@@ -803,4 +803,5 @@
     <public type="string" name="notificationUI_pas_combined_dropdown_body4" id="0x7f017ced" />
     <public type="string" name="notificationUI_pas_combined_dropdown_subtitle2" id="0x7f017cec" />
     <public type="string" name="notificationUI_pas_combined_dropdown_body5" id="0x7f017ceb" />
+    <public type="string" name="shell_command_activity_header" id="0x7f017cea" />
 </resources>

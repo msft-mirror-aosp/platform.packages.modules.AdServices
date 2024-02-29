@@ -106,8 +106,8 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.FledgeAuctionServerExecutionLogger;
-import com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerFactory;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -323,16 +323,16 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA);
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 
-        FledgeAuctionServerExecutionLoggerFactory fledgeAuctionServerExecutionLoggerFactory =
-                new FledgeAuctionServerExecutionLoggerFactory(
+        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
+                new AdsRelevanceExecutionLoggerFactory(
                         inputParams.getCallerPackageName(),
                         callerMetadata,
                         Clock.getInstance(),
                         mAdServicesLogger,
                         mFlags,
                         apiName);
-        final FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger =
-                fledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger();
+        final AdsRelevanceExecutionLogger adsRelevanceExecutionLogger =
+                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
 
         if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
             mAdServicesLogger.logFledgeApiCallStats(
@@ -371,7 +371,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             callback,
                             callingUid,
                             devContext,
-                            fledgeAuctionServerExecutionLogger);
+                            adsRelevanceExecutionLogger);
                     Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_DATA, traceCookie);
                 });
     }
@@ -386,16 +386,16 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         int apiName =
                 AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
 
-        FledgeAuctionServerExecutionLoggerFactory fledgeAuctionServerExecutionLoggerFactory =
-                new FledgeAuctionServerExecutionLoggerFactory(
+        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
+                new AdsRelevanceExecutionLoggerFactory(
                         inputParams.getCallerPackageName(),
                         callerMetadata,
                         Clock.getInstance(),
                         mAdServicesLogger,
                         mFlags,
                         apiName);
-        final FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger =
-                fledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger();
+        final AdsRelevanceExecutionLogger adsRelevanceExecutionLogger =
+                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
 
         if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
@@ -476,7 +476,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     auctionResultValidator,
                                     mFlags,
                                     mAdServicesLogger,
-                                    fledgeAuctionServerExecutionLogger,
+                                    adsRelevanceExecutionLogger,
                                     mKAnonSignJoinFactory);
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
@@ -551,7 +551,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             GetAdSelectionDataCallback callback,
             int callingUid,
             DevContext devContext,
-            FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
+            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger) {
         ListenableFuture<AuctionServerDebugReporting> auctionServerDebugReportingFuture =
                 AuctionServerDebugReporting.createInstance(
                         mFlags,
@@ -587,7 +587,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 callingUid,
                                                 devContext,
                                                 auctionServerDebugReporting,
-                                                fledgeAuctionServerExecutionLogger);
+                                                adsRelevanceExecutionLogger);
                                 runner.run(inputParams, callback);
                             }
 
@@ -615,7 +615,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 devContext,
                                                 AuctionServerDebugReporting
                                                         .createForDebugReportingDisabled(),
-                                                fledgeAuctionServerExecutionLogger);
+                                                adsRelevanceExecutionLogger);
                                 runner.run(inputParams, callback);
                             }
                         },
@@ -1095,7 +1095,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1131,11 +1134,19 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 callback);
     }
 
-    private int getCallingUid(int apiNameLoggingId) {
+    private int getCallingUid(int apiNameLoggingId) throws IllegalStateException {
+        return getCallingUid(apiNameLoggingId, null);
+    }
+
+    private int getCallingUid(int apiNameLoggingId, String callerAppPackageName) {
         try {
             return mCallingAppUidSupplier.getCallingAppUid();
         } catch (IllegalStateException illegalStateException) {
-            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_INTERNAL_ERROR, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiNameLoggingId,
+                    callerAppPackageName,
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw illegalStateException;
         }
     }
@@ -1162,7 +1173,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1213,7 +1227,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1268,7 +1285,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1320,7 +1340,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1370,7 +1393,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1421,7 +1447,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1436,7 +1465,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         } catch (RemoteException exception) {
             status = STATUS_INTERNAL_ERROR;
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, status, /*latencyMs=*/ 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, devContext.getCallingAppPackageName(), status, /*latencyMs=*/ 0);
         }
     }
 
@@ -1460,7 +1490,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1475,7 +1508,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         } catch (RemoteException exception) {
             status = STATUS_INTERNAL_ERROR;
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, status, /*latencyMs=*/ 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, devContext.getCallingAppPackageName(), status, /*latencyMs=*/ 0);
         }
     }
 
@@ -1496,7 +1530,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1511,7 +1548,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         } catch (RemoteException exception) {
             status = STATUS_INTERNAL_ERROR;
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, status, /*latencyMs=*/ 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, devContext.getCallingAppPackageName(), status, /*latencyMs=*/ 0);
         }
     }
 

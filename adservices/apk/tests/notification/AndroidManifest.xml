@@ -40,6 +40,27 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.test.adservices.ui.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for the apps view of Adservices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.AppsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.test.adservices.ui.APPS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
     <instrumentation

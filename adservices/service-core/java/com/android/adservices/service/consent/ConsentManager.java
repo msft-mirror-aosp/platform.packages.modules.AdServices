@@ -53,6 +53,8 @@ import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -85,6 +87,7 @@ import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -129,6 +132,7 @@ public class ConsentManager {
     private final MeasurementImpl mMeasurementImpl;
     private final CustomAudienceDao mCustomAudienceDao;
     private final AppInstallDao mAppInstallDao;
+    private final ProtectedSignalsDao mProtectedSignalsDao;
     private final FrequencyCapDao mFrequencyCapDao;
     private final AdServicesManager mAdServicesManager;
     private final int mConsentSourceOfTruth;
@@ -147,6 +151,7 @@ public class ConsentManager {
             @NonNull MeasurementImpl measurementImpl,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AppInstallDao appInstallDao,
+            @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull FrequencyCapDao frequencyCapDao,
             @NonNull AdServicesManager adServicesManager,
             @NonNull BooleanFileDatastore booleanFileDatastore,
@@ -163,6 +168,7 @@ public class ConsentManager {
         Objects.requireNonNull(measurementImpl);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(appInstallDao);
+        Objects.requireNonNull(protectedSignalsDao);
         Objects.requireNonNull(frequencyCapDao);
         Objects.requireNonNull(booleanFileDatastore);
         Objects.requireNonNull(userProfileIdManager);
@@ -188,6 +194,7 @@ public class ConsentManager {
         mMeasurementImpl = measurementImpl;
         mCustomAudienceDao = customAudienceDao;
         mAppInstallDao = appInstallDao;
+        mProtectedSignalsDao = protectedSignalsDao;
         mFrequencyCapDao = frequencyCapDao;
         mUxStatesDao = uxStatesDao;
 
@@ -255,13 +262,13 @@ public class ConsentManager {
                         // builds, use the deprecated flag
                         // enable_adext_service_to_appsearch_migration.
                         if (FlagsFactory.getFlags().getEnableMigrationFromAdExtService()) {
-                            ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
-                                    context,
-                                    datastore,
-                                    appSearchConsentManager,
-                                    adServicesExtDataManager,
-                                    statsdAdServicesLogger,
-                                    adServicesManager);
+                            AdExtDataConsentMigrationUtils
+                                    .handleConsentMigrationFromAdExtDataIfNeeded(
+                                            context,
+                                            appSearchConsentManager,
+                                            adServicesExtDataManager,
+                                            statsdAdServicesLogger,
+                                            adServicesManager);
                         }
                     }
 
@@ -281,6 +288,8 @@ public class ConsentManager {
                                     MeasurementImpl.getInstance(context),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                                     SharedStorageDatabase.getInstance(context).appInstallDao(),
+                                    ProtectedSignalsDatabase.getInstance(context)
+                                            .protectedSignalsDao(),
                                     SharedStorageDatabase.getInstance(context).frequencyCapDao(),
                                     adServicesManager,
                                     datastore,
@@ -680,6 +689,12 @@ public class ConsentManager {
             asyncExecute(
                     () -> mFrequencyCapDao.deleteHistogramDataBySourceApp(app.getPackageName()));
         }
+        if (mFlags.getProtectedSignalsCleanupEnabled()) {
+            asyncExecute(
+                    () ->
+                            mProtectedSignalsDao.deleteSignalsByPackage(
+                                    Collections.singletonList(app.getPackageName())));
+        }
     }
 
     /**
@@ -733,6 +748,9 @@ public class ConsentManager {
             asyncExecute(mAppInstallDao::deleteAllAppInstallData);
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
         }
+        if (mFlags.getProtectedSignalsCleanupEnabled()) {
+            asyncExecute(mProtectedSignalsDao::deleteAllSignals);
+        }
     }
 
     /**
@@ -759,6 +777,9 @@ public class ConsentManager {
         if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
             asyncExecute(mAppInstallDao::deleteAllAppInstallData);
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getProtectedSignalsCleanupEnabled()) {
+            asyncExecute(mProtectedSignalsDao::deleteAllSignals);
         }
     }
 
@@ -2197,6 +2218,12 @@ public class ConsentManager {
                 () -> // Same as PPAPI_ONLY. Doesn't need to be rollback safe
                 mUxStatesDao.setEnrollmentChannel(ux, channel),
                 /* errorLogger= */ null);
+    }
+
+    public boolean isPasFledgeConsentGiven() {
+        return mFlags.getPasUxEnabled()
+                && wasPasNotificationDisplayed()
+                && getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 
     @FunctionalInterface

@@ -38,6 +38,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_
 import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
@@ -112,6 +113,7 @@ import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.download.MddJobService;
@@ -171,6 +173,7 @@ import org.mockito.verification.VerificationMode;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -219,6 +222,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImplMock;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private AppInstallDao mAppInstallDaoMock;
+    @Mock private ProtectedSignalsDao mProtectedSignalsDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     @Mock private UiStatsLogger mUiStatsLoggerMock;
     @Mock private AppUpdateManager mAppUpdateManagerMock;
@@ -255,7 +259,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         extendedMockito.mockGetFlags(mMockFlags);
         doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
-        doReturn(true).when(mMockFlags).getAdservicesConsentMigrationLoggingEnabled();
+        doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         doReturn(true).when(mMockFlags).getEnrollmentEnableLimitedLogging();
         doReturn(mAdServicesLoggerImplMock).when(AdServicesLoggerImpl::getInstance);
         doReturn(true).when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
@@ -745,6 +749,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mJobSchedulerMock).cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(ENCRYPTION_KEY_PERIODIC_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(COBALT_LOGGING_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId());
 
         verifyNoMoreInteractions(mJobSchedulerMock);
     }
@@ -763,6 +768,27 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mProtectedSignalsDaoMock).deleteAllSignals();
+        verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verify(mUserProfileIdManagerMock).deleteId();
+    }
+
+    @Test
+    public void testDataIsResetAfterConsentIsRevokedSignalsDisabled() throws IOException {
+        doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
+        mConsentManager.disable(mSpyContext);
+
+        verify(() -> UiStatsLogger.logOptOutSelected());
+
+        SystemClock.sleep(1000);
+        verify(mTopicsWorkerMock).clearAllTopicsData(any());
+        // TODO(b/240988406): change to test for correct method call
+        verify(mAppConsentDaoSpy).clearAllConsentData();
+        verify(mEnrollmentDaoSpy).deleteAll();
+        verify(mMeasurementImplMock).deleteAllMeasurementData(any());
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verifyZeroInteractions(mProtectedSignalsDaoMock);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verify(mUserProfileIdManagerMock).deleteId();
     }
@@ -782,6 +808,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
+        verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
@@ -798,6 +825,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
@@ -817,6 +845,26 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
+        verify(mUserProfileIdManagerMock).deleteId();
+        verify(mUserProfileIdManagerMock).getOrCreateId();
+    }
+
+    @Test
+    public void testDataIsResetAfterConsentIsGivenSignalsDisabled() throws IOException {
+        doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
+        mConsentManager.enable(mSpyContext);
+
+        verify(() -> UiStatsLogger.logOptInSelected());
+
+        SystemClock.sleep(1000);
+        verify(mTopicsWorkerMock).clearAllTopicsData(any());
+        // TODO(b/240988406): change to test for correct method call
+        verify(mAppConsentDaoSpy).clearAllConsentData();
+        verify(mMeasurementImplMock).deleteAllMeasurementData(any());
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verifyZeroInteractions(mProtectedSignalsDaoMock);
+        verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
     }
@@ -1540,6 +1588,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
         verify(mAppInstallDaoMock).deleteByPackageName(app.getPackageName());
+        verify(mProtectedSignalsDaoMock)
+                .deleteSignalsByPackage(eq(Collections.singletonList(app.getPackageName())));
         verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(app.getPackageName());
     }
 
@@ -1582,6 +1632,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
         verify(mAppInstallDaoMock).deleteByPackageName(app.getPackageName());
+        verify(mProtectedSignalsDaoMock)
+                .deleteSignalsByPackage(eq(Collections.singletonList(app.getPackageName())));
         verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(app.getPackageName());
 
         // restore consent for first app
@@ -1887,6 +1939,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
+        verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
     }
 
@@ -1904,6 +1957,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
     }
 
@@ -1960,6 +2014,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
+        verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
     }
 
@@ -2033,6 +2088,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
+        verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
     }
 
@@ -2050,6 +2106,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
     }
 
@@ -2108,6 +2165,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
     }
 
@@ -2952,6 +3010,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         mMeasurementImplMock,
                         mCustomAudienceDaoMock,
                         mAppInstallDaoMock,
+                        mProtectedSignalsDaoMock,
                         mFrequencyCapDaoMock,
                         mAdServicesManager,
                         mConsentDatastore,
@@ -3604,6 +3663,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementImplMock,
                 mCustomAudienceDaoMock,
                 mAppInstallDaoMock,
+                mProtectedSignalsDaoMock,
                 mFrequencyCapDaoMock,
                 mAdServicesManager,
                 mConsentDatastore,
@@ -4700,5 +4760,57 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         // Verify notificationDisplayed is also set in PPAPI
         assertThat(mConsentDatastore.get(PAS_NOTIFICATION_DISPLAYED_ONCE)).isTrue();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_happycase() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isTrue();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_NotificationNotDisplayed() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(false).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_FledgeRevoken() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_pasNotEnabled() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(false);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
     }
 }

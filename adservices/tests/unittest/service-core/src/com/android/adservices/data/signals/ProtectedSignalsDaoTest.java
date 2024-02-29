@@ -147,6 +147,17 @@ public class ProtectedSignalsDaoTest {
     }
 
     @Test
+    public void testTwoSignalsDeleteAll() {
+        mProtectedSignalsDao.insertSignals(
+                Arrays.asList(DBProtectedSignalFixture.SIGNAL, DBProtectedSignalFixture.SIGNAL));
+
+        List<DBProtectedSignal> readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        mProtectedSignalsDao.deleteAllSignals();
+        readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        assertEquals(0, readResult.size());
+    }
+
+    @Test
     public void testTwoBuyers() {
         DBProtectedSignal signal1 =
                 DBProtectedSignal.builder()
@@ -349,7 +360,7 @@ public class ProtectedSignalsDaoTest {
                 DBProtectedSignalFixture.getBuilder().setPackageName(PACKAGE_2).build();
         final class FlagsWithAllAppsAllowed implements Flags {
             @Override
-            public String getPpapiAppAllowList() {
+            public String getPasAppAllowList() {
                 return AllowLists.ALLOW_ALL;
             }
         }
@@ -382,7 +393,7 @@ public class ProtectedSignalsDaoTest {
                 DBProtectedSignalFixture.getBuilder().setPackageName(PACKAGE_2).build();
         class FlagsThatAllowOneApp implements Flags {
             @Override
-            public String getPpapiAppAllowList() {
+            public String getPasAppAllowList() {
                 return PACKAGE_1;
             }
         }

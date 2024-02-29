@@ -65,7 +65,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
-import com.android.adservices.service.stats.FledgeAuctionServerExecutionLogger;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
@@ -140,7 +140,7 @@ public class PersistAdSelectionResultRunner {
     @NonNull private AuctionResultValidator mAuctionResultValidator;
 
 
-    @NonNull private final FledgeAuctionServerExecutionLogger mFledgeAuctionServerExecutionLogger;
+    @NonNull private final AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
     @NonNull KAnonSignJoinFactory mKAnonSignJoinFactory;
 
     public PersistAdSelectionResultRunner(
@@ -160,7 +160,7 @@ public class PersistAdSelectionResultRunner {
             @NonNull final AuctionResultValidator auctionResultValidator,
             @NonNull final Flags flags,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull final FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger,
+            @NonNull final AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -175,7 +175,7 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(auctionResultValidator);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adServicesLogger);
-        Objects.requireNonNull(fledgeAuctionServerExecutionLogger);
+        Objects.requireNonNull(adsRelevanceExecutionLogger);
         Objects.requireNonNull(kAnonSignJoinFactory);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
@@ -194,7 +194,7 @@ public class PersistAdSelectionResultRunner {
         mAuctionResultValidator = auctionResultValidator;
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
-        mFledgeAuctionServerExecutionLogger = fledgeAuctionServerExecutionLogger;
+        mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
     }
 
@@ -285,32 +285,22 @@ public class PersistAdSelectionResultRunner {
             ListenableFuture<Void> signJoinFuture =
                     Futures.submitAsync(
                             () -> {
-                                List<KAnonMessageEntity> messageEntities =
-                                        getKAnonEntitiesFromAuctionResult(
-                                                auctionResult, adSelectionId);
-                                KAnonSignJoinManager kAnonSignJoinManager =
-                                        mKAnonSignJoinFactory.getKAnonSignJoinManager();
-                                kAnonSignJoinManager.processNewMessages(messageEntities);
-                                return null;
+                                try {
+                                    List<KAnonMessageEntity> messageEntities =
+                                            getKAnonEntitiesFromAuctionResult(
+                                                    auctionResult, adSelectionId);
+                                    KAnonSignJoinManager kAnonSignJoinManager =
+                                            mKAnonSignJoinFactory.getKAnonSignJoinManager();
+                                    kAnonSignJoinManager.processNewMessages(messageEntities);
+                                } catch (Throwable t) {
+                                    sLogger.d("Error while processing new messages for KAnon");
+                                }
+                                return Futures.immediateVoidFuture();
                             },
                             mBackgroundExecutorService);
-            Futures.addCallback(
-                    signJoinFuture,
-                    new FutureCallback<Void>() {
-                        @Override
-                        public void onSuccess(Void result) {
-                            mAdServicesLogger.logKAnonSignJoinStatus();
-                        }
-
-                        @Override
-                        public void onFailure(Throwable t) {
-                            mAdServicesLogger.logKAnonSignJoinStatus();
-                        }
-                    },
-                    mBackgroundExecutorService);
         } else {
+            sLogger.d("KAnon Sign Join feature is disabled");
             mAdServicesLogger.logKAnonSignJoinStatus();
-            LogUtil.i("KAnon Sign Join feature is disabled");
         }
     }
 
@@ -853,7 +843,7 @@ public class PersistAdSelectionResultRunner {
             resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v("Attempted notifying success");
-            mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
+            mAdsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
 
         }
     }
@@ -897,7 +887,7 @@ public class PersistAdSelectionResultRunner {
             resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v("Persist Ad Selection Result failed");
-            mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
+            mAdsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
         }
     }
 
