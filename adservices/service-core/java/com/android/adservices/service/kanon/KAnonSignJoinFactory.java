@@ -17,7 +17,9 @@
 package com.android.adservices.service.kanon;
 
 import android.annotation.NonNull;
+import android.annotation.RequiresApi;
 import android.content.Context;
+import android.os.Build;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
@@ -36,6 +38,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.time.Clock;
 
 /** A factory class used to create an instance of {@link KAnonSignJoinManager}. */
+@RequiresApi(Build.VERSION_CODES.S)
 public class KAnonSignJoinFactory {
 
     private static Context mContext;
@@ -81,6 +84,7 @@ public class KAnonSignJoinFactory {
                             KAnonDatabase.getInstance(mContext).kAnonMessageDao(),
                             FlagsFactory.getFlags(),
                             Clock.systemUTC());
+            KeyAttestationFactory keyAttestationFactory = new KeyAttestationFactory(mContext);
             KAnonCallerImpl kAnonCaller =
                     new KAnonCallerImpl(
                             AdServicesExecutors.getLightWeightExecutor(),
@@ -93,9 +97,11 @@ public class KAnonSignJoinFactory {
                             FlagsFactory.getFlags(),
                             kAnonObliviousHttpEncryptor,
                             kAnonMessageManager,
-                            AdServicesLoggerImpl.getInstance());
+                            AdServicesLoggerImpl.getInstance(),
+                            keyAttestationFactory);
             mKAnonSignJoinManager =
                     new KAnonSignJoinManager(
+                            mContext,
                             kAnonCaller,
                             kAnonMessageManager,
                             FlagsFactory.getFlags(),

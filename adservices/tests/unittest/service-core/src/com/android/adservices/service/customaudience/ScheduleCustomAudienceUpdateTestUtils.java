@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addAuctionServerRequestFlags;
 import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.JOIN_CUSTOM_AUDIENCE_KEY;
 import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.LEAVE_CUSTOM_AUDIENCE_KEY;
 
@@ -31,6 +32,8 @@ import android.os.RemoteException;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
+
+import com.google.common.collect.ImmutableList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -74,11 +77,12 @@ public class ScheduleCustomAudienceUpdateTestUtils {
                     .build();
 
     /** Creates a JSON response that is expected to be returned from the server for update */
-    public static String createJsonResponsePayload(
+    public static JSONObject createJsonResponsePayload(
             AdTechIdentifier buyer,
             String owner,
             List<String> joinCustomAudienceNames,
-            List<String> leaveCustomAudienceNames)
+            List<String> leaveCustomAudienceNames,
+            boolean auctionServerRequestFlagsEnabled)
             throws JSONException {
 
         JSONObject responseJson = new JSONObject();
@@ -87,6 +91,14 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
             JSONObject generatedCa =
                     generateCustomAudienceWithName(buyer, owner, joinCustomAudienceNames.get(i));
+            if (auctionServerRequestFlagsEnabled) {
+                // Add auction server request flags
+                generatedCa =
+                        addAuctionServerRequestFlags(
+                                generatedCa,
+                                ImmutableList.of(CustomAudienceBlob.OMIT_ADS_VALUE),
+                                false);
+            }
             joinCustomAudienceArray.put(i, generatedCa);
         }
 
@@ -98,7 +110,7 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
         responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, leaveCustomAudienceArray);
 
-        return responseJson.toString();
+        return responseJson;
     }
 
     private static JSONObject generateCustomAudienceWithName(

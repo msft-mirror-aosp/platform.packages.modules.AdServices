@@ -123,6 +123,7 @@ public class ScenarioDispatcherTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315327589)
     public void testScenarioDispatcher_withDuplicatePathCalls_doesNotReturnEarly()
             throws Exception {
         ScenarioDispatcher dispatcher =

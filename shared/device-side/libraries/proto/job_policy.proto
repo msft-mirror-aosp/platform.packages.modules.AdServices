@@ -24,35 +24,8 @@ message JobPolicy {
   // Unique identifier of a job.
   optional int32 job_id = 1; // ** REQUIRED field **
 
-  // Indicate the priority for this job. Use this to inform the system about which jobs it should
-  // try to run before other jobs.
-  optional Priority priority = 2;
-
-  enum Priority {
-    // Unknown priority value.
-    PRIORITY_UNKNOWN = 0;
-
-    // Job has minimal value to the user. The user has absolutely no expectation or knowledge of
-    // this task and it has no bearing on the user's perception of the app whatsoever.
-    PRIORITY_MIN = 1;
-
-    // Low priority. The task provides some benefit to users, but is not critical and is more of a
-    // nice-to-have.
-    PRIORITY_LOW = 2;
-
-    // Default value for all regular jobs.
-    PRIORITY_DEFAULT = 3;
-
-    // This task should be ordered ahead of most other tasks. It may be eferred a little, but if it
-    // doesn't run at some point, the user may think something is wrong.
-    PRIORITY_HIGH = 4;
-
-    // This task should be run ahead of all other tasks. Only Expedited Jobs can have this priority.
-    PRIORITY_MAX = 5;
-  }
-
   // Set basic description of the kind of network your job requires.
-  optional NetworkType network_type = 3;
+  optional NetworkType network_type = 2;
 
   enum NetworkType {
     // Unknown network type.
@@ -75,7 +48,7 @@ message JobPolicy {
   }
 
   // Set the battery constraint for your job.
-  optional BatteryType battery_type = 4;
+  optional BatteryType battery_type = 3;
 
   enum BatteryType {
     // Unknown battery type.
@@ -92,41 +65,38 @@ message JobPolicy {
   }
 
   // Set if your job requires the device in idle.
-  optional bool require_device_idle = 5;
+  optional bool require_device_idle = 4;
 
   // Specify that to run this job, the device's available storage must not be low.
-  optional bool require_storage_not_low = 6;
-
-  // The URI string to be parsed to build a URI.
-  optional string trigger_content_uri_string = 7;
-
-  // The flag used in JobInfo to build a TriggerContentUri.
-  optional int32 trigger_content_flag = 8;
-
-  // The maximum delay in millisecond to use before scheduling the job when triggering on content
-  // URI changes.
-  optional int64 trigger_content_max_delay_ms = 9;
-
-  // The delay from when a change is detected until the job is scheduled when triggering on content
-  // URI changes, in millisecond.
-  optional int64 trigger_content_update_delay_ms = 10;
+  optional bool require_storage_not_low = 5;
 
   // The interval of a periodic job in millisecond.
-  optional int64 periodic_interval_ms = 11;
+  optional int64 periodic_interval_ms = 6;
 
   // The flex interval of a periodic job in millisecond.
-  optional int64 flex_internal_ms = 12;
+  optional int64 flex_internal_ms = 7;
 
   // Specify that this job should be delayed by the provided amount of time, in millisecond.
-  optional int64 minimum_latency_ms = 13;
+  optional int64 minimum_latency_ms = 8;
 
   // Set deadline which is the maximum scheduling latency in millisecond.
-  optional int64 override_deadline_ms = 14;
-
-  // Setting this to true indicates that this job is important and needs to run as soon as possible
-  // with stronger guarantees than regular jobs.
-  optional bool is_expedited = 15;
+  optional int64 override_deadline_ms = 9;
 
   // Set whether or not to persist this job across device reboots.
-  optional bool is_persisted = 16;
+  optional bool is_persisted = 10;
+
+  optional TriggerContent trigger_content = 11;
+
+  message TriggerContent {
+    // The URI string to be parsed to build a URI.
+    optional string trigger_content_uri_string = 1;
+
+    // The maximum delay in millisecond to use before scheduling the job when triggering on content
+    // URI changes.
+    optional int64 trigger_content_max_delay_ms = 2;
+
+    // The delay from when a change is detected until the job is scheduled when triggering on content
+    // URI changes, in millisecond.
+    optional int64 trigger_content_update_delay_ms = 3;
+  }
 }

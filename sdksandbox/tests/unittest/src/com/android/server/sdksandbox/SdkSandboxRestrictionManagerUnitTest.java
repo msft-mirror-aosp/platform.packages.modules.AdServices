@@ -22,6 +22,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.SharedLibraryInfo;
+import android.content.pm.VersionedPackage;
 import android.os.Build;
 import android.os.Process;
 
@@ -35,6 +36,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /** Unit tests for {@link SdkSandboxRestrictionManager}. */
 public class SdkSandboxRestrictionManagerUnitTest {
@@ -43,7 +45,7 @@ public class SdkSandboxRestrictionManagerUnitTest {
     private SdkSandboxRestrictionManager mSdkSandboxRestrictionManager;
     private PackageManagerHelper mPackageManagerHelper;
     private SdkSandboxRestrictionManager.Injector mInjector;
-    private CallingInfo mCallingInfo;
+    private int mClientAppUid;
 
     @Before
     public void setUp() {
@@ -52,9 +54,9 @@ public class SdkSandboxRestrictionManagerUnitTest {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
 
-        int clientAppUid = Process.myUid();
-        mCallingInfo = new CallingInfo(clientAppUid, TEST_PACKAGE);
-        PackageManagerHelper packageManagerHelper = new PackageManagerHelper(context, clientAppUid);
+        mClientAppUid = Process.myUid();
+        PackageManagerHelper packageManagerHelper =
+                new PackageManagerHelper(context, mClientAppUid);
 
         mPackageManagerHelper = Mockito.spy(packageManagerHelper);
         mInjector = Mockito.spy(new FakeInjector(context, mPackageManagerHelper));
@@ -75,7 +77,7 @@ public class SdkSandboxRestrictionManagerUnitTest {
         Mockito.when(mInjector.getCurrentSdkLevel()).thenReturn(33);
         Mockito.when(mPackageManagerHelper.getSdkSharedLibraryInfo(TEST_PACKAGE))
                 .thenReturn(new ArrayList<>());
-        assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mCallingInfo))
+        assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid))
                 .isEqualTo(DEFAULT_TARGET_SDK_VERSION);
     }
 
@@ -85,7 +87,7 @@ public class SdkSandboxRestrictionManagerUnitTest {
         Mockito.when(mInjector.getCurrentSdkLevel()).thenReturn(34);
         Mockito.when(mPackageManagerHelper.getSdkSharedLibraryInfo(TEST_PACKAGE))
                 .thenReturn(new ArrayList<>());
-        assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mCallingInfo))
+        assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid))
                 .isEqualTo(DEFAULT_TARGET_SDK_VERSION);
     }
 
@@ -94,7 +96,7 @@ public class SdkSandboxRestrictionManagerUnitTest {
         Mockito.when(mInjector.getCurrentSdkLevel()).thenReturn(35);
         Mockito.when(mPackageManagerHelper.getSdkSharedLibraryInfo(TEST_PACKAGE))
                 .thenReturn(new ArrayList<>());
-        assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mCallingInfo))
+        assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid))
                 .isEqualTo(35);
     }
 
@@ -109,7 +111,7 @@ public class SdkSandboxRestrictionManagerUnitTest {
                 .getApplicationInfoForSharedLibrary(
                         Mockito.any(SharedLibraryInfo.class), Mockito.anyInt());
 
-        assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mCallingInfo))
+        assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid))
                 .isEqualTo(DEFAULT_TARGET_SDK_VERSION);
     }
 
@@ -120,19 +122,78 @@ public class SdkSandboxRestrictionManagerUnitTest {
 
         ApplicationInfo applicationInfo1 = new ApplicationInfo();
         applicationInfo1.targetSdkVersion = 35;
-
         ApplicationInfo applicationInfo2 = new ApplicationInfo();
         applicationInfo2.targetSdkVersion = 36;
 
-        ApplicationInfo applicationInfo3 = new ApplicationInfo();
-        applicationInfo3.targetSdkVersion = 37;
-
-        Mockito.doReturn(applicationInfo1, applicationInfo2, applicationInfo3)
+        Mockito.doReturn(applicationInfo1, applicationInfo2, applicationInfo2)
                 .when(mPackageManagerHelper)
                 .getApplicationInfoForSharedLibrary(
                         Mockito.any(SharedLibraryInfo.class), Mockito.anyInt());
 
-        assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mCallingInfo))
+        assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid))
+                .isEqualTo(35);
+    }
+
+    @Test
+    public void testGetEffectiveTargetSdkVersion_sharedUid() throws Exception {
+        Mockito.when(mInjector.getCurrentSdkLevel()).thenReturn(37);
+
+        String packageName2 = TEST_PACKAGE + "_1";
+        List<String> packageNames = List.of(TEST_PACKAGE, packageName2);
+
+        Mockito.when(mPackageManagerHelper.getPackageNamesForUid(mClientAppUid))
+                .thenReturn(packageNames);
+
+        SharedLibraryInfo sharedLibraryInfo1 =
+                new SharedLibraryInfo(
+                        "testpath1",
+                        TEST_PACKAGE,
+                        new ArrayList<>(),
+                        "test1",
+                        0L,
+                        SharedLibraryInfo.TYPE_SDK_PACKAGE,
+                        new VersionedPackage("test1", 0L),
+                        /*dependentPackages= */ null,
+                        /* dependencies= */ null,
+                        /* isNative= */ false);
+
+        SharedLibraryInfo sharedLibraryInfo2 =
+                new SharedLibraryInfo(
+                        "testpath2",
+                        packageName2,
+                        new ArrayList<>(),
+                        "test2",
+                        0L,
+                        SharedLibraryInfo.TYPE_SDK_PACKAGE,
+                        new VersionedPackage("test2", 0L),
+                        /*dependentPackages= */ null,
+                        /* dependencies= */ null,
+                        /* isNative= */ false);
+
+        Mockito.doReturn(List.of(sharedLibraryInfo1))
+                .when(mPackageManagerHelper)
+                .getSdkSharedLibraryInfo(TEST_PACKAGE);
+
+        Mockito.doReturn(List.of(sharedLibraryInfo2))
+                .when(mPackageManagerHelper)
+                .getSdkSharedLibraryInfo(packageName2);
+
+        ApplicationInfo applicationInfo1 = new ApplicationInfo();
+        applicationInfo1.targetSdkVersion = 35;
+        ApplicationInfo applicationInfo2 = new ApplicationInfo();
+        applicationInfo2.targetSdkVersion = 36;
+
+        Mockito.doReturn(applicationInfo1)
+                .when(mPackageManagerHelper)
+                .getApplicationInfoForSharedLibrary(
+                        Mockito.eq(sharedLibraryInfo1), /* flags= */ Mockito.anyInt());
+
+        Mockito.doReturn(applicationInfo2)
+                .when(mPackageManagerHelper)
+                .getApplicationInfoForSharedLibrary(
+                        Mockito.eq(sharedLibraryInfo2), /* flags= */ Mockito.anyInt());
+
+        assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid))
                 .isEqualTo(35);
     }
 

@@ -134,6 +134,7 @@ public class KAnonCallerImplTest {
     @Mock private BinaryHttpMessageDeserializer mockBinaryHttpMessageDeserializer;
     @Mock private ObliviousHttpEncryptor mockKAnonOblivivousHttpEncryptorImpl;
     @Mock private AdServicesLogger mockAdServicesLogger;
+    @Mock private KeyAttestationFactory mockKeyAttestationFactory;
     private UserProfileIdManager mUserProfileIdManager;
     private KAnonCallerImpl mKAnonCaller;
 
@@ -180,7 +181,8 @@ public class KAnonCallerImplTest {
                                 mFlags,
                                 mockKAnonOblivivousHttpEncryptorImpl,
                                 mKAnonMessageManager,
-                                mockAdServicesLogger));
+                                mockAdServicesLogger,
+                                mockKeyAttestationFactory));
     }
 
     @Test
@@ -199,7 +201,8 @@ public class KAnonCallerImplTest {
                                 mFlags,
                                 mockKAnonOblivivousHttpEncryptorImpl,
                                 mKAnonMessageManager,
-                                mockAdServicesLogger));
+                                mockAdServicesLogger,
+                                mockKeyAttestationFactory));
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
@@ -237,7 +240,8 @@ public class KAnonCallerImplTest {
                                 flagsWithBatchSizeOne,
                                 mockKAnonOblivivousHttpEncryptorImpl,
                                 mKAnonMessageManager,
-                                mockAdServicesLogger));
+                                mockAdServicesLogger,
+                                mockKeyAttestationFactory));
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
@@ -650,6 +654,11 @@ public class KAnonCallerImplTest {
         @Override
         public int getFledgeKAnonSignBatchSize() {
             return mBatchSize;
+        }
+
+        @Override
+        public boolean getFledgeKAnonKeyAttestationEnabled() {
+            return false;
         }
     }
 }

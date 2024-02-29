@@ -19,6 +19,7 @@ import static com.android.adservices.ui.notifications.ConsentNotificationActivit
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED;
 import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
 
 import android.content.Intent;
@@ -125,10 +126,8 @@ public class ConsentNotificationPasFragment extends Fragment {
             }
             howItWorksExpander2.setOnClickListener(
                     view -> {
-                        // TODO(b/322365218): change to log info section 2 clicked.
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED, getContext());
-
+                                LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED, getContext());
                         setInfoViewState2(!mIsInfoViewExpanded2);
                     });
             ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy2))
