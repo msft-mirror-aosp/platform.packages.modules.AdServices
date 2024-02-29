@@ -27,6 +27,13 @@ public interface UserProfileIdDao {
     @Nullable
     UUID getUserProfileId();
 
+    /**
+     * Returns the timestamp (milliseconds since epoch) when the user profile id was persisted.
+     *
+     * <p>Returns 0 if not found
+     */
+    long getTimestamp();
+
     /** Sets the user profile id. */
     void setUserProfileId(@NonNull UUID userProfileId);
 

@@ -25,7 +25,6 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
@@ -48,7 +47,6 @@ import java.util.List;
  */
 public class AggregateReportingJobHandlerWrapper {
     public static Object[] spyPerformScheduledPendingReportsInWindow(
-            EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             long windowStartTime,
             long windowEndTime,
@@ -74,7 +72,6 @@ public class AggregateReportingJobHandlerWrapper {
         AggregateReportingJobHandler aggregateReportingJobHandler =
                 Mockito.spy(
                         new AggregateReportingJobHandler(
-                                        enrollmentDao,
                                         datastoreManager,
                                         mockEncryptionManager,
                                         flags,

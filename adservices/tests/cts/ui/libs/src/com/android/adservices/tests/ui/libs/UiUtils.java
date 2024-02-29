@@ -465,7 +465,7 @@ public class UiUtils {
     /** set get adservices common states services enabled */
     public static void setGetAdservicesCommonStatesServiceEnable(boolean enable) {
         ShellUtils.runShellCommand(
-                "device_config put adservices is_get_ad_services_common_states_enabled " + enable);
+                "device_config put adservices get_adservices_common_states_api_enabled " + enable);
     }
 
     /** set get adservices common states services enabled */

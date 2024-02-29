@@ -129,6 +129,9 @@ java_defaults {
     defaults: [
         "modules-utils-testable-device-config-defaults",
     ],
+    libs: [
+        "framework-configinfrastructure",
+    ],
     static_libs: [
          "adservices-service-core",
     ],

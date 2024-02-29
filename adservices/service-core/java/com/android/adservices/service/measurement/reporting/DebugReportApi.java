@@ -605,7 +605,7 @@ public class DebugReportApi {
             body.put(Body.SOURCE_TYPE, source.getSourceType().getValue());
             body.put(
                     Body.RANDOMIZED_TRIGGER_RATE,
-                    mSourceNoiseHandler.getRandomAttributionProbability(source));
+                    mSourceNoiseHandler.getRandomizedTriggerRate(source));
             if (triggerData != null) {
                 body.put(Body.TRIGGER_DATA, triggerData.toString());
             }

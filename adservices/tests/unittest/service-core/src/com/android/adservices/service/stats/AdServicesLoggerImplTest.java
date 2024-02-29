@@ -153,21 +153,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testLogFledgeApiCallStatsWithFailureReason() {
-        final int latencyMs = 10;
-        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
-        adServicesLogger.logFledgeApiCallStats(
-                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                latencyMs,
-                ApiCallStats.successResult());
-        verify(mStatsdLoggerMock)
-                .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        latencyMs,
-                        ApiCallStats.successResult());
-    }
-
-    @Test
     public void testLogRunAdSelectionProcessReportedStats() {
         RunAdSelectionProcessReportedStats stats =
                 RunAdSelectionProcessReportedStats.builder()
@@ -670,6 +655,10 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         long inputEventDelayMs = 200L;
         long validDelayWindowMs = 1000L;
         String sourceRegistrant = "test_source_registrant";
+        boolean clickDeduplicationEnabled = true;
+        boolean clickDeduplicationEnforced = true;
+        long maxSourcesPerClick = 1;
+        boolean clickUnderLimit = true;
 
         MeasurementClickVerificationStats stats =
                 MeasurementClickVerificationStats.builder()
@@ -680,6 +669,10 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setInputEventDelayMillis(inputEventDelayMs)
                         .setValidDelayWindowMillis(validDelayWindowMs)
                         .setSourceRegistrant(sourceRegistrant)
+                        .setClickDeduplicationEnabled(clickDeduplicationEnabled)
+                        .setClickDeduplicationEnforced(clickDeduplicationEnforced)
+                        .setMaxSourcesPerClick(maxSourcesPerClick)
+                        .setCurrentRegistrationUnderClickDeduplicationLimit(clickUnderLimit)
                         .build();
 
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);

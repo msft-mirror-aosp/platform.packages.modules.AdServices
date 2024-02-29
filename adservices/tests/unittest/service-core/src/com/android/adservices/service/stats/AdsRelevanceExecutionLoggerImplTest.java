@@ -22,9 +22,9 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
-import static com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerFactory.GET_AD_SELECTION_DATA_API_NAME;
-import static com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerFactory.PERSIST_AD_SELECTION_RESULT_API_NAME;
-import static com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerImpl.UNAVAILABLE_LATENCY;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory.GET_AD_SELECTION_DATA_API_NAME;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory.PERSIST_AD_SELECTION_RESULT_API_NAME;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImpl.UNAVAILABLE_LATENCY;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -41,7 +41,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class FledgeAuctionServerExecutionLoggerImplTest {
+public class AdsRelevanceExecutionLoggerImplTest {
     public static final int GET_AD_SELECTION_DATA_LATENCY_MS = 1;
     public static final int PERSIST_AD_SELECTION_RESULT_LATENCY_MS = 1;
 
@@ -92,15 +92,15 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
 
         int resultCode = STATUS_SUCCESS;
         // Start the Ad selection execution logger and set start state of the process.
-        FledgeAuctionServerExecutionLoggerImpl getAdSelectionDataLogger =
-                new FledgeAuctionServerExecutionLoggerImpl(
+        AdsRelevanceExecutionLoggerImpl getAdSelectionDataLogger =
+                new AdsRelevanceExecutionLoggerImpl(
                         TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
                         GET_AD_SELECTION_DATA_API_NAME,
                         AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
-        getAdSelectionDataLogger.endAuctionServerApi(resultCode);
+        getAdSelectionDataLogger.endAdsRelevanceApi(resultCode);
 
         // Verify the logging of the auction server APIs.
         verify(mAdServicesLoggerMock).logApiCallStats(argumentCaptor.capture());
@@ -125,15 +125,15 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
 
         int resultCode = STATUS_SUCCESS;
         // Start the Ad selection execution logger and set start state of the process.
-        FledgeAuctionServerExecutionLoggerImpl persistAdSelectionResultLogger =
-                new FledgeAuctionServerExecutionLoggerImpl(
+        AdsRelevanceExecutionLoggerImpl persistAdSelectionResultLogger =
+                new AdsRelevanceExecutionLoggerImpl(
                         TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
                         PERSIST_AD_SELECTION_RESULT_API_NAME,
                         AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
-        persistAdSelectionResultLogger.endAuctionServerApi(resultCode);
+        persistAdSelectionResultLogger.endAdsRelevanceApi(resultCode);
 
         // Verify the logging of the auction server APIs.
         verify(mAdServicesLoggerMock).logApiCallStats(argumentCaptor.capture());
@@ -150,8 +150,8 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
     public void testFledgeAuctionServerExecutionLogger_missingStartOfGetAdSelectionData() {
         ArgumentCaptor<ApiCallStats> argumentCaptor = ArgumentCaptor.forClass(ApiCallStats.class);
         when(mMockClockMock.elapsedRealtime()).thenReturn(BINDER_ELAPSED_TIMESTAMP);
-        FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
-                new FledgeAuctionServerExecutionLoggerImpl(
+        AdsRelevanceExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
+                new AdsRelevanceExecutionLoggerImpl(
                         TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
@@ -161,8 +161,8 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
 
         // Set a 0 timestamp for auctionServerApiStartTimestamp to mock
         // missing start of get-ad-selection-data process
-        fledgeAuctionServerExecutionLoggerImpl.setAuctionServerApiStartTimestamp(0L);
-        fledgeAuctionServerExecutionLoggerImpl.endAuctionServerApi(STATUS_SUCCESS);
+        fledgeAuctionServerExecutionLoggerImpl.setAdsRelevanceApiStartTimestamp(0L);
+        fledgeAuctionServerExecutionLoggerImpl.endAdsRelevanceApi(STATUS_SUCCESS);
 
         // Verify the logging of the auction server APIs.
         verify(mAdServicesLoggerMock).logApiCallStats(argumentCaptor.capture());
@@ -183,8 +183,8 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
-                new FledgeAuctionServerExecutionLoggerImpl(
+        AdsRelevanceExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
+                new AdsRelevanceExecutionLoggerImpl(
                         TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
@@ -194,8 +194,8 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
 
         // Set a positive timestamp for auctionServerApiEndTimestamp to mock
         // redundant end of get-ad-selection-data process
-        fledgeAuctionServerExecutionLoggerImpl.setAuctionServerApiEndTimestamp(1L);
-        fledgeAuctionServerExecutionLoggerImpl.endAuctionServerApi(STATUS_SUCCESS);
+        fledgeAuctionServerExecutionLoggerImpl.setAdsRelevanceApiEndTimestamp(1L);
+        fledgeAuctionServerExecutionLoggerImpl.endAdsRelevanceApi(STATUS_SUCCESS);
 
         // Verify the logging of the auction server APIs.
         verify(mAdServicesLoggerMock).logApiCallStats(argumentCaptor.capture());
@@ -212,8 +212,8 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
     public void testFledgeAuctionServerExecutionLogger_missingStartOfPersistAdSelectionResult() {
         ArgumentCaptor<ApiCallStats> argumentCaptor = ArgumentCaptor.forClass(ApiCallStats.class);
         when(mMockClockMock.elapsedRealtime()).thenReturn(BINDER_ELAPSED_TIMESTAMP);
-        FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
-                new FledgeAuctionServerExecutionLoggerImpl(
+        AdsRelevanceExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
+                new AdsRelevanceExecutionLoggerImpl(
                         TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
@@ -223,8 +223,8 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
 
         // Set a 0 timestamp for auctionServerApiStartTimestamp to mock
         // missing start of persist-ad-selection-result process
-        fledgeAuctionServerExecutionLoggerImpl.setAuctionServerApiStartTimestamp(0L);
-        fledgeAuctionServerExecutionLoggerImpl.endAuctionServerApi(STATUS_SUCCESS);
+        fledgeAuctionServerExecutionLoggerImpl.setAdsRelevanceApiStartTimestamp(0L);
+        fledgeAuctionServerExecutionLoggerImpl.endAdsRelevanceApi(STATUS_SUCCESS);
 
         // Verify the logging of the auction server APIs.
         verify(mAdServicesLoggerMock).logApiCallStats(argumentCaptor.capture());
@@ -245,8 +245,8 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
                         BINDER_ELAPSED_TIMESTAMP,
                         PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP,
                         PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP);
-        FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
-                new FledgeAuctionServerExecutionLoggerImpl(
+        AdsRelevanceExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
+                new AdsRelevanceExecutionLoggerImpl(
                         TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
@@ -256,8 +256,8 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
 
         // Set a positive timestamp for auctionServerApiEndTimestamp to mock
         // redundant end of persist-ad-selection-result process
-        fledgeAuctionServerExecutionLoggerImpl.setAuctionServerApiEndTimestamp(1L);
-        fledgeAuctionServerExecutionLoggerImpl.endAuctionServerApi(STATUS_SUCCESS);
+        fledgeAuctionServerExecutionLoggerImpl.setAdsRelevanceApiEndTimestamp(1L);
+        fledgeAuctionServerExecutionLoggerImpl.endAdsRelevanceApi(STATUS_SUCCESS);
 
         // Verify the logging of the auction server APIs.
         verify(mAdServicesLoggerMock).logApiCallStats(argumentCaptor.capture());

@@ -84,7 +84,8 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
     @Before
     public void setup() throws Exception {
         extendedMockito.mockGetFlags(mMockFlags);
-        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mMockFlags).getUiOtaStringsFeatureEnabled();
         // UiDialogFragmentEnable flag should be on for this test
         doReturn(true).when(mMockFlags).getUiDialogFragmentEnabled();
         doReturn(true).when(mMockFlags).getUiDialogsFeatureEnabled();
@@ -179,46 +180,10 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void optOutDialogTest() {
-        UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
-        assertThat(consentSwitch).isNotNull();
-
-        // guarantee in on state
-        if (!consentSwitch.isChecked()) {
-            consentSwitch.click();
-        }
-
-        // click switch
-        consentSwitch.click();
-        UiObject2 dialogTitle =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
-
-        UiObject2 negativeText =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_negative_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(negativeText).isNotNull();
-
-        // cancel
-        negativeText.click();
-
-        // Retrieve a new instance to avoid android.support.test.uiautomator.StaleObjectException.
-        consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
-        // click switch
-        consentSwitch.click();
-        dialogTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
-        negativeText = ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_negative_text);
-        UiObject2 positiveText =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(negativeText).isNotNull();
-        // confirm
-        positiveText.click();
-    }
-
-    @Test
+    @FlakyTest(bugId = 301779505)
     public void blockTopicDialogTest() throws Exception {
         // open topics view
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
         UiObject2 blockTopicText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_topic_title, 0);
         assertThat(blockTopicText).isNotNull();
@@ -254,12 +219,13 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @FlakyTest(bugId = 301779505)
     public void unblockTopicDialogTest() throws Exception {
         // open topics view
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
 
         // open blocked topics view
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_topics_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_topics_ga_title);
         UiObject2 unblockTopicText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_unblock_topic_title, 0);
         assertThat(unblockTopicText).isNotNull();
@@ -285,10 +251,10 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void resetTopicDialogTest() throws Exception {
         // open topics view
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
 
         // click reset
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_topics_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_topics_ga_title);
         UiObject2 dialogTitle =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_reset_topic_message);
         UiObject2 positiveText =
@@ -302,7 +268,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         verify(mConsentManager, timeout(1000)).resetTopics();
 
         // click reset again
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_topics_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_topics_ga_title);
         dialogTitle =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_reset_topic_message);
         UiObject2 negativeText =
@@ -320,13 +286,13 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
     public void blockAppDialogTest() throws Exception {
         // perform a gentle swipe so scroll won't miss the text close to the
         // bottom of the current screen.
-        UiObject2 appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        UiObject2 appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
         if (appsTitle == null) {
             ApkTestUtil.gentleSwipe(sDevice);
         }
 
         // open apps view
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_ga_title);
         UiObject2 blockAppText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_app_title, 0);
         assertThat(blockAppText).isNotNull();
@@ -360,21 +326,22 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @FlakyTest(bugId = 301779505)
     public void unblockAppDialogTest() throws Exception {
-        UiObject2 appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        UiObject2 appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
         if (appsTitle == null) {
             ApkTestUtil.gentleSwipe(sDevice);
         }
 
         // open apps view
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_ga_title);
 
         // perform a gentle swipe so scroll won't miss the text close to the
         // bottom of the current screen.
         ApkTestUtil.gentleSwipe(sDevice);
 
         // open blocked apps view
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_apps_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_apps_ga_title);
         UiObject2 unblockAppText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_unblock_app_title, 0);
         assertThat(unblockAppText).isNotNull();
@@ -398,16 +365,16 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void resetAppDialogTest() throws Exception {
-        UiObject2 appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        UiObject2 appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
         if (appsTitle != null) {
             ApkTestUtil.gentleSwipe(sDevice);
         }
 
         // open apps view
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_ga_title);
 
         // click reset
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_apps_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_apps_ga_title);
         UiObject2 dialogTitle =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_reset_app_message);
         UiObject2 positiveText =
@@ -420,7 +387,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         verify(mConsentManager, timeout(1000)).resetApps();
 
         // click reset again
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_apps_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_apps_ga_title);
         dialogTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_reset_app_message);
         UiObject2 negativeText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_negative_text);
