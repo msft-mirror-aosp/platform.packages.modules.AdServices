@@ -25,6 +25,8 @@ import static com.android.adservices.service.common.httpclient.AdServicesHttpUti
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
+import static org.junit.Assert.assertThrows;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -125,12 +127,14 @@ public class KAnonCallerImplTest {
     private final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
 
     @Mock private Clock mockClock;
+    @Mock private com.android.adservices.shared.util.Clock mAdServicesClock;
     @Mock private UserProfileIdDao mockUserProfileIdDao;
     @Mock private AdServicesHttpsClient mockAdServicesHttpClient;
     @Mock private AnonymousCountingTokens mockAnonymousCountingTokens;
     @Mock private BinaryHttpMessageDeserializer mockBinaryHttpMessageDeserializer;
     @Mock private ObliviousHttpEncryptor mockKAnonOblivivousHttpEncryptorImpl;
     @Mock private AdServicesLogger mockAdServicesLogger;
+    @Mock private KeyAttestationFactory mockKeyAttestationFactory;
     private UserProfileIdManager mUserProfileIdManager;
     private KAnonCallerImpl mKAnonCaller;
 
@@ -152,12 +156,13 @@ public class KAnonCallerImplTest {
                 Room.inMemoryDatabaseBuilder(CONTEXT, KAnonDatabase.class).build();
         mClientParametersDao = kAnonDatabase.clientParametersDao();
         mServerParametersDao = kAnonDatabase.serverParametersDao();
-        mUserProfileIdManager = new UserProfileIdManager(mockUserProfileIdDao);
+        mUserProfileIdManager = new UserProfileIdManager(mockUserProfileIdDao, mAdServicesClock);
         mKAnonMessageDao = kAnonDatabase.kAnonMessageDao();
         mFlags = new KAnonSignAndJoinRunnerTestFlags(32);
         mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
 
         when(mockClock.instant()).thenReturn(FIXED_INSTANT);
+        when(mAdServicesClock.currentTimeMillis()).thenReturn(FIXED_INSTANT.toEpochMilli());
 
         InputStream inputStream = CONTEXT.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
         mTranscript = Transcript.parseDelimitedFrom(inputStream);
@@ -176,7 +181,8 @@ public class KAnonCallerImplTest {
                                 mFlags,
                                 mockKAnonOblivivousHttpEncryptorImpl,
                                 mKAnonMessageManager,
-                                mockAdServicesLogger));
+                                mockAdServicesLogger,
+                                mockKeyAttestationFactory));
     }
 
     @Test
@@ -195,7 +201,8 @@ public class KAnonCallerImplTest {
                                 mFlags,
                                 mockKAnonOblivivousHttpEncryptorImpl,
                                 mKAnonMessageManager,
-                                mockAdServicesLogger));
+                                mockAdServicesLogger,
+                                mockKeyAttestationFactory));
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
@@ -233,7 +240,8 @@ public class KAnonCallerImplTest {
                                 flagsWithBatchSizeOne,
                                 mockKAnonOblivivousHttpEncryptorImpl,
                                 mKAnonMessageManager,
-                                mockAdServicesLogger));
+                                mockAdServicesLogger,
+                                mockKeyAttestationFactory));
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
@@ -456,6 +464,12 @@ public class KAnonCallerImplTest {
         assertThat(actualString).isEqualTo(expectedString);
     }
 
+    @Test
+    public void signJoinMessages_withEmptyList_throwsIllegalArgumentException() {
+        assertThrows(
+                IllegalArgumentException.class, () -> mKAnonCaller.signAndJoinMessages(List.of()));
+    }
+
     private void createAndPersistKAnonMessages() {
         DBKAnonMessage dbKAnonMessage =
                 DBKAnonMessage.builder()
@@ -640,6 +654,11 @@ public class KAnonCallerImplTest {
         @Override
         public int getFledgeKAnonSignBatchSize() {
             return mBatchSize;
+        }
+
+        @Override
+        public boolean getFledgeKAnonKeyAttestationEnabled() {
+            return false;
         }
     }
 }

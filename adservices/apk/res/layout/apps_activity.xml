@@ -69,6 +69,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_placeholder_icon_for_empty_apps_list"
+                    android:focusable="false"
+                    android:importantForAccessibility="no"
                     android:contentDescription="@string/ic_placeholder_icon_for_empty_apps_list_description" />
                 <TextView
                     android:id="@+id/no_apps_state"
@@ -113,7 +115,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:key="blocked_apps"
-                        android:text="@string/settingsUI_blocked_apps_title"
+                        android:text="@string/settingsUI_blocked_apps_ga_title"
                         android:textAppearance="@style/TextAppearance.H5"
                         android:drawableStart="@drawable/ic_chevron_right_24dp"
                         android:drawablePadding="28dp"/>

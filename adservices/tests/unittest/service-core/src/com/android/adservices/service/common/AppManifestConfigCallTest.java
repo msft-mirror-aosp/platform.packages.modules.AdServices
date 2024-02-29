@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_PROTECTED_SIGNALS;
@@ -203,6 +204,9 @@ public final class AppManifestConfigCallTest extends AdServicesUnitTestCase {
         expect.withMessage("apiToString(%s)", API_PROTECTED_SIGNALS)
                 .that(apiToString(API_PROTECTED_SIGNALS))
                 .isEqualTo("PROTECTED_SIGNALS");
+        expect.withMessage("apiToString(%s)", API_AD_SELECTION)
+                .that(apiToString(API_AD_SELECTION))
+                .isEqualTo("AD_SELECTION");
         expect.withMessage("apiToString(42)").that(apiToString(42)).isEqualTo("INVALID-42");
     }
 

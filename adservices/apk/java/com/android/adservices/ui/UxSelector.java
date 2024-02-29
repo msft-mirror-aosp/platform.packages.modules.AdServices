@@ -16,7 +16,6 @@
 
 package com.android.adservices.ui;
 
-import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 
 import android.annotation.RequiresApi;
 import android.content.Context;
@@ -44,7 +43,8 @@ public interface UxSelector {
                 initU18();
                 break;
             case GA_UX:
-                if (UxUtil.getFlag(KEY_PAS_UX_ENABLED)) {
+                if (UxUtil.pasUxIsActive(/* beforeNotificationShown */ false)) {
+                    // UI views should be updated only once notification is sent (ROW).
                     initGaUxWithPas();
                     break;
                 }

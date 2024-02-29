@@ -847,6 +847,7 @@ public final class FlagsConstants {
 
     // App/SDK AllowList/DenyList keys
     public static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
+    public static final String KEY_PAS_APP_ALLOW_LIST = "pas_app_allow_list";
 
     public static final String KEY_AD_ID_API_APP_BLOCK_LIST = "ad_id_api_app_block_list";
 
@@ -1256,6 +1257,9 @@ public final class FlagsConstants {
     /** Key for kanon fetch parameters url. */
     public static final String KEY_KANON_FETCH_PARAMETERS_URL = "kanon_fetch_parameters_url";
 
+    /** Key for get challenge url. */
+    public static final String KEY_ANON_GET_CHALLENGE_URl = "kanon_get_challenge_url";
+
     /** Key for kanon register client parameters url. */
     public static final String KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL =
             "fledge_kanon_register_client_parameters_url";
@@ -1289,9 +1293,21 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED =
             "fledge_kanon_background_process_enabled";
 
+    /** Key for kanon background processed enabled. */
+    public static final String KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED =
+            "fledge_kanon_sign_join_logging_enabled";
+
+    /** Key for kanon key attestation feature flag. */
+    public static final String KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED =
+            "fledge_kanon_key_attestation_enabled";
+
     /** Key for kanon set type to join for sign join process. */
     public static final String KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN =
             "fledge_kanon_set_type_to_sign_join";
+
+    /** Key for kanon join url authoriy. */
+    public static final String KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY =
+            "fledge_kanon_join_url_authoriy";
 
     /** key for allow list of get adservices common states. */
     public static final String KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST =
@@ -1300,4 +1316,7 @@ public final class FlagsConstants {
     /** Key for feature flagging custom audiences CLI. */
     public static final String KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED =
             "fledge_is_custom_audience_cli_enabled";
+
+    /** Key for AdServices' module job policy. */
+    public static final String KEY_AD_SERVICES_MODULE_JOB_POLICY = "ad_services_module_job_policy";
 }

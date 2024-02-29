@@ -97,6 +97,20 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
     }
+    /**
+     * CUJ 198: Impressions are reported to winner buyer/seller after waterfall mediation while
+     * using unified tables.
+     */
+    @Test
+    public void testSelectAdsWithUnifiedTable_withImpressionReporting_eventsAreReceived()
+            throws Exception {
+        overrideShouldUseUnifiedTable(true);
+        try {
+            testSelectAds_withImpressionReporting_eventsAreReceived();
+        } finally {
+            overrideShouldUseUnifiedTable(false);
+        }
+    }
 
     private AdSelectionOutcome doSelectAds(AdSelectionFromOutcomesConfig config)
             throws ExecutionException, InterruptedException, TimeoutException {

@@ -134,18 +134,6 @@ public final class SignedContextualAds implements Parcelable {
     }
 
     /**
-     * @return a new builder from this SignedContextualAds instance
-     */
-    @NonNull
-    public SignedContextualAds.Builder cloneToBuilder() {
-        return new SignedContextualAds.Builder()
-                .setBuyer(mBuyer)
-                .setDecisionLogicUri(mDecisionLogicUri)
-                .setAdsWithBid(mAdsWithBid)
-                .setSignature(mSignature);
-    }
-
-    /**
      * @return the Ad tech identifier from which this contextual Ad would have been downloaded
      */
     @NonNull
@@ -204,6 +192,16 @@ public final class SignedContextualAds implements Parcelable {
         @Nullable private byte[] mSignature;
 
         public Builder() {}
+
+        /** Returns a {@link SignedContextualAds.Builder} from a {@link SignedContextualAds}. */
+        public Builder(@NonNull SignedContextualAds signedContextualAds) {
+            Objects.requireNonNull(signedContextualAds);
+
+            this.mBuyer = signedContextualAds.getBuyer();
+            this.mDecisionLogicUri = signedContextualAds.getDecisionLogicUri();
+            this.mAdsWithBid = signedContextualAds.getAdsWithBid();
+            this.mSignature = signedContextualAds.getSignature();
+        }
 
         /**
          * Sets the buyer Ad tech Identifier

@@ -3703,7 +3703,7 @@ public class AttributionJobHandlerTest {
                                         trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
                         .setRandomizedTriggerRate(
-                                mSourceNoiseHandler.getRandomAttributionProbability(source))
+                                mSourceNoiseHandler.getRandomizedTriggerRate(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)
@@ -3799,7 +3799,7 @@ public class AttributionJobHandlerTest {
                                         trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
                         .setRandomizedTriggerRate(
-                                mSourceNoiseHandler.getRandomAttributionProbability(source))
+                                mSourceNoiseHandler.getRandomizedTriggerRate(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)
@@ -3897,7 +3897,7 @@ public class AttributionJobHandlerTest {
                                         trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
                         .setRandomizedTriggerRate(
-                                mSourceNoiseHandler.getRandomAttributionProbability(source))
+                                mSourceNoiseHandler.getRandomizedTriggerRate(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)
@@ -3993,7 +3993,7 @@ public class AttributionJobHandlerTest {
                                         trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
                         .setRandomizedTriggerRate(
-                                mSourceNoiseHandler.getRandomAttributionProbability(source))
+                                mSourceNoiseHandler.getRandomizedTriggerRate(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)
@@ -4092,7 +4092,7 @@ public class AttributionJobHandlerTest {
                                         trigger.getDestinationType()))
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRandomizedTriggerRate(
-                                mSourceNoiseHandler.getRandomAttributionProbability(source))
+                                mSourceNoiseHandler.getRandomizedTriggerRate(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)
@@ -6906,7 +6906,7 @@ public class AttributionJobHandlerTest {
                                         trigger.getDestinationType()))
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRandomizedTriggerRate(
-                                mSourceNoiseHandler.getRandomAttributionProbability(source))
+                                mSourceNoiseHandler.getRandomizedTriggerRate(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)
@@ -7005,7 +7005,7 @@ public class AttributionJobHandlerTest {
                                         trigger.getDestinationType()))
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRandomizedTriggerRate(
-                                mSourceNoiseHandler.getRandomAttributionProbability(source))
+                                mSourceNoiseHandler.getRandomizedTriggerRate(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)

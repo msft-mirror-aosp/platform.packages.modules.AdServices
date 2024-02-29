@@ -31,7 +31,8 @@ final class PreEnrolledAdTechForTest {
                 SECOND_ENROLLMENT,
                 TOPICS_SAMPLE_APPS,
                 MSMT_SYS_HEALTH_TEST_ENROLLMENT,
-                LOCAL_SERVER_FOR_MSMT_REMARKETING);
+                LOCAL_SERVER_FOR_MSMT_REMARKETING,
+                LOCAL_SERVER_FOR_PAS);
     }
 
     private static final EnrollmentData SIMPLE_ENROLLMENT =
@@ -110,5 +111,12 @@ final class PreEnrolledAdTechForTest {
                     .setAttributionReportingUrl(Arrays.asList("https://localhost:8080"))
                     .setRemarketingResponseBasedRegistrationUrl(
                             Arrays.asList("https://localhost:8080"))
+                    .build();
+
+    private static final EnrollmentData LOCAL_SERVER_FOR_PAS =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("E7")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS")
+                    .setEncryptionKeyUrl("https://localhost")
                     .build();
 }

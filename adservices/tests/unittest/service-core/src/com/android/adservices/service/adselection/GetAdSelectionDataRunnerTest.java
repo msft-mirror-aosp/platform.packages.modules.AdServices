@@ -24,11 +24,11 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
-import static com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerImplTest.BINDER_ELAPSED_TIMESTAMP;
-import static com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerImplTest.GET_AD_SELECTION_DATA_END_TIMESTAMP;
-import static com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerImplTest.GET_AD_SELECTION_DATA_OVERALL_LATENCY_MS;
-import static com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerImplTest.GET_AD_SELECTION_DATA_START_TIMESTAMP;
-import static com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerImplTest.sCallerMetadata;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.BINDER_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.GET_AD_SELECTION_DATA_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.GET_AD_SELECTION_DATA_OVERALL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.GET_AD_SELECTION_DATA_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.sCallerMetadata;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
@@ -88,9 +88,9 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.FledgeAuctionServerExecutionLogger;
-import com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerFactory;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableMap;
@@ -160,8 +160,8 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Mock private com.android.adservices.shared.util.Clock
             mFledgeAuctionServerExecutionLoggerClockMock;
-    private FledgeAuctionServerExecutionLoggerFactory mFledgeAuctionServerExecutionLoggerFactory;
-    private FledgeAuctionServerExecutionLogger mFledgeAuctionServerExecutionLogger;
+    private AdsRelevanceExecutionLoggerFactory mAdsRelevanceExecutionLoggerFactory;
+    private AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
 
     private NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback;
 
@@ -223,17 +223,17 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         when(mClockMock.instant()).thenReturn(AD_SELECTION_INITIALIZATION_INSTANT);
         when(mAuctionServerDebugReporting.isEnabled()).thenReturn(false);
         mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
-        mFledgeAuctionServerExecutionLoggerFactory =
-                new FledgeAuctionServerExecutionLoggerFactory(
+        mAdsRelevanceExecutionLoggerFactory =
+                new AdsRelevanceExecutionLoggerFactory(
                         TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mFledgeAuctionServerExecutionLoggerClockMock,
                         mAdServicesLoggerSpy,
                         mFlags,
                         AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
-        mFledgeAuctionServerExecutionLogger =
-                mFledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger();
-        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
+        mAdsRelevanceExecutionLogger =
+                mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
+        mGetAdSelectionDataRunner = initRunner(mFlags, mAdsRelevanceExecutionLogger);
     }
 
     @After
@@ -291,7 +291,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         mGetAdSelectionDataRunner =
                 initRunner(
                         mFlags,
-                        mFledgeAuctionServerExecutionLogger,
+                        mAdsRelevanceExecutionLogger,
                         mMultiCloudSupportStrategyFlagOn);
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -328,7 +328,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         mGetAdSelectionDataRunner =
                 initRunner(
                         mFlags,
-                        mFledgeAuctionServerExecutionLogger,
+                        mAdsRelevanceExecutionLogger,
                         MultiCloudTestStrategyFactory.getEnabledTestStrategy(
                                 mObliviousHttpEncryptorMock, ALLOW_LIST_COORDINATORS));
 
@@ -359,7 +359,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         mGetAdSelectionDataRunner =
                 initRunner(
                         mFlags,
-                        mFledgeAuctionServerExecutionLogger,
+                        mAdsRelevanceExecutionLogger,
                         MultiCloudTestStrategyFactory.getEnabledTestStrategy(
                                 mObliviousHttpEncryptorMock, ALLOW_LIST_COORDINATORS));
 
@@ -390,7 +390,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         mGetAdSelectionDataRunner =
                 initRunner(
                         mFlags,
-                        mFledgeAuctionServerExecutionLogger,
+                        mAdsRelevanceExecutionLogger,
                         MultiCloudTestStrategyFactory.getDisabledTestStrategy(
                                 mObliviousHttpEncryptorMock));
 
@@ -532,7 +532,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     public void testRunner_revokedUserConsent_returnsRandomResultWithExcessiveSizeFormatterVersion()
             throws InterruptedException, IOException {
         mFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
-        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
+        mGetAdSelectionDataRunner = initRunner(mFlags, mAdsRelevanceExecutionLogger);
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
@@ -652,7 +652,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         CALLER_UID,
                         DevContext.createForDevOptionsDisabled(),
                         mAuctionServerDebugReporting,
-                        mFledgeAuctionServerExecutionLogger);
+                        mAdsRelevanceExecutionLogger);
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -683,14 +683,14 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     }
 
     private GetAdSelectionDataRunner initRunner(
-            Flags flags, FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
+            Flags flags, AdsRelevanceExecutionLogger adsRelevanceExecutionLogger) {
         return initRunner(
-                flags, fledgeAuctionServerExecutionLogger, mMultiCloudSupportStrategyFlagOff);
+                flags, adsRelevanceExecutionLogger, mMultiCloudSupportStrategyFlagOff);
     }
 
     private GetAdSelectionDataRunner initRunner(
             Flags flags,
-            FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger,
+            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             MultiCloudSupportStrategy multiCloudSupportStrategy) {
         return new GetAdSelectionDataRunner(
                 mContext,
@@ -709,7 +709,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 DevContext.createForDevOptionsDisabled(),
                 mClockMock,
                 mAuctionServerDebugReporting,
-                fledgeAuctionServerExecutionLogger);
+                adsRelevanceExecutionLogger);
     }
 
     private void createAndPersistDBCustomAudiencesWithAdRenderId() {
@@ -751,10 +751,10 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
         logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
-        mFledgeAuctionServerExecutionLogger =
-                mFledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger();
+        mAdsRelevanceExecutionLogger =
+                mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
-                initRunner(mFlags, mFledgeAuctionServerExecutionLogger, multiCloudSupportStrategy);
+                initRunner(mFlags, mAdsRelevanceExecutionLogger, multiCloudSupportStrategy);
     }
 
     private void verifyGetAdSelectionDataApiUsageLog(int resultCode) throws InterruptedException {

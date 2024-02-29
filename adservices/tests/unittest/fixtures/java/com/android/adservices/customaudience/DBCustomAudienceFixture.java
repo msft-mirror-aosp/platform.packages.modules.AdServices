@@ -112,14 +112,14 @@ public class DBCustomAudienceFixture {
     }
 
     /** Build valid DB CA with server auction flags */
-    public static DBCustomAudience.Builder getValidBuilderByBuyerWithServerAuctionFLags(
+    public static DBCustomAudience.Builder getValidBuilderByBuyerWithOmitAdsEnabled(
             AdTechIdentifier buyer) {
         return getValidBuilderByBuyerNoFilters(buyer)
                 .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS);
     }
 
     /** Build valid DB CA with server auction flags and name */
-    public static DBCustomAudience.Builder getValidBuilderByBuyerWithServerAuctionFLags(
+    public static DBCustomAudience.Builder getValidBuilderByBuyerWithOmitAdsEnabled(
             AdTechIdentifier buyer, String name) {
         return getValidBuilderByBuyerWithAdRenderId(buyer, name, CustomAudienceFixture.VALID_OWNER)
                 .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS);

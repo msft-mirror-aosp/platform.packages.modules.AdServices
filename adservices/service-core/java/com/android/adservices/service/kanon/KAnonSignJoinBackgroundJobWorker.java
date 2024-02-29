@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.kanon;
 
+import android.annotation.RequiresApi;
 import android.content.Context;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 
@@ -32,6 +34,7 @@ import com.google.common.util.concurrent.Futures;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+@RequiresApi(Build.VERSION_CODES.S)
 public class KAnonSignJoinBackgroundJobWorker {
     public static final String JOB_DESCRIPTION = "FLEDGE KAnon Sign Join Background Job";
     private static final Object SINGLETON_LOCK = new Object();
@@ -83,7 +86,7 @@ public class KAnonSignJoinBackgroundJobWorker {
     }
 
     private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
-        if (shouldStop.get()) {
+        if (shouldStop.get() || !mFlags.getFledgeKAnonBackgroundProcessEnabled()) {
             return FluentFuture.from(Futures.immediateVoidFuture());
         }
         return FluentFuture.from(Futures.immediateVoidFuture())

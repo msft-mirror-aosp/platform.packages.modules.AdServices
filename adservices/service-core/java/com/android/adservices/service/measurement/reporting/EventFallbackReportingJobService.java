@@ -30,7 +30,6 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
@@ -110,7 +109,6 @@ public final class EventFallbackReportingJobService extends JobService {
                 long eventMainReportingJobPeriodMs =
                         AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
                 new EventReportingJobHandler(
-                                EnrollmentDao.getInstance(getApplicationContext()),
                                 DatastoreManagerFactory.getDatastoreManager(
                                         getApplicationContext()),
                                 FlagsFactory.getFlags(),
