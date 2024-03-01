@@ -6203,6 +6203,76 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
+    public void fetchSource_flexEventSourceTypeNavigationNoWindows_eventReportWindowBoundsWindows()
+            throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [0, 1, 2],"
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, getInputEvent());
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementEnableTriggerDataMatching();
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"" + TimeUnit.DAYS.toSeconds(5)
+                                                        + "\","
+                                                + "  \"event_report_window\": \""
+                                                        + TimeUnit.DAYS.toSeconds(4) + "\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + "  \"max_event_level_reports\": 3,"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
+        assertNotNull(result.getTriggerSpecs());
+        assertEquals(3, result.getTriggerSpecs().getMaxReports());
+        assertEquals(
+                0L,
+                result.getTriggerSpecs()
+                        .getTriggerSpecs()[0]
+                        .getTriggerData()
+                        .get(0)
+                        .getValue()
+                        .longValue());
+        assertEquals(
+                3, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
+        List<Long> expectedWindows = List.of(
+                TimeUnit.DAYS.toMillis(2),
+                TimeUnit.DAYS.toMillis(4));
+        assertEquals(
+                expectedWindows,
+                result.getTriggerSpecs()
+                        .getTriggerSpecs()[0]
+                        .getEventReportWindowsEnd());
+    }
+
+    @Test
     public void fetchSource_flexEventSourceTypeEventNoWindows_defaultsToEventWindows()
             throws Exception {
         String triggerSpecsString =
@@ -6327,6 +6397,75 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
         List<Long> expectedWindows = List.of(
                 TimeUnit.DAYS.toMillis(4));
+        assertEquals(
+                expectedWindows,
+                result.getTriggerSpecs()
+                        .getTriggerSpecs()[0]
+                        .getEventReportWindowsEnd());
+    }
+
+    @Test
+    public void fetchSource_flexEventSourceTypeEventNoWindows_eventReportWindowBoundsWindows()
+            throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [0, 1, 2],"
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementEnableTriggerDataMatching();
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"" + TimeUnit.DAYS.toSeconds(4)
+                                                        + "\","
+                                                + "  \"event_report_window\": \""
+                                                        + TimeUnit.DAYS.toSeconds(2) + "\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + "  \"max_event_level_reports\": 3,"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
+        assertNotNull(result.getTriggerSpecs());
+        assertEquals(3, result.getTriggerSpecs().getMaxReports());
+        assertEquals(
+                0L,
+                result.getTriggerSpecs()
+                        .getTriggerSpecs()[0]
+                        .getTriggerData()
+                        .get(0)
+                        .getValue()
+                        .longValue());
+        assertEquals(
+                3, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
+        List<Long> expectedWindows = List.of(
+                TimeUnit.DAYS.toMillis(2));
         assertEquals(
                 expectedWindows,
                 result.getTriggerSpecs()

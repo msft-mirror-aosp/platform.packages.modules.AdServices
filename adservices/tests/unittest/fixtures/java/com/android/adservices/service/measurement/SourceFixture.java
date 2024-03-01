@@ -223,6 +223,22 @@ public final class SourceFixture {
         return triggerSpecs;
     }
 
+    /** Provides a value-sum-based valid TriggerSpecs. */
+    public static TriggerSpecs getValidTriggerSpecsValueSumWithStartTime(long startTime)
+            throws JSONException {
+        Source source =
+                getMinimalValidSourceBuilder()
+                        .setAttributedTriggers(new ArrayList<>())
+                        .build();
+        TriggerSpecs triggerSpecs = new TriggerSpecs(
+                getTriggerSpecValueSumArrayValidBaseline(startTime),
+                /* maxReports */ 3,
+                source);
+        // Oblige building privacy parameters for the trigger specs
+        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        return triggerSpecs;
+    }
+
     public static Source getValidSourceWithFlexEventReport() {
         try {
             return getValidSourceBuilder()
@@ -266,7 +282,7 @@ public final class SourceFixture {
                 .setTriggerSpecsString(triggerSpecs.encodeToJson())
                 .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                 .setEventAttributionStatus(null)
-                .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString());
+                .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJsonString());
     }
 
     public static Source.Builder getValidSourceBuilderWithFlexEventReport() throws JSONException {
@@ -276,10 +292,10 @@ public final class SourceFixture {
                 .setTriggerSpecsString(triggerSpecs.encodeToJson())
                 .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                 .setEventAttributionStatus(null)
-                .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString());
+                .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJsonString());
     }
 
-    public static String getTriggerSpecCountEncodedJSONValidBaseline() {
+    public static String getTriggerSpecCountEncodedJsonValidBaseline() {
         return "[{\"trigger_data\": [1, 2, 3],"
                 + "\"event_report_windows\": { "
                 + "\"start_time\": 0, "
@@ -293,13 +309,18 @@ public final class SourceFixture {
     }
 
     public static TriggerSpec[] getTriggerSpecArrayCountValidBaseline() {
-        return triggerSpecArrayFrom(getTriggerSpecCountEncodedJSONValidBaseline());
+        return triggerSpecArrayFrom(getTriggerSpecCountEncodedJsonValidBaseline());
     }
 
-    public static String getTriggerSpecValueSumEncodedJSONValidBaseline() {
+    public static String getTriggerSpecValueSumEncodedJsonValidBaseline() {
+        return getTriggerSpecValueSumEncodedJsonValidBaseline(0L);
+    }
+
+    /** Provides baseline trigger specs JSON given a start time. */
+    public static String getTriggerSpecValueSumEncodedJsonValidBaseline(long startTime) {
         return "[{\"trigger_data\": [1, 2],"
                 + "\"event_report_windows\": { "
-                + "\"start_time\": 0, "
+                + "\"start_time\": " + String.valueOf(startTime) + ", "
                 + String.format(
                         "\"end_times\": [%s, %s]}, ",
                         TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
@@ -308,10 +329,15 @@ public final class SourceFixture {
     }
 
     public static TriggerSpec[] getTriggerSpecValueSumArrayValidBaseline() {
-        return triggerSpecArrayFrom(getTriggerSpecValueSumEncodedJSONValidBaseline());
+        return triggerSpecArrayFrom(getTriggerSpecValueSumEncodedJsonValidBaseline(0L));
     }
 
-    public static TriggerSpec[] getTriggerSpecValueCountJSONTwoTriggerSpecs() {
+    /** Provides value-sum trigger specs given a start time. */
+    public static TriggerSpec[] getTriggerSpecValueSumArrayValidBaseline(long startTime) {
+        return triggerSpecArrayFrom(getTriggerSpecValueSumEncodedJsonValidBaseline(startTime));
+    }
+
+    public static TriggerSpec[] getTriggerSpecValueCountJsonTwoTriggerSpecs() {
         return triggerSpecArrayFrom(
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
