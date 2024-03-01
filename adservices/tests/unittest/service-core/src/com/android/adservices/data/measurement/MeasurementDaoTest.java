@@ -317,7 +317,7 @@ public class MeasurementDaoTest {
                 source.getTriggerSpecsString());
         assertNull(source.getEventAttributionStatus());
         assertEquals(
-                validSource.getTriggerSpecs().encodePrivacyParametersToJSONString(),
+                validSource.getTriggerSpecs().encodePrivacyParametersToJsonString(),
                 source.getPrivacyParameters());
         assertEquals(validSource.getTriggerSpecs(), source.getTriggerSpecs());
 
@@ -6925,7 +6925,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source1.buildTriggerSpecs();
         Source source2 =
@@ -6938,7 +6938,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source2.buildTriggerSpecs();
 
@@ -6983,7 +6983,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source3.buildTriggerSpecs();
 
@@ -7047,7 +7047,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source1.buildTriggerSpecs();
         Source source2 =
@@ -7060,7 +7060,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source2.buildTriggerSpecs();
 
@@ -7105,7 +7105,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source3.buildTriggerSpecs();
 
@@ -7169,7 +7169,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source1.buildTriggerSpecs();
 
@@ -7183,7 +7183,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source2.buildTriggerSpecs();
 
@@ -7228,7 +7228,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source3.buildTriggerSpecs();
 
@@ -7309,7 +7309,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source1.buildTriggerSpecs();
 
@@ -7343,7 +7343,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source3.buildTriggerSpecs();
 
