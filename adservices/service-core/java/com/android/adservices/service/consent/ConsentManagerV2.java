@@ -274,7 +274,6 @@ public class ConsentManagerV2 {
                             AdExtDataConsentMigrationUtilsV2
                                     .handleConsentMigrationToAppSearchIfNeededV2(
                                             context,
-                                            datastore,
                                             appSearchConsentStorageManager,
                                             adServicesExtDataManager,
                                             statsdAdServicesLogger);

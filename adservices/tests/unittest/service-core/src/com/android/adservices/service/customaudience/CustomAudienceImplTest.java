@@ -36,6 +36,8 @@ import com.android.adservices.data.customaudience.AdDataConversionStrategyFactor
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.Validator;
@@ -64,6 +66,10 @@ public class CustomAudienceImplTest {
 
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE =
             DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+
+    private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS =
+            DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
+                    .build();
 
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS =
             DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(
@@ -139,11 +145,26 @@ public class CustomAudienceImplTest {
     }
 
     @Test
-    public void testJoinCustomAudienceWithServerAuctionFlags_runNormally() {
+    public void testJoinCustomAudienceWithServerAuctionFlags_runNormallyFlagEnabled() {
+        Flags flagsWithAuctionServerRequestFlagsEnabled =
+                new FlagsFactory.TestFlags() {
+                    @Override
+                    public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+                        return true;
+                    }
+                };
+
+        CustomAudienceImpl customAudienceImpl =
+                new CustomAudienceImpl(
+                        mCustomAudienceDaoMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mCustomAudienceValidatorMock,
+                        mClockMock,
+                        flagsWithAuctionServerRequestFlagsEnabled);
 
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
-        mImpl.joinCustomAudience(
+        customAudienceImpl.joinCustomAudience(
                 VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
                 CustomAudienceFixture.VALID_OWNER,
                 DEV_OPTIONS_DISABLED);
@@ -151,6 +172,46 @@ public class CustomAudienceImplTest {
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         VALID_DB_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1),
+                        false);
+        verify(mClockMock).instant();
+        verify(mCustomAudienceQuantityCheckerMock)
+                .check(
+                        VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
+                        CustomAudienceFixture.VALID_OWNER);
+        verify(mCustomAudienceValidatorMock).validate(VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS);
+        verifyNoMoreInteractions(mClockMock, mCustomAudienceDaoMock, mCustomAudienceValidatorMock);
+    }
+
+    @Test
+    public void testJoinCustomAudienceWithServerAuctionFlags_runNormallyFlagDisabled() {
+        Flags flagsWithAuctionServerRequestFlagsDisabled =
+                new FlagsFactory.TestFlags() {
+                    @Override
+                    public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+                        return false;
+                    }
+                };
+
+        CustomAudienceImpl customAudienceImpl =
+                new CustomAudienceImpl(
+                        mCustomAudienceDaoMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mCustomAudienceValidatorMock,
+                        mClockMock,
+                        flagsWithAuctionServerRequestFlagsDisabled);
+
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+
+        customAudienceImpl.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
+                CustomAudienceFixture.VALID_OWNER,
+                DEV_OPTIONS_DISABLED);
+
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS,
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1),
                         false);
@@ -211,7 +272,8 @@ public class CustomAudienceImplTest {
                                 CommonFixture.FLAGS_FOR_TEST
                                         .getFledgeCustomAudienceDefaultExpireInMs()),
                         AD_DATA_CONVERSION_STRATEGY,
-                        false);
+                        false,
+                        /* auctionServerRequestFlags = */ false);
 
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(

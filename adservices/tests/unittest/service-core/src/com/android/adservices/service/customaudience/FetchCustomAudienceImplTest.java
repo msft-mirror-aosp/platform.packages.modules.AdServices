@@ -87,6 +87,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
 
@@ -1168,6 +1169,24 @@ public class FetchCustomAudienceImplTest {
         verify(mAdServicesLoggerMock, times(2))
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_requestRejectedByServer() throws Exception {
+        // Respond with a 403
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setResponseCode(403)));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertFalse(callback.mIsSuccess);
+        assertEquals(STATUS_INTERNAL_ERROR, callback.mFledgeErrorResponse.getStatusCode());
+        verify(mCustomAudienceDaoMock, times(/* wantedNumberOfInvocations= */ 0))
+                .insertOrOverwriteCustomAudience(any(), any(), anyBoolean());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INTERNAL_ERROR), anyInt());
     }
 
     @Test

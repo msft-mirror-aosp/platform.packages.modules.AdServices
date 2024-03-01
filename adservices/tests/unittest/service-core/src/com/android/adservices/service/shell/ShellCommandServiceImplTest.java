@@ -29,10 +29,16 @@ import androidx.room.Room;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.shared.testing.common.BlockingCallableWrapper;
 
 import com.google.common.collect.ImmutableList;
@@ -54,8 +60,21 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
+        AppInstallDao appInstallDao =
+                Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
+                        .build()
+                        .appInstallDao();
+        BackgroundFetchRunner backgroundFetchRunner =
+                new BackgroundFetchRunner(
+                        customAudienceDao,
+                        appInstallDao,
+                        sContext.getPackageManager(),
+                        new EnrollmentDao(mContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
+                        mFlags,
+                        CustomAudienceLoggerFactory.getNoOpInstance());
         ShellCommandFactorySupplier adServicesShellCommandHandlerFactory =
-                new TestShellCommandFactorySupplier(mFlags, customAudienceDao);
+                new TestShellCommandFactorySupplier(
+                        mFlags, backgroundFetchRunner, customAudienceDao);
         mShellCommandService =
                 new ShellCommandServiceImpl(
                         adServicesShellCommandHandlerFactory,

@@ -51,6 +51,12 @@ public class CustomAudienceLoggerFactory {
         return sSingleton;
     }
 
+    /** Create and returns a new instance of {@link CustomAudienceLoggerFactory} that is no-op. */
+    @NonNull
+    public static CustomAudienceLoggerFactory getNoOpInstance() {
+        return new CustomAudienceLoggerFactory(Clock.getInstance(), new NoOpLoggerImpl());
+    }
+
     /**
      * @return a new {@link BackgroundFetchExecutionLogger}.
      */

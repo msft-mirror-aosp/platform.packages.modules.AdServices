@@ -32,7 +32,6 @@ import android.os.Build;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.service.appsearch.AppSearchConsentStorageManager;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager;
@@ -60,12 +59,10 @@ public class AdExtDataConsentMigrationUtilsV2 {
      */
     public static void handleConsentMigrationToAppSearchIfNeededV2(
             @NonNull Context context,
-            @NonNull BooleanFileDatastore datastore,
             @Nullable AppSearchConsentStorageManager appSearchConsentManager,
             @Nullable AdServicesExtDataStorageServiceManager adExtDataManager,
             @Nullable StatsdAdServicesLogger statsdAdServicesLogger) {
         Objects.requireNonNull(context);
-        Objects.requireNonNull(datastore);
         Objects.requireNonNull(statsdAdServicesLogger);
         LogUtil.d("Check if consent migration to AppSearch is needed.");
         AppConsents appConsents = null;
@@ -89,7 +86,7 @@ public class AdExtDataConsentMigrationUtilsV2 {
                 return;
             }
 
-            appConsents = migrateDataToAppSearchV2(appSearchConsentManager, dataFromR, datastore);
+            appConsents = migrateDataToAppSearchV2(appSearchConsentManager, dataFromR);
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH, true);
@@ -169,12 +166,10 @@ public class AdExtDataConsentMigrationUtilsV2 {
         return !isNotificationDisplayedOnS;
     }
 
-
     @TargetApi(Build.VERSION_CODES.S)
     private static AppConsents migrateDataToAppSearchV2(
             AppSearchConsentStorageManager appSearchConsentStorageManager,
-            AdServicesExtDataParams dataFromR,
-            BooleanFileDatastore datastore) {
+            AdServicesExtDataParams dataFromR) {
 
         boolean isMeasurementConsented = dataFromR.getIsMeasurementConsented() == BOOLEAN_TRUE;
         appSearchConsentStorageManager.setConsent(

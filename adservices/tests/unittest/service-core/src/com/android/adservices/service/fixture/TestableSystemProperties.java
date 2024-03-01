@@ -34,9 +34,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Fixture class mocks {@link SystemProperties} to return the set value or its default value. */
-public final class SysPropForceDefaultValueFixture implements StaticMockFixture {
+public final class TestableSystemProperties implements StaticMockFixture {
 
-    private static final String TAG = SysPropForceDefaultValueFixture.class.getSimpleName();
+    private static final String TAG = TestableSystemProperties.class.getSimpleName();
     private static Map<String, String> sKeyValueMap = new ConcurrentHashMap<>();
 
     @Override

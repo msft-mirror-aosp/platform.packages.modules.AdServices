@@ -437,6 +437,8 @@ public final class SettingsTestUtil {
         ShellUtils.runShellCommand(
                 "device_config put adservices is_eea_device_feature_enabled true");
         ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ui_toggle_speed_bump_enabled false");
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // 1) disable Fledge API is enabled

@@ -278,8 +278,9 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                 }
 
                 // Fail silently for revoked user consent
-                if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        input.getCallerPackageName())) {
+                if (mConsentManager.isPasFledgeConsentGiven()
+                        && !mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                                input.getCallerPackageName())) {
                     sLogger.v("Orchestrating signal update");
                     mUpdateSignalsOrchestrator
                             .orchestrateUpdate(

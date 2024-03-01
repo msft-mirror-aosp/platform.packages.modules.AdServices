@@ -116,7 +116,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:key="blocked_topics"
-                        android:text="@string/settingsUI_blocked_topics_title"
+                        android:text="@string/settingsUI_blocked_topics_ga_title"
                         android:textAppearance="@style/TextAppearance.H5"
                         android:drawableStart="@drawable/ic_chevron_right_24dp"
                         android:drawablePadding="28dp"/>
@@ -178,6 +178,7 @@
                         android:src="@drawable/ic_info_icon"
                         tools:ignore="ContentDescription" />
                     <TextView
+                        android:id="@+id/topics_view_ga_footer_text"
                         android:text="@string/settingsU_topics_view_footer"
                         style="@style/MainStyle.Body2" />
                 </LinearLayout>

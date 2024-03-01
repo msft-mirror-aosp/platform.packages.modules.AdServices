@@ -40,6 +40,7 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     private static final String CA_NAME = "shoes";
     private BackgroundJobHelper mBackgroundJobHelper;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

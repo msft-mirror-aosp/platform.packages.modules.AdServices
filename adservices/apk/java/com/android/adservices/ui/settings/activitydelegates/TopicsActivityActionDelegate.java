@@ -155,8 +155,9 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initGaUxWithPas() {
         initGA();
-        configureElement(R.id.topics_view_ga_footer, R.string.settingsUI_pas_topics_view_footer);
-        configureLink(R.id.topics_view_ga_footer);
+        configureElement(
+                R.id.topics_view_ga_footer_text, R.string.settingsUI_pas_topics_view_footer);
+        configureLink(R.id.topics_view_ga_footer_text);
     }
 
     private void configureSharedElements() {

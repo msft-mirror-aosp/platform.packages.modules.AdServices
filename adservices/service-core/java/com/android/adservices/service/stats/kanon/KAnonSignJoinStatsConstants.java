@@ -101,4 +101,27 @@ public class KAnonSignJoinStatsConstants {
 
     /** No failure in the job, everything is successful */
     public static final int KANON_JOB_RESULT_SUCCESS = 4;
+
+    // The following result codes are related to the KAnon get challenge path.
+
+    /** Unset result code, used for unknown scenarios */
+    public static final int KEY_ATTESTATION_RESULT_UNSET = 0;
+
+    /** Result code indicating the {@link java.security.KeyStoreException} error thrown. */
+    public static final int KEY_ATTESTATION_RESULT_KEYSTORE_EXCEPTION = 1;
+
+    /** Result code indicating the {@link IllegalStateException} error thrown. */
+    public static final int KEY_ATTESTATION_RESULT_ILLEGAL_STATE_EXCEPTION = 2;
+
+    /** Result code indicating the {@link java.security.cert.CertificateException} error thrown. */
+    public static final int KEY_ATTESTATION_RESULT_CERTIFICATE_EXCEPTION = 3;
+
+    /** Result code indicating the {@link java.security.NoSuchAlgorithmException} error thrown. */
+    public static final int KEY_ATTESTATION_RESULT_IO_EXCEPTION = 4;
+
+    /** Result code indicating the {@link java.security.NoSuchAlgorithmException} error thrown. */
+    public static final int KEY_ATTESTATION_RESULT_NO_SUCH_ALGORITHM_EXCEPTION = 5;
+
+    /** Result code indicating get challenge was successful */
+    public static final int KEY_ATTESTATION_RESULT_SUCCESS = 6;
 }

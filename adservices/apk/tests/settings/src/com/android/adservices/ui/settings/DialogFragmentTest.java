@@ -180,6 +180,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @FlakyTest(bugId = 301779505)
     public void blockTopicDialogTest() throws Exception {
         // open topics view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);

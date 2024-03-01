@@ -34,5 +34,5 @@ public @interface SetLongFlag {
     /** Name of the flag. */
     String name();
     /** Value the flag will be set to when the test is running */
-    int value();
+    long value();
 }

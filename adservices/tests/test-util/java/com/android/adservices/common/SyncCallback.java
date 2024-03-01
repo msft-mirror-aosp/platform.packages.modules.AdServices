@@ -26,6 +26,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.shared.testing.common.Identifiable;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Optional;
@@ -51,7 +52,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @param <T> type of the object received on success.
  * @param <E> type of the object received on error.
  */
-public class SyncCallback<T, E> {
+public class SyncCallback<T, E> implements Identifiable {
 
     @VisibleForTesting static final String TAG = SyncCallback.class.getSimpleName();
 
@@ -96,11 +97,7 @@ public class SyncCallback<T, E> {
         mFailIfCalledOnMainThread = failIfCalledOnMainThread;
     }
 
-    /**
-     * Gets this callback id.
-     *
-     * @return a unique identifier for this callback.
-     */
+    @Override
     public final String getId() {
         return mId;
     }

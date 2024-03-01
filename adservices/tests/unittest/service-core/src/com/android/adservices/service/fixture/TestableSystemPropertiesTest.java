@@ -26,11 +26,11 @@ import com.android.compatibility.common.util.ShellUtils;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Unit test for {@link SysPropForceDefaultValueFixture} */
-public class SysPropForceDefaultValueFixtureTest {
+/** Unit test for {@link TestableSystemProperties} */
+public final class TestableSystemPropertiesTest {
     @Rule
     public AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule(SysPropForceDefaultValueFixture::new);
+            new AdServicesExtendedMockitoRule(TestableSystemProperties::new);
 
     @Test
     public void testForceToReturnDefaultValue_intValue() {
@@ -50,7 +50,7 @@ public class SysPropForceDefaultValueFixtureTest {
 
         // Now set the SystemProperties value using method and verify that correct value is
         // returned.
-        SysPropForceDefaultValueFixture.set(systemPropertyKey, String.valueOf(apiConfiguredValue));
+        TestableSystemProperties.set(systemPropertyKey, String.valueOf(apiConfiguredValue));
         assertThat(SystemProperties.getInt(systemPropertyKey, defaultValue))
                 .isEqualTo(apiConfiguredValue);
     }
@@ -73,7 +73,7 @@ public class SysPropForceDefaultValueFixtureTest {
 
         // Now set the SystemProperties value using method and verify that correct value is
         // returned.
-        SysPropForceDefaultValueFixture.set(systemPropertyKey, String.valueOf(apiConfiguredValue));
+        TestableSystemProperties.set(systemPropertyKey, String.valueOf(apiConfiguredValue));
         assertThat(SystemProperties.getLong(systemPropertyKey, defaultValue))
                 .isEqualTo(apiConfiguredValue);
     }
@@ -96,7 +96,7 @@ public class SysPropForceDefaultValueFixtureTest {
 
         // Now set the SystemProperties value using method and verify that correct value is
         // returned.
-        SysPropForceDefaultValueFixture.set(systemPropertyKey, String.valueOf(apiConfiguredValue));
+        TestableSystemProperties.set(systemPropertyKey, String.valueOf(apiConfiguredValue));
         assertThat(SystemProperties.getBoolean(systemPropertyKey, defaultValue))
                 .isEqualTo(apiConfiguredValue);
     }
@@ -118,7 +118,7 @@ public class SysPropForceDefaultValueFixtureTest {
 
         // Now set the SystemProperties value using method and verify that correct value is
         // returned.
-        SysPropForceDefaultValueFixture.set(systemPropertyKey, apiConfiguredValue);
+        TestableSystemProperties.set(systemPropertyKey, apiConfiguredValue);
         assertThat(SystemProperties.get(systemPropertyKey, defaultValue))
                 .isEqualTo(apiConfiguredValue);
     }
@@ -139,7 +139,7 @@ public class SysPropForceDefaultValueFixtureTest {
         // Verify the SystemProperties getter method is stubbed to return overridden value.
         assertThat(SystemProperties.get(systemPropertyKey)).isEqualTo(emptyString);
 
-        SysPropForceDefaultValueFixture.set(systemPropertyKey, apiConfiguredValue);
+        TestableSystemProperties.set(systemPropertyKey, apiConfiguredValue);
         assertThat(SystemProperties.get(systemPropertyKey)).isEqualTo(apiConfiguredValue);
     }
 
