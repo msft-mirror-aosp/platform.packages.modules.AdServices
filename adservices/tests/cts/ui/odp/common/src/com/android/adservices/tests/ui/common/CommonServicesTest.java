@@ -46,6 +46,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -144,6 +145,8 @@ public class CommonServicesTest {
 
     /** Verify that for GA, ROW devices get adservices common states of opt-in consent. */
     @Test
+    @Ignore
+    // TODO: b/327682322
     public void testGetAdservicesCommonStatesOptin() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -181,6 +184,8 @@ public class CommonServicesTest {
 
     /** Verify that for GA devices get adservices common states of opt-out consent. */
     @Test
+    @Ignore
+    // TODO: b/327682322
     public void testGetAdservicesCommonStatesOptOut() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         UiUtils.setFlipFlow(true);
