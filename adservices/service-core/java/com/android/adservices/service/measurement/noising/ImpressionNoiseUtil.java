@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement.noising;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,31 +42,31 @@ public final class ImpressionNoiseUtil {
     public static List<int[]> selectRandomStateAndGenerateReportConfigs(
             ImpressionNoiseParams noiseParams, ThreadLocalRandom rand) {
         // Get total possible combinations
-        long numCombinations =
+        BigInteger numCombinations =
                 Combinatorics.getNumberOfStarsAndBarsSequences(
                         /*numStars=*/ noiseParams.getReportCount(),
                         /*numBars=*/ noiseParams.getTriggerDataCardinality()
                                 * noiseParams.getReportingWindowCount()
                                 * noiseParams.getDestinationTypeMultiplier());
         // Choose a sequence index
-        long sequenceIndex = nextLong(rand, numCombinations);
+        BigInteger sequenceIndex = nextBigInteger(rand, numCombinations);
         return getReportConfigsForSequenceIndex(noiseParams, sequenceIndex);
     }
 
     @VisibleForTesting
     static List<int[]> getReportConfigsForSequenceIndex(
-            ImpressionNoiseParams noiseParams, long sequenceIndex) {
+            ImpressionNoiseParams noiseParams, BigInteger sequenceIndex) {
         List<int[]> reportConfigs = new ArrayList<>();
         // Get the configuration for the sequenceIndex
-        long[] starIndices = Combinatorics.getStarIndices(
+        BigInteger[] starIndices = Combinatorics.getStarIndices(
                 /*numStars=*/noiseParams.getReportCount(),
                 /*sequenceIndex=*/sequenceIndex);
-        long[] barsPrecedingEachStar = Combinatorics.getBarsPrecedingEachStar(starIndices);
+        BigInteger[] barsPrecedingEachStar = Combinatorics.getBarsPrecedingEachStar(starIndices);
         // Generate fake reports
         // Stars: number of reports
         // Bars: (Number of windows) * (Trigger data cardinality) * (Destination multiplier)
-        for (long numBars : barsPrecedingEachStar) {
-            if (numBars == 0L) {
+        for (BigInteger numBars : barsPrecedingEachStar) {
+            if (numBars.compareTo(BigInteger.ZERO) == 0) {
                 continue;
             }
 
@@ -83,13 +84,16 @@ public final class ImpressionNoiseUtil {
      * @param noiseParams noise params
      * @return array having triggerData, destinationType and windowIndex
      */
-    private static int[] createReportingConfig(long numBars, ImpressionNoiseParams noiseParams) {
-        long triggerData = (numBars - 1L) % ((long) noiseParams.getTriggerDataCardinality());
-        long remainingData = (numBars - 1L) / ((long) noiseParams.getTriggerDataCardinality());
+    private static int[] createReportingConfig(BigInteger numBars,
+            ImpressionNoiseParams noiseParams) {
+        BigInteger triggerData = numBars.subtract(BigInteger.ONE)
+                .mod(BigInteger.valueOf((long) noiseParams.getTriggerDataCardinality()));
+        BigInteger remainingData = numBars.subtract(BigInteger.ONE)
+                .divide(BigInteger.valueOf((long) noiseParams.getTriggerDataCardinality()));
 
-        int reportingWindowIndex = ((int) remainingData) % noiseParams.getReportingWindowCount();
-        int destinationTypeIndex = ((int) remainingData) / noiseParams.getReportingWindowCount();
-        return new int[] {(int) triggerData, reportingWindowIndex, destinationTypeIndex};
+        int reportingWindowIndex = remainingData.intValue() % noiseParams.getReportingWindowCount();
+        int destinationTypeIndex = remainingData.intValue() / noiseParams.getReportingWindowCount();
+        return new int[] {triggerData.intValue(), reportingWindowIndex, destinationTypeIndex};
     }
 
     /**
@@ -111,10 +115,10 @@ public final class ImpressionNoiseUtil {
         for (int i = 0; i < params[1].length; i++) {
             updatedPerTypeNumWindowList[i] = params[1][i] * destinationMultiplier;
         }
-        long numStates =
+        BigInteger numStates =
                 Combinatorics.getNumStatesFlexApi(
                         params[0][0], updatedPerTypeNumWindowList, params[2]);
-        long sequenceIndex = nextLong(rand, numStates);
+        BigInteger sequenceIndex = nextBigInteger(rand, numStates);
         List<Combinatorics.AtomReportState> rawFakeReports =
                 Combinatorics.getReportSetBasedOnRank(
                         params[0][0],
@@ -135,7 +139,11 @@ public final class ImpressionNoiseUtil {
 
     /** Wrapper for calls to ThreadLocalRandom visible for testing */
     @VisibleForTesting
-    public static long nextLong(ThreadLocalRandom rand, long bound) {
-        return rand.nextLong(bound);
+    public static BigInteger nextBigInteger(ThreadLocalRandom rand, BigInteger bound) {
+        BigInteger candidate;
+        do {
+            candidate = new BigInteger(bound.bitLength(), rand);
+        } while (candidate.compareTo(bound) >= 0);
+        return candidate;
     }
 }
