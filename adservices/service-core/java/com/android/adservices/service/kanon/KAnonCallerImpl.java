@@ -61,6 +61,7 @@ import com.android.adservices.service.exception.KAnonSignJoinException;
 import com.android.adservices.service.exception.KAnonSignJoinException.KAnonAction;
 import com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants;
@@ -81,6 +82,10 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -527,6 +532,7 @@ public class KAnonCallerImpl implements KAnonCaller {
 
     private ListenableFuture<Void> fetchKeyAttestationChallenge() throws KAnonSignJoinException {
         if (mFlags.getFledgeKAnonKeyAttestationEnabled()) {
+            long startTimeKeyAttestation = Instant.now().toEpochMilli();
             LogUtil.d("Fetching key attestation challenge");
             Uri getChallengeUri = Uri.parse(mFlags.getFledgeKAnonGetChallengeUrl());
             return FluentFuture.from(
@@ -546,44 +552,65 @@ public class KAnonCallerImpl implements KAnonCaller {
                             mLightweightExecutorService)
                     .transformAsync(
                             response -> {
-                                GetKeyAttestationChallengeResponse
-                                        getKeyAttestationChallengeResponse;
-                                try {
-                                    getKeyAttestationChallengeResponse =
-                                            GetKeyAttestationChallengeResponse.parseFrom(
-                                                    BaseEncoding.base64()
-                                                            .decode(response.getResponseBody()));
-                                    KeyAttestation keyAttestation =
-                                            mKeyAttestationFactory.getKeyAttestation();
-                                    byte[] attestationChallengeInBytes =
-                                            keyAttestation
-                                                    .generateAttestationRecord(
-                                                            getKeyAttestationChallengeResponse
-                                                                    .getAttestationChallenge()
-                                                                    .toByteArray())
-                                                    .encode();
-                                    updateRequestMetadata(attestationChallengeInBytes);
-                                    return immediateVoidFuture();
-                                } catch (InvalidProtocolBufferException e) {
-                                    throw new KAnonSignJoinException(
-                                            "Error while parsing key attestation challenge"
-                                                    + " response",
-                                            e);
+                                GetKeyAttestationChallengeResponse getAttestationResponse =
+                                        GetKeyAttestationChallengeResponse.parseFrom(
+                                                BaseEncoding.base64()
+                                                        .decode(response.getResponseBody()));
+                                KeyAttestation keyAttestation =
+                                        mKeyAttestationFactory.getKeyAttestation();
+                                byte[] attestationCertificateInBytes =
+                                        keyAttestation
+                                                .generateAttestationRecord(
+                                                        getAttestationResponse
+                                                                .getAttestationChallenge()
+                                                                .toByteArray())
+                                                .encode();
+                                updateRequestMetadata(attestationCertificateInBytes);
+                                return immediateFuture(attestationCertificateInBytes.length);
+                            },
+                            mLightweightExecutorService)
+                    .transformAsync(
+                            attestationCertificateSize -> {
+                                if (mFlags.getFledgeKAnonLoggingEnabled()) {
+                                    long latency =
+                                            Instant.now().toEpochMilli() - startTimeKeyAttestation;
+                                    KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats =
+                                            KAnonGetChallengeStatusStats.builder()
+                                                    .setResultCode(
+                                                            KAnonSignJoinStatsConstants
+                                                                    .KEY_ATTESTATION_RESULT_SUCCESS)
+                                                    .setCertificateSizeInBytes(
+                                                            attestationCertificateSize)
+                                                    .setLatencyInMs((int) latency)
+                                                    .build();
+                                    mAdServicesLogger.logKAnonGetChallengeJobStats(
+                                            kAnonGetChallengeStatusStats);
                                 }
+                                return immediateVoidFuture();
                             },
                             mLightweightExecutorService)
                     .catchingAsync(
                             Throwable.class,
                             t -> {
-                                if (t.getCause() instanceof AdServicesNetworkException exception) {
-                                    LogUtil.d(
-                                            "Error while making the http call, status code is :"
-                                                    + exception.getErrorCode());
+                                if (mFlags.getFledgeKAnonLoggingEnabled()) {
+                                    long latency =
+                                            Instant.now().toEpochMilli()
+                                                    - startTimeKeyAttestation;
+                                    int action = getActionFromExceptionForKeyAttestation(t);
+                                    KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats =
+                                            KAnonGetChallengeStatusStats.builder()
+                                                    .setResultCode(action)
+                                                    .setCertificateSizeInBytes(0)
+                                                    .setLatencyInMs((int) latency)
+                                                    .build();
+                                    mAdServicesLogger.logKAnonGetChallengeJobStats(
+                                            kAnonGetChallengeStatusStats);
                                 }
-                                LogUtil.d("Error while fetching the attestation challenge");
                                 return immediateFailedFuture(
                                         new KAnonSignJoinException(
-                                                "Error while making the http call", t));
+                                                "Error during get challenge method",
+                                                t,
+                                                KAnonAction.GET_CHALLENGE_HTTP_CALL));
                             },
                             mLightweightExecutorService);
         } else {
@@ -627,19 +654,12 @@ public class KAnonCallerImpl implements KAnonCaller {
                         mLightweightExecutorService)
                 .catchingAsync(
                         Throwable.class,
-                        t -> {
-                            if (t.getCause() instanceof AdServicesNetworkException exception) {
-                                LogUtil.d(
-                                        "Error while making the http call, status code is :"
-                                                + exception.getErrorCode());
-                            }
-                            LogUtil.d("error while fetching the server param");
-                            return immediateFailedFuture(
-                                    new KAnonSignJoinException(
-                                            "Error while making the http call",
-                                            t,
-                                            KAnonAction.SERVER_PARAM_HTTP_CALL));
-                        },
+                        t ->
+                                immediateFailedFuture(
+                                        new KAnonSignJoinException(
+                                                "Error while making the http call",
+                                                t,
+                                                KAnonAction.SERVER_PARAM_HTTP_CALL)),
                         mLightweightExecutorService)
                 .transformAsync(
                         response -> {
@@ -1120,5 +1140,24 @@ public class KAnonCallerImpl implements KAnonCaller {
             }
         }
         return KAnonSignJoinStatsConstants.KANON_ACTION_FAILURE_REASON_INTERNAL_ERROR;
+    }
+
+    private int getActionFromExceptionForKeyAttestation(Throwable t) {
+        if (t instanceof KeyStoreException) {
+            return KAnonSignJoinStatsConstants.KEY_ATTESTATION_RESULT_KEYSTORE_EXCEPTION;
+        }
+        if (t instanceof IllegalStateException) {
+            return KAnonSignJoinStatsConstants.KEY_ATTESTATION_RESULT_ILLEGAL_STATE_EXCEPTION;
+        }
+        if (t instanceof CertificateException) {
+            return KAnonSignJoinStatsConstants.KEY_ATTESTATION_RESULT_CERTIFICATE_EXCEPTION;
+        }
+        if (t instanceof IOException) {
+            return KAnonSignJoinStatsConstants.KEY_ATTESTATION_RESULT_IO_EXCEPTION;
+        }
+        if (t instanceof NoSuchAlgorithmException) {
+            return KAnonSignJoinStatsConstants.KEY_ATTESTATION_RESULT_NO_SUCH_ALGORITHM_EXCEPTION;
+        }
+        return KAnonSignJoinStatsConstants.KEY_ATTESTATION_RESULT_UNSET;
     }
 }

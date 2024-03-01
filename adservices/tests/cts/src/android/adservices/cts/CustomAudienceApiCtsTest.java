@@ -18,6 +18,7 @@ package android.adservices.cts;
 
 import static android.adservices.common.AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE;
 import static android.adservices.common.CommonFixture.VALID_BUYER_1;
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 import static android.adservices.customaudience.CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTIVATION_TIME;
@@ -137,6 +138,15 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     public void testJoinCustomAudience_validCustomAudience_success()
             throws ExecutionException, InterruptedException, TimeoutException {
         joinCustomAudience(CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1).build());
+    }
+
+    @Test
+    public void testJoinCustomAudience_validCustomAudience_successWithAuctionServerRequestFlags()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderByBuyerWithAuctionServerRequestFlags(
+                                VALID_BUYER_1, FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                        .build());
     }
 
     @Test

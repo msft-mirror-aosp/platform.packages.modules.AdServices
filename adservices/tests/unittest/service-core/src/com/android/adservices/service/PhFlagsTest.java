@@ -927,7 +927,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.Flags.ClassifierType;
-import com.android.adservices.service.fixture.SysPropForceDefaultValueFixture;
+import com.android.adservices.service.fixture.TestableSystemProperties;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.modules.utils.testing.TestableDeviceConfig;
@@ -954,8 +954,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     @Override
     protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
         return newDefaultAdServicesExtendedMockitoRuleBuilder()
-                .addStaticMockFixtures(
-                        TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new)
+                .addStaticMockFixtures(TestableDeviceConfig::new, TestableSystemProperties::new)
                 .build();
     }
 
