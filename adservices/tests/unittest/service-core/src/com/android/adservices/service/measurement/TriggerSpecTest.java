@@ -185,7 +185,7 @@ public class TriggerSpecTest {
     }
 
     private static JSONObject getValidBaselineTestCase() throws JSONException {
-        return new JSONArray(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline())
+        return new JSONArray(SourceFixture.getTriggerSpecCountEncodedJsonValidBaseline())
                 .getJSONObject(0);
     }
 }
