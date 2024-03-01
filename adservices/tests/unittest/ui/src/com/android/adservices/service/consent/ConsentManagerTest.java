@@ -4813,4 +4813,56 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .getConsent(eq(AdServicesApiType.FLEDGE));
         assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
     }
+
+    @Test
+    public void testIsPasMeasurementConsentGiven_happycase() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.MEASUREMENTS));
+        assertThat(spyConsentManager.isPasMeasurementConsentGiven()).isTrue();
+    }
+
+    @Test
+    public void testIsPasMeasurementConsentGiven_NotificationNotDisplayed() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(false).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.MEASUREMENTS));
+        assertThat(spyConsentManager.isPasMeasurementConsentGiven()).isFalse();
+    }
+
+    @Test
+    public void testIsPasMeasurementConsentGiven_consentRevoken() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.MEASUREMENTS));
+        assertThat(spyConsentManager.isPasMeasurementConsentGiven()).isFalse();
+    }
+
+    @Test
+    public void testIsPasMeasurementConsentGiven_pasNotEnabled() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(false);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.MEASUREMENTS));
+        assertThat(spyConsentManager.isPasMeasurementConsentGiven()).isFalse();
+    }
 }
