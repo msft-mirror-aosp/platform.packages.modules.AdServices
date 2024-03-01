@@ -37,9 +37,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFE
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_BACKGROUND_JOB_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INITIALIZE_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
@@ -56,7 +57,9 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppManifestConfigCall;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
@@ -150,7 +153,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     @Override
     public void logFledgeApiCallStats(
             int apiName, String appPackageName, int resultCode, int latencyMs) {
-        if (mFlags.getFledgeAppPackageNameLoggingEnabled() && (appPackageName != null)) {
+        boolean enabled = BinderFlagReader.readFlag(mFlags::getFledgeAppPackageNameLoggingEnabled);
+        if (enabled && (appPackageName != null)) {
             AdServicesStatsLog.write(
                     AD_SERVICES_API_CALLED,
                     AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN,
@@ -174,18 +178,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 "",
                 latencyMs,
                 resultCode);
-    }
-
-    @Override
-    public void logFledgeApiCallStats(int apiName, int latencyMs, ApiCallStats.Result result) {
-        AdServicesStatsLog.write(
-                AD_SERVICES_API_CALLED,
-                AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN,
-                apiName,
-                "",
-                "",
-                latencyMs,
-                result.getResultCode());
     }
 
     @Override
@@ -646,6 +638,16 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 kAnonImmediateSignJoinStatusStats.getMessagesFailedToJoin(),
                 kAnonImmediateSignJoinStatusStats.getMessagesFailedToSign(),
                 kAnonImmediateSignJoinStatusStats.getLatencyInMs());
+    }
+
+    @Override
+    public void logKAnonGetChallengeJobStats(
+            KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats) {
+        AdServicesStatsLog.write(
+                K_ANON_KEY_ATTESTATION_STATUS_REPORTED,
+                kAnonGetChallengeStatusStats.getCertificateSizeInBytes(),
+                kAnonGetChallengeStatusStats.getResultCode(),
+                kAnonGetChallengeStatusStats.getLatencyInMs());
     }
 
     @NonNull
