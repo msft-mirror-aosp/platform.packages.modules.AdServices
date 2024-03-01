@@ -22,6 +22,7 @@ import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
@@ -92,11 +93,6 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logFledgeApiCallStats(
                 apiName, appPackageName, resultCode, latencyMs);
         // TODO(b/324155747): Add Cobalt app name api error logging.
-    }
-
-    @Override
-    public void logFledgeApiCallStats(int apiName, int latencyMs, ApiCallStats.Result result) {
-        mStatsdAdServicesLogger.logFledgeApiCallStats(apiName, latencyMs, result);
     }
 
     @Override
@@ -279,6 +275,12 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     public void logKAnonBackgroundJobStats(
             KAnonBackgroundJobStatusStats kAnonBackgroundJobStatusStats) {
         mStatsdAdServicesLogger.logKAnonBackgroundJobStats(kAnonBackgroundJobStatusStats);
+    }
+
+    @Override
+    public void logKAnonGetChallengeJobStats(
+            KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats) {
+        mStatsdAdServicesLogger.logKAnonGetChallengeJobStats(kAnonGetChallengeStatusStats);
     }
 
     @Override

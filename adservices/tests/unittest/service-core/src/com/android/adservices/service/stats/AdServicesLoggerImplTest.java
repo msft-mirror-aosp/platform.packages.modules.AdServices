@@ -153,21 +153,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testLogFledgeApiCallStatsWithFailureReason() {
-        final int latencyMs = 10;
-        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
-        adServicesLogger.logFledgeApiCallStats(
-                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                latencyMs,
-                ApiCallStats.successResult());
-        verify(mStatsdLoggerMock)
-                .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        latencyMs,
-                        ApiCallStats.successResult());
-    }
-
-    @Test
     public void testLogRunAdSelectionProcessReportedStats() {
         RunAdSelectionProcessReportedStats stats =
                 RunAdSelectionProcessReportedStats.builder()
