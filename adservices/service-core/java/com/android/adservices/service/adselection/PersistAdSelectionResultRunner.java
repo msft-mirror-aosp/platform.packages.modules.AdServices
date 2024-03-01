@@ -35,7 +35,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
@@ -69,7 +68,6 @@ import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -84,6 +82,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -387,7 +386,10 @@ public class PersistAdSelectionResultRunner {
                 KAnonMessageEntity.builder()
                         .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
                         .setAdSelectionId(adSelectionId)
-                        .setHashSet(BaseEncoding.base16().encode(digestedBytes))
+                        .setHashSet(
+                                Base64.getUrlEncoder()
+                                        .withoutPadding()
+                                        .encodeToString(digestedBytes))
                         .build();
         return List.of(kAnonMessageEntity);
     }
