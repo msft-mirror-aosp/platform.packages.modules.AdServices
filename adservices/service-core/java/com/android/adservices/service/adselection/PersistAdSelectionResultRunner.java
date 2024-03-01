@@ -63,8 +63,8 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
+import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
@@ -537,7 +537,9 @@ public class PersistAdSelectionResultRunner {
 
         byte metaInfoByte = resultBytes[0];
         int version = AuctionServerPayloadFormattingUtil.extractFormatterVersion(metaInfoByte);
-        mPayloadExtractor = AuctionServerPayloadFormatterFactory.createPayloadExtractor(version);
+        mPayloadExtractor =
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(
+                        version, mAdServicesLogger);
     }
 
     private AuctionResult composeAuctionResult(
