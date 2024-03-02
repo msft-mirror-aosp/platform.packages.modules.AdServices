@@ -28,18 +28,17 @@ import java.util.Objects;
 public abstract class AbstractAdServicesShellCommandHelper {
     protected static final String TAG = "AdServicesShellCommand";
 
-    @VisibleForTesting
-    static final String START_SHELL_COMMAND_SERVICE =
-            "am start-foreground-service -a android.adservices.SHELL_COMMAND_SERVICE";
+    static final String SHELL_ACTIVITY_COMPONENT_NAME =
+            "com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity";
+    static final String SHELL_ACTIVITY_INTENT = "android.adservices.BACK_COMPACT_SHELL_COMMAND";
+
+    static final String ENABLE_SHELL_ACTIVITY = "pm enable " + SHELL_ACTIVITY_COMPONENT_NAME;
+    static final String START_SHELL_ACTIVITY = "am start -W -a " + SHELL_ACTIVITY_INTENT;
+
+    static final String DISABLE_SHELL_ACTIVITY = "pm disable " + SHELL_ACTIVITY_COMPONENT_NAME;
 
     @VisibleForTesting
     static final String ADSERVICES_MANAGER_SERVICE_CHECK = "service check adservices_manager";
-
-    private static final String FOREGROUND_SERVICE_ERROR =
-            "Failed to start shell command foreground service";
-
-    private static final int SLEEP_INTERVAL_IN_MILLIS = 2000;
-    private static final int MAX_WAIT_TIME_IN_MILLIS = 10000;
 
     private final Logger mLog;
 
@@ -56,8 +55,9 @@ public abstract class AbstractAdServicesShellCommandHelper {
      * <p>For device T+, adservices_manager binds to the shell command service, runs the shell
      * command and returns standard output.
      *
-     * <p>For device R,S, we start the shell command service and then call dumpsys to run the shell
-     * command. The dumpsys output produces both error and output as part of single string.
+     * <p>For device R,S, we enable and start shell command activity and then call dumpsys to run
+     * the shell command. The dumpsys output produces both error and output as part of single
+     * string.
      */
     @FormatMethod
     public String runCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
@@ -74,13 +74,7 @@ public abstract class AbstractAdServicesShellCommandHelper {
                     String.format("cmd adservices_manager %s", String.format(cmdFmt, cmdArgs)));
         }
 
-        if (!startShellCommandForegroundService()) {
-            return FOREGROUND_SERVICE_ERROR;
-        }
-
-        String res = runShellCommand(runDumpsysShellCommand(String.format(cmdFmt, cmdArgs)));
-        String parsedOut = parseResultFromDumpsys(res);
-        return parsedOut;
+        return runShellCommandRS(String.format(cmdFmt, cmdArgs));
     }
 
     /**
@@ -93,10 +87,11 @@ public abstract class AbstractAdServicesShellCommandHelper {
      * <p>For device T+, adservices_manager binds to the shell command service, runs the shell
      * command and returns both standard output and standard error as part of {@link CommandResult}.
      *
-     * <p>For device R,S, we start the shell command service and then call dumpsys to run the shell
-     * command. The dumpsys output produces both error and output as part of single string. We will
-     * populate the {@link CommandResult} {@code out} field with this string. The caller would need
-     * to infer from the {@code out} field whether it's actually standard output or error.
+     * <p>For device R,S, we enable and start the shell command activity and then call dumpsys to
+     * run the shell command. The dumpsys output produces both error and output as part of single
+     * string. We will populate the {@link CommandResult} {@code out} field with this string. The
+     * caller would need to infer from the {@code out} field whether it's actually standard output
+     * or error.
      */
     @FormatMethod
     public CommandResult runCommandRwe(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
@@ -113,31 +108,8 @@ public abstract class AbstractAdServicesShellCommandHelper {
                     String.format("cmd adservices_manager %s", String.format(cmdFmt, cmdArgs)));
         }
 
-        if (!startShellCommandForegroundService()) {
-            return new CommandResult("", FOREGROUND_SERVICE_ERROR);
-        }
-
-        String res = runShellCommand(runDumpsysShellCommand(String.format(cmdFmt, cmdArgs)));
-        String parsedOut = parseResultFromDumpsys(res);
-        return new CommandResult(parsedOut, "");
-    }
-
-    private boolean startShellCommandForegroundService() {
-        runShellCommand(START_SHELL_COMMAND_SERVICE);
-        for (int i = SLEEP_INTERVAL_IN_MILLIS;
-                i <= MAX_WAIT_TIME_IN_MILLIS;
-                i += SLEEP_INTERVAL_IN_MILLIS) {
-            try {
-                Thread.sleep(SLEEP_INTERVAL_IN_MILLIS);
-                if (checkShellCommandServiceStarted()) {
-                    return true;
-                }
-            } catch (InterruptedException e) {
-                mLog.e("Thread interrupted, current time in millisecond : %d", i);
-                Thread.currentThread().interrupt();
-            }
-        }
-        return false;
+        String res = runShellCommandRS(String.format(cmdFmt, cmdArgs));
+        return new CommandResult(res, "");
     }
 
     /** Executes a shell command and returns the standard output. */
@@ -154,40 +126,48 @@ public abstract class AbstractAdServicesShellCommandHelper {
     /** Gets the device API level. */
     protected abstract int getDeviceApiLevel();
 
-    private boolean checkShellCommandServiceStarted() {
-        // Run echo command and check output if service is started or not.
-        String out = runShellCommand(String.format(runDumpsysShellCommand("echo hello")));
-        return parseResultFromDumpsys(out).contains("hello");
+    private String runShellCommandRS(String cmd) {
+        String res = runShellCommand(ENABLE_SHELL_ACTIVITY);
+        mLog.d("Output for command %s: %s", ENABLE_SHELL_ACTIVITY, res);
+        res = runShellCommand(START_SHELL_ACTIVITY);
+        mLog.d("Output for command %s: %s", START_SHELL_ACTIVITY, res);
+
+        res = runShellCommand(runDumpsysShellCommand(cmd));
+        mLog.d("Output for command %s: %s", runDumpsysShellCommand(cmd), res);
+        String out = parseResultFromDumpsys(res);
+
+        res = runShellCommand(DISABLE_SHELL_ACTIVITY);
+        mLog.d("Output for command %s: %s", DISABLE_SHELL_ACTIVITY, res);
+        return out;
     }
 
-    /* Retrieves the output from dumpsys after 'Client:'. If 'Client:' is missing, we return the
-       input String.
+    /* Parses the output from dumpsys.
 
        Sample dumpsys output:
-        com.google.android.adservices.api/com.android.adservices.shell.AdServicesShellCommandService
-         4e0649c pid=5303 user=0
-          Client:
-            hello
+        TASK 10145:com.google.android.ext.services id=13 userId=0
+        ACTIVITY com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity
+        hello
 
        parsed Output: hello
     */
     @VisibleForTesting
     String parseResultFromDumpsys(String res) {
-
-        String strSeparator = "Client:\n";
-        int index = res.indexOf(strSeparator);
-        if (index == -1) {
+        String separator = "\n";
+        String[] splitStr = res.split(separator);
+        if (splitStr.length < 3) {
             return res;
         }
-        return res.substring(index + strSeparator.length());
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 2; i < splitStr.length; i++) {
+            sb = i > 2 ? sb.append("\n" + splitStr[i]) : sb.append(splitStr[i]);
+        }
+        return sb.toString();
     }
 
     @VisibleForTesting
     String runDumpsysShellCommand(String cmd) {
-        return String.format(
-                "dumpsys activity service com.google.android.adservices.api/com.android"
-                        + ".adservices.shell.AdServicesShellCommandService cmd %s",
-                cmd);
+        return String.format("dumpsys activity %s cmd %s", SHELL_ACTIVITY_COMPONENT_NAME, cmd);
     }
 
     boolean isAdServicesManagerServicePublished() {
