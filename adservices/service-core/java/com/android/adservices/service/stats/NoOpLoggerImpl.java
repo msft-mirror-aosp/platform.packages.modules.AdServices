@@ -132,6 +132,16 @@ public class NoOpLoggerImpl implements AdServicesLogger {
             InteractionReportingTableClearedStats stats) {}
 
     @Override
+    public void logGetAdSelectionDataApiCalledStats(GetAdSelectionDataApiCalledStats stats) {
+
+    }
+
+    @Override
+    public void logGetAdSelectionDataBuyerInputGeneratedStats(
+            GetAdSelectionDataBuyerInputGeneratedStats stats) {
+    }
+
+    @Override
     public void logAppManifestConfigCall(AppManifestConfigCall call) {}
 
     @Override

@@ -587,7 +587,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 callingUid,
                                                 devContext,
                                                 auctionServerDebugReporting,
-                                                adsRelevanceExecutionLogger);
+                                                adsRelevanceExecutionLogger,
+                                                mAdServicesLogger,
+                                                getAuctionServerPayloadMetricsStrategy(mFlags));
                                 runner.run(inputParams, callback);
                             }
 
@@ -615,11 +617,22 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 devContext,
                                                 AuctionServerDebugReporting
                                                         .createForDebugReportingDisabled(),
-                                                adsRelevanceExecutionLogger);
+                                                adsRelevanceExecutionLogger,
+                                                mAdServicesLogger,
+                                                getAuctionServerPayloadMetricsStrategy(mFlags));
                                 runner.run(inputParams, callback);
                             }
                         },
                         mLightweightExecutor);
+    }
+
+    private AuctionServerPayloadMetricsStrategy getAuctionServerPayloadMetricsStrategy(
+            Flags flags) {
+        if (flags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled()) {
+            return new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLogger);
+        } else {
+            return new AuctionServerPayloadMetricsStrategyDisabled();
+        }
     }
 
     private void runAdSelection(
