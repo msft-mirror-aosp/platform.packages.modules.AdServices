@@ -94,6 +94,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.ReportEventRequest;
@@ -807,6 +808,39 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                 ArgumentCaptor.forClass(AppManifestConfigCall.class);
         verify(mStatsdLoggerMock).logAppManifestConfigCall(argumentCaptor.capture());
         expect.that(argumentCaptor.getValue()).isEqualTo(call);
+    }
+
+    @Test
+    public void testLogGetAdSelectionDataApiCalledStats() {
+        GetAdSelectionDataApiCalledStats stats =
+                GetAdSelectionDataApiCalledStats.builder()
+                        .setPayloadSizeKb(64)
+                        .setNumBuyers(3)
+                        .setStatusCode(STATUS_SUCCESS)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logGetAdSelectionDataApiCalledStats(stats);
+
+        verify(mStatsdLoggerMock).logGetAdSelectionDataApiCalledStats(eq(stats));
+    }
+
+    @Test
+    public void testlogGetAdSelectionDataBuyerInputGeneratedStats() {
+        GetAdSelectionDataBuyerInputGeneratedStats stats =
+                GetAdSelectionDataBuyerInputGeneratedStats.builder()
+                        .setNumCustomAudiences(2)
+                        .setNumCustomAudiencesOmitAds(1)
+                        .setCustomAudienceSizeMeanB(23F)
+                        .setCustomAudienceSizeVarianceB(24F)
+                        .setTrustedBiddingSignalsKeysSizeMeanB(25F)
+                        .setTrustedBiddingSignalsKeysSizeVarianceB(26F)
+                        .setUserBiddingSignalsSizeMeanB(27F)
+                        .setUserBiddingSignalsSizeVarianceB(28F)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
+
+        verify(mStatsdLoggerMock).logGetAdSelectionDataBuyerInputGeneratedStats(eq(stats));
     }
 
     private void mockAppNameApiErrorLogger() {

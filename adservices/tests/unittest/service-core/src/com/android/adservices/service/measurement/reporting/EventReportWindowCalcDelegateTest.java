@@ -27,6 +27,8 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
+import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.TriggerSpecsUtil;
@@ -1336,7 +1338,7 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTimeForNoisingFlexEventApi_validTime_equal() throws JSONException {
         TriggerSpecs testObject1 = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), 3, null);
+                SourceFixture.getTriggerSpecValueCountJsonTwoTriggerSpecs(), 3, null);
         // Assertion
         assertEquals(new UnsignedLong(1L), testObject1.getTriggerDataFromIndex(0));
         assertEquals(new UnsignedLong(3L), testObject1.getTriggerDataFromIndex(2));
@@ -1845,6 +1847,9 @@ public class EventReportWindowCalcDelegateTest {
         doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         long triggerTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1) - 1;
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(triggerTime)
+                .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
@@ -1855,7 +1860,38 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 EventReportWindowCalcDelegate.MomentPlacement.BEFORE,
                 mEventReportWindowCalcDelegate.fallsWithinWindow(
-                        source, triggerTime, EventSurfaceType.APP));
+                        source, trigger, new UnsignedLong(0L)));
+    }
+
+    @Test
+    public void fallsWithinWindow_flexApi_windowNotStarted()
+            throws JSONException {
+        JSONObject jsonTriggerSpec = new JSONObject();
+        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 1000);
+        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000, 40000}));
+        jsonTriggerSpec.put("event_report_windows", windows);
+        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
+        TriggerSpec[] triggerSpecArray = TriggerSpecsUtil.triggerSpecArrayFrom(
+                new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString());
+        TriggerSpecs testTriggerSpecs = new TriggerSpecs(triggerSpecArray, 3, null);
+        Source source = SourceFixture.getMinimalValidSourceBuilder()
+                .setEventTime(10000L)
+                .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                .setMaxEventLevelReports(3)
+                .setPrivacyParameters("{\"flip_probability\" :0.0024}")
+                .build();
+        source.buildTriggerSpecs();
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(10999L)
+                .build();
+
+        // Assertion
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.BEFORE,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, trigger, new UnsignedLong(1L)));
     }
 
     @Test
@@ -1863,6 +1899,9 @@ public class EventReportWindowCalcDelegateTest {
         doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         long triggerTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1);
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(triggerTime)
+                .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
@@ -1873,7 +1912,41 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 EventReportWindowCalcDelegate.MomentPlacement.WITHIN,
                 mEventReportWindowCalcDelegate.fallsWithinWindow(
-                        source, triggerTime, EventSurfaceType.APP));
+                        source, trigger, new UnsignedLong(0L)));
+    }
+
+    @Test
+    public void fallsWithinWindow_flexApi_windowWithin()
+            throws JSONException {
+        JSONObject jsonTriggerSpec = new JSONObject();
+        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 1000);
+        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000, 40000}));
+        jsonTriggerSpec.put("event_report_windows", windows);
+        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
+        TriggerSpec[] triggerSpecArray = TriggerSpecsUtil.triggerSpecArrayFrom(
+                new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString());
+        TriggerSpecs testTriggerSpecs = new TriggerSpecs(triggerSpecArray, 3, null);
+
+        Source source = SourceFixture.getMinimalValidSourceBuilder()
+                .setEventTime(10000L)
+                .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                .setMaxEventLevelReports(3)
+                .setPrivacyParameters("{\"flip_probability\" :0.0024}")
+                .build();
+
+        source.buildTriggerSpecs();
+
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(11000L)
+                .build();
+
+        // Assertion
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.WITHIN,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, trigger, new UnsignedLong(1L)));
     }
 
     @Test
@@ -1881,6 +1954,9 @@ public class EventReportWindowCalcDelegateTest {
         doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         long triggerTime = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(20);
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(triggerTime)
+                .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
@@ -1891,6 +1967,40 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 EventReportWindowCalcDelegate.MomentPlacement.AFTER,
                 mEventReportWindowCalcDelegate.fallsWithinWindow(
-                        source, triggerTime, EventSurfaceType.APP));
+                        source, trigger, new UnsignedLong(0L)));
+    }
+
+    @Test
+    public void fallsWithinWindow_flexApi_windowPassed()
+            throws JSONException {
+        JSONObject jsonTriggerSpec = new JSONObject();
+        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 1000);
+        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000, 40000}));
+        jsonTriggerSpec.put("event_report_windows", windows);
+        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
+        TriggerSpec[] triggerSpecArray = TriggerSpecsUtil.triggerSpecArrayFrom(
+                new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString());
+        TriggerSpecs testTriggerSpecs = new TriggerSpecs(triggerSpecArray, 3, null);
+
+        Source source = SourceFixture.getMinimalValidSourceBuilder()
+                .setEventTime(10000L)
+                .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                .setMaxEventLevelReports(3)
+                .setPrivacyParameters("{\"flip_probability\" :0.0024}")
+                .build();
+
+        source.buildTriggerSpecs();
+
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(50000L)
+                .build();
+
+        // Assertion
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.AFTER,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, trigger, new UnsignedLong(1L)));
     }
 }

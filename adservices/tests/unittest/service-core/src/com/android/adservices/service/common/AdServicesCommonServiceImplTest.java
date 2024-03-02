@@ -69,7 +69,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -760,12 +759,8 @@ public class AdServicesCommonServiceImplTest {
                 .when(mFlags)
                 .getAdServicesCommonStatesAllowList();
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
-        doReturn(AdServicesApiConsent.GIVEN)
-                .when(mConsentManager)
-                .getConsent(eq(AdServicesApiType.MEASUREMENTS));
-        doReturn(AdServicesApiConsent.REVOKED)
-                .when(mConsentManager)
-                .getConsent(eq(AdServicesApiType.FLEDGE));
+        doReturn(true).when(mConsentManager).isPasMeasurementConsentGiven();
+        doReturn(false).when(mConsentManager).isPasFledgeConsentGiven();
         SyncIAdServicesCommonStatesCallback callback =
                 new SyncIAdServicesCommonStatesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);

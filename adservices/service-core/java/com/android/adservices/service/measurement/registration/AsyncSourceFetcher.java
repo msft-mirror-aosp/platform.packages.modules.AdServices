@@ -151,6 +151,7 @@ public class AsyncSourceFetcher {
             expiry = mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds();
         }
         builder.setExpiryTime(sourceEventTime + TimeUnit.SECONDS.toMillis(expiry));
+        long effectiveExpiry = expiry;
         if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
             long eventReportWindow;
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
@@ -173,6 +174,7 @@ public class AsyncSourceFetcher {
                                         mFlags.getMeasurementMinimumEventReportWindowInSeconds(),
                                         mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds()));
             }
+            effectiveExpiry = eventReportWindow;
             builder.setEventReportWindow(TimeUnit.SECONDS.toMillis(eventReportWindow));
         }
         long aggregateReportWindow;
@@ -484,7 +486,7 @@ public class AsyncSourceFetcher {
                     getValidTriggerSpecs(
                             triggerSpecString,
                             eventReportWindows,
-                            expiry,
+                            effectiveExpiry,
                             asyncRegistration.getSourceType(),
                             finalMaxEventLevelReports,
                             triggerDataMatching);

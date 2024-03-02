@@ -36,6 +36,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_BUYER_INPUT_GENERATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_BACKGROUND_JOB_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
@@ -648,6 +650,30 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 kAnonGetChallengeStatusStats.getCertificateSizeInBytes(),
                 kAnonGetChallengeStatusStats.getResultCode(),
                 kAnonGetChallengeStatusStats.getLatencyInMs());
+    }
+
+    @Override
+    public void logGetAdSelectionDataApiCalledStats(GetAdSelectionDataApiCalledStats stats) {
+        AdServicesStatsLog.write(
+                GET_AD_SELECTION_DATA_API_CALLED,
+                stats.getPayloadSizeKb(),
+                stats.getNumBuyers(),
+                stats.getStatusCode());
+    }
+
+    @Override
+    public void logGetAdSelectionDataBuyerInputGeneratedStats(
+            GetAdSelectionDataBuyerInputGeneratedStats stats) {
+        AdServicesStatsLog.write(
+                GET_AD_SELECTION_DATA_BUYER_INPUT_GENERATED,
+                stats.getNumCustomAudiences(),
+                stats.getNumCustomAudiencesOmitAds(),
+                stats.getCustomAudienceSizeMeanB(),
+                stats.getCustomAudienceSizeVarianceB(),
+                stats.getTrustedBiddingSignalsKeysSizeMeanB(),
+                stats.getTrustedBiddingSignalsKeysSizeVarianceB(),
+                stats.getUserBiddingSignalsSizeMeanB(),
+                stats.getUserBiddingSignalsSizeVarianceB());
     }
 
     @NonNull

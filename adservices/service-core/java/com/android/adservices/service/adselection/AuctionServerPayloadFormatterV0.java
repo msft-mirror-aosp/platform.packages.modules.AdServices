@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.META_INFO_LENGTH_BYTE;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.getMetaInfoByte;
 
+import android.adservices.exceptions.UnsupportedPayloadSizeException;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
@@ -141,7 +142,8 @@ public class AuctionServerPayloadFormatterV0
                 .orElseThrow(
                         () -> {
                             sLogger.e(PAYLOAD_SIZE_EXCEEDS_LIMIT);
-                            return new IllegalStateException(PAYLOAD_SIZE_EXCEEDS_LIMIT);
+                            return new UnsupportedPayloadSizeException(
+                                    payloadSize / 1000, PAYLOAD_SIZE_EXCEEDS_LIMIT);
                         });
     }
 }

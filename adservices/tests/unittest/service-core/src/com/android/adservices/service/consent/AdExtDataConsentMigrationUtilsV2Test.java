@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,14 +34,13 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.extdata.AdServicesExtDataParams;
-import android.app.adservices.AdServicesManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.appsearch.AppSearchConsentManager;
+import com.android.adservices.service.appsearch.AppSearchConsentStorageManager;
 import com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager;
 import com.android.adservices.service.stats.ConsentMigrationStats;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
@@ -54,7 +53,7 @@ import org.mockito.Spy;
 
 @SpyStatic(SdkLevel.class)
 @SpyStatic(DeviceRegionProvider.class)
-public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockitoTestCase {
+public class AdExtDataConsentMigrationUtilsV2Test extends AdServicesExtendedMockitoTestCase {
     private static final String EXTSERVICES_PKG_NAME_SUFFIX = "android.ext.services";
     private static final String ADSERVICES_PKG_NAME_SUFFIX = "android.adservices.api";
 
@@ -79,19 +78,19 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
     private static final int REGION_ROW_CODE = 2;
 
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
-    @Mock private AppSearchConsentManager mAppSearchConsentManagerMock;
+    @Mock private AppSearchConsentStorageManager mAppSearchConsentManagerMock;
     @Mock private AdServicesExtDataStorageServiceManager mAdServicesExtDataManagerMock;
     @Mock private SharedPreferences mSharedPreferencesMock;
     @Mock private SharedPreferences.Editor mSharedPreferencesEditorMock;
     @Mock private AdServicesExtDataParams mAdServicesExtDataParamsMock;
     @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
-    @Mock private AdServicesManager mAdServicesManagerMock;
+    @Mock private AdServicesStorageManager mAdServicesManagerMock;
 
     @Test
-    public void testHandleConsentMigrationFromAdExtDataIfNeeded_onR_skipsMigration() {
+    public void testHandleConsentMigrationFromAdExtDataIfNeededV2_onR_skipsMigration() {
         doReturn(false).when(SdkLevel::isAtLeastS);
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -106,10 +105,10 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onSWithNullAdExtManager_skipsMigration() {
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onSWithNullAdExtManager_skipsMigration() {
         mockSDevice();
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 null,
@@ -124,7 +123,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onSWithPastMigrationDone_skipsMigration() {
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onSWithPastMigrationDone_skipsMigration() {
         mockSDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
@@ -133,7 +132,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
                         ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH, false))
                 .thenReturn(true);
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -147,7 +146,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testHandleConsentMigrationFromAdExtDataIfNeeded_onSWithNotifOnS_skipsMigration() {
+    public void testHandleConsentMigrationFromAdExtDataIfNeededV2_onSWithNotifOnS_skipsMigration() {
         mockSDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
@@ -155,7 +154,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
         mockNoMigration();
         when(mAppSearchConsentManagerMock.wasU18NotificationDisplayed()).thenReturn(true);
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -171,7 +170,8 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testHandleConsentMigrationFromAdExtDataIfNeeded_onSWithNoNotifOnR_skipsMigration() {
+    public void
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onSWithNoNotifOnR_skipsMigration() {
         mockSDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
@@ -182,7 +182,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
                 .thenReturn(mAdServicesExtDataParamsMock);
         when(mAdServicesExtDataParamsMock.getIsNotificationDisplayed()).thenReturn(BOOLEAN_FALSE);
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -202,7 +202,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onSWithMigrationEligibleWithFullData_migrationSuccessWithAdExtDataCleared() {
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onSWithMigrationEligibleWithFullData_migrationSuccessWithAdExtDataCleared() {
         mockSDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
@@ -216,7 +216,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
         doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -230,7 +230,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
         verify(mAppSearchConsentManagerMock).wasNotificationDisplayed();
         verify(mAppSearchConsentManagerMock)
                 .setConsent(
-                        AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey(),
+                        AdServicesApiType.MEASUREMENTS,
                         TEST_PARAMS_WITH_ALL_DATA.getIsMeasurementConsented() == BOOLEAN_TRUE);
         verify(mAppSearchConsentManagerMock)
                 .setU18NotificationDisplayed(
@@ -265,7 +265,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onSWithMigrationEligibleWithPartialDataWithFailedSharedPrefUpdate_migrationSuccessWithAdExtDataCleared() {
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onSWithMigrationEligibleWithPartialDataWithFailedSharedPrefUpdate_migrationSuccessWithAdExtDataCleared() {
         mockSDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
@@ -279,7 +279,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
         doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -293,7 +293,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
         verify(mAppSearchConsentManagerMock).wasNotificationDisplayed();
         verify(mAppSearchConsentManagerMock)
                 .setConsent(
-                        AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey(),
+                        AdServicesApiType.MEASUREMENTS,
                         TEST_PARAMS_WITH_PARTIAL_DATA.getIsMeasurementConsented() == BOOLEAN_TRUE);
         verify(mAppSearchConsentManagerMock)
                 .setU18NotificationDisplayed(
@@ -329,10 +329,10 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithNullAdExtManager_skipsMigration() {
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onTWithNullAdExtManager_skipsMigration() {
         mockTDevice();
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 null,
@@ -347,7 +347,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithMigrationFromAdExtDone_skipsMigration() {
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onTWithMigrationFromAdExtDone_skipsMigration() {
         when(mSharedPreferencesMock.getBoolean(
                         ConsentConstants.SHARED_PREFS_KEY_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER,
                         false))
@@ -358,7 +358,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithMigrationFromAppSearchDone_skipsMigration() {
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onTWithMigrationFromAppSearchDone_skipsMigration() {
         when(mSharedPreferencesMock.getBoolean(
                         ConsentConstants.SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED, false))
                 .thenReturn(true);
@@ -368,7 +368,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithMigrationFromPpapiDone_skipsMigration() {
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onTWithMigrationFromPpapiDone_skipsMigration() {
         when(mSharedPreferencesMock.getBoolean(
                         ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED, false))
                 .thenReturn(true);
@@ -382,7 +382,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
                 .thenReturn(mSharedPreferencesMock);
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -397,14 +397,14 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithExtServicesPkg_skipsMigration() {
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onTWithExtServicesPkg_skipsMigration() {
         mockTDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
                 .thenReturn(mSharedPreferencesMock);
         when(mContextSpy.getPackageName()).thenReturn(EXTSERVICES_PKG_NAME_SUFFIX);
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -418,7 +418,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithNotifOnT_skipsMigration() {
+    public void testHandleConsentMigrationFromAdExtDataIfNeededV2_onTWithNotifOnT_skipsMigration() {
         mockTDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
@@ -427,7 +427,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
         mockNoMigration();
         when(mAdServicesManagerMock.wasU18NotificationDisplayed()).thenReturn(true);
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -443,7 +443,8 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithNoNotifOnR_skipsMigration() {
+    public void
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onTWithNoNotifOnR_skipsMigration() {
         mockTDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
@@ -455,7 +456,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
                 .thenReturn(mAdServicesExtDataParamsMock);
         when(mAdServicesExtDataParamsMock.getIsNotificationDisplayed()).thenReturn(BOOLEAN_FALSE);
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -475,7 +476,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithMigrationEligibleWithFullData_migrationSuccessWithAdExtDataCleared() {
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onTWithMigrationEligibleWithFullData_migrationSuccessWithAdExtDataCleared() {
         mockTDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
@@ -490,7 +491,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
         doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -502,7 +503,10 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
         verify(mAdServicesManagerMock).wasU18NotificationDisplayed();
         verify(mAdServicesManagerMock).wasGaUxNotificationDisplayed();
         verify(mAdServicesManagerMock).wasNotificationDisplayed();
-        verify(mAdServicesManagerMock).setConsent(any());
+        verify(mAdServicesManagerMock)
+                .setConsent(
+                        AdServicesApiType.MEASUREMENTS,
+                        TEST_PARAMS_WITH_ALL_DATA.getIsMeasurementConsented() == BOOLEAN_TRUE);
 
         verify(mAdServicesManagerMock)
                 .setU18NotificationDisplayed(
@@ -537,7 +541,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithMigrationEligibleWithPartialDataWithFailedSharedPrefUpdate_migrationSuccessWithAdExtDataCleared() {
+            testHandleConsentMigrationFromAdExtDataIfNeededV2_onTWithMigrationEligibleWithPartialDataWithFailedSharedPrefUpdate_migrationSuccessWithAdExtDataCleared() {
         mockTDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
@@ -552,7 +556,7 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
 
         doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
-        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtilsV2.handleConsentMigrationFromAdExtDataIfNeededV2(
                 mContextSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock,
@@ -565,7 +569,10 @@ public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockit
         verify(mAdServicesManagerMock).wasGaUxNotificationDisplayed();
         verify(mAdServicesManagerMock).wasNotificationDisplayed();
 
-        verify(mAdServicesManagerMock).setConsent(any());
+        verify(mAdServicesManagerMock)
+                .setConsent(
+                        AdServicesApiType.MEASUREMENTS,
+                        TEST_PARAMS_WITH_PARTIAL_DATA.getIsMeasurementConsented() == BOOLEAN_TRUE);
         verify(mAdServicesManagerMock)
                 .setU18NotificationDisplayed(
                         TEST_PARAMS_WITH_PARTIAL_DATA.getIsNotificationDisplayed() == BOOLEAN_TRUE);

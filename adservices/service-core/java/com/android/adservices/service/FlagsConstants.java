@@ -712,6 +712,10 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST =
             "fledge_auction_server_coordinator_url_allowlist";
 
+    public static final String
+            KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED =
+                    "fledge_auction_server_get_ad_selection_data_payload_metrics_enabled";
+
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";

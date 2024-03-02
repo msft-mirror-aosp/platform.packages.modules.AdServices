@@ -2220,6 +2220,10 @@ public class ConsentManager {
                 /* errorLogger= */ null);
     }
 
+    /**
+     * get pas conset for fledge, pasUxEnable flag has checked iseea, thus we don't need to check
+     * this again
+     */
     public boolean isPasFledgeConsentGiven() {
         if (mFlags.getConsentManagerDebugMode()) {
             return true;
@@ -2228,6 +2232,17 @@ public class ConsentManager {
         return mFlags.getPasUxEnabled()
                 && wasPasNotificationDisplayed()
                 && getConsent(AdServicesApiType.FLEDGE).isGiven();
+    }
+
+    /** get pas conset for measurement */
+    public boolean isPasMeasurementConsentGiven() {
+        if (mFlags.getConsentManagerDebugMode()) {
+            return true;
+        }
+
+        return mFlags.getPasUxEnabled()
+                && wasPasNotificationDisplayed()
+                && getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
     }
 
     @FunctionalInterface

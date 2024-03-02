@@ -289,6 +289,17 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logKAnonImmediateSignJoinStats(kAnonImmediateSignJoinStatusStats);
     }
 
+    @Override
+    public void logGetAdSelectionDataApiCalledStats(GetAdSelectionDataApiCalledStats stats) {
+        mStatsdAdServicesLogger.logGetAdSelectionDataApiCalledStats(stats);
+    }
+
+    @Override
+    public void logGetAdSelectionDataBuyerInputGeneratedStats(
+            GetAdSelectionDataBuyerInputGeneratedStats stats) {
+        mStatsdAdServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
+    }
+
     /** Logs api call error status using {@code CobaltLogger}. */
     private void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
         mAppNameApiErrorLogger =
