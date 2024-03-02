@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThrows;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.ext.SdkExtensions;
 import android.util.Log;
 
@@ -42,6 +43,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.TestUtil;
+import com.android.adservices.service.js.JSScriptEngine;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -195,7 +197,11 @@ public class FledgeCtsDebuggableJetpackTest {
 
     @Before
     public void setup() throws Exception {
-        Assume.assumeTrue(SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= 4);
+        int adServicesVersion = SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES);
+        int extServicesVersion = SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S);
+        Assume.assumeTrue(adServicesVersion >= 4 || extServicesVersion >= 9);
+
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         mAdSelectionClient = new AdSelectionClient(sContext);
         mCustomAudienceClient = new CustomAudienceClient(sContext);

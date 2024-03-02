@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android shënon temat e interesit bazuar në aplikacionet që ke përdorur së fundi. Aplikacionet dhe partnerët e tyre të reklamave mund ta përdorin gjithashtu aktivitetin tënd nëpër aplikacione të tjera në këtë pajisje për të personalizuar reklamat ndërkohë që të ndihmojnë përsëri që ta mbash të sigurt dhe privat identitetin tënd."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Aplikacionet që përdor ti mund të përcaktojnë gjithashtu se çfarë të pëlqen bazuar në aktivitetin tënd të aplikacioneve. Për shembull, nëse ti përdor rregullisht aplikacionet e gatimit, mund të shikosh reklama për shërbimet e dërgimit të ushqimeve ose përmbajtje të ngjashme në aplikacione të tjera.\n\nAplikacionet mund t\'i ruajnë në mënyrë të sigurt këto informacione që ato të mund të përdoren vetëm nga partnerët e tyre të reklamave për personalizimin e reklamave në aplikacione të tjera."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Më vonë, një aplikacion që ti përdor mund t\'i kërkojë këto informacione - temat e tua të reklamave ose reklama të sugjeruara nga aplikacionet që ke përdorur."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Aplikacionet që përdor ti mund t\'i kërkojnë informacione Android për t\'i ndihmuar të matin performancën e reklamave të tyre. Android ndihmon në mbrojtjen e privatësisë sate duke kufizuar informacionet që aplikacionet mund të ndajnë me njëri-tjetrin."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
@@ -572,7 +576,7 @@
     <string name="topic10289" msgid="5361961713593805925">"Shërbime uebi"</string>
     <string name="topic10290" msgid="1030690821237195132">"Hapësira ruajtëse në renë kompjuterike"</string>
     <string name="topic10291" msgid="4049265350889304495">"Dizajn dhe zhvillim uebi"</string>
-    <string name="topic10292" msgid="3386329227033265361">"Hostimi i sajteve të uebit"</string>
+    <string name="topic10292" msgid="3386329227033265361">"Hostimi i uebsajteve"</string>
     <string name="topic10293" msgid="5737650187548034975">"Punë dhe arsim"</string>
     <string name="topic10294" msgid="4134169605040294646">"Arsim"</string>
     <string name="topic10295" msgid="331240908257602211">"Konferenca dhe publikime akademike"</string>

@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android registrerer emner, du kan være interesseret i, baseret på de apps, du har brugt for nylig. Desuden kan apps og deres annonceringspartnere bruge din aktivitet i andre apps på denne enhed til at tilpasse annoncer til dig personligt, samtidig med at de hjælper med at beskytte din identitet og holde den privat."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  De apps, du bruger, kan også fastslå, hvad du kan lide, baseret på din appaktivitet. Hvis du f.eks. jævnligt bruger madlavningsapps, får du muligvis annoncer for udbringning af dagligvarer eller relateret indhold i andre apps.\n\nApps kan gemme disse oplysninger sikkert, så de kun kan benyttes af deres annonceringspartnere til at tilpasse annoncer til dig personligt i andre apps."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Senere kan en app, du bruger, anmode om disse oplysninger – enten dine annonceemner eller annonceforslag fra de apps, du har brugt."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"De apps, du bruger, kan anmode Android om oplysninger for at hjælpe dem med at måle effektiviteten af deres annoncer. Android hjælper med at beskytte dit privatliv ved at begrænse de oplysninger, apps kan dele med hinanden."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

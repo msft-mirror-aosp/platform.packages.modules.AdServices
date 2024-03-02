@@ -46,6 +46,7 @@ java_defaults {
         "tflite_support_classifiers_java",
         "opencensus-java-api",
         "opencensus-java-contrib-grpc-metrics",
+        "adservices_flags_lib", // Used by FlagsConstantsTest
     ],
     libs: [
         "android.test.base",
@@ -197,6 +198,7 @@ java_defaults {
         "opencensus-java-contrib-grpc-metrics",
         "tflite_support_classifiers_java",
         "truth",
+        "adservices_flags_lib", // Used by FlagsConstantsTest
     ],
     libs: [
         "android.ext.adservices",

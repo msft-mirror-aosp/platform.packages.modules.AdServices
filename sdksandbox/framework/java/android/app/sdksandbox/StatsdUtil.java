@@ -25,6 +25,10 @@ package android.app.sdksandbox;
  */
 public class StatsdUtil {
     // Values for SandboxActivityEventOccurred.method
+    public static final int
+            SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__REGISTER_SDK_SANDBOX_ACTIVITY_HANDLER = 1;
+    public static final int
+            SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__UNREGISTER_SDK_SANDBOX_ACTIVITY_HANDLER = 2;
     public static final int SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY = 5;
 
     // Values for SandboxActivityEventOccurred.call_result

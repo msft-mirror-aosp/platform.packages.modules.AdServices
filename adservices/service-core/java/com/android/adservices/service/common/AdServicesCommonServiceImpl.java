@@ -89,9 +89,9 @@ import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.shared.util.Clock;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -437,7 +437,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             callback.onFailure(STATUS_CALLER_NOT_ALLOWED);
                             return;
                         }
-                        if (mFlags.isGetAdServicesCommonStatesEnabled()) {
+                        if (mFlags.isGetAdServicesCommonStatesApiEnabled()) {
                             LogUtil.d("start getting states");
                             ConsentManager consentManager = ConsentManager.getInstance();
                             AdServicesCommonStates adservicesCommonStates =
@@ -486,8 +486,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         .setSdkPackageName(sdkName)
                                         .setLatencyMillisecond(
                                                 getLatency(callerMetadata, serviceStartTime))
-                                        .setResult(
-                                                new ApiCallStats.Result(resultCode, failureReason))
+                                        .setResult(resultCode, failureReason)
                                         .build());
                     }
                 });
@@ -504,9 +503,18 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     private @ConsentStatus.ConsentStatusCode int getConsentStatus(
             ConsentManager consentManager, AdServicesApiType apiType) {
-        if (consentManager.getConsent(apiType).isGiven()) return ConsentStatus.GIVEN;
-        else {
+        if (apiType == AdServicesApiType.FLEDGE) {
+            if (consentManager.isPasFledgeConsentGiven()) {
+                return ConsentStatus.GIVEN;
+            }
             return ConsentStatus.REVOKED;
         }
+        if (apiType == AdServicesApiType.MEASUREMENTS) {
+            if (consentManager.isPasMeasurementConsentGiven()) {
+                return ConsentStatus.GIVEN;
+            }
+            return ConsentStatus.REVOKED;
+        }
+        return ConsentStatus.REVOKED;
     }
 }

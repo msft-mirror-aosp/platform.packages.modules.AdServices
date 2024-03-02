@@ -16,9 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.getResultCodeFromException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
@@ -68,7 +66,6 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.ApiCallStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -304,6 +301,8 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
 
+        String callerAppPackageName = inputParams.getCallerPackageName();
+
         try {
             ListenableFuture<Void> filterAndValidateRequestFuture =
                     Futures.submit(
@@ -348,10 +347,14 @@ public abstract class AdSelectionRunner {
                                         adSelectionAndOrchestrationResultPair) {
                             Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
                             notifySuccessToCaller(
-                                    adSelectionAndOrchestrationResultPair.first, callback);
+                                    callerAppPackageName,
+                                    adSelectionAndOrchestrationResultPair.first,
+                                    callback);
                             if (mDebugReporting.isEnabled()) {
                                 sendDebugReports(
-                                        adSelectionAndOrchestrationResultPair.second, fullCallback);
+                                        inputParams.getCallerPackageName(),
+                                        adSelectionAndOrchestrationResultPair.second,
+                                        fullCallback);
                             } else {
                                 if (Objects.nonNull(fullCallback)) {
                                     notifyEmptySuccessToCaller(fullCallback);
@@ -373,9 +376,13 @@ public abstract class AdSelectionRunner {
                                 notifyEmptySuccessToCaller(callback);
                             } else {
                                 if (t.getCause() instanceof AdServicesException) {
-                                    notifyFailureToCaller(callback, t.getCause());
+                                    notifyFailureToCaller(
+                                            inputParams.getCallerPackageName(),
+                                            callback,
+                                            t.getCause());
                                 } else {
-                                    notifyFailureToCaller(callback, t);
+                                    notifyFailureToCaller(
+                                            inputParams.getCallerPackageName(), callback, t);
                                 }
                             }
                         }
@@ -384,7 +391,7 @@ public abstract class AdSelectionRunner {
         } catch (Throwable t) {
             Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
             sLogger.v("run ad selection fails fast with exception %s.", t.toString());
-            notifyFailureToCaller(callback, t);
+            notifyFailureToCaller(inputParams.getCallerPackageName(), callback, t);
         }
     }
 
@@ -438,7 +445,9 @@ public abstract class AdSelectionRunner {
     }
 
     private void notifySuccessToCaller(
-            @NonNull DBAdSelection result, @NonNull AdSelectionCallback callback) {
+            @NonNull String callerAppPackageName,
+            @NonNull DBAdSelection result,
+            @NonNull AdSelectionCallback callback) {
         try {
             int overallLatencyMs =
                     mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
@@ -451,7 +460,8 @@ public abstract class AdSelectionRunner {
             // Note: Success is logged before the callback to ensure deterministic testing.
             mAdServicesLogger.logFledgeApiCallStats(
                     AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                    AdServicesStatusUtils.STATUS_SUCCESS,
+                    callerAppPackageName,
+                    STATUS_SUCCESS,
                     overallLatencyMs);
 
             callback.onSuccess(
@@ -478,15 +488,13 @@ public abstract class AdSelectionRunner {
     }
 
     private void notifyFailureToCaller(
-            @NonNull AdSelectionCallback callback, @NonNull Throwable t) {
+            @NonNull String callerAppPackageName,
+            @NonNull AdSelectionCallback callback,
+            @NonNull Throwable t) {
         try {
             sLogger.e(t, "Ad Selection failure: ");
 
             int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
-            int failureReason =
-                    resultCode == STATUS_CALLER_NOT_ALLOWED
-                            ? FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST
-                            : FAILURE_REASON_UNSET;
 
             // Skip logging if a FilterException occurs.
             // AdSelectionServiceFilter ensures the failing assertion is logged internally.
@@ -500,8 +508,9 @@ public abstract class AdSelectionRunner {
                 //  should be able to differentiate the data from the on-device telemetry.
                 mAdServicesLogger.logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        overallLatencyMs,
-                        new ApiCallStats.Result(resultCode, failureReason));
+                        callerAppPackageName,
+                        resultCode,
+                        overallLatencyMs);
             }
 
             FledgeErrorResponse selectionFailureResponse =
@@ -797,7 +806,9 @@ public abstract class AdSelectionRunner {
     }
 
     private void sendDebugReports(
-            AdSelectionOrchestrationResult result, @Nullable AdSelectionCallback callback) {
+            @NonNull String callerAppPackageName,
+            AdSelectionOrchestrationResult result,
+            @Nullable AdSelectionCallback callback) {
         AdScoringOutcome topScoringAd = result.mWinningOutcome;
         AdScoringOutcome secondScoringAd = result.mSecondHighestScoredOutcome;
         DebugReportSenderStrategy sender = mDebugReporting.getSenderStrategy();
@@ -817,7 +828,7 @@ public abstract class AdSelectionRunner {
 
                         @Override
                         public void onFailure(Throwable throwable) {
-                            notifyFailureToCaller(callback, throwable);
+                            notifyFailureToCaller(callerAppPackageName, callback, throwable);
                         }
                     },
                     mLightweightExecutorService);

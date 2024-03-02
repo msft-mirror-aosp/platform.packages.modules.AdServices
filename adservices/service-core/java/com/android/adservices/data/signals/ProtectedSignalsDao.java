@@ -33,6 +33,7 @@ import com.android.adservices.service.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -188,7 +189,8 @@ public abstract class ProtectedSignalsDao {
             return 0;
         }
 
-        CleanupUtils.removeAllowedPackages(sourceAppsToRemove, packageManager, flags);
+        CleanupUtils.removeAllowedPackages(
+                sourceAppsToRemove, packageManager, Arrays.asList(flags.getPasAppAllowList()));
 
         int numDeletedEvents = 0;
         if (!sourceAppsToRemove.isEmpty()) {
@@ -219,14 +221,14 @@ public abstract class ProtectedSignalsDao {
     /**
      * Deletes all signals generated from the given packages.
      *
-     * <p>This method is not meant to be called externally, but is a helper for {@link
-     * #deleteAllDisallowedPackageSignalsAndUpdateSignalUpdateMetadata(PackageManager, Flags,
-     * Instant)}
-     *
-     * @return the number of deleted histogram events
+     * @return the number of deleted signals
      */
     @Query("DELETE FROM protected_signals WHERE packageName in (:packages)")
-    protected abstract int deleteSignalsByPackage(@NonNull List<String> packages);
+    public abstract int deleteSignalsByPackage(@NonNull List<String> packages);
+
+    /** Deletes all signals */
+    @Query("DELETE FROM protected_signals")
+    public abstract int deleteAllSignals();
 
     /** Returns all buyers for the given packages. */
     @Query("SELECT DISTINCT buyer FROM protected_signals WHERE packageName in (:packages)")

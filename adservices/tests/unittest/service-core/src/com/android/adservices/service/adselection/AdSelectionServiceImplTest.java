@@ -30,11 +30,11 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
@@ -65,6 +65,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -154,6 +155,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -197,7 +199,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
 
 public class AdSelectionServiceImplTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -310,9 +311,11 @@ public class AdSelectionServiceImplTest {
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
     @Mock private MeasurementImpl mMeasurementServiceMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     public AdSelectionServiceImplTest() {}
 
@@ -415,6 +418,8 @@ public class AdSelectionServiceImplTest {
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
+        mMultiCloudSupportStrategy =
+                MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
     }
 
     @After
@@ -513,9 +518,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -541,6 +547,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -634,9 +641,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -666,6 +674,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -765,9 +774,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -805,6 +815,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -897,9 +908,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -931,6 +943,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -1017,9 +1030,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -1045,6 +1059,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -1140,9 +1155,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         true);
 
         ReportImpressionInput input =
@@ -1168,6 +1184,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -1255,9 +1272,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         true);
 
         ReportImpressionInput input =
@@ -1356,9 +1374,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         true);
 
         ReportImpressionInput input =
@@ -1464,9 +1483,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -1492,6 +1512,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -1587,9 +1608,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -1612,6 +1634,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -1708,9 +1731,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -1733,6 +1757,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -1834,9 +1859,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -1897,6 +1923,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -2008,9 +2035,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -2045,6 +2073,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -2152,9 +2181,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -2209,6 +2239,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -2314,9 +2345,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -2377,6 +2409,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -2482,9 +2515,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -2539,6 +2573,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -2641,9 +2676,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -2687,6 +2723,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -2789,9 +2826,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -2826,6 +2864,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -2941,9 +2980,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -2986,6 +3026,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -3109,9 +3150,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -3167,6 +3209,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -3284,9 +3327,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -3340,6 +3384,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -3428,9 +3473,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -3449,6 +3495,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -3535,9 +3582,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -3555,6 +3603,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -3641,9 +3690,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -3661,6 +3711,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -3753,9 +3804,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -3773,6 +3825,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -3860,9 +3913,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -3880,6 +3934,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -3962,9 +4017,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput request =
@@ -3982,6 +4038,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
@@ -4063,9 +4120,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput request =
@@ -4083,6 +4141,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -4165,9 +4224,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput request =
@@ -4185,6 +4245,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -4287,9 +4348,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4311,6 +4373,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -4434,9 +4497,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4493,6 +4557,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -4531,9 +4596,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -4554,7 +4620,11 @@ public class AdSelectionServiceImplTest {
                         TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -4593,9 +4663,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -4617,7 +4688,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_USER_CONSENT_REVOKED), anyInt());
+                        eq(SHORT_API_NAME_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
     }
 
     @Test
@@ -4650,9 +4724,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -4675,7 +4750,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
+                        eq(SHORT_API_NAME_OVERRIDE),
+                        eq(null), // Actually logged as ""
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -4712,9 +4790,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -4746,7 +4825,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -4785,9 +4867,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -4820,6 +4903,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -4854,9 +4938,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -4887,7 +4972,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(null), // Actually logged as ""
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -4927,9 +5015,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -4961,7 +5050,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(incorrectPackageName),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -5001,241 +5093,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
-                        false);
-
-        AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
-        AdSelectionConfig adSelectionConfig2 =
-                mAdSelectionConfigBuilder
-                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
-                        .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_uri"))
-                        .build();
-        AdSelectionConfig adSelectionConfig3 =
-                mAdSelectionConfigBuilder
-                        .setSeller(AdTechIdentifier.fromString("nike.com"))
-                        .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_uri"))
-                        .build();
-
-        String adSelectionConfigId1 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
-        String adSelectionConfigId2 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig2);
-        String adSelectionConfigId3 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig3);
-
-        DBAdSelectionOverride dbAdSelectionOverride1 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId1)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        DBAdSelectionOverride dbAdSelectionOverride2 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId2)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        DBAdSelectionOverride dbAdSelectionOverride3 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId3)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride2);
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride3);
-
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, TEST_PACKAGE_NAME));
-
-        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
-
-        assertTrue(callback.mIsSuccess);
-
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, TEST_PACKAGE_NAME));
-
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
-    }
-
-    @Test
-    public void testResetAllAdSelectionConfigRemoteOverridesSuccess() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN)
-                .when(mConsentManagerMock)
-                .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
-
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mAppInstallDao,
-                        mCustomAudienceDao,
-                        mEncodedPayloadDao,
-                        mFrequencyCapDao,
-                        mEncryptionKeyDao,
-                        mEnrollmentDao,
-                        mClientSpy,
-                        mDevContextFilterMock,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mScheduledExecutor,
-                        CONTEXT,
-                        mAdServicesLoggerMock,
-                        mFlags,
-                        CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilterMock,
-                        mAdFilteringFeatureFactory,
-                        mConsentManagerMock,
-                        mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher,
-                        false);
-
-        AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
-        AdSelectionConfig adSelectionConfig2 =
-                mAdSelectionConfigBuilder
-                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
-                        .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_uri"))
-                        .build();
-        AdSelectionConfig adSelectionConfig3 =
-                mAdSelectionConfigBuilder
-                        .setSeller(AdTechIdentifier.fromString("nike.com"))
-                        .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_uri"))
-                        .build();
-
-        String adSelectionConfigId1 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
-        String adSelectionConfigId2 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig2);
-        String adSelectionConfigId3 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig3);
-
-        DBAdSelectionOverride dbAdSelectionOverride1 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId1)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        DBAdSelectionOverride dbAdSelectionOverride2 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId2)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        DBAdSelectionOverride dbAdSelectionOverride3 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId3)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride2);
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride3);
-
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, TEST_PACKAGE_NAME));
-
-        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
-
-        assertTrue(callback.mIsSuccess);
-
-        assertFalse(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, TEST_PACKAGE_NAME));
-        assertFalse(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, TEST_PACKAGE_NAME));
-        assertFalse(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, TEST_PACKAGE_NAME));
-
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
-    }
-
-    @Test
-    public void testResetAllAdSelectionConfigRemoteOverridesWithRevokedUserConsentSuccess()
-            throws Exception {
-        doReturn(AdServicesApiConsent.REVOKED)
-                .when(mConsentManagerMock)
-                .getConsent(AdServicesApiType.FLEDGE);
-
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
-
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mAppInstallDao,
-                        mCustomAudienceDao,
-                        mEncodedPayloadDao,
-                        mFrequencyCapDao,
-                        mEncryptionKeyDao,
-                        mEnrollmentDao,
-                        mClientSpy,
-                        mDevContextFilterMock,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mScheduledExecutor,
-                        CONTEXT,
-                        mAdServicesLoggerMock,
-                        mFlags,
-                        CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilterMock,
-                        mAdFilteringFeatureFactory,
-                        mConsentManagerMock,
-                        mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
@@ -5312,6 +5173,247 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(incorrectPackageName),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testResetAllAdSelectionConfigRemoteOverridesSuccess() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
+                                .build());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        false);
+
+        AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
+        AdSelectionConfig adSelectionConfig2 =
+                mAdSelectionConfigBuilder
+                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
+                        .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_uri"))
+                        .build();
+        AdSelectionConfig adSelectionConfig3 =
+                mAdSelectionConfigBuilder
+                        .setSeller(AdTechIdentifier.fromString("nike.com"))
+                        .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_uri"))
+                        .build();
+
+        String adSelectionConfigId1 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
+        String adSelectionConfigId2 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig2);
+        String adSelectionConfigId3 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig3);
+
+        DBAdSelectionOverride dbAdSelectionOverride1 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId1)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        DBAdSelectionOverride dbAdSelectionOverride2 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId2)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        DBAdSelectionOverride dbAdSelectionOverride3 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId3)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride2);
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride3);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
+
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
+
+        assertTrue(callback.mIsSuccess);
+
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testResetAllAdSelectionConfigRemoteOverridesWithRevokedUserConsentSuccess()
+            throws Exception {
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
+
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
+                                .build());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        false);
+
+        AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
+        AdSelectionConfig adSelectionConfig2 =
+                mAdSelectionConfigBuilder
+                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
+                        .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_uri"))
+                        .build();
+        AdSelectionConfig adSelectionConfig3 =
+                mAdSelectionConfigBuilder
+                        .setSeller(AdTechIdentifier.fromString("nike.com"))
+                        .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_uri"))
+                        .build();
+
+        String adSelectionConfigId1 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
+        String adSelectionConfigId2 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig2);
+        String adSelectionConfigId3 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig3);
+
+        DBAdSelectionOverride dbAdSelectionOverride1 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId1)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        DBAdSelectionOverride dbAdSelectionOverride2 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId2)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        DBAdSelectionOverride dbAdSelectionOverride3 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId3)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride2);
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride3);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
+
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
+
+        assertTrue(callback.mIsSuccess);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -5346,9 +5448,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
@@ -5423,6 +5526,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -5454,9 +5558,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         adSelectionService.destroy();
@@ -5491,9 +5596,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         adSelectionService.destroy();
@@ -5542,9 +5648,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput request =
@@ -5609,9 +5716,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -5677,9 +5785,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -5736,9 +5845,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -5797,9 +5907,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -5852,9 +5963,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
@@ -5911,9 +6023,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
@@ -6011,9 +6124,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -6127,9 +6241,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -6151,6 +6266,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_CALLER_NOT_ALLOWED),
                         anyInt());
     }
@@ -6245,9 +6361,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -6269,6 +6386,7 @@ public class AdSelectionServiceImplTest {
         Mockito.verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_CALLER_NOT_ALLOWED),
                         anyInt());
     }
@@ -6369,9 +6487,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -6397,6 +6516,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -6474,9 +6594,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -6496,6 +6617,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
@@ -6580,9 +6702,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -6620,6 +6743,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -6714,9 +6838,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -6739,6 +6864,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -6828,9 +6954,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -6855,6 +6982,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -6944,9 +7072,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -6971,6 +7100,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -7082,9 +7212,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -7109,6 +7240,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -7213,9 +7345,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -7237,6 +7370,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -7329,9 +7463,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -7357,6 +7492,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -7458,9 +7594,10 @@ public class AdSelectionServiceImplTest {
                             mAdSelectionServiceFilterMock,
                             mAdFilteringFeatureFactory,
                             mConsentManagerMock,
-                            mObliviousHttpEncryptor,
+                            mMultiCloudSupportStrategy,
                             mAdSelectionDebugReportDao,
                             mAdIdFetcher,
+                            mUnusedKAnonSignJoinFactory,
                             false);
 
             ReportImpressionInput input =
@@ -7483,6 +7620,7 @@ public class AdSelectionServiceImplTest {
             verify(mAdServicesLoggerMock)
                     .logFledgeApiCallStats(
                             eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                            eq(TEST_PACKAGE_NAME),
                             eq(STATUS_INTERNAL_ERROR),
                             anyInt());
         } finally {
@@ -7525,9 +7663,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesConfig config =
@@ -7550,6 +7689,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -7590,9 +7730,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesConfig config =
@@ -7615,6 +7756,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -7649,9 +7791,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesConfig config =
@@ -7675,6 +7818,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -7714,9 +7858,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesConfig config =
@@ -7750,6 +7895,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -7791,9 +7937,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesConfig config =
@@ -7827,6 +7974,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -7862,9 +8010,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesConfig config =
@@ -7896,6 +8045,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -7937,9 +8087,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesConfig config =
@@ -7973,6 +8124,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(incorrectPackageName),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -8011,9 +8163,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesConfig config1 =
@@ -8093,6 +8246,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -8134,9 +8288,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesConfig config1 =
@@ -8216,6 +8371,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -8251,9 +8407,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesConfig config1 =
@@ -8332,6 +8489,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -8373,9 +8531,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesConfig config1 =
@@ -8455,6 +8614,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(incorrectPackageName),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -8513,9 +8673,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionOverrideTestCallback overridesCallback =
@@ -8534,6 +8695,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -8561,6 +8723,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -8721,7 +8884,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.reportInteraction(inputParams, callback);
         assertTrue(
@@ -8731,6 +8894,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         eq(0));
     }
@@ -8767,6 +8931,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         eq(0));
     }
@@ -8808,6 +8973,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(0));
     }
@@ -8893,7 +9059,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.setAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -8903,6 +9069,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         eq(0));
     }
@@ -8933,8 +9100,9 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
-                        eq(0));
+                        anyInt());
     }
 
     @Test
@@ -9015,7 +9183,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -9025,6 +9193,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         eq(0));
     }
@@ -9053,8 +9222,9 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
-                        eq(0));
+                        anyInt());
     }
 
     @Test
@@ -9111,7 +9281,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdCounterHistogramOverrides(callback);
         assertTrue(
@@ -9121,6 +9291,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         eq(0));
     }
@@ -9142,8 +9313,9 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
-                        eq(0));
+                        anyInt());
     }
 
     @Test
@@ -9187,9 +9359,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -9249,9 +9422,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         ReportImpressionInput input =
@@ -9292,9 +9466,10 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionServiceFilterMock,
                 mAdFilteringFeatureFactory,
                 mConsentManagerMock,
-                mObliviousHttpEncryptor,
+                mMultiCloudSupportStrategy,
                 mAdSelectionDebugReportDao,
                 mAdIdFetcher,
+                mUnusedKAnonSignJoinFactory,
                 false);
     }
 
@@ -9358,7 +9533,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
                 adSelectionConfig,
@@ -9388,7 +9563,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.overrideAdSelectionFromOutcomesConfigRemoteInfo(
                 adSelectionFromOutcomesConfig, selectionLogic, selectionSignals, callback);
@@ -9411,7 +9586,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdSelectionConfigRemoteInfoOverride(adSelectionConfig, callback);
         resultLatch.await();
@@ -9433,7 +9608,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdSelectionFromOutcomesConfigRemoteInfoOverride(config, callback);
         resultLatch.await();
@@ -9454,7 +9629,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdSelectionConfigRemoteOverrides(callback);
         resultLatch.await();
@@ -9475,7 +9650,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdSelectionFromOutcomesConfigRemoteOverrides(callback);
         resultLatch.await();
@@ -9529,7 +9704,7 @@ public class AdSelectionServiceImplTest {
                     };
             doAnswer(countDownAnswer)
                     .when(mAdServicesLoggerMock)
-                    .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                    .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
         }
 
         ReportImpressionTestCallback callback = new ReportImpressionTestCallback(resultLatch);
@@ -9573,7 +9748,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.updateAdCounterHistogram(inputParams, callback);
         assertTrue(
@@ -9598,7 +9773,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.setAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -9623,7 +9798,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -9646,7 +9821,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdCounterHistogramOverrides(callback);
         assertTrue(
@@ -9680,7 +9855,7 @@ public class AdSelectionServiceImplTest {
                     };
             doAnswer(countDownAnswer)
                     .when(mAdServicesLoggerMock)
-                    .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                    .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
         }
 
         ReportInteractionTestCallback callback = new ReportInteractionTestCallback(resultLatch);
@@ -9887,7 +10062,7 @@ public class AdSelectionServiceImplTest {
 
         @Override
         public boolean getFledgeAdSelectionFilteringEnabled() {
-            return false;
+            return true;
         }
 
         @Override

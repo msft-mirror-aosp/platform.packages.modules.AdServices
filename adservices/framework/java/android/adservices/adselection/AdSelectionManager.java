@@ -232,13 +232,13 @@ public class AdSelectionManager {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
-
         try {
             final AdSelectionService service = getServiceProvider().getService();
             service.getAdSelectionData(
                     new GetAdSelectionDataInput.Builder()
                             .setSeller(request.getSeller())
                             .setCallerPackageName(getCallerPackageName())
+                            .setCoordinatorOriginUri(request.getCoordinatorOriginUri())
                             .build(),
                     new CallerMetadata.Builder()
                             .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())

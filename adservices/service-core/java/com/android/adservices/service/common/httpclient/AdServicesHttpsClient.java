@@ -546,23 +546,53 @@ public class AdServicesHttpsClient {
                                 ClosingFuture.from(
                                         mExecutorService.submit(
                                                 () ->
-                                                        doPerformRequestAndGetResponseInBytes(
-                                                                url, closer, request))),
+                                                        doPerformRequestAndGetResponse(
+                                                                url,
+                                                                closer,
+                                                                request,
+                                                                ResponseBodyType
+                                                                        .BASE64_ENCODED_STRING))),
                         mExecutorService)
                 .finishToFuture();
     }
 
-    private AdServicesHttpClientResponse doPerformRequestAndGetResponseInBytes(
+    /**
+     * Performs an HTTP request according to the request object and returns the response in plain
+     * String
+     */
+    public ListenableFuture<AdServicesHttpClientResponse> performRequestGetResponseInPlainString(
+            @NonNull AdServicesHttpClientRequest request) {
+        Objects.requireNonNull(request.getUri());
+        LogUtil.d("Making request expecting a response in plain string");
+        return ClosingFuture.from(
+                        mExecutorService.submit(() -> mUriConverter.toUrl(request.getUri())))
+                .transformAsync(
+                        (closer, url) ->
+                                ClosingFuture.from(
+                                        mExecutorService.submit(
+                                                () ->
+                                                        doPerformRequestAndGetResponse(
+                                                                url,
+                                                                closer,
+                                                                request,
+                                                                ResponseBodyType
+                                                                        .PLAIN_TEXT_STRING))),
+                        mExecutorService)
+                .finishToFuture();
+    }
+
+    private AdServicesHttpClientResponse doPerformRequestAndGetResponse(
             @NonNull URL url,
             @NonNull ClosingFuture.DeferredCloser closer,
-            AdServicesHttpClientRequest request)
+            AdServicesHttpClientRequest request,
+            ResponseBodyType responseType)
             throws IOException, AdServicesNetworkException {
         HttpsURLConnection urlConnection;
         try {
             urlConnection = setupConnection(url, request.getDevContext());
             urlConnection.setRequestMethod(request.getHttpMethodType().name());
         } catch (IOException e) {
-            LogUtil.d(e, "Failed to open URL");
+            LogUtil.e(e, "Failed to open URL");
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
@@ -590,13 +620,28 @@ public class AdServicesHttpsClient {
 
             if (isSuccessfulResponse(responseCode)) {
                 LogUtil.d(" request succeeded for URL: " + url);
+                Map<String, List<String>> responseHeadersMap =
+                        pickRequiredHeaderFields(
+                                urlConnection.getHeaderFields(), request.getResponseHeaderKeys());
+                inputStream = new BufferedInputStream(urlConnection.getInputStream());
+                String responseBody;
+                if (responseType == ResponseBodyType.BASE64_ENCODED_STRING) {
+                    responseBody =
+                            BaseEncoding.base64()
+                                    .encode(
+                                            getByteArray(
+                                                    inputStream,
+                                                    urlConnection.getContentLengthLong()));
+                } else {
+                    responseBody =
+                            fromInputStream(inputStream, urlConnection.getContentLengthLong());
+                }
                 return AdServicesHttpClientResponse.builder()
-                        .setResponseBody(
-                                BaseEncoding.base64()
-                                        .encode(
-                                                getByteArray(
-                                                        urlConnection.getInputStream(),
-                                                        urlConnection.getContentLengthLong())))
+                        .setResponseBody(responseBody)
+                        .setResponseHeaders(
+                                ImmutableMap.<String, List<String>>builder()
+                                        .putAll(responseHeadersMap.entrySet())
+                                        .build())
                         .build();
             } else {
                 LogUtil.d(" request failed for URL: " + url);
@@ -809,5 +854,10 @@ public class AdServicesHttpsClient {
      */
     public HttpCache getAssociatedCache() {
         return mCache;
+    }
+
+    enum ResponseBodyType {
+        BASE64_ENCODED_STRING,
+        PLAIN_TEXT_STRING
     }
 }

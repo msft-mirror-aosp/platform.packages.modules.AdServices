@@ -16,6 +16,7 @@
 
 package com.android.adservices.ui;
 
+
 import android.content.Context;
 import android.os.Build;
 
@@ -63,5 +64,24 @@ public class UxUtil {
         } else {
             return UxStatesManager.getInstance().getUx();
         }
+    }
+
+    /** Returns the specified UX flag. */
+    public static boolean getFlag(String uxFlagKey) {
+        return UxStatesManager.getInstance().getFlag(uxFlagKey);
+    }
+
+    /**
+     * PAS could be enabled but user may not have received notification, so user would see GA UX
+     * instead of PAS UX. Before the notification card is shown the notification has not been
+     * displayed yet, so if the calling context is related to this then we should only look at the
+     * PAS UX flag.
+     *
+     * @param beforeNotificationShown True if the calling context is logic before PAS notification
+     *     shown has been recorded.
+     * @return True if user will see PAS UX for settings/notification, otherwise false.
+     */
+    public static boolean pasUxIsActive(boolean beforeNotificationShown) {
+        return UxStatesManager.getInstance().pasUxIsActive(beforeNotificationShown);
     }
 }

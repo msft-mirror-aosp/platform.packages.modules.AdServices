@@ -70,7 +70,7 @@ import javax.net.ssl.HttpsURLConnection;
 public class EncryptionKeyFetcherTest {
 
     private static final String ENROLLMENT_ID = "1";
-    private static final String COMPANY_ID = "1001";
+    private static final String ENROLLED_APIS = "PRIVACY_SANDBOX_API_TOPICS";
     private static final String SITE = "https://test1.com";
     private static final String EMPTY_SITE = "";
     private static final String SINGLE_WHITESPACE_SITE = " ";
@@ -147,7 +147,7 @@ public class EncryptionKeyFetcherTest {
     private static EnrollmentData.Builder constructEnrollmentData() {
         return new EnrollmentData.Builder()
                 .setEnrollmentId(ENROLLMENT_ID)
-                .setCompanyId(COMPANY_ID)
+                .setEnrolledAPIs(ENROLLED_APIS)
                 .setSdkNames("1sdk")
                 .setAttributionSourceRegistrationUrl(List.of(SITE))
                 .setAttributionTriggerRegistrationUrl(List.of(SITE))
@@ -210,7 +210,6 @@ public class EncryptionKeyFetcherTest {
                         .setFetchStatus(FetchStatus.SUCCESS)
                         .setIsFirstTimeFetch(true)
                         .setAdtechEnrollmentId(ENROLLMENT_ID)
-                        .setCompanyId(COMPANY_ID)
                         .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
                         .build();
         verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
@@ -233,7 +232,6 @@ public class EncryptionKeyFetcherTest {
                         .setFetchStatus(FetchStatus.NULL_ENDPOINT)
                         .setIsFirstTimeFetch(true)
                         .setAdtechEnrollmentId(ENROLLMENT_ID)
-                        .setCompanyId(COMPANY_ID)
                         .setEncryptionKeyUrl(null)
                         .build();
         verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
@@ -257,7 +255,6 @@ public class EncryptionKeyFetcherTest {
                         .setFetchStatus(FetchStatus.NULL_ENDPOINT)
                         .setIsFirstTimeFetch(true)
                         .setAdtechEnrollmentId(ENROLLMENT_ID)
-                        .setCompanyId(COMPANY_ID)
                         .setEncryptionKeyUrl(null)
                         .build();
         verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
@@ -281,7 +278,6 @@ public class EncryptionKeyFetcherTest {
                         .setFetchStatus(FetchStatus.NULL_ENDPOINT)
                         .setIsFirstTimeFetch(true)
                         .setAdtechEnrollmentId(ENROLLMENT_ID)
-                        .setCompanyId(COMPANY_ID)
                         .setEncryptionKeyUrl(null)
                         .build();
         verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
@@ -304,7 +300,6 @@ public class EncryptionKeyFetcherTest {
                         .setFetchStatus(FetchStatus.IO_EXCEPTION)
                         .setIsFirstTimeFetch(true)
                         .setAdtechEnrollmentId(ENROLLMENT_ID)
-                        .setCompanyId(COMPANY_ID)
                         .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
                         .build();
         verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
@@ -328,7 +323,6 @@ public class EncryptionKeyFetcherTest {
                         .setFetchStatus(FetchStatus.IO_EXCEPTION)
                         .setIsFirstTimeFetch(true)
                         .setAdtechEnrollmentId(ENROLLMENT_ID)
-                        .setCompanyId(COMPANY_ID)
                         .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
                         .build();
         verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
@@ -355,7 +349,6 @@ public class EncryptionKeyFetcherTest {
                         .setFetchStatus(FetchStatus.BAD_REQUEST_EXCEPTION)
                         .setIsFirstTimeFetch(true)
                         .setAdtechEnrollmentId(ENROLLMENT_ID)
-                        .setCompanyId(COMPANY_ID)
                         .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
                         .build();
         verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
@@ -379,7 +372,6 @@ public class EncryptionKeyFetcherTest {
                         .setFetchStatus(FetchStatus.KEY_NOT_MODIFIED)
                         .setIsFirstTimeFetch(false)
                         .setAdtechEnrollmentId(ENROLLMENT_ID)
-                        .setCompanyId(COMPANY_ID)
                         .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
                         .build();
         verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
@@ -404,7 +396,6 @@ public class EncryptionKeyFetcherTest {
                         .setFetchStatus(FetchStatus.SUCCESS)
                         .setIsFirstTimeFetch(false)
                         .setAdtechEnrollmentId(ENROLLMENT_ID)
-                        .setCompanyId(COMPANY_ID)
                         .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
                         .build();
         verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));

@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 public final class AdservicesShellCommandFactorySupplier extends ShellCommandFactorySupplier {
     private static final ImmutableList<ShellCommandFactory> sDefaultFactories =
             ImmutableList.of(
-                    CommonShellCommandFactory.getInstance(),
                     CustomAudienceShellCommandFactory.getInstance(FlagsFactory.getFlags()));
 
     @Override

@@ -19,6 +19,9 @@ package android.adservices.adselection;
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
 
 import android.annotation.NonNull;
+import android.net.Uri;
+
+import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.EncryptionContextDao;
@@ -65,10 +68,13 @@ public class ObliviousHttpEncryptorWithSeedImpl implements ObliviousHttpEncrypto
     /** Encrypts the given byte and stores the encryption context data keyed by given contextId */
     @Override
     public FluentFuture<byte[]> encryptBytes(
-            byte[] plainText, long contextId, long keyFetchTimeoutMs) {
+            byte[] plainText,
+            long contextId,
+            long keyFetchTimeoutMs,
+            @Nullable Uri coordinatorUri) {
 
         return mEncryptionKeyManager
-                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs)
+                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs, coordinatorUri)
                 .transform(
                         key -> createAndSerializeRequestWithSeed(key, plainText, contextId),
                         mLightweightExecutor);

@@ -32,6 +32,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
+import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.content.Context;
 import android.net.Uri;
@@ -73,7 +74,7 @@ import java.util.concurrent.TimeoutException;
 public abstract class FledgeScenarioTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
-    protected static final String TAG = "FledgeScenarioTest";
+    protected static final String TAG = FledgeScenarioTest.class.getSimpleName();
     protected static final int TIMEOUT = 120;
     protected static final String SHOES_CA = "shoes";
     protected static final String SHIRTS_CA = "shirts";
@@ -156,7 +157,7 @@ public abstract class FledgeScenarioTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public final void tearDown() throws IOException {
         if (mMockWebServer != null) {
             mMockWebServer.shutdown();
         }
@@ -218,6 +219,12 @@ public abstract class FledgeScenarioTest {
         Log.d(TAG, "Left Custom Audience: " + customAudienceName);
     }
 
+    protected void doScheduleCustomAudienceUpdate(ScheduleCustomAudienceUpdateRequest request)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        mCustomAudienceClient.scheduleCustomAudienceUpdate(request).get(TIMEOUT, TimeUnit.SECONDS);
+        Log.d(TAG, "Scheduled Custom Audience Update: " + request);
+    }
+
     protected String getServerBaseAddress() {
         return String.format(
                 "https://%s:%s%s/",
@@ -236,6 +243,14 @@ public abstract class FledgeScenarioTest {
                 String.format(
                         "device_config put adservices fledge_register_ad_beacon_enabled %s",
                         enabled ? "true" : "false"));
+    }
+
+    protected void overrideShouldUseUnifiedTable(boolean shouldUse) {
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices"
+                                + " fledge_on_device_auction_should_use_unified_tables %s",
+                        shouldUse ? "true" : "false"));
     }
 
     protected void setDebugReportingEnabledForTesting(boolean enabled) {

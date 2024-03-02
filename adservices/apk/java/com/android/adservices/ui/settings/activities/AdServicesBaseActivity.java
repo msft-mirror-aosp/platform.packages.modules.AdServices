@@ -55,6 +55,20 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (isUxStatesReady(this)) {
+            initWithUx(this, getApplicationContext());
+        }
+    }
+
+    @Override
+    public void initGaUxWithPas() {
+        // overriding in base activity since PAS layout will be the same as GA.
+        initGA();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();

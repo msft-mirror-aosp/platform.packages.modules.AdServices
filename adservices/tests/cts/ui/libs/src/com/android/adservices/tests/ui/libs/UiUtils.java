@@ -25,14 +25,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
-import android.app.Instrumentation;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.os.OutcomeReceiver;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.BySelector;
@@ -64,10 +60,8 @@ public class UiUtils {
     private static final String PRIVACY_SANDBOX_PACKAGE_NAME = "android.adservices.ui.SETTINGS";
     private static final String NOTIFICATION_PACKAGE_NAME = "android.adservices.ui.NOTIFICATIONS";
     public static final int LAUNCH_TIMEOUT = 5000;
-    private static final int LONG_TIMEOUT = 15000;
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 500;
     public static final int SCROLL_WAIT_TIME = 1000;
-    private static final int MAX_MORE_CLICK = 10;
 
     private static final String ANDROID_WIDGET_SCROLLVIEW = "android.widget.ScrollView";
 
@@ -108,16 +102,6 @@ public class UiUtils {
         forceSetFlag("enable_ad_services_system_api", true);
     }
 
-    public static void setAsNonWorkingHours() {
-        // set the notification interval start time to 9:00 AM
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_interval_begin_ms 32400000");
-        // set the notification interval end time to 5:00 PM
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_interval_end_ms 61200000");
-        ShellUtils.runShellCommand("date 00:00");
-    }
-
     public static void disableSchedulingParams() {
         ShellUtils.runShellCommand(
                 "device_config put adservices consent_notification_interval_begin_ms 0");
@@ -134,10 +118,6 @@ public class UiUtils {
         forceSetFlag("consent_notification_debug_mode", false);
     }
 
-    public static void disableGlobalKillswitch() throws Exception {
-        forceSetFlag("global_kill_switch", false);
-    }
-
     public static void enableGlobalKillSwitch() throws Exception {
         forceSetFlag("global_kill_switch", true);
     }
@@ -152,10 +132,6 @@ public class UiUtils {
 
     public static void enableU18() throws Exception {
         forceSetFlag("u18_ux_enabled", true);
-    }
-
-    public static void disableU18() throws Exception {
-        forceSetFlag("u18_ux_enabled", false);
     }
 
     public static void enableGa() throws Exception {
@@ -175,10 +151,6 @@ public class UiUtils {
     /** Override flag rvc_ux_enabled in tests to false */
     public static void disableRvc() throws Exception {
         forceSetFlag("rvc_ux_enabled", false);
-    }
-
-    public static void disableGa() throws Exception {
-        forceSetFlag("ga_ux_enabled", false);
     }
 
     /** Disables the enableAdServices system API. */
@@ -245,24 +217,8 @@ public class UiUtils {
                 .grantRuntimePermission("com.android.adservices.api", POST_NOTIFICATIONS);
     }
 
-    public static void enableConsentNotificationActivityDebugMode() throws Exception {
-        forceSetFlag("consent_notification_activity_debug_mode", true);
-    }
-
-    public static void enableEnableAdservicesSystemApi() throws Exception {
-        forceSetFlag("enable_ad_services_system_api", true);
-    }
-
-    public static void enableUiDialogsFeature() throws Exception {
-        forceSetFlag("ui_dialogs_feature_enabled", true);
-    }
-
     public static void disableNotificationFlowV2() throws Exception {
         forceSetFlag("eu_notif_flow_change_enabled", false);
-    }
-
-    public static void setDebugUx(UiConstants.UX ux) {
-        ShellUtils.runShellCommand("device_config put adservices debug_ux " + ux);
     }
 
     public static void verifyNotification(
@@ -308,30 +264,6 @@ public class UiUtils {
     }
 
     public static void verifyNotification(
-            Context context, UiDevice device, boolean isDisplayed, boolean isEuTest, boolean isGa)
-            throws Exception {
-        int notificationTitle =
-                isEuTest
-                        ? isGa
-                                ? R.string.notificationUI_notification_ga_title_eu
-                                : R.string.notificationUI_notification_title_eu
-                        : isGa
-                                ? R.string.notificationUI_notification_ga_title
-                                : R.string.notificationUI_notification_title;
-
-        int notificationHeader =
-                isEuTest
-                        ? isGa
-                                ? R.string.notificationUI_header_ga_title_eu
-                                : R.string.notificationUI_header_title_eu
-                        : isGa
-                                ? R.string.notificationUI_header_ga_title
-                                : R.string.notificationUI_header_title;
-
-        verifyNotification(context, device, isDisplayed, notificationTitle, notificationHeader);
-    }
-
-    public static void verifyNotification(
             Context context,
             UiDevice device,
             boolean isDisplayed,
@@ -358,91 +290,6 @@ public class UiUtils {
         Thread.sleep(LAUNCH_TIMEOUT);
         UiObject2 title = getElement(context, device, notificationHeader);
         assertThat(title).isNotNull();
-    }
-
-    public static void consentConfirmationScreen(
-            Context context, UiDevice device, boolean isEuDevice, boolean dialogsOn)
-            throws InterruptedException {
-        // TODO(b/300934314) clean up consentConfirmationScreen, getLeftControlButton,
-        // getRightControlButton
-        UiObject2 leftControlButton = getLeftControlButton(context, device, isEuDevice);
-        UiObject2 rightControlButton = getRightControlButton(context, device, isEuDevice);
-        UiObject2 moreButton =
-                getElement(context, device, R.string.notificationUI_more_button_text);
-
-        assertThat(leftControlButton).isNull();
-        assertThat(rightControlButton).isNull();
-        assertThat(moreButton).isNotNull();
-
-        for (int i = 0; i < MAX_MORE_CLICK; i++) {
-            moreButton.click();
-            device.waitForIdle(LAUNCH_TIMEOUT);
-            moreButton = getElement(context, device, R.string.notificationUI_more_button_text);
-            if (moreButton == null) {
-                break;
-            }
-        }
-        leftControlButton = getLeftControlButton(context, device, isEuDevice);
-        rightControlButton = getRightControlButton(context, device, isEuDevice);
-
-        assertThat(leftControlButton).isNotNull();
-        assertThat(rightControlButton).isNotNull();
-        assertThat(moreButton).isNull();
-        if (isEuDevice) {
-            if (!dialogsOn) {
-                leftControlButton.click();
-            } else {
-                rightControlButton.click();
-            }
-
-            rightControlButton =
-                    getElement(
-                            context,
-                            device,
-                            R.string.notificationUI_confirmation_right_control_button_text);
-            rightControlButton.click();
-        } else {
-            leftControlButton.click();
-            device.waitForIdle(LAUNCH_TIMEOUT);
-            UiObject2 mainSwitch = device.findObject(By.clazz("android.widget.Switch"));
-
-            assertThat(mainSwitch).isNotNull();
-            if (dialogsOn) {
-                if (!mainSwitch.isChecked()) {
-                    performSwitchClick(device, context, dialogsOn, mainSwitch);
-                }
-                assertThat(mainSwitch.isChecked()).isTrue();
-            } else {
-                if (mainSwitch.isChecked()) {
-                    performSwitchClick(device, context, dialogsOn, mainSwitch);
-                }
-                assertThat(mainSwitch.isChecked()).isFalse();
-            }
-        }
-    }
-
-    private static UiObject2 getRightControlButton(
-            Context context, UiDevice device, boolean isEuDevice) {
-        UiObject2 rightControlButton =
-                getElement(
-                        context,
-                        device,
-                        isEuDevice
-                                ? R.string.notificationUI_right_control_button_text_eu
-                                : R.string.notificationUI_right_control_button_text);
-        return rightControlButton;
-    }
-
-    private static UiObject2 getLeftControlButton(
-            Context context, UiDevice device, boolean isEuDevice) {
-        UiObject2 leftControlButton =
-                getElement(
-                        context,
-                        device,
-                        isEuDevice
-                                ? R.string.notificationUI_left_control_button_text_eu
-                                : R.string.notificationUI_left_control_button_text);
-        return leftControlButton;
     }
 
     public static void setupOTAStrings(
@@ -563,29 +410,8 @@ public class UiUtils {
         ShellUtils.runShellCommand("cmd wifi connect-network VirtWifi open");
     }
 
-    public static void turnOffWifi(UiDevice device) {
+    public static void turnOffWifi() {
         ShellUtils.runShellCommand("svc wifi disable");
-    }
-
-    private static void startAndroidSettingsApp(UiDevice device) {
-        // Go to home screen
-        device.pressHome();
-
-        // Wait for launcher
-        final String launcherPackage = device.getLauncherPackageName();
-        assertThat(launcherPackage).isNotNull();
-        device.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
-
-        // launch Android Settings
-        Context context = ApplicationProvider.getApplicationContext();
-        Intent intent = new Intent(android.provider.Settings.ACTION_SETTINGS);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
-
-        // Wait for Android Settings to appear
-        device.wait(
-                Until.hasObject(By.pkg(android.provider.Settings.ACTION_SETTINGS).depth(0)),
-                LAUNCH_TIMEOUT);
     }
 
     private static void scrollToThenClickElementContainingText(UiDevice device, String text) {
@@ -618,30 +444,6 @@ public class UiUtils {
         return getString(context, resourceId) + "!";
     }
 
-    private static void scrollToBeginning(UiDevice device) {
-        UiObject2 scrollView =
-                device.findObject(By.clazz(ANDROID_WIDGET_SCROLLVIEW).scrollable(true));
-        scrollView.swipe(Direction.DOWN, 0.7f, 500);
-    }
-
-    public static void performSwitchClick(
-            UiDevice device, Context context, boolean dialogsOn, UiObject2 mainSwitch) {
-        if (dialogsOn && mainSwitch.isChecked()) {
-            mainSwitch.click();
-            UiObject2 dialogTitle =
-                    getElement(context, device, R.string.settingsUI_dialog_opt_out_title);
-            UiObject2 positiveText =
-                    getElement(context, device, R.string.settingsUI_dialog_opt_out_positive_text);
-
-            assertThat(dialogTitle).isNotNull();
-            assertThat(positiveText).isNotNull();
-
-            positiveText.click();
-        } else {
-            mainSwitch.click();
-        }
-    }
-
     /**
      * Swipes through the screen to show elements on the button of the page but hidden by the
      * navigation bar.
@@ -663,7 +465,7 @@ public class UiUtils {
     /** set get adservices common states services enabled */
     public static void setGetAdservicesCommonStatesServiceEnable(boolean enable) {
         ShellUtils.runShellCommand(
-                "device_config put adservices is_get_ad_services_common_states_enabled " + enable);
+                "device_config put adservices get_adservices_common_states_api_enabled " + enable);
     }
 
     /** set get adservices common states services enabled */
@@ -676,8 +478,7 @@ public class UiUtils {
         return context.getResources().getString(resourceId);
     }
 
-    public static void scrollToAndClick(Context context, UiDevice device, int resId)
-            throws InterruptedException {
+    public static void scrollToAndClick(Context context, UiDevice device, int resId) {
         scrollTo(context, device, resId);
         UiObject2 consentPageButton =
                 device.wait(
@@ -721,12 +522,6 @@ public class UiUtils {
         return objList.get(index);
     }
 
-    public static void click(Context context, UiDevice device, int resId) {
-        UiObject2 obj = device.findObject(By.text(getString(context, resId)));
-        // objects may be partially hidden by the status bar and nav bars.
-        clickTopLeft(obj);
-    }
-
     public static void clickTopLeft(UiObject2 obj) {
         assertThat(obj).isNotNull();
         obj.click(new Point(obj.getVisibleBounds().top, obj.getVisibleBounds().left));
@@ -746,19 +541,6 @@ public class UiUtils {
         } catch (RuntimeException e) {
             LogUtil.e("Failed to take screenshot: " + e.getMessage());
         }
-    }
-
-    /**
-     * Check whether the device is supported. Adservices doesn't support non-phone device.
-     *
-     * @return if the device is supported.
-     */
-    public static boolean isDeviceSupported() {
-        final Instrumentation inst = InstrumentationRegistry.getInstrumentation();
-        PackageManager pm = inst.getContext().getPackageManager();
-        return !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
     }
 
     public static void resetAdServicesConsentData(Context context) throws Exception {
@@ -782,7 +564,7 @@ public class UiUtils {
                         .setPrivacySandboxUiRequest(false)
                         .build(),
                 Executors.newCachedThreadPool(),
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         responseFuture.set(result);

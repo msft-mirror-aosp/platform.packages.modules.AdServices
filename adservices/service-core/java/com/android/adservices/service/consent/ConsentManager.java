@@ -53,6 +53,8 @@ import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -85,6 +87,7 @@ import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -129,6 +132,7 @@ public class ConsentManager {
     private final MeasurementImpl mMeasurementImpl;
     private final CustomAudienceDao mCustomAudienceDao;
     private final AppInstallDao mAppInstallDao;
+    private final ProtectedSignalsDao mProtectedSignalsDao;
     private final FrequencyCapDao mFrequencyCapDao;
     private final AdServicesManager mAdServicesManager;
     private final int mConsentSourceOfTruth;
@@ -147,6 +151,7 @@ public class ConsentManager {
             @NonNull MeasurementImpl measurementImpl,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AppInstallDao appInstallDao,
+            @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull FrequencyCapDao frequencyCapDao,
             @NonNull AdServicesManager adServicesManager,
             @NonNull BooleanFileDatastore booleanFileDatastore,
@@ -163,6 +168,7 @@ public class ConsentManager {
         Objects.requireNonNull(measurementImpl);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(appInstallDao);
+        Objects.requireNonNull(protectedSignalsDao);
         Objects.requireNonNull(frequencyCapDao);
         Objects.requireNonNull(booleanFileDatastore);
         Objects.requireNonNull(userProfileIdManager);
@@ -188,6 +194,7 @@ public class ConsentManager {
         mMeasurementImpl = measurementImpl;
         mCustomAudienceDao = customAudienceDao;
         mAppInstallDao = appInstallDao;
+        mProtectedSignalsDao = protectedSignalsDao;
         mFrequencyCapDao = frequencyCapDao;
         mUxStatesDao = uxStatesDao;
 
@@ -251,13 +258,17 @@ public class ConsentManager {
                     if (enableAdExtServiceConsentData) {
                         adServicesExtDataManager =
                                 AdServicesExtDataStorageServiceManager.getInstance(context);
-                        if (FlagsFactory.getFlags().getEnableAdExtServiceToAppSearchMigration()) {
-                            ConsentMigrationUtils.handleConsentMigrationToAppSearchIfNeeded(
-                                    context,
-                                    datastore,
-                                    appSearchConsentManager,
-                                    adServicesExtDataManager,
-                                    statsdAdServicesLogger);
+                        // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03-
+                        // builds, use the deprecated flag
+                        // enable_adext_service_to_appsearch_migration.
+                        if (FlagsFactory.getFlags().getEnableMigrationFromAdExtService()) {
+                            AdExtDataConsentMigrationUtils
+                                    .handleConsentMigrationFromAdExtDataIfNeeded(
+                                            context,
+                                            appSearchConsentManager,
+                                            adServicesExtDataManager,
+                                            statsdAdServicesLogger,
+                                            adServicesManager);
                         }
                     }
 
@@ -277,6 +288,8 @@ public class ConsentManager {
                                     MeasurementImpl.getInstance(context),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                                     SharedStorageDatabase.getInstance(context).appInstallDao(),
+                                    ProtectedSignalsDatabase.getInstance(context)
+                                            .protectedSignalsDao(),
                                     SharedStorageDatabase.getInstance(context).frequencyCapDao(),
                                     adServicesManager,
                                     datastore,
@@ -676,6 +689,12 @@ public class ConsentManager {
             asyncExecute(
                     () -> mFrequencyCapDao.deleteHistogramDataBySourceApp(app.getPackageName()));
         }
+        if (mFlags.getProtectedSignalsCleanupEnabled()) {
+            asyncExecute(
+                    () ->
+                            mProtectedSignalsDao.deleteSignalsByPackage(
+                                    Collections.singletonList(app.getPackageName())));
+        }
     }
 
     /**
@@ -729,6 +748,9 @@ public class ConsentManager {
             asyncExecute(mAppInstallDao::deleteAllAppInstallData);
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
         }
+        if (mFlags.getProtectedSignalsCleanupEnabled()) {
+            asyncExecute(mProtectedSignalsDao::deleteAllSignals);
+        }
     }
 
     /**
@@ -755,6 +777,9 @@ public class ConsentManager {
         if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
             asyncExecute(mAppInstallDao::deleteAllAppInstallData);
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getProtectedSignalsCleanupEnabled()) {
+            asyncExecute(mProtectedSignalsDao::deleteAllSignals);
         }
     }
 
@@ -1542,7 +1567,6 @@ public class ConsentManager {
         adServicesManager.setConsent(consentParcel);
     }
 
-    @VisibleForTesting
     static void setPerApiConsentToSystemServer(
             @NonNull AdServicesManager adServicesManager,
             @ConsentParcel.ConsentApiType int consentApiType,
@@ -1597,7 +1621,11 @@ public class ConsentManager {
                                     /* default= */ false)
                             || sharedPreferences.getBoolean(
                                     ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED,
-                                    /* default= */ false);
+                                    /* default= */ false)
+                            || sharedPreferences.getBoolean(
+                                    ConsentConstants
+                                            .SHARED_PREFS_KEY_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER,
+                                    /* defValue= */ false);
             if (shouldSkipMigration) {
                 LogUtil.v(
                         "Consent migration has happened to user %d, skip...",
@@ -2190,6 +2218,31 @@ public class ConsentManager {
                 () -> // Same as PPAPI_ONLY. Doesn't need to be rollback safe
                 mUxStatesDao.setEnrollmentChannel(ux, channel),
                 /* errorLogger= */ null);
+    }
+
+    /**
+     * get pas conset for fledge, pasUxEnable flag has checked iseea, thus we don't need to check
+     * this again
+     */
+    public boolean isPasFledgeConsentGiven() {
+        if (mFlags.getConsentManagerDebugMode()) {
+            return true;
+        }
+
+        return mFlags.getPasUxEnabled()
+                && wasPasNotificationDisplayed()
+                && getConsent(AdServicesApiType.FLEDGE).isGiven();
+    }
+
+    /** get pas conset for measurement */
+    public boolean isPasMeasurementConsentGiven() {
+        if (mFlags.getConsentManagerDebugMode()) {
+            return true;
+        }
+
+        return mFlags.getPasUxEnabled()
+                && wasPasNotificationDisplayed()
+                && getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
     }
 
     @FunctionalInterface

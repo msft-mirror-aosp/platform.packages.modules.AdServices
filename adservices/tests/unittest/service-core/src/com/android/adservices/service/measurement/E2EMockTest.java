@@ -395,7 +395,6 @@ public abstract class E2EMockTest extends E2ETest {
         long reportTime = timestamp + delay;
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
                         mDatastoreManager,
                         reportTime
                                 - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
@@ -412,7 +411,6 @@ public abstract class E2EMockTest extends E2ETest {
 
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
                         mDatastoreManager,
                         reportTime - maxAggregateReportUploadRetryWindowMs,
                         reportTime,
@@ -430,7 +428,7 @@ public abstract class E2EMockTest extends E2ETest {
             throws IOException, JSONException {
         Object[] reportCaptures =
                 DebugReportingJobHandlerWrapper.spyPerformScheduledPendingReports(
-                        mEnrollmentDao, mDatastoreManager, sContext);
+                        mDatastoreManager, sContext);
 
         processActualDebugReports(
                 timestamp,
@@ -463,7 +461,6 @@ public abstract class E2EMockTest extends E2ETest {
 
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
                         mDatastoreManager,
                         reportingJob.mTimestamp
                                 - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
@@ -488,7 +485,6 @@ public abstract class E2EMockTest extends E2ETest {
 
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
                         mDatastoreManager,
                         reportingJob.mTimestamp - maxAggregateReportUploadRetryWindowMs,
                         reportingJob.mTimestamp,

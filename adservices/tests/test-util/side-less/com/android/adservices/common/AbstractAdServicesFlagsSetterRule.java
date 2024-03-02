@@ -58,6 +58,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     protected static final String LOGCAT_TAG_UI = LOGCAT_TAG_ADSERVICES + ".ui";
     protected static final String LOGCAT_TAG_ADID = LOGCAT_TAG_ADSERVICES + ".adid";
     protected static final String LOGCAT_TAG_APPSETID = LOGCAT_TAG_ADSERVICES + ".appsetid";
+    protected static final String LOGCAT_TAG_SHARED = "adservices-shared";
 
     // TODO(b/294423183): instead of hardcoding the SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX, we
     // should dynamically calculate it based on setLogcatTag() calls
@@ -111,14 +112,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     /** Overrides the flag that sets the Topics Device Classifier kill switch. */
     public T setTopicsOnDeviceClassifierKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, value);
-    }
-
-    /**
-     * Overrides the system property that sets max time period between each epoch computation job
-     * run.
-     */
-    public T setTopicsEpochJobPeriodMsForTests(long value) {
-        return setSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
     }
 
     /** Overrides the system property that defines the percentage for random topic. */
@@ -293,6 +286,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      */
     public T setDefaultLogcatTags() {
         setLogcatTag(LOGCAT_TAG_ADSERVICES, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_SHARED, LOGCAT_LEVEL_VERBOSE);
         setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LOGCAT_LEVEL_VERBOSE);
         return getThis();
     }

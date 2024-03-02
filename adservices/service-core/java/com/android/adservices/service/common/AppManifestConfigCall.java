@@ -37,11 +37,25 @@ public final class AppManifestConfigCall {
     public static final int API_CUSTOM_AUDIENCES =
             AdServicesStatsLog
                     .APP_MANIFEST_CONFIG_HELPER_CALLED__API_ACCESS_TYPE__API_ACCESS_TYPE_CUSTOM_AUDIENCES;
+
+    public static final int API_PROTECTED_SIGNALS =
+            AdServicesStatsLog
+                    .APP_MANIFEST_CONFIG_HELPER_CALLED__API_ACCESS_TYPE__API_ACCESS_TYPE_PROTECTED_SIGNALS;
+
+    public static final int API_AD_SELECTION =
+            AdServicesStatsLog
+                    .APP_MANIFEST_CONFIG_HELPER_CALLED__API_ACCESS_TYPE__API_ACCESS_TYPE_AD_SELECTION;
     public static final int API_ATTRIBUTION =
             AdServicesStatsLog
                     .APP_MANIFEST_CONFIG_HELPER_CALLED__API_ACCESS_TYPE__API_ACCESS_TYPE_ATTRIBUTION;
 
-    @IntDef({API_TOPICS, API_CUSTOM_AUDIENCES, API_ATTRIBUTION})
+    @IntDef({
+        API_TOPICS,
+        API_CUSTOM_AUDIENCES,
+        API_ATTRIBUTION,
+        API_PROTECTED_SIGNALS,
+        API_AD_SELECTION
+    })
     @Retention(SOURCE)
     public @interface ApiType {}
 
@@ -105,6 +119,8 @@ public final class AppManifestConfigCall {
             case API_TOPICS:
             case API_CUSTOM_AUDIENCES:
             case API_ATTRIBUTION:
+            case API_PROTECTED_SIGNALS:
+            case API_AD_SELECTION:
                 this.api = api;
                 break;
             default:
@@ -185,6 +201,10 @@ public final class AppManifestConfigCall {
                 return "CUSTOM_AUDIENCES";
             case API_ATTRIBUTION:
                 return "ATTRIBUTION";
+            case API_PROTECTED_SIGNALS:
+                return "PROTECTED_SIGNALS";
+            case API_AD_SELECTION:
+                return "AD_SELECTION";
             default:
                 return "INVALID-" + result;
         }

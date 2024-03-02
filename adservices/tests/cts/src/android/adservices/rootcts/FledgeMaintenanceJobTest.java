@@ -16,6 +16,8 @@
 
 package android.adservices.rootcts;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -27,18 +29,20 @@ import android.adservices.utils.ScenarioDispatcher;
 
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.annotations.SetFlagEnabled;
+
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
 
-public class FledgeMaintenanceJobTest extends FledgeScenarioTest {
+public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
 
     private static final int FLEDGE_MAINTENANCE_JOB_ID = 1;
 
     @Rule public DeviceTimeRule mDeviceTimeRule = new DeviceTimeRule();
 
-    private BackgroundJobHelper mBackgroundJobHelper = new BackgroundJobHelper(sContext);
+    private final BackgroundJobHelper mBackgroundJobHelper = new BackgroundJobHelper(sContext);
 
     @Test
     public void testAdSelection_afterOneDay_adSelectionDataCleared() throws Exception {
@@ -72,6 +76,7 @@ public class FledgeMaintenanceJobTest extends FledgeScenarioTest {
 
     @Test
     @FlakyTest(bugId = 315327390)
+    @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     public void testAdSelection_afterOneDay_adInteractionsIsCleared() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
@@ -82,7 +87,7 @@ public class FledgeMaintenanceJobTest extends FledgeScenarioTest {
 
         try {
             overrideBiddingLogicVersionToV3(true);
-            overrideRegisterAdBeaconEnabled(true);
+
             joinCustomAudience(SHOES_CA);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             mDeviceTimeRule.overrideDeviceTimeToPlus25Hours();
@@ -94,8 +99,6 @@ public class FledgeMaintenanceJobTest extends FledgeScenarioTest {
                             () -> doReportEvent(result.getAdSelectionId(), "click"));
             assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
         } finally {
-            overrideBiddingLogicVersionToV3(false);
-            overrideRegisterAdBeaconEnabled(false);
             leaveCustomAudience(SHOES_CA);
         }
 

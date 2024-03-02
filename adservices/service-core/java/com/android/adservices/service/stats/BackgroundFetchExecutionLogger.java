@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.customaudience.BackgroundFetchWorker;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;

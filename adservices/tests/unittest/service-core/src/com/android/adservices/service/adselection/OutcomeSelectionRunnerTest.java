@@ -17,13 +17,12 @@
 package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.AdSelectionFromOutcomesConfigFixture.SAMPLE_SELLER;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -74,7 +73,6 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.ApiCallStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -224,8 +222,9 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        anyInt(),
-                        eq(new ApiCallStats.Result(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
+                        eq(MY_APP_PACKAGE_NAME),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        anyInt());
     }
 
     @Test
@@ -270,10 +269,9 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        anyInt(),
-                        eq(
-                                new ApiCallStats.Result(
-                                        STATUS_USER_CONSENT_REVOKED, FAILURE_REASON_UNSET)));
+                        eq(MY_APP_PACKAGE_NAME),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
     }
 
 
@@ -343,8 +341,9 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        anyInt(),
-                        eq(new ApiCallStats.Result(STATUS_TIMEOUT, FAILURE_REASON_UNSET)));
+                        eq(MY_APP_PACKAGE_NAME),
+                        eq(STATUS_TIMEOUT),
+                        anyInt());
     }
 
     private void persistAdSelectionEntry(

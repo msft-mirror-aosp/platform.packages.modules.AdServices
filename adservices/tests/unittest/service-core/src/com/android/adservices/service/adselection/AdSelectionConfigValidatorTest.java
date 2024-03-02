@@ -448,7 +448,7 @@ public class AdSelectionConfigValidatorTest {
                         CommonFixture.VALID_BUYER_1, 0);
 
         List<AdWithBid> adsWithBids =
-                List.of(new AdWithBid(adDataWithExceededFrequencyCapLimits, 100.0));
+                ImmutableList.of(new AdWithBid(adDataWithExceededFrequencyCapLimits, 100.0));
 
         Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
         buyerContextualAds.put(
