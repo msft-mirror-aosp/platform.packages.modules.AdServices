@@ -21,6 +21,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_EN
 import android.os.RemoteException;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
@@ -78,6 +79,7 @@ public final class SettingsGaUiAutomatorTest extends AdServicesUiTestCase {
         SettingsTestUtil.topicsSubtitleTestUtil(mDevice);
     }
 
+    @FlakyTest(bugId = 326706521)
     @Test
     public void appsSubtitleTest() throws Exception {
         SettingsTestUtil.appsSubtitleTestUtil(mDevice);

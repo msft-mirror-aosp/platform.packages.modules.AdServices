@@ -271,13 +271,13 @@ public class ConsentManagerV2 {
                         // builds, use the deprecated flag
                         // enable_adext_service_to_appsearch_migration.
                         if (FlagsFactory.getFlags().getEnableMigrationFromAdExtService()) {
-                            AdExtDataConsentMigrationUtils
-                                    .handleConsentMigrationToAppSearchIfNeededV2(
+                            AdExtDataConsentMigrationUtilsV2
+                                    .handleConsentMigrationFromAdExtDataIfNeededV2(
                                             context,
-                                            datastore,
                                             appSearchConsentStorageManager,
                                             adServicesExtDataManager,
-                                            statsdAdServicesLogger);
+                                            statsdAdServicesLogger,
+                                            adServicesManager);
                         }
                         mAppConsentForRStorageManager =
                                 new AppConsentForRStorageManager(

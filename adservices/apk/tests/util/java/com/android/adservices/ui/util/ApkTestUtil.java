@@ -53,7 +53,7 @@ public class ApkTestUtil {
     private static final String ANDROID_WIDGET_SCROLLVIEW = "android.widget.ScrollView";
 
     private static final String TAG = "ApkTestUtil";
-    private static final int WINDOW_LAUNCH_TIMEOUT = 1_000;
+    private static final int WINDOW_LAUNCH_TIMEOUT = 2_000;
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 1_000;
 
     /**

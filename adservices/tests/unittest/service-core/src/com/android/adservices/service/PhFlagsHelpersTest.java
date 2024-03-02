@@ -16,6 +16,8 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesFlag;
+
 import android.provider.DeviceConfig;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -30,14 +32,14 @@ public final class PhFlagsHelpersTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testGetBooleanDeviceConfigFlag() {
-        extendedMockito.mockGetAdServicesFlag(NAME, true);
+        mockGetAdServicesFlag(NAME, true);
 
         expect.that(PhFlags.getDeviceConfigFlag(NAME, /* defaultValue= */ false)).isTrue();
     }
 
     @Test
     public void testGetStringDeviceConfigFlag() {
-        extendedMockito.mockGetAdServicesFlag(NAME, "of the rose");
+        mockGetAdServicesFlag(NAME, "of the rose");
 
         expect.that(PhFlags.getDeviceConfigFlag(NAME, /* defaultValue= */ "D'OH"))
                 .isEqualTo("of the rose");
@@ -45,21 +47,21 @@ public final class PhFlagsHelpersTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testGetIntDeviceConfigFlag() {
-        extendedMockito.mockGetAdServicesFlag(NAME, 42);
+        mockGetAdServicesFlag(NAME, 42);
 
         expect.that(PhFlags.getDeviceConfigFlag(NAME, /* defaultValue= */ 108)).isEqualTo(42);
     }
 
     @Test
     public void testGetLongDeviceConfigFlag() {
-        extendedMockito.mockGetAdServicesFlag(NAME, 42L);
+        mockGetAdServicesFlag(NAME, 42L);
 
         expect.that(PhFlags.getDeviceConfigFlag(NAME, /* defaultValue= */ 108L)).isEqualTo(42L);
     }
 
     @Test
     public void testGetFloatDeviceConfigFlag() {
-        extendedMockito.mockGetAdServicesFlag(NAME, 42f);
+        mockGetAdServicesFlag(NAME, 42f);
 
         expect.that(PhFlags.getDeviceConfigFlag(NAME, /* defaultValue= */ 108f)).isEqualTo(42f);
     }

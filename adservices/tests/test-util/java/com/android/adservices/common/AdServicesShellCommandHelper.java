@@ -42,7 +42,7 @@ public final class AdServicesShellCommandHelper extends AbstractAdServicesShellC
 
     @Override
     protected String runShellCommand(String cmd) {
-        return SystemUtil.runShellCommand(cmd);
+        return SystemUtil.runShellCommand(cmd).strip();
     }
 
     @Override
@@ -65,10 +65,10 @@ public final class AdServicesShellCommandHelper extends AbstractAdServicesShellC
             }
 
             try (FileInputStream fis = new ParcelFileDescriptor.AutoCloseInputStream(fdOut)) {
-                out = new String(FileUtils.readInputStreamFully(fis));
+                out = new String(FileUtils.readInputStreamFully(fis)).strip();
             }
             try (FileInputStream fis = new ParcelFileDescriptor.AutoCloseInputStream(fdErr)) {
-                err = new String(FileUtils.readInputStreamFully(fis));
+                err = new String(FileUtils.readInputStreamFully(fis)).strip();
             }
             return new CommandResult(out, err);
         } catch (IOException e) {
