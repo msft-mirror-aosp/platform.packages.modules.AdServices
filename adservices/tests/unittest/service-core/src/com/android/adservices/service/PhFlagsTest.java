@@ -171,6 +171,7 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPT
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
@@ -212,11 +213,13 @@ import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JO
 import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
+import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_GET_TOKENS_URL;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_JOIN_URL;
+import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
@@ -593,6 +596,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
@@ -642,12 +646,15 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BAC
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_BATCH_SIZE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
@@ -918,12 +925,11 @@ import static org.junit.Assert.assertThrows;
 import android.provider.DeviceConfig;
 import android.util.Log;
 
-import androidx.test.filters.SmallTest;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.Flags.ClassifierType;
-import com.android.adservices.service.fixture.SysPropForceDefaultValueFixture;
+import com.android.adservices.service.fixture.TestableSystemProperties;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.modules.utils.testing.TestableDeviceConfig;
@@ -941,7 +947,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /** Unit tests for {@link com.android.adservices.service.PhFlags} */
-@SmallTest
 @SpyStatic(SdkLevel.class)
 public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
@@ -951,8 +956,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     @Override
     protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
         return newDefaultAdServicesExtendedMockitoRuleBuilder()
-                .addStaticMockFixtures(
-                        TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new)
+                .addStaticMockFixtures(TestableDeviceConfig::new, TestableSystemProperties::new)
                 .build();
     }
 
@@ -9703,6 +9707,23 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
+        assertThat(mPhFlags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled())
+                .isEqualTo(FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED);
+
+        boolean phOverridingValue =
+                !FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED,
+                String.valueOf(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testConsentNotificationActivityDebugMode() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getConsentNotificationActivityDebugMode())
@@ -10509,6 +10530,17 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testFledgeKAnonUrlAuthorityToJoin() {
+        assertThat(mPhFlags.getFledgeKAnonUrlAuthorityToJoin())
+                .isEqualTo(FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN);
+
+        String phOverridingValue = "testing-set";
+        overrideKAnonFlags(phOverridingValue, KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY);
+
+        assertThat(mPhFlags.getFledgeKAnonUrlAuthorityToJoin()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testKAnonBackgroundProcessEnabled() {
         // Set KAnon feature flag to true.
         setFledgeAuctionServerEnabled(true);
@@ -10522,6 +10554,38 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Boolean.toString(phOverridingValue), KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED);
 
         assertThat(mPhFlags.getFledgeKAnonBackgroundProcessEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testKAnonSignJoinLoggingEnabled() {
+        // Set KAnon feature flag to true.
+        setFledgeAuctionServerEnabled(true);
+        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
+        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureEnabled()).isTrue();
+        assertThat(mPhFlags.getFledgeKAnonLoggingEnabled())
+                .isEqualTo(FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
+
+        boolean phOverridingValue = true;
+        overrideKAnonFlags(
+                Boolean.toString(phOverridingValue), KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED);
+
+        assertThat(mPhFlags.getFledgeKAnonLoggingEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testKAnonKeyAttestationEnabled() {
+        // Set KAnon feature flag to true.
+        setFledgeAuctionServerEnabled(true);
+        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
+        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureEnabled()).isTrue();
+        assertThat(mPhFlags.getFledgeKAnonKeyAttestationEnabled())
+                .isEqualTo(FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED);
+
+        boolean phOverridingValue = true;
+        overrideKAnonFlags(
+                Boolean.toString(phOverridingValue), KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED);
+
+        assertThat(mPhFlags.getFledgeKAnonKeyAttestationEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -10702,7 +10766,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     private void verifyGetBooleanNotCalled(String name) {
-        extendedMockito.unsafeVerifyGetBooleanDeviceConfigFlagNotCalled(
+        ExtendedMockitoExpectations.verifyGetBooleanDeviceConfigFlagNotCalled(
                 DeviceConfig.NAMESPACE_ADSERVICES, name);
     }
 }

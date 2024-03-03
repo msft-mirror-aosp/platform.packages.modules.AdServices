@@ -17,6 +17,7 @@
 package com.android.adservices.service.kanon;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -83,6 +84,7 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
         mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
         mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
+                        mContext,
                         mockKanonCaller,
                         mKAnonMessageManager,
                         mFlags,
@@ -148,7 +150,7 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
                 });
         countDownLatch.await();
 
-        verify(mockKanonCaller).signAndJoinMessages(Collections.emptyList());
+        verifyNoMoreInteractions(mockKanonCaller);
     }
 
     private static class KAnonSignJoinBackgroundWorkerFlags implements Flags {
@@ -161,6 +163,11 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
         @Override
         public int getFledgeKAnonMessagesPerBackgroundProcess() {
             return mMessagesPerBackgroundRun;
+        }
+
+        @Override
+        public boolean getFledgeKAnonBackgroundProcessEnabled() {
+            return true;
         }
     }
 }

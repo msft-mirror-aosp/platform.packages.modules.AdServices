@@ -95,17 +95,16 @@ public class PackageManagerHelper {
                 .applicationInfo;
     }
 
-    /** Returns the packageName for the UID */
+    /** Returns the packageNames for the UID */
     @NonNull
-    public String getPackageNameForUid(int callingUid) throws PackageManager.NameNotFoundException {
+    public List<String> getPackageNamesForUid(int callingUid)
+            throws PackageManager.NameNotFoundException {
         String[] possibleAppPackages = mPackageManager.getPackagesForUid(callingUid);
 
         if (possibleAppPackages == null || possibleAppPackages.length == 0) {
             throw new PackageManager.NameNotFoundException(
                     "Could not find package for " + callingUid);
         }
-        // TODO(b/312380622): Based on the decision of how to handle sharedUid in SDK Runtime, this
-        // logic might change
         if (possibleAppPackages.length > 1) {
             Log.d(
                     TAG,
@@ -114,8 +113,6 @@ public class PackageManagerHelper {
                             + ". Count: "
                             + possibleAppPackages.length);
         }
-        // Return the first packageName from the list of packages because ideally there should just
-        // be one package for a UID because shared-uid is deprecated
-        return possibleAppPackages[0];
+        return List.of(possibleAppPackages);
     }
 }
