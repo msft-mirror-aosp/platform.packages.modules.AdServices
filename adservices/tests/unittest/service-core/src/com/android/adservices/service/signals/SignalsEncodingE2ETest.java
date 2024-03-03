@@ -235,6 +235,8 @@ public class SignalsEncodingE2ETest {
                         mMockThrottler);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+
         when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true);
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)

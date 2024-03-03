@@ -24,7 +24,7 @@ import android.provider.DeviceConfig;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.fixture.SysPropForceDefaultValueFixture;
+import com.android.adservices.service.fixture.TestableSystemProperties;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Test;
@@ -36,8 +36,7 @@ public final class CommonPhFlagsTest extends AdServicesExtendedMockitoTestCase {
     @Override
     protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
         return newDefaultAdServicesExtendedMockitoRuleBuilder()
-                .addStaticMockFixtures(
-                        TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new)
+                .addStaticMockFixtures(TestableDeviceConfig::new, TestableSystemProperties::new)
                 .build();
     }
 

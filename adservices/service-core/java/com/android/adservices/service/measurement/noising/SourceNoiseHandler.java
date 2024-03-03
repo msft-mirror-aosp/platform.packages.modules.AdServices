@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -77,7 +76,7 @@ public class SourceNoiseHandler {
         double value = rand.nextDouble();
         if (value >= getRandomizedSourceResponsePickRate(source)) {
             source.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
-            return Collections.emptyList();
+            return null;
         }
 
         List<Source.FakeReport> fakeReports;

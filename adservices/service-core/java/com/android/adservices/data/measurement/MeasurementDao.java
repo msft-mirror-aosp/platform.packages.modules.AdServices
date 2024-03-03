@@ -475,7 +475,7 @@ class MeasurementDao implements IMeasurementDao {
                     source.getTriggerSpecs().encodeToJson());
             values.put(
                     MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
-                    source.getTriggerSpecs().encodePrivacyParametersToJSONString());
+                    source.getTriggerSpecs().encodePrivacyParametersToJsonString());
         }
         values.put(
                 MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS,

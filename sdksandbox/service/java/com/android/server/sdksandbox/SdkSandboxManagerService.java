@@ -2176,7 +2176,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private int getEffectiveTargetSdkVersion(int sdkSandboxUid)
             throws PackageManager.NameNotFoundException {
-        // TODO(b/271547387): Need to decide on how to deal with apps using sharedUid
         return mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(
                 Process.getAppUidForSdkSandboxUid(sdkSandboxUid));
     }
