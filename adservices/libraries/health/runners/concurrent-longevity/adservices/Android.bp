@@ -33,6 +33,7 @@ java_library_static {
         include_dirs: [ "external/protobuf/src" ],
     },
     static_libs: [
+        "adservices-shared-testing",
         "longevity-device-lib",
     ],
     libs: [
