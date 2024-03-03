@@ -16,11 +16,14 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.UserProfileIdManager.MILLISECONDS_IN_DAY;
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.data.common.UserProfileIdDao;
+import com.android.adservices.shared.util.Clock;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,10 +39,15 @@ public class UserProfileIdManagerTest {
 
     @Mock private UserProfileIdDao mUserProfileIdDao;
     private UserProfileIdManager mUserProfileIdManager;
+    @Mock private Clock mClock;
+    private static final long TIME_INITIAL = 1000;
+    private static final long TIME_BEFORE_A_DAY = 1010;
+    private static final long TIME_AFTER_A_DAY = TIME_INITIAL + MILLISECONDS_IN_DAY;
 
     @Before
     public void setup() {
-        mUserProfileIdManager = new UserProfileIdManager(mUserProfileIdDao);
+        mUserProfileIdManager = new UserProfileIdManager(mUserProfileIdDao, mClock);
+        when(mClock.currentTimeMillis()).thenReturn(TIME_INITIAL);
     }
 
     @Test
@@ -61,9 +69,21 @@ public class UserProfileIdManagerTest {
     }
 
     @Test
-    public void testDeleteId() {
+    public void testDeleteId_aDayHasElapsed_deleted() {
+        when(mUserProfileIdDao.getTimestamp()).thenReturn(TIME_INITIAL);
+        when(mClock.currentTimeMillis()).thenReturn(TIME_AFTER_A_DAY);
         mUserProfileIdManager.deleteId();
+        verify(mUserProfileIdDao).getTimestamp();
         verify(mUserProfileIdDao).deleteStorage();
+        verifyNoMoreInteractions(mUserProfileIdDao);
+    }
+
+    @Test
+    public void testDeleteId_aDayHasNotElapsed_notDeleted() {
+        when(mUserProfileIdDao.getTimestamp()).thenReturn(TIME_INITIAL);
+        when(mClock.currentTimeMillis()).thenReturn(TIME_BEFORE_A_DAY);
+        mUserProfileIdManager.deleteId();
+        verify(mUserProfileIdDao).getTimestamp();
         verifyNoMoreInteractions(mUserProfileIdDao);
     }
 }

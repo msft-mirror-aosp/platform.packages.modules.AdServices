@@ -35,7 +35,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
@@ -64,12 +63,11 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
+import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -84,6 +82,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -285,32 +284,22 @@ public class PersistAdSelectionResultRunner {
             ListenableFuture<Void> signJoinFuture =
                     Futures.submitAsync(
                             () -> {
-                                List<KAnonMessageEntity> messageEntities =
-                                        getKAnonEntitiesFromAuctionResult(
-                                                auctionResult, adSelectionId);
-                                KAnonSignJoinManager kAnonSignJoinManager =
-                                        mKAnonSignJoinFactory.getKAnonSignJoinManager();
-                                kAnonSignJoinManager.processNewMessages(messageEntities);
-                                return null;
+                                try {
+                                    List<KAnonMessageEntity> messageEntities =
+                                            getKAnonEntitiesFromAuctionResult(
+                                                    auctionResult, adSelectionId);
+                                    KAnonSignJoinManager kAnonSignJoinManager =
+                                            mKAnonSignJoinFactory.getKAnonSignJoinManager();
+                                    kAnonSignJoinManager.processNewMessages(messageEntities);
+                                } catch (Throwable t) {
+                                    sLogger.d("Error while processing new messages for KAnon");
+                                }
+                                return Futures.immediateVoidFuture();
                             },
                             mBackgroundExecutorService);
-            Futures.addCallback(
-                    signJoinFuture,
-                    new FutureCallback<Void>() {
-                        @Override
-                        public void onSuccess(Void result) {
-                            mAdServicesLogger.logKAnonSignJoinStatus();
-                        }
-
-                        @Override
-                        public void onFailure(Throwable t) {
-                            mAdServicesLogger.logKAnonSignJoinStatus();
-                        }
-                    },
-                    mBackgroundExecutorService);
         } else {
+            sLogger.d("KAnon Sign Join feature is disabled");
             mAdServicesLogger.logKAnonSignJoinStatus();
-            LogUtil.i("KAnon Sign Join feature is disabled");
         }
     }
 
@@ -397,7 +386,10 @@ public class PersistAdSelectionResultRunner {
                 KAnonMessageEntity.builder()
                         .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
                         .setAdSelectionId(adSelectionId)
-                        .setHashSet(BaseEncoding.base16().encode(digestedBytes))
+                        .setHashSet(
+                                Base64.getUrlEncoder()
+                                        .withoutPadding()
+                                        .encodeToString(digestedBytes))
                         .build();
         return List.of(kAnonMessageEntity);
     }
@@ -545,7 +537,9 @@ public class PersistAdSelectionResultRunner {
 
         byte metaInfoByte = resultBytes[0];
         int version = AuctionServerPayloadFormattingUtil.extractFormatterVersion(metaInfoByte);
-        mPayloadExtractor = AuctionServerPayloadFormatterFactory.createPayloadExtractor(version);
+        mPayloadExtractor =
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(
+                        version, mAdServicesLogger);
     }
 
     private AuctionResult composeAuctionResult(

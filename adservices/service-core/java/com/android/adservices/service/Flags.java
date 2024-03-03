@@ -61,7 +61,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Topics Epoch Job Flex. Note the minimum value system allows is +8h24m0s0ms */
-    long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
+    @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
 
     /** Returns flex for the Epoch computation job in Millisecond. */
     default long getTopicsEpochJobFlexMs() {
@@ -391,7 +391,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default whether measurement click deduplication is enabled. */
-    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED = true;
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED = false;
 
     /** Returns whether measurement click deduplication is enforced. */
     default boolean getMeasurementIsClickDeduplicationEnforced() {
@@ -399,7 +399,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default whether measurement click deduplication is enforced. */
-    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED = true;
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED = false;
 
     /** Returns the number of sources that can be registered with a single click. */
     default long getMeasurementMaxSourcesPerClick() {
@@ -1546,8 +1546,8 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
     }
 
-    String FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI =
-            "https://staging-chromekanonymity-pa.sandbox.googleapis.com/v1/proxy/keys";
+    /** Default value of the url to fetch keys for KAnon encryption */
+    String FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI = "";
 
     /** Returns Uri to fetch join encryption key for fledge ad selection. */
     default String getFledgeAuctionServerJoinKeyFetchUri() {
@@ -1747,6 +1747,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     default String getFledgeAuctionServerCoordinatorUrlAllowlist() {
         return FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
+    }
+
+    @FeatureFlag
+    boolean FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED = false;
+
+    /** Returns whether the fledge GetAdSelectionData payload metrics are enabled. */
+    default boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
+        return FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
     }
 
     // Protected signals cleanup feature flag disabled by default
@@ -2662,7 +2670,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Enable Back Compat feature flag. The default value is false which means that all back compat
      * related features are disabled by default. This flag would be enabled for R/S during rollout.
      */
-    boolean ENABLE_BACK_COMPAT = false;
+    @FeatureFlag boolean ENABLE_BACK_COMPAT = false;
 
     /** Returns value of enable Back Compat */
     default boolean getEnableBackCompat() {
@@ -2746,6 +2754,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
                     + "com.example.adservices.samples.fledge.sampleapp2,"
                     + "com.example.adservices.samples.fledge.sampleapp3,"
                     + "com.example.adservices.samples.fledge.sampleapp4,"
+                    + "com.example.adservices.samples.signals.sampleapp,"
                     + "com.example.measurement.sampleapp,"
                     + "com.example.measurement.sampleapp2,"
                     + "com.android.adservices.tests.cts.endtoendtest.measurement";
@@ -4492,7 +4501,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Cobalt logging feature flag. */
-    boolean COBALT_LOGGING_ENABLED = false;
+    @FeatureFlag boolean COBALT_LOGGING_ENABLED = false;
 
     /**
      * Returns the feature flag value for cobalt logging job. The cobalt logging feature will be
@@ -4686,20 +4695,22 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     boolean FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED = false;
 
     /** Default value of k-anon fetch server parameters url. */
-    String FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL =
-            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getServerPublicParams/act_v0_32_2048_05_2023";
+    String FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL = "";
+
+    /** Default value of k-anon get challenge url. */
+    String FLEDGE_DEFAULT_GET_CHALLENGE_URL = "";
 
     /** Default value of k-anon register client parameters url. */
-    String FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL =
-            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/registerClient";
+    String FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL = "";
 
     /** Default value of k-anon get tokens url. */
-    String FLEDGE_DEFAULT_KANON_GET_TOKENS_URL =
-            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getTokens";
+    String FLEDGE_DEFAULT_KANON_GET_TOKENS_URL = "";
 
     /** Default value of k-anon get tokens url. */
-    String FLEDGE_DEFAULT_KANON_JOIN_URL =
-            "https://staging-chromekanonymity-pa.sandbox.googleapis.com/v1/proxy/req";
+    String FLEDGE_DEFAULT_KANON_JOIN_URL = "";
+
+    /** Default value of kanon join authority */
+    String FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN = "";
 
     /** Default size of batch in a kanon sign call */
     int FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE = 32;
@@ -4718,6 +4729,12 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Default value for kanon background process flag */
     boolean FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED = false;
+
+    /** Default value for kanon logging flag */
+    boolean FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED = false;
+
+    /** Default value for kanon key attestation feature flag */
+    boolean FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED = false;
 
     /** Default value for kanon sign join set type */
     String FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN = "fledge";
@@ -4739,6 +4756,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default String getFledgeKAnonFetchServerParamsUrl() {
         return FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to fetch server parameters during k-anon
+     * sign call
+     *
+     * @return kanon fetch server params url.
+     */
+    default String getFledgeKAnonGetChallengeUrl() {
+        return FLEDGE_DEFAULT_GET_CHALLENGE_URL;
     }
 
     /**
@@ -4810,11 +4837,29 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /**
      * This method returns {@code true} if the kanon background process is enabled, {@code false}
-     * otherwise
+     * otherwise.
      */
     default boolean getFledgeKAnonBackgroundProcessEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
                 && FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED;
+    }
+
+    /**
+     * This method returns {@code true} if the telemetry logging for kanon is enabled, {@code false}
+     * otherwise.
+     */
+    default boolean getFledgeKAnonLoggingEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED;
+    }
+
+    /**
+     * This method return {@code true} if the KAnon Key attestaion is enabled, {@code false}
+     * otherwise.
+     */
+    default boolean getFledgeKAnonKeyAttestationEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED;
     }
 
     /**
@@ -4823,6 +4868,15 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default String getFledgeKAnonSetTypeToSignJoin() {
         return FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN;
+    }
+
+    /**
+     * This method returns the url authority that will be used in the
+     * {@link com.android.adservices.service.common.bhttp.BinaryHttpMessage}. This BinaryHttpMessage
+     * is sent as part of kanon http join request.
+     */
+    default String getFledgeKAnonUrlAuthorityToJoin() {
+        return FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
     }
 
     /*

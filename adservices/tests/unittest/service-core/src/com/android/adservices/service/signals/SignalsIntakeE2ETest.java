@@ -217,6 +217,7 @@ public class SignalsIntakeE2ETest {
                         mMockThrottler);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
         when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true);
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
@@ -674,9 +675,22 @@ public class SignalsIntakeE2ETest {
     }
 
     @Test
-    public void testNoConsent() throws Exception {
+    public void testNoConsentCallerPackageHasNoConsent() throws Exception {
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(true);
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+        baseTestNoConsent();
+    }
+
+    @Test
+    public void testNoConsentUserNotSeenNotification() throws Exception {
+        when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
+                .thenReturn(false);
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(false);
+        baseTestNoConsent();
+    }
+
+    private void baseTestNoConsent() throws Exception {
         setupService(false);
         String json =
                 "{" + "\"put\":{\"" + BASE64_KEY_1 + "\":\"" + BASE64_VALUE_1 + "\"" + "}" + "}";

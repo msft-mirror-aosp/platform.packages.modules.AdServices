@@ -503,9 +503,18 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     private @ConsentStatus.ConsentStatusCode int getConsentStatus(
             ConsentManager consentManager, AdServicesApiType apiType) {
-        if (consentManager.getConsent(apiType).isGiven()) return ConsentStatus.GIVEN;
-        else {
+        if (apiType == AdServicesApiType.FLEDGE) {
+            if (consentManager.isPasFledgeConsentGiven()) {
+                return ConsentStatus.GIVEN;
+            }
             return ConsentStatus.REVOKED;
         }
+        if (apiType == AdServicesApiType.MEASUREMENTS) {
+            if (consentManager.isPasMeasurementConsentGiven()) {
+                return ConsentStatus.GIVEN;
+            }
+            return ConsentStatus.REVOKED;
+        }
+        return ConsentStatus.REVOKED;
     }
 }

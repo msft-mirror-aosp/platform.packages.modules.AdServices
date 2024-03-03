@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ACTIVATION_TIME;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_2;
@@ -26,6 +29,7 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.UPDATE_ID;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayload;
+import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.JOIN_CUSTOM_AUDIENCE_KEY;
 import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.STALE_DELAYED_UPDATE_AGE;
 
 import static org.junit.Assert.assertEquals;
@@ -33,6 +37,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -69,6 +74,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -115,6 +121,7 @@ public final class ScheduledUpdatesHandlerTest {
     @Captor ArgumentCaptor<DBCustomAudience> mInsertCustomAudienceCaptor;
     private boolean mFledgeAdSelectionFilteringEnabled;
     private boolean mFledgeAuctionServerAdRenderIdEnabled;
+    private boolean mAuctionServerRequestFlags;
     private long mFledgeAuctionServerAdRenderIdMaxLength;
     private Flags mFlags;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
@@ -148,6 +155,7 @@ public final class ScheduledUpdatesHandlerTest {
         mFledgeAuctionServerAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
         mFledgeAuctionServerAdRenderIdMaxLength =
                 mFlags.getFledgeAuctionServerAdRenderIdMaxLength();
+        mAuctionServerRequestFlags = mFlags.getFledgeAuctionServerRequestFlagsEnabled();
     }
 
     @Test
@@ -166,12 +174,14 @@ public final class ScheduledUpdatesHandlerTest {
 
         String responsePayload =
                 createJsonResponsePayload(
-                        UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
-                        partialCustomAudienceList.stream()
-                                .map(ca -> ca.getName())
-                                .collect(Collectors.toList()),
-                        List.of(LEAVE_CA_1, LEAVE_CA_2));
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
                         AdServicesHttpClientResponse.builder()
@@ -222,6 +232,341 @@ public final class ScheduledUpdatesHandlerTest {
     }
 
     @Test
+    public void testPerformScheduledUpdates_SuccessWithAuctionServerRequestFlagsEnabled()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        enableAuctionServerRequestFlags();
+
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
+
+        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
+                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
+        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
+                .thenReturn(List.of(updateAndOverridesPair));
+
+        byte[] expectedRequestBody =
+                createJsonRequestPayloadFromPartialCustomAudience(partialCustomAudienceList);
+
+        String responsePayload =
+                createJsonResponsePayload(
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                true)
+                        .toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored = mHandler.performScheduledUpdates(Instant.now()).get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock)
+                .performRequestGetResponseInPlainString(mRequestCaptor.capture());
+        assertEquals(
+                "Request method should have been POST",
+                AdServicesHttpUtil.HttpMethodType.POST,
+                mRequestCaptor.getValue().getHttpMethodType());
+        assertEquals(
+                "Sent payload mismatch",
+                new String(expectedRequestBody),
+                new String(mRequestCaptor.getValue().getBodyInBytes()));
+
+        verify(mCustomAudienceImplMock)
+                .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_1);
+        verify(mCustomAudienceImplMock)
+                .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
+
+        verify(mCustomAudienceDaoMock, times(2))
+                .insertOrOverwriteCustomAudience(
+                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+
+        List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
+
+        verify(mCustomAudienceDaoMock).deleteScheduledCustomAudienceUpdate(UPDATE);
+
+        assertTrue(
+                "Joined Custom Audiences should have all the CAs in response",
+                joinedCustomAudiences.stream()
+                        .map(ca -> ca.getName())
+                        .collect(Collectors.toList())
+                        .containsAll(
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList())));
+        assertEquals(
+                "Bidding signals should have been overridden",
+                VALID_BIDDING_SIGNALS.toString(),
+                joinedCustomAudiences.get(0).getUserBiddingSignals().toString());
+
+        assertEquals(
+                "Auction server flags should not equal 0",
+                FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS,
+                joinedCustomAudiences.get(0).getAuctionServerRequestFlags());
+        assertEquals(
+                "Auction server flags should not equal 0",
+                FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS,
+                joinedCustomAudiences.get(1).getAuctionServerRequestFlags());
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_SuccessWithAuctionServerRequestFlagsDisabled()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
+
+        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
+                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
+        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
+                .thenReturn(List.of(updateAndOverridesPair));
+
+        byte[] expectedRequestBody =
+                createJsonRequestPayloadFromPartialCustomAudience(partialCustomAudienceList);
+
+        String responsePayload =
+                createJsonResponsePayload(
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                true)
+                        .toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored = mHandler.performScheduledUpdates(Instant.now()).get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock)
+                .performRequestGetResponseInPlainString(mRequestCaptor.capture());
+        assertEquals(
+                "Request method should have been POST",
+                AdServicesHttpUtil.HttpMethodType.POST,
+                mRequestCaptor.getValue().getHttpMethodType());
+        assertEquals(
+                "Sent payload mismatch",
+                new String(expectedRequestBody),
+                new String(mRequestCaptor.getValue().getBodyInBytes()));
+
+        verify(mCustomAudienceImplMock)
+                .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_1);
+        verify(mCustomAudienceImplMock)
+                .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
+
+        verify(mCustomAudienceDaoMock, times(2))
+                .insertOrOverwriteCustomAudience(
+                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+
+        List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
+
+        verify(mCustomAudienceDaoMock).deleteScheduledCustomAudienceUpdate(UPDATE);
+
+        assertTrue(
+                "Joined Custom Audiences should have all the CAs in response",
+                joinedCustomAudiences.stream()
+                        .map(ca -> ca.getName())
+                        .collect(Collectors.toList())
+                        .containsAll(
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList())));
+        assertEquals(
+                "Bidding signals should have been overridden",
+                VALID_BIDDING_SIGNALS.toString(),
+                joinedCustomAudiences.get(0).getUserBiddingSignals().toString());
+
+        assertEquals(
+                "Auction server flags should equal 0 since flag is disabled",
+                0,
+                joinedCustomAudiences.get(0).getAuctionServerRequestFlags());
+        assertEquals(
+                "Auction server flags should equal 0 since flag is disabled",
+                0,
+                joinedCustomAudiences.get(1).getAuctionServerRequestFlags());
+    }
+
+    @Test
+    public void
+            testPerformScheduledUpdates_SuccessWithAuctionServerRequestFlagsEnabledButNoFlagsInResponse()
+                    throws JSONException, ExecutionException, InterruptedException,
+                            TimeoutException {
+        enableAuctionServerRequestFlags();
+
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
+
+        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
+                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
+        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
+                .thenReturn(List.of(updateAndOverridesPair));
+
+        byte[] expectedRequestBody =
+                createJsonRequestPayloadFromPartialCustomAudience(partialCustomAudienceList);
+
+        String responsePayload =
+                createJsonResponsePayload(
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                false)
+                        .toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored = mHandler.performScheduledUpdates(Instant.now()).get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock)
+                .performRequestGetResponseInPlainString(mRequestCaptor.capture());
+        assertEquals(
+                "Request method should have been POST",
+                AdServicesHttpUtil.HttpMethodType.POST,
+                mRequestCaptor.getValue().getHttpMethodType());
+        assertEquals(
+                "Sent payload mismatch",
+                new String(expectedRequestBody),
+                new String(mRequestCaptor.getValue().getBodyInBytes()));
+
+        verify(mCustomAudienceImplMock)
+                .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_1);
+        verify(mCustomAudienceImplMock)
+                .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
+
+        verify(mCustomAudienceDaoMock, times(2))
+                .insertOrOverwriteCustomAudience(
+                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+
+        List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
+
+        verify(mCustomAudienceDaoMock).deleteScheduledCustomAudienceUpdate(UPDATE);
+
+        assertTrue(
+                "Joined Custom Audiences should have all the CAs in response",
+                joinedCustomAudiences.stream()
+                        .map(ca -> ca.getName())
+                        .collect(Collectors.toList())
+                        .containsAll(
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList())));
+        assertEquals(
+                "Bidding signals should have been overridden",
+                VALID_BIDDING_SIGNALS.toString(),
+                joinedCustomAudiences.get(0).getUserBiddingSignals().toString());
+
+        assertEquals(
+                "Auction server flags should equal 0 since json response did not have flags",
+                0,
+                joinedCustomAudiences.get(0).getAuctionServerRequestFlags());
+        assertEquals(
+                "Auction server flags should equal 0 since json response did not have flags",
+                0,
+                joinedCustomAudiences.get(1).getAuctionServerRequestFlags());
+    }
+
+    @Test
+    public void testPerformScheduledUpdatesDoesNotPersistCAsWithMissingField() throws Exception {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
+
+        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
+                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
+        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
+                .thenReturn(List.of(updateAndOverridesPair));
+
+        JSONObject responsePayloadJSON =
+                createJsonResponsePayload(
+                        UPDATE.getBuyer(),
+                        UPDATE.getOwner(),
+                        partialCustomAudienceList.stream()
+                                .map(ca -> ca.getName())
+                                .collect(Collectors.toList()),
+                        List.of(LEAVE_CA_1, LEAVE_CA_2),
+                        /* auctionServerRequestFlagsEnabled= */ false);
+
+        // Remove ADS_KEY from both of the CAs to join
+        responsePayloadJSON.getJSONArray(JOIN_CUSTOM_AUDIENCE_KEY).getJSONObject(0).remove(ADS_KEY);
+        responsePayloadJSON.getJSONArray(JOIN_CUSTOM_AUDIENCE_KEY).getJSONObject(1).remove(ADS_KEY);
+
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayloadJSON.toString())
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored = mHandler.performScheduledUpdates(Instant.now()).get(10, TimeUnit.SECONDS);
+
+        // Verify custom audiences were not inserted since field is missing
+        verify(mCustomAudienceDaoMock, never())
+                .insertOrOverwriteCustomAudience(
+                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+    }
+
+    @Test
+    public void
+            testPerformScheduledUpdatesThrowsExceptionForMissingFieldWithAuctionServerRequestFlagsEnabled()
+                    throws Exception {
+        enableAuctionServerRequestFlags();
+
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
+
+        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
+                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
+        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
+                .thenReturn(List.of(updateAndOverridesPair));
+
+        JSONObject responsePayloadJSON =
+                createJsonResponsePayload(
+                        UPDATE.getBuyer(),
+                        UPDATE.getOwner(),
+                        partialCustomAudienceList.stream()
+                                .map(ca -> ca.getName())
+                                .collect(Collectors.toList()),
+                        List.of(LEAVE_CA_1, LEAVE_CA_2),
+                        /* auctionServerRequestFlagsEnabled= */ false);
+
+        // Remove ADS_KEY from both of the CAs to join
+        responsePayloadJSON.getJSONArray(JOIN_CUSTOM_AUDIENCE_KEY).getJSONObject(0).remove(ADS_KEY);
+        responsePayloadJSON.getJSONArray(JOIN_CUSTOM_AUDIENCE_KEY).getJSONObject(1).remove(ADS_KEY);
+
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayloadJSON.toString())
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+        Void ignored = mHandler.performScheduledUpdates(Instant.now()).get(10, TimeUnit.SECONDS);
+
+        // Verify custom audiences were not inserted since field is missing
+        verify(mCustomAudienceDaoMock, never())
+                .insertOrOverwriteCustomAudience(
+                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+    }
+
+    @Test
     public void testPerformScheduledUpdates_PartialCaDifferentNames_Success()
             throws JSONException, ExecutionException, InterruptedException, TimeoutException {
         List<DBPartialCustomAudience> partialCustomAudienceList =
@@ -236,10 +581,12 @@ public final class ScheduledUpdatesHandlerTest {
 
         String responsePayload =
                 createJsonResponsePayload(
-                        UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
-                        List.of(nonOverriddenCaName, PARTIAL_CA_1, PARTIAL_CA_2),
-                        List.of(LEAVE_CA_1, LEAVE_CA_2));
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                List.of(nonOverriddenCaName, PARTIAL_CA_1, PARTIAL_CA_2),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
                         AdServicesHttpClientResponse.builder()
@@ -310,12 +657,14 @@ public final class ScheduledUpdatesHandlerTest {
 
         String responsePayload =
                 createJsonResponsePayload(
-                        UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
-                        partialCustomAudienceList.stream()
-                                .map(ca -> ca.getName())
-                                .collect(Collectors.toList()),
-                        List.of(LEAVE_CA_1, LEAVE_CA_2));
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
                         AdServicesHttpClientResponse.builder()
@@ -381,10 +730,12 @@ public final class ScheduledUpdatesHandlerTest {
 
         String responsePayload =
                 createJsonResponsePayload(
-                        UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
-                        List.of(nonOverriddenCaName),
-                        List.of(LEAVE_CA_1, LEAVE_CA_2));
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                List.of(nonOverriddenCaName),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
                         AdServicesHttpClientResponse.builder()
@@ -442,12 +793,14 @@ public final class ScheduledUpdatesHandlerTest {
 
         String responsePayload =
                 createJsonResponsePayload(
-                        UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
-                        partialCustomAudienceList.stream()
-                                .map(ca -> ca.getName())
-                                .collect(Collectors.toList()),
-                        List.of(LEAVE_CA_1, LEAVE_CA_2));
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
                         AdServicesHttpClientResponse.builder()
@@ -531,7 +884,8 @@ public final class ScheduledUpdatesHandlerTest {
                     new CustomAudienceBlob(
                             mFledgeAdSelectionFilteringEnabled,
                             mFledgeAuctionServerAdRenderIdEnabled,
-                            mFledgeAuctionServerAdRenderIdMaxLength);
+                            mFledgeAuctionServerAdRenderIdMaxLength,
+                            mAuctionServerRequestFlags);
             blob.overrideFromPartialCustomAudience(
                     OWNER,
                     BUYER,
@@ -576,5 +930,28 @@ public final class ScheduledUpdatesHandlerTest {
         public int getFledgeFetchCustomAudienceMaxCustomAudienceSizeB() {
             return 0;
         }
+    }
+
+    private void enableAuctionServerRequestFlags() {
+        // Enable auction server request flags
+        mFlags =
+                new ScheduleCustomAudienceUpdateFlags() {
+                    @Override
+                    public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+                        return true;
+                    }
+                };
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDaoMock,
+                        mAdServicesHttpsClientMock,
+                        mFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock);
     }
 }
