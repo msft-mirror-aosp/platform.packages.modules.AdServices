@@ -30,7 +30,6 @@ import android.os.SystemProperties;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
@@ -38,6 +37,7 @@ import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /* TODO(b/326254556): test fail if properties are already set. Example:
@@ -65,7 +65,7 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
 
     // TODO(b/326254556): add 2 tests (T and pre-T) for getGlobalKillSwitch() itself
 
-    @FlakyTest(bugId = 326254556)
+    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetTopicsEpochJobFlexMs() {
         testUnguardedFlag(
@@ -74,14 +74,14 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
                 flags -> flags.getTopicsEpochJobFlexMs());
     }
 
-    @FlakyTest(bugId = 326254556)
+    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetAdIdKillSwitch() {
         testUnguardedLegacyKillSwitch(
                 KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", flags -> flags.getAdIdKillSwitch());
     }
 
-    @FlakyTest(bugId = 326254556)
+    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetLegacyMeasurementKillSwitch() {
         testLegacyKillSwitch(
@@ -90,7 +90,7 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
                 flags -> flags.getLegacyMeasurementKillSwitch());
     }
 
-    @FlakyTest(bugId = 326254556)
+    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetMeasurementEnabled() {
         testFeatureFlagBackedByLegacyKillSwitch(
@@ -99,7 +99,7 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
                 flags -> flags.getMeasurementEnabled());
     }
 
-    @FlakyTest(bugId = 326254556)
+    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
         testFeatureFlagBackedByLegacyKillSwitch(
@@ -109,7 +109,7 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
                 flags -> flags.getMeasurementAttributionFallbackJobEnabled());
     }
 
-    @FlakyTest(bugId = 326254556)
+    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetCobaltLoggingEnabled() {
         testFeatureFlag(
