@@ -16,7 +16,9 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
@@ -5078,6 +5080,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED
                         + " = "
                         + getFledgeCustomAudienceCLIEnabledStatus());
+        writer.println(
+                "\t"
+                        + KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED
+                        + " = "
+                        + getAdServicesRetryStrategyEnabled());
+        writer.println(
+                "\t"
+                        + KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS
+                        + " = "
+                        + getAdServicesJsScriptEngineMaxRetryAttempts());
     }
 
     @VisibleForTesting
@@ -6034,6 +6046,22 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getBackgroundJobsLoggingEnabled() {
         return !getBackgroundJobsLoggingKillSwitch();
+    }
+
+    @Override
+    public boolean getAdServicesRetryStrategyEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED,
+                /* defaultValue */ DEFAULT_AD_SERVICES_RETRY_STRATEGY_ENABLED);
+    }
+
+    @Override
+    public int getAdServicesJsScriptEngineMaxRetryAttempts() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS,
+                /* defaultValue */ DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers

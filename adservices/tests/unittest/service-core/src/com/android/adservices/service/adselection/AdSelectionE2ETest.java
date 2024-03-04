@@ -144,6 +144,7 @@ import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
@@ -658,6 +659,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     private MockAdIdWorker mMockAdIdWorker;
     private AdIdFetcher mAdIdFetcher;
+    private RetryStrategyFactory mRetryStrategyFactory;
 
     @Before
     public void setUp() throws Exception {
@@ -706,6 +708,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mSpyContext));
         mAdIdFetcher =
                 new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -738,7 +741,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         Uri uriPathForScoringWithReportResults =
@@ -991,7 +995,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1119,7 +1124,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1267,7 +1273,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1411,7 +1418,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -1536,7 +1544,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1756,7 +1765,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -1856,7 +1866,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2047,7 +2058,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2173,7 +2185,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2320,7 +2333,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2463,7 +2477,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2587,7 +2602,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -3140,7 +3156,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3280,7 +3297,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(adSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4049,7 +4067,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4169,7 +4188,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4290,7 +4310,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -4414,7 +4435,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -4539,7 +4561,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -4680,7 +4703,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -5874,7 +5898,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         String jsWaitMoreThanAllowedForBiddingPerCa =
                 insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
@@ -6128,7 +6153,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6205,7 +6231,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6400,7 +6427,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6477,7 +6505,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6597,7 +6626,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         String jsWaitMoreThanAllowedForScoring =
                 insertJsWait(2 * mFlags.getAdSelectionScoringTimeoutMs());
@@ -7294,7 +7324,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -7430,7 +7461,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -7566,7 +7598,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -7679,7 +7712,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             mAdSelectionDebugReportDao,
                             mAdIdFetcher,
                             mUnusedKAnonSignJoinFactory,
-                            false);
+                            false,
+                            mRetryStrategyFactory);
 
             mMockWebServerRule.startMockWebServer(mDispatcher);
             List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
