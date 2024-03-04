@@ -41,6 +41,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -98,7 +99,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final DebugReporting debugReporting,
             final int callerUid,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            @NonNull final RetryStrategy retryStrategy) {
         super(
                 context,
                 customAudienceDao,
@@ -121,6 +123,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(adCounterKeyCopier);
+        Objects.requireNonNull(retryStrategy);
 
         mAdServicesHttpsClient = adServicesHttpsClient;
         mAdFilterer = adFilterer;
@@ -136,7 +139,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 () -> flags.getIsolateMaxHeapSizeBytes(),
                                 mAdCounterKeyCopier,
                                 mDebugReporting.getScriptStrategy(),
-                                cpcBillingEnabled),
+                                cpcBillingEnabled,
+                                retryStrategy),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -161,7 +165,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 flags,
                                 mDebugReporting,
                                 cpcBillingEnabled,
-                                dataVersionHeaderEnabled),
+                                dataVersionHeaderEnabled,
+                                retryStrategy),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
                                 devContext,
@@ -516,7 +521,9 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
      * clean up cache.
      */
     private void cleanUpCache() {
-        mAdServicesHttpsClient.getAssociatedCache().cleanUp();
+        ListenableFuture<?> unused =
+                mBackgroundExecutorService.submit(
+                        () -> mAdServicesHttpsClient.getAssociatedCache().cleanUp());
     }
 
     private static class AdSelectionContext {

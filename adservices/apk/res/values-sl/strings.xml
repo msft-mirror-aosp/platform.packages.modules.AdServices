@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android beleži teme, ki vas zanimajo, na podlagi aplikacij, ki ste jih nedavno uporabljali. Aplikacije in njihovi oglaševalski partnerji lahko uporabljajo vašo dejavnost v drugih aplikacijah v tej napravi za osebno prilagajanje oglasov, hkrati pa skrbijo za zagotavljanje zasebnosti in varnosti vaše identitete."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Aplikacije, ki jih uporabljate, lahko tudi ugotavljajo, kaj vam je všeč, na podlagi dejavnosti v aplikacijah. Če redno uporabljate kuharske aplikacije, vam bodo morda prikazani oglasi za storitve dostave živil ali sorodno vsebino v drugih aplikacijah.\n\nAplikacije varno hranijo te podatke, da jih za osebno prilagajanje oglasov v drugih aplikacijah lahko uporabljajo samo njihovi oglaševalski partnerji."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Pozneje lahko aplikacija, ki jo uporabljate, prosi za te podatke – bodisi za teme oglasov bodisi za oglase, ki so jih predlagale aplikacije, ki ste jih uporabljali."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Aplikacije, ki jih uporabljate, lahko prosijo Android za podatke, da bodo lažje merile uspešnost oglasov. Android varuje vašo zasebnost tako, da omeji, katere podatke si aplikacije lahko delijo med seboj."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

@@ -69,6 +69,10 @@ public class ConsentConstants {
     public static final String SHARED_PREFS_KEY_HAS_MIGRATED =
             "CONSENT_HAS_MIGRATED_TO_SYSTEM_SERVER";
 
+    // Shared preferences to mark whether AdExtData has been migrated to system server
+    public static final String SHARED_PREFS_KEY_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER =
+            "CONSENT_HAS_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER";
+
     // Shared preferences to mark whether PPAPI consent has been cleared.
     static final String SHARED_PREFS_KEY_PPAPI_HAS_CLEARED = "CONSENT_HAS_CLEARED_IN_PPAPI";
 

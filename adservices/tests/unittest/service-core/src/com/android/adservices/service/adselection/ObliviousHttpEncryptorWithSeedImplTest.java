@@ -76,7 +76,7 @@ public class ObliviousHttpEncryptorWithSeedImplTest {
 
     @Test
     public void test_encryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000L))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000L, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
         String seed = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
         byte[] seedBytes = seed.getBytes(StandardCharsets.US_ASCII);
@@ -97,7 +97,10 @@ public class ObliviousHttpEncryptorWithSeedImplTest {
         assertThat(
                         BaseEncoding.base16()
                                 .lowerCase()
-                                .encode(encryptor.encryptBytes(plainTextBytes, 1L, 1000L).get()))
+                                .encode(
+                                        encryptor
+                                                .encryptBytes(plainTextBytes, 1L, 1000L, null)
+                                                .get()))
                 // Only the Ohttp header containing key ID and algorithm IDs is same across
                 // multiple test runs since, a random seed is used to generate rest of the
                 // cipher text.
@@ -119,7 +122,7 @@ public class ObliviousHttpEncryptorWithSeedImplTest {
 
     @Test
     public void test_decryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String seed = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
@@ -134,7 +137,7 @@ public class ObliviousHttpEncryptorWithSeedImplTest {
         String plainText = "test request 1";
         byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
 
-        byte[] encryptedBytes = encryptor.encryptBytes(plainTextBytes, 1L, 1000L).get();
+        byte[] encryptedBytes = encryptor.encryptBytes(plainTextBytes, 1L, 1000L, null).get();
 
         assertThat(encryptedBytes).isNotNull();
         assertThat(encryptedBytes).isNotEmpty();
