@@ -79,6 +79,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.HttpCache;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
@@ -186,7 +187,6 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
     @Mock private FledgeAllowListsFilter mFledgeAllowListsFilterMock;
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
-
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
@@ -208,6 +208,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
             MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
+    private RetryStrategyFactory mRetryStrategyFactory;
 
     @Before
     public void setup() {
@@ -257,6 +258,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                 new AdFilteringFeatureFactory(
                         mAppInstallDao, mFrequencyCapDaoSpy, flagsEnablingAdFiltering);
 
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
+
         mAdSelectionServiceImpl =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
@@ -283,7 +286,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder(
@@ -446,7 +450,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -517,7 +522,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                             mAdSelectionDebugReportDao,
                             mAdIdFetcher,
                             mUnusedKAnonSignJoinFactory,
-                            false);
+                            false,
+                            mRetryStrategyFactory);
 
             UpdateAdCounterHistogramTestCallback callback =
                     callUpdateAdCounterHistogram(mInputParams);
@@ -769,7 +775,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -886,7 +893,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
