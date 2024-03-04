@@ -145,16 +145,18 @@ public class SandboxedTopicsManagerTest {
         callback.assertLoadSdkIsSuccessful();
     }
 
+    // TODO(b/314188692, b/299104530): refactor test to extend superclass that uses FlagSetter rule
+
     // Override the Epoch Period to shorten the Epoch Length in the test.
     private void overrideEpochPeriod(long overrideEpochPeriod) {
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
+                "device_config put adservices topics_epoch_job_period_ms " + overrideEpochPeriod);
     }
 
     // Override the Percentage For Random Topic in the test.
     private void overridePercentageForRandomTopic(long overridePercentage) {
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_percentage_for_random_topics "
+                "device_config put adservices.topics_percentage_for_random_topics "
                         + overridePercentage);
     }
 
