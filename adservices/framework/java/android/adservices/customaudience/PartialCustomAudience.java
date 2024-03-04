@@ -41,6 +41,8 @@ import java.util.Objects;
  * <p>Other nullable fields will not be overridden if left null
  *
  * <p>For more information about each field refer to {@link CustomAudience}.
+ *
+ * @hide
  */
 @FlaggedApi(FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
 public final class PartialCustomAudience implements Parcelable {

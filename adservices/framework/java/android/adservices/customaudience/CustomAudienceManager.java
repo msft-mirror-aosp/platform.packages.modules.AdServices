@@ -481,6 +481,8 @@ public class CustomAudienceManager {
      *
      * <p>This call fails with {@link LimitExceededException} if the calling package exceeds the
      * allowed rate limits and is throttled.
+     *
+     * @hide
      */
     @FlaggedApi(FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
