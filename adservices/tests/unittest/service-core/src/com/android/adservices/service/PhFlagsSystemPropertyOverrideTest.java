@@ -119,7 +119,7 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
                 flags -> flags.getCobaltLoggingEnabled());
     }
 
-    @FlakyTest(bugId = 326254556)
+    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetMddLoggerEnabled() {
         testFeatureFlagBackedByLegacyKillSwitch(
