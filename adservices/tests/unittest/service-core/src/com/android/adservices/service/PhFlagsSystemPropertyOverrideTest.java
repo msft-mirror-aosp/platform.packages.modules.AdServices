@@ -21,6 +21,7 @@ import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
@@ -116,6 +117,15 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
                 KEY_COBALT_LOGGING_ENABLED,
                 "COBALT_LOGGING_ENABLED",
                 flags -> flags.getCobaltLoggingEnabled());
+    }
+
+    @FlakyTest(bugId = 326254556)
+    @Test
+    public void testGetMddLoggerEnabled() {
+        testFeatureFlagBackedByLegacyKillSwitch(
+                KEY_MDD_LOGGER_KILL_SWITCH,
+                "MDD_LOGGER_KILL_SWITCH",
+                flags -> flags.getMddLoggerEnabled());
     }
 
     /**
@@ -242,7 +252,7 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
      * Tests the behavior of a boolean flag that is guarded by the global kill switch.
      *
      * @param flagName name of the flag
-     * @param defaultValue default value of the flag
+     * @param defaultValueConstant default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
     private void testLegacyKillSwitch(
