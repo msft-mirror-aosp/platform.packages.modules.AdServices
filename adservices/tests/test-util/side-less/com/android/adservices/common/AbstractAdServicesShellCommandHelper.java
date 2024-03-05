@@ -19,6 +19,7 @@ package com.android.adservices.common;
 import com.android.adservices.common.Logger.RealLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Supplier;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
@@ -37,8 +38,14 @@ public abstract class AbstractAdServicesShellCommandHelper {
 
     static final String DISABLE_SHELL_ACTIVITY = "pm disable " + SHELL_ACTIVITY_COMPONENT_NAME;
 
+    static final String CMD_ECHO = "echo";
+    static final String ECHO_OUT = "finish_activity";
+
     @VisibleForTesting
     static final String ADSERVICES_MANAGER_SERVICE_CHECK = "service check adservices_manager";
+
+    private static final long WAIT_SAMPLE_INTERVAL_MILLIS = 500;
+    private static final long TIMEOUT_ACTIVITY_FINISH_MILLIS = 2000;
 
     private final Logger mLog;
 
@@ -136,8 +143,8 @@ public abstract class AbstractAdServicesShellCommandHelper {
         mLog.d("Output for command %s: %s", runDumpsysShellCommand(cmd), res);
         String out = parseResultFromDumpsys(res);
 
-        res = runShellCommand(DISABLE_SHELL_ACTIVITY);
-        mLog.d("Output for command %s: %s", DISABLE_SHELL_ACTIVITY, res);
+        checkShellCommandActivityFinished();
+        disableShellCommandActivity();
         return out;
     }
 
@@ -173,6 +180,52 @@ public abstract class AbstractAdServicesShellCommandHelper {
     boolean isAdServicesManagerServicePublished() {
         String out = runShellCommand(ADSERVICES_MANAGER_SERVICE_CHECK);
         return !out.contains("not found");
+    }
+
+    private void checkShellCommandActivityFinished() {
+        mLog.d("Checking if ShellCommandActivity is finished");
+        String cmd = CMD_ECHO + " " + ECHO_OUT;
+        tryWaitForSuccess(
+                () -> {
+                    String res = runShellCommand(runDumpsysShellCommand(cmd));
+                    mLog.d("Output for command %s: %s", runDumpsysShellCommand(cmd), res);
+                    return !res.contains(ECHO_OUT);
+                },
+                "Failed to finish ShellCommandActivity",
+                TIMEOUT_ACTIVITY_FINISH_MILLIS);
+    }
+
+    private void disableShellCommandActivity() {
+        String res = runShellCommand(DISABLE_SHELL_ACTIVITY);
+        mLog.d("Output for command %s: %s", DISABLE_SHELL_ACTIVITY, res);
+
+        // Add some sleep to ensure shell command is disabled.
+        try {
+            mLog.d("Sleep for %dms to let activity disable finish", WAIT_SAMPLE_INTERVAL_MILLIS);
+            Thread.sleep(WAIT_SAMPLE_INTERVAL_MILLIS);
+        } catch (InterruptedException e) {
+            mLog.e("Thread interrupted while disabling activity");
+        }
+    }
+
+    // TODO(b/328107990): Create a generic method and move this to a CTS helper class.
+    private void tryWaitForSuccess(
+            Supplier<Boolean> successCondition, String failureMessage, long maxTimeoutMillis) {
+        long epoch = System.currentTimeMillis();
+        while (System.currentTimeMillis() - epoch <= maxTimeoutMillis) {
+            try {
+                mLog.d("Sleep for %dms before we check for result", WAIT_SAMPLE_INTERVAL_MILLIS);
+                Thread.sleep(WAIT_SAMPLE_INTERVAL_MILLIS);
+                if (successCondition.get()) {
+                    mLog.d("ShellCommandActivity is finished");
+                    return;
+                }
+            } catch (InterruptedException e) {
+                mLog.e("Thread interrupted, %s", failureMessage);
+                Thread.currentThread().interrupt();
+            }
+        }
+        mLog.e("Timeout %dms happened, %s", maxTimeoutMillis, failureMessage);
     }
 
     /** Contains the result of a shell command. */
