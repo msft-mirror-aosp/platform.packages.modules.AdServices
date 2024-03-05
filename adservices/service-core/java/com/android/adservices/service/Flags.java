@@ -4913,4 +4913,32 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default String getAdServicesModuleJobPolicy() {
         return AD_SERVICES_MODULE_JOB_POLICY;
     }
+
+    /**
+     * Default value for the enabled status of the {@link
+     * com.android.adservices.service.common.RetryStrategy}.
+     */
+    boolean DEFAULT_AD_SERVICES_RETRY_STRATEGY_ENABLED = false;
+
+    /**
+     * Returns the enabled status of the AdServices {@link
+     * com.android.adservices.service.common.RetryStrategy}.
+     */
+    default boolean getAdServicesRetryStrategyEnabled() {
+        return DEFAULT_AD_SERVICES_RETRY_STRATEGY_ENABLED;
+    }
+
+    /**
+     * Default value for the max number of retry attempts for {@link
+     * com.android.adservices.service.js.JSScriptEngine}
+     */
+    int DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS = 1;
+
+    /**
+     * Returns the max number of retry attempts for {@link
+     * com.android.adservices.service.js.JSScriptEngine}.
+     */
+    default int getAdServicesJsScriptEngineMaxRetryAttempts() {
+        return DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
+    }
 }
