@@ -27,4 +27,7 @@ public class ExampleSandboxTest extends SdkSandboxTestScenarioRunner {
     public void testExample() {
         assertTrue(true);
     }
+
+    @Override
+    public void cleanUpOnTestFinish() {}
 }
