@@ -1749,6 +1749,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
     }
 
+    @FeatureFlag
+    boolean FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED = false;
+
+    /** Returns whether the fledge GetAdSelectionData payload metrics are enabled. */
+    default boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
+        return FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
+    }
+
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 

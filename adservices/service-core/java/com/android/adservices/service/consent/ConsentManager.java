@@ -2221,6 +2221,10 @@ public class ConsentManager {
     }
 
     public boolean isPasFledgeConsentGiven() {
+        if (mFlags.getConsentManagerDebugMode()) {
+            return true;
+        }
+
         return mFlags.getPasUxEnabled()
                 && wasPasNotificationDisplayed()
                 && getConsent(AdServicesApiType.FLEDGE).isGiven();
