@@ -443,13 +443,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             || !intent.getPackage().equals(sdkSandboxPackageName)
                             || intent.getAction() == null
                             || !intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
-                        this.logSandboxActivityApiLatency(
-                                SdkSandboxStatsLog
-                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE,
-                                (int) (mInjector.elapsedRealtime() - timeEventStarted),
-                                callingUid);
                         return null;
                     }
 
@@ -457,13 +450,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     if (intent.getComponent() != null) {
                         final String componentPackageName = intent.getComponent().getPackageName();
                         if (!componentPackageName.equals(sdkSandboxPackageName)) {
-                            this.logSandboxActivityApiLatency(
-                                    SdkSandboxStatsLog
-                                            .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
-                                    SdkSandboxStatsLog
-                                            .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE,
-                                    (int) (mInjector.elapsedRealtime() - timeEventStarted),
-                                    callingUid);
                             return null;
                         }
                     }
