@@ -16,6 +16,8 @@
 
 package com.android.adservices.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -107,5 +109,19 @@ public class DBCustomAudienceFixture {
         return buyers.stream()
                 .map(a -> DBCustomAudienceFixture.getValidBuilderByBuyer(a).build())
                 .collect(Collectors.toList());
+    }
+
+    /** Build valid DB CA with server auction flags */
+    public static DBCustomAudience.Builder getValidBuilderByBuyerWithOmitAdsEnabled(
+            AdTechIdentifier buyer) {
+        return getValidBuilderByBuyerNoFilters(buyer)
+                .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS);
+    }
+
+    /** Build valid DB CA with server auction flags and name */
+    public static DBCustomAudience.Builder getValidBuilderByBuyerWithOmitAdsEnabled(
+            AdTechIdentifier buyer, String name) {
+        return getValidBuilderByBuyerWithAdRenderId(buyer, name, CustomAudienceFixture.VALID_OWNER)
+                .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS);
     }
 }

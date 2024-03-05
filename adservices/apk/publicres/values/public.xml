@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2023 The Android Open Source Project
+<!-- Copyright (C) 2024 The Android Open Source Project
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -748,4 +748,60 @@
     <public type="string" name="settingsUI_dialog_acknowledge" id="0x7f017d25" />
     <public type="string" name="permlab_adServicesAccessAdServicesCobaltUpload" id="0x7f017d23" />
     <public type="string" name="permdesc_adServicesAccessAdServicesCobaltUpload" id="0x7f017d22" />
+    <public type="string" name="app_name" id="0x7f017d21" />
+    <public type="string" name="permlab_updateAdservicesAdId" id="0x7f017d20" />
+    <public type="string" name="permdesc_updateAdservicesAdId" id="0x7f017d1f" />
+    <public type="string" name="notificationUI_pas_notification_title" id="0x7f017d1e" />
+    <public type="string" name="notificationUI_pas_notification_content" id="0x7f017d1d" />
+    <public type="string" name="notificationUI_pas_re_notification_title" id="0x7f017d1c" />
+    <public type="string" name="notificationUI_pas_re_notification_content" id="0x7f017d1b" />
+    <public type="string" name="notificationUI_pas_header_title" id="0x7f017d1a" />
+    <public type="string" name="notificationUI_pas_body_main" id="0x7f017d19" />
+    <public type="string" name="notificationUI_pas_subtitle1" id="0x7f017d18" />
+    <public type="string" name="notificationUI_pas_body1" id="0x7f017d17" />
+    <public type="string" name="notificationUI_pas_expand_button_text1" id="0x7f017d16" />
+    <public type="string" name="notificationUI_pas_subtitle2" id="0x7f017d15" />
+    <public type="string" name="notificationUI_pas_body2" id="0x7f017d14" />
+    <public type="string" name="notificationUI_pas_expand_button_text2" id="0x7f017d13" />
+    <public type="string" name="notificationUI_pas_text3" id="0x7f017d12" />
+    <public type="string" name="notificationUI_pas_left_control_button_text" id="0x7f017d11" />
+    <public type="string" name="notificationUI_pas_right_control_button_text" id="0x7f017d10" />
+    <public type="string" name="notificationUI_pas_renotify_header_title" id="0x7f017d0f" />
+    <public type="string" name="notificationUI_pas_renotify_body_main" id="0x7f017d0e" />
+    <public type="string" name="notificationUI_pas_renotify_subtitle1" id="0x7f017d0d" />
+    <public type="string" name="notificationUI_pas_renotify_body1" id="0x7f017d0c" />
+    <public type="string" name="notificationUI_pas_renotify_expand_button_text1" id="0x7f017d0b" />
+    <public type="string" name="notificationUI_pas_renotify_subtitle2" id="0x7f017d0a" />
+    <public type="string" name="notificationUI_pas_renotify_body2" id="0x7f017d09" />
+    <public type="string" name="notificationUI_pas_renotify_expand_button_text2" id="0x7f017d08" />
+    <public type="string" name="notificationUI_pas_renotify_text3" id="0x7f017d07" />
+    <public type="string" name="notificationUI_pas_renotify_left_control_button_text" id="0x7f017d06" />
+    <public type="string" name="notificationUI_pas_renotify_right_control_button_text" id="0x7f017d05" />
+    <public type="string" name="notificationUI_pas_msmt_dropdown_subtitle1" id="0x7f017d04" />
+    <public type="string" name="notificationUI_pas_msmt_body1" id="0x7f017d03" />
+    <public type="string" name="notificationUI_pas_msmt_dropdown_subtitle2" id="0x7f017d02" />
+    <public type="string" name="notificationUI_pas_msmt_body2" id="0x7f017d01" />
+    <public type="string" name="notificationUI_pas_app_dropdown_subtitle1" id="0x7f017d00" />
+    <public type="string" name="notificationUI_pas_app_body1" id="0x7f017cff" />
+    <public type="string" name="notificationUI_pas_app_dropdown_subtitle2" id="0x7f017cfe" />
+    <public type="string" name="notificationUI_pas_app_body2" id="0x7f017cfd" />
+    <public type="string" name="notificationUI_pas_app_dropdown_subtitle3" id="0x7f017cfc" />
+    <public type="string" name="notificationUI_pas_app_body3" id="0x7f017cfb" />
+    <public type="string" name="notificationUI_pas_leanr_more_link" id="0x7f017cfa" />
+    <public type="string" name="settingsUI_pas_apps_view_body_text" id="0x7f017cf9" />
+    <public type="string" name="settingsUI_pas_apps_view_footer" id="0x7f017cf8" />
+    <public type="string" name="settingsUI_pas_msmt_view_footer" id="0x7f017cf7" />
+    <public type="string" name="settingsUI_pas_topics_view_footer" id="0x7f017cf6" />
+    <public type="string" name="notificationUI_pas_combined_header_title" id="0x7f017cf5" />
+    <public type="string" name="notificationUI_pas_combined_body_1" id="0x7f017cf4" />
+    <public type="string" name="notificationUI_pas_combined_body_2" id="0x7f017cf3" />
+    <public type="string" name="notificationUI_pas_combined_body_3" id="0x7f017cf2" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_subtitle1" id="0x7f017cf1" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_body1" id="0x7f017cf0" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_body2" id="0x7f017cef" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_body3" id="0x7f017cee" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_body4" id="0x7f017ced" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_subtitle2" id="0x7f017cec" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_body5" id="0x7f017ceb" />
+    <public type="string" name="shell_command_activity_header" id="0x7f017cea" />
 </resources>

@@ -16,12 +16,18 @@
 
 package com.android.adservices.service.stats;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
+
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchStatus.IO_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENCRYPTION_KEY_DB_TRANSACTION_ENDED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENCRYPTION_KEY_FETCHED;
@@ -31,12 +37,22 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_BUYER_INPUT_GENERATED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_BACKGROUND_JOB_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INITIALIZE_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
@@ -60,10 +76,19 @@ import android.adservices.adselection.ReportEventRequest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AppManifestConfigCall;
+import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
+import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
+import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -394,6 +419,164 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    public void testlogFledgeApiCallStats() {
+        // Mocks
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt()));
+
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        int resultCode = STATUS_SUCCESS;
+        int latencyMs = 10;
+
+        // Invoke logging call
+        mLogger.logFledgeApiCallStats(apiName, resultCode, latencyMs);
+
+        // Verify logging
+        verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_API_CALLED),
+                                eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                                eq(apiName),
+                                eq(""),
+                                eq(""),
+                                eq(latencyMs),
+                                eq(resultCode)));
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testlogFledgeApiCallStatsWithAppPackageNameLogging_enabled() {
+        when(mFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(true);
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt()));
+
+        mLogger = new StatsdAdServicesLogger(mFlags);
+
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        String appPackageName = TEST_PACKAGE_NAME;
+        int resultCode = STATUS_SUCCESS;
+        int latencyMs = 10;
+
+        // Log api call with app package name.
+        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+
+        // Verify app package name is logged.
+        verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_API_CALLED),
+                                eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                                eq(apiName),
+                                eq(appPackageName),
+                                eq(""),
+                                eq(latencyMs),
+                                eq(resultCode)));
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testlogFledgeApiCallStatsWithAppPackageNameLogging_nullAppPackageName() {
+        when(mFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(true);
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt()));
+
+        mLogger = new StatsdAdServicesLogger(mFlags);
+
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        String appPackageName = null;
+        int resultCode = STATUS_SUCCESS;
+        int latencyMs = 10;
+
+        // Log api call with app package name.
+        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+
+        // Verify app package name is logged.
+        verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_API_CALLED),
+                                eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                                eq(apiName),
+                                eq(""),
+                                eq(""),
+                                eq(latencyMs),
+                                eq(resultCode)));
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testlogFledgeApiCallStatsWithAppPackageNameLogging_disabled() {
+        when(mFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(false);
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt()));
+
+        mLogger = new StatsdAdServicesLogger(mFlags);
+
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        String appPackageName = TEST_PACKAGE_NAME;
+        int resultCode = STATUS_SUCCESS;
+        int latencyMs = 10;
+
+        // Log api call with app package name.
+        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+
+        // Verify app package name is not logged.
+        verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_API_CALLED),
+                                eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                                eq(apiName),
+                                eq(""),
+                                eq(""),
+                                eq(latencyMs),
+                                eq(resultCode)));
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+
+    @Test
     public void logMeasurementDebugKeysMatch_success() {
         when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
         when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
@@ -590,7 +773,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_UPDATED)
@@ -628,7 +810,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_UPDATED)
@@ -895,6 +1076,10 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         long inputEventDelayMs = 200L;
         long validDelayWindowMs = 1000L;
         String sourceRegistrant = "test_source_registrant";
+        boolean clickDeduplicationEnabled = true;
+        boolean clickDeduplicationEnforced = true;
+        long maxSourcesPerClick = 1;
+        boolean clickUnderLimit = true;
 
         MeasurementClickVerificationStats stats =
                 MeasurementClickVerificationStats.builder()
@@ -905,6 +1090,10 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setInputEventDelayMillis(inputEventDelayMs)
                         .setValidDelayWindowMillis(validDelayWindowMs)
                         .setSourceRegistrant(sourceRegistrant)
+                        .setClickDeduplicationEnabled(clickDeduplicationEnabled)
+                        .setClickDeduplicationEnforced(clickDeduplicationEnforced)
+                        .setMaxSourcesPerClick(maxSourcesPerClick)
+                        .setCurrentRegistrationUnderClickDeduplicationLimit(clickUnderLimit)
                         .build();
 
         doNothing()
@@ -918,7 +1107,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                         anyBoolean(),
                                         anyLong(),
                                         anyLong(),
-                                        anyString()));
+                                        anyString(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyLong(),
+                                        anyBoolean()));
 
         // Invoke logging call.
         mLogger.logMeasurementClickVerificationStats(stats);
@@ -934,8 +1127,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(systemClickVerificationEnabled),
                                 eq(inputEventDelayMs),
                                 eq(validDelayWindowMs),
-                                eq("")); // App package name not in allow list.
-
+                                eq(""), // App package name not in allow list.
+                                eq(clickDeduplicationEnabled),
+                                eq(clickDeduplicationEnforced),
+                                eq(maxSourcesPerClick),
+                                eq(clickUnderLimit));
         verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
@@ -944,7 +1140,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void logEncryptionKeyFetchedStats_success() {
         String enrollmentId = "enrollmentId";
-        String companyId = "companyId";
         String encryptionKeyUrl = "https://www.adtech1.com/.well-known/encryption-keys";
 
         AdServicesEncryptionKeyFetchedStats stats =
@@ -953,7 +1148,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setFetchStatus(IO_EXCEPTION)
                         .setIsFirstTimeFetch(false)
                         .setAdtechEnrollmentId(enrollmentId)
-                        .setCompanyId(companyId)
                         .setEncryptionKeyUrl(encryptionKeyUrl)
                         .build();
 
@@ -981,7 +1175,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(IO_EXCEPTION.getValue()),
                                 eq(false),
                                 eq(enrollmentId),
-                                eq(companyId),
+                                eq(""),
                                 eq(encryptionKeyUrl));
 
         verify(writeInvocation);
@@ -1018,7 +1212,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    public void logDestinationRegisteredBeaconsReportedStats_success() {
+    public void logDestinationRegisteredBeaconsReportedStats_tPlus_success() {
+        // TODO: b/325098723 - Atoms using writeIntArray() crash the module on S- devices
+        mockIsAtLeastT(true);
         List<DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType>
                 keySizeRangeTypeList = Arrays.asList(
                 DestinationRegisteredBeaconsReportedStats
@@ -1053,7 +1249,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         // Invoke logging call.
         mLogger.logDestinationRegisteredBeaconsReportedStats(stats);
 
-        // Verify only compat logging took place
+        // Verify only logging with T+ devices.
         MockedVoidMethod writeInvocation =
                 () ->
                         AdServicesStatsLog.write(
@@ -1067,6 +1263,47 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
         verify(writeInvocation);
 
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logDestinationRegisteredBeaconsReportedStats_sMinus_emptyLogging() {
+        // TODO: b/325098723 - Atoms using writeIntArray() crash the module on S- devices
+        mockIsAtLeastT(false);
+        List<DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType>
+                keySizeRangeTypeList = Arrays.asList(
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .LARGER_THAN_MAXIMUM_KEY_SIZE,
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .SMALLER_THAN_MAXIMUM_KEY_SIZE,
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .EQUAL_TO_MAXIMUM_KEY_SIZE);
+        int[] keySizeRangeTypeArray = new int[] {
+                /* LARGER_THAN_MAXIMUM_KEY_SIZE */ 4,
+                /* SMALLER_THAN_MAXIMUM_KEY_SIZE */ 2,
+                /* EQUAL_TO_MAXIMUM_KEY_SIZE */ 3};
+
+        DestinationRegisteredBeaconsReportedStats stats =
+                DestinationRegisteredBeaconsReportedStats.builder()
+                        .setBeaconReportingDestinationType(SELLER_DESTINATION)
+                        .setAttemptedRegisteredBeacons(5)
+                        .setAttemptedKeySizesRangeType(keySizeRangeTypeList)
+                        .setTableNumRows(25)
+                        .setAdServicesStatusCode(0)
+                        .build();
+
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), any(), anyInt(), anyInt()));
+        // Invoke logging call.
+        mLogger.logDestinationRegisteredBeaconsReportedStats(stats);
+
+        // Verify no logging action with S- devices.
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 
@@ -1118,6 +1355,299 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(/* numUrisCleared */ 25),
                                 eq(/* numUnreportedUris */ 5)
                         );
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogAppManifestConfigCall() {
+        String pkgName = "pkg.I.am";
+        @ApiType int apiType = AppManifestConfigCall.API_TOPICS;
+        @Result int result = AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
+        AppManifestConfigCall call = new AppManifestConfigCall(pkgName, apiType);
+        call.result = result;
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyString(), anyInt(), anyInt()));
+
+        mLogger.logAppManifestConfigCall(call);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                APP_MANIFEST_CONFIG_HELPER_CALLED, pkgName, apiType, result);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKAnonSignStatus_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt()));
+        boolean wasSuccessful = true;
+        int action = 0;
+        int actionFailureReason = 0;
+        int latency = 1000;
+        int batchSize = 32;
+        KAnonSignStatusStats kAnonSignStatusStats =
+                KAnonSignStatusStats.builder()
+                        .setKAnonAction(action)
+                        .setKAnonActionFailureReason(actionFailureReason)
+                        .setBatchSize(batchSize)
+                        .setLatencyInMs(latency)
+                        .setWasSuccessful(wasSuccessful)
+                        .build();
+        mLogger.logKAnonSignStats(kAnonSignStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_SIGN_STATUS_REPORTED,
+                                wasSuccessful,
+                                action,
+                                actionFailureReason,
+                                batchSize,
+                                latency);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKAnonJoinStatus_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyBoolean(), anyInt(), anyInt(), anyInt()));
+        boolean wasSuccessful = true;
+        int latency = 1000;
+        int numberOfFailedMessages = 32;
+        int totalMessages = 100;
+        KAnonJoinStatusStats kAnonSignStatusStats =
+                KAnonJoinStatusStats.builder()
+                        .setLatencyInMs(latency)
+                        .setNumberOfFailedMessages(numberOfFailedMessages)
+                        .setWasSuccessful(true)
+                        .setTotalMessages(totalMessages)
+                        .build();
+        mLogger.logKAnonJoinStats(kAnonSignStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_JOIN_STATUS_REPORTED,
+                                wasSuccessful,
+                                totalMessages,
+                                numberOfFailedMessages,
+                                latency);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKAnonInitializeStats_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt()));
+        boolean wasSuccessful = true;
+        int action = 1;
+        int actionFailureReason = 2;
+        int latency = 122;
+        KAnonInitializeStatusStats kAnonInitializeStatusStats =
+                KAnonInitializeStatusStats.builder()
+                        .setKAnonAction(1)
+                        .setKAnonActionFailureReason(actionFailureReason)
+                        .setLatencyInMs(latency)
+                        .setWasSuccessful(wasSuccessful)
+                        .build();
+        mLogger.logKAnonInitializeStats(kAnonInitializeStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_INITIALIZE_STATUS_REPORTED,
+                                wasSuccessful,
+                                action,
+                                actionFailureReason,
+                                latency);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKanonBackgroundJobStats_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
+                                        anyInt()));
+        int jobResult = 1;
+        int totalMessagesAttempted = 12;
+        int messagesFailedToJoin = 123;
+        int messageFailedToSign = 19;
+        int latency = 17;
+        int messagesLeftInDb = 12356;
+        KAnonBackgroundJobStatusStats kAnonBackgroundJobStatusStats =
+                KAnonBackgroundJobStatusStats.builder()
+                        .setKAnonJobResult(jobResult)
+                        .setMessagesFailedToJoin(messagesFailedToJoin)
+                        .setMessagesFailedToSign(messageFailedToSign)
+                        .setMessagesInDBLeft(messagesLeftInDb)
+                        .setTotalMessagesAttempted(totalMessagesAttempted)
+                        .setLatencyInMs(latency)
+                        .build();
+        mLogger.logKAnonBackgroundJobStats(kAnonBackgroundJobStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_BACKGROUND_JOB_STATUS_REPORTED,
+                                jobResult,
+                                totalMessagesAttempted,
+                                messagesLeftInDb,
+                                messagesFailedToJoin,
+                                messageFailedToSign,
+                                latency);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKanonImmediateSignJoinStats_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
+                                        anyInt()));
+        int jobResult = 1;
+        int totalMessagesAttempted = 12;
+        int messagesFailedToJoin = 123;
+        int messageFailedToSign = 19;
+        int latency = 17;
+        KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats =
+                KAnonImmediateSignJoinStatusStats.builder()
+                        .setKAnonJobResult(jobResult)
+                        .setMessagesFailedToJoin(messagesFailedToJoin)
+                        .setMessagesFailedToSign(messageFailedToSign)
+                        .setTotalMessagesAttempted(totalMessagesAttempted)
+                        .setLatencyInMs(latency)
+                        .build();
+        mLogger.logKAnonImmediateSignJoinStats(kAnonImmediateSignJoinStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED,
+                                jobResult,
+                                totalMessagesAttempted,
+                                messagesFailedToJoin,
+                                messageFailedToSign,
+                                latency);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKAnonGetChallengeStats_success() {
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
+        int jobResult = 1;
+        int latency = 17;
+        int challengeSizeInBytes = 100;
+        KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats =
+                KAnonGetChallengeStatusStats.builder()
+                        .setCertificateSizeInBytes(challengeSizeInBytes)
+                        .setResultCode(jobResult)
+                        .setLatencyInMs(latency)
+                        .build();
+
+        mLogger.logKAnonGetChallengeJobStats(kAnonGetChallengeStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_KEY_ATTESTATION_STATUS_REPORTED,
+                                challengeSizeInBytes,
+                                jobResult,
+                                latency);
+        verify(writeInvocation);
+    }
+
+    @Test
+    public void testLogGetAdSelectionDataApiCalledStats_success() {
+        GetAdSelectionDataApiCalledStats stats =
+                GetAdSelectionDataApiCalledStats.builder()
+                        .setPayloadSizeKb(64)
+                        .setNumBuyers(3)
+                        .setStatusCode(STATUS_SUCCESS)
+                        .build();
+
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logGetAdSelectionDataApiCalledStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(GET_AD_SELECTION_DATA_API_CALLED),
+                                eq(64),
+                                eq(3),
+                                eq(STATUS_SUCCESS));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testlogGetAdSelectionDataBuyerInputGeneratedStats_success() {
+        GetAdSelectionDataBuyerInputGeneratedStats stats =
+                GetAdSelectionDataBuyerInputGeneratedStats.builder()
+                        .setNumCustomAudiences(2)
+                        .setNumCustomAudiencesOmitAds(1)
+                        .setCustomAudienceSizeMeanB(23F)
+                        .setCustomAudienceSizeVarianceB(24F)
+                        .setTrustedBiddingSignalsKeysSizeMeanB(25F)
+                        .setTrustedBiddingSignalsKeysSizeVarianceB(26F)
+                        .setUserBiddingSignalsSizeMeanB(27F)
+                        .setUserBiddingSignalsSizeVarianceB(28F)
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(GET_AD_SELECTION_DATA_BUYER_INPUT_GENERATED),
+                                eq(2),
+                                eq(1),
+                                eq(23F),
+                                eq(24F),
+                                eq(25F),
+                                eq(26F),
+                                eq(27F),
+                                eq(28F));
 
         verify(writeInvocation);
 

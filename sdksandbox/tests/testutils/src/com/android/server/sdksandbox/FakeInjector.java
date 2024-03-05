@@ -26,17 +26,20 @@ public class FakeInjector extends SdkSandboxManagerService.Injector {
     private SdkSandboxStorageManager mSdkSandboxStorageManager = null;
     private SdkSandboxServiceProvider mSdkSandboxServiceProvider = null;
     private SdkSandboxPulledAtoms mSdkSandboxPulledAtoms = null;
+    private SdkSandboxStatsdLogger mSdkSandboxStatsdLogger = null;
     private ArrayDeque<Long> mLatencyTimeSeries = new ArrayDeque<>();
 
     FakeInjector(
             Context context,
             SdkSandboxStorageManager sdkSandboxStorageManager,
             SdkSandboxServiceProvider sdkSandboxServiceProvider,
-            SdkSandboxPulledAtoms sdkSandboxPulledAtoms) {
+            SdkSandboxPulledAtoms sdkSandboxPulledAtoms,
+            SdkSandboxStatsdLogger sdkSandboxStatsdLogger) {
         super(context);
         mSdkSandboxStorageManager = sdkSandboxStorageManager;
         mSdkSandboxServiceProvider = sdkSandboxServiceProvider;
         mSdkSandboxPulledAtoms = sdkSandboxPulledAtoms;
+        mSdkSandboxStatsdLogger = sdkSandboxStatsdLogger;
     }
 
     public FakeInjector(Context spyContext) {
@@ -56,6 +59,11 @@ public class FakeInjector extends SdkSandboxManagerService.Injector {
     @Override
     public SdkSandboxStorageManager getSdkSandboxStorageManager() {
         return mSdkSandboxStorageManager;
+    }
+
+    @Override
+    public SdkSandboxStatsdLogger getSdkSandboxStatsdLogger() {
+        return mSdkSandboxStatsdLogger;
     }
 
     @Override

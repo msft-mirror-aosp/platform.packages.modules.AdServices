@@ -30,9 +30,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+            <View
+                android:id="@+id/adservices_ppapi_title_spacing"
+                android:visibility="@integer/adservices_ppapi_title_spacing"
+                android:layout_height="18dp"
+                android:layout_width="match_parent"/>
             <TextView
                 android:id="@+id/apps_introduction"
-                android:layout_marginTop="18dp"
                 android:paddingHorizontal="24dp"
                 android:text="@string/settingsUI_apps_view_subtitle"
                 style="@style/MainStyle.Body2" />
@@ -65,6 +69,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_placeholder_icon_for_empty_apps_list"
+                    android:focusable="false"
+                    android:importantForAccessibility="no"
                     android:contentDescription="@string/ic_placeholder_icon_for_empty_apps_list_description" />
                 <TextView
                     android:id="@+id/no_apps_state"
@@ -109,7 +115,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:key="blocked_apps"
-                        android:text="@string/settingsUI_blocked_apps_title"
+                        android:text="@string/settingsUI_blocked_apps_ga_title"
                         android:textAppearance="@style/TextAppearance.H5"
                         android:drawableStart="@drawable/ic_chevron_right_24dp"
                         android:drawablePadding="28dp"/>
@@ -173,6 +179,7 @@
                         android:src="@drawable/ic_info_icon"
                         tools:ignore="ContentDescription" />
                     <TextView
+                        android:id="@+id/apps_view_ga_footer_text"
                         android:text="@string/settingsUI_apps_view_footer"
                         style="@style/MainStyle.Body2" />
                 </LinearLayout>

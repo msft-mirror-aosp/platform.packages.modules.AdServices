@@ -27,17 +27,20 @@ import static org.mockito.Mockito.doReturn;
 import android.adservices.adselection.SignedContextualAds;
 import android.adservices.common.AdTechIdentifier;
 
-
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.security.KeyPairGenerator;
+import java.security.spec.ECGenParameterSpec;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -47,6 +50,9 @@ public class ProtectedAudienceSignatureManagerTest {
     @Mock private EncryptionKeyDao mEncryptionKeyDaoMock;
     private ProtectedAudienceSignatureManager mNoOpSignatureManager;
     private ProtectedAudienceSignatureManager mSignatureManager;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -94,7 +100,9 @@ public class ProtectedAudienceSignatureManagerTest {
     public void testVerifySignature_invalidSignature_returnFalse() {
         byte[] invalidSignature = new byte[] {1, 2, 3};
         SignedContextualAds signedContextualAds =
-                aSignedContextualAds().cloneToBuilder().setSignature(invalidSignature).build();
+                new SignedContextualAds.Builder(aSignedContextualAds())
+                        .setSignature(invalidSignature)
+                        .build();
         String enrollmentId = "enrollment1";
         AdTechIdentifier buyer = signedContextualAds.getBuyer();
 
@@ -113,6 +121,37 @@ public class ProtectedAudienceSignatureManagerTest {
         boolean isVerified = mSignatureManager.isVerified(buyer, signedContextualAds);
 
         assertThat(isVerified).isFalse();
+    }
+
+    @Test
+    public void testMultipleKeys_success() throws Exception {
+        boolean enrollmentEnabled = true;
+        mSignatureManager =
+                new ProtectedAudienceSignatureManager(
+                        mEnrollmentDaoMock, mEncryptionKeyDaoMock, enrollmentEnabled);
+        SignedContextualAds signedContextualAds = aSignedContextualAds();
+        String enrollmentId = "enrollment1";
+        AdTechIdentifier buyer = signedContextualAds.getBuyer();
+
+        doReturn(new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build())
+                .when(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByAdTechIdentifier(buyer);
+        doReturn(
+                        List.of(
+                                new EncryptionKey.Builder()
+                                        .setBody(generateRandomECPublicKey())
+                                        .build(),
+                                new EncryptionKey.Builder().setBody(PUBLIC_TEST_KEY_STRING).build(),
+                                new EncryptionKey.Builder()
+                                        .setBody(generateRandomECPublicKey())
+                                        .build()))
+                .when(mEncryptionKeyDaoMock)
+                .getEncryptionKeyFromEnrollmentIdAndKeyType(
+                        enrollmentId, EncryptionKey.KeyType.SIGNING);
+
+        boolean isVerified = mSignatureManager.isVerified(buyer, signedContextualAds);
+
+        assertThat(isVerified).isTrue();
     }
 
     @Test
@@ -192,5 +231,13 @@ public class ProtectedAudienceSignatureManagerTest {
         List<byte[]> signingKeys = mNoOpSignatureManager.fetchPublicKeyForAdTech(adTech);
 
         assertThat(signingKeys).isEqualTo(Collections.emptyList());
+    }
+
+    private static String generateRandomECPublicKey() throws Exception {
+        // Initialize the KeyPairGenerator
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
+        keyPairGenerator.initialize(new ECGenParameterSpec("secp256r1"));
+        return Base64.getEncoder()
+                .encodeToString(keyPairGenerator.generateKeyPair().getPublic().getEncoded());
     }
 }

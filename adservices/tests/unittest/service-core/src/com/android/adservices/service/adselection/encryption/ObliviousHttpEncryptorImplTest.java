@@ -17,14 +17,17 @@
 package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
+
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.EncryptionContextDao;
@@ -56,6 +59,9 @@ public class ObliviousHttpEncryptorImplTest {
     private ObliviousHttpEncryptor mObliviousHttpEncryptor;
     private ExecutorService mLightweightExecutor;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setUp() {
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();
@@ -75,12 +81,12 @@ public class ObliviousHttpEncryptorImplTest {
     public void test_encryptBytes_invalidPlainText() {
         assertThrows(
                 NullPointerException.class,
-                () -> mObliviousHttpEncryptor.encryptBytes(null, 1L, 1000L));
+                () -> mObliviousHttpEncryptor.encryptBytes(null, 1L, 1000L, null));
     }
 
     @Test
     public void test_encryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000L))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000L, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
@@ -91,7 +97,7 @@ public class ObliviousHttpEncryptorImplTest {
                                 .lowerCase()
                                 .encode(
                                         mObliviousHttpEncryptor
-                                                .encryptBytes(plainTextBytes, 1L, 1000L)
+                                                .encryptBytes(plainTextBytes, 1L, 1000L, null)
                                                 .get()))
                 // Only the Ohttp header containing key ID and algorithm IDs is same across
                 // multiple test runs since, a random seed is used to generate rest of the
@@ -121,14 +127,14 @@ public class ObliviousHttpEncryptorImplTest {
 
     @Test
     public void test_decryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
         byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
 
         byte[] encryptedBytes =
-                mObliviousHttpEncryptor.encryptBytes(plainTextBytes, 1L, 1000L).get();
+                mObliviousHttpEncryptor.encryptBytes(plainTextBytes, 1L, 1000L, null).get();
 
         assertThat(encryptedBytes).isNotNull();
         assertThat(encryptedBytes).isNotEmpty();

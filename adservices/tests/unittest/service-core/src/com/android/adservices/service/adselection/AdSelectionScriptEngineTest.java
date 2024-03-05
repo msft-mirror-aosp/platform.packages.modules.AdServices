@@ -46,12 +46,15 @@ import androidx.test.filters.FlakyTest;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine.AuctionScriptResult;
+import com.android.adservices.service.common.NoOpRetryStrategyImpl;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -70,6 +73,7 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -201,11 +205,15 @@ public class AdSelectionScriptEngineTest {
 
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLoggerMock;
     @Mock private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLoggerMock;
+    private RetryStrategy mRetryStrategy;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
+        mRetryStrategy = new NoOpRetryStrategyImpl();
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
                         sContext,
@@ -213,7 +221,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierNoOpImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
 
         MockitoAnnotations.initMocks(this);
     }
@@ -377,7 +386,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierNoOpImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        true);
+                        true,
+                        mRetryStrategy);
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -391,11 +401,12 @@ public class AdSelectionScriptEngineTest {
         final List<GenerateBidResult> results =
                 generateBids(
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
-                            + " trusted_bidding_signals, contextual_signals,"
-                            + " custom_audience_signals) { \n"
-                            + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.bid, 'adCost':"
-                            + " ad.metadata.adCost };\n"
-                            + "}",
+                                + " trusted_bidding_signals, contextual_signals,"
+                                + " custom_audience_signals) { \n"
+                                + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.bid, "
+                                + "'adCost':"
+                                + " ad.metadata.adCost };\n"
+                                + "}",
                         AD_DATA_WITH_DOUBLE_WITH_AD_COST_LIST,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -426,7 +437,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierNoOpImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -440,11 +452,12 @@ public class AdSelectionScriptEngineTest {
         final List<GenerateBidResult> results =
                 generateBids(
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
-                            + " trusted_bidding_signals, contextual_signals,"
-                            + " custom_audience_signals) { \n"
-                            + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.bid, 'adCost':"
-                            + " ad.metadata.adCost };\n"
-                            + "}",
+                                + " trusted_bidding_signals, contextual_signals,"
+                                + " custom_audience_signals) { \n"
+                                + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.bid, "
+                                + "'adCost':"
+                                + " ad.metadata.adCost };\n"
+                                + "}",
                         AD_DATA_WITH_DOUBLE_WITH_AD_COST_LIST,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -475,7 +488,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierNoOpImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        true);
+                        true,
+                        mRetryStrategy);
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -489,11 +503,12 @@ public class AdSelectionScriptEngineTest {
         final List<GenerateBidResult> results =
                 generateBids(
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
-                            + " trusted_bidding_signals, contextual_signals,"
-                            + " custom_audience_signals) { \n"
-                            + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.bid, 'adCost':"
-                            + " ad.metadata.adCost };\n"
-                            + "}",
+                                + " trusted_bidding_signals, contextual_signals,"
+                                + " custom_audience_signals) { \n"
+                                + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.bid, "
+                                + "'adCost':"
+                                + " ad.metadata.adCost };\n"
+                                + "}",
                         AD_DATA_WITH_DOUBLE_WITH_EMPTY_AD_COST,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -529,7 +544,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
 
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -575,7 +591,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
 
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -648,7 +665,9 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
-                                AD_DATA_CONVERSION_STRATEGY),
+                                AD_DATA_CONVERSION_STRATEGY,
+                                false,
+                                /* auctionServerRequestFlags = */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -673,7 +692,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
 
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -709,7 +729,9 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
-                                AD_DATA_CONVERSION_STRATEGY),
+                                AD_DATA_CONVERSION_STRATEGY,
+                                false,
+                                /* auctionServerRequestFlags = */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -734,7 +756,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
 
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -754,7 +777,9 @@ public class AdSelectionScriptEngineTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
-                        AD_DATA_CONVERSION_STRATEGY);
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        false);
         final List<GenerateBidResult> results =
                 generateBidsV3(
                         "function generateBid(custom_audience, auction_signals,"
@@ -863,7 +888,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
 
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -913,7 +939,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierImpl(),
                         new DebugReportingEnabledScriptStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
 
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -1054,7 +1081,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierImpl(),
                         new DebugReportingEnabledScriptStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -1091,7 +1119,9 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
-                                AD_DATA_CONVERSION_STRATEGY),
+                                AD_DATA_CONVERSION_STRATEGY,
+                                false,
+                                /* auctionServerRequestFlags = */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -1113,7 +1143,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -1154,7 +1185,9 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
-                                AD_DATA_CONVERSION_STRATEGY),
+                                AD_DATA_CONVERSION_STRATEGY,
+                                false,
+                                /* auctionServerRequestFlags = */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -1176,7 +1209,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierImpl(),
                         new DebugReportingEnabledScriptStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -1215,7 +1249,9 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
-                                AD_DATA_CONVERSION_STRATEGY),
+                                AD_DATA_CONVERSION_STRATEGY,
+                                false,
+                                /* auctionServerRequestFlags = */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -1269,7 +1305,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
 
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
@@ -1310,7 +1347,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierImpl(),
                         new DebugReportingEnabledScriptStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
 
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
@@ -1383,7 +1421,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierNoOpImpl(),
                         new DebugReportingEnabledScriptStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -1433,7 +1472,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierNoOpImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -1485,7 +1525,8 @@ public class AdSelectionScriptEngineTest {
                         () -> mIsolateSettings.getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierNoOpImpl(),
                         new DebugReportingEnabledScriptStrategy(),
-                        false);
+                        false,
+                        mRetryStrategy);
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
@@ -1761,17 +1802,17 @@ public class AdSelectionScriptEngineTest {
         String encodeSignalsJS =
                 String.format(
                         "function encodeSignals(signals, maxSize) {\n"
-                            + "  // returning error if the creation time name of the only signal   "
-                            + " // is correct\n"
-                            + "  if(signals.size != 1) {\n"
-                            + "     return { 'status': 0, 'results': new Uint8Array([1]) };\n"
-                            + "  }\n"
-                            + "  let signalValues = signals.values().next().value;\n"
-                            + "  if(signalValues[0].creation_time == %d) {\n"
-                            + "     return { 'status': 0, 'results': new Uint8Array([0]) };\n"
-                            + "  }\n"
-                            + "  return { 'status': 0, 'results': new Uint8Array([2]) };\n"
-                            + "}\n",
+                                + "  // returning error if the creation time name of the only "
+                                + "  // signal is correct\n"
+                                + "  if(signals.size != 1) {\n"
+                                + "     return { 'status': 0, 'results': new Uint8Array([1]) };\n"
+                                + "  }\n"
+                                + "  let signalValues = signals.values().next().value;\n"
+                                + "  if(signalValues[0].creation_time == %d) {\n"
+                                + "     return { 'status': 0, 'results': new Uint8Array([0]) };\n"
+                                + "  }\n"
+                                + "  return { 'status': 0, 'results': new Uint8Array([2]) };\n"
+                                + "}\n",
                         signalValue.getCreationTime().getEpochSecond());
         ListenableFuture<byte[]> jsOutcome =
                 mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, rawSignalsMap, 10);

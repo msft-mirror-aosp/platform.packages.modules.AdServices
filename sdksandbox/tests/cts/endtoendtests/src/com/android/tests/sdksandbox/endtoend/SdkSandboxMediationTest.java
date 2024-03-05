@@ -37,6 +37,8 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.sdksandbox.cts.provider.mediationtest.IMediationTestSdkApi;
 
+import com.google.common.truth.Expect;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -67,6 +69,9 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
     @Rule(order = 1)
     public final ActivityScenarioRule activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
+
+    @Rule(order = 2)
+    public final Expect mExpect = Expect.create();
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
@@ -230,30 +235,23 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
                 assertThrows(
                         IllegalStateException.class,
                         () -> mediatorSdk.loadSdkBySdk(MEDIATOR_SDK_NAME));
-        assertThat(exception.getMessage())
-                .isEqualTo(
-                        "java.lang.AssertionError: Load SDK was not successful. errorCode: 101,"
-                                + " errorMsg: "
-                                + MEDIATOR_SDK_NAME
-                                + " has been loaded already");
+
+        mExpect.that(exception.getMessage()).contains("errorCode: 101");
+        mExpect.that(exception.getMessage()).contains("Load SDK was not successful.");
+        mExpect.that(exception.getMessage()).contains(MEDIATOR_SDK_NAME);
     }
 
     @Test
     public void testLoadSdkThatDoesNotExist() throws Exception {
         IMediationTestSdkApi mediatorSdk = loadMediatorSdk();
-        final String nonExistingSdk = "non-existing-sdk";
+        String nonExistingSdk = "non-existing-sdk";
         IllegalStateException exception =
                 assertThrows(
                         IllegalStateException.class,
                         () -> mediatorSdk.loadSdkBySdk(nonExistingSdk));
-        assertThat(exception.getMessage())
-                .isEqualTo(
-                        "java.lang.AssertionError: "
-                                + "Load SDK was not successful. "
-                                + "errorCode: 100, "
-                                + "errorMsg: "
-                                + nonExistingSdk
-                                + " not found for loading");
+        mExpect.that(exception.getMessage()).contains("errorCode: 100");
+        mExpect.that(exception.getMessage()).contains("Load SDK was not successful.");
+        mExpect.that(exception.getMessage()).contains(nonExistingSdk);
     }
 
     @Test

@@ -34,6 +34,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -42,6 +43,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.BuyerReportingResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.ReportingScriptResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.SellerReportingResult;
+import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -126,6 +128,9 @@ public class ReportImpressionScriptEngineTest {
     // Only used for setup, so no need to use the real impl for now
     private static final AdDataArgumentUtil AD_DATA_ARGUMENT_UTIL =
             new AdDataArgumentUtil(new AdCounterKeyCopierNoOpImpl());
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
@@ -1198,11 +1203,11 @@ public class ReportImpressionScriptEngineTest {
             registerAdBeaconScriptEngineHelper =
                     new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperDisabled();
         }
-
         return new ReportImpressionScriptEngine(
                 sContext,
                 () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
                 () -> mIsolateSettings.getMaxHeapSizeBytes(),
-                registerAdBeaconScriptEngineHelper);
+                registerAdBeaconScriptEngineHelper,
+                new NoOpRetryStrategyImpl());
     }
 }

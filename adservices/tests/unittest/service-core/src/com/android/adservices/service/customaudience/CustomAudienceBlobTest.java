@@ -19,6 +19,7 @@ package com.android.adservices.service.customaudience;
 import static android.adservices.common.AdDataFixture.getValidFilterAdsWithAdRenderIdByBuyer;
 import static android.adservices.common.CommonFixture.VALID_BUYER_1;
 import static android.adservices.common.CommonFixture.VALID_BUYER_2;
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTIVATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_EXPIRATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME;
@@ -27,6 +28,10 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER
 import static android.adservices.customaudience.CustomAudienceFixture.getValidBiddingLogicUriByBuyer;
 import static android.adservices.customaudience.CustomAudienceFixture.getValidDailyUpdateUriByBuyer;
 import static android.adservices.customaudience.TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer;
+
+import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceBlob.OMIT_ADS_VALUE;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_1;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -44,11 +49,17 @@ import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
+import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 
+import com.google.common.collect.ImmutableList;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -96,6 +107,9 @@ public class CustomAudienceBlobTest {
 
     public CustomAudienceBlobTest() throws JSONException {}
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setup() throws JSONException {
         mCustomAudienceBlob = new CustomAudienceBlob();
@@ -123,6 +137,27 @@ public class CustomAudienceBlobTest {
 
         assertThat(asJSONObject.toString())
                 .isEqualTo(mFetchAndJoinCustomAudienceInputAsJSONObjectString);
+    }
+
+    @Test
+    public void testOverrideFromPartialCustomAudience_validValues() {
+        mCustomAudienceBlob.overrideFromPartialCustomAudience(
+                VALID_OWNER,
+                VALID_BUYER_1,
+                DBPartialCustomAudience.getPartialCustomAudience(PARTIAL_CUSTOM_AUDIENCE_1));
+
+        assertEquals(mCustomAudienceBlob.getOwner(), VALID_OWNER);
+        assertEquals(mCustomAudienceBlob.getBuyer(), VALID_BUYER_1);
+        assertEquals(mCustomAudienceBlob.getName(), PARTIAL_CUSTOM_AUDIENCE_1.getName());
+        assertEquals(
+                mCustomAudienceBlob.getActivationTime(),
+                PARTIAL_CUSTOM_AUDIENCE_1.getActivationTime());
+        assertEquals(
+                mCustomAudienceBlob.getExpirationTime(),
+                PARTIAL_CUSTOM_AUDIENCE_1.getExpirationTime());
+        assertEquals(
+                mCustomAudienceBlob.getUserBiddingSignals(),
+                PARTIAL_CUSTOM_AUDIENCE_1.getUserBiddingSignals());
     }
 
     @Test
@@ -156,6 +191,192 @@ public class CustomAudienceBlobTest {
         JSONObject asJSONObject = mCustomAudienceBlob.asJSONObject();
 
         assertThat(asJSONObject.toString()).isEqualTo(mJSONObject.toString());
+    }
+
+    @Test
+    public void testOverrideFromJSONObject_validValuesWithAuctionServerRequestFlagsEnabled()
+            throws JSONException {
+        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, 12L, true);
+
+        JSONObject jsonObject =
+                CustomAudienceBlobFixture.asJSONObject(
+                        VALID_OWNER,
+                        VALID_BUYER_1,
+                        VALID_NAME,
+                        VALID_ACTIVATION_TIME,
+                        VALID_EXPIRATION_TIME,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1),
+                        getValidBiddingLogicUriByBuyer(VALID_BUYER_1),
+                        VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(VALID_BUYER_1).build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(VALID_BUYER_1),
+                        /* shouldAddHarmlessJunk= */ false);
+
+        JSONObject jsonObjectWithAuctionServerRequestFlags =
+                CustomAudienceBlobFixture.addAuctionServerRequestFlags(
+                        jsonObject, ImmutableList.of(OMIT_ADS_VALUE), false);
+
+        blob.overrideFromJSONObject(jsonObjectWithAuctionServerRequestFlags);
+
+        assertEquals(blob.getOwner(), VALID_OWNER);
+        assertEquals(blob.getBuyer(), VALID_BUYER_1);
+        assertEquals(blob.getName(), VALID_NAME);
+        assertEquals(blob.getActivationTime(), VALID_ACTIVATION_TIME);
+        assertEquals(blob.getExpirationTime(), VALID_EXPIRATION_TIME);
+        assertEquals(
+                blob.getDailyUpdateUri(),
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1));
+        assertEquals(blob.getBiddingLogicUri(), getValidBiddingLogicUriByBuyer(VALID_BUYER_1));
+        assertEquals(blob.getUserBiddingSignals(), VALID_USER_BIDDING_SIGNALS);
+        assertEquals(
+                blob.getTrustedBiddingData().toString(),
+                getValidTrustedBiddingDataByBuyer(VALID_BUYER_1).toString());
+        assertEquals(
+                blob.getAds().toString(),
+                getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1).toString());
+        assertEquals(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS, blob.getAuctionServerRequestFlags());
+    }
+
+    @Test
+    public void testOverrideFromJSONObject_invalidValuesWithAuctionServerRequestFlagsEnabled()
+            throws JSONException {
+        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, 12L, true);
+
+        JSONObject jsonObject =
+                CustomAudienceBlobFixture.asJSONObject(
+                        VALID_OWNER,
+                        VALID_BUYER_1,
+                        VALID_NAME,
+                        VALID_ACTIVATION_TIME,
+                        VALID_EXPIRATION_TIME,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1),
+                        getValidBiddingLogicUriByBuyer(VALID_BUYER_1),
+                        VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(VALID_BUYER_1).build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(VALID_BUYER_1),
+                        /* shouldAddHarmlessJunk= */ false);
+
+        // Add a value instead of json array, making this invalid
+        jsonObject.put(AUCTION_SERVER_REQUEST_FLAGS_KEY, "not array");
+
+        // Assert no exception is thrown
+        blob.overrideFromJSONObject(jsonObject);
+
+        // Assert that all the values were propagated properly, and auction server request flags are
+        // set to 0
+        assertEquals(blob.getOwner(), VALID_OWNER);
+        assertEquals(blob.getBuyer(), VALID_BUYER_1);
+        assertEquals(blob.getName(), VALID_NAME);
+        assertEquals(blob.getActivationTime(), VALID_ACTIVATION_TIME);
+        assertEquals(blob.getExpirationTime(), VALID_EXPIRATION_TIME);
+        assertEquals(
+                blob.getDailyUpdateUri(),
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1));
+        assertEquals(blob.getBiddingLogicUri(), getValidBiddingLogicUriByBuyer(VALID_BUYER_1));
+        assertEquals(blob.getUserBiddingSignals(), VALID_USER_BIDDING_SIGNALS);
+        assertEquals(
+                blob.getTrustedBiddingData().toString(),
+                getValidTrustedBiddingDataByBuyer(VALID_BUYER_1).toString());
+        assertEquals(
+                blob.getAds().toString(),
+                getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1).toString());
+        assertEquals(0, blob.getAuctionServerRequestFlags());
+    }
+
+    @Test
+    public void testOverrideFromJSONObject_UnexpectedValuesWithAuctionServerRequestFlagsEnabled()
+            throws JSONException {
+        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, 12L, true);
+
+        JSONObject jsonObject =
+                CustomAudienceBlobFixture.asJSONObject(
+                        VALID_OWNER,
+                        VALID_BUYER_1,
+                        VALID_NAME,
+                        VALID_ACTIVATION_TIME,
+                        VALID_EXPIRATION_TIME,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1),
+                        getValidBiddingLogicUriByBuyer(VALID_BUYER_1),
+                        VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(VALID_BUYER_1).build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(VALID_BUYER_1),
+                        /* shouldAddHarmlessJunk= */ false);
+
+        // Add a json array with both valid and invalid values
+        JSONArray array = new JSONArray();
+        array.put(1);
+        array.put(OMIT_ADS_VALUE);
+        array.put(3);
+        jsonObject.put(AUCTION_SERVER_REQUEST_FLAGS_KEY, array);
+
+        // Assert no exception is thrown
+        blob.overrideFromJSONObject(jsonObject);
+
+        // Assert that all the values were propagated properly, and auction server request flags are
+        // set to 0
+        assertEquals(blob.getOwner(), VALID_OWNER);
+        assertEquals(blob.getBuyer(), VALID_BUYER_1);
+        assertEquals(blob.getName(), VALID_NAME);
+        assertEquals(blob.getActivationTime(), VALID_ACTIVATION_TIME);
+        assertEquals(blob.getExpirationTime(), VALID_EXPIRATION_TIME);
+        assertEquals(
+                blob.getDailyUpdateUri(),
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1));
+        assertEquals(blob.getBiddingLogicUri(), getValidBiddingLogicUriByBuyer(VALID_BUYER_1));
+        assertEquals(blob.getUserBiddingSignals(), VALID_USER_BIDDING_SIGNALS);
+        assertEquals(
+                blob.getTrustedBiddingData().toString(),
+                getValidTrustedBiddingDataByBuyer(VALID_BUYER_1).toString());
+        assertEquals(
+                blob.getAds().toString(),
+                getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1).toString());
+        assertEquals(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS, blob.getAuctionServerRequestFlags());
+    }
+
+    @Test
+    public void testOverrideFromJSONObject_validValuesWithAuctionServerRequestFlagsDisabled()
+            throws JSONException {
+        JSONObject JsonObject =
+                CustomAudienceBlobFixture.asJSONObject(
+                        VALID_OWNER,
+                        VALID_BUYER_1,
+                        VALID_NAME,
+                        VALID_ACTIVATION_TIME,
+                        VALID_EXPIRATION_TIME,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1),
+                        getValidBiddingLogicUriByBuyer(VALID_BUYER_1),
+                        VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(VALID_BUYER_1).build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(VALID_BUYER_1),
+                        false);
+
+        JSONObject jsonObjectWithAuctionServerRequestFlags =
+                CustomAudienceBlobFixture.addAuctionServerRequestFlags(
+                        JsonObject,
+                        ImmutableList.of(OMIT_ADS_VALUE),
+                        /* shouldAddHarmlessJunk= */ false);
+
+        mCustomAudienceBlob.overrideFromJSONObject(jsonObjectWithAuctionServerRequestFlags);
+
+        assertEquals(mCustomAudienceBlob.getOwner(), VALID_OWNER);
+        assertEquals(mCustomAudienceBlob.getBuyer(), VALID_BUYER_1);
+        assertEquals(mCustomAudienceBlob.getName(), VALID_NAME);
+        assertEquals(mCustomAudienceBlob.getActivationTime(), VALID_ACTIVATION_TIME);
+        assertEquals(mCustomAudienceBlob.getExpirationTime(), VALID_EXPIRATION_TIME);
+        assertEquals(
+                mCustomAudienceBlob.getDailyUpdateUri(),
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1));
+        assertEquals(
+                mCustomAudienceBlob.getBiddingLogicUri(),
+                getValidBiddingLogicUriByBuyer(VALID_BUYER_1));
+        assertEquals(mCustomAudienceBlob.getUserBiddingSignals(), VALID_USER_BIDDING_SIGNALS);
+        assertEquals(
+                mCustomAudienceBlob.getTrustedBiddingData().toString(),
+                getValidTrustedBiddingDataByBuyer(VALID_BUYER_1).toString());
+        assertEquals(
+                mCustomAudienceBlob.getAds().toString(),
+                getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1).toString());
+        assertEquals(0, mCustomAudienceBlob.getAuctionServerRequestFlags());
     }
 
     @Test

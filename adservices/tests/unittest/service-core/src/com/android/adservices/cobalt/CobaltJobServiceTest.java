@@ -18,7 +18,9 @@ package com.android.adservices.cobalt;
 
 import static com.android.adservices.cobalt.CobaltConstants.DEFAULT_API_KEY;
 import static com.android.adservices.cobalt.CobaltConstants.DEFAULT_RELEASE_STAGE;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
+import static com.android.adservices.common.JobServiceTestHelper.createOnStopJobCallback;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -26,8 +28,7 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroun
 import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
-import static com.android.adservices.spe.AdservicesJobInfo.COBALT_LOGGING_JOB;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
+import static com.android.adservices.spe.AdServicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -35,7 +36,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -43,20 +43,19 @@ import static org.mockito.Mockito.when;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
-import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.BooleanSyncCallback;
 import com.android.adservices.common.JobServiceCallback;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.cobalt.CobaltPeriodicJob;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -70,10 +69,11 @@ import org.mockito.Spy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@RequiresSdkLevelAtLeastS(reason = "Cobalt is not launching for Android R")
 @SpyStatic(CobaltJobService.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(CobaltFactory.class)
-@SpyStatic(AdservicesJobServiceLogger.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
 public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
@@ -81,7 +81,6 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
     private static final long JOB_INTERVAL_MS = 21_600_000L;
     private static final long JOB_FLEX_MS = 2_000_000L;
     private static final int COBALT_LOGGING_JOB_ID = COBALT_LOGGING_JOB.getJobId();
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final JobScheduler sJobScheduler = sContext.getSystemService(JobScheduler.class);
     @Spy private CobaltJobService mSpyCobaltJobService;
 
@@ -91,14 +90,14 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
     @Mock JobParameters mMockJobParameters;
 
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
-    private AdservicesJobServiceLogger mLogger;
+    private AdServicesJobServiceLogger mLogger;
 
     @Before
     public void setup() {
         doReturn(sJobScheduler).when(mSpyCobaltJobService).getSystemService(JobScheduler.class);
         mockCobaltLoggingFlags();
 
-        mLogger = mockAdservicesJobServiceLogger(sContext, mMockStatsdLogger);
+        mLogger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
     }
 
     @After
@@ -169,7 +168,7 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
         // Feature is Enabled.
         mockCobaltLoggingEnabled(/* overrideValue= */ true);
 
-        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
 
         assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
 
@@ -181,7 +180,7 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
         // Feature is disabled.
         mockCobaltLoggingEnabled(false);
 
-        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
 
         assertJobScheduled(callBack, /* shouldSchedule */ false, /* checkPendingJob */ false);
         verifyNoMoreInteractions(staticMockMarker(CobaltFactory.class));
@@ -193,7 +192,7 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
         mockCobaltLoggingEnabled(/* overrideValue= */ true);
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
-        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
 
         assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
 
@@ -211,7 +210,7 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
                 .getCobaltLoggingJobPeriodMs();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
 
         assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
 
@@ -234,7 +233,7 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
                 .when(mMockFlags)
                 .getCobaltLoggingJobPeriodMs();
 
-        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
 
         assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
 
@@ -262,7 +261,7 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
                 .getCobaltLoggingJobPeriodMs();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
 
         assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
 
@@ -409,53 +408,24 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
         when(mMockFlags.getCobaltAdservicesApiKeyHex()).thenReturn(DEFAULT_API_KEY);
     }
 
-    private JobServiceCallback scheduleJobInBackground(boolean forceSchedule) {
-        JobServiceCallback callback = new JobServiceCallback();
+    private BooleanSyncCallback scheduleJobInBackground(boolean forceSchedule) {
+        BooleanSyncCallback callback = new BooleanSyncCallback();
 
         mExecutorService.execute(
                 () ->
-                        callback.insertJobScheduledResult(
+                        callback.injectResult(
                                 CobaltJobService.scheduleIfNeeded(sContext, forceSchedule)));
 
         return callback;
     }
 
     private void assertJobScheduled(
-            JobServiceCallback callback, boolean shouldSchedule, boolean checkPendingJob)
+            BooleanSyncCallback callback, boolean shouldSchedule, boolean checkPendingJob)
             throws InterruptedException {
         assertThat(callback.assertResultReceived()).isEqualTo(shouldSchedule);
 
         if (checkPendingJob) {
             assertThat(sJobScheduler.getPendingJob(COBALT_LOGGING_JOB_ID)).isNotNull();
         }
-    }
-
-    private JobServiceCallback createJobFinishedCallback(JobService jobService) {
-        JobServiceCallback callback = new JobServiceCallback();
-
-        doAnswer(
-                        unusedInvocation -> {
-                            callback.onJobFinished();
-                            return null;
-                        })
-                .when(jobService)
-                .jobFinished(any(), anyBoolean());
-
-        return callback;
-    }
-
-    private JobServiceCallback createOnStopJobCallback(JobService jobService) {
-        JobServiceCallback callback = new JobServiceCallback();
-
-        doAnswer(
-                        invocation -> {
-                            invocation.callRealMethod();
-                            callback.onJobStopped();
-                            return null;
-                        })
-                .when(jobService)
-                .onStopJob(any());
-
-        return callback;
     }
 }

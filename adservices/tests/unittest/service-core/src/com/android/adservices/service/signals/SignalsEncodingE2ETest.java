@@ -43,6 +43,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -63,9 +64,11 @@ import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.adselection.DebugReportingScriptDisabledStrategy;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.NoOpRetryStrategyImpl;
+import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
@@ -112,6 +115,9 @@ public class SignalsEncodingE2ETest {
 
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
+
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
     // certain minimum version.
@@ -155,7 +161,7 @@ public class SignalsEncodingE2ETest {
 
     private AdTechUriValidator mAdtechUriValidator;
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    private CustomAudienceServiceFilter mCustomAudienceServiceFilter;
+    private ProtectedSignalsServiceFilter mProtectedSignalsServiceFilter;
     private EncoderLogicHandler mEncoderLogicHandler;
     private EncoderPersistenceDao mEncoderPersistenceDao;
     private ListeningExecutorService mLightweightExecutorService;
@@ -220,8 +226,8 @@ public class SignalsEncodingE2ETest {
                                         DbTestUtil.getSharedDbHelperForTest(),
                                         mFlagsWithProtectedSignalsAndEncodingEnabled),
                                 mAdServicesLoggerMock));
-        mCustomAudienceServiceFilter =
-                new CustomAudienceServiceFilter(
+        mProtectedSignalsServiceFilter =
+                new ProtectedSignalsServiceFilter(
                         mContextSpy,
                         mConsentManagerMock,
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
@@ -231,6 +237,8 @@ public class SignalsEncodingE2ETest {
                         mMockThrottler);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+
         when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true);
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
@@ -257,10 +265,10 @@ public class SignalsEncodingE2ETest {
                         AdServicesLoggerImpl.getInstance(),
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mCustomAudienceServiceFilter);
+                        mProtectedSignalsServiceFilter);
 
         mSignalStorageManager = new SignalsProviderImpl(mSignalsDao);
-
+        RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
                         mContextSpy,
@@ -272,7 +280,8 @@ public class SignalsEncodingE2ETest {
                                         .getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierNoOpImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        retryStrategy);
 
         mPeriodicEncodingJobWorker =
                 new PeriodicEncodingJobWorker(
@@ -780,8 +789,8 @@ public class SignalsEncodingE2ETest {
         }
 
         @Override
-        public boolean getProtectedSignalsServiceKillSwitch() {
-            return false;
+        public boolean getProtectedSignalsEnabled() {
+            return true;
         }
 
         @Override

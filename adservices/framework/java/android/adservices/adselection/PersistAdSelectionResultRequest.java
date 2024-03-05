@@ -20,16 +20,19 @@ import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTI
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.os.OutcomeReceiver;
 
 import com.android.internal.util.Preconditions;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
- * Represents a request containing the seller, the ad selection id and data.
+ * Represents a request containing the seller, the ad selection data id and data.
  *
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
  * AdSelectionManager#persistAdSelectionResult} methods in {@link AdSelectionManager}.
@@ -50,8 +53,21 @@ public final class PersistAdSelectionResultRequest {
 
     /**
      * @return an ad selection id.
+     * @deprecated Use the {@link #getAdSelectionDataId()} instead, the underlying value is enforced
+     *     to be the same.
      */
     public long getAdSelectionId() {
+        return mAdSelectionId;
+    }
+
+    /**
+     * Returns the id that identifies the {@link
+     * AdSelectionManager#getAdSelectionData(GetAdSelectionDataRequest, Executor, OutcomeReceiver)}
+     * payload that generated this result.
+     */
+    @FlaggedApi(
+            "com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled")
+    public long getAdSelectionDataId() {
         return mAdSelectionId;
     }
 
@@ -83,10 +99,24 @@ public final class PersistAdSelectionResultRequest {
 
         public Builder() {}
 
-        /** Sets the ad selection id {@link Long}. */
+        /**
+         * Sets the ad selection id {@link Long}.
+         *
+         * @deprecated Use the {@link #setAdSelectionDataId(long)} instead.
+         */
         @NonNull
         public PersistAdSelectionResultRequest.Builder setAdSelectionId(long adSelectionId) {
             this.mAdSelectionId = adSelectionId;
+            return this;
+        }
+
+        /** Sets the ad selection data id {@link Long}. */
+        @NonNull
+        @FlaggedApi(
+                "com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled")
+        public PersistAdSelectionResultRequest.Builder setAdSelectionDataId(
+                long adSelectionDataId) {
+            this.mAdSelectionId = adSelectionDataId;
             return this;
         }
 

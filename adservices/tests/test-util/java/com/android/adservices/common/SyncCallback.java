@@ -15,6 +15,9 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.shared.util.Preconditions.checkState;
+import static com.android.internal.util.Preconditions.checkArgument;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.os.Looper;
@@ -23,12 +26,17 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.shared.testing.common.Identifiable;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.base.Optional;
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-// TODO(b/302757068): add unit tests (and/or convert tests from OutcomeReceiverForTestsTest)
 /**
  * Helper used to block until a success (or failure) callback is received.
  *
@@ -44,21 +52,28 @@ import java.util.concurrent.TimeUnit;
  * @param <T> type of the object received on success.
  * @param <E> type of the object received on error.
  */
-public class SyncCallback<T, E> {
+public class SyncCallback<T, E> implements Identifiable {
 
-    private static final String TAG = SyncCallback.class.getSimpleName();
+    @VisibleForTesting static final String TAG = SyncCallback.class.getSimpleName();
 
     private static final boolean DEFAULT_BEHAVIOR_FOR_FAIL_IF_CALLED_ON_MAIN_THREAD = true;
 
     /** Default time (used when not specified by constructor). */
     public static final int DEFAULT_TIMEOUT_MS = 5_000;
 
+    @VisibleForTesting
+    static final String MSG_WRONG_ERROR_RECEIVED = "expected error of type %s, but received %s";
+
+    private static final AtomicInteger sNextId = new AtomicInteger();
+
+    private final String mId = getClass().getSimpleName() + "#" + sNextId.incrementAndGet();
+
     private final CountDownLatch mLatch = new CountDownLatch(1);
     private final int mTimeoutMs;
     private final long mEpoch = SystemClock.elapsedRealtime();
 
     private @Nullable E mError;
-    private @Nullable T mResult;
+    private @Nullable Optional<T> mResult;
     private @Nullable String mMethodCalled;
     private @Nullable RuntimeException mInternalFailure;
     private final boolean mFailIfCalledOnMainThread;
@@ -82,6 +97,11 @@ public class SyncCallback<T, E> {
         mFailIfCalledOnMainThread = failIfCalledOnMainThread;
     }
 
+    @Override
+    public final String getId() {
+        return mId;
+    }
+
     @VisibleForTesting
     boolean isFailIfCalledOnMainThread() {
         return mFailIfCalledOnMainThread;
@@ -101,8 +121,8 @@ public class SyncCallback<T, E> {
      * @throws IllegalStateException if {@link #injectResult(T)} or {@link #injectError(E)} was
      *     already called.
      */
-    public final void injectResult(T result) {
-        mResult = result;
+    public final void injectResult(@Nullable T result) {
+        mResult = Optional.fromNullable(result);
         setMethodCalled("injectResult", result);
     }
 
@@ -123,11 +143,11 @@ public class SyncCallback<T, E> {
      *
      * @return the result
      */
-    public final T assertResultReceived() throws InterruptedException {
+    public final @Nullable T assertResultReceived() throws InterruptedException {
         assertReceived();
-        assertWithMessage("result").that(mResult).isNotNull();
-        assertWithMessage("error").that(mError).isNull();
-        return mResult;
+
+        assertWithMessage("result received").that(mResult).isNotNull();
+        return getResult();
     }
 
     /**
@@ -138,9 +158,23 @@ public class SyncCallback<T, E> {
      */
     public final E assertErrorReceived() throws InterruptedException {
         assertReceived();
-        assertWithMessage("result").that(mResult).isNull();
+
         assertWithMessage("error").that(mError).isNotNull();
         return mError;
+    }
+
+    /**
+     * Asserts that {@link #injectError(Object)} was called with a class of type {@code S}, waiting
+     * up to {@link #getMaxTimeoutMs()} milliseconds before failing (if not called).
+     *
+     * @return the error
+     */
+    public final <S extends E> S assertErrorReceived(Class<S> expectedClass)
+            throws InterruptedException {
+        checkArgument(expectedClass != null, "expectedClass cannot be null");
+        E error = assertErrorReceived();
+        checkState(expectedClass.isInstance(error), MSG_WRONG_ERROR_RECEIVED, expectedClass, error);
+        return expectedClass.cast(error);
     }
 
     /**
@@ -148,36 +182,56 @@ public class SyncCallback<T, E> {
      * called, waiting up to {@link #getMaxTimeoutMs()} milliseconds before failing (if not called).
      */
     public final void assertReceived() throws InterruptedException {
-        Log.v(
-                TAG,
-                "waiting up to "
-                        + mTimeoutMs
-                        + "ms on "
-                        + Thread.currentThread()
-                        + " until called");
+        logV(
+                "assertReceived(): waiting up to %d ms on %s until called",
+                mTimeoutMs, Thread.currentThread());
         boolean called = mLatch.await(mTimeoutMs, TimeUnit.MILLISECONDS);
         if (!called) {
             throw new IllegalStateException(
-                    String.format("Callback not received in %d ms", mTimeoutMs));
+                    String.format("Callback not received (on %s) in %d ms", this, mTimeoutMs));
         }
         if (mInternalFailure != null) {
             throw mInternalFailure;
         }
     }
 
-    /** Gets the error returned by {@link #injectError(E)}. */
+    /**
+     * Gets the error returned by {@link #injectError(E)} (or {@code null} if it was not called
+     * yet).
+     */
     public final @Nullable E getErrorReceived() {
         return mError;
     }
 
-    /** Gets the result returned by {@link #injectResult(T)}. */
+    /**
+     * Gets the result returned by {@link #injectResult(T)} (or {@code null} if it was not called
+     * yet).
+     */
     public final @Nullable T getResultReceived() {
-        return mResult;
+        return getResult();
+    }
+
+    /**
+     * Convenience method to log a verbose message - it includes an unique identifier for the
+     * callback.
+     */
+    @FormatMethod
+    protected final void logV(@FormatString String msgFmt, @Nullable Object... msgArgs) {
+        Log.v(TAG, "[" + getId() + "] " + String.format(msgFmt, msgArgs));
+    }
+
+    /**
+     * Convenience method to log an error message - it includes an unique identifier for the
+     * callback.
+     */
+    @FormatMethod
+    protected final void logE(@FormatString String msgFmt, @Nullable Object... msgArgs) {
+        Log.e(TAG, "[" + getId() + "] " + String.format(msgFmt, msgArgs));
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName()
+        return getId()
                 + "[latch="
                 + mLatch
                 + ", timeoutMs="
@@ -187,7 +241,7 @@ public class SyncCallback<T, E> {
                 + ", error="
                 + mError
                 + ", result="
-                + mResult
+                + getResult()
                 + ", methodCalled="
                 + mMethodCalled
                 + ", internalFailure="
@@ -201,19 +255,27 @@ public class SyncCallback<T, E> {
         String methodCalled = method + "(" + arg + ")";
         long delta = SystemClock.elapsedRealtime() - mEpoch;
         Thread currentThread = Thread.currentThread();
-        Log.v(TAG, methodCalled + " in " + delta + "ms on " + currentThread);
+        logV("%s called in %d ms on %s", methodCalled, delta, currentThread);
+        String errorMsg = null;
         if (mMethodCalled != null) {
-            mInternalFailure =
-                    new IllegalStateException(methodCalled + " called after " + mMethodCalled);
+            errorMsg = methodCalled + " called after " + mMethodCalled;
         }
         if (mFailIfCalledOnMainThread
                 && Looper.getMainLooper() != null
                 && Looper.getMainLooper().isCurrentThread()) {
-            mInternalFailure =
-                    new IllegalStateException(
-                            methodCalled + " called on main thread (" + currentThread + ")");
+            errorMsg = methodCalled + " called on main thread (" + currentThread + ")";
+        }
+        if (errorMsg != null) {
+            logE(
+                    "Illegal state when %s was called on %s: %s",
+                    methodCalled, currentThread, errorMsg);
+            mInternalFailure = new IllegalStateException(errorMsg);
         }
         mMethodCalled = methodCalled;
         mLatch.countDown();
+    }
+
+    private @Nullable T getResult() {
+        return mResult == null || !mResult.isPresent() ? null : mResult.get();
     }
 }

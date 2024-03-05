@@ -52,6 +52,13 @@
                      "com.android.adservices.service.customaudience.BackgroundFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+
+        <!-- FLEDGE Schedule Custom Audience Update Job -->
+        <service android:name=
+                     "com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- FLEDGE Background Key Fetch Job -->
         <service android:name=
                      "com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService"
@@ -65,6 +72,12 @@
         <!-- FLEDGE Protected Signals periodic encoding job -->
         <service android:name=
                      "com.android.adservices.service.signals.PeriodicEncodingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- FLEDGE KAnon sign join background job -->
+        <service android:name=
+                     "com.android.adservices.service.kanon.KAnonSignJoinBackgroundJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 

@@ -23,11 +23,17 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Assume;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link CustomAudienceManager} */
 public class CustomAudienceManagerTest {
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testCustomAudienceManagerCtor_TPlus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);

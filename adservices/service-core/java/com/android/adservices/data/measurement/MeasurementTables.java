@@ -178,6 +178,8 @@ public final class MeasurementTables {
         String DEBUG_AD_ID = "debug_ad_id";
         String REGISTRATION_ORIGIN = "registration_origin";
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
+        String AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG =
+                "aggregatable_source_registration_time_config";
     }
 
     /** Contract for EventReport. */
@@ -638,6 +640,8 @@ public final class MeasurementTables {
                     + TriggerContract.REGISTRATION_ORIGIN
                     + " TEXT, "
                     + TriggerContract.AGGREGATION_COORDINATOR_ORIGIN
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG
                     + " TEXT "
                     + ")";
 

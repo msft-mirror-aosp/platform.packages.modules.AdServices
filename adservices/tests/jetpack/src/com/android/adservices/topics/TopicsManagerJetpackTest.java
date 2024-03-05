@@ -18,6 +18,9 @@ package com.android.adservices.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.os.Build;
+import android.os.ext.SdkExtensions;
+
 import androidx.privacysandbox.ads.adservices.java.topics.TopicsManagerFutures;
 import androidx.privacysandbox.ads.adservices.topics.GetTopicsRequest;
 import androidx.privacysandbox.ads.adservices.topics.GetTopicsResponse;
@@ -28,6 +31,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.TestUtil;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -50,6 +54,10 @@ public class TopicsManagerJetpackTest {
 
     @Before
     public void setup() throws Exception {
+        int adServicesVersion = SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES);
+        int extServicesVersion = SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S);
+        Assume.assumeTrue(adServicesVersion >= 4 || extServicesVersion >= 9);
+
         mTestUtil.overrideKillSwitches(true);
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.

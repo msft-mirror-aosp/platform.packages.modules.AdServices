@@ -155,7 +155,7 @@ public class SqliteObjectMapper {
         setBooleanColumn(cursor, MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
                 builder::setInstallAttributed);
         setTextColumn(cursor, MeasurementTables.SourceContract.FILTER_DATA,
-                builder::setFilterData);
+                builder::setFilterDataString);
         setTextColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_SOURCE,
                 builder::setAggregateSource);
         setIntColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
@@ -299,6 +299,12 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.AGGREGATION_COORDINATOR_ORIGIN,
                 builder::setAggregationCoordinatorOrigin);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG,
+                (enumValue) ->
+                        builder.setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.valueOf(enumValue)));
         return builder.build();
     }
 
@@ -313,7 +319,9 @@ public class SqliteObjectMapper {
                 builder::setPublisher);
         setUriColumn(cursor, MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
-        setLongColumn(cursor, MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
+        setLongColumn(
+                cursor,
+                MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
                 builder::setSourceRegistrationTime);
         setLongColumn(cursor, MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 builder::setScheduledReportTime);
