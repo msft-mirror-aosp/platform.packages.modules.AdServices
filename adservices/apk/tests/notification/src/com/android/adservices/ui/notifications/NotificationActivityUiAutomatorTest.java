@@ -49,7 +49,9 @@ import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,6 +85,7 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesUiTestC
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         doReturn(BETA_UX).when(mUxStatesManager).getUx();
         ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());

@@ -2541,7 +2541,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * MDD Logger Kill Switch. The default value is false which means the MDD Logger is enabled.
      * This flag is used for emergency turning off the MDD Logger.
      */
-    @FeatureFlag(LEGACY_KILL_SWITCH)
+    @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
     boolean MDD_LOGGER_KILL_SWITCH = false;
 
     /**
@@ -4912,5 +4912,33 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns the base64 encoded Job Policy proto for AdServices. */
     default String getAdServicesModuleJobPolicy() {
         return AD_SERVICES_MODULE_JOB_POLICY;
+    }
+
+    /**
+     * Default value for the enabled status of the {@link
+     * com.android.adservices.service.common.RetryStrategy}.
+     */
+    boolean DEFAULT_AD_SERVICES_RETRY_STRATEGY_ENABLED = false;
+
+    /**
+     * Returns the enabled status of the AdServices {@link
+     * com.android.adservices.service.common.RetryStrategy}.
+     */
+    default boolean getAdServicesRetryStrategyEnabled() {
+        return DEFAULT_AD_SERVICES_RETRY_STRATEGY_ENABLED;
+    }
+
+    /**
+     * Default value for the max number of retry attempts for {@link
+     * com.android.adservices.service.js.JSScriptEngine}
+     */
+    int DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS = 1;
+
+    /**
+     * Returns the max number of retry attempts for {@link
+     * com.android.adservices.service.js.JSScriptEngine}.
+     */
+    default int getAdServicesJsScriptEngineMaxRetryAttempts() {
+        return DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
     }
 }
