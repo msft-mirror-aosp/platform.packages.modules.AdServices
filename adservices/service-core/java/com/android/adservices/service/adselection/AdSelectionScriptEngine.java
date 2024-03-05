@@ -39,6 +39,7 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -110,7 +111,6 @@ public class AdSelectionScriptEngine {
     public static final String TRUSTED_SCORING_SIGNALS_ARG_NAME = "__rb_trusted_scoring_signals";
     public static final String GENERATE_BID_FUNCTION_NAME = "generateBid";
     public static final String SCORE_AD_FUNCTION_NAME = "scoreAd";
-
     public static final String ENCODE_SIGNALS_DRIVER_FUNCTION_NAME = "encodeSignalsDriver";
     public static final String ENCODE_SIGNALS_FUNCTION_NAME = "encodeSignals";
     public static final String USER_SIGNALS_ARG_NAME = "__rb_user_signals";
@@ -326,7 +326,6 @@ public class AdSelectionScriptEngine {
                     + MARSHALL_ENCODED_SIGNALS_JS
                     + "\n";
 
-    private static final String TAG = AdSelectionScriptEngine.class.getName();
     private static final int JS_SCRIPT_STATUS_SUCCESS = 0;
     private static final String ARG_PASSING_SEPARATOR = ", ";
     private final JSScriptEngine mJsEngine;
@@ -338,6 +337,7 @@ public class AdSelectionScriptEngine {
     private final AdDataArgumentUtil mAdDataArgumentUtil;
     private final DebugReportingScriptStrategy mDebugReportingScript;
     private final boolean mCpcBillingEnabled;
+    private final RetryStrategy mRetryStrategy;
 
     public AdSelectionScriptEngine(
             Context context,
@@ -345,7 +345,8 @@ public class AdSelectionScriptEngine {
             Supplier<Long> maxHeapSizeBytesSupplier,
             AdCounterKeyCopier adCounterKeyCopier,
             DebugReportingScriptStrategy debugReportingScript,
-            boolean cpcBillingEnabled) {
+            boolean cpcBillingEnabled,
+            RetryStrategy retryStrategy) {
         mJsEngine = JSScriptEngine.getInstance(context, sLogger);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
@@ -353,6 +354,7 @@ public class AdSelectionScriptEngine {
         mAdWithBidArgumentUtil = new AdWithBidArgumentUtil(mAdDataArgumentUtil);
         mDebugReportingScript = debugReportingScript;
         mCpcBillingEnabled = cpcBillingEnabled;
+        mRetryStrategy = retryStrategy;
     }
 
     /**
@@ -402,7 +404,6 @@ public class AdSelectionScriptEngine {
             adDataArguments.add(mAdDataArgumentUtil.asScriptArgument("ignored", currAd));
         }
         runAdBiddingPerCAExecutionLogger.startGenerateBids();
-
         return FluentFuture.from(
                         transform(
                                 runAuctionScriptIterative(
@@ -470,7 +471,6 @@ public class AdSelectionScriptEngine {
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
                         .build();
         runAdBiddingPerCAExecutionLogger.startGenerateBids();
-
         return FluentFuture.from(
                 transform(
                         runAuctionScriptGenerateBidV3(
@@ -564,7 +564,7 @@ public class AdSelectionScriptEngine {
         }
 
         String combinedDriverAndEncodingLogic = ENCODE_SIGNALS_DRIVER_JS + encodingLogic;
-        ImmutableList<JSScriptArgument> args = null;
+        ImmutableList<JSScriptArgument> args;
         try {
             args =
                     ImmutableList.<JSScriptArgument>builder()
@@ -582,12 +582,14 @@ public class AdSelectionScriptEngine {
                         ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                                 mMaxHeapSizeBytesSupplier.get())
                         : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+
         return FluentFuture.from(
                         mJsEngine.evaluate(
                                 combinedDriverAndEncodingLogic,
                                 args,
                                 ENCODE_SIGNALS_DRIVER_FUNCTION_NAME,
-                                isolateSettings))
+                                isolateSettings,
+                                mRetryStrategy))
                 .transform(this::handleEncodingOutput, mExecutor);
     }
 
@@ -935,7 +937,8 @@ public class AdSelectionScriptEngine {
                         jsScript + "\n" + CHECK_FUNCTIONS_EXIST_JS,
                         ImmutableList.of(
                                 stringArrayArg(FUNCTION_NAMES_ARG_NAME, expectedFunctionsNames)),
-                        isolateSettings),
+                        isolateSettings,
+                        mRetryStrategy),
                 Boolean::parseBoolean,
                 mExecutor);
     }
@@ -984,7 +987,8 @@ public class AdSelectionScriptEngine {
                         ImmutableList.of(
                                 stringArrayArg(
                                         FUNCTION_NAMES_ARG_NAME, ImmutableList.of(functionName))),
-                        isolateSettings),
+                        isolateSettings,
+                        mRetryStrategy),
                 Integer::parseInt,
                 mExecutor);
     }
@@ -1088,7 +1092,8 @@ public class AdSelectionScriptEngine {
                                 argPassing,
                                 auctionFunctionCallGenerator.apply(args)),
                 args,
-                isolateSettings);
+                isolateSettings,
+                mRetryStrategy);
     }
 
     /**
@@ -1144,7 +1149,8 @@ public class AdSelectionScriptEngine {
                                 argPassing,
                                 auctionFunctionCallGenerator.apply(otherArgs)),
                 allArgs,
-                isolateSettings);
+                isolateSettings,
+                mRetryStrategy);
     }
 
     private String callGenerateBid(List<JSScriptArgument> otherArgs) {

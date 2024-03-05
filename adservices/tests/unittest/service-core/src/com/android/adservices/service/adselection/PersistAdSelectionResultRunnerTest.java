@@ -93,6 +93,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.kanon.KAnonMessageEntity;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.kanon.KAnonSignJoinManager;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
@@ -101,10 +102,10 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
-import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -116,6 +117,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -125,8 +127,10 @@ import org.mockito.internal.stubbing.answers.Returns;
 import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -136,6 +140,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     private static final int CALLER_UID = Process.myUid();
+    private static final String SHA256 = "SHA-256";
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String DIFFERENT_CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME_2;
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
@@ -393,6 +398,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
     @Mock private KAnonSignJoinManager mKAnonSignJoinManagerMock;
+    @Captor private ArgumentCaptor<List<KAnonMessageEntity>> mKAnonMessageEntitiesCaptor;
 
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     private PersistAdSelectionResultRunner mPersistAdSelectionResultRunner;
@@ -1759,6 +1765,64 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
 
         Assert.assertTrue(callback.mIsSuccess);
         verify(mKAnonSignJoinManagerMock, times(1)).processNewMessages(anyList());
+    }
+
+    @Test
+    public void testRunner_withKAnonEnabled_createsKAnonEntityWithCorrectEncoding()
+            throws Exception {
+        Flags flagsWithKAnonEnabled =
+                new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
+        doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
+        PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
+        KAnonSignJoinFactory kAnonSignJoinFactory =
+                spy(new KAnonSignJoinFactory(mKAnonSignJoinManagerMock));
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithKAnonEnabled,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        kAnonSignJoinFactory);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(
+                        (unused) -> {
+                            countDownLatch.countDown();
+                            return null;
+                        })
+                .when(mKAnonSignJoinManagerMock)
+                .processNewMessages(anyList());
+
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+        countDownLatch.await();
+
+        Assert.assertTrue(callback.mIsSuccess);
+        MessageDigest md = MessageDigest.getInstance(SHA256);
+        String winningUrl = callback.mPersistAdSelectionResultResponse.getAdRenderUri().toString();
+        byte[] expectedBytes = md.digest(winningUrl.getBytes(StandardCharsets.UTF_8));
+
+        verify(mKAnonSignJoinManagerMock, times(1))
+                .processNewMessages(mKAnonMessageEntitiesCaptor.capture());
+        List<KAnonMessageEntity> capturedMessageEntity = mKAnonMessageEntitiesCaptor.getValue();
+
+        assertThat(capturedMessageEntity.size()).isEqualTo(1);
+
+        byte[] actualBytes =
+                Base64.getUrlDecoder().decode(capturedMessageEntity.get(0).getHashSet());
+        assertThat(actualBytes).isEqualTo(expectedBytes);
     }
 
     private byte[] prepareDecryptedAuctionResultForRemarketingAd(

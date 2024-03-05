@@ -37,6 +37,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
@@ -113,7 +114,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull Flags flags,
             @NonNull DebugReporting debugReporting,
             boolean cpcBillingEnabled,
-            boolean dataVersionHeaderEnabled) {
+            boolean dataVersionHeaderEnabled,
+            @NonNull RetryStrategy retryStrategy) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -123,6 +125,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adCounterKeyCopier);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(retryStrategy);
 
         mContext = context;
         mDevContext = devContext;
@@ -136,11 +139,12 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
                         mContext,
-                        () -> mFlags.getEnforceIsolateMaxHeapSize(),
-                        () -> mFlags.getIsolateMaxHeapSizeBytes(),
+                        mFlags::getEnforceIsolateMaxHeapSize,
+                        mFlags::getIsolateMaxHeapSizeBytes,
                         mAdCounterKeyCopier,
                         debugReporting.getScriptStrategy(),
-                        cpcBillingEnabled);
+                        cpcBillingEnabled,
+                        retryStrategy);
         mJsFetcher =
                 new JsFetcher(
                         backgroundExecutorService,

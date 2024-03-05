@@ -157,8 +157,11 @@ public class ConsentNotificationResetChannelTest {
         if (SdkLevel.isAtLeastS()) {
             verify(mConsentManager).recordNotificationDisplayed(false);
             verify(mConsentManager).recordGaUxNotificationDisplayed(false);
+        }
+        if (SdkLevel.isAtLeastT()) {
             verify(mConsentManager).recordPasNotificationDisplayed(false);
         }
+
         verify(mConsentManager).setU18NotificationDisplayed(false);
         verify(mConsentManager).setU18Account(false);
     }

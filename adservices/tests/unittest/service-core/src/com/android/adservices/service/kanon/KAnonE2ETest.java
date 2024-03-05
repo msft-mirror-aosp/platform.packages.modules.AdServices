@@ -114,6 +114,7 @@ import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryp
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessage;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer;
@@ -317,6 +318,7 @@ public class KAnonE2ETest {
     private KAnonSignJoinFactory mKAnonSignJoinFactory;
 
     private Instant FIXED_INSTANT = Instant.now();
+    private RetryStrategyFactory mRetryStrategyFactory;
 
     @Before
     public void setUp() throws IOException {
@@ -414,6 +416,7 @@ public class KAnonE2ETest {
 
         InputStream inputStream = CONTEXT.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
         mTranscript = Transcript.parseDelimitedFrom(inputStream);
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
     }
 
     @After
@@ -2033,7 +2036,8 @@ public class KAnonE2ETest {
                 mAdSelectionDebugReportDaoSpy,
                 mAdIdFetcher,
                 mKAnonSignJoinFactory,
-                false);
+                false,
+                mRetryStrategyFactory);
     }
 
     public PersistAdSelectionResultTestCallback invokePersistAdSelectionResult(

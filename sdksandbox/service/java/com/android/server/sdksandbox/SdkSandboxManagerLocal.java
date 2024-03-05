@@ -212,7 +212,7 @@ public interface SdkSandboxManagerLocal {
      * @return effective target Sdk version for the sdk sandbox process.
      * @throws NameNotFoundException if the client package for the given sdk sandbox uid is not
      *     found.
+     * @hide
      */
-    @FlaggedApi(Flags.FLAG_GET_EFFECTIVE_TARGET_SDK_VERSION_API)
     int getEffectiveTargetSdkVersion(int sdkSandboxUid) throws NameNotFoundException;
 }

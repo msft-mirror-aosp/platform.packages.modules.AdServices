@@ -45,6 +45,7 @@ import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBid
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -137,7 +138,8 @@ public class OutcomeSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             final int callerUid,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            @NonNull final RetryStrategy retryStrategy) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
@@ -148,6 +150,7 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adCounterKeyCopier);
+        Objects.requireNonNull(retryStrategy);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
@@ -168,7 +171,8 @@ public class OutcomeSelectionRunner {
                                 flags::getIsolateMaxHeapSizeBytes,
                                 adCounterKeyCopier,
                                 new DebugReportingScriptDisabledStrategy(),
-                                cpcBillingEnabled),
+                                cpcBillingEnabled,
+                                retryStrategy),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,

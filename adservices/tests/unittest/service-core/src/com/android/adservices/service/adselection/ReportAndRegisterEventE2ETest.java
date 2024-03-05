@@ -93,6 +93,7 @@ import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -241,6 +242,7 @@ public class ReportAndRegisterEventE2ETest {
 
     @Mock private DebugReportApi mDebugReportApiMock;
     @Mock private SourceNoiseHandler mSourceNoiseHandlerMock;
+    private RetryStrategyFactory mRetryStrategyFactory;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -314,6 +316,7 @@ public class ReportAndRegisterEventE2ETest {
 
 
         when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContext);
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
 
         mAdSelectionService = getAdSelectionServiceImpl(mFlags);
 
@@ -1019,7 +1022,8 @@ public class ReportAndRegisterEventE2ETest {
                 mAdSelectionDebugReportDaoMock,
                 mAdIdFetcher,
                 mUnusedKAnonSignJoinFactory,
-                false);
+                false,
+                mRetryStrategyFactory);
     }
 
     private void initializeReportingArtifacts() throws JSONException {
