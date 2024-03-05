@@ -43,6 +43,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.BuyerReportingResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.ReportingScriptResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.SellerReportingResult;
+import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -1202,11 +1203,11 @@ public class ReportImpressionScriptEngineTest {
             registerAdBeaconScriptEngineHelper =
                     new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperDisabled();
         }
-
         return new ReportImpressionScriptEngine(
                 sContext,
                 () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
                 () -> mIsolateSettings.getMaxHeapSizeBytes(),
-                registerAdBeaconScriptEngineHelper);
+                registerAdBeaconScriptEngineHelper,
+                new NoOpRetryStrategyImpl());
     }
 }
