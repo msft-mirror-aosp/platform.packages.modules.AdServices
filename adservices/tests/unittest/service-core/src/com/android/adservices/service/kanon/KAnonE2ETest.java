@@ -95,7 +95,6 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
-
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.adselection.AdIdFetcher;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
@@ -115,6 +114,7 @@ import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryp
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessage;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer;
@@ -164,18 +164,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
-import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
-import private_join_and_compute.anonymous_counting_tokens.GetKeyAttestationChallengeResponse;
-import private_join_and_compute.anonymous_counting_tokens.GetServerPublicParamsResponse;
-import private_join_and_compute.anonymous_counting_tokens.GetTokensRequest;
-import private_join_and_compute.anonymous_counting_tokens.GetTokensResponse;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
-import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
-import private_join_and_compute.anonymous_counting_tokens.TokensSet;
-import private_join_and_compute.anonymous_counting_tokens.Transcript;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -191,6 +179,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
+import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
+import private_join_and_compute.anonymous_counting_tokens.GetKeyAttestationChallengeResponse;
+import private_join_and_compute.anonymous_counting_tokens.GetServerPublicParamsResponse;
+import private_join_and_compute.anonymous_counting_tokens.GetTokensRequest;
+import private_join_and_compute.anonymous_counting_tokens.GetTokensResponse;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
+import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.TokensSet;
+import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
 public class KAnonE2ETest {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -318,6 +318,7 @@ public class KAnonE2ETest {
     private KAnonSignJoinFactory mKAnonSignJoinFactory;
 
     private Instant FIXED_INSTANT = Instant.now();
+    private RetryStrategyFactory mRetryStrategyFactory;
 
     @Before
     public void setUp() throws IOException {
@@ -391,7 +392,7 @@ public class KAnonE2ETest {
                         mFlags.getFledgeAuctionServerPayloadBucketSizes());
         mPayloadExtractor =
                 AuctionServerPayloadFormatterFactory.createPayloadExtractor(
-                        mFlags.getFledgeAuctionServerPayloadFormatVersion());
+                        mFlags.getFledgeAuctionServerPayloadFormatVersion(), mAdServicesLoggerMock);
 
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
@@ -415,6 +416,7 @@ public class KAnonE2ETest {
 
         InputStream inputStream = CONTEXT.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
         mTranscript = Transcript.parseDelimitedFrom(inputStream);
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
     }
 
     @After
@@ -2034,7 +2036,8 @@ public class KAnonE2ETest {
                 mAdSelectionDebugReportDaoSpy,
                 mAdIdFetcher,
                 mKAnonSignJoinFactory,
-                false);
+                false,
+                mRetryStrategyFactory);
     }
 
     public PersistAdSelectionResultTestCallback invokePersistAdSelectionResult(

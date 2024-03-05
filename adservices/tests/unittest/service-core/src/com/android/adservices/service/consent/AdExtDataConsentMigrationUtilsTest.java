@@ -40,19 +40,21 @@ import android.content.SharedPreferences;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager;
 import com.android.adservices.service.stats.ConsentMigrationStats;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-public class AdExtDataConsentMigrationUtilsTest {
+@SpyStatic(SdkLevel.class)
+@SpyStatic(DeviceRegionProvider.class)
+public class AdExtDataConsentMigrationUtilsTest extends AdServicesExtendedMockitoTestCase {
     private static final String EXTSERVICES_PKG_NAME_SUFFIX = "android.ext.services";
     private static final String ADSERVICES_PKG_NAME_SUFFIX = "android.adservices.api";
 
@@ -75,13 +77,6 @@ public class AdExtDataConsentMigrationUtilsTest {
                     .build();
 
     private static final int REGION_ROW_CODE = 2;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule mExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(SdkLevel.class)
-                    .spyStatic(DeviceRegionProvider.class)
-                    .build();
 
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
     @Mock private AppSearchConsentManager mAppSearchConsentManagerMock;
@@ -352,15 +347,40 @@ public class AdExtDataConsentMigrationUtilsTest {
 
     @Test
     public void
-            testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithPastMigrationDone_skipsMigration() {
-        mockTDevice();
-
-        when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
-                .thenReturn(mSharedPreferencesMock);
+            testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithMigrationFromAdExtDone_skipsMigration() {
         when(mSharedPreferencesMock.getBoolean(
                         ConsentConstants.SHARED_PREFS_KEY_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER,
                         false))
                 .thenReturn(true);
+
+        ensureNoMigrationIfPastMigrationDoneOnTPlus();
+    }
+
+    @Test
+    public void
+            testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithMigrationFromAppSearchDone_skipsMigration() {
+        when(mSharedPreferencesMock.getBoolean(
+                        ConsentConstants.SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED, false))
+                .thenReturn(true);
+
+        ensureNoMigrationIfPastMigrationDoneOnTPlus();
+    }
+
+    @Test
+    public void
+            testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithMigrationFromPpapiDone_skipsMigration() {
+        when(mSharedPreferencesMock.getBoolean(
+                        ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED, false))
+                .thenReturn(true);
+
+        ensureNoMigrationIfPastMigrationDoneOnTPlus();
+    }
+
+    private void ensureNoMigrationIfPastMigrationDoneOnTPlus() {
+        mockTDevice();
+
+        when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
+                .thenReturn(mSharedPreferencesMock);
 
         AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,

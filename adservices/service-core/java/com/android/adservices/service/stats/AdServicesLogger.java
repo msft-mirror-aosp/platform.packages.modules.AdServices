@@ -188,4 +188,11 @@ public interface AdServicesLogger {
 
     /** Logs status for get challenge method during kAnon sign join process. */
     void logKAnonGetChallengeJobStats(KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats);
+
+    /** Logs stats for GetAdSelectionDataApiCalled */
+    void logGetAdSelectionDataApiCalledStats(GetAdSelectionDataApiCalledStats stats);
+
+    /** Logs stats for GetAdSelectionDataBuyerInputGenerated */
+    void logGetAdSelectionDataBuyerInputGeneratedStats(
+            GetAdSelectionDataBuyerInputGeneratedStats stats);
 }

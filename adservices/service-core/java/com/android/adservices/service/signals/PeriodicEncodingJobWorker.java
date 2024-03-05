@@ -35,6 +35,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdCounterKeyCopierNoOpImpl;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.adselection.DebugReportingScriptDisabledStrategy;
+import com.android.adservices.service.common.RetryStrategy;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.SingletonRunner;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -83,7 +85,6 @@ public class PeriodicEncodingJobWorker {
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
     private final DevContextFilter mDevContextFilter;
-
     private final SingletonRunner<Void> mSingletonRunner =
             new SingletonRunner<>(JOB_DESCRIPTION, this::doRun);
 
@@ -132,6 +133,13 @@ public class PeriodicEncodingJobWorker {
             if (sPeriodicEncodingJobWorker == null) {
                 ProtectedSignalsDatabase signalsDatabase =
                         ProtectedSignalsDatabase.getInstance(context);
+                Flags flags = FlagsFactory.getFlags();
+                RetryStrategy retryStrategy =
+                        RetryStrategyFactory.createInstance(
+                                        flags.getAdServicesRetryStrategyEnabled(),
+                                        AdServicesExecutors.getLightWeightExecutor())
+                                .createRetryStrategy(
+                                        flags.getAdServicesJsScriptEngineMaxRetryAttempts());
                 sPeriodicEncodingJobWorker =
                         new PeriodicEncodingJobWorker(
                                 new EncoderLogicHandler(context),
@@ -141,17 +149,16 @@ public class PeriodicEncodingJobWorker {
                                 signalsDatabase.protectedSignalsDao(),
                                 new AdSelectionScriptEngine(
                                         context,
-                                        () ->
-                                                FlagsFactory.getFlags()
-                                                        .getEnforceIsolateMaxHeapSize(),
-                                        () -> FlagsFactory.getFlags().getIsolateMaxHeapSizeBytes(),
+                                        flags::getEnforceIsolateMaxHeapSize,
+                                        flags::getIsolateMaxHeapSizeBytes,
                                         new AdCounterKeyCopierNoOpImpl(),
                                         new DebugReportingScriptDisabledStrategy(),
-                                        false), // not used in encoding
+                                        false, // not used in encoding
+                                        retryStrategy),
                                 AdServicesExecutors.getBackgroundExecutor(),
                                 AdServicesExecutors.getLightWeightExecutor(),
                                 DevContextFilter.create(context),
-                                FlagsFactory.getFlags());
+                                flags);
             }
         }
         return sPeriodicEncodingJobWorker;
