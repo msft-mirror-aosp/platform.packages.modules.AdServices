@@ -3054,6 +3054,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableAttributionScope() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
+                MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE);
+    }
+
+    @Override
     public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
         return getDeviceConfigFlag(
                 KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
@@ -3542,6 +3549,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_LIMIT
                         + " = "
                         + getMeasurementPlatformDebugAdIdMatchingLimit());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE
+                        + " = "
+                        + getMeasurementEnableAttributionScope());
         writer.println(
                 "\t"
                         + FlagsConstants
