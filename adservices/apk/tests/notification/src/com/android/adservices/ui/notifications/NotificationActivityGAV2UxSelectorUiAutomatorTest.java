@@ -87,19 +87,19 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
         UiObject2 title2 =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);
         assertThat(title2).isNotNull();
+
+        // Retrieve new instances to avoid android.support.test.uiautomator.StaleObjectException.
         leftControlButton =
                 ApkTestUtil.getElement(
-                        mDevice, R.string.notificationUI_left_control_button_text_eu);
+                        mDevice, R.string.notificationUI_confirmation_left_control_button_text);
         assertThat(leftControlButton).isNull();
         rightControlButton =
                 ApkTestUtil.getElement(
-                        mDevice,
-                        R.string.notificationUI_right_control_button_ga_text_eu_v2);
+                        mDevice, R.string.notificationUI_confirmation_right_control_button_text);
         assertThat(rightControlButton).isNull();
 
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
-        // Retrieve new instances to avoid android.support.test.uiautomator.StaleObjectException.
         leftControlButton =
                 ApkTestUtil.getElement(
                         mDevice, R.string.notificationUI_left_control_button_text_eu);
