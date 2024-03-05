@@ -2064,13 +2064,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     }
                     break;
                 default: // NO_INTERCEPT
-                    SdkSandboxManagerService.this.logSandboxActivityApiLatency(
-                            SdkSandboxStatsLog
-                                    .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
-                            SdkSandboxStatsLog
-                                    .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE,
-                            (int) (mInjector.elapsedRealtime() - timeEventStarted),
-                            callingUid);
                     return null;
             }
 
