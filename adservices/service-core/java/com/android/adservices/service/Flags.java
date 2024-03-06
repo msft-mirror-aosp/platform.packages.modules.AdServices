@@ -3615,14 +3615,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION;
     }
 
-    /** Default minimum event report delay in milliseconds */
-    long MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS = 3_600_000L;
-
-    /** Returns minimum event report delay in milliseconds */
-    default long getMeasurementMinEventReportDelayMillis() {
-        return MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
-    }
-
     /**
      * Default early reporting windows for VTC type source. Derived from {@link
      * com.android.adservices.service.measurement.PrivacyParams#EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS}.

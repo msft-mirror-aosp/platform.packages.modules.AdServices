@@ -2906,13 +2906,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public long getMeasurementMinEventReportDelayMillis() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS);
-    }
-
-    @Override
     public String getMeasurementEventReportsVtcEarlyReportingWindows() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS,
@@ -3763,11 +3756,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION
                         + " = "
                         + getMeasurementMaxEventReportsPerDestination());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS
-                        + " = "
-                        + getMeasurementMinEventReportDelayMillis());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS

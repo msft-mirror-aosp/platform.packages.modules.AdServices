@@ -1138,9 +1138,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION =
             "measurement_max_aggregate_keys_per_trigger_registration";
 
-    public static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
-            "measurement_min_event_report_delay_millis";
-
     public static final String KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS =
             "measurement_event_reports_vtc_early_reporting_windows";
 

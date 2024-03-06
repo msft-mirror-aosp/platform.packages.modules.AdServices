@@ -416,7 +416,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_MAX_SUM_OF_AGGREG
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
-import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
@@ -853,7 +852,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
@@ -5805,22 +5803,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration())
                 .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementMinEventReportDelayMillis() {
-        assertThat(mPhFlags.getMeasurementMinEventReportDelayMillis())
-                .isEqualTo(MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS);
-
-        // Now overriding with the value from PH.
-        long phOverrideValue = MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS + 2300L;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                Long.toString(phOverrideValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMinEventReportDelayMillis()).isEqualTo(phOverrideValue);
     }
 
     @Test
