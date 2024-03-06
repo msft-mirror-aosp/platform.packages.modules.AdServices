@@ -257,6 +257,18 @@ public class AuctionServerE2ETest {
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();
+
+    private static final AuctionResult AUCTION_RESULT_PAS =
+            AuctionResult.newBuilder()
+                    .setAdType(AuctionResult.AdType.APP_INSTALL_AD)
+                    .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
+                    .setCustomAudienceOwner(WINNING_CUSTOM_AUDIENCE_OWNER)
+                    .setBuyer(WINNER_BUYER.toString())
+                    .setBid(BID)
+                    .setScore(SCORE)
+                    .setIsChaff(false)
+                    .setWinReportingUrls(WIN_REPORTING_URLS)
+                    .build();
     private static final int NUM_BUYERS = 2;
 
     private static final long AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS = 20;
@@ -2014,7 +2026,6 @@ public class AuctionServerE2ETest {
                 mEncryptionContextDao.getEncryptionContext(
                         adSelectionId, ENCRYPTION_KEY_TYPE_AUCTION));
 
-
         ProtectedAuctionInput protectedAuctionInput =
                 getProtectedAuctionInputFromCipherText(
                         callback.mGetAdSelectionDataResponse.getAdSelectionData(), privKey);
@@ -2245,7 +2256,6 @@ public class AuctionServerE2ETest {
         Assert.assertNotNull(
                 mEncryptionContextDao.getEncryptionContext(
                         adSelectionId, ENCRYPTION_KEY_TYPE_AUCTION));
-
     }
 
     @Test
@@ -2285,6 +2295,61 @@ public class AuctionServerE2ETest {
         ProtectedAppSignals protectedAppSignals = buyerInput.getProtectedAppSignals();
         Assert.assertArrayEquals(
                 encodedSignals, protectedAppSignals.getAppInstallSignals().toByteArray());
+    }
+
+    @Test
+    public void testPersistAdSelectionResult_withoutDecrypt_validSignalsRequest_success()
+            throws Exception {
+        mFlags = new AuctionServerE2ETestFlags();
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any()))
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
+        when(mObliviousHttpEncryptorMock.decryptBytes(any(byte[].class), anyLong()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        byte[] encodedSignals = new byte[] {2, 3, 5, 7, 11, 13, 17, 19};
+        createAndPersistEncodedSignals(WINNER_BUYER, encodedSignals);
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback getAdSelectionDataTestCallback =
+                invokeGetAdSelectionData(mAdSelectionService, input);
+        long adSelectionId =
+                getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
+
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setSeller(SELLER)
+                        .setAdSelectionResult(prepareAuctionResultBytesPas())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
+                invokePersistAdSelectionResult(mAdSelectionService, persistAdSelectionResultInput);
+
+        assertTrue(persistAdSelectionResultTestCallback.mIsSuccess);
+        Assert.assertEquals(
+                WINNER_AD_RENDER_URI,
+                persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
+                        .getAdRenderUri());
+        Assert.assertEquals(
+                adSelectionId,
+                persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
+                        .getAdSelectionId());
+        ReportingData reportingData = mAdSelectionEntryDao.getReportingDataForId(adSelectionId);
+        Assert.assertEquals(
+                BUYER_REPORTING_URI, reportingData.getBuyerWinReportingUri().toString());
+        Assert.assertEquals(
+                SELLER_REPORTING_URI, reportingData.getSellerWinReportingUri().toString());
     }
 
     private AdSelectionServiceImpl getService(MultiCloudSupportStrategy multiCloudSupportStrategy) {
@@ -2547,6 +2612,18 @@ public class AuctionServerE2ETest {
 
     private byte[] prepareAuctionResultBytes() {
         byte[] auctionResultBytes = AUCTION_RESULT.toByteArray();
+        AuctionServerDataCompressor.CompressedData compressedData =
+                mDataCompressor.compress(
+                        AuctionServerDataCompressor.UncompressedData.create(auctionResultBytes));
+        AuctionServerPayloadFormattedData formattedData =
+                mPayloadFormatter.apply(
+                        AuctionServerPayloadUnformattedData.create(compressedData.getData()),
+                        AuctionServerDataCompressorGzip.VERSION);
+        return formattedData.getData();
+    }
+
+    private byte[] prepareAuctionResultBytesPas() {
+        byte[] auctionResultBytes = AUCTION_RESULT_PAS.toByteArray();
         AuctionServerDataCompressor.CompressedData compressedData =
                 mDataCompressor.compress(
                         AuctionServerDataCompressor.UncompressedData.create(auctionResultBytes));
