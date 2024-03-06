@@ -1337,4 +1337,7 @@ public final class FlagsConstants {
      */
     public static final String KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS =
             "ad_services_js_engine_max_retry_attempts";
+
+    /** Key for feature flagging AdServices consent manager v2. */
+    public static final String KEY_ENABLE_CONSENT_MANAGER_V2 = "enable_consent_manager_v2";
 }
