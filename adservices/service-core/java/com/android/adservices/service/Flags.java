@@ -3683,14 +3683,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default Measurement ARA parsing alignment v1 feature flag. */
-    boolean MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 = true;
-
-    /** Returns whether Measurement ARA parsing alignment v1 feature is enabled. */
-    default boolean getMeasurementEnableAraParsingAlignmentV1() {
-        return MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
-    }
-
-    /** Default Measurement ARA parsing alignment v1 feature flag. */
     boolean MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 = true;
 
     /** Returns whether Measurement ARA deduplication alignment v1 feature is enabled. */

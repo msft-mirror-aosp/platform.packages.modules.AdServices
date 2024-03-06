@@ -305,9 +305,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT =
             "measurement_vtc_configurable_max_event_reports_count";
 
-    public static final String KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 =
-            "measurement_enable_ara_parsing_alignment_v1";
-
     public static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
 

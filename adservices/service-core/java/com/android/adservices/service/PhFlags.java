@@ -3847,11 +3847,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementEnableCoarseEventReportDestinations());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1
-                        + " = "
-                        + getMeasurementEnableAraParsingAlignmentV1());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1
                         + " = "
                         + getMeasurementEnableAraDeduplicationAlignmentV1());
@@ -5354,13 +5349,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT,
                 DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
-    }
-
-    @Override
-    public boolean getMeasurementEnableAraParsingAlignmentV1() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1,
-                MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1);
     }
 
     @Override
