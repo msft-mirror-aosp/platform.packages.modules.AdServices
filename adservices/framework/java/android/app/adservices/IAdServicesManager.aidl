@@ -247,4 +247,16 @@ interface IAdServicesManager {
 
     /** Set the current enrollment channel. */
     void setEnrollmentChannel(in String enrollmentChannel);
+
+    /** Returns whether the isMeasurementDataReset bit is true. */
+    boolean isMeasurementDataReset();
+
+    /** Saves the isMeasurementDataReset bit. */
+    void setMeasurementDataReset(boolean isMeasurementDataReset);
+
+    /** Returns whether the isPaDataReset bit is true. */
+    boolean isPaDataReset();
+
+    /** Saves the isPaDataReset bit. */
+    void setPaDataReset(boolean isPaDataReset);
 }
