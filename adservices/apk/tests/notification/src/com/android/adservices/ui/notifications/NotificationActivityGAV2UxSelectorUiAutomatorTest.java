@@ -20,14 +20,12 @@ import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
-import static com.android.adservices.ui.util.ApkTestUtil.getString;
 import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
-import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
@@ -84,14 +82,7 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
                         R.string.notificationUI_confirmation_right_control_button_text);
         assertThat(rightControlButton).isNotNull();
 
-        rightControlButton.click();
-        mDevice.wait(
-                Until.gone(
-                        By.text(
-                                getString(
-                                        R.string
-                                                .notificationUI_confirmation_right_control_button_text))),
-                WINDOW_LAUNCH_TIMEOUT);
+        rightControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
 
         UiObject2 title2 =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);
@@ -119,14 +110,7 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
                         R.string.notificationUI_right_control_button_ga_text_eu_v2);
         assertThat(rightControlButton).isNotNull();
 
-        rightControlButton.click();
-        mDevice.wait(
-                Until.gone(
-                        By.text(
-                                getString(
-                                        R.string
-                                                .notificationUI_right_control_button_ga_text_eu_v2))),
-                WINDOW_LAUNCH_TIMEOUT);
+        rightControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
 
         // Retrieve a new instance to avoid android.support.test.uiautomator.StaleObjectException.
         title2 = ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);
@@ -146,10 +130,7 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_right_control_button_text);
         assertThat(rightControlButton).isNotNull();
 
-        leftControlButton.click();
-        mDevice.wait(
-                Until.gone(By.text(getString(R.string.notificationUI_left_control_button_text))),
-                WINDOW_LAUNCH_TIMEOUT);
+        leftControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
         UiObject2 topicsTitle =
                 ApkTestUtil.getElement(mDevice, R.string.settingsUI_topics_ga_title);
         ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_topics_ga_title);
