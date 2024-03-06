@@ -83,11 +83,13 @@ import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.RvcUxEnrollmentChannelCollection;
 import com.android.adservices.ui.util.ApkTestUtil;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -137,6 +139,8 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_PAS_UX_ENABLED);
+        doReturn(false).when(mMockFlags).getConsentNotificationActivityDebugMode();
+        doReturn("").when(mMockFlags).getDebugUx();
         cancelAllPreviousNotifications();
     }
 
@@ -696,6 +700,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
 
     @Test
     public void testPasNotifications_PasUxEnabled_FirstNotice() throws InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_PAS_UX_ENABLED);
         doReturn(true).when(mMockUxStatesManager).pasUxIsActive(anyBoolean());
@@ -755,6 +760,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
 
     @Test
     public void testPasNotifications_PasUxEnabled_RenotifyNotice() throws InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_PAS_UX_ENABLED);
         doReturn(true).when(mMockUxStatesManager).pasUxIsActive(anyBoolean());
@@ -809,6 +815,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
 
     @Test
     public void testPasSettingsUpdatedAfterNotificationDisplayed() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
