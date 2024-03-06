@@ -206,4 +206,10 @@ public interface AdServicesLogger {
 
     /** Logs stats for shell command indicating success/failure, latency. */
     void logShellCommandStats(ShellCommandStats stats);
+
+    /**
+     * Logs stats for signature verification for {@link
+     * android.adservices.adselection.SignedContextualAds} during on-device ad selection auction
+     */
+    void logSignatureVerificationStats(SignatureVerificationStats stats);
 }

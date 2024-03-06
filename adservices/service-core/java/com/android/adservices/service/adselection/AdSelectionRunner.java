@@ -70,6 +70,7 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.SignatureVerificationLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -609,11 +610,18 @@ public abstract class AdSelectionRunner {
         AdSelectionConfig adSelectionConfigInput;
         if (!mFlags.getFledgeAdSelectionContextualAdsEnabled()) {
             // Empty all contextual ads if the feature is disabled
-            sLogger.v("Contextual flow is disabled");
+            sLogger.v(
+                    "Contextual flow is disabled. FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = %s",
+                    mFlags.getFledgeAdSelectionContextualAdsEnabled());
             adSelectionConfigInput = getAdSelectionConfigWithoutContextualAds(adSelectionConfig);
         } else {
-            sLogger.v("Contextual flow is enabled, filtering contextual ads");
-            adSelectionConfigInput = getAdSelectionConfigFilterContextualAds(adSelectionConfig);
+            sLogger.v(
+                    "Contextual flow is enabled, filtering contextual ads."
+                            + " FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = %s",
+                    mFlags.getFledgeAdSelectionContextualAdsEnabled());
+            // mAdSelectionExecutionLogger
+            adSelectionConfigInput =
+                    getAdSelectionConfigFilterContextualAds(adSelectionConfig, callerPackageName);
         }
 
         ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
@@ -830,22 +838,25 @@ public abstract class AdSelectionRunner {
     }
 
     private AdSelectionConfig getAdSelectionConfigFilterContextualAds(
-            AdSelectionConfig adSelectionConfig) {
+            AdSelectionConfig adSelectionConfig, String callerPackageName) {
         Map<AdTechIdentifier, SignedContextualAds> filteredContextualAdsMap = new HashMap<>();
         sLogger.v("Filtering contextual ads in Ad Selection Config");
-        boolean isEnrollmentCheckEnabled = !mFlags.getDisableFledgeEnrollmentCheck();
-        ProtectedAudienceSignatureManager signatureManager =
-                new ProtectedAudienceSignatureManager(
-                        mEnrollmentDao, mEncryptionKeyDao, isEnrollmentCheckEnabled);
+        ProtectedAudienceSignatureManager signatureManager = getSignatureManager();
         SignedContextualAds filtered;
         for (Map.Entry<AdTechIdentifier, SignedContextualAds> entry :
                 adSelectionConfig.getPerBuyerSignedContextualAds().entrySet()) {
-            if (!signatureManager.isVerified(entry.getKey(), entry.getValue())) {
+            if (!signatureManager.isVerified(
+                    entry.getKey(),
+                    adSelectionConfig.getSeller(),
+                    callerPackageName,
+                    entry.getValue())) {
                 sLogger.v(
                         "Contextual ads for buyer: '%s' have an invalid signature and will be"
                                 + " removed from the auction",
                         entry.getKey());
                 continue;
+            } else {
+                sLogger.v("Contextual ads for buyer '%s' is verified", entry.getKey());
             }
 
             filtered = mAdFilterer.filterContextualAds(entry.getValue());
@@ -869,6 +880,22 @@ public abstract class AdSelectionRunner {
                 .cloneToBuilder()
                 .setPerBuyerSignedContextualAds(filteredContextualAdsMap)
                 .build();
+    }
+
+    @NonNull
+    private ProtectedAudienceSignatureManager getSignatureManager() {
+        boolean isEnrollmentCheckEnabled = !mFlags.getDisableFledgeEnrollmentCheck();
+        boolean isContextualAdsLoggingEnabled =
+                mFlags.getFledgeAdSelectionContextualAdsMetricsEnabled();
+        SignatureVerificationLogger signatureVerificationLogger =
+                new SignatureVerificationLogger(
+                        com.android.adservices.shared.util.Clock.getInstance(), mAdServicesLogger);
+        return new ProtectedAudienceSignatureManager(
+                mEnrollmentDao,
+                mEncryptionKeyDao,
+                signatureVerificationLogger,
+                isEnrollmentCheckEnabled,
+                isContextualAdsLoggingEnabled);
     }
 
     private AdSelectionConfig getAdSelectionConfigWithoutContextualAds(
