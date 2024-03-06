@@ -46,6 +46,7 @@ import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
+import com.android.adservices.service.proto.PrivacySandboxApi;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -243,6 +244,15 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @Nullable
     public EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url) {
+        if (url == null) {
+            return null;
+        }
+
+        if (getEnrollmentApiBasedSchema()) {
+            return getEnrollmentDataForAPIByUrl(
+                    url, PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING);
+        }
+
         int buildId = mEnrollmentUtil.getBuildId();
         boolean originMatch = mFlags.getEnforceEnrollmentOriginMatch();
         Optional<Uri> registrationBaseUri =
@@ -358,15 +368,18 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Nullable
     public EnrollmentData getEnrollmentDataForFledgeByAdTechIdentifier(
             AdTechIdentifier adTechIdentifier) {
+        if (getEnrollmentApiBasedSchema()) {
+            return getEnrollmentDataForAPIByAdTechIdentifier(
+                    adTechIdentifier, PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE);
+        }
         int buildId = mEnrollmentUtil.getBuildId();
         String adTechIdentifierString = adTechIdentifier.toString();
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
-            mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, false, buildId);
             return null;
         }
-        mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, true, buildId);
 
+        // TODO (b/331781010): Cleanup EnrollmentDao Queries
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -426,14 +439,20 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @NonNull
     public Set<AdTechIdentifier> getAllFledgeEnrolledAdTechs() {
-        int buildId = mEnrollmentUtil.getBuildId();
         Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+
+        if (getEnrollmentApiBasedSchema()) {
+            List<EnrollmentData> enrollmentDataFledge =
+                    getAllEnrollmentDataByAPI(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE);
+            return getAllEnrolledAdTechs(enrollmentDataFledge);
+        }
+
+        int buildId = mEnrollmentUtil.getBuildId();
+        SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
-            mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, false, buildId);
             return enrolledAdTechIdentifiers;
         }
-        mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, true, buildId);
 
         try (Cursor cursor =
                 db.query(
@@ -479,6 +498,13 @@ public class EnrollmentDao implements IEnrollmentDao {
             return null;
         }
 
+        if (getEnrollmentApiBasedSchema()) {
+            EnrollmentData enrollmentData =
+                    getEnrollmentDataForAPIByUrl(
+                            originalUri, PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE);
+            return getEnrollmentDataWithMatchingAdTechIdentifier(enrollmentData);
+        }
+
         String originalUriHost = originalUri.getHost();
         if (originalUriHost == null || originalUriHost.isEmpty()) {
             return null;
@@ -494,13 +520,12 @@ public class EnrollmentDao implements IEnrollmentDao {
         String topLevelDomain = subdomains[subdomains.length - 1];
 
         int buildId = mEnrollmentUtil.getBuildId();
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
-            mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, false, buildId);
             return null;
         }
-        mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, true, buildId);
 
+        // TODO (b/331781010): Cleanup EnrollmentDao Queries
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -569,13 +594,12 @@ public class EnrollmentDao implements IEnrollmentDao {
             return null;
         }
         int buildId = mEnrollmentUtil.getBuildId();
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
-            mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, false, buildId);
             return null;
         }
-        mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, true, buildId);
 
+        // TODO (b/331781010): Cleanup EnrollmentDao Queries
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -608,6 +632,14 @@ public class EnrollmentDao implements IEnrollmentDao {
             return null;
         }
 
+        if (getEnrollmentApiBasedSchema()) {
+            EnrollmentData enrollmentData =
+                    getEnrollmentDataForAPIByUrl(
+                            originalUri,
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS);
+            return getEnrollmentDataWithMatchingAdTechIdentifier(enrollmentData);
+        }
+
         Optional<Uri> topDomainUri = WebAddresses.topPrivateDomainAndScheme(originalUri);
         if (topDomainUri.isEmpty()) {
             return null;
@@ -615,15 +647,12 @@ public class EnrollmentDao implements IEnrollmentDao {
         String originalUriHost = topDomainUri.get().getHost();
 
         int buildId = mEnrollmentUtil.getBuildId();
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
-            mEnrollmentUtil.logEnrollmentDataStats(
-                    mLogger, READ_QUERY, /* isSuccessful= */ false, buildId);
             return null;
         }
-        mEnrollmentUtil.logEnrollmentDataStats(
-                mLogger, READ_QUERY, /* isSuccessful= */ true, buildId);
 
+        // TODO (b/331781010): Cleanup EnrollmentDao Queries
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -689,20 +718,20 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     @Nullable
-    // TODO (b/325661647): Remove if not used in PAS implementation
     public EnrollmentData getEnrollmentDataForPASByAdTechIdentifier(
             AdTechIdentifier adTechIdentifier) {
+        if (getEnrollmentApiBasedSchema()) {
+            return getEnrollmentDataForAPIByAdTechIdentifier(
+                    adTechIdentifier, PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS);
+        }
         int buildId = mEnrollmentUtil.getBuildId();
         String adTechIdentifierString = adTechIdentifier.toString();
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
-            mEnrollmentUtil.logEnrollmentDataStats(
-                    mLogger, READ_QUERY, /* isSuccessful= */ false, buildId);
             return null;
         }
-        mEnrollmentUtil.logEnrollmentDataStats(
-                mLogger, READ_QUERY, /* isSuccessful= */ true, buildId);
 
+        // TODO (b/331781010): Cleanup EnrollmentDao Queries
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -767,17 +796,20 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @NonNull
     public Set<AdTechIdentifier> getAllPASEnrolledAdTechs() {
-        int buildId = mEnrollmentUtil.getBuildId();
         Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (getEnrollmentApiBasedSchema()) {
+            List<EnrollmentData> enrollmentDataList =
+                    getAllEnrollmentDataByAPI(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS);
+            return getAllEnrolledAdTechs(enrollmentDataList);
+        }
+        int buildId = mEnrollmentUtil.getBuildId();
+        SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
-            mEnrollmentUtil.logEnrollmentDataStats(
-                    mLogger, READ_QUERY, /* isSuccessful= */ false, buildId);
             return enrolledAdTechIdentifiers;
         }
-        mEnrollmentUtil.logEnrollmentDataStats(
-                mLogger, READ_QUERY, /* isSuccessful= */ true, buildId);
 
+        // TODO (b/331781010): Cleanup EnrollmentDao Queries
         try (Cursor cursor =
                 db.query(
                         /*distinct=*/ true,
@@ -1022,5 +1054,269 @@ public class EnrollmentDao implements IEnrollmentDao {
     /** Check whether enrolled_apis and enrolled_site is supported in Enrollment Table. */
     private boolean supportsEnrollmentAPISchemaColumns() {
         return mDbHelper.supportsEnrollmentAPISchemaColumns();
+    }
+
+    @Nullable
+    private EnrollmentData getEnrollmentDataForAPIByAdTechIdentifier(
+            AdTechIdentifier adTechIdentifier, PrivacySandboxApi privacySandboxApi) {
+        int buildId = mEnrollmentUtil.getBuildId();
+        String adTechIdentifierString = adTechIdentifier.toString();
+        String privacySandboxApiString = privacySandboxApi.name();
+        SQLiteDatabase db = getReadableDatabase(buildId);
+        if (db == null) {
+            return null;
+        }
+
+        String selectionQuery =
+                String.format(
+                        Locale.ENGLISH,
+                        "(%1$s LIKE %2$s) AND (%3$s LIKE %4$s)",
+                        EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS,
+                        DatabaseUtils.sqlEscapeString("%" + privacySandboxApiString + "%"),
+                        EnrollmentTables.EnrollmentDataContract.ENROLLED_SITE,
+                        DatabaseUtils.sqlEscapeString("%" + adTechIdentifierString + "%"));
+
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        selectionQuery,
+                        null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d(
+                        "Failed to match %s enrollment to ad tech identifier \"%s\"",
+                        privacySandboxApiString, adTechIdentifierString);
+                mEnrollmentUtil.logEnrollmentMatchStats(
+                        mLogger, /* isSuccessful= */ false, buildId);
+                return null;
+            }
+
+            LogUtil.v(
+                    "Found %d rows potentially matching ad tech identifier \"%s\"",
+                    cursor.getCount(), adTechIdentifierString);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData potentialMatch =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+
+                String enrolledSite = potentialMatch.getEnrolledSite();
+                try {
+                    // Make sure the URI can be parsed and the parsed host matches the ad tech
+                    if (adTechIdentifierString.equalsIgnoreCase(
+                            Uri.parse(enrolledSite).getHost())) {
+                        LogUtil.v(
+                                "Found positive match for %s: enrolled_site \"%s\" matches "
+                                        + "ad tech identifier \"%s\"",
+                                privacySandboxApiString, enrolledSite, adTechIdentifierString);
+                        mEnrollmentUtil.logEnrollmentMatchStats(
+                                mLogger, /* isSuccessful= */ true, buildId);
+
+                        return potentialMatch;
+                    }
+                } catch (IllegalArgumentException exception) {
+                    LogUtil.v(
+                            "Error while matching ad tech %s to enrolled_site %s; skipping"
+                                    + " URI. Error message: %s",
+                            adTechIdentifierString, enrolledSite, exception.getMessage());
+                }
+            }
+            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, /* isSuccessful= */ false, buildId);
+            return null;
+        }
+    }
+
+    /**
+     * Returns all {@link EnrollmentData} of adtechs who have enrolled to use given {@link
+     * PrivacySandboxApi}
+     *
+     * @param privacySandboxApi the {@link PrivacySandboxApi} for which to obtain {@link
+     *     EnrollmentData}
+     * @return List of matching {@link EnrollmentData} or empty list if no matches were found
+     */
+    @VisibleForTesting
+    @NonNull
+    List<EnrollmentData> getAllEnrollmentDataByAPI(PrivacySandboxApi privacySandboxApi) {
+        int buildId = mEnrollmentUtil.getBuildId();
+        String privacySandboxApiString = privacySandboxApi.name();
+        List<EnrollmentData> enrollmentDataList = new ArrayList<>();
+
+        SQLiteDatabase db = getReadableDatabase(buildId);
+        if (db == null) {
+            return enrollmentDataList;
+        }
+
+        try (Cursor cursor =
+                db.query(
+                        /*distinct=*/ true,
+                        /*table=*/ EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        /*selection=*/ EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS
+                                + " LIKE '%"
+                                + privacySandboxApiString
+                                + "%'",
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d("Failed to find any %s-enrolled ad techs", privacySandboxApiString);
+                return enrollmentDataList;
+            }
+
+            LogUtil.v("Found %d %s enrollment entries", cursor.getCount(), privacySandboxApiString);
+
+            while (cursor.moveToNext()) {
+                enrollmentDataList.add(
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor));
+            }
+
+            LogUtil.v(
+                    "Found %d %s enrolled ad tech identifiers",
+                    enrollmentDataList.size(), privacySandboxApiString);
+
+            return enrollmentDataList;
+        }
+    }
+
+    /**
+     * Returns the {@link EnrollmentData} of given {@link Uri} based on {@link PrivacySandboxApi}
+     *
+     * @param originalUri the {@link Uri} to extract from
+     * @param privacySandboxApi the {@link PrivacySandboxApi} for which the Uri is enrolled into
+     * @return {@link EnrollmentData} or {@code null} if no matches were found
+     */
+    @VisibleForTesting
+    EnrollmentData getEnrollmentDataForAPIByUrl(
+            Uri originalUri, PrivacySandboxApi privacySandboxApi) {
+
+        if (originalUri == null || privacySandboxApi == null) {
+            LogUtil.e("OriginalUri or PrivacySandboxApi is not valid");
+            return null;
+        }
+        String privacySandboxApiString = privacySandboxApi.name();
+        Optional<Uri> topDomainUri = WebAddresses.topPrivateDomainAndScheme(originalUri);
+        if (topDomainUri.isEmpty()) {
+            return null;
+        }
+        String originalUriHost = topDomainUri.get().getHost();
+
+        int buildId = mEnrollmentUtil.getBuildId();
+        SQLiteDatabase db = getReadableDatabase(buildId);
+        if (db == null) {
+            return null;
+        }
+
+        String selectionQuery =
+                String.format(
+                        Locale.ENGLISH,
+                        "(%1$s LIKE %2$s) AND (%3$s LIKE %4$s)",
+                        EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS,
+                        DatabaseUtils.sqlEscapeString("%" + privacySandboxApiString + "%"),
+                        EnrollmentTables.EnrollmentDataContract.ENROLLED_SITE,
+                        DatabaseUtils.sqlEscapeString("%" + originalUriHost + "%"));
+
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        selectionQuery,
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d(
+                        "Failed to match %s enrollment for URI \"%s\" ",
+                        privacySandboxApiString, originalUri.toString());
+                mEnrollmentUtil.logEnrollmentMatchStats(
+                        mLogger, /* isSuccessful= */ false, buildId);
+                return null;
+            }
+
+            LogUtil.v(
+                    "Found %d rows potentially matching URI \"%s\".",
+                    cursor.getCount(), originalUri.toString());
+
+            while (cursor.moveToNext()) {
+                EnrollmentData potentialMatch =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                String enrolledSite = potentialMatch.getEnrolledSite();
+                try {
+                    // Make sure the URI can be parsed and the parsed host matches the ad tech
+                    String enrolledSiteHost = Uri.parse(enrolledSite).getHost();
+                    if (originalUriHost.equalsIgnoreCase(enrolledSiteHost)
+                            || originalUriHost
+                                    .toLowerCase(Locale.ENGLISH)
+                                    .endsWith("." + enrolledSiteHost.toLowerCase(Locale.ENGLISH))) {
+                        LogUtil.v(
+                                "Found positive match for %s: enrolled_site \"%s\" matches given "
+                                        + "URI \"%s\"",
+                                privacySandboxApiString, enrolledSiteHost, originalUri.toString());
+                        mEnrollmentUtil.logEnrollmentMatchStats(
+                                mLogger, /* isSuccessful= */ true, buildId);
+
+                        return potentialMatch;
+                    }
+                } catch (IllegalArgumentException exception) {
+                    LogUtil.v(
+                            "Error while matching URI %s to enrolled_site %s; skipping URI. "
+                                    + "Error message: %s",
+                            originalUri.toString(), enrolledSite, exception.getMessage());
+                }
+            }
+
+            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, /* isSuccessful= */ false, buildId);
+            return null;
+        }
+    }
+
+    @Nullable
+    private SQLiteDatabase getReadableDatabase(int buildId) {
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(
+                    mLogger, READ_QUERY, /* isSuccessful= */ false, buildId);
+            return null;
+        }
+        mEnrollmentUtil.logEnrollmentDataStats(
+                mLogger, READ_QUERY, /* isSuccessful= */ true, buildId);
+        return db;
+    }
+
+    /** Obtain Set of {@link AdTechIdentifier} from {@link EnrollmentData}. */
+    private static Set<AdTechIdentifier> getAllEnrolledAdTechs(
+            List<EnrollmentData> enrollmentDataList) {
+        Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
+        for (EnrollmentData enrollmentData : enrollmentDataList) {
+            String enrolledSite = enrollmentData.getEnrolledSite();
+            AdTechIdentifier adTechIdentifier =
+                    AdTechIdentifier.fromString(Uri.parse(enrolledSite).getHost());
+            enrolledAdTechIdentifiers.add(adTechIdentifier);
+        }
+        return enrolledAdTechIdentifiers;
+    }
+
+    /** Obtain {@link AdTechIdentifier} with corresponding {@link EnrollmentData}. */
+    private static Pair<AdTechIdentifier, EnrollmentData>
+            getEnrollmentDataWithMatchingAdTechIdentifier(EnrollmentData enrollmentData) {
+        if (enrollmentData == null) {
+            return null;
+        }
+        String enrolledSite = enrollmentData.getEnrolledSite();
+        return new Pair<>(
+                AdTechIdentifier.fromString(Uri.parse(enrolledSite).getHost()), enrollmentData);
+    }
+
+    private boolean getEnrollmentApiBasedSchema() {
+        // getEnrollmentApiBasedSchemaEnabled is used to enable querying with enrolled_apis
+        // and enrolled_site columns, and supportsEnrollmentAPISchemaColumns is used to ensure table
+        // contains enrolled_apis and enrolled_site columns
+        return mFlags.getEnrollmentApiBasedSchemaEnabled() && supportsEnrollmentAPISchemaColumns();
     }
 }
