@@ -19,6 +19,8 @@ package com.android.adservices.service.measurement;
 import android.net.Uri;
 import android.util.Pair;
 
+import com.android.adservices.common.WebUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -62,6 +64,7 @@ public final class TriggerFixture {
                 .setAttributionConfig(ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING)
                 .setAdtechBitMapping(ValidTriggerParams.X_NETWORK_KEY_MAPPING)
                 .setRegistrationOrigin(ValidTriggerParams.REGISTRATION_ORIGIN)
+                .setAggregationCoordinatorOrigin(ValidTriggerParams.AGGREGATION_COORDINATOR_ORIGIN)
                 .build();
     }
 
@@ -144,7 +147,10 @@ public final class TriggerFixture {
                         .build();
 
         public static final String ATTRIBUTION_CONFIGS_STRING =
-                new JSONArray(Collections.singletonList(ATTRIBUTION_CONFIG.serializeAsJson()))
+                new JSONArray(
+                                Collections.singletonList(
+                                        ATTRIBUTION_CONFIG.serializeAsJson(
+                                                FlagsFactory.getFlagsForTest())))
                         .toString();
 
         public static final String X_NETWORK_KEY_MAPPING =
@@ -154,6 +160,9 @@ public final class TriggerFixture {
                         + "}";
         public static final Uri REGISTRATION_ORIGIN =
                 WebUtil.validUri("https://subdomain.example.test");
+
+        public static final Uri AGGREGATION_COORDINATOR_ORIGIN =
+                WebUtil.validUri("https://coordinator.example.test");
 
         public static final String PLATFORM_AD_ID = "test-platform-ad-id";
         public static final String DEBUG_AD_ID = "test-debug-ad-id";

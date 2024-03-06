@@ -22,10 +22,9 @@ import android.os.Bundle;
 import android.os.IBinder;
 
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
-import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import android.app.sdksandbox.ISdkToServiceCallback;
-import com.android.sdksandbox.IUnloadSdkCallback;
-import com.android.sdksandbox.SandboxLatencyInfo;
+import com.android.sdksandbox.IUnloadSdkInSandboxCallback;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 
 /** @hide */
@@ -33,13 +32,13 @@ oneway interface ISdkSandboxService {
     void initialize(in ISdkToServiceCallback sdkToService, boolean isCustomizedSdkContextEnabled);
     void computeSdkStorage(in List<String> sharedPaths, in List<String> sdkPaths,
                            in IComputeSdkStorageCallback callback);
-    void isDisabled(in ISdkSandboxDisabledCallback callback);
     // TODO(b/228045863): Wrap parameters in a parcelable
     void loadSdk(in String callingPackageName, in ApplicationInfo info,
                   in String sdkName, in String sdkProviderClassName,
-                  in String sdkCeDataDir, in String sdkDeDataDir,
+                  in ApplicationInfo customizedInfo,
                   in Bundle params, in ILoadSdkInSandboxCallback callback,
                   in SandboxLatencyInfo sandboxLatencyInfo);
-    void unloadSdk(in String sdkName, in IUnloadSdkCallback callback, in SandboxLatencyInfo sandboxLatencyInfo);
+    void unloadSdk(in String sdkName, in IUnloadSdkInSandboxCallback callback, in SandboxLatencyInfo sandboxLatencyInfo);
     void syncDataFromClient(in SharedPreferencesUpdate update);
+    void notifySdkSandboxClientImportanceChange(boolean isForeground);
 }

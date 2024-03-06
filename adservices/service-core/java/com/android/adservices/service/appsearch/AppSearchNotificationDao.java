@@ -186,7 +186,8 @@ class AppSearchNotificationDao extends AppSearchDao {
     public static boolean wasNotificationDisplayed(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(userId);
@@ -194,7 +195,12 @@ class AppSearchNotificationDao extends AppSearchDao {
         String query = getQuery(userId);
         AppSearchNotificationDao dao =
                 AppSearchDao.readConsentData(
-                        AppSearchNotificationDao.class, searchSession, executor, NAMESPACE, query);
+                        AppSearchNotificationDao.class,
+                        searchSession,
+                        executor,
+                        NAMESPACE,
+                        query,
+                        adServicesPackageName);
         LogUtil.d("AppSearch notification data read: " + dao + " [ query: " + query + "]");
         if (dao == null) {
             return false;
@@ -213,7 +219,8 @@ class AppSearchNotificationDao extends AppSearchDao {
     public static boolean wasGaUxNotificationDisplayed(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(userId);
@@ -221,7 +228,12 @@ class AppSearchNotificationDao extends AppSearchDao {
         String query = getQuery(userId);
         AppSearchNotificationDao dao =
                 AppSearchDao.readConsentData(
-                        AppSearchNotificationDao.class, searchSession, executor, NAMESPACE, query);
+                        AppSearchNotificationDao.class,
+                        searchSession,
+                        executor,
+                        NAMESPACE,
+                        query,
+                        adServicesPackageName);
         LogUtil.d("AppSearch notification data read: " + dao + " [ query: " + query + "]");
         if (dao == null) {
             return false;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.ui.enrollment;
+package com.android.adservices.service.ui.enrollment.impl;
 
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
 
@@ -26,7 +26,8 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 /** Enroll through consent notification debug mode. Currently only supported for GA UX. */
 @RequiresApi(Build.VERSION_CODES.S)
@@ -47,7 +48,7 @@ public class ReconsentNotificationChannel implements PrivacySandboxEnrollmentCha
     public void enroll(Context context, ConsentManager consentManager) {
         ConsentNotificationJobService.schedule(
                 context,
-                /* AdIdEnabled= */ consentManager.isAdIdEnabled(),
-                /* IsReconsent= */ true);
+                /* adidEnabled= */ consentManager.isAdIdEnabled(),
+                /* reConsentStatus= */ true);
     }
 }

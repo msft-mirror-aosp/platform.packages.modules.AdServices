@@ -17,9 +17,9 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
+import static com.android.adservices.service.js.JSScriptArgument.numericArrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
-import static com.android.adservices.service.js.JSScriptArgument.stringArrayArg;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -195,7 +195,7 @@ public class AdDataArgumentUtilTest {
                                 jsonArg(
                                         AdDataArgumentUtil.METADATA_FIELD_NAME,
                                         AD_DATA_WITH_AD_COUNTER_KEYS.getMetadata()),
-                                stringArrayArg(
+                                numericArrayArg(
                                         AdCounterKeyCopierImpl.AD_COUNTER_KEYS_FIELD_NAME,
                                         new ArrayList<>(
                                                 AD_DATA_WITH_AD_COUNTER_KEYS.getAdCounterKeys()))));

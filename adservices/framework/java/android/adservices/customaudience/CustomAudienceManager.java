@@ -115,7 +115,9 @@ public class CustomAudienceManager {
     @NonNull
     ICustomAudienceService getService() {
         ICustomAudienceService service = mServiceBinder.getService();
-        Objects.requireNonNull(service);
+        if (service == null) {
+            throw new IllegalStateException("custom audience service is not available.");
+        }
         return service;
     }
 
@@ -167,6 +169,81 @@ public class CustomAudienceManager {
                     customAudience,
                     getCallerPackageName(),
                     new ICustomAudienceCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> receiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
+                        }
+                    });
+        } catch (RemoteException e) {
+            sLogger.e(e, "Exception");
+            receiver.onError(new IllegalStateException("Internal Error!", e));
+        }
+    }
+
+    /**
+     * Adds the user to the {@link CustomAudience} fetched from a {@code fetchUri}.
+     *
+     * <p>An attempt to register the user for a custom audience with the same combination of {@code
+     * ownerPackageName}, {@code buyer}, and {@code name} will cause the existing custom audience's
+     * information to be overwritten, including the list of ads data.
+     *
+     * <p>Note that the ads list can be completely overwritten by the daily background fetch job.
+     *
+     * <p>This call fails with an {@link SecurityException} if
+     *
+     * <ol>
+     *   <li>the {@code ownerPackageName} is not calling app's package name and/or
+     *   <li>the buyer is not authorized to use the API.
+     * </ol>
+     *
+     * <p>This call fails with an {@link IllegalArgumentException} if
+     *
+     * <ol>
+     *   <li>the storage limit has been exceeded by the calling application and/or
+     *   <li>any URI parameters in the {@link CustomAudience} given are not authenticated with the
+     *       {@link CustomAudience} buyer.
+     * </ol>
+     *
+     * <p>This call fails with {@link LimitExceededException} if the calling package exceeds the
+     * allowed rate limits and is throttled.
+     *
+     * <p>This call fails with an {@link IllegalStateException} if an internal service error is
+     * encountered.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void fetchAndJoinCustomAudience(
+            @NonNull FetchAndJoinCustomAudienceRequest fetchAndJoinCustomAudienceRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
+        Objects.requireNonNull(fetchAndJoinCustomAudienceRequest);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final ICustomAudienceService service = getService();
+
+            service.fetchAndJoinCustomAudience(
+                    new FetchAndJoinCustomAudienceInput.Builder(
+                                    fetchAndJoinCustomAudienceRequest.getFetchUri(),
+                                    getCallerPackageName())
+                            .setName(fetchAndJoinCustomAudienceRequest.getName())
+                            .setActivationTime(
+                                    fetchAndJoinCustomAudienceRequest.getActivationTime())
+                            .setExpirationTime(
+                                    fetchAndJoinCustomAudienceRequest.getExpirationTime())
+                            .setUserBiddingSignals(
+                                    fetchAndJoinCustomAudienceRequest.getUserBiddingSignals())
+                            .build(),
+                    new FetchAndJoinCustomAudienceCallback.Stub() {
                         @Override
                         public void onSuccess() {
                             executor.execute(() -> receiver.onResult(new Object()));

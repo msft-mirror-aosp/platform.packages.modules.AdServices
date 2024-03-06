@@ -30,15 +30,19 @@ public class MeasurementReportsStatsTest {
 
     @Test
     public void testBuilderCreateSucceed() {
-        MeasurementReportsStats measurementReportsStats = new MeasurementReportsStats.Builder()
-                .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
-                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
-                .setResultCode(RESULT_OK)
-                .build();
+        String appPackageName = "appPackageName";
+        MeasurementReportsStats measurementReportsStats =
+                new MeasurementReportsStats.Builder()
+                        .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
+                        .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
+                        .setResultCode(RESULT_OK)
+                        .setSourceRegistrant(appPackageName)
+                        .build();
         Assert.assertEquals(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED,
                 measurementReportsStats.getCode());
         Assert.assertEquals(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT,
                 measurementReportsStats.getType());
         Assert.assertEquals(RESULT_OK, measurementReportsStats.getResultCode());
+        Assert.assertEquals(appPackageName, measurementReportsStats.getSourceRegistrant());
     }
 }

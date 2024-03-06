@@ -29,9 +29,8 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.widget.MainSwitchBar;
-
-import com.google.common.annotations.VisibleForTesting;
 
 /**
  * View model for the Measurement view of the AdServices Settings App. This view model is

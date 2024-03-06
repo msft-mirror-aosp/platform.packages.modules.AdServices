@@ -17,21 +17,74 @@ package {
 }
 
 android_test {
-    name: "CobaltUnitTests",
+    name: "AdServicesCobaltUnitTests",
     srcs: [
         "src/**/*.java",
     ],
-    defaults: ["modules-utils-testable-device-config-defaults"],
+    defaults: ["adservices-extended-mockito-defaults"],
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
+        "adservices-service-core",
+        "adservices-test-utility",
+        "adservices-cobalt-schema",
+        "androidx.test.core",
         "androidx.test.runner",
+        "androidx.room_room-runtime",
+        "androidx.room_room-testing",
         "adservices-cobalt",
+        "apache-commons-math",
         "truth",
+    ],
+    jni_libs: [
+        "libhpke_jni",
     ],
     libs: [
         "android.test.base",
         "android.test.runner",
+        "mockito",
     ],
     sdk_version: "test_current",
+    min_sdk_version: "Tiramisu",
+    test_suites: [
+        "general-tests",
+        "mts-adservices",
+    ],
+}
+
+android_test {
+    name: "AdExtServicesCobaltUnitTests",
+    srcs: [
+        "src/**/*.java",
+    ],
+    defaults: ["adservices-extended-mockito-defaults"],
+    manifest: "AndroidManifest.xml",
+    test_config: "AndroidTest.ExtServices.xml",
+    static_libs: [
+        "adservices-service-core",
+        "adservices-test-utility",
+        "adservices-cobalt-schema",
+        "androidx.test.core",
+        "androidx.test.runner",
+        "androidx.room_room-runtime",
+        "androidx.room_room-testing",
+        "adservices-cobalt",
+        "apache-commons-math",
+        "truth",
+    ],
+    jni_libs: [
+        "libhpke_jni",
+    ],
+    libs: [
+        "android.test.base",
+        "android.test.runner",
+        "mockito",
+    ],
+    sdk_version: "test_current",
+    min_sdk_version: "30",
+    max_sdk_version: "32",
+    test_suites: [
+        "general-tests",
+        "mts-extservices"
+    ],
 }

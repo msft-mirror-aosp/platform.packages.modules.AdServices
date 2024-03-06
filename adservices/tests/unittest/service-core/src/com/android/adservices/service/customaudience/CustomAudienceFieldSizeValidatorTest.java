@@ -138,7 +138,7 @@ public class CustomAudienceFieldSizeValidatorTest {
     @Test
     public void testAdsTooBig() {
         AdDataConversionStrategy adDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true);
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
         List<AdData> tooBigAds =
                 List.of(
                         new AdData.Builder()
@@ -158,7 +158,7 @@ public class CustomAudienceFieldSizeValidatorTest {
                         CustomAudienceFieldSizeValidator.VIOLATION_TOTAL_ADS_SIZE_TOO_BIG,
                         FLAGS.getFledgeCustomAudienceMaxAdsSizeB(),
                         tooBigAds.stream()
-                                .map(adDataConversionStrategy::fromServiceObject)
+                                .map(obj -> adDataConversionStrategy.fromServiceObject(obj).build())
                                 .mapToInt(DBAdData::size)
                                 .sum()));
     }

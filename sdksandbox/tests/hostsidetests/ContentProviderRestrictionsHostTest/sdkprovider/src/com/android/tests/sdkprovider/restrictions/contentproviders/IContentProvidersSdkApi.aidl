@@ -15,5 +15,6 @@ package com.android.tests.sdkprovider.restrictions.contentproviders;
 
 interface IContentProvidersSdkApi {
     void getContentProvider();
+    void getContentProviderByAuthority(in String authority);
     void registerContentObserver();
 }

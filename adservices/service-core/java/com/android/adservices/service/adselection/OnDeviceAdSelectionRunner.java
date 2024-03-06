@@ -37,6 +37,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -88,7 +90,11 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
-            final int callerUid) {
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final DebugReporting debugReporting,
+            final int callerUid,
+            boolean shouldUseUnifiedTables) {
         super(
                 context,
                 customAudienceDao,
@@ -101,8 +107,11 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adSelectionExecutionLogger,
                 adSelectionServiceFilter,
                 adFilterer,
-                callerUid);
-
+                frequencyCapAdDataValidator,
+                adCounterHistogramUpdater,
+                debugReporting,
+                callerUid,
+                shouldUseUnifiedTables);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(adCounterKeyCopier);
@@ -110,13 +119,18 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mAdFilterer = adFilterer;
         mAdCounterKeyCopier = adCounterKeyCopier;
+        boolean cpcBillingEnabled = BinderFlagReader.readFlag(mFlags::getFledgeCpcBillingEnabled);
+        boolean dataVersionHeaderEnabled =
+                BinderFlagReader.readFlag(mFlags::getFledgeDataVersionHeaderEnabled);
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
                                 context,
                                 () -> flags.getEnforceIsolateMaxHeapSize(),
                                 () -> flags.getIsolateMaxHeapSizeBytes(),
-                                mAdCounterKeyCopier),
+                                mAdCounterKeyCopier,
+                                mDebugReporting.getScriptStrategy(),
+                                cpcBillingEnabled),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -124,7 +138,9 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                         devContext,
                         mAdSelectionEntryDao,
                         flags,
-                        adSelectionExecutionLogger);
+                        adSelectionExecutionLogger,
+                        mDebugReporting,
+                        dataVersionHeaderEnabled);
         mPerBuyerBiddingRunner =
                 new PerBuyerBiddingRunner(
                         new AdBidGeneratorImpl(
@@ -136,12 +152,16 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 devContext,
                                 mCustomAudienceDao,
                                 mAdCounterKeyCopier,
-                                flags),
+                                flags,
+                                mDebugReporting,
+                                cpcBillingEnabled,
+                                dataVersionHeaderEnabled),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
                                 devContext,
                                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao),
-                                lightweightExecutorService),
+                                lightweightExecutorService,
+                                dataVersionHeaderEnabled),
                         mScheduledExecutor,
                         mBackgroundExecutorService,
                         flags);
@@ -166,7 +186,11 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final PerBuyerBiddingRunner perBuyerBiddingRunner,
             @NonNull final AdFilterer adFilterer,
-            @NonNull final AdCounterKeyCopier adCounterKeyCopier) {
+            @NonNull final AdCounterKeyCopier adCounterKeyCopier,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final DebugReporting debugReporting,
+            boolean shouldUseUnifiedTables) {
         super(
                 context,
                 customAudienceDao,
@@ -181,7 +205,11 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 callerUid,
                 adSelectionServiceFilter,
                 adFilterer,
-                adSelectionExecutionLogger);
+                frequencyCapAdDataValidator,
+                adCounterHistogramUpdater,
+                adSelectionExecutionLogger,
+                debugReporting,
+                shouldUseUnifiedTables);
 
         Objects.requireNonNull(adsScoreGenerator);
         Objects.requireNonNull(adServicesHttpsClient);
@@ -199,7 +227,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
      * Orchestrate on device ad selection.
      *
      * @param adSelectionConfig Set of data from Sellers and Buyers needed for Ad Auction and
-     *     Selection
+     *                          Selection
      */
     public ListenableFuture<AdSelectionOrchestrationResult> orchestrateAdSelection(
             @NonNull final AdSelectionConfig adSelectionConfig,
@@ -216,28 +244,36 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
                 Futures.transformAsync(filteredCas, bidAds, mLightweightExecutorService);
 
-        AsyncFunction<List<AdBiddingOutcome>, List<AdScoringOutcome>> mapBidsToScores =
-                bids -> runAdScoring(bids, adSelectionConfig);
+        AsyncFunction<List<AdBiddingOutcome>, Pair<List<AdScoringOutcome>, List<DebugReport>>>
+                mapBidsToScores = bids -> runAdScoring(bids, adSelectionConfig);
 
-        ListenableFuture<List<AdScoringOutcome>> scoredAds =
-                Futures.transformAsync(
-                        biddingOutcome, mapBidsToScores, mLightweightExecutorService);
+        ListenableFuture<Pair<List<AdScoringOutcome>, List<DebugReport>>>
+                scoredAdsAndBuyerDebugReports =
+                        Futures.transformAsync(
+                                biddingOutcome, mapBidsToScores, mLightweightExecutorService);
 
-        Function<List<AdScoringOutcome>, AdScoringOutcome> reduceScoresToWinner =
-                scores -> getWinningOutcome(scores);
+        Function<
+                        Pair<List<AdScoringOutcome>, List<DebugReport>>,
+                        Pair<AdScoringOutcome, AdSelectionContext>>
+                reduceScoresToWinner = this::getWinningOutcomeAndContext;
 
-        ListenableFuture<AdScoringOutcome> winningOutcome =
-                Futures.transform(scoredAds, reduceScoresToWinner, mLightweightExecutorService);
+        ListenableFuture<Pair<AdScoringOutcome, AdSelectionContext>> winningOutcomeAndDebugReports =
+                Futures.transform(
+                        scoredAdsAndBuyerDebugReports,
+                        reduceScoresToWinner,
+                        mLightweightExecutorService);
 
-        AsyncFunction<AdScoringOutcome, AdSelectionOrchestrationResult> mapWinnerToDBResult =
-                scoringWinner -> createAdSelectionResult(scoringWinner);
+        AsyncFunction<Pair<AdScoringOutcome, AdSelectionContext>, AdSelectionOrchestrationResult>
+                mapWinnerToDBResult = this::createAdSelectionResult;
 
         ListenableFuture<AdSelectionOrchestrationResult> dbAdSelectionBuilder =
                 Futures.transformAsync(
-                        winningOutcome, mapWinnerToDBResult, mLightweightExecutorService);
+                        winningOutcomeAndDebugReports,
+                        mapWinnerToDBResult,
+                        mLightweightExecutorService);
 
         // Clean up after the future is complete, out of critical path
-        dbAdSelectionBuilder.addListener(() -> cleanUpCache(), mLightweightExecutorService);
+        dbAdSelectionBuilder.addListener(this::cleanUpCache, mLightweightExecutorService);
 
         return dbAdSelectionBuilder;
     }
@@ -302,7 +338,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     }
 
     @SuppressLint("DefaultLocale")
-    private ListenableFuture<List<AdScoringOutcome>> runAdScoring(
+    private ListenableFuture<Pair<List<AdScoringOutcome>, List<DebugReport>>> runAdScoring(
             @NonNull final List<AdBiddingOutcome> adBiddingOutcomes,
             @NonNull final AdSelectionConfig adSelectionConfig)
             throws AdServicesException {
@@ -311,24 +347,73 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
         sLogger.v("Got %d valid bidding outcomes", validBiddingOutcomes.size());
 
-        if (validBiddingOutcomes.isEmpty() && adSelectionConfig.getBuyerContextualAds().isEmpty()) {
+        if (validBiddingOutcomes.isEmpty()
+                && adSelectionConfig.getBuyerSignedContextualAds().isEmpty()) {
             sLogger.w("Received empty list of successful bidding outcomes and contextual ads");
             throw new IllegalStateException(ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING);
         }
-        return mAdsScoreGenerator.runAdScoring(validBiddingOutcomes, adSelectionConfig);
+        List<DebugReport> buyerDebugReports = new ArrayList<>();
+        if (mDebugReporting.isEnabled()) {
+            buyerDebugReports.addAll(
+                    validBiddingOutcomes.stream()
+                            .map(AdBiddingOutcome::getDebugReport)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList()));
+        }
+
+        return mAdsScoreGenerator
+                .runAdScoring(validBiddingOutcomes, adSelectionConfig)
+                .transform(
+                        adScoringOutcomes -> Pair.create(adScoringOutcomes, buyerDebugReports),
+                        mLightweightExecutorService);
     }
 
-    private AdScoringOutcome getWinningOutcome(
-            @NonNull List<AdScoringOutcome> overallAdScoringOutcome) {
+    private Pair<AdScoringOutcome, AdSelectionContext> getWinningOutcomeAndContext(
+            @NonNull
+                    Pair<List<AdScoringOutcome>, List<DebugReport>>
+                            scoringOutcomesAndBuyerDebugReports) {
         sLogger.v("Scoring completed, generating winning outcome");
-        return overallAdScoringOutcome.stream()
-                .filter(a -> a.getAdWithScore().getScore() > 0)
-                .max(
-                        (a, b) ->
-                                Double.compare(
-                                        a.getAdWithScore().getScore(),
-                                        b.getAdWithScore().getScore()))
-                .orElseThrow(() -> new IllegalStateException(ERROR_NO_WINNING_AD_FOUND));
+        // Iterate over the list to find the winner and second highest scored ad outcome.
+        AdScoringOutcome winningAd = null;
+        AdScoringOutcome secondHighestScoredAd = null;
+        double winningAdScore = Double.MIN_VALUE;
+        double secondHighestAdScore = Double.MIN_VALUE;
+        List<DebugReport> debugReports =
+                new ArrayList<>(scoringOutcomesAndBuyerDebugReports.second);
+        for (AdScoringOutcome adScoringOutcome : scoringOutcomesAndBuyerDebugReports.first) {
+            if (mDebugReporting.isEnabled() && Objects.nonNull(adScoringOutcome.getDebugReport())) {
+                debugReports.add(adScoringOutcome.getDebugReport());
+            }
+            double score = adScoringOutcome.getAdWithScore().getScore();
+            if (score <= 0) {
+                continue;
+            }
+            if (score > winningAdScore) {
+                // winner becomes second highest scored ad.
+                secondHighestScoredAd = winningAd;
+                secondHighestAdScore = winningAdScore;
+                winningAd = adScoringOutcome;
+                winningAdScore = score;
+            } else if (score > secondHighestAdScore) {
+                secondHighestScoredAd = adScoringOutcome;
+            }
+        }
+        if (Objects.isNull(winningAd)) {
+            throw new IllegalStateException(ERROR_NO_WINNING_AD_FOUND);
+        }
+
+        AdSelectionContext adSelectionContext;
+        if (mDebugReporting.isEnabled()) {
+            adSelectionContext =
+                    new AdSelectionContext(debugReports, winningAd, secondHighestScoredAd);
+        } else {
+            adSelectionContext =
+                    new AdSelectionContext(
+                            /*debugReports*/ Collections.emptyList(),
+                            /*winningAdScoringOutcome*/ null,
+                            /*secondHighestAdScoringOutcome*/ null);
+        }
+        return Pair.create(winningAd, adSelectionContext);
     }
 
     /**
@@ -336,22 +421,40 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
      * except adSelectionId and creation time, which should be created as close as possible to
      * persistence logic
      *
-     * @param scoringWinner Winning Ad for overall Ad Selection
+     * @param winningAdScoringOutcomeAndContext Winning Ad for overall Ad Selection with
+     *     AdSelectionContext
      * @return A {@link Pair} with a Builder for {@link DBAdSelection} populated with necessary data
      *     and a string containing the JS with the decision logic from this buyer.
      */
     @VisibleForTesting
     ListenableFuture<AdSelectionOrchestrationResult> createAdSelectionResult(
-            @NonNull AdScoringOutcome scoringWinner) {
+            @NonNull Pair<AdScoringOutcome, AdSelectionContext> winningAdScoringOutcomeAndContext) {
         DBAdSelection.Builder dbAdSelectionBuilder = new DBAdSelection.Builder();
         sLogger.v("Creating Ad Selection result from scoring winner");
+        String buyerContextualSignalsString;
+        String sellerContextualSignalsString;
+        // There should always be a winner.
+        AdScoringOutcome scoringWinner = winningAdScoringOutcomeAndContext.first;
+        if (Objects.isNull(scoringWinner.getBuyerContextualSignals())) {
+            buyerContextualSignalsString = "{}";
+        } else {
+            buyerContextualSignalsString = scoringWinner.getBuyerContextualSignals().toString();
+        }
+
+        if (Objects.isNull(scoringWinner.getSellerContextualSignals())) {
+            sellerContextualSignalsString = "{}";
+        } else {
+            sellerContextualSignalsString = scoringWinner.getSellerContextualSignals().toString();
+        }
+
         dbAdSelectionBuilder
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
                 .setCustomAudienceSignals(scoringWinner.getCustomAudienceSignals())
                 .setWinningAdRenderUri(
                         scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
                 .setBiddingLogicUri(scoringWinner.getBiddingLogicUri())
-                .setContextualSignals("{}");
+                .setBuyerContextualSignals(buyerContextualSignalsString)
+                .setSellerContextualSignals(sellerContextualSignalsString);
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
 
         final DBAdSelection.Builder copiedDBAdSelectionBuilder =
@@ -361,7 +464,15 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 .transform(
                         biddingLogicJs ->
                                 new AdSelectionOrchestrationResult(
-                                        copiedDBAdSelectionBuilder, biddingLogicJs),
+                                        copiedDBAdSelectionBuilder,
+                                        biddingLogicJs,
+                                        winningAdScoringOutcomeAndContext.second.mDebugReportList,
+                                        winningAdScoringOutcomeAndContext
+                                                .second
+                                                .mWinnerAdScoringOutcome,
+                                        winningAdScoringOutcomeAndContext
+                                                .second
+                                                .mSecondHighestAdScoringOutcome),
                         mLightweightExecutorService);
     }
 
@@ -393,5 +504,23 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
      */
     private void cleanUpCache() {
         mAdServicesHttpsClient.getAssociatedCache().cleanUp();
+    }
+
+    private static class AdSelectionContext {
+
+        @NonNull final List<DebugReport> mDebugReportList;
+
+        @Nullable final AdScoringOutcome mWinnerAdScoringOutcome;
+
+        @Nullable final AdScoringOutcome mSecondHighestAdScoringOutcome;
+
+        AdSelectionContext(
+                @NonNull List<DebugReport> debugReports,
+                @Nullable AdScoringOutcome winningAdScoringOutcome,
+                @Nullable AdScoringOutcome secondHighestAdScoringOutcome) {
+            this.mDebugReportList = debugReports;
+            this.mWinnerAdScoringOutcome = winningAdScoringOutcome;
+            this.mSecondHighestAdScoringOutcome = secondHighestAdScoringOutcome;
+        }
     }
 }

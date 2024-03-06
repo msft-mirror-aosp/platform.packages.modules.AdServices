@@ -25,7 +25,9 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
@@ -57,13 +59,22 @@ public class MeasurementActionDelegate {
                     try {
                         switch (event) {
                             case SWITCH_ON_MEASUREMENT:
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptInMeasurementDialog(
+                                            mMeasurementActivity);
+                                }
                                 mMeasurementViewModel.setMeasurementConsent(true);
                                 break;
                             case SWITCH_OFF_MEASUREMENT:
-                                mMeasurementViewModel.setMeasurementConsent(false);
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptOutMeasurementDialog(
+                                            mMeasurementActivity, mMeasurementViewModel);
+                                } else {
+                                    mMeasurementViewModel.setMeasurementConsent(false);
+                                }
                                 break;
                             case RESET_MEASUREMENT:
-                                UiStatsLogger.logResetMeasurementSelected(mMeasurementActivity);
+                                UiStatsLogger.logResetMeasurementSelected();
                                 mMeasurementViewModel.resetMeasurement();
                                 Toast.makeText(
                                                 mMeasurementActivity,

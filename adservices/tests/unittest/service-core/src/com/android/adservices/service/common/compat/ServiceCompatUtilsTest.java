@@ -35,7 +35,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
 public class ServiceCompatUtilsTest {
-    private static final String EXT_PACKAGE_NAME = "com.google.android.ext.adservices.api";
+    private static final String EXT_PACKAGE_NAME = "com.google.android.ext.services";
     private static final String NON_EXT_PACKAGE_NAME = "com.example.package";
 
     private MockitoSession mMockitoSession;

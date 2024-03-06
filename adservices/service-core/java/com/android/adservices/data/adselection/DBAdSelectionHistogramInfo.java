@@ -52,7 +52,7 @@ public abstract class DBAdSelectionHistogramInfo {
      * adtech has assigned to the winning ad.
      */
     @AutoValue.CopyAnnotations
-    @ColumnInfo(name = "ad_counter_keys")
+    @ColumnInfo(name = "ad_counter_int_keys")
     @Nullable
     protected abstract String getSerializedAdCounterKeys();
 
@@ -61,7 +61,7 @@ public abstract class DBAdSelectionHistogramInfo {
      * assigned to the winning ad.
      */
     @Nullable
-    public final Set<String> getAdCounterKeys() {
-        return FledgeRoomConverters.deserializeStringSet(getSerializedAdCounterKeys());
+    public final Set<Integer> getAdCounterKeys() {
+        return FledgeRoomConverters.deserializeIntegerSet(getSerializedAdCounterKeys());
     }
 }

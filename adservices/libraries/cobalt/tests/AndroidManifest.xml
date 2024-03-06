@@ -18,12 +18,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.android.cobalt.tests" >
 
-    <application android:debuggable="true">
-        <uses-library android:name="android.test.runner" />
-    </application>
+    <!-- Mark the app as debuggable to enable the use of Mockito. -->
+    <application android:debuggable="true"/>
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
-        android:targetPackage="com.android.cobalt.tests"
-        android:label="Cobalt tests"/>
-
+        android:targetPackage="com.android.cobalt.tests" />
 </manifest>

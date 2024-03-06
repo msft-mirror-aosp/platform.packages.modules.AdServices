@@ -17,6 +17,7 @@ package com.android.adservices.service.measurement.aggregation;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.net.Uri;
 
 import java.util.Objects;
 
@@ -28,19 +29,20 @@ public final class AggregateEncryptionKey {
     private final String mKeyId;
     private final String mPublicKey;
     private final long mExpiry;
+    private final Uri mAggregationCoordinatorOrigin;
 
-    /**
-     * Create a new aggregate encryption key object.
-     */
+    /** Create a new aggregate encryption key object. */
     private AggregateEncryptionKey(
             @Nullable String id,
             @NonNull String keyId,
             @NonNull String publicKey,
-            @NonNull long expiry) {
+            @NonNull long expiry,
+            @NonNull Uri aggregationCoordinatorOrigin) {
         mId = id;
         mKeyId = keyId;
         mPublicKey = publicKey;
         mExpiry = expiry;
+        mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
     }
 
     @Override
@@ -51,12 +53,13 @@ public final class AggregateEncryptionKey {
         AggregateEncryptionKey key = (AggregateEncryptionKey) obj;
         return Objects.equals(mKeyId, key.mKeyId)
                 && Objects.equals(mPublicKey, key.mPublicKey)
-                && mExpiry == key.mExpiry;
+                && mExpiry == key.mExpiry
+                && Objects.equals(mAggregationCoordinatorOrigin, key.mAggregationCoordinatorOrigin);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mKeyId, mPublicKey, mExpiry);
+        return Objects.hash(mKeyId, mPublicKey, mExpiry, mAggregationCoordinatorOrigin);
     }
 
     /**
@@ -87,6 +90,11 @@ public final class AggregateEncryptionKey {
         return mExpiry;
     }
 
+    /** Origin of the aggregation coordinator */
+    public Uri getAggregationCoordinatorOrigin() {
+        return mAggregationCoordinatorOrigin;
+    }
+
     /**
      * A builder for {@link AggregateEncryptionKey}.
      */
@@ -95,6 +103,7 @@ public final class AggregateEncryptionKey {
         private String mKeyId;
         private String mPublicKey;
         private long mExpiry;
+        private Uri mAggregationCoordinatorOrigin;
 
         public Builder() { }
 
@@ -130,14 +139,25 @@ public final class AggregateEncryptionKey {
             return this;
         }
 
+        /** See {@link AggregateEncryptionKey#getAggregationCoordinatorOrigin()}. */
+        public @NonNull Builder setAggregationCoordinatorOrigin(
+                @NonNull Uri aggregationCoordinatorOrigin) {
+            mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
+            return this;
+        }
+
         /**
          * Build the AggregateEncryptionKey.
          */
         public @NonNull AggregateEncryptionKey build() {
-            if (mKeyId == null || mPublicKey == null || mExpiry == 0) {
+            if (mKeyId == null
+                    || mPublicKey == null
+                    || mExpiry == 0
+                    || mAggregationCoordinatorOrigin == null) {
                 throw new IllegalArgumentException("Uninitialized fields");
             }
-            return new AggregateEncryptionKey(mId, mKeyId, mPublicKey, mExpiry);
+            return new AggregateEncryptionKey(
+                    mId, mKeyId, mPublicKey, mExpiry, mAggregationCoordinatorOrigin);
         }
     }
 }

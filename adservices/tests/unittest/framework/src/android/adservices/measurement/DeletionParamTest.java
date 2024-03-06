@@ -44,7 +44,7 @@ public final class DeletionParamTest {
                         Collections.emptyList(),
                         Instant.ofEpochMilli(1642060000000L),
                         Instant.ofEpochMilli(1642060538000L),
-                        sContext.getAttributionSource().getPackageName(),
+                        sContext.getPackageName(),
                         "sdk.package.name")
                 .setDeletionMode(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA)
                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
@@ -57,7 +57,7 @@ public final class DeletionParamTest {
                         Collections.emptyList(),
                         Instant.MIN,
                         Instant.MAX,
-                        sContext.getAttributionSource().getPackageName(),
+                        sContext.getPackageName(),
                         /* sdkPackageName = */ "")
                 .build();
     }
@@ -94,7 +94,7 @@ public final class DeletionParamTest {
                                         Collections.emptyList(),
                                         Instant.MIN,
                                         Instant.MAX,
-                                        sContext.getAttributionSource().getPackageName(),
+                                        sContext.getPackageName(),
                                         SDK_PACKAGE_NAME)
                                 .build());
     }
@@ -109,7 +109,7 @@ public final class DeletionParamTest {
                                         /* domainUris = */ null,
                                         Instant.MIN,
                                         Instant.MAX,
-                                        sContext.getAttributionSource().getPackageName(),
+                                        sContext.getPackageName(),
                                         SDK_PACKAGE_NAME)
                                 .build());
     }
@@ -124,7 +124,7 @@ public final class DeletionParamTest {
                                         Collections.emptyList(),
                                         /* start = */ null,
                                         Instant.MAX,
-                                        sContext.getAttributionSource().getPackageName(),
+                                        sContext.getPackageName(),
                                         SDK_PACKAGE_NAME)
                                 .build());
     }
@@ -139,7 +139,7 @@ public final class DeletionParamTest {
                                         Collections.emptyList(),
                                         Instant.MIN,
                                         /* end = */ null,
-                                        sContext.getAttributionSource().getPackageName(),
+                                        sContext.getPackageName(),
                                         SDK_PACKAGE_NAME)
                                 .build());
     }

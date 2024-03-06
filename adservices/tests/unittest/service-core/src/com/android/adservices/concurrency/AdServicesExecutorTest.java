@@ -16,18 +16,25 @@
 
 package com.android.adservices.concurrency;
 
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import android.os.Build;
+import android.os.Process;
+import android.os.StrictMode;
+import android.os.StrictMode.ThreadPolicy;
 
+import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.compatibility.common.util.ShellUtils;
+
 
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-public class AdServicesExecutorTest {
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 
+public class AdServicesExecutorTest {
     // Command to kill the adservices process
     public static final String KILL_ADSERVICES_CMD =
             "su 0 killall -9 com.google.android.adservices.api";
@@ -35,44 +42,80 @@ public class AdServicesExecutorTest {
     @Before
     public void setup() {
         // TODO(b/265113689) Unsuppress the test for user builds post removing the `su` utility
-        Assume.assumeTrue(Build.isDebuggable());
+        Assume.assumeTrue(BuildCompatUtils.isDebuggable());
         ShellUtils.runShellCommand(KILL_ADSERVICES_CMD);
     }
 
     @Test
     public void testCreateLightWeightThreadSuccess() throws Exception {
-        String threadName =
-                AdServicesExecutors.getLightWeightExecutor()
-                        .submit(() -> Thread.currentThread().getName())
-                        .get();
-        // Expecting 1-19 digits since the thread number is a positive long
-        assertTrue(threadName.matches("lightweight-\\d{1,19}$"));
+        ExecutorResult expectedResult =
+                new ExecutorResult(
+                        AdServicesExecutors.getAsyncThreadPolicy(),
+                        Process.THREAD_PRIORITY_DEFAULT,
+                        "lightweight-\\d{1,19}$");
+
+        runTaskAndAssertResult(AdServicesExecutors.getLightWeightExecutor(), expectedResult);
     }
 
     @Test
     public void testCreateBackgroundThreadSuccess() throws Exception {
-        String threadName =
-                AdServicesExecutors.getBackgroundExecutor()
-                        .submit(() -> Thread.currentThread().getName())
-                        .get();
-        assertTrue(threadName.matches("background-\\d{1,19}$"));
-    }
-
-    @Test
-    public void testCreateScheduledThreadSuccess() throws Exception {
-        String threadName =
-                AdServicesExecutors.getScheduler()
-                        .submit(() -> Thread.currentThread().getName())
-                        .get();
-        assertTrue(threadName.matches("scheduled-\\d{1,19}$"));
+        ExecutorResult expectedResult =
+                new ExecutorResult(
+                        AdServicesExecutors.getIoThreadPolicy(),
+                        Process.THREAD_PRIORITY_BACKGROUND,
+                        "background-\\d{1,19}$");
+        runTaskAndAssertResult(AdServicesExecutors.getBackgroundExecutor(), expectedResult);
     }
 
     @Test
     public void testCreateBlockingThreadSuccess() throws Exception {
-        String threadName =
-                AdServicesExecutors.getBlockingExecutor()
-                        .submit(() -> Thread.currentThread().getName())
-                        .get();
-        assertTrue(threadName.matches("blocking-\\d{1,19}$"));
+        ExecutorResult expectedResult =
+                new ExecutorResult(
+                        ThreadPolicy.LAX,
+                        Process.THREAD_PRIORITY_BACKGROUND + Process.THREAD_PRIORITY_LESS_FAVORABLE,
+                        "blocking-\\d{1,19}$");
+        runTaskAndAssertResult(AdServicesExecutors.getBlockingExecutor(), expectedResult);
+    }
+
+    @Test
+    public void testCreateScheduledThreadSuccess() throws Exception {
+        ExecutorResult expectedResult =
+                new ExecutorResult(
+                        AdServicesExecutors.getIoThreadPolicy(),
+                        Process.THREAD_PRIORITY_DEFAULT,
+                        "scheduled-\\d{1,19}$");
+        runTaskAndAssertResult(AdServicesExecutors.getScheduler(), expectedResult);
+    }
+
+    private void runTaskAndAssertResult(
+            ExecutorService executorService, ExecutorResult expectedResult) throws Exception {
+        Callable<ExecutorResult> task =
+                () ->
+                        new ExecutorResult(
+                                StrictMode.getThreadPolicy(),
+                                Process.getThreadPriority(Process.myTid()),
+                                Thread.currentThread().getName());
+        ExecutorResult actualResult = executorService.submit(task).get();
+
+        assertWithMessage("Thread priority")
+                .that(actualResult.mPriority)
+                .isEqualTo(expectedResult.mPriority);
+        assertWithMessage("Thread name")
+                .that(actualResult.mThreadName)
+                .matches(expectedResult.mThreadName);
+        assertThat(actualResult.mThreadPolicy.toString())
+                .isEqualTo(expectedResult.mThreadPolicy.toString());
+    }
+
+    private static final class ExecutorResult {
+        private ThreadPolicy mThreadPolicy;
+        private int mPriority;
+        private String mThreadName;
+
+        ExecutorResult(ThreadPolicy threadPolicy, int priority, String threadName) {
+            mThreadPolicy = threadPolicy;
+            mPriority = priority;
+            mThreadName = threadName;
+        }
     }
 }

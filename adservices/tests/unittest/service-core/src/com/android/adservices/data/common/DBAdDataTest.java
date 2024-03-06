@@ -40,9 +40,11 @@ import java.util.HashSet;
 public class DBAdDataTest {
 
     private static final AdData SAMPLE_AD_DATA =
-            AdDataFixture.getValidFilterAdDataByBuyer(CommonFixture.VALID_BUYER_1, 1);
+            AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 1)
+                    .setAdRenderId("ad-render-id")
+                    .build();
     private static final AdDataConversionStrategy CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
 
     @Test
     public void testConstructor() {
@@ -51,7 +53,8 @@ public class DBAdDataTest {
                         SAMPLE_AD_DATA.getRenderUri(),
                         SAMPLE_AD_DATA.getMetadata(),
                         SAMPLE_AD_DATA.getAdCounterKeys(),
-                        SAMPLE_AD_DATA.getAdFilters());
+                        SAMPLE_AD_DATA.getAdFilters(),
+                        SAMPLE_AD_DATA.getAdRenderId());
         assertEqualsServiceObject(SAMPLE_AD_DATA, dbAdData);
     }
 
@@ -62,25 +65,31 @@ public class DBAdDataTest {
                         SAMPLE_AD_DATA.getRenderUri(),
                         SAMPLE_AD_DATA.getMetadata(),
                         new HashSet<>(),
+                        null,
                         null);
         assertEquals(SAMPLE_AD_DATA.getRenderUri(), dbAdData.getRenderUri());
         assertEquals(SAMPLE_AD_DATA.getMetadata(), dbAdData.getMetadata());
         assertEquals(Collections.EMPTY_SET, dbAdData.getAdCounterKeys());
         assertNull(dbAdData.getAdFilters());
+        assertNull(dbAdData.getAdRenderId());
     }
 
     @Test
     public void testRenderUriNullFails() {
         assertThrows(
                 NullPointerException.class,
-                () -> new DBAdData(null, SAMPLE_AD_DATA.getMetadata(), new HashSet<>(), null));
+                () ->
+                        new DBAdData(
+                                null, SAMPLE_AD_DATA.getMetadata(), new HashSet<>(), null, null));
     }
 
     @Test
     public void testMetadataNullFails() {
         assertThrows(
                 NullPointerException.class,
-                () -> new DBAdData(SAMPLE_AD_DATA.getRenderUri(), null, new HashSet<>(), null));
+                () ->
+                        new DBAdData(
+                                SAMPLE_AD_DATA.getRenderUri(), null, new HashSet<>(), null, null));
     }
 
     @Test
@@ -92,12 +101,13 @@ public class DBAdDataTest {
                                 SAMPLE_AD_DATA.getRenderUri(),
                                 SAMPLE_AD_DATA.getMetadata(),
                                 null,
+                                null,
                                 null));
     }
 
     @Test
     public void testFromServiceObject() {
-        DBAdData dbAdData = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).build();
         assertEqualsServiceObject(SAMPLE_AD_DATA, dbAdData);
     }
 
@@ -105,8 +115,9 @@ public class DBAdDataTest {
     public void testFromServiceObjectFilteringDisabled() {
         AdData original = AdDataFixture.getValidFilterAdDataByBuyer(CommonFixture.VALID_BUYER_1, 1);
         DBAdData dbAdData =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(false)
-                        .fromServiceObject(original);
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(false, false)
+                        .fromServiceObject(original)
+                        .build();
         AdData noFilters =
                 new AdData.Builder()
                         .setRenderUri(original.getRenderUri())
@@ -116,13 +127,27 @@ public class DBAdDataTest {
     }
 
     @Test
+    public void testFromServiceObjectAdRenderIdDisabled() {
+        AdData original =
+                AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 1)
+                        .setAdRenderId("render_id")
+                        .build();
+        DBAdData dbAdData =
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(false, false)
+                        .fromServiceObject(original)
+                        .build();
+        assertNull(dbAdData.getAdRenderId());
+    }
+
+    @Test
     public void testSize() {
         int[] size = new int[1];
         size[0] += SAMPLE_AD_DATA.getRenderUri().toString().getBytes().length;
         size[0] += SAMPLE_AD_DATA.getMetadata().getBytes().length;
-        SAMPLE_AD_DATA.getAdCounterKeys().forEach(x -> size[0] += x.getBytes().length);
+        SAMPLE_AD_DATA.getAdCounterKeys().forEach(x -> size[0] += 4);
         size[0] += SAMPLE_AD_DATA.getAdFilters().getSizeInBytes();
-        assertEquals(size[0], CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).size());
+        size[0] += SAMPLE_AD_DATA.getAdRenderId().getBytes().length;
+        assertEquals(size[0], CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).build().size());
     }
 
     @Test
@@ -135,33 +160,35 @@ public class DBAdDataTest {
                         SAMPLE_AD_DATA.getRenderUri(),
                         SAMPLE_AD_DATA.getMetadata(),
                         Collections.EMPTY_SET,
+                        null,
                         null);
         assertEquals(size[0], dbAdData.size());
     }
 
     @Test
     public void testEquals() {
-        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
-        DBAdData dbAdData2 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).build();
+        DBAdData dbAdData2 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).build();
         assertEquals(dbAdData1, dbAdData2);
     }
 
     @Test
     public void testNotEqual() {
-        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).build();
         DBAdData dbAdData2 =
                 new DBAdData(
                         SAMPLE_AD_DATA.getRenderUri(),
                         SAMPLE_AD_DATA.getMetadata(),
                         Collections.EMPTY_SET,
+                        null,
                         null);
         assertNotEquals(dbAdData1, dbAdData2);
     }
 
     @Test
     public void testHashEquals() {
-        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
-        DBAdData dbAdData2 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).build();
+        DBAdData dbAdData2 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).build();
         assertEquals(dbAdData1.hashCode(), dbAdData2.hashCode());
     }
 
@@ -169,12 +196,13 @@ public class DBAdDataTest {
     public void testHashNotEqual() {
         // Technically there are values for SAMPLE_AD_DATA that could produce a collision, but it's
         // deterministic so there's no flake risk.
-        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).build();
         DBAdData dbAdData2 =
                 new DBAdData(
                         SAMPLE_AD_DATA.getRenderUri(),
                         SAMPLE_AD_DATA.getMetadata(),
                         Collections.EMPTY_SET,
+                        null,
                         null);
         assertNotEquals(dbAdData1.hashCode(), dbAdData2.hashCode());
     }
@@ -182,10 +210,10 @@ public class DBAdDataTest {
     @Test
     public void testToString() {
         DBAdData dbAdData =
-                new DBAdData(Uri.parse("https://a.com"), "{}", Collections.EMPTY_SET, null);
+                new DBAdData(Uri.parse("https://a.com"), "{}", Collections.EMPTY_SET, null, null);
         assertEquals(
                 "DBAdData{mRenderUri=https://a.com, mMetadata='{}', mAdCounterKeys=[], "
-                        + "mAdFilters=null}",
+                        + "mAdFilters=null, mAdRenderId='null'}",
                 dbAdData.toString());
     }
 

@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.actions;
 
-import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
 import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
 import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
@@ -26,7 +25,6 @@ import static com.android.adservices.service.measurement.E2ETest.hasTriggerDebug
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
-import android.content.AttributionSource;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.E2ETest.TestFormatJsonMapping;
@@ -53,9 +51,7 @@ public final class RegisterWebTrigger implements Action {
         JSONArray triggerParamsArray =
                 regParamsJson.getJSONArray(TestFormatJsonMapping.TRIGGER_PARAMS_REGISTRATIONS_KEY);
 
-        AttributionSource attributionSource =
-                getAttributionSource(
-                        regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY));
+        String packageName = regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY);
 
         WebTriggerRegistrationRequest registrationRequest =
                 new WebTriggerRegistrationRequest.Builder(
@@ -67,9 +63,7 @@ public final class RegisterWebTrigger implements Action {
 
         mRegistrationRequest =
                 new WebTriggerRegistrationRequestInternal.Builder(
-                                registrationRequest,
-                                attributionSource.getPackageName(),
-                                /* sdkPackageName = */ "")
+                                registrationRequest, packageName, /* sdkPackageName = */ "")
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);

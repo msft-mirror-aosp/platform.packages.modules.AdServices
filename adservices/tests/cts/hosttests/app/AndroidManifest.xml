@@ -18,16 +18,15 @@
      package="com.android.adservices.cts">
 
     <application android:label="@string/app_name">
-        <activity android:name=".TopicsApiLogActivity"
-             android:exported="true"/>
-        <uses-library android:name="android.ext.adservices" android:required="false"/>
+        <activity android:name=".TopicsApiLogActivity" android:exported="true"/>
+        <activity android:name=".AppSearchWriterActivity" android:exported="true"/>
 
+        <uses-library android:name="android.ext.adservices" android:required="false"/>
     </application>
+
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
          android:targetPackage="com.android.server.cts.device.statsd"
          android:label="CTS tests of android.os.statsd stats collection">
-        <meta-data android:name="listener"
-             android:value="com.android.cts.runner.CtsTestRunListener"/>
     </instrumentation>
 </manifest>

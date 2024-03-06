@@ -20,6 +20,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application
         android:label="@string/title_activity_main">
+        <profileable android:shell="true" android:enabled="true" />
         <activity
             android:name="com.android.sdksandboxwebviewclient.MainActivity"
             android:exported="true">

@@ -22,6 +22,7 @@ import android.app.adservices.topics.TopicParcel;
 
 import com.android.server.adservices.data.topics.TopicsDao;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -95,5 +96,20 @@ public class BlockedTopicsManager {
                 topicParcel.getTaxonomyVersion(),
                 topicParcel.getModelVersion(),
                 topicParcel.getTopicId());
+    }
+
+    /** Dumps its internal state. */
+    public void dump(PrintWriter writer, String prefix) {
+        writer.printf("%sBlockedTopicsManager:\n", prefix);
+        String prefix2 = prefix + "  ";
+
+        // NOTE: don't need to dump userId and mTopicsDao as these are already dumped by up in the
+        // call stack
+
+        List<TopicParcel> blockedTopics = retrieveAllBlockedTopics();
+        int size = blockedTopics.size();
+        writer.printf("%s%d blocked topics\n", prefix2, size);
+
+        // TODO(b/299942046): dump the blocked topics themselves
     }
 }

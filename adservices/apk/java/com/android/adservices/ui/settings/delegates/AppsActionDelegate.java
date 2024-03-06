@@ -70,15 +70,24 @@ public class AppsActionDelegate {
                     try {
                         switch (event) {
                             case SWITCH_ON_APPS:
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptInAppsDialog(mAppsActivity);
+                                }
                                 mAppsViewModel.setAppsConsent(true);
                                 mAppsViewModel.refresh();
                                 break;
                             case SWITCH_OFF_APPS:
-                                mAppsViewModel.setAppsConsent(false);
-                                mAppsViewModel.refresh();
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptOutAppsDialog(
+                                            mAppsActivity, mAppsViewModel);
+                                } else {
+                                    mAppsViewModel.setAppsConsent(false);
+                                    mAppsViewModel.refresh();
+                                }
+
                                 break;
                             case BLOCK_APP:
-                                UiStatsLogger.logBlockAppSelected(mAppsActivity);
+                                UiStatsLogger.logBlockAppSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockAppDialog(
@@ -92,7 +101,7 @@ public class AppsActionDelegate {
                                 }
                                 break;
                             case RESET_APPS:
-                                UiStatsLogger.logResetAppSelected(mAppsActivity);
+                                UiStatsLogger.logResetAppSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetAppDialog(

@@ -42,6 +42,12 @@ public abstract class AdScoringOutcome {
     @Nullable
     public abstract CustomAudienceSignals getCustomAudienceSignals();
 
+    /**
+     * @return data for event-level debug reporting.
+     */
+    @Nullable
+    public abstract DebugReport getDebugReport();
+
     /** @return uri that corresponds to the logic for Ad bidding, reporting */
     public abstract Uri getBiddingLogicUri();
 
@@ -59,13 +65,27 @@ public abstract class AdScoringOutcome {
     public abstract AdTechIdentifier getBuyer();
 
     /**
+     * @return Buyer contextual signals that are used for reporting
+     */
+    @Nullable
+    public abstract BuyerContextualSignals getBuyerContextualSignals();
+
+    /**
+     * @return Seller contextual signals that are used for reporting
+     */
+    @Nullable
+    public abstract SellerContextualSignals getSellerContextualSignals();
+
+    /**
      * @return generic builder
      */
     static Builder builder() {
         return new AutoValue_AdScoringOutcome.Builder()
                 .setCustomAudienceSignals(null)
                 .setBiddingLogicJs("")
-                .setBiddingLogicJsDownloaded(false);
+                .setBiddingLogicJsDownloaded(false)
+                .setBuyerContextualSignals(null)
+                .setSellerContextualSignals(null);
     }
 
     @AutoValue.Builder
@@ -74,6 +94,8 @@ public abstract class AdScoringOutcome {
 
         abstract Builder setCustomAudienceSignals(CustomAudienceSignals customAudienceSignals);
 
+        abstract Builder setDebugReport(DebugReport debugReport);
+
         abstract Builder setBiddingLogicUri(Uri decisionLogicUri);
 
         abstract Builder setBiddingLogicJs(String decisionLogicJs);
@@ -81,6 +103,11 @@ public abstract class AdScoringOutcome {
         abstract Builder setBiddingLogicJsDownloaded(boolean decisionLogicJsDownloaded);
 
         abstract Builder setBuyer(AdTechIdentifier buyer);
+
+        abstract Builder setBuyerContextualSignals(BuyerContextualSignals buyerContextualSignals);
+
+        abstract Builder setSellerContextualSignals(
+                SellerContextualSignals sellerContextualSignals);
 
         abstract AdScoringOutcome build();
     }

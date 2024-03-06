@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
 
@@ -31,8 +30,9 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
@@ -51,11 +51,6 @@ public final class DeleteUninstalledJobService extends JobService {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-    }
-
-    @Override
     public boolean onStartJob(JobParameters params) {
         // Always ensure that the first thing this job does is check if it should be running, and
         // cancel itself if it's not supposed to be.
@@ -63,22 +58,21 @@ public final class DeleteUninstalledJobService extends JobService {
             LogUtil.d(
                     "Disabling DeleteUninstalledJobService job because it's running in ExtServices"
                             + " on T+");
-            return skipAndCancelBackgroundJob(
-                    params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStartJob(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDeleteUninstalledKillSwitch()) {
-            LogUtil.e("DeleteUninstalledJobService is disabled");
+            LoggerFactory.getMeasurementLogger().e("DeleteUninstalledJobService is disabled");
             return skipAndCancelBackgroundJob(
                     params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                    /* doRecord=*/ true);
         }
 
-        LogUtil.d("DeleteUninstalledJobService.onStartJob");
+        LoggerFactory.getMeasurementLogger().d("DeleteUninstalledJobService.onStartJob");
         sBackgroundExecutor.execute(
                 () -> {
                     MeasurementImpl.getInstance(this).deleteAllUninstalledMeasurementData();
@@ -96,7 +90,7 @@ public final class DeleteUninstalledJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("DeleteUninstalledJobService.onStopJob");
+        LoggerFactory.getMeasurementLogger().d("DeleteUninstalledJobService.onStopJob");
         boolean shouldRetry = false;
 
         AdservicesJobServiceLogger.getInstance(this)
@@ -106,16 +100,8 @@ public final class DeleteUninstalledJobService extends JobService {
 
     /** Schedule the job. */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
-                                new ComponentName(context, DeleteUninstalledJobService.class))
-                        .setRequiresDeviceIdle(true)
-                        .setPeriodic(AdServicesConfig.getMeasurementDeleteExpiredJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
-        jobScheduler.schedule(job);
+    static void schedule(JobScheduler jobScheduler, JobInfo jobInfo) {
+        jobScheduler.schedule(jobInfo);
     }
 
     /**
@@ -125,35 +111,52 @@ public final class DeleteUninstalledJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobDeleteUninstalledKillSwitch()) {
-            LogUtil.e("DeleteUninstalledJobService is disabled, skip scheduling");
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobDeleteUninstalledKillSwitch()) {
+            LoggerFactory.getMeasurementLogger()
+                    .e("DeleteUninstalledJobService is disabled, skip scheduling");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("JobScheduler not found");
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID);
+        final JobInfo scheduledJob =
+                jobScheduler.getPendingJob(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling.
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
-            LogUtil.d("Scheduled DeleteUninstalledJobService");
+        JobInfo jobInfo = buildJobInfo(context, flags);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
+            LoggerFactory.getMeasurementLogger().d("Scheduled DeleteUninstalledJobService");
         } else {
-            LogUtil.d("DeleteUninstalledJobService already scheduled, skipping reschedule");
+            LoggerFactory.getMeasurementLogger()
+                    .d("DeleteUninstalledJobService already scheduled, skipping reschedule");
         }
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
+                        new ComponentName(context, DeleteUninstalledJobService.class))
+                .setPeriodic(flags.getMeasurementDeleteUninstalledJobPeriodMs())
+                .setPersisted(flags.getMeasurementDeleteUninstalledJobPersisted())
+                .build();
+    }
+
+    private boolean skipAndCancelBackgroundJob(
+            final JobParameters params, int skipReason, boolean doRecord) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
             jobScheduler.cancel(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID);
         }
 
-        AdservicesJobServiceLogger.getInstance(this)
-                .recordJobSkipped(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID, skipReason);
+        if (doRecord) {
+            AdservicesJobServiceLogger.getInstance(this)
+                    .recordJobSkipped(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID, skipReason);
+        }
 
         // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
         jobFinished(params, /* wantsReschedule */ false);

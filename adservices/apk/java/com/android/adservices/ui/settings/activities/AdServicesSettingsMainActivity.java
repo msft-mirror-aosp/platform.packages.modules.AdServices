@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.os.Build;
 import android.os.Bundle;
 
@@ -60,10 +62,12 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         // create the ResourcesLoader.
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
+            // apply to activity context as well since activity context has been created already.
+            OTAResourcesManager.applyOTAResources(this, false);
         }
-        UiStatsLogger.logSettingsPageDisplayed(getApplication());
+        UiStatsLogger.logSettingsPageDisplayed();
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+        if (!isUxStatesReady(this)) {
             initMainFragment();
         }
     }
@@ -82,27 +86,34 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (FlagsFactory.getFlags().getU18UxEnabled()) {
-            initWithMode(true);
+        if (isUxStatesReady(this)) {
+            initWithUx(this, getApplicationContext());
         }
     }
 
     @Override
     public void initBeta() {
-        initMainActivity();
+        initMainActivity(R.layout.main_activity);
     }
 
     @Override
     public void initGA() {
-        initMainActivity();
+        initMainActivity(R.layout.main_activity);
     }
 
     @Override
-    public void initU18() {}
+    public void initU18() {
+        initMainActivity(R.layout.main_u18_activity);
+    }
 
-    private void initMainActivity() {
-        setContentView(R.layout.main_activity);
-        // no need to store since no
+    @Override
+    public void initRvc() {
+        initU18();
+    }
+
+    private void initMainActivity(int layoutResID) {
+        setContentView(layoutResID);
+        // no need to store since not using
         new MainActivityActionDelegate(this, new ViewModelProvider(this).get(MainViewModel.class));
     }
 }

@@ -17,11 +17,13 @@
 package android.app.sdksandbox.hosttestutils;
 
 import com.android.tradefed.device.DeviceNotAvailableException;
-import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 public class DeviceSupportHostUtils {
     private final BaseHostJUnit4Test mTest;
+    private static final String FEATURE_AUTOMOTIVE = "android.hardware.type.automotive";
+    private static final String FEATURE_LEANBACK = "android.software.leanback";
+    private static final String FEATURE_RAM_LOW = "android.hardware.ram.low";
     private static final String FEATURE_WATCH = "android.hardware.type.watch";
 
     public DeviceSupportHostUtils(BaseHostJUnit4Test test) {
@@ -29,10 +31,22 @@ public class DeviceSupportHostUtils {
     }
 
     public boolean isSdkSandboxSupported() throws DeviceNotAvailableException {
-        return !isWatch(mTest.getDevice());
+        return !isWatch() && !isTv() && !isAuto() && !isLowRamDevice();
     }
 
-    private boolean isWatch(ITestDevice device) throws DeviceNotAvailableException {
-        return device.hasFeature(FEATURE_WATCH);
+    private boolean isWatch() throws DeviceNotAvailableException {
+        return mTest.getDevice().hasFeature(FEATURE_WATCH);
+    }
+
+    private boolean isTv() throws DeviceNotAvailableException {
+        return mTest.getDevice().hasFeature(FEATURE_LEANBACK);
+    }
+
+    private boolean isAuto() throws DeviceNotAvailableException {
+        return mTest.getDevice().hasFeature(FEATURE_AUTOMOTIVE);
+    }
+
+    private boolean isLowRamDevice() throws DeviceNotAvailableException {
+        return mTest.getDevice().hasFeature(FEATURE_RAM_LOW);
     }
 }

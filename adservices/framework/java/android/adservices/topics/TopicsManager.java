@@ -28,7 +28,6 @@ import android.annotation.TestApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.Build;
-import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -141,9 +140,7 @@ public final class TopicsManager {
      * @param getTopicsRequest The request for obtaining Topics.
      * @param executor The executor to run callback.
      * @param callback The callback that's called after topics are available or an error occurs.
-     * @throws SecurityException if caller is not authorized to call this API.
      * @throws IllegalStateException if this API is not available.
-     * @throws LimitExceededException if rate limit was reached.
      */
     @NonNull
     @RequiresPermission(ACCESS_ADSERVICES_TOPICS)
@@ -206,10 +203,7 @@ public final class TopicsManager {
                             executor.execute(
                                     () -> {
                                         if (resultParcel.isSuccess()) {
-                                            callback.onResult(
-                                                    new GetTopicsResponse.Builder(
-                                                                    getTopicList(resultParcel))
-                                                            .build());
+                                            callback.onResult(buildGetTopicsResponse(resultParcel));
                                         } else {
                                             // TODO: Errors should be returned in onFailure method.
                                             callback.onError(
@@ -233,6 +227,12 @@ public final class TopicsManager {
         }
     }
 
+    private GetTopicsResponse buildGetTopicsResponse(GetTopicsResult resultParcel) {
+        return new GetTopicsResponse.Builder(
+                        getTopicList(resultParcel), getEncryptedTopicList(resultParcel))
+                .build();
+    }
+
     private List<Topic> getTopicList(GetTopicsResult resultParcel) {
         List<Long> taxonomyVersionsList = resultParcel.getTaxonomyVersions();
         List<Long> modelVersionsList = resultParcel.getModelVersions();
@@ -249,6 +249,22 @@ public final class TopicsManager {
         }
 
         return topicList;
+    }
+
+    private List<EncryptedTopic> getEncryptedTopicList(GetTopicsResult resultParcel) {
+        List<EncryptedTopic> encryptedTopicList = new ArrayList<>();
+        List<byte[]> encryptedTopics = resultParcel.getEncryptedTopics();
+        List<String> encryptionKeys = resultParcel.getEncryptionKeys();
+        List<byte[]> encapsulatedKeys = resultParcel.getEncapsulatedKeys();
+        int size = encryptedTopics.size();
+        for (int i = 0; i < size; i++) {
+            EncryptedTopic encryptedTopic =
+                    new EncryptedTopic(
+                            encryptedTopics.get(i), encryptionKeys.get(i), encapsulatedKeys.get(i));
+            encryptedTopicList.add(encryptedTopic);
+        }
+
+        return encryptedTopicList;
     }
 
     /**

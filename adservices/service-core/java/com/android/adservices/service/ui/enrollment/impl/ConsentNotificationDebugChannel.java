@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.ui.enrollment;
+package com.android.adservices.service.ui.enrollment.impl;
 
-import static com.android.adservices.service.PhFlags.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 
 import android.content.Context;
 import android.os.Build;
@@ -26,7 +26,8 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 /** Enrollment channel controlled by the consent notification debug mode. */
 @RequiresApi(Build.VERSION_CODES.S)
@@ -45,7 +46,7 @@ public class ConsentNotificationDebugChannel implements PrivacySandboxEnrollment
         // The reconsent bit does not matter to the debug mode.
         ConsentNotificationJobService.schedule(
                 context,
-                /* AdIdEnabled= */ consentManager.isAdIdEnabled(),
-                /* IsReconsent= */ false);
+                /* adidEnabled= */ consentManager.isAdIdEnabled(),
+                /* reConsentStatus= */ false);
     }
 }
