@@ -1206,6 +1206,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH =
             "measurement_enable_redirect_to_well_known_path";
 
+    public static final String KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE =
+            "measurement_enable_attribution_scope";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
@@ -1323,4 +1326,15 @@ public final class FlagsConstants {
 
     /** Key for AdServices' module job policy. */
     public static final String KEY_AD_SERVICES_MODULE_JOB_POLICY = "ad_services_module_job_policy";
+
+    /** Key for feature flagging AdServices Retryable. */
+    public static final String KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED =
+            "ad_services_retry_strategy_enabled";
+
+    /**
+     * Key for setting the value for max number of retry attempts for {@link
+     * com.android.adservices.service.js.JSScriptEngine}
+     */
+    public static final String KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS =
+            "ad_services_js_engine_max_retry_attempts";
 }

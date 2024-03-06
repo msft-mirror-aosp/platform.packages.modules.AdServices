@@ -18,10 +18,10 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
@@ -56,6 +56,7 @@ import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
@@ -139,7 +140,8 @@ public class ImpressionReporterLegacy {
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             final int callerUid,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            @NonNull final RetryStrategy retryStrategy) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
@@ -153,6 +155,7 @@ public class ImpressionReporterLegacy {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(frequencyCapAdDataValidator);
         Objects.requireNonNull(devContext);
+        Objects.requireNonNull(retryStrategy);
 
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutor);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
@@ -184,7 +187,8 @@ public class ImpressionReporterLegacy {
                         context,
                         () -> flags.getEnforceIsolateMaxHeapSize(),
                         () -> flags.getIsolateMaxHeapSizeBytes(),
-                        registerAdBeaconScriptEngineHelper);
+                        registerAdBeaconScriptEngineHelper,
+                        retryStrategy);
 
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
