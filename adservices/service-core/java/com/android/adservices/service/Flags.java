@@ -4402,6 +4402,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
     }
 
+    int MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE = 20;
+
+    /** Returns max number of attribution scopes per source. */
+    default int getMeasurementMaxAttributionScopesPerSource() {
+        return MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
+    }
+
+    int MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH = 50;
+
+    /** Returns max length of attribution scope. */
+    default int getMeasurementMaxAttributionScopeLength() {
+        return MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
+    }
+
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
     boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
 

@@ -111,6 +111,9 @@ public class Source {
     @Nullable private UnsignedLong mSharedDebugKey;
     private List<Pair<Long, Long>> mParsedEventReportWindows;
     private boolean mDropSourceIfInstalled;
+    @Nullable private List<String> mAttributionScopes;
+    @Nullable private Long mAttributionScopeLimit;
+    @Nullable private Long mMaxEventStates;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -538,7 +541,10 @@ public class Source {
                 && Objects.equals(mPrivacyParametersString, source.mPrivacyParametersString)
                 && Objects.equals(mTriggerDataMatching, source.mTriggerDataMatching)
                 && Objects.equals(mSharedDebugKey, source.mSharedDebugKey)
-                && mDropSourceIfInstalled == source.mDropSourceIfInstalled;
+                && mDropSourceIfInstalled == source.mDropSourceIfInstalled
+                && Objects.equals(mAttributionScopes, source.mAttributionScopes)
+                && Objects.equals(mAttributionScopeLimit, source.mAttributionScopeLimit)
+                && Objects.equals(mMaxEventStates, source.mMaxEventStates);
     }
 
     @Override
@@ -586,7 +592,10 @@ public class Source {
                 mPrivacyParametersString,
                 mCoarseEventReportDestinations,
                 mSharedDebugKey,
-                mDropSourceIfInstalled);
+                mDropSourceIfInstalled,
+                mAttributionScopes,
+                mAttributionScopeLimit,
+                mMaxEventStates);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -1208,6 +1217,24 @@ public class Source {
         }
     }
 
+    /** Returns the attribution scopes attached to the source. */
+    @Nullable
+    public List<String> getAttributionScopes() {
+        return mAttributionScopes;
+    }
+
+    /** Returns the attribution scope limit for the source. It should be positive. */
+    @Nullable
+    public Long getAttributionScopeLimit() {
+        return mAttributionScopeLimit;
+    }
+
+    /** Returns max number of event states. It should be positive. */
+    @Nullable
+    public Long getMaxEventStates() {
+        return mMaxEventStates;
+    }
+
     /**
      * Builder for {@link Source}.
      */
@@ -1270,6 +1297,9 @@ public class Source {
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
             builder.setDropSourceIfInstalled(copyFrom.mDropSourceIfInstalled);
+            builder.setAttributionScopes(copyFrom.mAttributionScopes);
+            builder.setAttributionScopeLimit(copyFrom.mAttributionScopeLimit);
+            builder.setMaxEventStates(copyFrom.mMaxEventStates);
             return builder;
         }
 
@@ -1622,6 +1652,27 @@ public class Source {
         @NonNull
         public Builder setDropSourceIfInstalled(boolean dropSourceIfInstalled) {
             mBuilding.mDropSourceIfInstalled = dropSourceIfInstalled;
+            return this;
+        }
+
+        /** See {@link Source#getAttributionScopes()}. */
+        @NonNull
+        public Builder setAttributionScopes(@Nullable List<String> attributionScopes) {
+            mBuilding.mAttributionScopes = attributionScopes;
+            return this;
+        }
+
+        /** See {@link Source#getAttributionScopeLimit()}. */
+        @NonNull
+        public Builder setAttributionScopeLimit(@Nullable Long attributionScopeLimit) {
+            mBuilding.mAttributionScopeLimit = attributionScopeLimit;
+            return this;
+        }
+
+        /** See {@link Source#getMaxEventStates()}. */
+        @NonNull
+        public Builder setMaxEventStates(@Nullable Long maxEventStates) {
+            mBuilding.mMaxEventStates = maxEventStates;
             return this;
         }
 

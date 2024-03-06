@@ -94,6 +94,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
@@ -3135,6 +3137,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxAttributionScopesPerSource() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE,
+                MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE);
+    }
+
+    @Override
+    public int getMeasurementMaxAttributionScopeLength() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH,
+                MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH);
+    }
+
+    @Override
     public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
         return getDeviceConfigFlag(
                 KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
@@ -5171,6 +5187,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK
                         + " = "
                         + getMeasurementEnableNavigationReportingOriginCheck());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH
+                        + " = "
+                        + getMeasurementMaxAttributionScopeLength());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE
+                        + " = "
+                        + getMeasurementMaxAttributionScopesPerSource());
         writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
         writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
         writer.println(

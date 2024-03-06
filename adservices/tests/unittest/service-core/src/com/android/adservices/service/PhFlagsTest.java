@@ -416,6 +416,8 @@ import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_KEY
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
@@ -8358,6 +8360,39 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         assertThat(mPhFlags.getMeasurementEnableNavigationReportingOriginCheck())
                 .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMaxAttributionScopesPerSource() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementMaxAttributionScopesPerSource())
+                .isEqualTo(MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE);
+
+        int phOverridingValue = MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE + 1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementMaxAttributionScopesPerSource())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMaxAttributionScopeLength() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementMaxAttributionScopeLength())
+                .isEqualTo(MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH);
+
+        int phOverridingValue = MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH + 1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementMaxAttributionScopeLength()).isEqualTo(phOverridingValue);
     }
 
     @Test

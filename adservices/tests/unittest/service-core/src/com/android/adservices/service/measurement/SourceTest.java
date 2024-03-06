@@ -176,6 +176,9 @@ public class SourceTest {
                         .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJsonString())
                         .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .setDropSourceIfInstalled(true)
+                        .setAttributionScopes(List.of("1", "2", "3"))
+                        .setAttributionScopeLimit(4L)
+                        .setMaxEventStates(10L)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -227,6 +230,9 @@ public class SourceTest {
                         .setEventAttributionStatus(null)
                         .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJsonString())
                         .setDropSourceIfInstalled(true)
+                        .setAttributionScopes(List.of("1", "2", "3"))
+                        .setAttributionScopeLimit(4L)
+                        .setMaxEventStates(10L)
                         .build());
     }
 
@@ -498,6 +504,27 @@ public class SourceTest {
                 SourceFixture.getMinimalValidSourceBuilder().setDropSourceIfInstalled(true).build(),
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setDropSourceIfInstalled(false)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setAttributionScopes(List.of("1", "2", "3"))
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setAttributionScopes(List.of("4", "5", "6"))
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setAttributionScopeLimit(10L)
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setAttributionScopeLimit(5L)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setMaxEventStates(1L)
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setMaxEventStates(2L)
                         .build());
     }
 
