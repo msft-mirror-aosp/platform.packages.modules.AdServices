@@ -27,6 +27,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
+import androidx.test.uiautomator.BySelector;
 import androidx.test.uiautomator.Direction;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -70,10 +71,7 @@ public class ApkTestUtil {
     }
 
     public static UiObject2 getConsentSwitch(UiDevice device) {
-        UiObject2 consentSwitch =
-                device.wait(
-                        Until.findObject(By.clazz("android.widget.Switch")),
-                        PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
+        UiObject2 consentSwitch = scrollToFindElement(device, By.clazz("android.widget.Switch"));
         // Swipe the screen by the width of the toggle so it's not blocked by the nav bar on AOSP
         // devices.
         if (device.getDisplayHeight() - consentSwitch.getVisibleBounds().centerY() < 100) {
@@ -121,39 +119,30 @@ public class ApkTestUtil {
     }
 
     public static UiObject2 scrollTo(UiDevice device, int resId) {
-        device.waitForWindowUpdate(null, WINDOW_LAUNCH_TIMEOUT);
-        UiObject2 scrollView = device.wait(
-                Until.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW)),
-                PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         String targetStr = getString(resId);
-        if (scrollView != null) {
-            scrollView.scrollUntil(
-                    Direction.DOWN,
-                    Until.findObject(
-                            By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
-            scrollView.scrollUntil(
-                    Direction.UP,
-                    Until.findObject(
-                            By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
-        }
-        return getElement(device, resId);
+        return scrollToFindElement(
+                device, By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE)));
     }
 
     public static UiObject2 scrollTo(UiDevice device, String regexStr) {
+        return scrollToFindElement(
+                device, By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE)));
+    }
+
+    public static UiObject2 scrollToFindElement(UiDevice device, BySelector selector) {
         device.waitForWindowUpdate(null, WINDOW_LAUNCH_TIMEOUT);
         UiObject2 scrollView =
                 device.wait(
                         Until.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW)),
                         PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-        if (scrollView != null) {
-            scrollView.scrollUntil(
-                    Direction.DOWN,
-                    Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))));
-            scrollView.scrollUntil(
-                    Direction.UP,
-                    Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))));
+        if (scrollView == null) {
+            return null;
         }
-        return getElement(device, regexStr);
+        UiObject2 element = scrollView.scrollUntil(Direction.DOWN, Until.findObject(selector));
+
+        return element != null
+                ? element
+                : scrollView.scrollUntil(Direction.UP, Until.findObject(selector));
     }
 
     /** Returns the UiObject corresponding to a resource ID. */
@@ -189,20 +178,6 @@ public class ApkTestUtil {
                     PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS).get(index);
         }
         return objs.get(index);
-    }
-
-    /** Returns the string corresponding to a resource regex string and index. */
-    public static UiObject2 getElement(UiDevice device, String regexStr) {
-        Log.d(
-                TAG,
-                "Waiting for object using res id regex "
-                        + regexStr
-                        + " until a timeout of "
-                        + PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS
-                        + " ms");
-        return device.wait(
-                Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))),
-                PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
     }
 
     /** Returns the UiObject corresponding to a resource ID. */

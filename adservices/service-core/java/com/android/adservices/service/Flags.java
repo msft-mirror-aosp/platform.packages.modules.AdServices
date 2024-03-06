@@ -2541,7 +2541,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * MDD Logger Kill Switch. The default value is false which means the MDD Logger is enabled.
      * This flag is used for emergency turning off the MDD Logger.
      */
-    @FeatureFlag(LEGACY_KILL_SWITCH)
+    @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
     boolean MDD_LOGGER_KILL_SWITCH = false;
 
     /**
@@ -4290,6 +4290,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns true when session stable kill switches are enabled. */
     default boolean getMeasurementEnableSessionStableKillSwitches() {
         return MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
+    }
+
+    boolean MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE = false;
+
+    /** Returns true when attribution scope is enabled. */
+    default boolean getMeasurementEnableAttributionScope() {
+        return MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
     }
 
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */

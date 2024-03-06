@@ -17,8 +17,7 @@
 package android.adservices.debuggablects;
 
 import static android.adservices.debuggablects.CustomAudienceShellCommandHelper.fromJson;
-import static android.adservices.debuggablects.CustomAudienceShellCommandHelper.verifyActivationTime;
-import static android.adservices.debuggablects.CustomAudienceShellCommandHelper.verifyBackgroundFetchData;
+import static android.adservices.debuggablects.CustomAudienceSubject.assertThat;
 
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
@@ -111,12 +110,18 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
                 .containsExactly(mShirtsCustomAudience, mShoesCustomAudience);
         assertThat(fromJson(customAudiencesAfterLeaving.getJSONObject(0)))
                 .isEqualTo(mShoesCustomAudience);
-        verifyActivationTime(customAudiences.getJSONObject(0));
-        verifyActivationTime(customAudiences.getJSONObject(1));
-        verifyActivationTime(customAudiencesAfterLeaving.getJSONObject(0));
-        verifyBackgroundFetchData(customAudiences.getJSONObject(0), 0, 0);
-        verifyBackgroundFetchData(customAudiences.getJSONObject(1), 0, 0);
-        verifyBackgroundFetchData(customAudiencesAfterLeaving.getJSONObject(0), 0, 0);
+        JSONObject customAudience1 = customAudiences.getJSONObject(0);
+        JSONObject customAudience2 = customAudiences.getJSONObject(1);
+        JSONObject customAudience3 = customAudiencesAfterLeaving.getJSONObject(0);
+        assertThat(customAudience1).hasValidActivationTime();
+        assertThat(customAudience1).hasValidationFailures(0);
+        assertThat(customAudience1).hasTimeoutFailures(0);
+        assertThat(customAudience2).hasValidActivationTime();
+        assertThat(customAudience2).hasValidationFailures(0);
+        assertThat(customAudience2).hasTimeoutFailures(0);
+        assertThat(customAudience3).hasValidActivationTime();
+        assertThat(customAudience3).hasValidationFailures(0);
+        assertThat(customAudience3).hasTimeoutFailures(0);
     }
 
     @Test
@@ -134,8 +139,9 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
 
         CustomAudience parsedCustomAudience = fromJson(customAudience);
         assertThat(mShirtsCustomAudience).isEqualTo(parsedCustomAudience);
-        verifyActivationTime(customAudience);
-        verifyBackgroundFetchData(customAudience, 0, 0);
+        assertThat(customAudience).hasValidActivationTime();
+        assertThat(customAudience).hasValidationFailures(0);
+        assertThat(customAudience).hasTimeoutFailures(0);
     }
 
     @Test

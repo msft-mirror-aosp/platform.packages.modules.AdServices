@@ -112,16 +112,24 @@ public class ProtectedAudienceSignatureManager {
         Objects.requireNonNull(signedContextualAds);
 
         List<byte[]> publicKeys = fetchPublicKeyForAdTech(buyer);
-        boolean isVerified = false;
+        sLogger.v("Received %s keys", publicKeys.size());
         SignedContextualAdsHashUtil contextualAdsHashUtil;
         for (byte[] publicKey : publicKeys) {
             contextualAdsHashUtil = new SignedContextualAdsHashUtil();
             byte[] serialized = contextualAdsHashUtil.serialize(signedContextualAds);
-            isVerified =
-                    mSignatureVerifier.verify(
-                            publicKey, serialized, signedContextualAds.getSignature());
+            if (mSignatureVerifier.verify(
+                    publicKey, serialized, signedContextualAds.getSignature())) {
+                sLogger.v(
+                        "Signature is verified with key: '%s'.",
+                        Base64.getEncoder().encodeToString(publicKey));
+                return true;
+            }
+            sLogger.v(
+                    "Key '%s' didn't verify the signature. Trying the next key...",
+                    Base64.getEncoder().encodeToString(publicKey));
         }
-        return isVerified;
+        sLogger.v("All keys are exhausted and signature is not verified!");
+        return false;
     }
 
     @VisibleForTesting

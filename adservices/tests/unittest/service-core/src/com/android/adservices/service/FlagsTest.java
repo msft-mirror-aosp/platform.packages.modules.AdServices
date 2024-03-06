@@ -324,6 +324,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag("ENABLE_BACK_COMPAT", flags -> flags.getEnableBackCompat());
     }
 
+    @Test
+    public void testGetFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
+        testFeatureFlag(
+                "FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED",
+                flags -> flags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled());
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //
