@@ -1778,11 +1778,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getFledgeAuctionServerKillSwitch() {
-        // We check the Global Kill switch and the Fledge Select Ads Kill switch.
-        // Global Kill switch overrides all other kill switches & Fledge Select Ads Kill overrides
-        // On device and Server Auction Kill switches.
-        return getGlobalKillSwitch()
-                || getFledgeSelectAdsKillSwitch()
+        return getFledgeSelectAdsKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH),
                         getDeviceConfigFlag(
@@ -1792,11 +1788,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getFledgeOnDeviceAuctionKillSwitch() {
-        // We check the Global Kill switch and the Fledge Select Ads Kill switch.
-        // Global Kill switch overrides all other kill switches & Fledge Select Ads Kill overrides
-        // On device and Server Auction Kill switches.
-        return getGlobalKillSwitch()
-                || getFledgeSelectAdsKillSwitch()
+        return getFledgeSelectAdsKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH),
