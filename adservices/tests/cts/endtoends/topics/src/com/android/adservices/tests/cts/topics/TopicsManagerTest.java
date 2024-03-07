@@ -36,6 +36,7 @@ import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.common.ServiceUnavailableException;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
@@ -141,7 +142,7 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
         Exception e =
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient.getTopics().get());
-        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
+        assertThat(e).hasCauseThat().isInstanceOf(ServiceUnavailableException.class);
     }
 
     @Test
