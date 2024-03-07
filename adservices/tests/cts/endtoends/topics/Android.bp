@@ -27,6 +27,7 @@ java_defaults {
         "truth-prebuilt",
         "adservices-clients",
         "adservices-test-utility",
+        "framework-adservices-lib",
     ],
     libs: [
         "android.test.base",
@@ -42,7 +43,8 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
+        "mcts-adservices"
     ],
     min_sdk_version: "Tiramisu",
     manifest: "CtsAdServicesEndToEndTestsManifest.xml",
