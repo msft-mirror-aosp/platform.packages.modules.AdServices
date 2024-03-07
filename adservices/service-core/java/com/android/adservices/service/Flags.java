@@ -2517,9 +2517,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns value of Fledge Auction server API kill switch. */
     default boolean getFledgeAuctionServerKillSwitch() {
-        return getGlobalKillSwitch()
-                || getFledgeSelectAdsKillSwitch()
-                || FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+        return getFledgeSelectAdsKillSwitch() || FLEDGE_AUCTION_SERVER_KILL_SWITCH;
     }
 
     /**
@@ -2530,9 +2528,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns value of On Device Auction API kill switch. */
     default boolean getFledgeOnDeviceAuctionKillSwitch() {
-        return getGlobalKillSwitch()
-                || getFledgeSelectAdsKillSwitch()
-                || FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
+        return getFledgeSelectAdsKillSwitch() || FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
     }
 
     /**
