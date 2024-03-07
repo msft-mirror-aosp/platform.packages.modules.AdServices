@@ -743,10 +743,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public int getMeasurementMaxDistinctEnrollmentsInAttribution() {
+    public int getMeasurementMaxDistinctReportingOriginsInAttribution() {
         return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION,
-                MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION);
+                FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION,
+                MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION);
     }
 
     @Override
@@ -3806,9 +3806,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementMaxAggregateAttributionPerRateLimitWindow());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION
                         + " = "
-                        + getMeasurementMaxDistinctEnrollmentsInAttribution());
+                        + getMeasurementMaxDistinctReportingOriginsInAttribution());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE
