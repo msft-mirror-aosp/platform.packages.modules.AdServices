@@ -336,6 +336,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     // move to the block above once refactored.                                                   //
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
+    @Test
+    public void testGetMeasurementApiDeleteRegistrationsKillSwitch() {
+        testLegacyMsmtKillSwitchGuardedByMsmtKillSwitch(
+                "getMeasurementApiDeleteRegistrationsKillSwitch()",
+                "MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH",
+                flags -> flags.getMeasurementApiDeleteRegistrationsKillSwitch());
+    }
+
     // TODO(b/325074749) - remove once all flags have been converted
     /**
      * @deprecated - flags that are converted should call some method like {@code
