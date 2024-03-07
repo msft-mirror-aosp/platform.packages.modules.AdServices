@@ -23,6 +23,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_IN
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
+import static com.android.adservices.ui.util.ApkTestUtil.getString;
+import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -33,6 +35,7 @@ import android.content.Context;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
+import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
@@ -128,7 +131,14 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesUiTestC
         assertThat(leftControlButton).isNotNull();
         assertThat(rightControlButton).isNotNull();
 
-        rightControlButton.clickAndWait(Until.newWindow(), LAUNCH_TIMEOUT);
+        rightControlButton.click();
+        mDevice.wait(
+                Until.gone(
+                        By.text(
+                                getString(
+                                        R.string
+                                                .notificationUI_confirmation_right_control_button_text))),
+                WINDOW_LAUNCH_TIMEOUT);
 
         UiObject2 acceptedTitle =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);

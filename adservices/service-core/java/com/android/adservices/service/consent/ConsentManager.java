@@ -108,6 +108,8 @@ import java.util.stream.Stream;
  *   <li>PPAPI_AND_SYSTEM_SERVER: Write consent to both PPAPI and system server. Read consent from
  *       system server only.
  * </ul>
+ *
+ * IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with ConsentManagerV2
  */
 // TODO(b/259791134): Add a CTS/UI test to test the Consent Migration
 // TODO(b/269798827): Enable for R.
