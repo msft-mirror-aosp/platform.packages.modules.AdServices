@@ -352,6 +352,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
     }
 
     private void setMsmmtKillSwitch(boolean value) {
+        // NOTE: need to set global kill-switch as well, as getMeasurementEnabled() calls it first
         setGlobalKillSwitch(value);
         ExtendedMockitoExpectations.mockGetAdServicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
