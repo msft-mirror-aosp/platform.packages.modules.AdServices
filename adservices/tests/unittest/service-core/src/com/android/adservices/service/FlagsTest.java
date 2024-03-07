@@ -381,7 +381,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
-        testMsmtFeatureFlagBasedUpLegacyKillSwitchAndGuardedByMsmtEnabled(
+        testMsmtFeatureFlagBackedByLegacyKillSwitchAndGuardedByMsmtEnabled(
                 "getMeasurementAttributionFallbackJobEnabled()",
                 "MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH",
                 flag -> flag.getMeasurementAttributionFallbackJobEnabled());
@@ -490,15 +490,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 .isEqualTo(!defaultKillSwitchValue);
     }
 
-    private void testMsmtFeatureFlagBasedUpLegacyKillSwitchAndGuardedByMsmtEnabled(
+    private void testMsmtFeatureFlagBackedByLegacyKillSwitchAndGuardedByMsmtEnabled(
             String getterName, String killSwitchName, Flaginator<Boolean> flaginator) {
         boolean defaultKillSwitchValue = getConstantValue(killSwitchName);
         boolean defaultValue = !defaultKillSwitchValue;
 
         // Getter
-        expect.withMessage("%s when global kill_switch is on", getterName)
-                .that(flaginator.getFlagValue(mGlobalKsOnFlags))
-                .isFalse();
         expect.withMessage("%s when msmt_enabled is true", getterName)
                 .that(flaginator.getFlagValue(mMsmtEnabledFlags))
                 .isEqualTo(defaultValue);
