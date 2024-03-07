@@ -22,6 +22,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
@@ -53,7 +54,7 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
     private final Flags mPhFlags = PhFlags.getInstance();
 
     private final FlagGuard mGlobalKillSwitchGuard = value -> setGlobalKillSwitch(!value);
-    private final FlagGuard mMsmtKillSwitchesGuard = value -> setMsmmtKillSwitch(!value);
+    private final FlagGuard mMsmtKillSwitchGuard = value -> setMsmmtKillSwitch(!value);
 
     // Overriding DeviceConfig stub to avoid Read device config permission errors and to also
     // test the behavior of flags, when both device config and system properties are set.
@@ -104,9 +105,9 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
     @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
         testFeatureFlagBackedByLegacyKillSwitch(
-                KEY_MEASUREMENT_KILL_SWITCH,
-                "MEASUREMENT_KILL_SWITCH",
-                mMsmtKillSwitchesGuard,
+                KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
                 flags -> flags.getMeasurementAttributionFallbackJobEnabled());
     }
 
