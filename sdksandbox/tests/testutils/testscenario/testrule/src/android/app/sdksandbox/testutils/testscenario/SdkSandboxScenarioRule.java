@@ -164,6 +164,8 @@ public class SdkSandboxScenarioRule implements TestRule {
             // run "after methods" for clean up.
             Throwable afterFailure = runAfterTestMethods();
 
+            mTestExecutor.cleanOnTestFinish();
+
             if (testFailure != null) {
                 throw testFailure;
             } else if (afterFailure != null) {
