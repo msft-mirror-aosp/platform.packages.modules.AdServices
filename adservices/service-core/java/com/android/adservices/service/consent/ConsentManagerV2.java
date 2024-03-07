@@ -97,6 +97,8 @@ import java.util.stream.Collectors;
  *   <li>APPSEARCH_ONLY: Write and read consent from appSearch only for back compat.
  *   <li>PPAPI_AND_ADEXT_SERVICE: Write and read consent from PPAPI and AdExt service..
  * </ul>
+ *
+ * IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with ConsentManager.
  */
 // TODO(b/279042385): move UI logs to UI.
 @RequiresApi(Build.VERSION_CODES.S)

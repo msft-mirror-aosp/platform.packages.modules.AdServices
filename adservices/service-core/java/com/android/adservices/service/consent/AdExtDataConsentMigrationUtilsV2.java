@@ -46,6 +46,9 @@ import java.util.Objects;
 /**
  * Utility methods for consent migration from AdExtDataStorage (Android R) to AppSearch (Android S)
  * and System Server (Android T+) for ConsentManagerV2 paradigm.
+ *
+ * <p>IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with
+ * AdExtDataConsentMigrationUtils.
  */
 public class AdExtDataConsentMigrationUtilsV2 {
     private AdExtDataConsentMigrationUtilsV2() {

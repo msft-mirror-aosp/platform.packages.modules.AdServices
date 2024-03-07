@@ -16,9 +16,6 @@
 
 package com.android.adservices.service.shell;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -82,7 +79,10 @@ public class CustomAudienceRefreshCommandTest
                 .thenReturn(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA);
         when(mBackgroundFetchRunnerMock.updateCustomAudience(
                         OVERRIDE_CURRENT_TIME, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(STATUS_SUCCESS)));
+                .thenReturn(
+                        FluentFuture.from(
+                                Futures.immediateFuture(
+                                        BackgroundFetchRunner.UpdateResultType.SUCCESS)));
 
         ShellCommandTest.Result result =
                 runRefreshCustomAudienceCommand(
@@ -102,7 +102,10 @@ public class CustomAudienceRefreshCommandTest
                 .thenReturn(null);
         when(mBackgroundFetchRunnerMock.updateCustomAudience(
                         OVERRIDE_CURRENT_TIME, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(STATUS_SUCCESS)));
+                .thenReturn(
+                        FluentFuture.from(
+                                Futures.immediateFuture(
+                                        BackgroundFetchRunner.UpdateResultType.SUCCESS)));
 
         ShellCommandTest.Result result =
                 runRefreshCustomAudienceCommand(
@@ -114,7 +117,7 @@ public class CustomAudienceRefreshCommandTest
     }
 
     @Test
-    public void testRun_withFailedBackgroundFetch_returnsGenericFailure() {
+    public void testRun_withFailedBackgroundFetch_returnsTimeoutFailure() {
         when(mCustomAudienceDao.getDebuggableCustomAudienceByPrimaryKey(OWNER, BUYER, NAME))
                 .thenReturn(CUSTOM_AUDIENCE);
         when(mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
@@ -122,7 +125,11 @@ public class CustomAudienceRefreshCommandTest
                 .thenReturn(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA);
         when(mBackgroundFetchRunnerMock.updateCustomAudience(
                         OVERRIDE_CURRENT_TIME, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(STATUS_INTERNAL_ERROR)));
+                .thenReturn(
+                        FluentFuture.from(
+                                Futures.immediateFuture(
+                                        BackgroundFetchRunner.UpdateResultType
+                                                .NETWORK_READ_TIMEOUT_FAILURE)));
 
         ShellCommandTest.Result result =
                 runRefreshCustomAudienceCommand(
@@ -133,12 +140,39 @@ public class CustomAudienceRefreshCommandTest
         expectFailure(
                 result,
                 String.format(
-                        CustomAudienceRefreshCommand.OUTPUT_ERROR_WITH_CODE,
-                        STATUS_INTERNAL_ERROR));
+                        CustomAudienceRefreshCommand.OUTPUT_ERROR_WITH_MESSAGE,
+                        CustomAudienceRefreshCommand.OUTPUT_ERROR_NETWORK));
     }
 
     @Test
-    public void testRun_withTimedOutBackgroundFetch_returnsGenericFailure() {
+    public void testRun_withFailedBackgroundFetch_returnsUnknownFailure() {
+        when(mCustomAudienceDao.getDebuggableCustomAudienceByPrimaryKey(OWNER, BUYER, NAME))
+                .thenReturn(CUSTOM_AUDIENCE);
+        when(mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        OWNER, BUYER, NAME))
+                .thenReturn(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA);
+        when(mBackgroundFetchRunnerMock.updateCustomAudience(
+                        OVERRIDE_CURRENT_TIME, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA))
+                .thenReturn(
+                        FluentFuture.from(
+                                Futures.immediateFuture(
+                                        BackgroundFetchRunner.UpdateResultType.UNKNOWN)));
+
+        ShellCommandTest.Result result =
+                runRefreshCustomAudienceCommand(
+                        CustomAudienceRefreshCommand.BACKGROUND_FETCH_TIMEOUT_FINAL_SECONDS);
+
+        verify(mBackgroundFetchRunnerMock)
+                .updateCustomAudience(OVERRIDE_CURRENT_TIME, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA);
+        expectFailure(
+                result,
+                String.format(
+                        CustomAudienceRefreshCommand.OUTPUT_ERROR_WITH_MESSAGE,
+                        CustomAudienceRefreshCommand.OUTPUT_ERROR_UNKNOWN));
+    }
+
+    @Test
+    public void testRun_withTimedOutBackgroundFetch_returnsTimeoutFailure() {
         when(mCustomAudienceDao.getDebuggableCustomAudienceByPrimaryKey(OWNER, BUYER, NAME))
                 .thenReturn(CUSTOM_AUDIENCE);
         when(mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
@@ -148,7 +182,10 @@ public class CustomAudienceRefreshCommandTest
                         OVERRIDE_CURRENT_TIME, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA))
                 .thenAnswer(
                         invocation ->
-                                FluentFuture.from(Futures.immediateFuture(STATUS_INTERNAL_ERROR)));
+                                FluentFuture.from(
+                                        Futures.immediateFuture(
+                                                BackgroundFetchRunner.UpdateResultType
+                                                        .NETWORK_READ_TIMEOUT_FAILURE)));
 
         ShellCommandTest.Result result = runRefreshCustomAudienceCommand(0);
 
@@ -157,8 +194,8 @@ public class CustomAudienceRefreshCommandTest
         expectFailure(
                 result,
                 String.format(
-                        CustomAudienceRefreshCommand.OUTPUT_ERROR_WITH_CODE,
-                        STATUS_INTERNAL_ERROR));
+                        CustomAudienceRefreshCommand.OUTPUT_ERROR_WITH_MESSAGE,
+                        CustomAudienceRefreshCommand.OUTPUT_ERROR_NETWORK));
     }
 
     private ShellCommandTest.Result runRefreshCustomAudienceCommand(int timeoutInSeconds) {

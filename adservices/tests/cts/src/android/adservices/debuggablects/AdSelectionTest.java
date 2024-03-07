@@ -17,6 +17,7 @@
 package android.adservices.debuggablects;
 
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -88,6 +89,17 @@ public class AdSelectionTest extends FledgeScenarioTest {
 
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /**
+     * {@link AdSelectionTest#testAdSelection_withBiddingAndScoringLogic_happyPath} with flag {@link
+     * KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES} turned on.
+     */
+    @Test
+    @SetFlagEnabled(KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES)
+    public void testAdSelection_withUnifiedTable_withBiddingAndScoringLogic_happyPath()
+            throws Exception {
+        testAdSelection_withAdCostInUrl_happyPath();
     }
 
     /**

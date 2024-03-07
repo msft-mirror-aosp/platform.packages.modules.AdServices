@@ -21,7 +21,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 
-import android.adservices.common.AdServicesStatusUtils.StatusCode;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.content.pm.PackageManager;
@@ -141,8 +140,7 @@ public class BackgroundFetchRunner {
     }
 
     /** Updates a single given custom audience and persists the results. */
-    @StatusCode
-    public FluentFuture<Integer> updateCustomAudience(
+    public FluentFuture<UpdateResultType> updateCustomAudience(
             @NonNull Instant jobStartTime,
             @NonNull final DBCustomAudienceBackgroundFetchData fetchData) {
         Objects.requireNonNull(jobStartTime);
@@ -194,7 +192,7 @@ public class BackgroundFetchRunner {
                                         e.getMessage());
                             }
 
-                            return resultCode;
+                            return updatableData.getInitialUpdateResult();
                         },
                         AdServicesExecutors.getBackgroundExecutor());
     }

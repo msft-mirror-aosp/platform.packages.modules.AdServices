@@ -283,7 +283,7 @@ public class TriggerSpecs {
         for (EventReport eventReport : sourceEventReports) {
             // Delete pending reports since we may have different ones based on new trigger priority
             // ordering.
-            if (eventReport.getReportTime() >= triggerTime) {
+            if (eventReport.getReportTime() > triggerTime) {
                 reportsToDelete.add(eventReport);
                 continue;
             }
