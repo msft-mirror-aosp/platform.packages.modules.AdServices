@@ -707,7 +707,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getMeasurementAttributionFallbackJobEnabled() {
-        return (getGlobalKillSwitch() || getLegacyMeasurementKillSwitch())
+        return getLegacyMeasurementKillSwitch()
                 ? false
                 : !getFlagFromSystemPropertiesOrDeviceConfig(
                         FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH,
