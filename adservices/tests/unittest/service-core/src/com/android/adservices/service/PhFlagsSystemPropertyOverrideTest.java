@@ -28,7 +28,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 import static com.android.adservices.service.FlagsTest.getConstantValue;
 
-import android.os.SystemProperties;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -36,20 +35,13 @@ import androidx.annotation.Nullable;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoExpectations;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+import com.android.adservices.service.fixture.TestableSystemProperties;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
-/* TODO(b/326254556): test fail if properties are already set. Example:
- *
- * adb shell setprop debug.adservices.topics_epoch_job_flex_ms 42
- * adb shell setprop debug.adservices.test.measurement_kill_switch true
- */
-
-@SpyStatic(SystemProperties.class)
-public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
+public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
 
     private final Flags mPhFlags = PhFlags.getInstance();
 
@@ -62,6 +54,7 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
     protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
         return newDefaultAdServicesExtendedMockitoRuleBuilder()
                 .addStaticMockFixtures(TestableDeviceConfig::new)
+                .addStaticMockFixtures(TestableSystemProperties::new)
                 .build();
     }
 
@@ -146,7 +139,7 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
         // Now overriding with the value in both system properties and device config.
         long systemPropertyValue = defaultValue + 1;
         long deviceConfigValue = defaultValue + 2;
-        mockGetSystemProperty(name, systemPropertyValue);
+        setSystemProperty(name, systemPropertyValue);
 
         setAdservicesFlag(name, deviceConfigValue);
 
@@ -344,7 +337,7 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
                         + ", expectedFlagValue="
                         + expectedFlagValue);
 
-        mockGetSystemProperty(flagName, systemPropertyValue);
+        setSystemProperty(flagName, systemPropertyValue);
         setAdservicesFlag(flagName, deviceConfigValue);
 
         expect.withMessage(
@@ -363,15 +356,17 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
         ExtendedMockitoExpectations.mockGetAdServicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
 
-    private void mockGetSystemProperty(String name, long value) {
-        ExtendedMockitoExpectations.mockGetSystemProperty(
-                PhFlags.getSystemPropertyName(name), value);
+    private void setSystemProperty(String name, long value) {
+        setSystemProperty(name, String.valueOf(value));
     }
 
-    private void mockGetSystemProperty(String name, boolean value) {
-        Log.v(mTag, "Setting system property: " + name + "=" + value);
-        ExtendedMockitoExpectations.mockGetSystemProperty(
-                PhFlags.getSystemPropertyName(name), value);
+    private void setSystemProperty(String name, boolean value) {
+        setSystemProperty(name, String.valueOf(value));
+    }
+
+    private void setSystemProperty(String name, String value) {
+        Log.v(mTag, "setSystemProperty(): " + name + "=" + value);
+        TestableSystemProperties.set(PhFlags.getSystemPropertyName(name), "" + value);
     }
 
     private void verifyGetBooleanSystemPropertyNotCalled(String name) {
