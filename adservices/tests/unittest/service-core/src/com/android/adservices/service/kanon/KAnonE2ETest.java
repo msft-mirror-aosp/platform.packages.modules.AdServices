@@ -76,6 +76,7 @@ import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
@@ -114,6 +115,7 @@ import com.android.adservices.service.adselection.AuctionServerPayloadUnformatte
 import com.android.adservices.service.adselection.MockAdIdWorker;
 import com.android.adservices.service.adselection.MultiCloudSupportStrategy;
 import com.android.adservices.service.adselection.MultiCloudTestStrategyFactory;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
 import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -335,6 +337,9 @@ public class KAnonE2ETest {
 
     private Instant FIXED_INSTANT = Instant.now();
     private RetryStrategyFactory mRetryStrategyFactory;
+    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    private ConsentedDebugConfigurationGeneratorFactory
+            mConsentedDebugConfigurationGeneratorFactory;
 
     @Before
     public void setUp() throws IOException {
@@ -437,6 +442,13 @@ public class KAnonE2ETest {
         InputStream inputStream = CONTEXT.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
         mTranscript = Transcript.parseDelimitedFrom(inputStream);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
+        mConsentedDebugConfigurationDao =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
+                        .build()
+                        .consentedDebugConfigurationDao();
+        mConsentedDebugConfigurationGeneratorFactory =
+                new ConsentedDebugConfigurationGeneratorFactory(
+                        false, mConsentedDebugConfigurationDao);
     }
 
     @After
@@ -1943,7 +1955,8 @@ public class KAnonE2ETest {
                 mAdIdFetcher,
                 mKAnonSignJoinFactory,
                 false,
-                mRetryStrategyFactory);
+                mRetryStrategyFactory,
+                mConsentedDebugConfigurationGeneratorFactory);
     }
 
     public PersistAdSelectionResultTestCallback invokePersistAdSelectionResult(
