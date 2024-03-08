@@ -280,6 +280,7 @@ public class AsyncRegistrationQueueRunner {
                 source.setStatus(Source.Status.MARKED_TO_DELETE);
             }
             insertSourceFromTransaction(source, dao);
+
             mDebugReportApi.scheduleSourceSuccessDebugReport(source, dao);
         }
     }
@@ -678,6 +679,10 @@ public class AsyncRegistrationQueueRunner {
         if (sourceId == null) {
             // Source was not saved due to DB size restrictions
             return;
+        }
+
+        if (mFlags.getMeasurementEnableAttributionScope()) {
+            dao.updateSourcesForAttributionScope(source);
         }
 
         if (fakeReports != null) {

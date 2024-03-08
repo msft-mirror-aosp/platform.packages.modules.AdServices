@@ -918,6 +918,19 @@ public class SourceTest {
     }
 
     @Test
+    public void testGetAllAttributionDestinations() {
+        Source source = SourceFixture.getValidSource();
+        assertThat(source.getAllAttributionDestinations())
+                .containsExactly(
+                        Pair.create(
+                                EventSurfaceType.APP,
+                                Uri.parse("android-app://com.destination").toString()),
+                        Pair.create(
+                                EventSurfaceType.WEB,
+                                Uri.parse("https://destination.com").toString()));
+    }
+
+    @Test
     public void testGetFilterData_nonEmpty() throws JSONException {
         JSONObject filterMapJson = new JSONObject();
         filterMapJson.put("conversion", new JSONArray(Collections.singletonList("electronics")));

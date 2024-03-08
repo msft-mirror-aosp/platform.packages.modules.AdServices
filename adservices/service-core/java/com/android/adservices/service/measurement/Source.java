@@ -710,6 +710,22 @@ public class Source {
         return mWebDestinations;
     }
 
+    /** Returns combined list of web and app attribution destinations. */
+    public List<Pair<Integer, String>> getAllAttributionDestinations() {
+        List<Pair<Integer, String>> destinations = new ArrayList<>();
+        if (hasAppDestinations()) {
+            for (Uri appDestination : getAppDestinations()) {
+                destinations.add(Pair.create(EventSurfaceType.APP, appDestination.toString()));
+            }
+        }
+        if (hasWebDestinations()) {
+            for (Uri webDestination : getWebDestinations()) {
+                destinations.add(Pair.create(EventSurfaceType.WEB, webDestination.toString()));
+            }
+        }
+        return destinations;
+    }
+
     /**
      * Type of {@link Source}. Values: Event, Navigation.
      */
