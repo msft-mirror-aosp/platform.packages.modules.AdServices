@@ -21,6 +21,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
@@ -413,6 +414,22 @@ public class ImpressionNoiseUtilTest {
         final ImpressionNoiseParams data1 = createExample();
         final ImpressionNoiseParams data2 = createExample();
         assertEquals(data1.toString(), data2.toString());
+    }
+
+    @Test
+    public void nextBigInteger_boundZero_throws() {
+        ThreadLocalRandom rand = ThreadLocalRandom.current();
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ImpressionNoiseUtil.nextBigInteger(rand, BigInteger.ZERO));
+    }
+
+    @Test
+    public void nextBigInteger_boundOne_returnsZero() {
+        ThreadLocalRandom rand = ThreadLocalRandom.current();
+        assertEquals(
+                BigInteger.ZERO,
+                ImpressionNoiseUtil.nextBigInteger(rand, BigInteger.ONE));
     }
 
     private ImpressionNoiseParams createExample() {

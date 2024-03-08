@@ -137,9 +137,12 @@ public final class ImpressionNoiseUtil {
         return fakeReportConfigs;
     }
 
-    /** Wrapper for calls to ThreadLocalRandom visible for testing */
+    /** Wrapper for calls to ThreadLocalRandom. Bound must be positive. */
     @VisibleForTesting
     public static BigInteger nextBigInteger(ThreadLocalRandom rand, BigInteger bound) {
+        if (bound.compareTo(BigInteger.ONE) < 0) {
+            throw new IllegalArgumentException("Bound must be positive.");
+        }
         BigInteger candidate;
         do {
             candidate = new BigInteger(bound.bitLength(), rand);
