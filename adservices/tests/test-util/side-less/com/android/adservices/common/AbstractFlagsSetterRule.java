@@ -36,13 +36,9 @@ import com.android.adservices.common.annotations.SetStringFlags;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
-import org.junit.AssumptionViolatedException;
-import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -57,7 +53,8 @@ import java.util.Set;
  * the end, setting {@link android.provider.DeviceConfig} or {@link android.os.SystemProperties},
  * etc...
  */
-abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> implements TestRule {
+abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>>
+        extends AbstractRethrowerRule {
 
     protected static final String SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX = "log.tag.";
 
@@ -76,16 +73,17 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
     private final Set<String> mChangedFlags = new LinkedHashSet<>();
     // Name of system properties that were changed by the test
     private final Set<String> mChangedSystemProperties = new LinkedHashSet<>();
+    private final Matcher mSystemPropertiesMatcher;
 
     private final List<NameValuePair> mPreTestFlags = new ArrayList<>();
     private final List<NameValuePair> mPreTestSystemProperties = new ArrayList<>();
+    private final List<NameValuePair> mOnTestFailureFlags = new ArrayList<>();
+    private final List<NameValuePair> mOnTestFailureSystemProperties = new ArrayList<>();
 
     private final SyncDisabledModeForTest mPreviousSyncDisabledModeForTest;
 
     private boolean mIsRunning;
     private boolean mFlagsClearedByTest;
-
-    protected final Logger mLog;
 
     protected AbstractFlagsSetterRule(
             RealLogger logger,
@@ -93,9 +91,32 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
             String systemPropertiesPrefix,
             DeviceConfigHelper.InterfaceFactory deviceConfigInterfaceFactory,
             SystemPropertiesHelper.Interface systemPropertiesInterface) {
-        mLog = new Logger(Objects.requireNonNull(logger), "FlagsSetterRule");
+        this(
+                logger,
+                deviceConfigNamespace,
+                systemPropertiesPrefix,
+                // TODO(b/294423183, 328682831): should not be necessary, but integrated with
+                // setLogcatTag()
+                (prop) ->
+                        prop.name.startsWith(systemPropertiesPrefix)
+                                || prop.name.startsWith(SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX),
+                deviceConfigInterfaceFactory,
+                systemPropertiesInterface);
+    }
+
+    protected AbstractFlagsSetterRule(
+            RealLogger logger,
+            String deviceConfigNamespace,
+            String systemPropertiesPrefix,
+            Matcher systemPropertiesMatcher,
+            DeviceConfigHelper.InterfaceFactory deviceConfigInterfaceFactory,
+            SystemPropertiesHelper.Interface systemPropertiesInterface) {
+
+        super(logger);
+
         mDeviceConfigNamespace = Objects.requireNonNull(deviceConfigNamespace);
         mSystemPropertiesPrefix = Objects.requireNonNull(systemPropertiesPrefix);
+        mSystemPropertiesMatcher = Objects.requireNonNull(systemPropertiesMatcher);
         mDeviceConfig =
                 new DeviceConfigHelper(deviceConfigInterfaceFactory, deviceConfigNamespace, logger);
         mSystemProperties = new SystemPropertiesHelper(systemPropertiesInterface, logger);
@@ -123,62 +144,46 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
                 mPreviousSyncDisabledModeForTest);
     }
 
-    // TODO(b/294423183): should not be necessary, but integrated with setLogcatTag()
-    protected Matcher getSystemPropertiesMatcher() {
-        return (prop) ->
-                prop.name.startsWith(mSystemPropertiesPrefix)
-                        || prop.name.startsWith(SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX);
+    @Override
+    protected void preTest(Statement base, Description description, List<Throwable> cleanUpErrors) {
+        String testName = getTestName(description);
+        mIsRunning = true;
+
+        // TODO(b/294423183): ideally should be "setupErrors", but it's not used yet (other
+        // than logging), so it doesn't matter
+        runSafely(cleanUpErrors, () -> mPreTestFlags.addAll(mDeviceConfig.getAll()));
+        runSafely(
+                cleanUpErrors,
+                () ->
+                        mPreTestSystemProperties.addAll(
+                                mSystemProperties.getAll(mSystemPropertiesMatcher)));
+
+        setAnnotatedFlags(description);
+        runInitialCommands(testName);
     }
 
     @Override
-    public final Statement apply(Statement base, Description description) {
-        String testName = description.getDisplayName();
-        Matcher systemPropertiesMatcher = getSystemPropertiesMatcher();
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                mIsRunning = true;
-                List<Throwable> cleanUpErrors = new ArrayList<>();
+    protected void onTestFailure(
+            Statement base,
+            Description description,
+            List<Throwable> cleanUpErrors,
+            Throwable testFailure) {
+        runSafely(cleanUpErrors, () -> mOnTestFailureFlags.addAll(mDeviceConfig.getAll()));
+        runSafely(
+                cleanUpErrors,
+                () ->
+                        mOnTestFailureSystemProperties.addAll(
+                                mSystemProperties.getAll(mSystemPropertiesMatcher)));
+    }
 
-                // TODO(b/294423183): ideally should be "setupErrors", but it's not used yet (other
-                // than logging), so it doesn't matter
-                runSafely(cleanUpErrors, () -> mPreTestFlags.addAll(mDeviceConfig.getAll()));
-                runSafely(
-                        cleanUpErrors,
-                        () ->
-                                mPreTestSystemProperties.addAll(
-                                        mSystemProperties.getAll(systemPropertiesMatcher)));
-
-                setAnnotatedFlags(description);
-                runInitialCommands(testName);
-                List<NameValuePair> postTestFlags = new ArrayList<>();
-                List<NameValuePair> postTestSystemProperties = new ArrayList<>();
-                Throwable testError = null;
-
-                try {
-                    base.evaluate();
-                } catch (Throwable t) {
-                    testError = t;
-                    runSafely(cleanUpErrors, () -> postTestFlags.addAll(mDeviceConfig.getAll()));
-                    runSafely(
-                            cleanUpErrors,
-                            () ->
-                                    postTestSystemProperties.addAll(
-                                            mSystemProperties.getAll(systemPropertiesMatcher)));
-                } finally {
-                    runSafely(cleanUpErrors, () -> resetFlags(testName));
-                    runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
-                    runSafely(
-                            cleanUpErrors,
-                            () -> setSyncDisabledMode(mPreviousSyncDisabledModeForTest));
-                    mIsRunning = false;
-                }
-                // TODO(b/294423183): ideally it should throw an exception if cleanUpErrors is not
-                // empty, but it's better to wait until this class is unit tested to do so (for now,
-                // it's just logging it)
-                throwIfNecessary(testName, testError, postTestFlags, postTestSystemProperties);
-            }
-        };
+    @Override
+    protected void postTest(
+            Statement base, Description description, List<Throwable> cleanUpErrors) {
+        String testName = getTestName(description);
+        runSafely(cleanUpErrors, () -> resetFlags(testName));
+        runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
+        runSafely(cleanUpErrors, () -> setSyncDisabledMode(mPreviousSyncDisabledModeForTest));
+        mIsRunning = false;
     }
 
     private void setSyncDisabledMode(SyncDisabledModeForTest mode) {
@@ -186,36 +191,21 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
                 "setSyncDisabledMode(" + mode + ")", () -> mDeviceConfig.setSyncDisabledMode(mode));
     }
 
-    private void throwIfNecessary(
-            String testName,
-            @Nullable Throwable testError,
-            List<NameValuePair> postTestFlags,
-            List<NameValuePair> postTestSystemProperties)
-            throws Throwable {
-        if (testError == null) {
-            mLog.v("Good News, Everyone! %s passed.", testName);
-            return;
-        }
-        if (testError instanceof AssumptionViolatedException) {
-            mLog.i("%s is being ignored: %s", testName, testError);
-            throw testError;
-        }
-
-        StringBuilder dump = new StringBuilder();
+    @Override
+    protected String decorateTestFailureMessage(StringBuilder dump, List<Throwable> cleanUpErrors) {
         if (mFlagsClearedByTest) {
             dump.append("NOTE: test explicitly cleared all flags.\n");
         }
 
-        logAllAndDumpDiff("flags", dump, mChangedFlags, mPreTestFlags, postTestFlags);
+        logAllAndDumpDiff(
+                "flags", dump, mChangedFlags, mPreTestFlags, mOnTestFailureSystemProperties);
         logAllAndDumpDiff(
                 "system properties",
                 dump,
                 mChangedSystemProperties,
                 mPreTestSystemProperties,
-                postTestSystemProperties);
-
-        mLog.e("%s failed with %s.\n%s", testName, testError, dump);
-        throw new TestFailure(testError, dump);
+                mOnTestFailureSystemProperties);
+        return "flags / system properties state";
     }
 
     private void logAllAndDumpDiff(
@@ -290,7 +280,7 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
     public final void dumpSystemProperties(
             @FormatString String reasonFmt, @Nullable Object... reasonArgs) {
         log(
-                mSystemProperties.getAll(getSystemPropertiesMatcher()),
+                mSystemProperties.getAll(mSystemPropertiesMatcher),
                 "system properties (Reason: %s)",
                 String.format(reasonFmt, reasonArgs));
     }
@@ -542,15 +532,6 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
         }
     }
 
-    private void runSafely(List<Throwable> errors, Runnable r) {
-        try {
-            r.run();
-        } catch (Throwable e) {
-            mLog.e(e, "runSafely() failed");
-            errors.add(e);
-        }
-    }
-
     private boolean isFlagAnnotationPresent(Annotation annotation) {
         return (annotation instanceof SetFlagEnabled)
                 || (annotation instanceof SetFlagsEnabled)
@@ -676,45 +657,6 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
     private void setAnnotatedFlag(SetStringFlags repeatedAnnotation) {
         for (SetStringFlag annotation : repeatedAnnotation.value()) {
             setAnnotatedFlag(annotation);
-        }
-    }
-
-    // toString() is overridden to remove the AbstractAdServicesFlagsSetterRule$ from the name
-    @SuppressWarnings("OverrideThrowableToString")
-    public static final class TestFailure extends Exception {
-
-        private final String mDump;
-
-        TestFailure(Throwable cause, StringBuilder dump) {
-            super(
-                    "Test failed (see flags / system properties state below the stack trace)",
-                    cause,
-                    /* enableSuppression= */ false,
-                    /* writableStackTrace= */ false);
-            mDump = "\n" + dump;
-            setStackTrace(cause.getStackTrace());
-        }
-
-        @Override
-        public void printStackTrace(PrintWriter s) {
-            super.printStackTrace(s);
-            s.println(mDump);
-        }
-
-        @Override
-        public void printStackTrace(PrintStream s) {
-            super.printStackTrace(s);
-            s.println(mDump);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + ": " + getMessage();
-        }
-
-        /** Gets the flags / system properties state. */
-        public String getFlagsState() {
-            return mDump;
         }
     }
 
