@@ -616,9 +616,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns the feature flag for Attribution Fallback Job . */
     default boolean getMeasurementAttributionFallbackJobEnabled() {
-        return getGlobalKillSwitch()
-                ? false
-                : getMeasurementEnabled() && !MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+        return getMeasurementEnabled() && !MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
     }
 
     long MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
@@ -2044,10 +2042,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Delete Registration Kill Switch value is true.
      */
     default boolean getMeasurementApiDeleteRegistrationsKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
     }
 
     /**
@@ -2062,10 +2057,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * value is true.
      */
     default boolean getMeasurementApiStatusKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_API_STATUS_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_API_STATUS_KILL_SWITCH;
     }
 
     /**
@@ -2080,10 +2072,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Source Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterSourceKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
     }
 
     /**
@@ -2098,10 +2087,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Trigger Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterTriggerKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
     }
 
     /**
@@ -2117,10 +2103,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Register Web Source Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterWebSourceKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
     }
 
     /**
@@ -2135,10 +2118,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Sources Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterSourcesKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
     }
 
     /**
@@ -2154,10 +2134,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Register Web Trigger Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterWebTriggerKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
     }
 
     /**
@@ -2173,9 +2150,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Aggregate Fallback Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobAggregateFallbackReportingKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
+        return getLegacyMeasurementKillSwitch()
                 || MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
     }
 
@@ -2192,10 +2167,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Aggregate Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobAggregateReportingKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -2210,10 +2182,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Kill Switch value is true.
      */
     default boolean getMeasurementJobAttributionKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
     }
 
     /**
@@ -2228,10 +2197,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Kill Switch value is true.
      */
     default boolean getMeasurementJobDeleteExpiredKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
     }
 
     /**
@@ -2247,9 +2213,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Delete Uninstalled Kill Switch value is true.
      */
     default boolean getMeasurementJobDeleteUninstalledKillSwitch() {
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
     }
 
     /**
@@ -2265,9 +2229,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Event Fallback Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobEventFallbackReportingKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
+        return getLegacyMeasurementKillSwitch()
                 || MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
     }
 
@@ -2284,10 +2246,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobEventReportingKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -2303,10 +2262,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobDebugReportingKillSwitch() {
-        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -2322,9 +2278,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Debug Reporting Fallback Job kill switch value is true.
      */
     default boolean getMeasurementDebugReportingFallbackJobKillSwitch() {
-        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
+        return getLegacyMeasurementKillSwitch()
                 || MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
     }
 
@@ -2341,9 +2295,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Debug Reporting Fallback Job kill switch value is true.
      */
     default boolean getMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
-        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
+        return getLegacyMeasurementKillSwitch()
                 || MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
     }
 
@@ -2380,9 +2332,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Verbose Debug Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobVerboseDebugReportingKillSwitch() {
-        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
+        return getLegacyMeasurementKillSwitch()
                 || MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
     }
 
@@ -2399,9 +2349,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * or the Measurement Kill Switch value is true.
      */
     default boolean getMeasurementReceiverInstallAttributionKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
+        return getLegacyMeasurementKillSwitch()
                 || MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
     }
 
@@ -2418,10 +2366,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * or the Measurement Kill Switch value is true.
      */
     default boolean getMeasurementReceiverDeletePackagesKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
     }
 
     /**
@@ -2437,9 +2382,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Measurement rollback deletion Kill Switch value is true.
      */
     default boolean getMeasurementRollbackDeletionKillSwitch() {
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
     }
 
     /** Flag for storing Measurement Rollback data in External Storage for Android R. */
@@ -2508,7 +2451,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns value of Topics API kill switch */
     default boolean getTopicsKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
     }
 
@@ -2533,7 +2475,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns value of Mdd Background Task kill switch */
     default boolean getMddBackgroundTaskKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || MDD_BACKGROUND_TASK_KILL_SWITCH;
     }
 
@@ -2576,9 +2517,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns value of Fledge Auction server API kill switch. */
     default boolean getFledgeAuctionServerKillSwitch() {
-        return getGlobalKillSwitch()
-                || getFledgeSelectAdsKillSwitch()
-                || FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+        return getFledgeSelectAdsKillSwitch() || FLEDGE_AUCTION_SERVER_KILL_SWITCH;
     }
 
     /**
@@ -2589,9 +2528,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns value of On Device Auction API kill switch. */
     default boolean getFledgeOnDeviceAuctionKillSwitch() {
-        return getGlobalKillSwitch()
-                || getFledgeSelectAdsKillSwitch()
-                || FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
+        return getFledgeSelectAdsKillSwitch() || FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
     }
 
     /**
@@ -2632,7 +2569,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns value of encryption key new enrollment fetch job kill switch */
     default boolean getEncryptionKeyNewEnrollmentFetchKillSwitch() {
-        // We check the Global kill switch first. As a result, it overrides all other kill switches.
         return getGlobalKillSwitch() || ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
     }
 
@@ -2647,7 +2583,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns value of encryption key new enrollment fetch job kill switch */
     default boolean getEncryptionKeyPeriodicFetchKillSwitch() {
-        // We check the Global kill switch first. As a result, it overrides all other kill switches.
         return getGlobalKillSwitch() || ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
     }
 
@@ -3443,10 +3378,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * value is true.
      */
     default boolean getAsyncRegistrationJobQueueKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+        return getLegacyMeasurementKillSwitch() || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
     }
 
     boolean MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH = false;
@@ -3457,9 +3389,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Switch value is true.
      */
     default boolean getAsyncRegistrationFallbackJobKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
+        return getLegacyMeasurementKillSwitch()
                 || MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
     }
 
