@@ -656,13 +656,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
     }
 
-    int MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION = 10;
+    int MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION = 10;
 
     /**
-     * Returns max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
+     * Returns max distinct reporting origins for attribution per { Advertiser X Publisher X
+     * TimePeriod }.
      */
-    default int getMeasurementMaxDistinctEnrollmentsInAttribution() {
-        return MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
+    default int getMeasurementMaxDistinctReportingOriginsInAttribution() {
+        return MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION;
     }
 
     int MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE = 100;

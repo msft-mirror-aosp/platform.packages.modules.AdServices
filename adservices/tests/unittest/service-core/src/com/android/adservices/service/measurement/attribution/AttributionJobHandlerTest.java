@@ -208,8 +208,8 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Flags.MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
         when(mFlags.getMeasurementMaxAggregateAttributionPerRateLimitWindow())
                 .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
-        when(mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution())
-                .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION);
+        when(mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution())
+                .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION);
         when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(true);
         when(mFlags.getMeasurementMaxAttributionsPerInvocation())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION);
