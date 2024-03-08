@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Kami melancarkan ciri privasi iklan baharu yang dipanggil pengukuran iklan. Android hanya berkongsi maklumat yang sangat terhad antara apl, seperti apabila iklan dipaparkan kepada anda, untuk membantu apl mengukur prestasi iklan."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Anda boleh membuat perubahan dalam tetapan privasi iklan."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Apl yang anda gunakan boleh meminta Android maklumat untuk membantu apl mengukur prestasi iklan apl. Android membolehkan apl mengumpulkan jenis data yang terhad sahaja."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Ciri privasi iklan baharu"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Dapatkan lebih banyak pilihan terhadap iklan yang anda lihat sambil melindungi identiti anda"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Kemaskinian pada ciri privasi iklan anda"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Dapatkan lebih banyak pilihan terhadap iklan yang anda lihat sambil melindungi identiti anda"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android sedang mengembangkan ciri privasi iklan untuk mengehadkan perkara yang boleh dipelajari oleh apl tentang anda apabila apl tersebut memaparkan iklan yang diperibadikan kepada anda."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Apl dan rakan kongsi pengiklanan mereka boleh menggunakan aktiviti anda merentas apl lain pada peranti ini untuk memeribadikan iklan di samping memastikan identiti anda dirahsiakan dan selamat."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Lagi tentang iklan cadangan apl"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Jenis data yang terhad dikongsi antara apl untuk memahami prestasi iklan apl mereka, seperti masa dalam sehari bagi iklan yang dipaparkan kepada anda."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Lagi tentang pengukuran iklan"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android mengetahui topik yang anda minati berdasarkan apl yang anda gunakan baru-baru ini. Juga, apl dan rakan kongsi pengiklanan mereka boleh menggunakan aktiviti anda merentas apl lain pada peranti ini untuk memeribadikan iklan di samping tetap membantu dalam memastikan identiti anda dirahsiakan dan selamat."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Apl yang anda gunakan juga boleh menentukan perkara yang anda minati berdasarkan pada aktiviti apl anda. Contohnya, jika anda sering menggunakan apl memasak, anda mungkin melihat iklan untuk perkhidmatan penghantaran barang runcit atau kandungan berkaitan dalam apl lain.\n\nApl boleh menyimpan maklumat ini dengan selamat supaya maklumat tersebut hanya boleh digunakan oleh rakan kongsi pengiklanan untuk memeribadikan iklan pada apl lain."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Kemudian, apl yang anda gunakan boleh meminta maklumat ini — sama ada topik iklan anda atau iklan yang dicadangkan oleh apl yang telah anda gunakan."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Apl yang anda gunakan boleh meminta Android maklumat untuk membantu apl mengukur prestasi iklan apl. Android membantu dalam melindungi privasi anda dengan mengehadkan maklumat yang boleh dikongsi oleh apl dengan satu sama lain."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Apakah jenis data yang digunakan?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Apl yang anda gunakan boleh meminta Android maklumat yang membantu apl mengukur prestasi iklan apl. Android melindungi privasi anda dengan mengehadkan maklumat yang boleh dikongsi antara satu apl dengan apl lain."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Bagaimanakah identiti saya dilindungi?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android menggunakan berbilang langkah privasi seperti data pengagregatan dan penghingaran untuk mengehadkan maklumat yang boleh dikongsi antara satu apl dengan apl lain dan melindungi identiti anda.\n\nData pengukuran iklan juga dipadamkan secara kerap daripada peranti anda."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Aktiviti apl anda boleh digunakan untuk mencadangkan iklan."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Bagaimanakah apl menggunakan data ini?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Apl boleh menyimpan maklumat ini dengan selamat supaya maklumat tersebut hanya boleh digunakan oleh rakan kongsi pengiklanan mereka untuk memeribadikan iklan pada apl lain. Sebagai contoh, jika anda menggunakan apl memasak secara kerap, anda mungkin melihat iklan untuk perkhidmatan penghantaran barang runcit atau kandungan berkaitan dalam apl lain."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Bagaimanakah boleh saya mengurus data ini?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Anda boleh menyekat apl tertentu daripada berkongsi aktiviti anda dengan rakan kongsi pengiklanan. Anda menetapkan semula atau mematikan iklan cadangan apl dalam tetapan privasi anda pada bila-bila masa. Android juga mengautopadam data ini secara kerap."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Ketahui lebih lanjut tentang cara Android melindungi privasi anda"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Apl dan rakan kongsi pengiklanan mereka boleh menggunakan aktiviti anda merentas apl lain pada peranti ini untuk memeribadikan iklan di samping memastikan identiti anda dirahsiakan dan selamat.\n\nSebagai contoh, jika anda menggunakan apl memasak secara kerap, anda mungkin melihat iklan untuk perkhidmatan penghantaran barang runcit atau kandungan berkaitan dalam apl lain.\n\nAndroid mengautopadam aktiviti anda secara kerap tetapi anda juga boleh menyekat apl daripada berkongsi maklumat ini dengan rakan kongsi pengiklanan mereka."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"Perkara ini adalah lazim bagi apl dan rakan kongsi pengiklanan mereka untuk mengingati perkara yang anda minati untuk memeribadikan pengalaman anda. Apl boleh menyimpan maklumat ini dengan selamat supaya maklumat tersebut hanya boleh digunakan oleh rakan kongsi pengiklanan mereka untuk menunjukkan iklan pada apl lain.\n\nAnda boleh menyekat apl daripada berkongsi data aktiviti anda dengan rakan kongsi pengiklanan. Android juga mengautopadam data aktiviti yang dikongsi secara kerap, maka apl yang anda gunakan semula mungkin muncul semula dalam senarai ini.\n\nIklan yang anda lihat dapat diperibadikan bergantung pada pelbagai faktor seperti tetapan ini, tetapan topik iklan, tetapan ID pengiklanan anda dan sama ada apl yang anda gunakan memeribadikan iklan.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Ketahui lebih lanjut tentang iklan cadangan apl"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android menggunakan berbilang langkah privasi seperti data pengagregatan dan penghingaran untuk mengehadkan maklumat yang boleh dikongsi antara satu apl dengan apl lain dan melindungi identiti anda.\n\nPenyemak imbas anda mungkin mengandungi tetapan yang serupa. Jika pengukuran iklan dihidupkan untuk Android dan juga penyemak imbas anda, syarikat mungkin dapat mengukur keberkesanan sesuatu iklan antara apl yang anda gunakan dengan laman yang anda lawati. Sejarah penyemakan imbas anda dirahsiakan pada peranti anda.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Ketahui lebih lanjut tentang pengukuran iklan"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android mengetahui topik yang anda minati berdasarkan apl yang telah anda gunakan dalam beberapa minggu lepas.\n\nKemudian, apl yang anda gunakan boleh meminta topik anda daripada Android untuk memeribadikan iklan yang anda lihat. Android berkongsi hingga 3 topik sambil melindungi identiti anda dan maklumat tentang penggunaan apl anda.\n\nAndroid mengautopadam topik secara kerap. Sementara anda terus menggunakan apl, topik mungkin dipaparkan semula pada senarai. Atau anda boleh menyekat topik yang anda tidak mahu Android berkongsi dengan apl.\n\nIklan yang anda lihat dapat diperibadikan bergantung pada pelbagai faktor seperti tetapan ini, tetapan iklan cadangan apl, tetapan ID pengiklanan anda dan sama ada apl anda menggunakan iklan yang diperibadikan.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Ketahui lebih lanjut tentang topik iklan"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Ilustrasi simbol berwarna-warni yang mewakili topik yang diminati seperti muzik, berita dan sukan"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Ilustrasi berwarna-warni kunci di dalam bulatan"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Ilustrasi kecil hitam dan putih sembilan titik yang membentuk segi empat sama"</string>
