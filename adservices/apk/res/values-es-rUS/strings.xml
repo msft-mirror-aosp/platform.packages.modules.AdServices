@@ -231,55 +231,34 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Lanzamos una nueva función de privacidad en los anuncios llamada medición de anuncios. Android solo comparte información muy limitada entre las apps, como cuándo se te mostró un anuncio, para ayudar a las apps a medir el rendimiento de los anuncios."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Puedes realizar cambios en la configuración de privacidad de los anuncios."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Las apps que usas pueden solicitarle información a Android para medir el rendimiento de sus anuncios. Android permite que las apps recopilen solo algunos tipos de datos."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Nuevas funciones de privacidad en los anuncios"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Controla mejor los anuncios que ves al mismo tiempo que proteges tu identidad"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Actualizaciones de las funciones de privacidad en los anuncios"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Controla mejor los anuncios que ves al mismo tiempo que proteges tu identidad"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android está ampliando las funciones de privacidad en los anuncios para restringir qué información las apps pueden saber de ti cuando te muestran anuncios personalizados."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Las apps y sus socios publicitarios pueden usar tu actividad en otras apps en este dispositivo para personalizar anuncios sin que debas preocuparte por tu seguridad ni la privacidad de tu identidad."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Más información sobre los anuncios sugeridos por apps"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Se comparten algunos tipos de datos entre apps para entender el rendimiento de sus anuncios, como el momento del día en que se mostró un anuncio."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Más información sobre la medición de anuncios"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android obtiene información sobre temas de interés según las apps que usaste recientemente. Además, las apps y sus socios publicitarios pueden usar tu actividad en otras apps en este dispositivo para personalizar anuncios sin que debas preocuparte por tu seguridad ni la privacidad de tu identidad."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Las apps que usas también pueden determinar lo que te gusta en función de tu actividad en ellas. Por ejemplo, si usas con frecuencia apps de cocina, es posible que veas anuncios de servicios de entrega de alimentos o contenido relacionado en otras apps.\n\nLas apps pueden almacenar esa información de manera segura para que solo la puedan usar sus socios publicitarios con el objetivo de personalizar anuncios en otras apps."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Más adelante, una app puede preguntarte por esta información, como temas de anuncios o los anuncios que sugirieron las apps que usaste."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Las apps que uses pueden solicitarle información a Android para medir el rendimiento de sus anuncios. Android ayuda a proteger tu privacidad limitando la información que las apps pueden compartir entre ellas."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"¿Qué datos se usan?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Las apps que usas pueden solicitarle información a Android para facilitar la medición del rendimiento de sus anuncios. Android ayuda a proteger tu privacidad limitando la información que las apps pueden compartir entre sí."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"¿Cómo se protege mi identidad?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android usa varias medidas de privacidad, como la agregación y la contaminación de datos, para limitar la información que las apps pueden compartir entre sí y ayudar a proteger tu identidad.\n\nLos datos de la medición de anuncios también se borran regularmente de tu dispositivo."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Tu actividad en apps puede usarse para sugerirte anuncios."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"¿Cómo usan estos datos las apps?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Las apps pueden almacenar esa información de manera segura para que solo la puedan usar sus socios publicitarios con el objetivo de personalizar anuncios en otras apps. Por ejemplo, si usas apps de cocina con frecuencia, es posible que veas anuncios de servicios de entrega de alimentos o contenido relacionado en otras apps."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"¿Cómo puedo administrar estos datos?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Puedes bloquear apps específicas para que no compartan tu actividad con socios publicitarios. También puedes restablecer o desactivar los anuncios sugeridos por apps en cualquier momento en la configuración de privacidad. Por su parte, Android borra automáticamente esos datos con regularidad."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Más información sobre cómo Android ayuda a proteger tu privacidad"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Las apps y sus socios publicitarios pueden usar tu actividad en otras apps en este dispositivo para personalizar anuncios, manteniendo la privacidad y seguridad de tu información.\n\nPor ejemplo, si usas apps de cocina con frecuencia, es posible que veas anuncios de servicios de entrega de alimentos o contenido relacionado en otras apps.\n\nAndroid borra automáticamente tu actividad con regularidad, pero también puedes impedir que las apps compartan esa información con sus socios publicitarios."</string>
+    <!-- no translation found for settingsUI_pas_apps_view_footer (7911915685966727993) -->
     <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android usa varias medidas de privacidad, como la agregación y la contaminación de datos, para limitar la información que las apps pueden compartir entre sí y ayudar a proteger tu identidad.\n\nEs posible que tu navegador tenga una configuración similar. Si la medición de anuncios está activada tanto en Android como en tu navegador, una empresa puede medir la eficacia de un anuncio entre las apps que usas y los sitios que visitas. Tu historial de navegación se mantiene privado en tu dispositivo.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Más información sobre la medición de anuncios"</a></string>
+    <!-- no translation found for settingsUI_pas_topics_view_footer (4957955199367073977) -->
     <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Ilustración colorida de símbolos que representan temas de interés como música, noticias y deportes"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Ilustración colorida de una cerradura dentro de un círculo"</string>
