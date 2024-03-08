@@ -305,9 +305,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT =
             "measurement_vtc_configurable_max_event_reports_count";
 
-    public static final String KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 =
-            "measurement_enable_ara_parsing_alignment_v1";
-
     public static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
 
@@ -1137,9 +1134,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION =
             "measurement_max_aggregate_keys_per_trigger_registration";
-
-    public static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
-            "measurement_min_event_report_delay_millis";
 
     public static final String KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS =
             "measurement_event_reports_vtc_early_reporting_windows";

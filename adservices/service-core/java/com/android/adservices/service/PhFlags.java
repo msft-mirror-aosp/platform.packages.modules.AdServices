@@ -2906,13 +2906,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public long getMeasurementMinEventReportDelayMillis() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS);
-    }
-
-    @Override
     public String getMeasurementEventReportsVtcEarlyReportingWindows() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS,
@@ -3765,11 +3758,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementMaxEventReportsPerDestination());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS
-                        + " = "
-                        + getMeasurementMinEventReportDelayMillis());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS
                         + " = "
                         + getMeasurementEventReportsVtcEarlyReportingWindows());
@@ -3857,11 +3845,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS
                         + " = "
                         + getMeasurementEnableCoarseEventReportDestinations());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1
-                        + " = "
-                        + getMeasurementEnableAraParsingAlignmentV1());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1
@@ -5366,13 +5349,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT,
                 DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
-    }
-
-    @Override
-    public boolean getMeasurementEnableAraParsingAlignmentV1() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1,
-                MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1);
     }
 
     @Override

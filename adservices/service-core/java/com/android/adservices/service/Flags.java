@@ -3615,14 +3615,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION;
     }
 
-    /** Default minimum event report delay in milliseconds */
-    long MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS = 3_600_000L;
-
-    /** Returns minimum event report delay in milliseconds */
-    default long getMeasurementMinEventReportDelayMillis() {
-        return MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
-    }
-
     /**
      * Default early reporting windows for VTC type source. Derived from {@link
      * com.android.adservices.service.measurement.PrivacyParams#EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS}.
@@ -3688,14 +3680,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns the default max allowed number of event reports. */
     default int getMeasurementVtcConfigurableMaxEventReportsCount() {
         return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
-    }
-
-    /** Default Measurement ARA parsing alignment v1 feature flag. */
-    boolean MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 = true;
-
-    /** Returns whether Measurement ARA parsing alignment v1 feature is enabled. */
-    default boolean getMeasurementEnableAraParsingAlignmentV1() {
-        return MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
     }
 
     /** Default Measurement ARA parsing alignment v1 feature flag. */

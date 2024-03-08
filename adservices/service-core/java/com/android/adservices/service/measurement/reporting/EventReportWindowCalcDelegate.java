@@ -110,7 +110,7 @@ public class EventReportWindowCalcDelegate {
                 getEffectiveReportingWindows(source, isInstallCase(source, destinationType));
         for (Pair<Long, Long> window : reportingWindows) {
             if (isWithinWindow(triggerTime, window)) {
-                return window.second + mFlags.getMeasurementMinEventReportDelayMillis();
+                return window.second;
             }
         }
 
@@ -190,8 +190,7 @@ public class EventReportWindowCalcDelegate {
         // TODO: (b/288646239) remove this check, confirming noising indexing accuracy.
         return windowIndex < reportingWindows.size()
                 ? reportingWindows.get(windowIndex).second
-                        + mFlags.getMeasurementMinEventReportDelayMillis()
-                : finalWindow.second + mFlags.getMeasurementMinEventReportDelayMillis();
+                : finalWindow.second;
     }
 
     /**
@@ -216,8 +215,7 @@ public class EventReportWindowCalcDelegate {
         for (TriggerSpec triggerSpec : triggerSpecs.getTriggerSpecs()) {
             triggerDataIndex -= triggerSpec.getTriggerData().size();
             if (triggerDataIndex < 0) {
-                return triggerSpec.getEventReportWindowsEnd().get(windowIndex)
-                        + mFlags.getMeasurementMinEventReportDelayMillis();
+                return triggerSpec.getEventReportWindowsEnd().get(windowIndex);
             }
         }
         return 0;
@@ -249,8 +247,7 @@ public class EventReportWindowCalcDelegate {
         List<Long> reportingWindows = triggerSpecs.findReportingEndTimesForTriggerData(triggerData);
         for (Long window : reportingWindows) {
             if (triggerTime < window + sourceRegistrationTime) {
-                return sourceRegistrationTime + window
-                        + mFlags.getMeasurementMinEventReportDelayMillis();
+                return sourceRegistrationTime + window;
             }
         }
         return -1L;
