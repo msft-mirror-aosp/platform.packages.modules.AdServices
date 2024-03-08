@@ -18,8 +18,10 @@ package com.android.adservices.service.measurement.noising;
 
 import com.android.adservices.service.measurement.PrivacyParams;
 
+import com.google.common.math.BigIntegerMath;
 import com.google.common.math.DoubleMath;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,42 +34,6 @@ import java.util.Objects;
 public class Combinatorics {
 
     /**
-     * Computes the binomial coefficient aka {@code n} choose {@code k}.
-     * https://en.wikipedia.org/wiki/Binomial_coefficient
-     *
-     * @return binomial coefficient for (n choose k)
-     * @throws ArithmeticException if the result overflows an int
-     */
-    static long getBinomialCoefficient(int n, int k) {
-        if (k > n) {
-            return 0L;
-        }
-        if (k == n || n == 0) {
-            return 1L;
-        }
-        // getBinomialCoefficient(n, k) == getBinomialCoefficient(n, n - k).
-        if (k > n - k) {
-            k = n - k;
-        }
-        // (n choose k) = n (n -1) ... (n - (k - 1)) / k!
-        // = mul((n + 1 - i) / i), i from 1 -> k.
-        //
-        // You might be surprised that this algorithm works just fine with integer
-        // division (i.e. division occurs cleanly with no remainder). However, this is
-        // true for a very simple reason. Imagine a value of `i` causes division with
-        // remainder in the below algorithm. This immediately implies that
-        // (n choose i) is fractional, which we know is not the case.
-        long result = 1L;
-        long nLong = (long) n;
-        long kLong = (long) k;
-        for (long i = 1L; i <= kLong; i++) {
-            result = Math.multiplyExact(result, nLong + 1 - i);
-            result = result / i;
-        }
-        return result;
-    }
-
-    /**
      * Returns the k-combination associated with the number {@code combinationIndex}. In
      * other words, returns the combination of {@code k} integers uniquely indexed by
      * {@code combinationIndex} in the combinatorial number system.
@@ -76,7 +42,7 @@ public class Combinatorics {
      * @return combinationIndex-th lexicographically smallest k-combination.
      * @throws ArithmeticException in case of int overflow
      */
-    static long[] getKCombinationAtIndex(long combinationIndex, int k) {
+    static BigInteger[] getKCombinationAtIndex(BigInteger combinationIndex, int k) {
         // Computes the combinationIndex-th lexicographically smallest k-combination.
         // https://en.wikipedia.org/wiki/Combinatorial_number_system
         //
@@ -94,7 +60,7 @@ public class Combinatorics {
         //
         // We find this set via a simple greedy algorithm.
         // http://math0.wvstateu.edu/~baker/cs405/code/Combinadics.html
-        long[] result = new long[k];
+        BigInteger[] result = new BigInteger[k];
         if (k == 0) {
             return result;
         }
@@ -102,38 +68,40 @@ public class Combinatorics {
         // maximum a such that (a choose k) <= combinationIndex. Let a_k = a. Use
         // the previous binomial coefficient to compute the next one. Note: possible
         // to speed this up via something other than incremental search.
-        long target = combinationIndex;
-        long candidate = (long) k - 1L;
-        long binomialCoefficient = 0L;
-        long nextBinomialCoefficient = 1L;
-        while (nextBinomialCoefficient <= target) {
-            candidate++;
+        BigInteger target = combinationIndex;
+        BigInteger candidate = BigInteger.valueOf((long) k - 1L);
+        BigInteger binomialCoefficient = BigInteger.ZERO;
+        BigInteger nextBinomialCoefficient = BigInteger.ONE;
+        while (nextBinomialCoefficient.compareTo(target) <= 0) {
+            candidate = candidate.add(BigInteger.ONE);
             binomialCoefficient = nextBinomialCoefficient;
             // (n + 1 choose k) = (n choose k) * (n + 1) / (n + 1 - k)
-            nextBinomialCoefficient = Math.multiplyExact(binomialCoefficient, (candidate + 1));
-            nextBinomialCoefficient /= candidate + 1 - k;
+            nextBinomialCoefficient = binomialCoefficient.multiply(candidate.add(BigInteger.ONE));
+            nextBinomialCoefficient = nextBinomialCoefficient.divide(
+                    candidate.add(BigInteger.ONE).subtract(BigInteger.valueOf((long) k)));
         }
         // We know from the k-combination definition, all subsequent values will be
         // strictly decreasing. Find them all by decrementing candidate.
         // Use the previous binomial coefficient to compute the next one.
-        long currentK = (long) k;
+        BigInteger currentK = BigInteger.valueOf((long) k);
         int currentIndex = 0;
         while (true) {
-            if (binomialCoefficient <= target) {
+            if (binomialCoefficient.compareTo(target) <= 0) {
                 result[currentIndex] = candidate;
                 currentIndex++;
-                target -= binomialCoefficient;
+                target = target.subtract(binomialCoefficient);
                 if (currentIndex == k) {
                     return result;
                 }
                 // (n - 1 choose k - 1) = (n choose k) * k / n
-                binomialCoefficient = binomialCoefficient * currentK / candidate;
-                currentK--;
+                binomialCoefficient = binomialCoefficient.multiply(currentK).divide(candidate);
+                currentK = currentK.subtract(BigInteger.ONE);
             } else {
                 // (n - 1 choose k) = (n choose k) * (n - k) / n
-                binomialCoefficient = binomialCoefficient * (candidate - currentK) / candidate;
+                binomialCoefficient = binomialCoefficient.multiply(candidate.subtract(currentK))
+                        .divide(candidate);
             }
-            candidate--;
+            candidate = candidate.subtract(BigInteger.ONE);
         }
     }
 
@@ -146,8 +114,8 @@ public class Combinatorics {
      * @param numBars  number of bars
      * @return number of possible sequences
      */
-    public static long getNumberOfStarsAndBarsSequences(int numStars, int numBars) {
-        return getBinomialCoefficient(numStars + numBars, numStars);
+    public static BigInteger getNumberOfStarsAndBarsSequences(int numStars, int numBars) {
+        return BigIntegerMath.binomial(numStars + numBars, numStars);
     }
 
     /**
@@ -158,7 +126,7 @@ public class Combinatorics {
      * @param sequenceIndex index of the sequence
      * @return list of indices of every star in stars & bars sequence
      */
-    public static long[] getStarIndices(int numStars, long sequenceIndex) {
+    public static BigInteger[] getStarIndices(int numStars, BigInteger sequenceIndex) {
         return getKCombinationAtIndex(sequenceIndex, numStars);
     }
 
@@ -169,12 +137,13 @@ public class Combinatorics {
      * @param starIndices indices of the stars in descending order
      * @return count of bars preceding every star
      */
-    public static long[] getBarsPrecedingEachStar(long[] starIndices) {
+    public static BigInteger[] getBarsPrecedingEachStar(BigInteger[] starIndices) {
         for (int i = 0; i < starIndices.length; i++) {
-            long starIndex = starIndices[i];
+            BigInteger starIndex = starIndices[i];
             // There are {@code starIndex} prior positions in the sequence, and `i` prior
             // stars, so there are {@code starIndex - i} prior bars.
-            starIndices[i] = starIndex - ((long) starIndices.length - 1L - (long) i);
+            starIndices[i] = starIndex.subtract(
+                    BigInteger.valueOf((long) starIndices.length - 1L - (long) i));
         }
         return starIndices;
     }
@@ -187,7 +156,7 @@ public class Combinatorics {
      * @param numWindows number of reporting windows
      * @return number of states
      */
-    public static long getNumStatesArithmetic(
+    public static BigInteger getNumStatesArithmetic(
             int numBucketIncrements, int numTriggerData, int numWindows) {
         int numStars = numBucketIncrements;
         int numBars = Math.multiplyExact(numTriggerData, numWindows);
@@ -203,7 +172,7 @@ public class Combinatorics {
      * @param perTypeCapList cap per trigger data
      * @return number of states
      */
-    private static long getNumStatesRecursive(
+    private static BigInteger getNumStatesRecursive(
             int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
         int index = perTypeNumWindowList.length - 1;
         return getNumStatesRecursive(
@@ -216,18 +185,18 @@ public class Combinatorics {
                 new HashMap<>());
     }
 
-    private static long getNumStatesRecursive(
+    private static BigInteger getNumStatesRecursive(
             int totalCap,
             int index,
             int winVal,
             int capVal,
             int[] perTypeNumWindowList,
             int[] perTypeCapList,
-            Map<List<Integer>, Long> dp) {
+            Map<List<Integer>, BigInteger> dp) {
         List<Integer> key = List.of(totalCap, index, winVal, capVal);
         if (!dp.containsKey(key)) {
             if (winVal == 0 && index == 0) {
-                dp.put(key, 1L);
+                dp.put(key, BigInteger.ONE);
             } else if (winVal == 0) {
                 dp.put(key, getNumStatesRecursive(
                         totalCap,
@@ -238,9 +207,9 @@ public class Combinatorics {
                         perTypeCapList,
                         dp));
             } else {
-                long result = 0L;
+                BigInteger result = BigInteger.ZERO;
                 for (int i = 0; i <= Math.min(totalCap, capVal); i++) {
-                    result = Math.addExact(result, getNumStatesRecursive(
+                    result = result.add(getNumStatesRecursive(
                             totalCap - i,
                             index,
                             winVal - 1,
@@ -263,10 +232,10 @@ public class Combinatorics {
      * @param perTypeCapList limit of the increment of each trigger data
      * @return number of states
      */
-    public static long getNumStatesFlexApi(
+    public static BigInteger getNumStatesFlexApi(
             int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
         if (perTypeNumWindowList.length == 0 || perTypeCapList.length == 0) {
-            return 1;
+            return BigInteger.ONE;
         }
         for (int i = 1; i < perTypeNumWindowList.length; i++) {
             if (perTypeNumWindowList[i] != perTypeNumWindowList[i - 1]) {
@@ -286,9 +255,10 @@ public class Combinatorics {
      * @param numOfStates Number of States
      * @return the probability to use fake reports
      */
-    public static double getFlipProbability(long numOfStates) {
+    public static double getFlipProbability(BigInteger numOfStates) {
+        double numStatesDouble = numOfStates.doubleValue();
         double epsilon = (double) PrivacyParams.getPrivacyEpsilon();
-        return numOfStates / (numOfStates + Math.exp(epsilon) - 1D);
+        return numStatesDouble / (numStatesDouble + Math.exp(epsilon) - 1D);
     }
 
     private static double getBinaryEntropy(double x) {
@@ -304,15 +274,15 @@ public class Combinatorics {
      * @param flipProbability Flip Probability
      * @return the information gain
      */
-    public static double getInformationGain(long numOfStates, double flipProbability) {
-        if (numOfStates <= 1L) {
+    public static double getInformationGain(BigInteger numOfStates, double flipProbability) {
+        if (numOfStates.compareTo(BigInteger.ONE) <= 0) {
             return 0d;
         }
-        double log2Q = DoubleMath.log2(numOfStates);
-        double fakeProbability = flipProbability * (numOfStates - 1L) / numOfStates;
-        return log2Q
+        double numStatesDouble = numOfStates.doubleValue();
+        double fakeProbability = flipProbability * (numStatesDouble - 1D) / numStatesDouble;
+        return DoubleMath.log2(numStatesDouble)
                 - getBinaryEntropy(fakeProbability)
-                - fakeProbability * DoubleMath.log2(numOfStates - 1);
+                - fakeProbability * DoubleMath.log2(numStatesDouble - 1D);
     }
 
     /**
@@ -327,8 +297,8 @@ public class Combinatorics {
             int totalCap,
             int[] perTypeNumWindowList,
             int[] perTypeCapList,
-            long rank,
-            Map<List<Integer>, Long> dp) {
+            BigInteger rank,
+            Map<List<Integer>, BigInteger> dp) {
         int triggerTypeIndex = perTypeNumWindowList.length - 1;
 
         return getReportSetBasedOnRankRecursive(
@@ -347,10 +317,10 @@ public class Combinatorics {
             int triggerTypeIndex,
             int winVal,
             int capVal,
-            long rank,
+            BigInteger rank,
             int[] perTypeNumWindowList,
             int[] perTypeCapList,
-            Map<List<Integer>, Long> numStatesLookupTable) {
+            Map<List<Integer>, BigInteger> numStatesLookupTable) {
 
         if (winVal == 0 && triggerTypeIndex == 0) {
             return new ArrayList<>();
@@ -366,7 +336,7 @@ public class Combinatorics {
                     numStatesLookupTable);
         }
         for (int i = 0; i <= Math.min(totalCap, capVal); i++) {
-            long currentNumStates =
+            BigInteger currentNumStates =
                     getNumStatesRecursive(
                             totalCap - i,
                             triggerTypeIndex,
@@ -375,7 +345,7 @@ public class Combinatorics {
                             perTypeNumWindowList,
                             perTypeCapList,
                             numStatesLookupTable);
-            if (currentNumStates > rank) {
+            if (currentNumStates.compareTo(rank) > 0) {
                 // The triggers to be appended.
                 List<AtomReportState> toAppend = new ArrayList<>();
                 for (int k = 0; k < i; k++) {
@@ -394,7 +364,7 @@ public class Combinatorics {
                 toAppend.addAll(otherReports);
                 return toAppend;
             } else {
-                rank -= currentNumStates;
+                rank = rank.subtract(currentNumStates);
             }
         }
         // will not reach here
