@@ -16,6 +16,7 @@
 
 package com.android.adservices.mockito;
 
+import static com.android.adservices.common.SyncCallback.DEFAULT_TIMEOUT_MS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -72,7 +73,18 @@ public final class MockitoExpectations {
      */
     public static NoFailureSyncCallback<ApiCallStats> mockLogApiCallStats(
             AdServicesLogger adServicesLogger) {
-        NoFailureSyncCallback<ApiCallStats> callback = new NoFailureSyncCallback<>();
+        return mockLogApiCallStats(adServicesLogger, DEFAULT_TIMEOUT_MS);
+    }
+
+    /**
+     * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
+     * object that blocks until that call is made. This method allows to pass in a customized
+     * timeout.
+     */
+    public static NoFailureSyncCallback<ApiCallStats> mockLogApiCallStats(
+            AdServicesLogger adServicesLogger, int timeoutMs) {
+        NoFailureSyncCallback<ApiCallStats> callback = new NoFailureSyncCallback<>(timeoutMs);
+
         doAnswer(
                         inv -> {
                             Log.v(TAG, "mockLogApiCallStats(): inv=" + inv);

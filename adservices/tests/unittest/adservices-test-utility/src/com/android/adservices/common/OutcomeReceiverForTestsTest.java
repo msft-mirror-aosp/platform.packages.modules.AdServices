@@ -22,11 +22,15 @@ import static com.android.adservices.common.SyncCallback.MSG_WRONG_ERROR_RECEIVE
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.testing.junit.SafeAndroidJUnitRunner;
+
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.NoSuchElementException;
 
 @RequiresSdkLevelAtLeastS(reason = "android.os.OutcomeReceiver was introduced on S")
+@RunWith(SafeAndroidJUnitRunner.class)
 public final class OutcomeReceiverForTestsTest extends AdServicesUnitTestCase {
 
     private static final String RESULT = "Saul Goodman!";

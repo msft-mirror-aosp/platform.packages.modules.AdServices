@@ -88,7 +88,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
             "com.android.adservices.servicecoreappsetidtest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
-    private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
+    private static final int BACKGROUND_THREAD_TIMEOUT_MS = 7_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     private static final String APPSETID_API_ALLOW_LIST =
             "com.android.adservices.servicecoreappsetidtest";
@@ -309,7 +309,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
             int failureReason)
             throws InterruptedException {
         SyncIGetAppSetIdCallback callback =
-                new SyncIGetAppSetIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
+                new SyncIGetAppSetIdCallback(BACKGROUND_THREAD_TIMEOUT_MS);
 
         CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
         Mockito.doAnswer(
@@ -365,7 +365,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .build();
 
         NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mockLogApiCallStats(mAdServicesLogger, BACKGROUND_THREAD_TIMEOUT_MS);
 
         GetAppSetIdResult getAppSetIdResult = getAppSetIdResults(appSetIdServiceImpl);
 
@@ -380,7 +380,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
             throws Exception {
         // To capture result in inner class, we have to declare final.
         SyncIGetAppSetIdCallback callback =
-                new SyncIGetAppSetIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
+                new SyncIGetAppSetIdCallback(BACKGROUND_THREAD_TIMEOUT_MS);
 
         appSetIdServiceImpl.getAppSetId(mRequest, mCallerMetadata, callback);
 

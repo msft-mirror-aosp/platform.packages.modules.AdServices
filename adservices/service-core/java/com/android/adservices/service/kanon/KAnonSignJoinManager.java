@@ -75,6 +75,9 @@ public class KAnonSignJoinManager {
      * @return {@code false} if the message is to be filtered out, and {@code true} otherwise.
      */
     private boolean filterRequest(KAnonMessageEntity kAnonMessageEntity) {
+        sLogger.v(
+                "Starting filter request method for message with message id: "
+                        + kAnonMessageEntity.getAdSelectionId());
         boolean shouldProcessRightNow = false;
         List<KAnonMessageEntity> messageEntitiesFromDB =
                 mKAnonMessageManager.fetchKAnonMessageEntityWithMessage(
@@ -83,6 +86,7 @@ public class KAnonSignJoinManager {
         // It exists in the database in the PROCESSED(SIGNED/JOINED) status with expired
         // corresponding client params.
         if (messageEntitiesFromDB.isEmpty()) {
+            sLogger.v("Message not found in the database, message should be processed");
             shouldProcessRightNow = true;
         } else {
             for (KAnonMessageEntity messageInDB : messageEntitiesFromDB) {
@@ -92,10 +96,14 @@ public class KAnonSignJoinManager {
                                 != KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED
                         && clientParamsExpiryInstant != null
                         && clientParamsExpiryInstant.isBefore(mClock.instant())) {
+                    sLogger.v(
+                            "Message found in database but corresponding client parameters have"
+                                + " expired, message should be processed");
                     shouldProcessRightNow = true;
                 }
             }
         }
+        sLogger.v("shouldProcessRightNow field is : " + shouldProcessRightNow);
         return shouldProcessRightNow;
     }
 
@@ -120,7 +128,7 @@ public class KAnonSignJoinManager {
             KAnonSignJoinBackgroundJobService.scheduleIfNeeded(mContext, forceSchedule);
         } catch (Throwable t) {
             // Not throwing this error because we want this error to fail silently.
-            sLogger.d("Error while scheduling KAnon background job service:" + t.getMessage());
+            sLogger.e("Error while scheduling KAnon background job service:" + t.getMessage());
         }
         List<KAnonMessageEntity> messageAfterFiltering =
                 newMessages.stream().filter(this::filterRequest).collect(Collectors.toList());
@@ -130,6 +138,7 @@ public class KAnonSignJoinManager {
         List<KAnonMessageEntity> insertedMessages =
                 mKAnonMessageManager.persistNewAnonMessageEntities(messageAfterFiltering);
         if (shouldMakeKAnonCallsNow()) {
+            sLogger.v("Processing message immediately from persist ad selection result API");
             mKAnonCaller.signAndJoinMessages(insertedMessages);
         } else {
             // TODO(b/326903508): Remove unused loggers. Use callback instead of logger
@@ -149,6 +158,7 @@ public class KAnonSignJoinManager {
         if (messageEntities.isEmpty()) {
             return;
         }
+        sLogger.v("Processing " + messageEntities.size() + " messages from database");
         mKAnonCaller.signAndJoinMessages(messageEntities);
     }
 }

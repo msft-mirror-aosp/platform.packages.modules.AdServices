@@ -292,13 +292,13 @@ public class PersistAdSelectionResultRunner {
                                             mKAnonSignJoinFactory.getKAnonSignJoinManager();
                                     kAnonSignJoinManager.processNewMessages(messageEntities);
                                 } catch (Throwable t) {
-                                    sLogger.d("Error while processing new messages for KAnon");
+                                    sLogger.e("Error while processing new messages for KAnon");
                                 }
                                 return Futures.immediateVoidFuture();
                             },
                             mBackgroundExecutorService);
         } else {
-            sLogger.d("KAnon Sign Join feature is disabled");
+            sLogger.v("KAnon Sign Join feature is disabled");
             mAdServicesLogger.logKAnonSignJoinStatus();
         }
     }

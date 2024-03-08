@@ -64,6 +64,11 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
         listenToMainViewModelUiEvents();
     }
 
+    /** Refreshes static views with data from view model that may have changed. */
+    public void refreshState() {
+        initWithUx(mActivity, mActivity.getApplicationContext());
+    }
+
     @Override
     public void initBeta() {
         // hidden elements

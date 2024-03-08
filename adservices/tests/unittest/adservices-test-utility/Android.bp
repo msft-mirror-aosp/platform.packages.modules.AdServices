@@ -34,7 +34,6 @@ android_test {
     sdk_version: "module_current",
     plugins: ["auto_annotation_plugin"],
     test_config: "AndroidTest.xml",
-    // TODO(b/293894199): should be 30 (see explanation on AndroidTest.xml)
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     target_sdk_version: "31",
 }

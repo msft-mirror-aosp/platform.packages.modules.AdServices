@@ -208,21 +208,6 @@ public final class ExtendedMockitoExpectations {
         doReturn(logger).when(() -> AdServicesJobServiceLogger.getInstance(any(Context.class)));
     }
 
-    /** Mocks a call to {@link SystemProperties#getLong(String, long)}, returning {@code value}. */
-    public static void mockGetSystemProperty(String key, long value) {
-        logV("mockGetSystemProperty(key=%s, value=%s)", key, value);
-        doReturn(value).when(() -> SystemProperties.getLong(eq(key), anyLong()));
-    }
-
-    /**
-     * Mocks a call to {@link SystemProperties#getBoolean(String, boolean)}, returning {@code
-     * value}.
-     */
-    public static void mockGetSystemProperty(String key, boolean value) {
-        logV("mockGetSystemProperty(key=%s, value=%s)", key, value);
-        doReturn(value).when(() -> SystemProperties.getBoolean(eq(key), anyBoolean()));
-    }
-
     /**
      * Mocks a call to {@code DeviceConfig.getBoolean()} using the AdServices namespace and
      * returning {@code value}.

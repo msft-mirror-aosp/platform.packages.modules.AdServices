@@ -14,19 +14,8 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<!--
-    TODO(b/293894199): this config is only necessary so it doesn't run on R, as
-    AndroidJUnitRunner scans all classes in the classpath and fails with a
-    NoSuchClassException because OutcomeReceiverForTests implements
-    OutcomeReceiver, which was added on S - we need to figure out a way to skip
-    that scan.
--->
 <configuration description="Config needed to run test on S+ only">
     <option name="test-tag" value="AdServicesTestUtilityTests"/>
-
-    <!-- Prevent tests from running on Android R -->
-    <object type="module_controller"
-            class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController" />
 
     <!-- Entries below are neceessary so atest can run specific test classes without specifying the
          module name (for example: atest AndroidSdkRangeTest) -->
