@@ -929,12 +929,12 @@ public class SdkSandboxStatsdMetricsUnitTest {
     }
 
     @Test
-    public void testRegisterActivityInterception_NullIntent_CallsStatsd() {
+    public void testRegisterActivityInterception_NullIntent_StatsdNotCalled() {
         assumeTrue(SdkLevel.isAtLeastU());
 
         interceptActivityLaunch(null);
 
-        Mockito.verify(mSdkSandboxStatsdLogger)
+        Mockito.verify(mSdkSandboxStatsdLogger, Mockito.never())
                 .logSandboxActivityApiLatency(
                         Mockito.eq(
                                 SdkSandboxStatsLog
@@ -947,7 +947,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
     }
 
     @Test
-    public void testRegisterActivityInterception_WrongComponent_CallsStatsd() {
+    public void testRegisterActivityInterception_WrongComponent_StatsdNotCalled() {
         assumeTrue(SdkLevel.isAtLeastU());
 
         Intent intent =
@@ -958,7 +958,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
 
         interceptActivityLaunch(intent);
 
-        Mockito.verify(mSdkSandboxStatsdLogger)
+        Mockito.verify(mSdkSandboxStatsdLogger, Mockito.never())
                 .logSandboxActivityApiLatency(
                         Mockito.eq(
                                 SdkSandboxStatsLog

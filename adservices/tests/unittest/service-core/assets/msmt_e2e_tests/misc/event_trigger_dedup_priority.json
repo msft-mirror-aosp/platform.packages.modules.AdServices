@@ -132,10 +132,10 @@
   "output": {
     "event_level_results": [
       {
-        "report_time": "1686828326150",
+        "report_time": "1686824726150",
         "payload": {
           "attribution_destination": "android-app://com.west-news",
-          "scheduled_report_time": "1686828326",
+          "scheduled_report_time": "1686824726",
           "source_event_id": "13579070122577564141",
           "trigger_data": "1",
           "source_type": "event",

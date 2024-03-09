@@ -43,6 +43,17 @@ import com.android.internal.annotations.VisibleForTesting;
  */
 public class SandboxedActivity extends Activity {
     private static final String TAG = "SandboxedActivity";
+    private final Injector mInjector;
+
+    public SandboxedActivity() {
+        this(new Injector());
+    }
+
+    @VisibleForTesting
+    SandboxedActivity(Injector injector) {
+        super();
+        mInjector = injector;
+    }
 
     /**
      * Wraps the base context in an internal {@link android.content.ContextWrapper} instance before
@@ -52,7 +63,7 @@ public class SandboxedActivity extends Activity {
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Override
     protected void attachBaseContext(Context newBase) {
-        SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
+        SdkSandboxActivityRegistry registry = mInjector.getSdkSandboxActivityRegistry();
         final SandboxedSdkContext sdkContext = registry.getSdkContext(this.getIntent());
         if (sdkContext == null) {
             Log.w(TAG, "Failed to get SDK Context for the passed intent");
@@ -82,7 +93,9 @@ public class SandboxedActivity extends Activity {
      */
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     public void notifySdkOnActivityCreation() {
-        SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
+        // TODO(b/326974007): log SandboxActivity creation latency here instead of
+        // SdkSandboxActivityRegistry.
+        SdkSandboxActivityRegistry registry = mInjector.getSdkSandboxActivityRegistry();
         try {
             registry.notifyOnActivityCreation(this.getIntent(), this);
         } catch (Exception e) {
@@ -95,5 +108,11 @@ public class SandboxedActivity extends Activity {
     @NonNull
     String getSandboxedActivityHandlerKey() {
         return EXTRA_SANDBOXED_ACTIVITY_HANDLER;
+    }
+
+    static class Injector {
+        SdkSandboxActivityRegistry getSdkSandboxActivityRegistry() {
+            return SdkSandboxActivityRegistry.getInstance();
+        }
     }
 }

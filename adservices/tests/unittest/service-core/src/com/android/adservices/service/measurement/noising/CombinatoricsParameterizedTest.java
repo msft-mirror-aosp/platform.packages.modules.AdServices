@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -83,13 +84,14 @@ public class CombinatoricsParameterizedTest {
 
     private static void getSingleRandomSelectReportSet_checkNoDuplication_success(
             int numBucketIncrements, int[] perTypeNumWindows, int[] perTypeCap) {
-        Map<List<Integer>, Long> dp = new HashMap<>();
+        Map<List<Integer>, BigInteger> dp = new HashMap<>();
         ArrayList<List<Combinatorics.AtomReportState>> allReportSets =
                 new ArrayList<>();
-        long numberStates =
+        BigInteger numberStates =
                 Combinatorics.getNumStatesFlexApi(
                         numBucketIncrements, perTypeNumWindows, perTypeCap);
-        for (long i = 0; i < numberStates; i++) {
+        for (BigInteger i = BigInteger.ZERO; i.compareTo(numberStates) < 0;
+                i = i.add(BigInteger.ONE)) {
             List<Combinatorics.AtomReportState> ithSet =
                     Combinatorics.getReportSetBasedOnRank(
                             numBucketIncrements, perTypeNumWindows, perTypeCap, i, dp);
@@ -103,11 +105,12 @@ public class CombinatoricsParameterizedTest {
 
     private static void getSingleRandomSelectReportSet_checkReportSetsMeetRequirement_success(
             int numBucketIncrements, int[] perTypeNumWindows, int[] perTypeCap) {
-        Map<List<Integer>, Long> dp = new HashMap<>();
-        long numberStates =
+        Map<List<Integer>, BigInteger> dp = new HashMap<>();
+        BigInteger numberStates =
                 Combinatorics.getNumStatesFlexApi(
                         numBucketIncrements, perTypeNumWindows, perTypeCap);
-        for (long i = 0; i < numberStates; i++) {
+        for (BigInteger i = BigInteger.ZERO; i.compareTo(numberStates) < 0;
+                i = i.add(BigInteger.ONE)) {
             List<Combinatorics.AtomReportState> ithSet =
                     Combinatorics.getReportSetBasedOnRank(
                             numBucketIncrements, perTypeNumWindows, perTypeCap, i, dp);

@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.access;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -34,14 +32,7 @@ public class KillSwitchAccessResolver implements IAccessResolver {
 
     @Override
     public AccessInfo getAccessInfo(@NonNull Context context) {
-        return new AccessInfo(!mEnabled, FAILURE_REASON_UNSET);
-    }
-
-    @NonNull
-    @Override
-    @AdServicesStatusUtils.StatusCode
-    public int getErrorStatusCode() {
-        return AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
+        return new AccessInfo(!mEnabled, AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED);
     }
 
     @NonNull

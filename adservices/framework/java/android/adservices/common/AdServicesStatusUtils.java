@@ -170,39 +170,61 @@ public final class AdServicesStatusUtils {
      */
     public static final int STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET = 18;
 
-    public static final int FAILURE_REASON_UNSET = 0;
-
-    // Failure Reason - Package Allowlist
-    public static final int FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST = 1;
-
-    // Failure Reason - Package Blocklist
-    public static final int FAILURE_REASON_PACKAGE_BLOCKLISTED = 2;
-
-    // Failure Reason - Enrollment
-    public static final int FAILURE_REASON_ENROLLMENT_BLOCKLISTED = 3;
-    public static final int FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND = 4;
-    public static final int FAILURE_REASON_ENROLLMENT_INVALID_ID = 5;
-
-    // Failure Reason - Dev Options
-    public static final int FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST = 6;
-
-    // Failure Reason - Foreground
-    public static final int FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND = 7;
-    public static final int FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION = 8;
-
-    // Failure Reason - App Manifest AdServices Config
-    public static final int FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION = 9;
-
-    // Failure Reason - Calling Package
-    public static final int FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND = 10;
-    public static final int FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID = 11;
-
     /**
      * Result code for Encryption related failures.
      *
      * <p>This error may be considered similar to {@link IllegalArgumentException}.
      */
     public static final int STATUS_ENCRYPTION_FAILURE = 19;
+
+    /**
+     * The caller is not authorized to make this call because the package is not in the allowlist.
+     *
+     * <p>This error may be considered similar to {@link SecurityException}.
+     */
+    public static final int STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST = 20;
+
+    /**
+     * The caller is not authorized to make this call because the package is not in the allowlist.
+     *
+     * <p>This error may be considered similar to {@link SecurityException}.
+     */
+    public static final int STATUS_CALLER_NOT_ALLOWED_PACKAGE_BLOCKLISTED = 21;
+
+    /**
+     * The caller is not authorized to make this call because enrollment data can't be found.
+     *
+     * <p>This error may be considered similar to {@link SecurityException}.
+     */
+    public static final int STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND = 22;
+
+    /**
+     * The caller is not authorized to make this call because enrollment ID is invalid.
+     *
+     * <p>This error may be considered similar to {@link SecurityException}.
+     */
+    public static final int STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID = 23;
+
+    /**
+     * The caller is not authorized to make this call because enrollment ID is in the blocklist.
+     *
+     * <p>This error may be considered similar to {@link SecurityException}.
+     */
+    public static final int STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED = 24;
+
+    /**
+     * The caller is not authorized to make this call because permission was not requested in the
+     * manifest.
+     *
+     * <p>This error may be considered similar to {@link SecurityException}.
+     */
+    public static final int STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION = 25;
+
+    /**
+     * The failure reason has not been set. Keep unset failure reason the lowest value of the
+     * failure reasons.
+     */
+    public static final int FAILURE_REASON_UNSET = 0;
 
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
@@ -281,6 +303,18 @@ public final class AdServicesStatusUtils {
                         SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
             case STATUS_CALLER_NOT_ALLOWED:
                 return new SecurityException(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+            case STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST:
+                return new SecurityException(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+            case STATUS_CALLER_NOT_ALLOWED_PACKAGE_BLOCKLISTED:
+                return new SecurityException(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+            case STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND:
+                return new SecurityException(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+            case STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID:
+                return new SecurityException(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+            case STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED:
+                return new SecurityException(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+            case STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION:
+                return new SecurityException(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
             case STATUS_BACKGROUND_CALLER:
                 return new IllegalStateException(ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
             case STATUS_UNAUTHORIZED:
@@ -300,6 +334,7 @@ public final class AdServicesStatusUtils {
     }
 
     /** Converts the {@link AdServicesResponse} to an exception to be used in the callback. */
+    // TODO(b/328601595): Add unit test for AdServicesStatusUtils.asException
     @NonNull
     public static Exception asException(@NonNull AdServicesResponse adServicesResponse) {
         return asException(adServicesResponse.getStatusCode());
@@ -332,7 +367,13 @@ public final class AdServicesStatusUtils {
                 STATUS_INVALID_OBJECT,
                 STATUS_SERVER_RATE_LIMIT_REACHED,
                 STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET,
-                STATUS_ENCRYPTION_FAILURE
+                STATUS_ENCRYPTION_FAILURE,
+                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
+                STATUS_CALLER_NOT_ALLOWED_PACKAGE_BLOCKLISTED,
+                STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND,
+                STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID,
+                STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED,
+                STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}
@@ -344,23 +385,9 @@ public final class AdServicesStatusUtils {
      */
     @IntDef(
             prefix = {"FAILURE_REASON_"},
-            value = {
-                FAILURE_REASON_UNSET,
-                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST,
-                FAILURE_REASON_PACKAGE_BLOCKLISTED,
-                FAILURE_REASON_ENROLLMENT_BLOCKLISTED,
-                FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND,
-                FAILURE_REASON_ENROLLMENT_INVALID_ID,
-                FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
-                FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND,
-                FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION,
-                FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
-                FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND,
-                FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID
-            })
+            value = {FAILURE_REASON_UNSET})
     @Retention(RetentionPolicy.SOURCE)
     public @interface FailureReason {}
-
 
     private AdServicesStatusUtils() {
         throw new UnsupportedOperationException();

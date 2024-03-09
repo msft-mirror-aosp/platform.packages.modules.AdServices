@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -27,7 +29,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -150,9 +151,7 @@ public class ForegroundEnforcementAccessResolverTest {
 
         // Validation
         assertFalse(result.isAllowedAccess());
-        assertEquals(
-                AdServicesStatusUtils.FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND,
-                result.getDeniedAccessReason());
+        assertEquals(STATUS_BACKGROUND_CALLER, result.getResponseCode());
         verify(mAppImportanceFilter, times(1))
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
     }
@@ -173,9 +172,7 @@ public class ForegroundEnforcementAccessResolverTest {
 
         // Validation
         assertFalse(result.isAllowedAccess());
-        assertEquals(
-                AdServicesStatusUtils.FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION,
-                result.getDeniedAccessReason());
+        assertEquals(STATUS_BACKGROUND_CALLER, result.getResponseCode());
         verify(mAppImportanceFilter, times(1))
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
     }
@@ -186,13 +183,5 @@ public class ForegroundEnforcementAccessResolverTest {
                 ERROR_MESSAGE,
                 new ForegroundEnforcementAccessResolver(1, 1, mAppImportanceFilter, () -> true)
                         .getErrorMessage());
-    }
-
-    @Test
-    public void testGetErrorStatusCode() {
-        assertEquals(
-                AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
-                new ForegroundEnforcementAccessResolver(1, 1, mAppImportanceFilter, () -> true)
-                        .getErrorStatusCode());
     }
 }

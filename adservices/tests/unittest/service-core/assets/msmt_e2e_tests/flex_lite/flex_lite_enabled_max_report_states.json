@@ -100,11 +100,11 @@
   "output": {
     "event_level_results": [
       {
-        "report_time": "800008600000",
+        "report_time": "800005000000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "800008600",
+          "scheduled_report_time": "800005000",
           "source_event_id": "1",
           "trigger_data": "1",
           "source_type": "navigation",
@@ -112,11 +112,11 @@
         }
       },
       {
-        "report_time": "800011600000",
+        "report_time": "800008000000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "800011600",
+          "scheduled_report_time": "800008000",
           "source_event_id": "1",
           "trigger_data": "2",
           "source_type": "navigation",
@@ -124,11 +124,11 @@
         }
       },
       {
-        "report_time": "800014600000",
+        "report_time": "800011000000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "800014600",
+          "scheduled_report_time": "800011000",
           "source_event_id": "1",
           "trigger_data": "3",
           "source_type": "navigation",

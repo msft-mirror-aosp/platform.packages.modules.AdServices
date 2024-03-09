@@ -17,7 +17,6 @@
 package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
-import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 
@@ -209,8 +208,8 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Flags.MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
         when(mFlags.getMeasurementMaxAggregateAttributionPerRateLimitWindow())
                 .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
-        when(mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution())
-                .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION);
+        when(mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution())
+                .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION);
         when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(true);
         when(mFlags.getMeasurementMaxAttributionsPerInvocation())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION);
@@ -219,8 +218,6 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementMaxAggregateReportsPerDestination())
                 .thenReturn(MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION);
         when(mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime()).thenReturn(0f);
-        when(mFlags.getMeasurementMinEventReportDelayMillis())
-                .thenReturn(Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS);
         when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
         when(mFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
@@ -5229,10 +5226,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]"
                                         + "}]")
-                        .setTriggerTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(1)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setTriggerTime(baseTime + TimeUnit.DAYS.toMillis(1))
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .setAdIdPermission(true)
@@ -5248,10 +5242,7 @@ public class AttributionJobHandlerTest {
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("android-app://com.ignored")))
-                        .setReportTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(3))
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRegistrationOrigin(WebUtil.validUri("https://adtech2.test"))
@@ -5281,14 +5272,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
-                        .setEventReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(2)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
-                        .setAggregatableReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(2)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setEventReportWindow(baseTime + TimeUnit.DAYS.toMillis(2))
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(2))
                         .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
                         .setEventAttributionStatus(existingAttributes.toString())
@@ -5362,7 +5347,7 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 EventReport.DebugReportStatus.PENDING,
                 insertedEventReports.get(2).getDebugReportStatus());
-        long reportTime = TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+        long reportTime = TimeUnit.DAYS.toMillis(2);
         assertEquals(reportTime, insertedEventReports.get(0).getReportTime() - baseTime);
         assertEquals(reportTime, insertedEventReports.get(1).getReportTime() - baseTime);
         assertEquals(reportTime, insertedEventReports.get(2).getReportTime() - baseTime);
@@ -5421,10 +5406,7 @@ public class AttributionJobHandlerTest {
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
-                        .setReportTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(2)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(2))
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRegistrationOrigin(WebUtil.validUri("https://adtech2.test"))
@@ -5454,14 +5436,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]"
                                         + "}")
                         .setEventTime(baseTime)
-                        .setEventReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
-                        .setAggregatableReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setEventReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
                         .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
                         .setEventAttributionStatus(existingAttributes.toString())
@@ -5547,7 +5523,7 @@ public class AttributionJobHandlerTest {
                 EventReport.DebugReportStatus.NONE,
                 insertedEventReports.get(2).getDebugReportStatus());
         assertEquals(2, deletedReportsCaptor.getValue().size());
-        long reportTime = TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+        long reportTime = TimeUnit.DAYS.toMillis(2);
         assertEquals(reportTime, insertedEventReports.get(0).getReportTime() - baseTime);
         assertEquals(reportTime, insertedEventReports.get(1).getReportTime() - baseTime);
         assertEquals(reportTime, insertedEventReports.get(2).getReportTime() - baseTime);
@@ -5591,10 +5567,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]"
                                         + "}]")
-                        .setTriggerTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(1)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setTriggerTime(baseTime + TimeUnit.DAYS.toMillis(1))
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .setAdIdPermission(true)
@@ -5610,10 +5583,7 @@ public class AttributionJobHandlerTest {
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
-                        .setReportTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(2)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(2))
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -5644,14 +5614,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setEventTime(baseTime)
-                        .setEventReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
-                        .setAggregatableReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setEventReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
                         .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
                         .setEventAttributionStatus(existingAttributes.toString())
@@ -5732,7 +5696,7 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 EventReport.DebugReportStatus.PENDING,
                 insertedEventReports.get(2).getDebugReportStatus());
-        long reportTime = TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+        long reportTime = TimeUnit.DAYS.toMillis(2);
         assertEquals(reportTime, insertedEventReports.get(0).getReportTime() - baseTime);
         assertEquals(reportTime, insertedEventReports.get(1).getReportTime() - baseTime);
         assertEquals(reportTime, insertedEventReports.get(2).getReportTime() - baseTime);
@@ -5792,10 +5756,7 @@ public class AttributionJobHandlerTest {
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
-                        .setReportTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(2)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(2))
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -5827,10 +5788,7 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .setEventTime(baseTime)
                         .setEventReportWindow(null)
-                        .setAggregatableReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
                         .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
                         .setEventAttributionStatus(existingAttributes.toString())
@@ -5934,10 +5892,7 @@ public class AttributionJobHandlerTest {
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
-                        .setReportTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(2)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(2))
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -5969,10 +5924,7 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .setEventTime(baseTime)
                         .setEventReportWindow(null)
-                        .setAggregatableReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
                         .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
                         .setEventAttributionStatus(existingAttributes.toString())
@@ -6057,10 +6009,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(1)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setTriggerTime(baseTime + TimeUnit.DAYS.toMillis(1))
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -6075,10 +6024,7 @@ public class AttributionJobHandlerTest {
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
-                        .setReportTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(2)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(2))
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -6097,10 +6043,7 @@ public class AttributionJobHandlerTest {
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
-                        .setReportTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(2)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(2))
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -6137,14 +6080,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setEventTime(baseTime)
-                        .setEventReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
-                        .setAggregatableReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setEventReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
                         .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
                         .setEventAttributionStatus(existingAttributes.toString())
@@ -6200,7 +6137,7 @@ public class AttributionJobHandlerTest {
         assertEquals(secondBucket, insertedEventReports.get(1).getTriggerSummaryBucket());
         assertEquals(new UnsignedLong(1L), insertedEventReports.get(0).getTriggerData());
         assertEquals(new UnsignedLong(1L), insertedEventReports.get(1).getTriggerData());
-        long reportTime = TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+        long reportTime = TimeUnit.DAYS.toMillis(2);
         assertEquals(reportTime, insertedEventReports.get(0).getReportTime() - baseTime);
         assertEquals(reportTime, insertedEventReports.get(1).getReportTime() - baseTime);
 
@@ -6236,10 +6173,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(1)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setTriggerTime(baseTime + TimeUnit.DAYS.toMillis(1))
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -6251,10 +6185,7 @@ public class AttributionJobHandlerTest {
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
-                        .setReportTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(2)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(2))
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -6272,10 +6203,7 @@ public class AttributionJobHandlerTest {
                         .setSourceEventId(new UnsignedLong(22L))
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
-                        .setReportTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(2)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(2))
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -6310,14 +6238,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setEventTime(baseTime)
-                        .setEventReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
-                        .setAggregatableReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setEventReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
                         .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
                         .setEventAttributionStatus(existingAttributes.toString())
@@ -6393,10 +6315,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(1)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setTriggerTime(baseTime + TimeUnit.DAYS.toMillis(1))
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -6416,14 +6335,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setEventTime(baseTime)
-                        .setEventReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
-                        .setAggregatableReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setEventReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
                         .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
                         .setEventAttributionStatus(existingAttributes.toString())
@@ -6497,10 +6410,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(1)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setTriggerTime(baseTime + TimeUnit.DAYS.toMillis(1))
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -6520,14 +6430,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setEventTime(baseTime)
-                        .setEventReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
-                        .setAggregatableReportWindow(
-                                baseTime
-                                        + TimeUnit.DAYS.toMillis(3)
-                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                        .setEventReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(3))
                         .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
                         .setEventAttributionStatus(existingAttributes.toString())

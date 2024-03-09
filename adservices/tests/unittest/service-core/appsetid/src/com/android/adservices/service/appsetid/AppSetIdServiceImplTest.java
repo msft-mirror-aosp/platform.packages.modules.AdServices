@@ -16,11 +16,8 @@
 
 package com.android.adservices.service.appsetid;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
@@ -142,9 +139,9 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
         invokeGetAppSetIdAndVerifyError(
                 mContext,
-                STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
+                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
+                /* checkLoggingStatus */ true,
+                FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -247,10 +244,10 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
 
         invokeGetAppSetIdAndVerifyError(
                 mContext,
-                STATUS_CALLER_NOT_ALLOWED,
-                mRequest, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
+                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
+                mRequest,
+                /* checkLoggingStatus */ true,
+                FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -271,7 +268,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                 STATUS_UNAUTHORIZED,
                 mRequest, /* checkLoggingStatus */
                 true,
-                FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND);
+                FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -291,7 +288,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                 STATUS_UNAUTHORIZED,
                 mRequest, /* checkLoggingStatus */
                 true,
-                FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID);
+                FAILURE_REASON_UNSET);
     }
 
     private void invokeGetAppSetIdAndVerifyError(

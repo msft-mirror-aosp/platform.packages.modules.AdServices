@@ -15,7 +15,6 @@
  */
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
 import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
 import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams;
@@ -286,8 +285,7 @@ public final class EventReportTest {
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(),
                 report.getAttributionDestinations().get(0));
-        assertEquals(source.getEventReportWindow() + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                report.getReportTime());
+        assertEquals(source.getEventReportWindow().longValue(), report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
@@ -339,7 +337,7 @@ public final class EventReportTest {
         assertEquals(
                 trigger.getAttributionDestination(), report.getAttributionDestinations().get(0));
         assertEquals(
-                baseTime + TimeUnit.HOURS.toMillis(1) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                baseTime + TimeUnit.HOURS.toMillis(1),
                 report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         // VTC, 3-1-3 config
@@ -384,8 +382,7 @@ public final class EventReportTest {
         assertEquals(APP_DESTINATION, report.getAttributionDestinations().get(0));
         assertEquals(
                 source.getEventTime()
-                        + NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                        + NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0],
                 report.getReportTime());
         assertEquals(Source.SourceType.NAVIGATION, report.getSourceType());
         assertEquals(
@@ -426,8 +423,7 @@ public final class EventReportTest {
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(),
                 report.getAttributionDestinations().get(0));
-        assertEquals(source.getEventReportWindow() + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                report.getReportTime());
+        assertEquals(source.getEventReportWindow().longValue(), report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
@@ -463,8 +459,7 @@ public final class EventReportTest {
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(),
                 report.getAttributionDestinations().get(0));
-        assertEquals(source.getEventReportWindow() + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                report.getReportTime());
+        assertEquals(source.getEventReportWindow().longValue(), report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(
                 INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
@@ -503,8 +498,7 @@ public final class EventReportTest {
         assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(),
                 report.getAttributionDestinations().get(0));
-        assertEquals(source.getEventReportWindow() + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                report.getReportTime());
+        assertEquals(source.getEventReportWindow().longValue(), report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
@@ -542,8 +536,7 @@ public final class EventReportTest {
         assertEquals(APP_DESTINATION, report.getAttributionDestinations().get(0));
         assertEquals(
                 source.getEventTime()
-                        + NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                        + NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0],
                 report.getReportTime());
         assertEquals(Source.SourceType.NAVIGATION, report.getSourceType());
         assertEquals(
@@ -627,8 +620,7 @@ public final class EventReportTest {
         // One hour after install attributed navigation type window
         assertEquals(
                 source.getEventTime()
-                        + INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                        + INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0],
                 report.getReportTime());
         assertEquals(Source.SourceType.NAVIGATION, report.getSourceType());
         assertEquals(
@@ -673,8 +665,7 @@ public final class EventReportTest {
         // One hour after regular navigation type window (without install attribution consideration)
         assertEquals(
                 source.getEventTime()
-                        + NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                        + NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0],
                 report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(
@@ -735,8 +726,7 @@ public final class EventReportTest {
                 source.getAppDestinations().get(0), report.getAttributionDestinations().get(0));
         assertEquals(
                 source.getWebDestinations().get(0), report.getAttributionDestinations().get(1));
-        assertEquals(source.getEventReportWindow() + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                report.getReportTime());
+        assertEquals(source.getEventReportWindow().longValue(), report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());

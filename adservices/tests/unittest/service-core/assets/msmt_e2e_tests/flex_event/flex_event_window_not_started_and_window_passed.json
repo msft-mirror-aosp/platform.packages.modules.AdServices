@@ -117,11 +117,11 @@
   "output": {
     "event_level_results": [
       {
-        "report_time": "349200000",
+        "report_time": "345600000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "349200",
+          "scheduled_report_time": "345600",
           "source_event_id": "111",
           "trigger_data": "1",
           "source_type": "navigation",

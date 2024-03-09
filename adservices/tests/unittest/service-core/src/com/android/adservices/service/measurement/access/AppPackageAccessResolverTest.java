@@ -198,7 +198,7 @@ public class AppPackageAccessResolverTest {
     }
 
     @Test
-    public void getFailureReason_notInAllowList() {
+    public void getResponseCode_notInAllowList() {
         // Execution
         AppPackageAccessResolver appPackageAccessResolver =
                 new AppPackageAccessResolver(
@@ -207,12 +207,12 @@ public class AppPackageAccessResolverTest {
 
         assertFalse(accessInfo.isAllowedAccess());
         assertEquals(
-                AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST,
-                accessInfo.getDeniedAccessReason());
+                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
+                accessInfo.getResponseCode());
     }
 
     @Test
-    public void getFailureReason_isBlocklisted() {
+    public void getResponseCode_isBlocklisted() {
         // Execution
         AppPackageAccessResolver appPackageAccessResolver =
                 new AppPackageAccessResolver(
@@ -221,7 +221,7 @@ public class AppPackageAccessResolverTest {
 
         assertFalse(accessInfo.isAllowedAccess());
         assertEquals(
-                AdServicesStatusUtils.FAILURE_REASON_PACKAGE_BLOCKLISTED,
-                accessInfo.getDeniedAccessReason());
+                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_BLOCKLISTED,
+                accessInfo.getResponseCode());
     }
 }

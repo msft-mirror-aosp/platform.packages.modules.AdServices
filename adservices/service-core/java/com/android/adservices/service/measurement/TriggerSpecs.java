@@ -30,6 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -461,7 +462,7 @@ public class TriggerSpecs {
     private class PrivacyComputationParams {
         private final int[] mPerTypeNumWindowList;
         private final int[] mPerTypeCapList;
-        private final long mNumStates;
+        private final BigInteger mNumStates;
         private final double mFlipProbability;
         private final double mInformationGain;
 
@@ -491,7 +492,7 @@ public class TriggerSpecs {
                     json.getDouble(FlexEventReportJsonKeys.FLIP_PROBABILITY);
             mPerTypeNumWindowList = null;
             mPerTypeCapList = null;
-            mNumStates = -1;
+            mNumStates = BigInteger.valueOf(-1L);
             mInformationGain = -1.0;
         }
 

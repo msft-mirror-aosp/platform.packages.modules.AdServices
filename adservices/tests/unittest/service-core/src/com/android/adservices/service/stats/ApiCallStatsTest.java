@@ -17,7 +17,7 @@
 package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_ENROLLMENT_BLOCKLISTED;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 
 import static com.android.adservices.service.stats.ApiCallStats.failureResult;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
@@ -46,10 +46,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__TARGETING)
                         .setApiName(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS)
                         .setLatencyMillisecond(LATENCY_MS)
-                        .setResult(
-                                failureResult(
-                                        STATUS_INVALID_ARGUMENT,
-                                        FAILURE_REASON_ENROLLMENT_BLOCKLISTED))
+                        .setResult(failureResult(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET))
                         .build();
 
         expect.withMessage("%s.getCode()", stats)
@@ -76,21 +73,21 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                 .isEqualTo(STATUS_INVALID_ARGUMENT);
         expect.withMessage("%s.getFailureReason()", stats)
                 .that(stats.getFailureReason())
-                .isEqualTo(FAILURE_REASON_ENROLLMENT_BLOCKLISTED);
+                .isEqualTo(FAILURE_REASON_UNSET);
     }
 
     @Test
     public void testBuilder_resultThatTakesIntegers() {
         ApiCallStats stats =
                 newCanonicalBuilder()
-                        .setResult(STATUS_INVALID_ARGUMENT, FAILURE_REASON_ENROLLMENT_BLOCKLISTED)
+                        .setResult(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)
                         .build();
         expect.withMessage("%s.getResultCode()", stats)
                 .that(stats.getResultCode())
                 .isEqualTo(STATUS_INVALID_ARGUMENT);
         expect.withMessage("%s.getFailureReason()", stats)
                 .that(stats.getFailureReason())
-                .isEqualTo(FAILURE_REASON_ENROLLMENT_BLOCKLISTED);
+                .isEqualTo(FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -134,10 +131,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__TARGETING)
                         .setApiName(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS)
                         .setLatencyMillisecond(LATENCY_MS)
-                        .setResult(
-                                failureResult(
-                                        STATUS_INVALID_ARGUMENT,
-                                        FAILURE_REASON_ENROLLMENT_BLOCKLISTED))
+                        .setResult(failureResult(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET))
                         .build();
 
         String toString = stats.toString();
@@ -150,7 +144,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
         expect.that(toString).contains("SdkPackageName='" + mSdkPackageName + "'");
         expect.that(toString).contains("LatencyMillisecond=" + LATENCY_MS);
         expect.that(toString).contains("ResultCode=" + STATUS_INVALID_ARGUMENT);
-        expect.that(toString).contains("FailureReason=" + FAILURE_REASON_ENROLLMENT_BLOCKLISTED);
+        expect.that(toString).contains("FailureReason=" + FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -162,7 +156,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
         String baseSdkPackageName = mSdkPackageName;
         int baseLatencyMs = LATENCY_MS;
         int resultCode = STATUS_INVALID_ARGUMENT;
-        int failureReason = FAILURE_REASON_ENROLLMENT_BLOCKLISTED;
+        int failureReason = FAILURE_REASON_UNSET;
 
         ApiCallStats equals1 =
                 new ApiCallStats.Builder()

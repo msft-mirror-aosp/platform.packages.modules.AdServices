@@ -76,14 +76,11 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 logger,
                 NAMESPACE_ADSERVICES,
                 SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX,
+                PROPERTIES_PREFIX_MATCHER,
                 deviceConfigInterfaceFactory,
                 systemPropertiesInterface);
     }
 
-    @Override
-    protected Matcher getSystemPropertiesMatcher() {
-        return PROPERTIES_PREFIX_MATCHER;
-    }
     // Helper methods to set more commonly used flags such as kill switches.
     // Less common flags can be set directly using setFlags methods.
 

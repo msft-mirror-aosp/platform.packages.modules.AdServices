@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_ENROLLMENT_BLOCKLISTED;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -33,7 +32,7 @@ import org.junit.Test;
 public final class ApiCallStatsResultTest extends AdServicesUnitTestCase {
 
     private static final int CODE = STATUS_BACKGROUND_CALLER + 42;
-    private static final int FAILURE = FAILURE_REASON_ENROLLMENT_BLOCKLISTED + 108;
+    private static final int FAILURE = FAILURE_REASON_UNSET + 108;
 
     @Test
     public void testForFailure() {

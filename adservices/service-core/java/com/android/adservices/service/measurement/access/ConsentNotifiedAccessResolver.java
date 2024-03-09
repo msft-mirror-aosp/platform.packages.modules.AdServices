@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.access;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-
 import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 import android.os.Build;
@@ -60,24 +58,23 @@ public class ConsentNotifiedAccessResolver implements IAccessResolver {
     @Override
     public AccessInfo getAccessInfo(@NonNull Context context) {
         if (mFlags.getConsentNotifiedDebugMode()) {
-            return new AccessInfo(true, FAILURE_REASON_UNSET);
+            return new AccessInfo(true, AdServicesStatusUtils.STATUS_SUCCESS);
         }
 
         // If the user has already consented, don't check whether the notification was shown
         if (mUserConsentAccessResolver.getAccessInfo(context).isAllowedAccess()) {
-            return new AccessInfo(true, FAILURE_REASON_UNSET);
+            return new AccessInfo(true, AdServicesStatusUtils.STATUS_SUCCESS);
         }
 
         boolean wasDisplayed =
                 mConsentManager.wasNotificationDisplayed()
                         || mConsentManager.wasGaUxNotificationDisplayed()
                         || mConsentManager.wasU18NotificationDisplayed();
-        return new AccessInfo(wasDisplayed, FAILURE_REASON_UNSET);
-    }
-
-    @Override
-    public int getErrorStatusCode() {
-        return AdServicesStatusUtils.STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET;
+        int statusCode =
+                wasDisplayed
+                        ? AdServicesStatusUtils.STATUS_SUCCESS
+                        : AdServicesStatusUtils.STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET;
+        return new AccessInfo(wasDisplayed, statusCode);
     }
 
     @NonNull

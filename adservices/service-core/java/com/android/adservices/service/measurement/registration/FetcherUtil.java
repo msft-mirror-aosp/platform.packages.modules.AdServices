@@ -180,25 +180,18 @@ public class FetcherUtil {
             return false;
         }
         int length = keyPiece.getBytes().length;
-        if (flags.getMeasurementEnableAraParsingAlignmentV1()) {
-            if (!(keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))) {
-                return false;
-            }
-            // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
-            // at most 32 digits.
-            if (length < 3 || length > 34) {
-                return false;
-            }
-            if (!HEX_PATTERN.matcher(keyPiece.substring(2)).matches()) {
-                return false;
-            }
-            return true;
-        } else {
-            // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
-            // at most 32 digits.
-            return (keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))
-                    && 2 < length && length < 35;
+        if (!(keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))) {
+            return false;
         }
+        // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
+        // at most 32 digits.
+        if (length < 3 || length > 34) {
+            return false;
+        }
+        if (!HEX_PATTERN.matcher(keyPiece.substring(2)).matches()) {
+            return false;
+        }
+        return true;
     }
 
     /** Validate attribution filters JSONArray. */
