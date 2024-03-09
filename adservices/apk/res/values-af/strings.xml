@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Ons stel ’n nuwe advertensieprivaatheidkenmerk genaamd advertensiemeting bekend. Android deel baie beperkte inligting tussen apps, soos wanneer ’n advertensie aan jou gewys is, om apps te help om die werkverrigting van advertensies te meet."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Jy kan veranderinge in advertensieprivaatheidinstellings maak."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Apps wat jy gebruik, kan Android vir inligting vra om hulle te help om die werkverrigting van hul advertensies te meet. Android laat apps slegs toe om beperkte soorte data in te samel."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Nuwe advertensieprivaatheidkenmerke"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Kry groter keuse oor die advertensies wat jy sien terwyl dit help om jou identiteit te beskerm"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Opdaterings van jou advertensieprivaatheidkenmerke"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Kry groter keuse oor die advertensies wat jy sien terwyl dit help om jou identiteit te beskerm"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android brei advertensieprivaatheidkenmerke uit om te beperk watter apps meer oor jou kan uitvind wanneer hulle vir jou gepersonaliseerde advertensies wys."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Apps en hul reklamevennote kan jou aktiwiteit in ander apps op hierdie toestel gebruik om advertensies te personaliseer terwyl hulle steeds help om jou identiteit privaat en veilig te hou."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Meer oor appvoorgestelde advertensies"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Beperkte soorte data word tussen apps gedeel om die prestasie van hul advertensies te verstaan, soos hoe laat in die dag ’n advertensie vir jou gewys is."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Meer oor advertensiemeting"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android neem kennis van onderwerpe waarin jy belangstel gegrond op apps wat jy onlangs gebruik het. Apps en hul reklamevennote kan ook jou aktiwiteit in ander apps op hierdie toestel gebruik om advertensies te personaliseer terwyl hulle steeds help om jou identiteit privaat en veilig te hou."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Apps wat jy gebruik, kan ook bepaal waarvan jy hou gegrond op jou appaktiwiteit. Byvoorbeeld, as jy gereeld kookapps gebruik, kan jy advertensies sien vir kruideniersware-afleweringdienste of soortgelyke inhoud in ander apps.\n\nApps kan hierdie inligting veilig berg sodat dit slegs deur hul advertensievennote gebruik kan word om advertensies in ander apps te personaliseer."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"’n App wat jy gebruik, kan later vir hierdie inligting vra – hetsy jou advertensie-onderwerpe óf advertensies wat voorgestel is deur die apps wat jy gebruik het."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Apps wat jy gebruik, kan Android vir inligting vra om hulle te help om die werkverrigting van hul advertensies te meet. Android help om jou privaatheid te beskerm deur die inligting wat apps met mekaar kan deel, te beperk."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Watter data word gebruik?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Apps wat jy gebruik, kan Android vra vir inligting wat hulle help om die prestasie van hul advertensies te meet. Android help om jou privaatheid te beskerm deur die inligting te beperk wat apps met mekaar kan deel."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Hoe word my identiteit beskerm?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android gebruik veelvuldige privaatheidmaatreëls, soos samevoeging en die byvoeging van betekenislose data, om die inligting te beperk wat apps kan met mekaar kan deel, en om te help om jou identiteit te beskerm.\n\nAdvertensiemetingdata word ook gereeld op jou toestel uitgevee."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Jou appaktiwiteit kan gebruik word om advertensies voor te stel."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Hoe gebruik apps hierdie data?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Apps kan hierdie inligting veilig berg sodat dit slegs deur hul reklamevennote gebruik kan word om advertensies in ander apps te personaliseer. Byvoorbeeld, as jy gereeld kookapps gebruik, kan jy advertensies vir kruidenierswareafleweringdienste of soortgelyke inhoud in ander apps sien."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Hoe kan ek hierdie data bestuur?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Jy kan spesifieke apps blokkeer om jou aktiwiteit met reklamevennote te deel. Jy kan appvoorgestelde advertensies enige tyd in jou privaatheidinstellings terugstel of afstel. Android vee hierdie data ook gereeld outomaties uit."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Kry meer inligting oor hoe Android help om jou privaatheid te beskerm"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Apps en hul reklamevennote kan jou aktiwiteit in ander apps op hierdie toestel gebruik om advertensies te personaliseer terwyl hulle steeds inligting oor jou privaat en veilig hou.\n\nByvoorbeeld, as jy gereeld kookapps gebruik, kan jy advertensies vir kruidenierswareafleweringdienste of soortgelyke inhoud in ander apps sien.\n\nAndroid vee jou aktiwiteit gereeld outomaties uit, maar jy kan apps ook blokkeer om hierdie inligting met hul reklamevennote te deel."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"Apps en hul reklamevennote onthou gebruiklik dinge waarin jy belangstel om jou ervaring te personaliseer. Apps kan hierdie inligting veilig berg sodat dit slegs deur hul reklamevennote gebruik kan word om advertensies in ander apps te wys.\n\nJy kan ’n app blokkeer om jou aktiwiteitdata met reklamevennote te deel. Android vee ook gedeelde aktiwiteitdata gereeld outomaties uit, met die gevolg dat ’n app wat jy weer gebruik weer op hierdie lys kan verskyn.\n\nOf ’n advertensie wat jy sien gepersonaliseer is, kan van baie faktore afhang, soos hierdie instelling, die advertensie-onderwerpe-instelling, jou reklame-ID-instellings en of die app wat jy gebruik advertensies gepersonaliseer het.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Kry meer inligting oor appvoorgestelde advertensies"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android gebruik veelvuldige privaatheidmaatreëls, soos samevoeging en die byvoeging van betekenislose data, om die inligting te beperk wat apps met mekaar kan deel, en om te help om jou identiteit te beskerm.\n\nJou blaaier het dalk ’n soortgelyke instelling. As advertensiemeting vir sowel Android as jou blaaier aangeskakel is, sal ’n maatskappy dalk die doeltreffendheid kan meet van ’n advertensie tussen apps wat jy gebruik en werwe wat jy besoek. Jou blaaigeskiedenis word privaat op jou toestel gehou.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Kry meer inligting oor advertensiemeting"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android neem kennis van onderwerpe waarin jy belangstel gegrond op die apps wat jy in die afgelope paar weke gebruik het.\n\n’n App wat jy gebruik, kan Android later vra wat jou onderwerpe is om die advertensies wat jy sien, te personaliseer. Android deel tot 3 onderwerpe terwyl dit jou identiteit en inligting oor jou appgebruik beskerm.\n\nAndroid vee onderwerpe gereeld outomaties uit. ’n Onderwerp sal dalk weer op die lys verskyn soos jy aanhou om apps te gebruik. Of jy kan onderwerpe blokkeer wat jy nie wil hê Android met apps moet deel nie.\n\nOf ’n advertensie wat jy sien gepersonaliseer is, hang van baie faktore af, soos hierdie instelling, die instelling vir appvoorgestelde advertensies, jou reklame-ID-instellings en of die app wat jy gebruik advertensies gepersonaliseer het.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Kry meer inligting oor advertensie-onderwerpe"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Kleurvolle illustrasie van simbole wat onderwerpe waarin jy belangstel verteenwoordig, soos musiek, nuus en sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Kleurvolle illustrasie van ’n slot binne ’n kring"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Klein illustrasie in swart en wit van nege kolletjies wat ’n vierkant vorm"</string>

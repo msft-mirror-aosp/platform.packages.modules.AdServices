@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Reklam ölçümü adı verilen yeni bir reklam gizliliği özelliğini kullanıma sunuyoruz. Android, uygulamaların gösterdikleri reklamların performansını ölçmesine yardımcı olmak için uygulamalar arasında çok sınırlı bilgi (ör. bir reklamın size gösterildiği saat) paylaşır."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Reklam gizlilik ayarlarında değişiklik yapabilirsiniz."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Kullandığınız uygulamalar, gösterdikleri reklamların performansını ölçmelerine yardımcı olmak için Android\'den bilgi isteyebilir. Android, uygulamaların sınırlı veri türlerini toplamasına izin verir."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Yeni reklam gizliliği özellikleri"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Göreceğiniz reklamlarla ilgili daha fazla seçenek elde ederken kimliğinizi koruyun"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Reklam gizliliği özelliklerinizdeki güncellemeler"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Göreceğiniz reklamlarla ilgili daha fazla seçenek elde ederken kimliğinizi koruyun"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android, size kişiselleştirilmiş reklamlar gösteren uygulamaların hakkınızda ne öğrenebileceğini kısıtlayan reklam gizliliği özellikleri sunuyor."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Uygulamalar ve uygulamaların reklamcılık iş ortakları, bu cihazda yüklü diğer uygulamalardaki etkinliğinizi kullanarak reklamları kişiselleştirebilir. Bu sırada, kimliğiniz gizli ve güvende tutulur."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Uygulama tarafından önerilen reklamlar hakkında daha fazla bilgi"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Gösterdikleri reklamların performansını anlamaları için sınırlı türde veri uygulamalar arasında paylaşılır. Örneğin reklamın size gösterildiği saat gibi bilgiler paylaşılır."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Reklam ölçümleri hakkında daha fazla bilgi"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android son kullandığınız uygulamalara bağlı olarak ilgilendiğiniz konuları not eder. Ayrıca, uygulamalar ve uygulamaların reklamcılık iş ortakları, bu cihazda yüklü diğer uygulamalardaki etkinliğinizi kullanarak reklamları kişiselleştirebilir. Bu sırada, kimliğiniz gizli ve güvende tutulur."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"• Kullandığınız uygulamalar ayrıca uygulama etkinliğinize bağlı olarak nelerden hoşlandığınızı belirleyebilir. Örneğin, yemek yapma uygulamalarını sık kullanıyorsanız diğer uygulamalarda market siparişi hizmetleri veya alakalı içeriklerle ilgili reklamlar görebilirsiniz.\n\nUygulamalar bu bilgileri güvenli bir şekilde depoladığından söz konu bilgiler yalnızca reklamcılık iş ortakları tarafından diğer uygulamalardaki reklamları kişiselleştirmek için kullanılabilir."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Daha sonra kullandığınız bir uygulama sizden bu bilgileri (reklam konularınız veya kullandığınız uygulamalar tarafından önerilen reklamlar) isteyebilir."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Kullandığınız uygulamalar, gösterdikleri reklamların performansını ölçmelerine yardımcı olmak için Android\'den bilgi isteyebilir. Android, uygulamaların diğer uygulamalarla paylaşabileceği bilgileri sınırlandırarak gizliliğinizi korur."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Hangi veriler kullanılır?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Kullandığınız uygulamalar, reklamlarının performansını ölçmek için Android\'den bilgi isteyebilir. Android, uygulamaların diğer uygulamalarla paylaşabileceği bilgileri sınırlandırarak gizliliğinizin korunmasına yardımcı olur."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Kimliğim nasıl korunuyor?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android, verilere gürültü yerleştirme ve toplu hale getirme gibi gizlilik önlemlerinden yararlanarak uygulamaların birbiriyle paylaşabileceği bilgileri sınırlandırıp kimliğinizi korur.\n\nReklam ölçümü verileri de düzenli olarak cihazınızdan silinir."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Uygulama etkinliğiniz, reklam önerileri için kullanılabilir."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Uygulamalar bu verileri nasıl kullanıyor?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Uygulamalar bu bilgileri güvenli bir şekilde sakladığından söz konusu bilgiler yalnızca reklamcılık iş ortakları tarafından diğer uygulamalardaki reklamları kişiselleştirmek için kullanılabilir. Örneğin, yemek yapma uygulamalarını sık kullanıyorsanız diğer uygulamalarda market siparişi hizmetleri veya alakalı içeriklerle ilgili reklamlar görebilirsiniz."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Bu verileri nasıl yönetebilirim?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Belirli uygulamaların etkinliğinizi reklamcılık iş ortaklarıyla paylaşmasını engelleyebilirsiniz. Uygulamalar tarafından önerilen reklamları istediğiniz zaman gizlilik ayarlarınızdan sıfırlayabilir veya kapatabilirsiniz. Android de bu verileri düzenli bir şekilde otomatik olarak siler."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Android\'in gizliliğinizi korumaya nasıl yardımcı olduğu hakkında daha fazla bilgi"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Uygulamalar ve uygulamaların reklamcılık iş ortakları, bu cihazda yüklü diğer uygulamalardaki etkinliğinizi kullanarak reklamları kişiselleştirebilir. Bu sırada, sizinle ilgili bilgiler gizli ve güvende tutulur.\n\nÖrneğin, yemek yapma uygulamalarını sık kullanıyorsanız diğer uygulamalarda market siparişi hizmetleri veya alakalı içeriklerle ilgili reklamlar görebilirsiniz.\n\nAndroid, etkinliklerinizi düzenli bir şekilde otomatik olarak siler. Dilerseniz siz de uygulamaların bu bilgileri reklamcılık iş ortaklarıyla paylaşmasını engelleyebilirsiniz."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"Uygulamaların ve reklamcılık iş ortaklarının deneyiminizi kişiselleştirmek amacıyla, ilgilendiğiniz şeyleri hatırlaması yaygın bir durumdur. Uygulamalar bu bilgileri güvenli bir şekilde sakladığından söz konusu bilgiler yalnızca reklamcılık iş ortakları tarafından diğer uygulamalarda reklam göstermek için kullanılabilir.\n\nUygulamaların etkinlik verilerinizi reklamcılık iş ortaklarıyla paylaşmasını engelleyebilirsiniz. Android de paylaşılan etkinlik verilerini düzenli bir şekilde otomatik olarak siler. Dolayısıyla, tekrar kullandığınız bir uygulama bu listede yeniden görünebilir.\n\nSize gösterilen reklamın kişiselleştirilme durumu; bu ayar, reklam konusu ayarı, reklam kimliği ayarlarınız ve kullandığınız uygulamanın reklamları kişiselleştirip kişiselleştirmediği gibi faktörlere bağlı olarak değişebilir.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Uygulama tarafından önerilen reklamlar hakkında daha fazla bilgi"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android, verilere gürültü yerleştirme ve toplu hale getirme gibi gizlilik önlemlerinden yararlanarak uygulamaların birbiriyle paylaşabileceği bilgileri sınırlandırıp kimliğinizi korur.\n\nTarayıcınızda da benzer bir ayar olabilir. Reklam ölçümü hem Android\'de hem de tarayıcınızda etkinse şirketler, reklamların kullandığınız uygulamalar ve ziyaret ettiğiniz siteler arasındaki etkisini ölçebilirler. Cihazınızdaki tarama geçmişiniz gizli kalır.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Reklam ölçümleri hakkında daha fazla bilgi"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android, son haftalarda kullandığınız uygulamalara bağlı olarak ilgilendiğiniz konuları not eder.\n\nDaha sonra, kullandığınız bir uygulama size gösterilen reklamları kişiselleştirmek için Android\'e ilgilendiğiniz konuları sorabilir. Android bu konuları (3\'e kadar) uygulamalarla paylaşır. Bunu yaparken kimliğinizi ve uygulama kullanımınızla ilgili bilgileri gizler.\n\nAndroid, konuları düzenli bir şekilde otomatik olarak siler. Uygulamaları kullanmaya devam ettikçe listede bir konu yeniden görünebilir. Dilerseniz Android\'in uygulamalarla paylaşmasını istemediğiniz konuları engelleyebilirsiniz.\n\nSize gösterilen reklamın kişiselleştirilme durumu; bu ayar, uygulama tarafından önerilen reklam ayarı, reklam kimliği ayarlarınız ve kullandığınız uygulamanın reklamları kişiselleştirip kişiselleştirmediği gibi faktörlere bağlı olarak değişebilir.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Reklam konuları hakkında daha fazla bilgi"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Müzik, haber ve spor gibi ilgi alanlarını temsil eden sembollerin renkli çizimi"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Daire içindeki bir kilidin renkli çizimi"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Kare oluşturan dokuz noktanın küçük siyah beyaz çizimi"</string>

@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Tunazindua kipengele kipya cha faragha ya matangazo kinachojulikana kama upimaji wa matangazo. Android hushiriki data mahususi pekee kati ya programu, kama vile wakati ulipoonyeshwa tangazo, ili kuwezesha programu kupima utendaji wa matangazo."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Unaweza kutekeleza mabadiliko kwenye mipangilio ya faragha ya matangazo."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Programu unazotumia zinaweza kuomba idhini ya kufikia data mahususi kwenye Android ili kuziwezesha kupima utendaji wa matangazo. Android huziwezesha programu kukusanya aina chache tu za data."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Vipengele vipya vya faragha ya matangazo"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Pata uwezo zaidi wa kuchagua matangazo ambayo ungependa kuyaona huku ukisaidia kulinda utambulisho wako"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Masasisho ya vipengele vyako vya faragha ya matangazo"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Pata uwezo zaidi wa kuchagua matangazo ambayo ungependa kuyaona huku ukisaidia kulinda utambulisho wako"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android inapanua vipengele vya faragha ya matangazo ili kudhibiti aina ya taarifa ambazo programu zinaweza kupata kukuhusu zinapokuonyesha matangazo yaliyowekewa mapendeleo."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Programu na washirika wake wa utangazaji wanaweza kutumia shughuli zako kwenye programu nyingine katika kifaa hiki kuweka mapendeleo kwenye matangazo huku wakiendelea kusaidia kuimarisha faragha na usalama wa utambulisho wako."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Maelezo zaidi kuhusu matangazo yanayopendekezwa na programu"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Aina chache za data hutumwa kati ya programu ili kuelewa utendaji wa matangazo yao, kama vile wakati wa siku ulipoonyeshwa tangazo."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Maelezo zaidi kuhusu upimaji wa matangazo"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Mada unazopendelea za madokezo ya Android kulingana na programu ulizotumia hivi majuzi. Pia, programu na washirika wake wa utangazaji wanaweza kutumia shughuli zako kwenye programu nyingine katika kifaa hiki kuwekea matangazo mapendeleo huku wakiendelea kusaidia kuweka utambulisho wako ukiwa wa faragha na salama."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Programu unazotumia zinaweza pia kubainisha unachopenda kulingana na shughuli zako kwenye programu. Kwa mfano, iwapo unatumia programu za upishi mara kwa mara, unaweza kuona matangazo ya huduma za kukuletea bidhaa za matumizi ya mapishi mahali ulipo au maudhui yanayohusiana katika programu nyingine. \n\nProgramu zinaweza kuhifadhi maelezo haya kwa usalama ili yatumike tu na washirika wake wa utangazaji kuwekea matangazo mapendeleo kwenye programu nyingine."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Baadaye, programu unayotumia inaweza kuomba maelezo haya, iwe ni mada za matangazo yako au matangazo yaliyopendekezwa na programu ulizotumia."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Programu unazotumia zinaweza kuiomba Android taarifa ili kuzisaidia kupima utendaji wa matangazo. Android hulinda faragha yako kwa kudhibiti taarifa ambazo programu zinaweza kutumiana."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Ni aina gani ya data inayotumiwa?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Programu unazotumia zinaweza kuiomba Android taarifa zinazozisaidia kupima utendaji wa matangazo yao. Android hulinda faragha yako kwa kudhibiti taarifa ambazo programu zinaweza kutumiana."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Je, utambulisho wangu unalindwaje?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android hutumia hatua nyingi za faragha kama vile ujumlishaji na ubadilishaji wa thamani za data bila mpangilio maalum ili kudhibiti maelezo ambayo programu zinaweza kutumiana na kusaidia kulinda utambulisho wako.\n\nPia, data ya upimaji wa matangazo hufutwa mara kwa mara kwenye kifaa chako."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Shughuli zako kwenye programu zinaweza kutumika kukupendekezea matangazo."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Je, programu hutumiaje data hii?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Programu zinaweza kuhifadhi maelezo haya kwa usalama ili yatumike tu na washirika wake wa utangazaji kuweka mapendeleo katika matangazo kwenye programu nyingine. Kwa mfano, iwapo unatumia programu za upishi mara kwa mara, huenda ukaona matangazo ya huduma za kukuletea mboga na matunda mahali ulipo au maudhui yanayohusiana katika programu nyingine."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Ninawezaje kudhibiti data hii?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Unaweza kuzuia programu mahususi ili zisitume shughuli zako kwa washirika wa utangazaji. Unaweza kuweka upya au kuzima matangazo yanayopendekezwa na programu wakati wowote kwenye mipangilio yako ya faragha. Android pia hufuta kiotomatiki data hii mara kwa mara."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Pata maelezo zaidi kuhusu jinsi Android inavyosaidia kulinda faragha yako"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Programu na washirika wake wa utangazaji wanaweza kutumia shughuli zako kwenye programu nyingine katika kifaa hiki kuweka mapendeleo kwenye matangazo huku wakiendelea kuimarisha faragha na usalama wa taarifa zinazokuhusu.\n\nKwa mfano, iwapo unatumia programu za upishi mara kwa mara, huenda ukaona matangazo ya huduma za kukuletea mboga na matunda mahali ulipo au maudhui yanayohusiana katika programu nyingine.\n\nAndroid hufuta kiotomatiki shughuli zako mara kwa mara, lakini unaweza pia kuzuia programu zisitume taarifa hizi kwa washirika wake wa utangazaji."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"Ni kawaida kwa programu na washirika wake wa utangazaji kukumbuka mambo yanayokuvutia ili kuweka mapendeleo kwenye hali yako ya utumiaji. Programu zinaweza kuhifadhi maelezo haya kwa usalama ili yatumike tu na washirika wake wa utangazaji kuonyesha matangazo kwenye programu nyingine.\n\nUnaweza kuzuia programu isitume data ya shughuli zako kwa washirika wa utangazaji. Pia, Android hufuta kiotomatiki mara kwa mara data ya shughuli inayotumwa, kwa hivyo programu unayotumia tena huenda ikaonekana tena kwenye orodha hii.\n\nHali ya iwapo tangazo unaloona limewekewa mapendeleo inaweza kutegemea vitu vingi kama vile mipangilio hii, mipangilio ya mada za matangazo, mipangilio yako ya kitambulisho cha matangazo na iwapo programu unayotumia huweka mapendeleo kwenye matangazo.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Pata maelezo zaidi kuhusu matangazo yanayopendekezwa na programu"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android hutumia hatua nyingi za faragha kama vile ujumlishaji na ubadilishaji wa thamani za data bila mpangilio maalum ili kudhibiti maelezo ambayo programu zinaweza kutumiana na kusaidia kulinda utambulisho wako.\n\nHuenda kivinjari chako kikawa na mipangilio sawa. Ukiwasha kipengele cha upimaji wa matangazo kwenye Android na katika kivinjari chako, huenda kampuni ikaweza kupima ufanisi wa tangazo kati ya programu unazotumia na tovuti unazotembelea. Historia yako ya kuvinjari huwekwa kuwa ya faragha kwenye kifaa chako.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Pata maelezo zaidi kuhusu upimaji wa matangazo"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android hunukuu mada zinazokuvutia kulingana na programu ulizotumia katika kipindi cha wiki kadhaa zilizopita.\n\nBaadaye, programu unayotumia inaweza kuomba Android maelezo ya mada zinazokuvutia ili kuweka mapendeleo kwenye matangazo unayoyaona. Android hutuma hadi mada 3 huku ikilinda utambulisho wako na maelezo kuhusu matumizi yako ya programu.\n\nAndroid hufuta mada kiotomatiki mara kwa mara. Kadiri unavyoendelea kutumia programu, huenda mada ikaonekana tena kwenye orodha. Au unaweza kuzuia mada ambazo hutaki Android itume kwenye programu nyinginezo.\n\nHali ya iwapo tangazo unaloona limewekewa mapendeleo inaweza kutegemea vitu vingi kama vile mipangilio hii, mipangilio ya matangazo yanayopendekezwa na programu, mipangilio yako ya kitambulisho cha matangazo na iwapo programu unayotumia imeweka mapendeleo kwenye matangazo.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Pata maelezo zaidi kuhusu mada za matangazo"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Mchoro unaovutia wa ishara unaowakilisha mada unazopendelea kama vile muziki, habari na michezo"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Mchoro unaovutia wa kufuli ikiwa ndani ya duara"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Mchoro mdogo wenye rangi nyeusi na nyeupe ulio na nukta tisa unaounda umbo mraba"</string>
