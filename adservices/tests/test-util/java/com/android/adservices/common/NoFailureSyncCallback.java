@@ -17,4 +17,13 @@
 package com.android.adservices.common;
 
 /** Custom {@link SyncCallback} implementation that doesn't expect an exception to be thrown. */
-public class NoFailureSyncCallback<T> extends SyncCallback<T, Void> {}
+public class NoFailureSyncCallback<T> extends SyncCallback<T, Void> {
+
+    /** Default constructor. */
+    public NoFailureSyncCallback() {}
+
+    /** Constructor with a custom timeout to wait for the outcome. */
+    public NoFailureSyncCallback(int timeoutMs) {
+        super(timeoutMs);
+    }
+}

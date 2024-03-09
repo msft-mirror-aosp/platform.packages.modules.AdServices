@@ -35,6 +35,7 @@ import android.content.Context;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -64,6 +65,7 @@ import java.util.concurrent.TimeUnit;
 public class AdSelectionDataE2ETest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+    private static final String TAG = "AdSelectionDataE2ETest";
     private static final String CONTEXTUAL_SIGNALS_ONE_BUYER = "ContextualSignalsOneBuyer.json";
     private static final String CONTEXTUAL_SIGNALS_CONTEXTUAL_WINNER =
             "ContextualSignalsContextualWinner.json";
@@ -139,22 +141,37 @@ public class AdSelectionDataE2ETest {
                         .getAdSelectionData(request)
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        FakeAdExchangeServer.runServerAuction(
-                CONTEXTUAL_SIGNALS_TWO_BUYERS,
-                outcome.getAdSelectionData(),
-                SFE_ADDRESS,
-                SERVER_RESPONSE_LOGGING_ENABLED);
+        try {
+            FakeAdExchangeServer.runServerAuction(
+                    CONTEXTUAL_SIGNALS_TWO_BUYERS,
+                    outcome.getAdSelectionData(),
+                    SFE_ADDRESS,
+                    SERVER_RESPONSE_LOGGING_ENABLED);
+        } catch (Exception e) {
+            Log.w(
+                    TAG,
+                    "Exception encountered during first runServerAuction warmup: "
+                            + e.getMessage()
+                            + ". Continuing execution.");
+        }
 
         // Wait for a couple of seconds before test execution
         Thread.sleep(2000L);
 
         // The second warm up call will bring up both the BFEs
-        FakeAdExchangeServer.runServerAuction(
-                CONTEXTUAL_SIGNALS_TWO_BUYERS,
-                outcome.getAdSelectionData(),
-                SFE_ADDRESS,
-                SERVER_RESPONSE_LOGGING_ENABLED);
-
+        try {
+            FakeAdExchangeServer.runServerAuction(
+                    CONTEXTUAL_SIGNALS_TWO_BUYERS,
+                    outcome.getAdSelectionData(),
+                    SFE_ADDRESS,
+                    SERVER_RESPONSE_LOGGING_ENABLED);
+        } catch (Exception e) {
+            Log.w(
+                    TAG,
+                    "Exception encountered during second runServerAuction warmup: "
+                            + e.getMessage()
+                            + ". Continuing execution.");
+        }
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
 
         // Wait for a couple of seconds before test execution

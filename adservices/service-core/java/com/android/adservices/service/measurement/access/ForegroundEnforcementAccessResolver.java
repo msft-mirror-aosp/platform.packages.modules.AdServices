@@ -16,10 +16,6 @@
 
 package com.android.adservices.service.measurement.access;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_FOREGROUND_UNKNOWN_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
@@ -57,13 +53,13 @@ public class ForegroundEnforcementAccessResolver implements IAccessResolver {
     public AccessInfo getAccessInfo(@NonNull Context context) {
         if (!mEnforceForegroundStatus) {
             LoggerFactory.getMeasurementLogger().d("Enforcement foreground flag has been disabled");
-            return new AccessInfo(true, FAILURE_REASON_UNSET);
+            return new AccessInfo(true, AdServicesStatusUtils.STATUS_SUCCESS);
         }
 
         if (ProcessCompatUtils.isSdkSandboxUid(mCallingUid)) {
             LoggerFactory.getMeasurementLogger()
                     .d("Foreground check skipped, app running on Sandbox");
-            return new AccessInfo(true, FAILURE_REASON_UNSET);
+            return new AccessInfo(true, AdServicesStatusUtils.STATUS_SUCCESS);
         }
 
         // @throws AppImportanceFilter.WrongCallingApplicationStateException if not in foreground
@@ -71,7 +67,7 @@ public class ForegroundEnforcementAccessResolver implements IAccessResolver {
             mAppImportanceFilter.assertCallerIsInForeground(mCallingUid, mAppNameId, null);
         } catch (AppImportanceFilter.WrongCallingApplicationStateException e) {
             LoggerFactory.getMeasurementLogger().e("App not running in foreground");
-            return new AccessInfo(false, FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND);
+            return new AccessInfo(false, AdServicesStatusUtils.STATUS_BACKGROUND_CALLER);
         } catch (Exception e) {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Unexpected error occurred when asserting caller in foreground");
@@ -79,16 +75,9 @@ public class ForegroundEnforcementAccessResolver implements IAccessResolver {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_FOREGROUND_UNKNOWN_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
-            return new AccessInfo(false, FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION);
+            return new AccessInfo(false, AdServicesStatusUtils.STATUS_BACKGROUND_CALLER);
         }
-        return new AccessInfo(true, FAILURE_REASON_UNSET);
-    }
-
-    @NonNull
-    @Override
-    @AdServicesStatusUtils.StatusCode
-    public int getErrorStatusCode() {
-        return AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+        return new AccessInfo(true, AdServicesStatusUtils.STATUS_SUCCESS);
     }
 
     @NonNull

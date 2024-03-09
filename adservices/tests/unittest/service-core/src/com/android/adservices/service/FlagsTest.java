@@ -324,10 +324,25 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag("ENABLE_BACK_COMPAT", flags -> flags.getEnableBackCompat());
     }
 
+    @Test
+    public void testGetFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
+        testFeatureFlag(
+                "FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED",
+                flags -> flags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled());
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //
     ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test
+    public void testGetMeasurementApiDeleteRegistrationsKillSwitch() {
+        testLegacyMsmtKillSwitchGuardedByMsmtKillSwitch(
+                "getMeasurementApiDeleteRegistrationsKillSwitch()",
+                "MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH",
+                flags -> flags.getMeasurementApiDeleteRegistrationsKillSwitch());
+    }
 
     // TODO(b/325074749) - remove once all flags have been converted
     /**
@@ -366,7 +381,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
-        testMsmtFeatureFlagBasedUpLegacyKillSwitchAndGuardedByMsmtEnabled(
+        testMsmtFeatureFlagBackedByLegacyKillSwitchAndGuardedByMsmtEnabled(
                 "getMeasurementAttributionFallbackJobEnabled()",
                 "MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH",
                 flag -> flag.getMeasurementAttributionFallbackJobEnabled());
@@ -475,15 +490,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 .isEqualTo(!defaultKillSwitchValue);
     }
 
-    private void testMsmtFeatureFlagBasedUpLegacyKillSwitchAndGuardedByMsmtEnabled(
+    private void testMsmtFeatureFlagBackedByLegacyKillSwitchAndGuardedByMsmtEnabled(
             String getterName, String killSwitchName, Flaginator<Boolean> flaginator) {
         boolean defaultKillSwitchValue = getConstantValue(killSwitchName);
         boolean defaultValue = !defaultKillSwitchValue;
 
         // Getter
-        expect.withMessage("%s when global kill_switch is on", getterName)
-                .that(flaginator.getFlagValue(mGlobalKsOnFlags))
-                .isFalse();
         expect.withMessage("%s when msmt_enabled is true", getterName)
                 .that(flaginator.getFlagValue(mMsmtEnabledFlags))
                 .isEqualTo(defaultValue);

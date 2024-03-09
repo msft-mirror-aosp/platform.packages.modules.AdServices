@@ -141,6 +141,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
@@ -317,6 +318,8 @@ public class AdSelectionServiceImplTest {
     @Mock private AdIdFetcher mAdIdFetcher;
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
+    private RetryStrategyFactory mRetryStrategyFactory;
+
     public AdSelectionServiceImplTest() {}
 
     @Rule(order = 0)
@@ -420,6 +423,7 @@ public class AdSelectionServiceImplTest {
                 .thenReturn(DevContext.createForDevOptionsDisabled());
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
     }
 
     @After
@@ -522,7 +526,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -645,7 +650,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -778,7 +784,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -912,7 +919,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1034,7 +1042,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1159,7 +1168,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        true);
+                        true,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1276,7 +1286,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        true);
+                        true,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1378,7 +1389,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        true);
+                        true,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1487,7 +1499,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1612,7 +1625,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1735,7 +1749,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1863,7 +1878,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2039,7 +2055,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2185,7 +2202,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2349,7 +2367,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2519,7 +2538,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2680,7 +2700,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2830,7 +2851,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2984,7 +3006,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3154,7 +3177,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3331,7 +3355,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3477,7 +3502,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3586,7 +3612,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3694,7 +3721,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3808,7 +3836,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3917,7 +3946,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4021,7 +4051,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -4124,7 +4155,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -4228,7 +4260,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -4352,7 +4385,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -4501,7 +4535,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -4600,7 +4635,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4667,7 +4703,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4728,7 +4765,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4794,7 +4832,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4871,7 +4910,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4942,7 +4982,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5019,7 +5060,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5097,7 +5139,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -5216,7 +5259,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -5337,7 +5381,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -5452,7 +5497,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -5562,7 +5608,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
@@ -5600,7 +5647,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock, never()).shutdown();
@@ -5652,7 +5700,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -5720,7 +5769,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5789,7 +5839,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5849,7 +5900,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5911,7 +5963,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5967,7 +6020,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -6027,7 +6081,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -6128,7 +6183,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6245,7 +6301,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6365,7 +6422,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6491,7 +6549,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6598,7 +6657,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
@@ -6706,7 +6766,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6842,7 +6903,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6958,7 +7020,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7076,7 +7139,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7216,7 +7280,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7349,7 +7414,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7467,7 +7533,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7598,7 +7665,8 @@ public class AdSelectionServiceImplTest {
                             mAdSelectionDebugReportDao,
                             mAdIdFetcher,
                             mUnusedKAnonSignJoinFactory,
-                            false);
+                            false,
+                            mRetryStrategyFactory);
 
             ReportImpressionInput input =
                     new ReportImpressionInput.Builder()
@@ -7667,7 +7735,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7734,7 +7803,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7795,7 +7865,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7862,7 +7933,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7941,7 +8013,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8014,7 +8087,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8091,7 +8165,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8167,7 +8242,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8292,7 +8368,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8411,7 +8488,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8535,7 +8613,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8677,7 +8756,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         AdSelectionOverrideTestCallback overridesCallback =
                 callAddOverrideForSelectAds(
@@ -9363,7 +9443,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -9426,7 +9507,8 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -9470,7 +9552,8 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionDebugReportDao,
                 mAdIdFetcher,
                 mUnusedKAnonSignJoinFactory,
-                false);
+                false,
+                mRetryStrategyFactory);
     }
 
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {
