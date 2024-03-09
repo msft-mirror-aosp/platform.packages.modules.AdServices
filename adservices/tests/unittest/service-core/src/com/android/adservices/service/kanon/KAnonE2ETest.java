@@ -76,6 +76,7 @@ import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
@@ -92,6 +93,10 @@ import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.data.kanon.ServerParametersDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.ohttp.ObliviousHttpGateway;
+import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
+import com.android.adservices.ohttp.OhttpGatewayPrivateKey;
+import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
@@ -109,11 +114,13 @@ import com.android.adservices.service.adselection.AuctionServerPayloadUnformatte
 import com.android.adservices.service.adselection.MockAdIdWorker;
 import com.android.adservices.service.adselection.MultiCloudSupportStrategy;
 import com.android.adservices.service.adselection.MultiCloudTestStrategyFactory;
+import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
 import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessage;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer;
@@ -143,6 +150,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
@@ -163,22 +171,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.net.URL;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
 import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
 import private_join_and_compute.anonymous_counting_tokens.GetKeyAttestationChallengeResponse;
@@ -191,8 +183,32 @@ import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.net.URL;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.spec.InvalidKeySpecException;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 public class KAnonE2ETest {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private final String PRIVATE_KEY_HEX =
+            "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
+    private final String SERVER_PUBLIC_KEY =
+            "f3b7b2f1764f5c077effecad2afd86154596e63f7375ea522761b881e6c3c323";
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final AdTechIdentifier WINNER_BUYER = AdSelectionConfigFixture.BUYER;
     private static final DBAdData WINNER_AD =
@@ -213,6 +229,7 @@ public class KAnonE2ETest {
     private static final String REGISTER_CLIENT_PARAMETERS_PATH = "/registerClientParams";
     private static final String GET_TOKENS_PATH = "/getTokens";
     private static final String JOIN_PATH = "/join";
+    private static final String FETCH_KEY_PATH = "/fetchKeys";
     private static final String SERVER_PARAM_VERSION = "serverParamVersion";
     private static final String CLIENT_PARAMS_VERSION = "clientParamsVersion";
     private static final WinReportingUrls WIN_REPORTING_URLS =
@@ -278,6 +295,7 @@ public class KAnonE2ETest {
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDaoSpy;
     private com.android.adservices.data.encryptionkey.EncryptionKeyDao mEncryptionKeyDao;
+    private EncryptionKeyDao mAdSelectionEncryptionKeyDao;
     private EnrollmentDao mEnrollmentDao;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
@@ -302,7 +320,6 @@ public class KAnonE2ETest {
     @Mock private Clock mockClock;
     @Mock private com.android.adservices.shared.util.Clock mAdServicesClock;
     @Mock private UserProfileIdDao mockUserProfileIdDao;
-    @Mock private KAnonObliviousHttpEncryptorImpl mockKAnonOblivivousHttpEncryptorImpl;
     @Captor private ArgumentCaptor<KAnonInitializeStatusStats> argumentCaptorInitializeStats;
     @Captor private ArgumentCaptor<KAnonGetChallengeStatusStats> argumentCaptorGetChallenge;
     @Captor private ArgumentCaptor<KAnonSignStatusStats> argumentCaptorSignStats;
@@ -317,6 +334,7 @@ public class KAnonE2ETest {
     private KAnonSignJoinFactory mKAnonSignJoinFactory;
 
     private Instant FIXED_INSTANT = Instant.now();
+    private RetryStrategyFactory mRetryStrategyFactory;
 
     @Before
     public void setUp() throws IOException {
@@ -409,11 +427,16 @@ public class KAnonE2ETest {
         mUserProfileIdManager = new UserProfileIdManager(mockUserProfileIdDao, mAdServicesClock);
         mKAnonMessageDao = kAnonDatabase.kAnonMessageDao();
         mAnonymousCountingTokensSpy = spy(new AnonymousCountingTokensImpl());
+        mAdSelectionEncryptionKeyDao =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
+                        .build()
+                        .encryptionKeyDao();
 
         when(mockClock.instant()).thenReturn(FIXED_INSTANT);
 
         InputStream inputStream = CONTEXT.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
         mTranscript = Transcript.parseDelimitedFrom(inputStream);
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
     }
 
     @After
@@ -490,62 +513,24 @@ public class KAnonE2ETest {
     @Test
     public void persistAdSelectionData_withImmediateJoinValueHundred_signsAndJoinsMessage()
             throws Exception {
-        GetServerPublicParamsResponse getServerPublicParamsResponse =
-                GetServerPublicParamsResponse.newBuilder()
-                        .setServerParamsVersion(SERVER_PARAM_VERSION)
-                        .setServerPublicParams(
-                                mTranscript.getServerParameters().getPublicParameters())
-                        .build();
-        MockResponse serverPublicParamResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getServerPublicParamsResponse.toByteArray());
-        RegisterClientResponse registerClientResponse =
-                RegisterClientResponse.newBuilder()
-                        .setClientParamsVersion(CLIENT_PARAMS_VERSION)
-                        .build();
-        MockResponse registerClientParamsResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(registerClientResponse.toByteArray());
-        GetTokensResponse getTokensResponse =
-                GetTokensResponse.newBuilder()
-                        .setTokensResponse(mTranscript.getTokensResponse())
-                        .build();
-        MockResponse getTokensResponseHttp =
-                new MockResponse().setResponseCode(200).setBody(getTokensResponse.toByteArray());
         GeneratedTokensRequestProto generatedTokensRequestProto =
                 GeneratedTokensRequestProto.newBuilder()
                         .addAllFingerprintsBytes(mTranscript.getFingerprintsList())
                         .setTokenRequest(mTranscript.getTokensRequest())
                         .setTokensRequestPrivateState(mTranscript.getTokensRequestPrivateState())
                         .build();
-        BinaryHttpMessage binaryHttpMessage =
-                BinaryHttpMessage.knownLengthResponseBuilder(
-                                ResponseControlData.builder().setFinalStatusCode(200).build())
-                        .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
-                        .setContent("Hello, world!\r\n".getBytes())
-                        .build();
-        MockResponse joinResponse =
-                new MockResponse().setResponseCode(200).setBody(binaryHttpMessage.serialize());
         doReturn(mTranscript.getClientParameters())
                 .when(mAnonymousCountingTokensSpy)
                 .generateClientParameters(any(), any());
         doReturn(generatedTokensRequestProto)
                 .when(mAnonymousCountingTokensSpy)
                 .generateTokensRequest(any(), any(), any(), any(), any());
-
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(
-                        ImmutableList.of(
-                                serverPublicParamResponse,
-                                registerClientParamsResponse,
-                                getTokensResponseHttp,
-                                joinResponse));
+        MockWebServer server = getMockWebServer(false, false, false, false, false, false);
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         URL registerClientUrl = server.getUrl(REGISTER_CLIENT_PARAMETERS_PATH);
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
         URL joinUrl = server.getUrl(JOIN_PATH);
+        URL fetchKeyUrl = server.getUrl(FETCH_KEY_PATH);
         final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
             FlagsWithUrls() {
@@ -571,6 +556,11 @@ public class KAnonE2ETest {
             public String getFledgeKAnonJoinUrl() {
                 return joinUrl.toString();
             }
+
+            @Override
+            public String getFledgeAuctionServerJoinKeyFetchUri() {
+                return fetchKeyUrl.toString();
+            }
         }
 
         Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
@@ -591,6 +581,7 @@ public class KAnonE2ETest {
         RecordedRequest recordedRequestGetServerParams = server.takeRequest();
         RecordedRequest recordedRequestRegisterClientParams = server.takeRequest();
         RecordedRequest recordedGetTokensRequest = server.takeRequest();
+        RecordedRequest recordedFetchKeys = server.takeRequest();
         RecordedRequest recordedJoinRequest = server.takeRequest();
 
         assertGetServerParametersRequest(recordedRequestGetServerParams);
@@ -615,19 +606,12 @@ public class KAnonE2ETest {
     @Test
     public void persistAdSelectionData_actGenerateParamsFails_shouldNotUpdateStatusInDB()
             throws Exception {
-        GetServerPublicParamsResponse getServerPublicParamsResponse =
-                GetServerPublicParamsResponse.newBuilder()
-                        .setServerParamsVersion(SERVER_PARAM_VERSION)
-                        .setServerPublicParams(
-                                mTranscript.getServerParameters().getPublicParameters())
-                        .build();
-        MockResponse serverPublicParamResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getServerPublicParamsResponse.toByteArray());
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(ImmutableList.of(serverPublicParamResponse));
+        doThrow(new InvalidProtocolBufferException("Some error"))
+                .when(mAnonymousCountingTokensSpy)
+                .generateClientParameters(any(), any());
+        MockWebServer server = getMockWebServer(false, false, false, false, false, false);
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
+
         final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
             FlagsWithUrls() {
@@ -648,9 +632,6 @@ public class KAnonE2ETest {
         mAdSelectionService = createAdSelectionService();
         mClientParametersDao.deleteAllClientParameters();
         mServerParametersDao.deleteAllServerParameters();
-        doThrow(new InvalidProtocolBufferException("Some error"))
-                .when(mAnonymousCountingTokensSpy)
-                .generateClientParameters(any(), any());
 
         PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
                 invokePersistAdSelectionResult(mAdSelectionService, persistAdSelectionResultInput);
@@ -674,20 +655,8 @@ public class KAnonE2ETest {
     @Test
     public void persistAdSelectionData_httpRegisterClientFails_shouldNotUpdateStatusInDB()
             throws Exception {
-        GetServerPublicParamsResponse getServerPublicParamsResponse =
-                GetServerPublicParamsResponse.newBuilder()
-                        .setServerParamsVersion("serverParamVersion")
-                        .setServerPublicParams(
-                                mTranscript.getServerParameters().getPublicParameters())
-                        .build();
-        MockResponse serverPublicParamResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getServerPublicParamsResponse.toByteArray());
-        MockResponse failedRegisterClientResponse = new MockResponse().setResponseCode(429);
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(
-                        ImmutableList.of(serverPublicParamResponse, failedRegisterClientResponse));
+        MockWebServer server = getMockWebServer(false, true, false, false, false, false);
+
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         URL registerClientUrl = server.getUrl(REGISTER_CLIENT_PARAMETERS_PATH);
         final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
@@ -737,8 +706,7 @@ public class KAnonE2ETest {
     @Test
     public void persistAdSelectionData_httpFetchServerParamFails_shouldNotUpdateStatusInDB()
             throws Exception {
-        MockResponse response = new MockResponse().setResponseCode(429);
-        MockWebServer server = mockWebServerRule.startMockWebServer(ImmutableList.of(response));
+        MockWebServer server = getMockWebServer(true, false, false, false, false, false);
         URL fetchServerUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         final class FlagsWithFetchServerParams extends KAnonE2ETestFlags implements Flags {
             FlagsWithFetchServerParams() {
@@ -779,20 +747,7 @@ public class KAnonE2ETest {
     @Test
     public void persistAdSelectionData_getChallengeHttpFails_shouldNotUpdateStatusInDB()
             throws Exception {
-        GetServerPublicParamsResponse getServerPublicParamsResponse =
-                GetServerPublicParamsResponse.newBuilder()
-                        .setServerParamsVersion("serverParamVersion")
-                        .setServerPublicParams(
-                                mTranscript.getServerParameters().getPublicParameters())
-                        .build();
-        MockResponse serverPublicParamResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getServerPublicParamsResponse.toByteArray());
-        MockResponse response = new MockResponse().setResponseCode(429);
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(
-                        ImmutableList.of(serverPublicParamResponse, response));
+        MockWebServer server = getMockWebServer(false, false, false, false, false, true);
         URL getChallengeUrl = server.getUrl(GET_CHALLENGE);
         URL fetchServerUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         final class FlagsWithGetChallengeUrl extends KAnonE2ETestFlags implements Flags {
@@ -846,28 +801,9 @@ public class KAnonE2ETest {
     public void
             persistAdSelectionData_attestationCertificateGenerationFails_shouldLogStatsProperly()
                     throws Exception {
-        GetKeyAttestationChallengeResponse getKeyAttestationChallengeResponse =
-                GetKeyAttestationChallengeResponse.newBuilder().build();
-        MockResponse getChallengeServerResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getKeyAttestationChallengeResponse.toByteArray());
-        GetServerPublicParamsResponse getServerPublicParamsResponse =
-                GetServerPublicParamsResponse.newBuilder()
-                        .setServerParamsVersion("serverParamVersion")
-                        .setServerPublicParams(
-                                mTranscript.getServerParameters().getPublicParameters())
-                        .build();
-        MockResponse serverPublicParamResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getServerPublicParamsResponse.toByteArray());
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(
-                        ImmutableList.of(serverPublicParamResponse, getChallengeServerResponse));
+        MockWebServer server = getMockWebServer(false, false, false, false, false, false);
         URL getChallengeUrl = server.getUrl(GET_CHALLENGE);
         URL fetchServerUrl = server.getUrl(GET_SERVER_PARAM_PATH);
-
         final class FlagsWithGetChallengeUrl extends KAnonE2ETestFlags implements Flags {
             FlagsWithGetChallengeUrl() {
                 super(false, 20, true, 100);
@@ -918,50 +854,12 @@ public class KAnonE2ETest {
     @Test
     public void persistAdSelectionData_withAttestationEnabled_signsAndJoinsMessage()
             throws Exception {
-        GetKeyAttestationChallengeResponse getKeyAttestationChallengeResponse =
-                GetKeyAttestationChallengeResponse.newBuilder().build();
-        MockResponse getChallengeServerResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getKeyAttestationChallengeResponse.toByteArray());
-        GetServerPublicParamsResponse getServerPublicParamsResponse =
-                GetServerPublicParamsResponse.newBuilder()
-                        .setServerParamsVersion(SERVER_PARAM_VERSION)
-                        .setServerPublicParams(
-                                mTranscript.getServerParameters().getPublicParameters())
-                        .build();
-        MockResponse serverPublicParamResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getServerPublicParamsResponse.toByteArray());
-        RegisterClientResponse registerClientResponse =
-                RegisterClientResponse.newBuilder()
-                        .setClientParamsVersion(CLIENT_PARAMS_VERSION)
-                        .build();
-        MockResponse registerClientParamsResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(registerClientResponse.toByteArray());
-        GetTokensResponse getTokensResponse =
-                GetTokensResponse.newBuilder()
-                        .setTokensResponse(mTranscript.getTokensResponse())
-                        .build();
-        MockResponse getTokensResponseHttpResponse =
-                new MockResponse().setResponseCode(200).setBody(getTokensResponse.toByteArray());
         GeneratedTokensRequestProto generatedTokensRequestProto =
                 GeneratedTokensRequestProto.newBuilder()
                         .addAllFingerprintsBytes(mTranscript.getFingerprintsList())
                         .setTokenRequest(mTranscript.getTokensRequest())
                         .setTokensRequestPrivateState(mTranscript.getTokensRequestPrivateState())
                         .build();
-        BinaryHttpMessage binaryHttpMessage =
-                BinaryHttpMessage.knownLengthResponseBuilder(
-                                ResponseControlData.builder().setFinalStatusCode(200).build())
-                        .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
-                        .setContent("Hello, world!\r\n".getBytes())
-                        .build();
-        MockResponse joinResponse =
-                new MockResponse().setResponseCode(200).setBody(binaryHttpMessage.serialize());
         doReturn(mTranscript.getClientParameters())
                 .when(mAnonymousCountingTokensSpy)
                 .generateClientParameters(any(), any());
@@ -977,18 +875,12 @@ public class KAnonE2ETest {
                 .when(mAnonymousCountingTokensSpy)
                 .recoverTokens(any(), any(), any(), any(), any(), any(), any(), any());
 
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(
-                        ImmutableList.of(
-                                serverPublicParamResponse,
-                                getChallengeServerResponse,
-                                registerClientParamsResponse,
-                                getTokensResponseHttpResponse,
-                                joinResponse));
+        MockWebServer server = getMockWebServer(false, false, false, false, false, false);
         URL getChallengeUrl = server.getUrl(GET_CHALLENGE);
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         URL registerClientUrl = server.getUrl(REGISTER_CLIENT_PARAMETERS_PATH);
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
+        URL fetchKeyUrl = server.getUrl(FETCH_KEY_PATH);
         URL joinUrl = server.getUrl(JOIN_PATH);
         final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
@@ -1025,10 +917,14 @@ public class KAnonE2ETest {
             public String getFledgeKAnonJoinUrl() {
                 return joinUrl.toString();
             }
+
+            @Override
+            public String getFledgeAuctionServerJoinKeyFetchUri() {
+                return fetchKeyUrl.toString();
+            }
         }
 
         Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
-
         doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
         mFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -1046,6 +942,7 @@ public class KAnonE2ETest {
         RecordedRequest getChallengeRequest = server.takeRequest();
         RecordedRequest recordedRequestRegisterClientParams = server.takeRequest();
         RecordedRequest recordedGetTokensRequest = server.takeRequest();
+        RecordedRequest recordedFetchKeysRequest = server.takeRequest();
         RecordedRequest recordedJoinRequest = server.takeRequest();
 
         assertGetChallengeRequest(getChallengeRequest);
@@ -1069,8 +966,7 @@ public class KAnonE2ETest {
     @Test
     public void persistAdSelectionData_joinHttpRequestFails_shouldMarkMessageAsFailed()
             throws Exception {
-        MockResponse response = new MockResponse().setResponseCode(429);
-        MockWebServer server = mockWebServerRule.startMockWebServer(ImmutableList.of(response));
+        MockWebServer server = getMockWebServer(false, false, false, false, true, true);
         URL joinUrl = server.getUrl(JOIN_PATH);
         final class FlagsWithCustomJoinUrl extends KAnonE2ETestFlags implements Flags {
             FlagsWithCustomJoinUrl() {
@@ -1112,8 +1008,7 @@ public class KAnonE2ETest {
             throws Exception {
         // In this test, the KAnonCaller will not fetch server and client params because those
         // parameters already exists in the database.
-        MockResponse response = new MockResponse().setResponseCode(429);
-        MockWebServer server = mockWebServerRule.startMockWebServer(ImmutableList.of(response));
+        MockWebServer server = getMockWebServer(false, false, true, false, false, true);
         URL getTokensUrl = server.getUrl(GET_TOKENS_PATH);
         final class FlagsWithGetTokensUrl extends KAnonE2ETestFlags implements Flags {
             FlagsWithGetTokensUrl() {
@@ -1189,14 +1084,6 @@ public class KAnonE2ETest {
         // KAnonCaller will not fetch server and client parameters because they already exists in
         // the database.
         // Incorrect get tokens response will result in failure for ACT#VerifyTokens method.
-        GetTokensResponse incorrectGetTokensResponse =
-                GetTokensResponse.newBuilder()
-                        .setTokensResponse(mTranscript.getTokensResponse())
-                        .build();
-        MockResponse mockGetTokensResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(incorrectGetTokensResponse.toByteArray());
         GeneratedTokensRequestProto generatedTokensRequestProto =
                 GeneratedTokensRequestProto.newBuilder()
                         .addAllFingerprintsBytes(mTranscript.getFingerprintsList())
@@ -1209,9 +1096,7 @@ public class KAnonE2ETest {
         doReturn(false)
                 .when(mAnonymousCountingTokensSpy)
                 .verifyTokensResponse(any(), any(), any(), any(), any(), any(), any(), any());
-
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(ImmutableList.of(mockGetTokensResponse));
+        MockWebServer server = getMockWebServer(false, false, true, false, false, false);
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
         final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
@@ -1253,18 +1138,7 @@ public class KAnonE2ETest {
     @Test
     public void persistAdSelectionData_actGenerateParamsFails_shouldLogStatsCorrectly()
             throws Exception {
-        GetServerPublicParamsResponse getServerPublicParamsResponse =
-                GetServerPublicParamsResponse.newBuilder()
-                        .setServerParamsVersion(SERVER_PARAM_VERSION)
-                        .setServerPublicParams(
-                                mTranscript.getServerParameters().getPublicParameters())
-                        .build();
-        MockResponse serverPublicParamResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getServerPublicParamsResponse.toByteArray());
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(ImmutableList.of(serverPublicParamResponse));
+        MockWebServer server = getMockWebServer(false, false, true, false, false, false);
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
@@ -1312,8 +1186,7 @@ public class KAnonE2ETest {
             throws Exception {
         // In this test, the KAnonCaller will not fetch server and client params because those
         // parameters already exists in the database.
-        MockResponse response = new MockResponse().setResponseCode(429);
-        MockWebServer server = mockWebServerRule.startMockWebServer(ImmutableList.of(response));
+        MockWebServer server = getMockWebServer(false, false, true, false, false, false);
         URL getTokensUrl = server.getUrl(GET_TOKENS_PATH);
         final class FlagsWithGetTokensUrl extends KAnonE2ETestFlags implements Flags {
             FlagsWithGetTokensUrl() {
@@ -1408,20 +1281,7 @@ public class KAnonE2ETest {
     @Test
     public void persistAdSelectionData_httpRegisterClientFails_shouldLogStatsCorrectly()
             throws Exception {
-        GetServerPublicParamsResponse getServerPublicParamsResponse =
-                GetServerPublicParamsResponse.newBuilder()
-                        .setServerParamsVersion("serverParamVersion")
-                        .setServerPublicParams(
-                                mTranscript.getServerParameters().getPublicParameters())
-                        .build();
-        MockResponse serverPublicParamResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getServerPublicParamsResponse.toByteArray());
-        MockResponse failedRegisterClientResponse = new MockResponse().setResponseCode(429);
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(
-                        ImmutableList.of(serverPublicParamResponse, failedRegisterClientResponse));
+        MockWebServer server = getMockWebServer(false, true, true, false, false, false);
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         URL registerClientUrl = server.getUrl(REGISTER_CLIENT_PARAMETERS_PATH);
         final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
@@ -1481,62 +1341,25 @@ public class KAnonE2ETest {
     @Test
     public void persistAdSelectionData_withImmediateJoinValueHundred_shouldLogStatsCorrectly()
             throws Exception {
-        GetServerPublicParamsResponse getServerPublicParamsResponse =
-                GetServerPublicParamsResponse.newBuilder()
-                        .setServerParamsVersion(SERVER_PARAM_VERSION)
-                        .setServerPublicParams(
-                                mTranscript.getServerParameters().getPublicParameters())
-                        .build();
-        MockResponse serverPublicParamResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getServerPublicParamsResponse.toByteArray());
-        RegisterClientResponse registerClientResponse =
-                RegisterClientResponse.newBuilder()
-                        .setClientParamsVersion(CLIENT_PARAMS_VERSION)
-                        .build();
-        MockResponse registerClientParamsResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(registerClientResponse.toByteArray());
-        GetTokensResponse getTokensResponse =
-                GetTokensResponse.newBuilder()
-                        .setTokensResponse(mTranscript.getTokensResponse())
-                        .build();
-        MockResponse getTokensResponseHttp =
-                new MockResponse().setResponseCode(200).setBody(getTokensResponse.toByteArray());
         GeneratedTokensRequestProto generatedTokensRequestProto =
                 GeneratedTokensRequestProto.newBuilder()
                         .addAllFingerprintsBytes(mTranscript.getFingerprintsList())
                         .setTokenRequest(mTranscript.getTokensRequest())
                         .setTokensRequestPrivateState(mTranscript.getTokensRequestPrivateState())
                         .build();
-        BinaryHttpMessage binaryHttpMessage =
-                BinaryHttpMessage.knownLengthResponseBuilder(
-                                ResponseControlData.builder().setFinalStatusCode(200).build())
-                        .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
-                        .setContent("Hello, world!\r\n".getBytes())
-                        .build();
-        MockResponse joinResponse =
-                new MockResponse().setResponseCode(200).setBody(binaryHttpMessage.serialize());
         doReturn(mTranscript.getClientParameters())
                 .when(mAnonymousCountingTokensSpy)
                 .generateClientParameters(any(), any());
         doReturn(generatedTokensRequestProto)
                 .when(mAnonymousCountingTokensSpy)
                 .generateTokensRequest(any(), any(), any(), any(), any());
+        MockWebServer server = getMockWebServer(false, false, false, false, false, false);
 
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(
-                        ImmutableList.of(
-                                serverPublicParamResponse,
-                                registerClientParamsResponse,
-                                getTokensResponseHttp,
-                                joinResponse));
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         URL registerClientUrl = server.getUrl(REGISTER_CLIENT_PARAMETERS_PATH);
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
         URL joinUrl = server.getUrl(JOIN_PATH);
+        URL fetchKeyUrl = server.getUrl(FETCH_KEY_PATH);
         final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
             FlagsWithUrls() {
@@ -1561,6 +1384,11 @@ public class KAnonE2ETest {
             @Override
             public String getFledgeKAnonJoinUrl() {
                 return joinUrl.toString();
+            }
+
+            @Override
+            public String getFledgeAuctionServerJoinKeyFetchUri() {
+                return fetchKeyUrl.toString();
             }
         }
 
@@ -1597,50 +1425,13 @@ public class KAnonE2ETest {
     @Test
     public void persistAdSelectionData_withAttestationEnabled_shouldLogStatsCorrectly()
             throws Exception {
-        GetKeyAttestationChallengeResponse getKeyAttestationChallengeResponse =
-                GetKeyAttestationChallengeResponse.newBuilder().build();
-        MockResponse getChallengeServerResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getKeyAttestationChallengeResponse.toByteArray());
-        GetServerPublicParamsResponse getServerPublicParamsResponse =
-                GetServerPublicParamsResponse.newBuilder()
-                        .setServerParamsVersion(SERVER_PARAM_VERSION)
-                        .setServerPublicParams(
-                                mTranscript.getServerParameters().getPublicParameters())
-                        .build();
-        MockResponse serverPublicParamResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getServerPublicParamsResponse.toByteArray());
-        RegisterClientResponse registerClientResponse =
-                RegisterClientResponse.newBuilder()
-                        .setClientParamsVersion(CLIENT_PARAMS_VERSION)
-                        .build();
-        MockResponse registerClientParamsResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(registerClientResponse.toByteArray());
-        GetTokensResponse getTokensResponse =
-                GetTokensResponse.newBuilder()
-                        .setTokensResponse(mTranscript.getTokensResponse())
-                        .build();
-        MockResponse getTokensResponseHttpResponse =
-                new MockResponse().setResponseCode(200).setBody(getTokensResponse.toByteArray());
         GeneratedTokensRequestProto generatedTokensRequestProto =
                 GeneratedTokensRequestProto.newBuilder()
                         .addAllFingerprintsBytes(mTranscript.getFingerprintsList())
                         .setTokenRequest(mTranscript.getTokensRequest())
                         .setTokensRequestPrivateState(mTranscript.getTokensRequestPrivateState())
                         .build();
-        BinaryHttpMessage binaryHttpMessage =
-                BinaryHttpMessage.knownLengthResponseBuilder(
-                                ResponseControlData.builder().setFinalStatusCode(200).build())
-                        .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
-                        .setContent("Hello, world!\r\n".getBytes())
-                        .build();
-        MockResponse joinResponse =
-                new MockResponse().setResponseCode(200).setBody(binaryHttpMessage.serialize());
+        MockWebServer server = getMockWebServer(false, false, false, false, false, false);
         doReturn(mTranscript.getClientParameters())
                 .when(mAnonymousCountingTokensSpy)
                 .generateClientParameters(any(), any());
@@ -1656,19 +1447,12 @@ public class KAnonE2ETest {
                 .when(mAnonymousCountingTokensSpy)
                 .recoverTokens(any(), any(), any(), any(), any(), any(), any(), any());
 
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(
-                        ImmutableList.of(
-                                serverPublicParamResponse,
-                                getChallengeServerResponse,
-                                registerClientParamsResponse,
-                                getTokensResponseHttpResponse,
-                                joinResponse));
         URL getChallengeUrl = server.getUrl(GET_CHALLENGE);
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         URL registerClientUrl = server.getUrl(REGISTER_CLIENT_PARAMETERS_PATH);
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
         URL joinUrl = server.getUrl(JOIN_PATH);
+        URL fetchKeyUrl = server.getUrl(FETCH_KEY_PATH);
         final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
             FlagsWithUrls() {
@@ -1703,6 +1487,11 @@ public class KAnonE2ETest {
             @Override
             public String getFledgeKAnonJoinUrl() {
                 return joinUrl.toString();
+            }
+
+            @Override
+            public String getFledgeAuctionServerJoinKeyFetchUri() {
+                return fetchKeyUrl.toString();
             }
         }
 
@@ -1747,44 +1536,12 @@ public class KAnonE2ETest {
 
     @Test
     public void persistAdSelectionData_withLoggingDisabled_shouldNotLogStats() throws Exception {
-        GetServerPublicParamsResponse getServerPublicParamsResponse =
-                GetServerPublicParamsResponse.newBuilder()
-                        .setServerParamsVersion(SERVER_PARAM_VERSION)
-                        .setServerPublicParams(
-                                mTranscript.getServerParameters().getPublicParameters())
-                        .build();
-        MockResponse serverPublicParamResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(getServerPublicParamsResponse.toByteArray());
-        RegisterClientResponse registerClientResponse =
-                RegisterClientResponse.newBuilder()
-                        .setClientParamsVersion(CLIENT_PARAMS_VERSION)
-                        .build();
-        MockResponse registerClientParamsResponse =
-                new MockResponse()
-                        .setResponseCode(200)
-                        .setBody(registerClientResponse.toByteArray());
-        GetTokensResponse getTokensResponse =
-                GetTokensResponse.newBuilder()
-                        .setTokensResponse(mTranscript.getTokensResponse())
-                        .build();
-        MockResponse getTokensResponseHttp =
-                new MockResponse().setResponseCode(200).setBody(getTokensResponse.toByteArray());
         GeneratedTokensRequestProto generatedTokensRequestProto =
                 GeneratedTokensRequestProto.newBuilder()
                         .addAllFingerprintsBytes(mTranscript.getFingerprintsList())
                         .setTokenRequest(mTranscript.getTokensRequest())
                         .setTokensRequestPrivateState(mTranscript.getTokensRequestPrivateState())
                         .build();
-        BinaryHttpMessage binaryHttpMessage =
-                BinaryHttpMessage.knownLengthResponseBuilder(
-                                ResponseControlData.builder().setFinalStatusCode(200).build())
-                        .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
-                        .setContent("Hello, world!\r\n".getBytes())
-                        .build();
-        MockResponse joinResponse =
-                new MockResponse().setResponseCode(200).setBody(binaryHttpMessage.serialize());
         doReturn(mTranscript.getClientParameters())
                 .when(mAnonymousCountingTokensSpy)
                 .generateClientParameters(any(), any());
@@ -1792,17 +1549,12 @@ public class KAnonE2ETest {
                 .when(mAnonymousCountingTokensSpy)
                 .generateTokensRequest(any(), any(), any(), any(), any());
 
-        MockWebServer server =
-                mockWebServerRule.startMockWebServer(
-                        ImmutableList.of(
-                                serverPublicParamResponse,
-                                registerClientParamsResponse,
-                                getTokensResponseHttp,
-                                joinResponse));
+        MockWebServer server = getMockWebServer(false, false, false, false, false, false);
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         URL registerClientUrl = server.getUrl(REGISTER_CLIENT_PARAMETERS_PATH);
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
         URL joinUrl = server.getUrl(JOIN_PATH);
+        URL fetchKeyUrl = server.getUrl(FETCH_KEY_PATH);
         final class FlagsWithLogginDisabled extends KAnonE2ETestFlags implements Flags {
 
             FlagsWithLogginDisabled() {
@@ -1833,6 +1585,11 @@ public class KAnonE2ETest {
             public boolean getFledgeKAnonLoggingEnabled() {
                 return false;
             }
+
+            @Override
+            public String getFledgeAuctionServerJoinKeyFetchUri() {
+                return fetchKeyUrl.toString();
+            }
         }
 
         Flags flagsWithLogginDisabled = new FlagsWithLogginDisabled();
@@ -1854,6 +1611,7 @@ public class KAnonE2ETest {
         verify(mAdServicesLoggerMock, times(0)).logKAnonSignStats(any());
         verify(mAdServicesLoggerMock, times(0)).logKAnonJoinStats(any());
     }
+
 
     private void assertGetChallengeRequest(RecordedRequest recordedRequest) {
         assertThat(recordedRequest.getMethod())
@@ -1905,7 +1663,8 @@ public class KAnonE2ETest {
         assertThat(getTokensRequest.getClientParamsVersion()).isEqualTo(CLIENT_PARAMS_VERSION);
     }
 
-    private void assertJoinRequest(RecordedRequest recordedRequest) throws JSONException {
+    private void assertJoinRequest(RecordedRequest recordedRequest)
+            throws JSONException, IOException, UnsupportedHpkeAlgorithmException {
         assertThat(recordedRequest.getMethod())
                 .isEqualTo(AdServicesHttpUtil.HttpMethodType.POST.name());
         assertThat(recordedRequest.getPath()).isEqualTo(JOIN_PATH);
@@ -1913,10 +1672,14 @@ public class KAnonE2ETest {
                 .isEqualTo(OHTTP_CONTENT_TYPE);
         assertThat(recordedRequest.getBody()).isNotEmpty();
 
+        OhttpGatewayPrivateKey privKey =
+                OhttpGatewayPrivateKey.create(
+                        BaseEncoding.base16().lowerCase().decode(PRIVATE_KEY_HEX));
+        byte[] decryptedBytes = ObliviousHttpGateway.decrypt(privKey, recordedRequest.getBody());
         BinaryHttpMessageDeserializer binaryHttpMessageDeserializer =
                 new BinaryHttpMessageDeserializer();
         BinaryHttpMessage binaryHttpMessage =
-                binaryHttpMessageDeserializer.deserialize(recordedRequest.getBody());
+                binaryHttpMessageDeserializer.deserialize(decryptedBytes);
 
         assertThat(binaryHttpMessage.isRequest()).isTrue();
         assertThat(binaryHttpMessage.getContent()).isNotEmpty();
@@ -1934,7 +1697,8 @@ public class KAnonE2ETest {
 
     private PersistAdSelectionResultInput setupTestForPersistAdSelectionResult(
             CountDownLatch countDownLatch)
-            throws RemoteException, InterruptedException, IOException {
+            throws RemoteException, InterruptedException, IOException, KeyStoreException,
+                    NoSuchAlgorithmException, NoSuchProviderException {
         setupMocksForKAnonWithCountdownlatch(countDownLatch);
         mAdSelectionService = createAdSelectionService();
 
@@ -2007,6 +1771,151 @@ public class KAnonE2ETest {
         return formattedData.getData();
     }
 
+    private MockWebServer getMockWebServer(
+            boolean badResponseForGetServerParam,
+            boolean badResponseForRegisterClients,
+            boolean badResponseForGetTokens,
+            boolean badResponseForKeyFetch,
+            boolean badResponseForJoinPath,
+            boolean badResponseForGetChallenge)
+            throws Exception {
+        return mockWebServerRule.startMockWebServer(
+                request -> {
+                    if (request.getPath().equals(GET_SERVER_PARAM_PATH)) {
+                        if (badResponseForGetServerParam) {
+                            return getBadRequestMockResponse();
+                        }
+                        return getMockResponseForGetServerParams(request);
+                    }
+                    if (request.getPath().equals(REGISTER_CLIENT_PARAMETERS_PATH)) {
+                        if (badResponseForRegisterClients) {
+                            return getBadRequestMockResponse();
+                        }
+                        return getMockResponseForRegisterClientParam(request);
+                    }
+                    if (request.getPath().equals(GET_TOKENS_PATH)) {
+                        if (badResponseForGetTokens) {
+                            return getBadRequestMockResponse();
+                        }
+                        return getMockResponseForGetTokens(request);
+                    }
+                    if (request.getPath().equals(FETCH_KEY_PATH)) {
+                        if (badResponseForKeyFetch) {
+                            return getBadRequestMockResponse();
+                        }
+                        try {
+                            return getMockResponseForGetKeys(request);
+                        } catch (Throwable t) {
+                            return new MockResponse().setResponseCode(500);
+                        }
+                    }
+                    if (request.getPath().equals(JOIN_PATH)) {
+                        if (badResponseForJoinPath) {
+                            return getBadRequestMockResponse();
+                        }
+                        try {
+                            return getMockResponseForJoin(request);
+                        } catch (Throwable t) {
+                            return new MockResponse().setResponseCode(404);
+                        }
+                    }
+                    if (request.getPath().equals(GET_CHALLENGE)) {
+                        return getMockResponseForGetChallenge(request);
+                    }
+                    return new MockResponse().setResponseCode(404);
+                });
+    }
+
+    private MockResponse getBadRequestMockResponse() {
+        return new MockResponse().setResponseCode(400);
+    }
+
+    private MockResponse getMockResponseForGetServerParams(RecordedRequest recordedRequest) {
+        GetServerPublicParamsResponse getServerPublicParamsResponse =
+                GetServerPublicParamsResponse.newBuilder()
+                        .setServerParamsVersion(SERVER_PARAM_VERSION)
+                        .setServerPublicParams(
+                                mTranscript.getServerParameters().getPublicParameters())
+                        .build();
+        return new MockResponse()
+                .setResponseCode(200)
+                .setBody(getServerPublicParamsResponse.toByteArray());
+    }
+
+    private MockResponse getMockResponseForGetChallenge(RecordedRequest recordedRequest) {
+        byte[] CHALLENGE =
+                ("AHXUDhoSEFikqOefmo8xE7kGp/xjVMRDYBecBiHGxCN8rTv9W0Z4L/14d0OLB"
+                                + "vC1VVzXBAnjgHoKLZzuJifTOaBJwGNIQ2ejnx3n6ayoRchDNCgpK29T+EAhBWzH")
+                        .getBytes();
+        GetKeyAttestationChallengeResponse getKeyAttestationChallengeResponse =
+                GetKeyAttestationChallengeResponse.newBuilder()
+                        .setAttestationChallenge(ByteString.copyFrom(CHALLENGE))
+                        .build();
+        return new MockResponse()
+                .setResponseCode(200)
+                .setBody(getKeyAttestationChallengeResponse.toByteArray());
+    }
+
+    private MockResponse getMockResponseForGetTokens(RecordedRequest recordedRequest) {
+        GetTokensResponse getTokensResponse =
+                GetTokensResponse.newBuilder()
+                        .setTokensResponse(mTranscript.getTokensResponse())
+                        .build();
+        return new MockResponse().setResponseCode(200).setBody(getTokensResponse.toByteArray());
+    }
+
+    private MockResponse getMockResponseForRegisterClientParam(RecordedRequest recordedRequest) {
+        RegisterClientResponse registerClientResponse =
+                RegisterClientResponse.newBuilder()
+                        .setClientParamsVersion(CLIENT_PARAMS_VERSION)
+                        .build();
+        return new MockResponse()
+                .setResponseCode(200)
+                .setBody(registerClientResponse.toByteArray());
+    }
+
+    private MockResponse getMockResponseForGetKeys(RecordedRequest recordedRequest)
+            throws InvalidKeySpecException {
+        int keyIdentifier = 4;
+
+        byte[] keyId = new byte[1];
+        keyId[0] = (byte) (keyIdentifier & 0xFF);
+        String keyConfigHex =
+                BaseEncoding.base16().lowerCase().encode(keyId)
+                        + "0020"
+                        + SERVER_PUBLIC_KEY
+                        + "000400010002";
+        ObliviousHttpKeyConfig key =
+                ObliviousHttpKeyConfig.fromSerializedKeyConfig(
+                        BaseEncoding.base16().lowerCase().decode(keyConfigHex));
+        String keysContentType = "application/ohttp-keys";
+        return new MockResponse()
+                .setResponseCode(200)
+                .setBody(key.serializeKeyConfigToBytes())
+                .setHeader(AdServicesHttpUtil.CONTENT_TYPE_HDR, keysContentType);
+    }
+
+    private MockResponse getMockResponseForJoin(RecordedRequest recordedRequest)
+            throws IOException, UnsupportedHpkeAlgorithmException {
+        byte[] requestBody = recordedRequest.getBody();
+
+        BinaryHttpMessage binaryHttpMessage =
+                BinaryHttpMessage.knownLengthResponseBuilder(
+                                ResponseControlData.builder().setFinalStatusCode(200).build())
+                        .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
+                        .setContent("Hello, world!\r\n".getBytes())
+                        .build();
+
+        OhttpGatewayPrivateKey privKey =
+                OhttpGatewayPrivateKey.create(
+                        BaseEncoding.base16().lowerCase().decode(PRIVATE_KEY_HEX));
+
+        byte[] encryptedResponse =
+                ObliviousHttpGateway.encrypt(privKey, requestBody, binaryHttpMessage.serialize());
+
+        return new MockResponse().setResponseCode(200).setBody(encryptedResponse);
+    }
+
     private AdSelectionService createAdSelectionService() {
         return new AdSelectionServiceImpl(
                 mAdSelectionEntryDao,
@@ -2033,7 +1942,8 @@ public class KAnonE2ETest {
                 mAdSelectionDebugReportDaoSpy,
                 mAdIdFetcher,
                 mKAnonSignJoinFactory,
-                false);
+                false,
+                mRetryStrategyFactory);
     }
 
     public PersistAdSelectionResultTestCallback invokePersistAdSelectionResult(
@@ -2188,17 +2098,21 @@ public class KAnonE2ETest {
         mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
         UUID userId = UUID.randomUUID();
         when(mockUserProfileIdDao.getUserProfileId()).thenReturn(userId);
-        when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
-                .thenAnswer(
-                        invocation ->
-                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
-        when(mockKAnonOblivivousHttpEncryptorImpl.decryptBytes(any(byte[].class), anyLong()))
-                .thenAnswer(invocation -> invocation.getArgument(0));
         KeyAttestationFactory keyAttestationFactory = new KeyAttestationFactory(mockKeyAttestation);
         when(mockKeyAttestation.generateAttestationRecord(any()))
                 .thenReturn(mockKeyAttestationCertificate);
         when(mockKeyAttestationCertificate.encode()).thenReturn(new byte[0]);
+
+        mAdSelectionEncryptionKeyDao.deleteAllEncryptionKeys();
+        AdSelectionEncryptionKeyManager encryptionKeyManager =
+                new AdSelectionEncryptionKeyManager(
+                        mAdSelectionEncryptionKeyDao,
+                        mFlags,
+                        mAdServicesHttpsClientSpy,
+                        AdServicesExecutors.getLightWeightExecutor());
+        KAnonObliviousHttpEncryptorImpl kAnonObliviousHttpEncryptor =
+                new KAnonObliviousHttpEncryptorImpl(
+                        encryptionKeyManager, AdServicesExecutors.getLightWeightExecutor());
         KAnonCallerImpl kAnonCaller =
                 new KAnonCallerImpl(
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2209,7 +2123,7 @@ public class KAnonE2ETest {
                         mUserProfileIdManager,
                         new BinaryHttpMessageDeserializer(),
                         mFlags,
-                        mockKAnonOblivivousHttpEncryptorImpl,
+                        kAnonObliviousHttpEncryptor,
                         mKAnonMessageManager,
                         mAdServicesLoggerMock,
                         keyAttestationFactory);

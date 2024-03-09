@@ -243,7 +243,7 @@ public class BackgroundFetchWorkerTest {
             }
 
             @Override
-            public FluentFuture<Integer> updateCustomAudience(
+            public FluentFuture<UpdateResultType> updateCustomAudience(
                     @NonNull Instant jobStartTime,
                     @NonNull DBCustomAudienceBackgroundFetchData fetchData) {
 

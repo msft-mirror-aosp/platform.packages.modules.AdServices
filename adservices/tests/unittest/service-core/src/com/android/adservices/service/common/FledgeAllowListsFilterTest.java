@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.common;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
@@ -129,7 +129,7 @@ public class FledgeAllowListsFilterTest {
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID),
                         eq(notAllowedPackage),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        eq(STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST),
                         anyInt());
 
         verifyNoMoreInteractions(mAdServicesLoggerMock);
@@ -153,7 +153,7 @@ public class FledgeAllowListsFilterTest {
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID),
                         eq(PACKAGE_ALLOWED_PAS_1),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        eq(STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST),
                         anyInt());
 
         verifyNoMoreInteractions(mAdServicesLoggerMock);
@@ -177,7 +177,7 @@ public class FledgeAllowListsFilterTest {
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID),
                         eq(PACKAGE_ALLOWED_PPAPI_1),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        eq(STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST),
                         anyInt());
 
         verifyNoMoreInteractions(mAdServicesLoggerMock);
