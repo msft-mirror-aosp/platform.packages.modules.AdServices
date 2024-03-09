@@ -42,6 +42,10 @@ public final class AbstractAdServicesShellCommandHelperTest {
                     + "a3ccaeb pid=6721\n"
                     + CMD_ECHO_OUT;
 
+    private static final String SAMPLE_DUMPSYS_UNKNOWN_COMMAND_OUTPUT =
+            "Unknown command:"
+                + " com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity";
+
     @Rule public final Expect expect = Expect.create();
 
     private final Logger.RealLogger mRealLogger = StandardStreamsLogger.getInstance();
@@ -136,6 +140,7 @@ public final class AbstractAdServicesShellCommandHelperTest {
 
         private final int mDeviceLevel;
         private final boolean mUsesSdkSandbox;
+        private int mDumpsysCommandCount;
 
         FakeAdServicesShellCommandHelper(Logger.RealLogger logger, int deviceLevel) {
             this(logger, deviceLevel, /* usesSdkSandbox= */ false);
@@ -146,6 +151,7 @@ public final class AbstractAdServicesShellCommandHelperTest {
             super(logger);
             mUsesSdkSandbox = usesSdkSandbox;
             mDeviceLevel = deviceLevel;
+            mDumpsysCommandCount = 0;
         }
 
         @Override
@@ -171,9 +177,13 @@ public final class AbstractAdServicesShellCommandHelperTest {
                 return CMD_ECHO_OUT;
             } else if (cmd.equals(ADSERVICES_MANAGER_SERVICE_CHECK)) {
                 return mUsesSdkSandbox ? " not found" : "found";
-            } else if (cmd.equals(
-                    runDumpsysShellCommand(String.format("%s %s", CMD_ECHO, CMD_ECHO_OUT)))) {
-                return SAMPLE_DUMPSYS_OUTPUT;
+            } else if (cmd.equals(runDumpsysShellCommand())) {
+                String out =
+                        mDumpsysCommandCount == 0
+                                ? SAMPLE_DUMPSYS_OUTPUT
+                                : SAMPLE_DUMPSYS_UNKNOWN_COMMAND_OUTPUT;
+                mDumpsysCommandCount++;
+                return out;
             }
             return "";
         }

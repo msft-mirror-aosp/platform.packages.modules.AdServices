@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
+import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.common.AdSelectionSignals;
 
 import com.android.adservices.common.SdkLevelSupportRule;
@@ -25,7 +28,8 @@ import com.android.adservices.common.SdkLevelSupportRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class AddAdSelectionFromOutcomesOverrideRequestTest {
+/** Adds tests for {@link AddAdSelectionFromOutcomesOverrideRequest}. */
+public final class AddAdSelectionFromOutcomesOverrideRequestTest {
     private static final AdSelectionFromOutcomesConfig AD_SELECTION_FROM_OUTCOMES_CONFIG =
             AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
     private static final String SELECTION_LOGIC_JS = "function test() { return \"hello world\"; }";

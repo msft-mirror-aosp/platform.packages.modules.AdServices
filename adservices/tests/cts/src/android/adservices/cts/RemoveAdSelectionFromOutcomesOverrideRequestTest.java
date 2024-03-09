@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
+
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
+import android.adservices.adselection.RemoveAdSelectionFromOutcomesOverrideRequest;
 
 import com.android.adservices.common.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-public class RemoveAdSelectionFromOutcomesOverrideRequestTest {
+/** Adds tests for {@link RemoveAdSelectionFromOutcomesOverrideRequest} */
+public final class RemoveAdSelectionFromOutcomesOverrideRequestTest {
     private static final AdSelectionFromOutcomesConfig AD_SELECTION_FROM_OUTCOMES_CONFIG =
             AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
 

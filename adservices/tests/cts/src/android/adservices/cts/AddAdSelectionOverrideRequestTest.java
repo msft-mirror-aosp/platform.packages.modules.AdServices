@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.DecisionLogic;
+import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 
@@ -28,8 +33,8 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Rule;
 import org.junit.Test;
 
-
-public class AddAdSelectionOverrideRequestTest {
+/** Adds tests for {@link AddAdSelectionOverrideRequest}. */
+public final class AddAdSelectionOverrideRequestTest {
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfig();
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";

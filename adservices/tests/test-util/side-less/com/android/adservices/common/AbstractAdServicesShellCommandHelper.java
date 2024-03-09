@@ -29,17 +29,18 @@ import java.util.Objects;
 public abstract class AbstractAdServicesShellCommandHelper {
     protected static final String TAG = "AdServicesShellCommand";
 
-    static final String SHELL_ACTIVITY_COMPONENT_NAME =
+    private static final String SHELL_ACTIVITY_COMPONENT_NAME =
             "com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity";
-    static final String SHELL_ACTIVITY_INTENT = "android.adservices.BACK_COMPACT_SHELL_COMMAND";
+    private static final String SHELL_ACTIVITY_INTENT =
+            "android.adservices.BACK_COMPACT_SHELL_COMMAND";
+    private static final String ENABLE_SHELL_ACTIVITY =
+            "pm enable " + SHELL_ACTIVITY_COMPONENT_NAME;
+    private static final String DISABLE_SHELL_ACTIVITY =
+            "pm disable " + SHELL_ACTIVITY_COMPONENT_NAME;
+    private static final String INVALID_COMMAND_OUTPUT = "Unknown command:";
 
-    static final String ENABLE_SHELL_ACTIVITY = "pm enable " + SHELL_ACTIVITY_COMPONENT_NAME;
-    static final String START_SHELL_ACTIVITY = "am start -W -a " + SHELL_ACTIVITY_INTENT;
-
-    static final String DISABLE_SHELL_ACTIVITY = "pm disable " + SHELL_ACTIVITY_COMPONENT_NAME;
-
-    static final String CMD_ECHO = "echo";
-    static final String ECHO_OUT = "finish_activity";
+    private static final String CMD_ARGS = "cmd-args";
+    private static final String GET_RESULT_ARG = "get-result";
 
     @VisibleForTesting
     static final String ADSERVICES_MANAGER_SERVICE_CHECK = "service check adservices_manager";
@@ -136,11 +137,14 @@ public abstract class AbstractAdServicesShellCommandHelper {
     private String runShellCommandRS(String cmd) {
         String res = runShellCommand(ENABLE_SHELL_ACTIVITY);
         mLog.d("Output for command %s: %s", ENABLE_SHELL_ACTIVITY, res);
-        res = runShellCommand(START_SHELL_ACTIVITY);
-        mLog.d("Output for command %s: %s", START_SHELL_ACTIVITY, res);
 
-        res = runShellCommand(runDumpsysShellCommand(cmd));
-        mLog.d("Output for command %s: %s", runDumpsysShellCommand(cmd), res);
+        String[] argsList = cmd.split(" ");
+        String args = String.join(",", argsList);
+        res = runShellCommand(startShellActivity(args));
+        mLog.d("Output for command %s: %s", startShellActivity(args), res);
+
+        res = runShellCommand(runDumpsysShellCommand());
+        mLog.d("Output for command %s: %s", runDumpsysShellCommand(), res);
         String out = parseResultFromDumpsys(res);
 
         checkShellCommandActivityFinished();
@@ -173,8 +177,14 @@ public abstract class AbstractAdServicesShellCommandHelper {
     }
 
     @VisibleForTesting
-    String runDumpsysShellCommand(String cmd) {
-        return String.format("dumpsys activity %s cmd %s", SHELL_ACTIVITY_COMPONENT_NAME, cmd);
+    String runDumpsysShellCommand() {
+        return String.format(
+                "dumpsys activity %s cmd %s", SHELL_ACTIVITY_COMPONENT_NAME, GET_RESULT_ARG);
+    }
+
+    private String startShellActivity(String args) {
+        return String.format(
+                "am start -W -a %s --esa %s %s", SHELL_ACTIVITY_INTENT, CMD_ARGS, args);
     }
 
     boolean isAdServicesManagerServicePublished() {
@@ -184,12 +194,11 @@ public abstract class AbstractAdServicesShellCommandHelper {
 
     private void checkShellCommandActivityFinished() {
         mLog.d("Checking if ShellCommandActivity is finished");
-        String cmd = CMD_ECHO + " " + ECHO_OUT;
         tryWaitForSuccess(
                 () -> {
-                    String res = runShellCommand(runDumpsysShellCommand(cmd));
-                    mLog.d("Output for command %s: %s", runDumpsysShellCommand(cmd), res);
-                    return !res.contains(ECHO_OUT);
+                    String res = runShellCommand(runDumpsysShellCommand());
+                    mLog.d("Output for command %s: %s", runDumpsysShellCommand(), res);
+                    return res.contains(INVALID_COMMAND_OUTPUT);
                 },
                 "Failed to finish ShellCommandActivity",
                 TIMEOUT_ACTIVITY_FINISH_MILLIS);

@@ -116,6 +116,19 @@ public class FetchAndJoinCustomAudienceRequestTest {
     }
 
     @Test
+    public void testBuildValidRequest_withFetchUri_success() {
+        Uri overrideFetchUri =
+                CustomAudienceFixture.getValidFetchUriByBuyer(
+                        CommonFixture.VALID_BUYER_1, /* token= */ "2");
+        final FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+                        .setFetchUri(overrideFetchUri)
+                        .build();
+
+        assertThat(request.getFetchUri()).isEqualTo(overrideFetchUri);
+    }
+
+    @Test
     public void testBuildNullFetchUri_throws() {
         assertThrows(
                 NullPointerException.class,
