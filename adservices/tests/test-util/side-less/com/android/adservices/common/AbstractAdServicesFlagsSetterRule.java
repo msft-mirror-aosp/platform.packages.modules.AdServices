@@ -76,14 +76,11 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 logger,
                 NAMESPACE_ADSERVICES,
                 SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX,
+                PROPERTIES_PREFIX_MATCHER,
                 deviceConfigInterfaceFactory,
                 systemPropertiesInterface);
     }
 
-    @Override
-    protected Matcher getSystemPropertiesMatcher() {
-        return PROPERTIES_PREFIX_MATCHER;
-    }
     // Helper methods to set more commonly used flags such as kill switches.
     // Less common flags can be set directly using setFlags methods.
 
@@ -202,21 +199,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
 
-    /**
-     * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getEnforceForegroundStatusForTopics()}.
-     */
-    public T setTopicsEnforceForeground(boolean value) {
-        return setFlag(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS, value);
-    }
 
-    /**
-     * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getTopicsDisableDirectAppCalls()}.
-     */
-    public T setTopicsDisableDirectAppCall(boolean value) {
-        return setFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //

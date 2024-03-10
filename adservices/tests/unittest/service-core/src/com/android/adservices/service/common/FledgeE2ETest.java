@@ -233,8 +233,8 @@ public class FledgeE2ETest {
     private static final Uri BUYER_DOMAIN_2 =
             CommonFixture.getUri(AdSelectionConfigFixture.BUYER_2, "");
     private static final String AD_URI_PREFIX = "/adverts/123";
-    private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
-    private static final String BUYER_TRUSTED_SIGNAL_URI_PATH = "/kv/buyer/signals/";
+    private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic";
+    private static final String BUYER_TRUSTED_SIGNAL_URI_PATH = "/kv/buyer/signals";
     private static final String BUYER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION =
             "/kv/buyer/data/version/signals/";
     private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
@@ -3012,6 +3012,150 @@ public class FledgeE2ETest {
     }
 
     @Test
+    public void testFledgeFlowSuccessWithMockServer_crossAppFcapFiltering() throws Exception {
+        testFledgeFlowSuccessWithCrossAppFcapFiltering(/* shouldUseUnifiedTables= */ false);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithMockServer_crossAppFcapFiltering_useUnifiedTables()
+            throws Exception {
+        testFledgeFlowSuccessWithCrossAppFcapFiltering(/* shouldUseUnifiedTables= */ true);
+    }
+
+    public void testFledgeFlowSuccessWithCrossAppFcapFiltering(boolean shouldUseUnifiedTables)
+            throws Exception {
+        doNothing()
+                .when(mFledgeAllowListsFilterSpy)
+                .assertAppInAllowlist(any(), anyInt(), anyInt());
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+        initClients(
+                /* gaUXEnabled= */ true,
+                /* registerAdBeaconEnabled= */ true,
+                /* cpcBillingEnabled= */ false,
+                /* dataVersionHeaderEnabled= */ false,
+                shouldUseUnifiedTables);
+
+        setupAdSelectionConfig();
+
+        /* Create common CAs for App #1 and App #2 */
+        // Create CA_1 without filters
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        // Create CA_2 with 1 non-win filter
+        List<Set<Integer>> adCounterKeysForCa2 =
+                Arrays.asList(Collections.singleton(KeyedFrequencyCapFixture.KEY1));
+        List<AdFilters> adFiltersForCa2 =
+                Arrays.asList(
+                        new AdFilters.Builder()
+                                .setFrequencyCapFilters(CLICK_ONCE_PER_DAY_KEY1)
+                                .build());
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain,
+                        CUSTOM_AUDIENCE_SEQ_2,
+                        BIDS_FOR_BUYER_2.subList(
+                                BIDS_FOR_BUYER_2.size() - 1, BIDS_FOR_BUYER_2.size()),
+                        adCounterKeysForCa2,
+                        adFiltersForCa2,
+                        false);
+
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
+
+        MockWebServer server =
+                getMockWebServer(
+                        getDecisionLogicWithBeacons(),
+                        getV3BiddingLogicJs(),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        true);
+
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        /*
+         * App #1
+         * - Join CA_1 and CA_2
+         * - Run ad selection
+         * - Update ad counter histogram
+         * - Leave CA_1 and CA_2
+         */
+        String app1PackageName = CommonFixture.TEST_PACKAGE_NAME;
+
+        // Join CA_1 and CA_2
+        joinCustomAudienceAndAssertSuccess(customAudience1, app1PackageName);
+        joinCustomAudienceAndAssertSuccess(customAudience2, app1PackageName);
+
+        // Run Ad Selection
+        long adSelectionId =
+                selectAdsAndReport(
+                        CommonFixture.getUri(
+                                mLocalhostBuyerDomain.getAuthority(),
+                                AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad1"),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        app1PackageName);
+
+        // Update ad counter histogram
+        updateHistogramAndAssertSuccess(
+                adSelectionId, FrequencyCapFilters.AD_EVENT_TYPE_CLICK, app1PackageName);
+
+        // Leave CA_1 and CA_2
+        leaveCustomAudienceAndAssertSuccess(
+                app1PackageName,
+                AdTechIdentifier.fromString(mLocalhostBuyerDomain.getHost()),
+                customAudience1.getName());
+        leaveCustomAudienceAndAssertSuccess(
+                app1PackageName,
+                AdTechIdentifier.fromString(mLocalhostBuyerDomain.getHost()),
+                customAudience2.getName());
+
+        /*
+         * App #2
+         * - Join CA_1 and CA_2
+         * - Run ad selection
+         */
+        String app2PackageName = CommonFixture.TEST_PACKAGE_NAME_1;
+
+        // Join CA_1 and CA_2
+        joinCustomAudienceAndAssertSuccess(customAudience1, app2PackageName);
+        joinCustomAudienceAndAssertSuccess(customAudience2, app2PackageName);
+
+        // Run Ad Selection
+        selectAdsAndReport(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_1 + "/ad2"),
+                impressionReportingSemaphore,
+                interactionReportingSemaphore,
+                CommonFixture.TEST_PACKAGE_NAME_1);
+
+        /*
+         * 20 requests for:
+         * - 10 requests for auction #1 with both CA_1 and CA_2
+         * - 9 requests for auction #2 with only CA_1 since CA_2 is filtered out
+         */
+        mockWebServerRule.verifyMockServerRequests(
+                server,
+                19,
+                ImmutableList.of(
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
+                mRequestMatcherPrefixMatch);
+    }
+
+    @Test
     public void testFledgeFlowSuccessWithMockServer_ContextualAdsFlow() throws Exception {
         // Reinitializing service so default flags are used
         // Create an instance of AdSelection Service with real dependencies
@@ -3697,12 +3841,19 @@ public class FledgeE2ETest {
 
     private void updateHistogramAndAssertSuccess(long adSelectionId, int adEventType)
             throws InterruptedException {
+        updateHistogramAndAssertSuccess(
+                adSelectionId, adEventType, CommonFixture.TEST_PACKAGE_NAME);
+    }
+
+    private void updateHistogramAndAssertSuccess(
+            long adSelectionId, int adEventType, String callerAppPackageName)
+            throws InterruptedException {
         UpdateAdCounterHistogramInput inputParams =
                 new UpdateAdCounterHistogramInput.Builder(
                                 adSelectionId,
                                 adEventType,
                                 AdTechIdentifier.fromString(mLocalhostBuyerDomain.getHost()),
-                                CommonFixture.TEST_PACKAGE_NAME)
+                                callerAppPackageName)
                         .build();
         CountDownLatch callbackLatch = new CountDownLatch(1);
         UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback callback =
@@ -3721,17 +3872,29 @@ public class FledgeE2ETest {
             Semaphore impressionReportingSemaphore,
             Semaphore interactionReportingSemaphore)
             throws Exception {
+        return selectAdsAndReport(
+                winningRenderUri,
+                impressionReportingSemaphore,
+                interactionReportingSemaphore,
+                CommonFixture.TEST_PACKAGE_NAME);
+    }
+
+    private long selectAdsAndReport(
+            Uri winningRenderUri,
+            Semaphore impressionReportingSemaphore,
+            Semaphore interactionReportingSemaphore,
+            String callerAppPackageName)
+            throws Exception {
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(
-                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, callerAppPackageName);
 
         assertTrue(resultsCallback.mIsSuccess);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(winningRenderUri, resultsCallback.mAdSelectionResponse.getRenderUri());
 
-        reportImpressionAndAssertSuccess(resultSelectionId);
-        reportInteractionAndAssertSuccess(resultsCallback);
+        reportImpressionAndAssertSuccess(resultSelectionId, callerAppPackageName);
+        reportInteractionAndAssertSuccess(resultsCallback, callerAppPackageName);
 
         /* We add a permit on every call received by the MockWebServer and remove them in the
          * tryAcquires below. If there are any left over it means that there were extra calls to the
@@ -4165,12 +4328,17 @@ public class FledgeE2ETest {
 
     private void reportInteractionAndAssertSuccess(AdSelectionTestCallback resultsCallback)
             throws Exception {
+        reportInteractionAndAssertSuccess(resultsCallback, CommonFixture.TEST_PACKAGE_NAME);
+    }
+
+    private void reportInteractionAndAssertSuccess(
+            AdSelectionTestCallback resultsCallback, String callerAppPackageName) throws Exception {
         ReportInteractionInput reportInteractionInput =
                 new ReportInteractionInput.Builder()
                         .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
                         .setInteractionKey(CLICK_INTERACTION)
                         .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .setCallerPackageName(callerAppPackageName)
                         .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
@@ -4196,11 +4364,16 @@ public class FledgeE2ETest {
     }
 
     private void reportImpressionAndAssertSuccess(long adSelectionId) throws Exception {
+        reportImpressionAndAssertSuccess(adSelectionId, CommonFixture.TEST_PACKAGE_NAME);
+    }
+
+    private void reportImpressionAndAssertSuccess(long adSelectionId, String callerAppPackageName)
+            throws Exception {
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionConfig(mAdSelectionConfig)
                         .setAdSelectionId(adSelectionId)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .setCallerPackageName(callerAppPackageName)
                         .build();
 
         ReportImpressionTestCallback reportImpressionTestCallback =
@@ -4312,9 +4485,13 @@ public class FledgeE2ETest {
     }
 
     private void joinCustomAudienceAndAssertSuccess(CustomAudience ca) {
+        joinCustomAudienceAndAssertSuccess(ca, CommonFixture.TEST_PACKAGE_NAME);
+    }
+
+    private void joinCustomAudienceAndAssertSuccess(
+            CustomAudience ca, String callerAppPackageName) {
         ResultCapturingCallback joinCallback = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                ca, CommonFixture.TEST_PACKAGE_NAME, joinCallback);
+        mCustomAudienceService.joinCustomAudience(ca, callerAppPackageName, joinCallback);
         assertTrue(joinCallback.isSuccess());
     }
 
@@ -4325,6 +4502,14 @@ public class FledgeE2ETest {
         mCustomAudienceService.fetchAndJoinCustomAudience(request, callback);
         resultLatch.await();
         assertTrue(callback.isSuccess());
+    }
+
+    private void leaveCustomAudienceAndAssertSuccess(
+            String callerAppPackageName, AdTechIdentifier buyer, String name) {
+        ResultCapturingCallback leaveCallback = new ResultCapturingCallback();
+        mCustomAudienceService.leaveCustomAudience(
+                callerAppPackageName, buyer, name, leaveCallback);
+        assertTrue(leaveCallback.isSuccess());
     }
 
     private void initClients(
