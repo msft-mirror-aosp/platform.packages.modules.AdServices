@@ -272,7 +272,7 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
             "measurement_max_aggregate_attribution_per_rate_limit_window";
 
-    public static final String KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION =
+    public static final String KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION =
             "measurement_max_distinct_enrollments_in_attribution";
 
     public static final String KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE =
@@ -304,9 +304,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT =
             "measurement_vtc_configurable_max_event_reports_count";
-
-    public static final String KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 =
-            "measurement_enable_ara_parsing_alignment_v1";
 
     public static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
@@ -1138,9 +1135,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION =
             "measurement_max_aggregate_keys_per_trigger_registration";
 
-    public static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
-            "measurement_min_event_report_delay_millis";
-
     public static final String KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS =
             "measurement_event_reports_vtc_early_reporting_windows";
 
@@ -1205,6 +1199,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH =
             "measurement_enable_redirect_to_well_known_path";
+
+    public static final String KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE =
+            "measurement_enable_attribution_scope";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
@@ -1323,4 +1320,15 @@ public final class FlagsConstants {
 
     /** Key for AdServices' module job policy. */
     public static final String KEY_AD_SERVICES_MODULE_JOB_POLICY = "ad_services_module_job_policy";
+
+    /** Key for feature flagging AdServices Retryable. */
+    public static final String KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED =
+            "ad_services_retry_strategy_enabled";
+
+    /**
+     * Key for setting the value for max number of retry attempts for {@link
+     * com.android.adservices.service.js.JSScriptEngine}
+     */
+    public static final String KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS =
+            "ad_services_js_engine_max_retry_attempts";
 }

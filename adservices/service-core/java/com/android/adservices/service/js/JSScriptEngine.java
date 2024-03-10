@@ -29,6 +29,7 @@ import androidx.javascriptengine.SandboxDeadException;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
@@ -47,6 +48,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.GuardedBy;
@@ -72,6 +74,9 @@ public class JSScriptEngine {
             "Unable to create isolate";
     public static final String JS_SCRIPT_ENGINE_SANDBOX_DEAD_MSG =
             "Unable to evaluate on isolate due to sandbox dead exception";
+    public static final String JS_EVALUATE_METHOD_NAME = "JSScriptEngine#evaluate";
+    public static final Set<Class<? extends Exception>> RETRYABLE_EXCEPTIONS_FROM_JS_ENGINE =
+            Set.of(JSScriptEngineConnectionException.class);
 
     @SuppressLint("StaticFieldLeak")
     private static JSScriptEngine sSingleton;
@@ -346,15 +351,16 @@ public class JSScriptEngine {
     }
 
     /**
-     * Same as {@link #evaluate(String, List, String, IsolateSettings)} where the entry point
-     * function name is {@link #ENTRY_POINT_FUNC_NAME}.
+     * Same as {@link #evaluate(String, List, String, IsolateSettings, RetryStrategy)} where the
+     * entry point function name is {@link #ENTRY_POINT_FUNC_NAME}.
      */
     @NonNull
     public ListenableFuture<String> evaluate(
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
-            @NonNull IsolateSettings isolateSettings) {
-        return evaluate(jsScript, args, ENTRY_POINT_FUNC_NAME, isolateSettings);
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy) {
+        return evaluate(jsScript, args, ENTRY_POINT_FUNC_NAME, isolateSettings, retryStrategy);
     }
 
     /**
@@ -373,8 +379,10 @@ public class JSScriptEngine {
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName,
-            @NonNull IsolateSettings isolateSettings) {
-        return evaluateInternal(jsScript, args, entryFunctionName, null, isolateSettings);
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy) {
+        return evaluateInternal(
+                jsScript, args, entryFunctionName, null, isolateSettings, retryStrategy);
     }
 
     /**
@@ -397,10 +405,12 @@ public class JSScriptEngine {
             @NonNull byte[] wasmBinary,
             @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName,
-            @NonNull IsolateSettings isolateSettings) {
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy) {
         Objects.requireNonNull(wasmBinary);
 
-        return evaluateInternal(jsScript, args, entryFunctionName, wasmBinary, isolateSettings);
+        return evaluateInternal(
+                jsScript, args, entryFunctionName, wasmBinary, isolateSettings, retryStrategy);
     }
 
     @NonNull
@@ -409,24 +419,30 @@ public class JSScriptEngine {
             @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName,
             @Nullable byte[] wasmBinary,
-            @NonNull IsolateSettings isolateSettings) {
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy) {
         Objects.requireNonNull(jsScript);
         Objects.requireNonNull(args);
         Objects.requireNonNull(entryFunctionName);
-
-        return ClosingFuture.from(mJsSandboxProvider.getFutureInstance(mContext))
-                .transformAsync(
-                        (closer, jsSandbox) ->
-                                evaluateOnSandbox(
-                                        closer,
-                                        jsSandbox,
-                                        jsScript,
-                                        args,
-                                        entryFunctionName,
-                                        wasmBinary,
-                                        isolateSettings),
-                        mExecutorService)
-                .finishToFuture();
+        Objects.requireNonNull(retryStrategy);
+        return retryStrategy.call(
+                () ->
+                        ClosingFuture.from(mJsSandboxProvider.getFutureInstance(mContext))
+                                .transformAsync(
+                                        (closer, jsSandbox) ->
+                                                evaluateOnSandbox(
+                                                        closer,
+                                                        jsSandbox,
+                                                        jsScript,
+                                                        args,
+                                                        entryFunctionName,
+                                                        wasmBinary,
+                                                        isolateSettings),
+                                        mExecutorService)
+                                .finishToFuture(),
+                RETRYABLE_EXCEPTIONS_FROM_JS_ENGINE,
+                mLogger,
+                JS_EVALUATE_METHOD_NAME);
     }
 
     @NonNull
