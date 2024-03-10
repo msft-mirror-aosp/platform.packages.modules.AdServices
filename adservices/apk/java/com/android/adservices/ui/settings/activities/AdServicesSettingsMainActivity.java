@@ -41,6 +41,7 @@ import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     public static final String FROM_NOTIFICATION_KEY = "FROM_NOTIFICATION";
     private MainActionDelegate mActionDelegate;
+    private MainActivityActionDelegate mActivityActionDelegate;
 
     /** @return the action delegate for the activity. */
     public MainActionDelegate getActionDelegate() {
@@ -89,8 +90,8 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (isUxStatesReady(this)) {
-            initWithUx(this, getApplicationContext());
+        if (isUxStatesReady(this) && mActivityActionDelegate != null) {
+            mActivityActionDelegate.refreshState();
         }
     }
 
@@ -121,7 +122,8 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
 
     private void initMainActivity(int layoutResID) {
         setContentView(layoutResID);
-        // no need to store since not using
-        new MainActivityActionDelegate(this, new ViewModelProvider(this).get(MainViewModel.class));
+        mActivityActionDelegate =
+                new MainActivityActionDelegate(
+                        this, new ViewModelProvider(this).get(MainViewModel.class));
     }
 }

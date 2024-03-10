@@ -1590,7 +1590,7 @@ class AttributionJobHandler {
                             trigger.getRegistrationOrigin(),
                             trigger.getTriggerTime() - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
-            if (count >= mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()) {
+            if (count >= mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution()) {
                 mDebugReportApi.scheduleTriggerDebugReport(
                         source,
                         trigger,
@@ -1599,7 +1599,7 @@ class AttributionJobHandler {
                         Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
             }
 
-            return count < mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution();
+            return count < mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution();
         } else {
             LoggerFactory.getMeasurementLogger()
                     .d(
