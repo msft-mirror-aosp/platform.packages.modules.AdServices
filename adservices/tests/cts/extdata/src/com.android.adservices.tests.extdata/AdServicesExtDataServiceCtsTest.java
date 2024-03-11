@@ -73,14 +73,13 @@ public class AdServicesExtDataServiceCtsTest {
 
         // Update AdExt data
         AdServicesExtDataParams paramsToUpdate =
-                new AdServicesExtDataParams.Builder()
-                        .setNotificationDisplayed(BOOLEAN_TRUE)
-                        .setMsmtConsent(BOOLEAN_FALSE)
-                        .setIsU18Account(BOOLEAN_TRUE)
-                        .setIsAdultAccount(BOOLEAN_FALSE)
-                        .setManualInteractionWithConsentStatus(STATE_UNKNOWN)
-                        .setMsmtRollbackApexVersion(200L)
-                        .build();
+                new AdServicesExtDataParams(
+                        /*isNotificationDisplayed=*/ BOOLEAN_TRUE,
+                        /*isMeasurementConsented=*/ BOOLEAN_FALSE,
+                        /*isU18Account=*/ BOOLEAN_TRUE,
+                        /*isAdultAccount=*/ BOOLEAN_FALSE,
+                        /*manualInteractionWithConsentStatus=*/ STATE_UNKNOWN,
+                        /*measurementRollbackApexVersion=*/ 200L);
 
         SyncAdExtTestCallback putReceiver = new SyncAdExtTestCallback();
         service.putAdServicesExtData(
