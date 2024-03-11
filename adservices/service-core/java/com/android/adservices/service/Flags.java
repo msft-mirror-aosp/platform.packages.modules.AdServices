@@ -4863,4 +4863,12 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default int getAdServicesJsScriptEngineMaxRetryAttempts() {
         return DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
     }
+
+    /** Default value for consent manager v2 flag */
+    boolean DEFAULT_ENABLE_CONSENT_MANAGER_V2 = false;
+
+    /** Gets the Consent Manager V2 enable flag. */
+    default boolean getEnableConsentManagerV2() {
+        return DEFAULT_ENABLE_CONSENT_MANAGER_V2;
+    }
 }

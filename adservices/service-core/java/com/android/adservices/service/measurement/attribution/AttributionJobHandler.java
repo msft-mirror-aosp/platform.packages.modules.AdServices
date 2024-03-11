@@ -1376,15 +1376,17 @@ class AttributionJobHandler {
     private boolean hasAttributionQuota(
             long attributionCount, Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        if (attributionCount >= mFlags.getMeasurementMaxAttributionPerRateLimitWindow()) {
+        int maxAttributionPerRateLimitWindow =
+                mFlags.getMeasurementMaxAttributionPerRateLimitWindow();
+        if (attributionCount >= maxAttributionPerRateLimitWindow) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(attributionCount),
+                    String.valueOf(maxAttributionPerRateLimitWindow),
                     measurementDao,
                     Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         }
-        return attributionCount < mFlags.getMeasurementMaxAttributionPerRateLimitWindow();
+        return attributionCount < maxAttributionPerRateLimitWindow;
     }
 
     private boolean hasAttributionQuota(
@@ -1403,7 +1405,7 @@ class AttributionJobHandler {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(attributionCount),
+                    String.valueOf(limit),
                     measurementDao,
                     Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         }

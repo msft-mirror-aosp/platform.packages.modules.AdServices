@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.common;
-
-import android.os.Build;
+package com.android.adservices;
 
 import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
@@ -31,16 +29,9 @@ import java.security.NoSuchAlgorithmException;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 
-/**
- * Key Attestation tests require the key to be provisioned successfully on the device.
- *
- * <p>We have some Barbet devices in our test lab that do not have keys provisioned and cuttlefish
- * devices/emulators require network connectivity to fetch the keys.
- *
- * <p>This rule ensures our tests don't run on Barbet devices and that we have network connectivity.
- */
-public class KeyAttestationSupportedRule implements TestRule {
-    private static final String BARBET = "barbet";
+/** Rule that checks for network connectivity before running a test */
+public class TlsConnectionAvailableRule implements TestRule {
+
     private static final String HOST = "example.com";
     private static final int PORT = 443;
 
@@ -49,11 +40,6 @@ public class KeyAttestationSupportedRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                if (BARBET.equalsIgnoreCase(Build.DEVICE)) {
-                    throw new AssumptionViolatedException(
-                            "Don't run Key Attestation tests on Barbet devices");
-                }
-
                 if (!assertTlsConnectionSucceeds()) {
                     throw new AssumptionViolatedException(
                             "Don't run Key Attestation tests on devices without network"

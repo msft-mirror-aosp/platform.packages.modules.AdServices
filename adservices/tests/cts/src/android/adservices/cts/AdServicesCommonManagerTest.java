@@ -149,4 +149,15 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
         receiver.assertFailure(IllegalStateException.class);
     }
+
+    @Test
+    // TODO(b/328794632): Need a real CTS test to successfully call the system API.
+    public void testUpdateAdIdCache_coverage() {
+        UpdateAdIdRequest request =
+                new UpdateAdIdRequest.Builder(AdId.ZERO_OUT)
+                        .setLimitAdTrackingEnabled(true)
+                        .build();
+        mCommonManager.updateAdId(
+                request, CALLBACK_EXECUTOR, new AdServicesOutcomeReceiverForTests<>());
+    }
 }

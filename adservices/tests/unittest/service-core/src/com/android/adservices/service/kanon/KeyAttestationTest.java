@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.kanon;
 
+import static com.android.adservices.common.DeviceExclusionRule.BARBET;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
@@ -27,9 +28,12 @@ import static org.mockito.Mockito.spy;
 
 import android.security.keystore.KeyProperties;
 
+import com.android.adservices.TlsConnectionAvailableRule;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.KeyAttestationSupportedRule;
+import com.android.adservices.common.DeviceExclusionRule;
 import com.android.adservices.common.SdkLevelSupportRule;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
@@ -68,8 +72,12 @@ public final class KeyAttestationTest {
             new AdServicesDeviceSupportedRule();
 
     @Rule(order = 2)
-    public final KeyAttestationSupportedRule keyAttestationSupportedRule =
-            new KeyAttestationSupportedRule();
+    public final DeviceExclusionRule deviceExclusionRule =
+            DeviceExclusionRule.forDevices(ImmutableList.of(BARBET));
+
+    @Rule(order = 3)
+    public final TlsConnectionAvailableRule tlsConnectionAvailableRule =
+            new TlsConnectionAvailableRule();
 
     @Before
     public void setUp() throws Exception {
