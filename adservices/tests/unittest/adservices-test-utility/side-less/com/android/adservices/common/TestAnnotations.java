@@ -87,6 +87,11 @@ final class TestAnnotations {
     }
 
     @AutoAnnotation
+    public static RequiresScreenSizeDevice requiresScreenSizeDevice(ScreenSize value) {
+        return new AutoAnnotation_TestAnnotations_requiresScreenSizeDevice(value);
+    }
+
+    @AutoAnnotation
     public static RequiresGoDevice requiresGoDevice() {
         return new AutoAnnotation_TestAnnotations_requiresGoDevice();
     }
