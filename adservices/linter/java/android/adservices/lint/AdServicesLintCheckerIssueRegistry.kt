@@ -29,8 +29,9 @@ class AdServicesLintCheckerIssueRegistry : IssueRegistry() {
             BackCompatAndroidProcessDetector.ISSUE,
             BackCompatJobServiceDetector.ISSUE,
             BackCompatNewFileDetector.ISSUE,
-            RoomDatabaseMigrationDetector.ISSUE,
+            DeviceConfigUsageDetector.ISSUE,
             PreconditionsCheckStateDetector.ISSUE,
+            RoomDatabaseMigrationDetector.ISSUE,
         )
 
     override val api: Int
