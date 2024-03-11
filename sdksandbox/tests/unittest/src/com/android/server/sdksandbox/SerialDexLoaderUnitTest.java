@@ -25,7 +25,6 @@ import android.os.Looper;
 import com.android.server.sdksandbox.verifier.SerialDexLoader.DexLoadResult;
 import com.android.server.sdksandbox.verifier.SerialDexLoader.VerificationHandler;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -34,15 +33,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class SerialDexLoaderUnitTest {
-    private static final String TAG = "SdkSandboxVerifierTest";
-    private SerialDexLoader mSerialDexLoader;
-    private FakeDexParser mFakeParser;
 
-    @Before
-    public void setup() {
-        mFakeParser = new FakeDexParser();
-        mSerialDexLoader = new SerialDexLoader(mFakeParser, new Handler(Looper.getMainLooper()));
-    }
+    private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
+
+    private FakeDexParser mFakeParser = new FakeDexParser();
+    private SerialDexLoader mSerialDexLoader = new SerialDexLoader(mFakeParser, MAIN_HANDLER);
 
     @Test
     public void loadSingleDex_succeeds() throws Exception {
