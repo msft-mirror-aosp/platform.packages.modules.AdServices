@@ -67,6 +67,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_DATA_SER
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.Flags.DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_MAINLINE_TRAIN_VERSION;
@@ -533,6 +534,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVIC
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
@@ -10730,6 +10732,21 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testEnableConsentManagerV2() {
+        boolean phOverrideValue = !DEFAULT_ENABLE_CONSENT_MANAGER_V2;
+
+        expect.withMessage("getEnableConsentManagerV2() by default")
+                .that(mPhFlags.getEnableConsentManagerV2())
+                .isEqualTo(DEFAULT_ENABLE_CONSENT_MANAGER_V2);
+
+        // Now overriding with the value from PH.
+        setEnableConsentManagerV2(phOverrideValue);
+        expect.withMessage("getEnableConsentManagerV2() when set by device config")
+                .that(mPhFlags.getEnableConsentManagerV2())
+                .isEqualTo(phOverrideValue);
+    }
+
+    @Test
     public void testGetMddLoggerEnabled() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
@@ -10772,6 +10789,10 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     private void setMddLoggerKillSwitch(boolean value) {
         setAdservicesFlag(KEY_MDD_LOGGER_KILL_SWITCH, value);
+    }
+
+    private void setEnableConsentManagerV2(boolean value) {
+        setAdservicesFlag(KEY_ENABLE_CONSENT_MANAGER_V2, value);
     }
 
     private void verifyGetBooleanNotCalled(String name) {
