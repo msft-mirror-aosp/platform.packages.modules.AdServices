@@ -26,6 +26,11 @@ import static com.android.adservices.service.common.httpclient.AdServicesHttpUti
 import static com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus.FAILED;
 import static com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus.JOINED;
 import static com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus.SIGNED;
+import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_INITIALIZE_FAILED;
+import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_SOME_OR_ALL_JOIN_FAILED;
+import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_SOME_OR_ALL_SIGN_FAILED;
+import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_SUCCESS;
+import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_UNSET;
 
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -60,7 +65,9 @@ import com.android.adservices.service.exception.KAnonSignJoinException;
 import com.android.adservices.service.exception.KAnonSignJoinException.KAnonAction;
 import com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants;
@@ -118,6 +125,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 public class KAnonCallerImpl implements KAnonCaller {
+
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
 
     @NonNull private ListeningExecutorService mLightweightExecutorService;
@@ -225,8 +233,10 @@ public class KAnonCallerImpl implements KAnonCaller {
      * join call by sending the corresponding token along with the message.
      */
     @Override
-    public void signAndJoinMessages(List<KAnonMessageEntity> messageEntities) {
+    public void signAndJoinMessages(
+            List<KAnonMessageEntity> messageEntities, KAnonCallerSource source) {
         Preconditions.checkArgument(messageEntities.size() > 0);
+        long startTime = Instant.now().toEpochMilli();
 
         ListenableFuture<Void> signJoinFuture =
                 FluentFuture.from(initializeClientAndServerParameters())
@@ -238,6 +248,15 @@ public class KAnonCallerImpl implements KAnonCaller {
                 new FutureCallback<Void>() {
                     @Override
                     public void onSuccess(Void result) {
+                        long latency = Instant.now().toEpochMilli() - startTime;
+                        if (source.equals(KAnonCallerSource.BACKGROUND_JOB)) {
+                            logBackgroundJobStats(
+                                    latency, messageEntities.size(), KANON_JOB_RESULT_SUCCESS);
+                        }
+                        if (source.equals(KAnonCallerSource.IMMEDIATE_SIGN_JOIN)) {
+                            logImmediateJoinStats(
+                                    latency, messageEntities.size(), KANON_JOB_RESULT_SUCCESS);
+                        }
                         // TODO(b/326903508): Remove unused loggers. Use callback instead of logger
                         // for testing.
                         mAdServicesLogger.logKAnonSignJoinStatus();
@@ -245,12 +264,42 @@ public class KAnonCallerImpl implements KAnonCaller {
 
                     @Override
                     public void onFailure(Throwable t) {
+                        long latency = Instant.now().toEpochMilli() - startTime;
+                        int result = getKAnonJobResultFromException(t);
+                        if (source.equals(KAnonCallerSource.BACKGROUND_JOB)) {
+                            logBackgroundJobStats(latency, messageEntities.size(), result);
+                        }
+                        if (source.equals(KAnonCallerSource.IMMEDIATE_SIGN_JOIN)) {
+                            logImmediateJoinStats(latency, messageEntities.size(), result);
+                        }
                         // TODO(b/326903508): Remove unused loggers. Use callback instead of logger
                         // for testing.
                         mAdServicesLogger.logKAnonSignJoinStatus();
                     }
                 },
                 mLightweightExecutorService);
+    }
+
+    private void logBackgroundJobStats(long latency, int numberOfMessagesAttempted, int jobResult) {
+        int numberOfMessagesLeftInDb = mKAnonMessageManager.getNumberOfUnprocessedMessagesInDB();
+        KAnonBackgroundJobStatusStats kAnonBackgroundJobStatusStats =
+                KAnonBackgroundJobStatusStats.builder()
+                        .setTotalMessagesAttempted(numberOfMessagesAttempted)
+                        .setLatencyInMs((int) latency)
+                        .setKAnonJobResult(jobResult)
+                        .setMessagesInDBLeft(numberOfMessagesLeftInDb)
+                        .build();
+        mAdServicesLogger.logKAnonBackgroundJobStats(kAnonBackgroundJobStatusStats);
+    }
+
+    private void logImmediateJoinStats(long latency, int numberOfMessagesAttempted, int jobResult) {
+        KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats =
+                KAnonImmediateSignJoinStatusStats.builder()
+                        .setTotalMessagesAttempted(numberOfMessagesAttempted)
+                        .setKAnonJobResult(jobResult)
+                        .setLatencyInMs((int) latency)
+                        .build();
+        mAdServicesLogger.logKAnonImmediateSignJoinStats(kAnonImmediateSignJoinStatusStats);
     }
 
     /**
@@ -1133,7 +1182,7 @@ public class KAnonCallerImpl implements KAnonCaller {
         if (binaryHttpMessage.getResponseControlData().getFinalStatusCode() == 200) {
             sLogger.v(
                     "Response code is 200. Updating message status to JOINED in database for"
-                        + " message : "
+                            + " message : "
                             + kAnonMessageEntity.getAdSelectionId());
             return updateMessagesStatusInDatabase(List.of(kAnonMessageEntity), JOINED);
         } else {
@@ -1178,5 +1227,14 @@ public class KAnonCallerImpl implements KAnonCaller {
             return KAnonSignJoinStatsConstants.KEY_ATTESTATION_RESULT_NO_SUCH_ALGORITHM_EXCEPTION;
         }
         return KAnonSignJoinStatsConstants.KEY_ATTESTATION_RESULT_UNSET;
+    }
+
+    private int getKAnonJobResultFromException(Throwable t) {
+        if (t instanceof KAnonSignJoinException exception) {
+            if (exception.getAction().ordinal() <= 7) {
+                return KANON_JOB_RESULT_INITIALIZE_FAILED;
+            }
+        }
+        return KANON_JOB_RESULT_UNSET;
     }
 }
