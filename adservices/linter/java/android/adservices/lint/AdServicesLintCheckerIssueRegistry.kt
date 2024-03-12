@@ -45,7 +45,7 @@ class AdServicesLintCheckerIssueRegistry : IssueRegistry() {
     override val vendor =
         Vendor(
             vendorName = "Android",
-            feedbackUrl = "http://b/issues/new?component=1210174",
+            feedbackUrl = "http://b/issues/new?component=1451456",
             contact = "gehuang@google.com"
         )
 }
