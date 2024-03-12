@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.DeviceConfigFlagsHelper.getDeviceConfigFlag;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
@@ -81,7 +82,6 @@ import static java.lang.Float.parseFloat;
 
 import android.annotation.NonNull;
 import android.os.SystemProperties;
-import android.provider.DeviceConfig;
 import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
@@ -5980,32 +5980,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers
-
-    @VisibleForTesting
-    static boolean getDeviceConfigFlag(String name, boolean defaultValue) {
-        return DeviceConfig.getBoolean(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
-    }
-
-    @VisibleForTesting
-    static String getDeviceConfigFlag(String name, String defaultValue) {
-        return DeviceConfig.getString(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
-    }
-
-    @VisibleForTesting
-    static int getDeviceConfigFlag(String name, int defaultValue) {
-        return DeviceConfig.getInt(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
-    }
-
-    @VisibleForTesting
-    static long getDeviceConfigFlag(String name, long defaultValue) {
-        return DeviceConfig.getLong(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
-    }
-
-    @VisibleForTesting
-    static float getDeviceConfigFlag(String name, float defaultValue) {
-        return DeviceConfig.getFloat(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
-    }
-
     /**
      * @deprecated - reading a flag from {@link SystemProperties} first is deprecated - this method
      *     should only be used to refactor existing methods in this class, not on new ones.
@@ -6014,9 +5988,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     private static boolean getFlagFromSystemPropertiesOrDeviceConfig(
             String name, boolean defaultValue) {
         return SystemProperties.getBoolean(
-                getSystemPropertyName(name),
-                /* def= */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue));
+                getSystemPropertyName(name), getDeviceConfigFlag(name, defaultValue));
     }
 
     @VisibleForTesting
