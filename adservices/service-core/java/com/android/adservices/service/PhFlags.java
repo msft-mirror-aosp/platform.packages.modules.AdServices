@@ -1962,13 +1962,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getAdServicesErrorLoggingEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ADSERVICES_ERROR_LOGGING_ENABLED,
-                ADSERVICES_ERROR_LOGGING_ENABLED);
-    }
-
-    @Override
     public int getNumberOfEpochsToKeepInHistory() {
         int numberOfEpochsToKeepInHistory =
                 getDeviceConfigFlag(
@@ -4569,12 +4562,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND
                         + " = "
                         + getFledgeReportInteractionRequestPermitsPerSecond());
-        writer.println("==== AdServices PH Flags Error Logging ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ADSERVICES_ERROR_LOGGING_ENABLED
-                        + " = "
-                        + getAdServicesErrorLoggingEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ERROR_CODE_LOGGING_DENY_LIST
