@@ -20,6 +20,7 @@ import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
@@ -36,9 +37,9 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.fixture.TestableSystemProperties;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
@@ -60,7 +61,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     // TODO(b/326254556): add 2 tests (T and pre-T) for getGlobalKillSwitch() itself
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetTopicsEpochJobFlexMs() {
         testUnguardedFlag(
@@ -69,14 +69,12 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 flags -> flags.getTopicsEpochJobFlexMs());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetAdIdKillSwitch() {
         testUnguardedLegacyKillSwitch(
                 KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", flags -> flags.getAdIdKillSwitch());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetLegacyMeasurementKillSwitch() {
         testLegacyKillSwitch(
@@ -85,7 +83,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 flags -> flags.getLegacyMeasurementKillSwitch());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetMeasurementEnabled() {
         testFeatureFlagBackedByLegacyKillSwitch(
@@ -94,7 +91,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 flags -> flags.getMeasurementEnabled());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
         testFeatureFlagBackedByLegacyKillSwitch(
@@ -104,7 +100,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 flags -> flags.getMeasurementAttributionFallbackJobEnabled());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetCobaltLoggingEnabled() {
         testFeatureFlag(
@@ -113,7 +108,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 flags -> flags.getCobaltLoggingEnabled());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetMddLoggerEnabled() {
         testFeatureFlagBackedByLegacyKillSwitch(
@@ -303,7 +297,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                     .that(flaginator.getFlagValue(mPhFlags))
                     .isEqualTo(disabledValue);
 
-            // Make sure neither DeviceConfig or SystemProperty was called
+            // Make sure neither DeviceConfig nor SystemProperty was called
             verifyGetBooleanSystemPropertyNotCalled(flagName);
             verifyGetBooleanDeviceConfigFlagNotCalled(flagName);
 
@@ -349,6 +343,9 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     private void setGlobalKillSwitch(boolean value) {
         ExtendedMockitoExpectations.mockGetAdServicesFlag(KEY_GLOBAL_KILL_SWITCH, value);
+        if (!SdkLevel.isAtLeastT()) {
+            ExtendedMockitoExpectations.mockGetAdServicesFlag(KEY_ENABLE_BACK_COMPAT, !value);
+        }
     }
 
     private void setMsmmtKillSwitch(boolean value) {
