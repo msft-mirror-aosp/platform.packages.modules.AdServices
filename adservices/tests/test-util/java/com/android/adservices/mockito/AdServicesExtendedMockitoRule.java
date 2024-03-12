@@ -170,6 +170,17 @@ public class AdServicesExtendedMockitoRule
         doReturn(isIt).when(SdkLevel::isAtLeastT);
     }
 
+    /** Mocks a call to SDK level to return R */
+    public final void mockSdkLevelR() {
+        logV("mockSdkLevelR()");
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(true).when(SdkLevel::isAtLeastR);
+        doReturn(false).when(SdkLevel::isAtLeastS);
+        doReturn(false).when(SdkLevel::isAtLeastSv2);
+        doReturn(false).when(SdkLevel::isAtLeastT);
+        doReturn(false).when(SdkLevel::isAtLeastU);
+    }
+
     /**
      * Mocks a call to {@link ActivityManager#getCurrentUser()}, returning {@code user}.
      *

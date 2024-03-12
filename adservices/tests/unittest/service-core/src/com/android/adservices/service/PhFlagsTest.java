@@ -7632,8 +7632,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        extendedMockito.mockIsAtLeastT(false);
-        extendedMockito.mockIsAtLeastS(false);
+        extendedMockito.mockSdkLevelR();
 
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementRollbackDeletionREnabled())
