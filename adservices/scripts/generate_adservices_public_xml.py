@@ -62,27 +62,28 @@ class AdServicesUiUtil:
             file.write(self.COPYRIGHT_TEXT)
             file.write(ET.tostring(root, encoding="unicode"))
 
-    def update_public_xml(self, strings_xml_dir=STRINGS_XML_DIR, public_xml_dir=PUBLIC_XML_DIR):
-        if not os.path.exists(strings_xml_dir):
+    def update_public_xml(self, public_xml_dir=PUBLIC_XML_DIR, res_xml_dir=STRINGS_XML_DIR,
+                          res_type='string'):
+        if not os.path.exists(res_xml_dir):
             return
 
-        new_strings = [node.attrib['name'] for node in ET.parse(strings_xml_dir).getroot()]
+        new_res = [node.attrib['name'] for node in ET.parse(res_xml_dir).getroot()]
         root, mapping = self._get_existing_tree(public_xml_dir)
 
-        added_strings = [string for string in new_strings if string not in mapping]
+        added_res = [res for res in new_res if res not in mapping]
         # TO-DO: add code to remove exsting elements when needed.
-        new_strings = set(new_strings)
-        deleted_strings = set(string for string in mapping if string not in new_strings)
+        new_res = set(new_res)
+        deleted_res = set(res for res in mapping if res not in new_res)
 
-        if not added_strings:
+        if not added_res:
             return
 
         i_min = self._get_min_id(mapping)
-        for string in added_strings:
+        for res in added_res:
             i_min -= 1
             added_element = ET.SubElement(root, 'public')
-            added_element.set('type', 'string')
-            added_element.set('name', string)
+            added_element.set('type', res_type)
+            added_element.set('name', res)
             added_element.set('id', hex(i_min))
 
         self._overwrite_public_xml(root, public_xml_dir)
