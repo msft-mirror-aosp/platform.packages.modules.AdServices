@@ -28,13 +28,14 @@ import android.os.PersistableBundle;
  * extra parameters, please reach out to Infra team.
  */
 public final class ExecutionRuntimeParameters {
-    private final PersistableBundle mExtras;
+    @Nullable private final PersistableBundle mExtras;
 
-    private ExecutionRuntimeParameters(PersistableBundle extras) {
+    private ExecutionRuntimeParameters(@Nullable PersistableBundle extras) {
         mExtras = extras;
     }
 
     /** Returns the extras configured in job scheduling. */
+    @Nullable
     public PersistableBundle getExtras() {
         return mExtras;
     }
