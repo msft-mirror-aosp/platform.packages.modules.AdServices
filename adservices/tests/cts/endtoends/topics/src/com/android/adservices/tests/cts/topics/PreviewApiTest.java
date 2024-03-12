@@ -21,6 +21,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
+import android.adservices.topics.EncryptedTopic;
 import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
@@ -48,6 +49,8 @@ public final class PreviewApiTest extends CtsTopicsEndToEndTestCase {
 
     // Use 0 percent for random topic in the test so that we can verify the returned topic.
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
+    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+    private static final String EMPTY_STRING = "";
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
@@ -148,6 +151,15 @@ public final class PreviewApiTest extends CtsTopicsEndToEndTestCase {
         GetTopicsResponse.Builder mockedBuilder =
                 new GetTopicsResponse.Builder(List.of(mockedTopic));
         mockedBuilder.build();
+
+        EncryptedTopic mockedEncryptedTopic =
+                new EncryptedTopic(
+                        /* encryptedTopic */ EMPTY_BYTE_ARRAY,
+                        /* keyIdentifier */ EMPTY_STRING,
+                        /* encapsulatedKey */ EMPTY_BYTE_ARRAY);
+        GetTopicsResponse.Builder mockedEncryptedBuilder =
+                new GetTopicsResponse.Builder(List.of(mockedTopic), List.of(mockedEncryptedTopic));
+        mockedEncryptedBuilder.build();
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */

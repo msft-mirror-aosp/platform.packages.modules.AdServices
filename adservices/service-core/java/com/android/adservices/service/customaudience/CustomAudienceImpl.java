@@ -99,7 +99,7 @@ public class CustomAudienceImpl {
                         new CustomAudienceImpl(
                                 customAudienceDao,
                                 new CustomAudienceQuantityChecker(customAudienceDao, flags),
-                                CustomAudienceValidator.getInstance(context),
+                                CustomAudienceValidator.getInstance(context, flags),
                                 Clock.systemUTC(),
                                 flags);
             }

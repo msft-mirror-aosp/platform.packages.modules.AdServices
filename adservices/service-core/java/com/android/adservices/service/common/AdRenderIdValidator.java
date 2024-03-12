@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -36,11 +37,14 @@ public interface AdRenderIdValidator extends Validator<String> {
      *     flags}.
      */
     static AdRenderIdValidator createInstance(Flags flags) {
+        LoggerFactory.Logger logger = LoggerFactory.getFledgeLogger();
         boolean adRenderIdEnabled = flags.getFledgeAuctionServerAdRenderIdEnabled();
         if (!adRenderIdEnabled) {
+            logger.v("Ad render ID disabled");
             return AD_RENDER_ID_VALIDATOR_NO_OP;
         } else {
             final long maxLength = flags.getFledgeAuctionServerAdRenderIdMaxLength();
+            logger.v("Ad render ID enabled with max length %d", maxLength);
             return createEnabledInstance(maxLength);
         }
     }

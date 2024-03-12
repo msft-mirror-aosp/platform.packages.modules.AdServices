@@ -59,18 +59,7 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
     }
 
     @Test
-    public void testLogError_errorLoggingFlagDisabled() {
-        mockAdServicesErrorLogging(/* enabled= */ false);
-
-        mErrorLogger.logError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
-
-        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
-    }
-
-    @Test
     public void testLogError_errorLoggingFlagEnabled_errorCodeLoggingDenied() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
         mockErrorCodeLoggingDenyList(
                 ImmutableList.of(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR));
 
@@ -82,7 +71,6 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
 
     @Test
     public void testLogError_errorLoggingFlagEnabled() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
         ArgumentCaptor<AdServicesErrorStats> adServicesErrorStatsArgumentCaptor =
                 ArgumentCaptor.forClass(AdServicesErrorStats.class);
 
@@ -97,20 +85,7 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_errorLoggingFlagDisabled() {
-        mockAdServicesErrorLogging(/* enabled= */ false);
-
-        mErrorLogger.logErrorWithExceptionInfo(
-                new Exception(),
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
-                PPAPI_NAME);
-
-        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
-    }
-
-    @Test
     public void testLogErrorWithExceptionInfo_errorLoggingFlagEnabled_errorCodeLoggingDenied() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
         mockErrorCodeLoggingDenyList(
                 ImmutableList.of(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION));
 
@@ -124,7 +99,6 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
 
     @Test
     public void testLogErrorWithExceptionInfo_errorLoggingFlagEnabled() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
         Exception exception = createSQLiteException(CLASS_NAME, METHOD_NAME, LINE_NUMBER);
 
         mErrorLogger.logErrorWithExceptionInfo(
@@ -147,7 +121,6 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
 
     @Test
     public void testLogErrorWithExceptionInfo_fullyQualifiedClassName_errorLoggingFlagEnabled() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
         String fullClassName = "com.android.adservices.topics.TopicsService";
         Exception exception = createSQLiteException(fullClassName, METHOD_NAME, LINE_NUMBER);
 
@@ -171,8 +144,6 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
 
     @Test
     public void testLogErrorWithExceptionInfo_emptyClassName_errorLoggingFlagEnabled() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
-
         Exception exception = createSQLiteException(/* className = */ "", METHOD_NAME, LINE_NUMBER);
 
         mErrorLogger.logErrorWithExceptionInfo(
@@ -201,10 +172,6 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
         Exception exception = new SQLiteException();
         exception.setStackTrace(stackTraceElements);
         return exception;
-    }
-
-    private void mockAdServicesErrorLogging(boolean enabled) {
-        when(mFlags.getAdServicesErrorLoggingEnabled()).thenReturn(enabled);
     }
 
     private void mockErrorCodeLoggingDenyList(ImmutableList<Integer> errorCodeLoggingDenyList) {

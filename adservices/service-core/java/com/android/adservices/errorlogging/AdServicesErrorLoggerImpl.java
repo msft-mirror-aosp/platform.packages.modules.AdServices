@@ -54,7 +54,6 @@ public final class AdServicesErrorLoggerImpl extends AbstractAdServicesErrorLogg
 
     @Override
     protected boolean isEnabled(int errorCode) {
-        return mFlags.getAdServicesErrorLoggingEnabled()
-                && !mFlags.getErrorCodeLoggingDenyList().contains(errorCode);
+        return !mFlags.getErrorCodeLoggingDenyList().contains(errorCode);
     }
 }

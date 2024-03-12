@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.spy;
 
+import android.app.KeyguardManager;
 import android.content.Context;
 import android.os.RemoteException;
 
@@ -52,6 +53,16 @@ public abstract class AdServicesUiTestCase extends AdServicesExtendedMockitoTest
     public void setUpDevice() throws RemoteException {
         mSpyContext = spy(appContext.get());
 
+        // Unlock the device if required
+        KeyguardManager keyguardManager = mSpyContext.getSystemService(KeyguardManager.class);
+        if (keyguardManager.isKeyguardLocked()) {
+            mDevice.swipe(
+                    mDevice.getDisplayWidth() / 2,
+                    mDevice.getDisplayHeight(),
+                    mDevice.getDisplayWidth() / 2,
+                    0,
+                    50);
+        }
         // Start from the home screen
         mDevice.pressHome();
         mDevice.setOrientationNatural();

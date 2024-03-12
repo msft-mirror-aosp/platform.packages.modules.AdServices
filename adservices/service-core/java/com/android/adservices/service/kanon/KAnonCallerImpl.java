@@ -474,13 +474,13 @@ public class KAnonCallerImpl implements KAnonCaller {
         byte[] clientPublicParametersBytes = mClientParameters.getPublicParameters().toByteArray();
         long clientParamsExpiryInSeconds =
                 registerClientResponse.getClientParamsExpiry().getSeconds();
+        Instant clientParamExpiryInstant = Instant.ofEpochSecond(clientParamsExpiryInSeconds);
         DBClientParameters clientParametersToSave =
                 DBClientParameters.builder()
                         .setClientPrivateParameters(clientPrivateParameterBytes)
                         .setClientPublicParameters(clientPublicParametersBytes)
                         .setClientId(mClientId)
-                        .setClientParametersExpiryInstant(
-                                Instant.ofEpochSecond(clientParamsExpiryInSeconds))
+                        .setClientParametersExpiryInstant(clientParamExpiryInstant)
                         .setClientParamsVersion(mClientParamsVersion)
                         .build();
 
@@ -492,8 +492,8 @@ public class KAnonCallerImpl implements KAnonCaller {
                         .setServerPublicParameters(mServerPublicParameters.toByteArray())
                         .setCreationInstant(Instant.now())
                         .setServerParamsVersion(mServerParamVersion)
-                        .setServerParamsJoinExpiryInstant(Instant.now().plusSeconds(10000))
-                        .setServerParamsSignExpiryInstant(Instant.now().plusSeconds(10000))
+                        .setServerParamsJoinExpiryInstant(clientParamExpiryInstant)
+                        .setServerParamsSignExpiryInstant(clientParamExpiryInstant)
                         .build();
         return Futures.submit(
                 () -> {

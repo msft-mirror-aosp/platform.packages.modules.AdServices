@@ -17,7 +17,7 @@ package {
 }
 
 java_library_host {
-    name: "BackCompatLintChecker",
+    name: "AdServicesLintChecker",
     srcs: [
         "java/**/*.java",
         "java/**/*.kt",
@@ -32,12 +32,12 @@ java_library_host {
 }
 
 java_test_host {
-    name: "BackCompatLintCheckerTest",
+    name: "AdServicesLintCheckerTest",
     srcs: [
         "tests/java/**/*.kt",
     ],
     static_libs: [
-        "BackCompatLintChecker",
+        "AdServicesLintChecker",
         "junit",
         "lint",
         "lint_tests",
