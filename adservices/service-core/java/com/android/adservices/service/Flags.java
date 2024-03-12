@@ -1770,13 +1770,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return ADSERVICES_ENABLED;
     }
 
-    boolean ADSERVICES_ERROR_LOGGING_ENABLED = false;
-
-    /** Return {@code true} if error logging is enabled */
-    default boolean getAdServicesErrorLoggingEnabled() {
-        return ADSERVICES_ERROR_LOGGING_ENABLED;
-    }
-
     /**
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
      * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
