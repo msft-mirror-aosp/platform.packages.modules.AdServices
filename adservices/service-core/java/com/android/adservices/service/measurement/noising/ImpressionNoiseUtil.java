@@ -16,13 +16,13 @@
 
 package com.android.adservices.service.measurement.noising;
 
-import com.android.adservices.service.measurement.ReportSpec;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Util class for generating impression noise
@@ -105,33 +105,33 @@ public final class ImpressionNoiseUtil {
      * @return list of reporting configs
      */
     public static List<int[]> selectRandomStateAndGenerateReportConfigs(
-            ImpressionNoiseParams noiseParams, Random rand) {
+            ImpressionNoiseParams noiseParams, ThreadLocalRandom rand) {
         // Get total possible combinations
-        int numCombinations =
+        long numCombinations =
                 Combinatorics.getNumberOfStarsAndBarsSequences(
                         /*numStars=*/ noiseParams.getReportCount(),
                         /*numBars=*/ noiseParams.getTriggerDataCardinality()
                                 * noiseParams.getReportingWindowCount()
                                 * noiseParams.getDestinationTypeMultiplier());
         // Choose a sequence index
-        int sequenceIndex = rand.nextInt(numCombinations);
+        long sequenceIndex = nextLong(rand, numCombinations);
         return getReportConfigsForSequenceIndex(noiseParams, sequenceIndex);
     }
 
     @VisibleForTesting
     static List<int[]> getReportConfigsForSequenceIndex(
-            ImpressionNoiseParams noiseParams, int sequenceIndex) {
+            ImpressionNoiseParams noiseParams, long sequenceIndex) {
         List<int[]> reportConfigs = new ArrayList<>();
         // Get the configuration for the sequenceIndex
-        int[] starIndices = Combinatorics.getStarIndices(
+        long[] starIndices = Combinatorics.getStarIndices(
                 /*numStars=*/noiseParams.getReportCount(),
                 /*sequenceIndex=*/sequenceIndex);
-        int[] barsPrecedingEachStar = Combinatorics.getBarsPrecedingEachStar(starIndices);
+        long[] barsPrecedingEachStar = Combinatorics.getBarsPrecedingEachStar(starIndices);
         // Generate fake reports
         // Stars: number of reports
         // Bars: (Number of windows) * (Trigger data cardinality) * (Destination multiplier)
-        for (int numBars : barsPrecedingEachStar) {
-            if (numBars == 0) {
+        for (long numBars : barsPrecedingEachStar) {
+            if (numBars == 0L) {
                 continue;
             }
 
@@ -149,35 +149,45 @@ public final class ImpressionNoiseUtil {
      * @param noiseParams noise params
      * @return array having triggerData, destinationType and windowIndex
      */
-    private static int[] createReportingConfig(int numBars, ImpressionNoiseParams noiseParams) {
-        int triggerData = (numBars - 1) % noiseParams.getTriggerDataCardinality();
-        int remainingData = (numBars - 1) / noiseParams.getTriggerDataCardinality();
+    private static int[] createReportingConfig(long numBars, ImpressionNoiseParams noiseParams) {
+        long triggerData = (numBars - 1L) % ((long) noiseParams.getTriggerDataCardinality());
+        long remainingData = (numBars - 1L) / ((long) noiseParams.getTriggerDataCardinality());
 
-        int reportingWindowIndex = remainingData % noiseParams.getReportingWindowCount();
-        int destinationTypeIndex = remainingData / noiseParams.getReportingWindowCount();
-        return new int[] {triggerData, reportingWindowIndex, destinationTypeIndex};
+        int reportingWindowIndex = ((int) remainingData) % noiseParams.getReportingWindowCount();
+        int destinationTypeIndex = ((int) remainingData) / noiseParams.getReportingWindowCount();
+        return new int[] {(int) triggerData, reportingWindowIndex, destinationTypeIndex};
     }
 
     /**
      * Randomly generate report configs based on noise params
      *
-     * @param reportSpec Report spec to use for state generation
+     * @param triggerSpecs trigger specs to use for state generation
      * @param destinationMultiplier destination multiplier
      * @param rand random number generator
      * @return list of reporting configs
      */
     public static List<int[]> selectFlexEventReportRandomStateAndGenerateReportConfigs(
-            ReportSpec reportSpec, int destinationMultiplier, Random rand) {
+            TriggerSpecs triggerSpecs, int destinationMultiplier, ThreadLocalRandom rand) {
 
-        int[][] params = reportSpec.getPrivacyParamsForComputation();
+        // Assumes trigger specs already built privacy parameters.
+        int[][] params = triggerSpecs.getPrivacyParamsForComputation();
+        // Doubling the window cap for each trigger data type correlates with counting report states
+        // that treat having a web destination as different from an app destination.
+        int[] updatedPerTypeNumWindowList = new int[params[1].length];
         for (int i = 0; i < params[1].length; i++) {
-            params[1][i] *= destinationMultiplier;
+            updatedPerTypeNumWindowList[i] = params[1][i] * destinationMultiplier;
         }
-        int numStates = Combinatorics.getNumStatesFlexAPI(params[0][0], params[1], params[2]);
-        int sequenceIndex = rand.nextInt(numStates);
+        long numStates =
+                Combinatorics.getNumStatesFlexApi(
+                        params[0][0], updatedPerTypeNumWindowList, params[2]);
+        long sequenceIndex = nextLong(rand, numStates);
         List<Combinatorics.AtomReportState> rawFakeReports =
                 Combinatorics.getReportSetBasedOnRank(
-                        params[0][0], params[1], params[2], sequenceIndex, new HashMap<>());
+                        params[0][0],
+                        updatedPerTypeNumWindowList,
+                        params[2],
+                        sequenceIndex,
+                        new HashMap<>());
         List<int[]> fakeReportConfigs = new ArrayList<>();
         for (Combinatorics.AtomReportState rawFakeReport : rawFakeReports) {
             int[] fakeReportConfig = new int[3];
@@ -187,5 +197,11 @@ public final class ImpressionNoiseUtil {
             fakeReportConfigs.add(fakeReportConfig);
         }
         return fakeReportConfigs;
+    }
+
+    /** Wrapper for calls to ThreadLocalRandom visible for testing */
+    @VisibleForTesting
+    public static long nextLong(ThreadLocalRandom rand, long bound) {
+        return rand.nextLong(bound);
     }
 }

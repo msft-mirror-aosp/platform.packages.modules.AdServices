@@ -219,7 +219,8 @@ class AppSearchTopicsConsentDao extends AppSearchDao {
     public static AppSearchTopicsConsentDao readConsentData(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(userId);
@@ -228,7 +229,8 @@ class AppSearchTopicsConsentDao extends AppSearchDao {
                 searchSession,
                 executor,
                 NAMESPACE,
-                getQuery(userId));
+                getQuery(userId),
+                adServicesPackageName);
     }
 
     /** Adds a blocked topic to the list of blocked topics. */
@@ -287,7 +289,8 @@ class AppSearchTopicsConsentDao extends AppSearchDao {
     public static List<Topic> getBlockedTopics(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(userId);
@@ -295,7 +298,12 @@ class AppSearchTopicsConsentDao extends AppSearchDao {
         String query = getQuery(userId);
         AppSearchTopicsConsentDao dao =
                 AppSearchDao.readConsentData(
-                        AppSearchTopicsConsentDao.class, searchSession, executor, NAMESPACE, query);
+                        AppSearchTopicsConsentDao.class,
+                        searchSession,
+                        executor,
+                        NAMESPACE,
+                        query,
+                        adServicesPackageName);
         LogUtil.d("AppSearch topics data read: " + dao + " [ query: " + query + "]");
         if (dao == null) {
             return List.of();

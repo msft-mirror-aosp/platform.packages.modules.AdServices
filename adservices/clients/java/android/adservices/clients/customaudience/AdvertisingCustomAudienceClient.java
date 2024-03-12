@@ -19,6 +19,7 @@ package android.adservices.clients.customaudience;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceManager;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.LeaveCustomAudienceRequest;
 import android.annotation.NonNull;
@@ -93,6 +94,32 @@ public class AdvertisingCustomAudienceClient {
                     // This value is used only for debug purposes: it will be used in toString()
                     // of returned future or error cases.
                     return "joinCustomAudience";
+                });
+    }
+
+    /** Fetch and Join custom audience. */
+    @NonNull
+    public ListenableFuture<Void> fetchAndJoinCustomAudience(
+            FetchAndJoinCustomAudienceRequest request) {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mCustomAudienceManager.fetchAndJoinCustomAudience(
+                            request,
+                            mExecutor,
+                            new OutcomeReceiver<Object, Exception>() {
+                                @Override
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    // This value is used only for debug purposes: it will be used in toString()
+                    // of returned future or error cases.
+                    return "fetchAndjoinCustomAudience";
                 });
     }
 

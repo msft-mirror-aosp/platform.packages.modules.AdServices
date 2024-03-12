@@ -16,17 +16,39 @@
 
 package android.adservices.adselection;
 
+import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
+
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
+
+import com.android.adservices.service.adselection.AdCost;
+import com.android.adservices.service.adselection.BuyerContextualSignals;
 
 public class CustomAudienceBiddingInfoFixture {
 
     public static final String VALID_BIDDING_LOGIC_URI_FORMAT = "https://%s/bidding/logic/here/";
 
+    public static final int DATA_VERSION_1 = 1;
+    public static final int DATA_VERSION_2 = 2;
+
     public static final String BUYER_DECISION_LOGIC_JS =
             "function runBidding(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                     + ") {;\n"
                     + "}";
+
+    public static final BuyerContextualSignals BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST =
+            BuyerContextualSignals.builder()
+                    .setAdCost(new AdCost(1.0, NUM_BITS_STOCHASTIC_ROUNDING))
+                    .build();
+
+    public static final BuyerContextualSignals BUYER_CONTEXTUAL_SIGNALS_WITH_DATA_VERSION =
+            BuyerContextualSignals.builder().setDataVersion(DATA_VERSION_1).build();
+
+    public static final BuyerContextualSignals BUYER_CONTEXTUAL_SIGNALS_All =
+            BuyerContextualSignals.builder()
+                    .setAdCost(new AdCost(1.0, NUM_BITS_STOCHASTIC_ROUNDING))
+                    .setDataVersion(DATA_VERSION_1)
+                    .build();
 
     public static Uri getValidBiddingLogicUri(String buyer) {
         return Uri.parse(String.format(VALID_BIDDING_LOGIC_URI_FORMAT, buyer));

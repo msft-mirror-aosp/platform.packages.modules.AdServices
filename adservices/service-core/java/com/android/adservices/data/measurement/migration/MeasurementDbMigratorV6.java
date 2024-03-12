@@ -21,7 +21,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.MeasurementTables;
 
 import org.json.JSONArray;
@@ -139,7 +139,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.AsyncRegistrationContract.TABLE,
                 MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID)) {
-            LogUtil.d("Registration id exists. Skipping Migration");
+            LoggerFactory.getMeasurementLogger().d("Registration id exists. Skipping Migration");
             return;
         }
 
@@ -277,7 +277,8 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.AsyncRegistrationContract.ID + " = ?",
                         new String[] {id});
         if (rowCount != 1) {
-            LogUtil.d("MeasurementDbMigratorV6: failed to update source record.");
+            LoggerFactory.getMeasurementLogger()
+                    .d("MeasurementDbMigratorV6: failed to update source record.");
         }
     }
 
@@ -292,7 +293,8 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.SourceContract.ID + " = ?",
                         new String[] {id});
         if (rowCount != 1) {
-            LogUtil.d("MeasurementDbMigratorV6: failed to update source record.");
+            LoggerFactory.getMeasurementLogger()
+                    .d("MeasurementDbMigratorV6: failed to update source record.");
         }
     }
 

@@ -26,11 +26,13 @@ java_test_host {
     static_libs: [
         "cts-install-lib-host",
         "modules-utils-build-testing",
+        "SdkSandboxHostTestUtils",
     ],
     test_suites: ["general-tests"],
     data: [
         ":CrashTestSdkProvider",
         ":SdkSandboxMetricsTestApp",
+        ":SdkSandboxMetricsSecondaryTestApp",
     ],
 }
 
@@ -62,6 +64,29 @@ java_library {
     srcs: [
         "sdkprovider/src/**/*.aidl",
     ],
+}
+
+android_test_helper_app {
+    name: "SdkSandboxMetricsSecondaryTestApp",
+    manifest: "app/SdkSandboxMetricsSecondaryTestAppManifest.xml",
+    srcs: [
+        "app/src/**/SdkSandboxMetricsSecondaryTestApp.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
+    ],
+    defaults: ["framework-sdksandbox-jarjar-defaults"],
+    static_libs: [
+        "androidx.core_core",
+        "androidx.test.ext.junit",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "SdkSandboxTestUtils",
+        "CrashTestSdkApi",
+    ],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
+    test_suites: ["general-tests"],
 }
 
 android_test_helper_app {

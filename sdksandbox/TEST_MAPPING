@@ -13,6 +13,9 @@
       "name": "CtsSdkSandboxInprocessTests[com.google.android.adservices.apex]"
     },
     {
+      "name": "SdkSandboxInprocessTests[com.google.android.adservices.apex]"
+    },
+    {
       "name": "SdkSandboxManagerServiceUnitTests[com.google.android.adservices.apex]"
     },
     {
@@ -81,6 +84,9 @@
       "name": "CtsSdkSandboxInprocessTests"
     },
     {
+      "name": "SdkSandboxInprocessTests"
+    },
+    {
       "name": "CtsSdkSandboxWebkitTestCases",
       "options": [
         {
@@ -110,6 +116,9 @@
       "name": "BroadcastRestrictionsHostTest"
     },
     {
+      "name": "ContentProviderRestrictionsHostTest"
+    },
+    {
       "name": "SdkSandboxStorageHostTest",
       "options": [
         {
@@ -128,6 +137,9 @@
     },
     {
       "name": "SdkSandboxTestUtilsExampleTest"
+    },
+    {
+      "name": "SdkSandboxSmallModuleHostTest"
     }
   ],
   "postsubmit": [

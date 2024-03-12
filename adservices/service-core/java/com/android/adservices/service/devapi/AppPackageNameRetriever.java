@@ -23,8 +23,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.common.SdkRuntimeUtil;
-
-import com.google.common.annotations.VisibleForTesting;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 

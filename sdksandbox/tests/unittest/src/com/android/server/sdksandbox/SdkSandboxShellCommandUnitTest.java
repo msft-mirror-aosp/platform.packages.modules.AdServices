@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.Manifest;
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -173,7 +174,6 @@ public class SdkSandboxShellCommandUnitTest {
                         Mockito.eq(
                                 "Shell command `sdk_sandbox start` failed due to sandbox"
                                         + " disabled."));
-        mService.setIsSdkSandboxDisabledResponse(false);
     }
 
     @Test
@@ -199,7 +199,8 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService, Mockito.never())
                 .startSdkSandboxIfNeeded(
                         Mockito.any(CallingInfo.class),
-                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class),
+                        Mockito.any(SandboxLatencyInfo.class));
     }
 
     @Test
@@ -224,7 +225,8 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService, Mockito.never())
                 .startSdkSandboxIfNeeded(
                         Mockito.any(CallingInfo.class),
-                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class),
+                        Mockito.any(SandboxLatencyInfo.class));
     }
 
     @Test
@@ -249,7 +251,8 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService)
                 .startSdkSandboxIfNeeded(
                         Mockito.eq(callingInfo),
-                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class),
+                        Mockito.any(SandboxLatencyInfo.class));
     }
 
     @Test
@@ -276,7 +279,8 @@ public class SdkSandboxShellCommandUnitTest {
         Mockito.verify(mService)
                 .startSdkSandboxIfNeeded(
                         Mockito.eq(callingInfo),
-                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class));
+                        Mockito.any(SdkSandboxManagerService.SandboxBindingCallback.class),
+                        Mockito.any(SandboxLatencyInfo.class));
     }
 
     @Test
@@ -385,11 +389,16 @@ public class SdkSandboxShellCommandUnitTest {
         }
 
         @Override
-        void startSdkSandboxIfNeeded(CallingInfo callingInfo, SandboxBindingCallback callback) {
+        void startSdkSandboxIfNeeded(
+                CallingInfo callingInfo,
+                SandboxBindingCallback callback,
+                SandboxLatencyInfo sandboxLatencyInfo) {
             if (mBindingSuccessful) {
-                callback.onBindingSuccessful(Mockito.mock(ISdkSandboxService.class), -1);
+                callback.onBindingSuccessful(
+                        Mockito.mock(ISdkSandboxService.class), sandboxLatencyInfo);
             } else {
-                callback.onBindingFailed(new LoadSdkException(null, new Bundle()), -1);
+                callback.onBindingFailed(
+                        new LoadSdkException(null, new Bundle()), sandboxLatencyInfo);
             }
         }
 
@@ -403,7 +412,7 @@ public class SdkSandboxShellCommandUnitTest {
         }
 
         @Override
-        boolean isSdkSandboxDisabled(ISdkSandboxService boundService) {
+        boolean isSdkSandboxDisabled() {
             return mIsDisabledResponse;
         }
 

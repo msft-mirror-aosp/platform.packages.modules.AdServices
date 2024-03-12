@@ -43,5 +43,4 @@ android_test {
         "mts-adservices",
         "general-tests",
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
 }

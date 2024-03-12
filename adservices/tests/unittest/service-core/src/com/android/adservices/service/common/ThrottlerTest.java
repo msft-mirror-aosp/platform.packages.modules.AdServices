@@ -19,8 +19,10 @@ package com.android.adservices.service.common;
 import static com.android.adservices.service.common.Throttler.ApiKey.ADID_API_APP_PACKAGE_NAME;
 import static com.android.adservices.service.common.Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME;
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCE;
+import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCES;
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_TRIGGER;
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE;
+import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER;
 import static com.android.adservices.service.common.Throttler.ApiKey.UNKNOWN;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
@@ -121,6 +123,9 @@ public class ThrottlerTest {
         doReturn(3F).when(flags).getAppSetIdRequestPermitsPerSecond();
         doReturn(4F).when(flags).getMeasurementRegisterSourceRequestPermitsPerSecond();
         doReturn(5F).when(flags).getMeasurementRegisterWebSourceRequestPermitsPerSecond();
+        doReturn(6F).when(flags).getMeasurementRegisterTriggerRequestPermitsPerSecond();
+        doReturn(7F).when(flags).getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
+        doReturn(8F).when(flags).getMeasurementRegisterSourcesRequestPermitsPerSecond();
 
         final Throttler throttler = new Throttler(flags);
 
@@ -138,6 +143,15 @@ public class ThrottlerTest {
 
         // Register Web Source ApiKey configured with 5 request per second
         assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_WEB_SOURCE, 5);
+
+        // Register Trigger ApiKey configured with 6 request per second
+        assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_TRIGGER, 6);
+
+        // Register Web Trigger ApiKey configured with 7 request per second
+        assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_WEB_TRIGGER, 7);
+
+        // Register Sources ApiKey configured with 8 request per second
+        assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_SOURCES, 8);
     }
 
     @Test
@@ -190,7 +204,16 @@ public class ThrottlerTest {
                 .getMeasurementRegisterSourceRequestPermitsPerSecond();
         doReturn(permitsPerSecond)
                 .when(flags)
+                .getMeasurementRegisterSourcesRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(flags)
                 .getMeasurementRegisterWebSourceRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(flags)
+                .getMeasurementRegisterTriggerRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(flags)
+                .getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
         doReturn(permitsPerSecond).when(flags).getTopicsApiSdkRequestPermitsPerSecond();
         doReturn(permitsPerSecond).when(flags).getTopicsApiAppRequestPermitsPerSecond();
         return flags;

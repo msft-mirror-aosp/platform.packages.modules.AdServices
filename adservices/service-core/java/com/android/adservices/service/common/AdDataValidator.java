@@ -37,15 +37,25 @@ public class AdDataValidator implements Validator<AdData> {
 
     @NonNull private final AdTechUriValidator mUriValidator;
     @NonNull private final JsonValidator mMetadataValidator;
+    @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
+    @NonNull private final AdRenderIdValidator mAdRenderIdValidator;
 
-    public AdDataValidator(@NonNull String adTechRole, @NonNull String adTechIdentifier) {
+    public AdDataValidator(
+            @NonNull String adTechRole,
+            @NonNull String adTechIdentifier,
+            @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull AdRenderIdValidator adRenderIdValidator) {
         Objects.requireNonNull(adTechRole);
         Objects.requireNonNull(adTechIdentifier);
+        Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(adRenderIdValidator);
 
         mUriValidator =
                 new AdTechUriValidator(
                         adTechRole, adTechIdentifier, AD_DATA_CLASS_NAME, RENDER_URI_FIELD_NAME);
         mMetadataValidator = new JsonValidator(AD_DATA_CLASS_NAME, METADATA_FIELD_NAME);
+        mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
+        mAdRenderIdValidator = adRenderIdValidator;
     }
 
     /**
@@ -62,6 +72,8 @@ public class AdDataValidator implements Validator<AdData> {
         ImmutableCollection.Builder<String> adDataViolations = new ImmutableList.Builder<>();
         mUriValidator.addValidation(adData.getRenderUri(), adDataViolations);
         mMetadataValidator.addValidation(adData.getMetadata(), adDataViolations);
+        mFrequencyCapAdDataValidator.addValidation(adData, adDataViolations);
+        mAdRenderIdValidator.addValidation(adData.getAdRenderId(), adDataViolations);
 
         violations.addAll(
                 adDataViolations.build().stream()

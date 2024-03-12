@@ -18,9 +18,7 @@ package com.android.adservices.data.measurement;
 
 import android.content.Context;
 
-/**
- * Factory for generating {@link DatastoreManager}
- */
+/** Factory for generating {@link DatastoreManager} */
 public class DatastoreManagerFactory {
 
     /**

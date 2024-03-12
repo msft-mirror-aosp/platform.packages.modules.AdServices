@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.ui.ux;
+package com.android.adservices.service.ui.ux.impl;
 
-import static com.android.adservices.service.PhFlags.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 
 import android.content.Context;
 import android.os.Build;
@@ -24,10 +24,14 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.enrollment.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.ux.base.PrivacySandboxUx;
+
+import com.google.errorprone.annotations.Immutable;
 
 /** The privacy sandbox (general availability) GA UX. */
 @RequiresApi(Build.VERSION_CODES.S)
+@Immutable
 public class GaUx implements PrivacySandboxUx {
 
     /** Whether a user is eligible for the privacy sandbox GA UX. */
@@ -42,11 +46,5 @@ public class GaUx implements PrivacySandboxUx {
             Context context,
             ConsentManager consentManager) {
         enrollmentChannel.enroll(context, consentManager);
-    }
-
-    /** Select one of the available GA UX modes for the user. */
-    public void selectMode(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager) {
-        // TO-DO(b/284175944): Add mode logic.
     }
 }

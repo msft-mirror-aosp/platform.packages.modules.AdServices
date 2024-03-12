@@ -30,15 +30,17 @@ import static org.mockito.Mockito.verify;
 import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 
 public class ForegroundEnforcementAccessResolverTest {
 
@@ -46,6 +48,13 @@ public class ForegroundEnforcementAccessResolverTest {
 
     @Mock private Context mContext;
     @Mock private AppImportanceFilter mAppImportanceFilter;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(ErrorLogUtil.class)
+                    .spyStatic(ProcessCompatUtils.class)
+                    .build();
 
     @Before
     public void setUp() {
@@ -77,10 +86,7 @@ public class ForegroundEnforcementAccessResolverTest {
 
     @Test
     public void testIsAllowed_callerNotSandbox_assertCallerForeground() {
-        MockitoSession mockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(ProcessCompatUtils.class).startMocking();
 
-        try {
             // Not Sandbox
             ExtendedMockito.doReturn(false)
                     .when(() -> ProcessCompatUtils.isSdkSandboxUid(anyInt()));
@@ -93,17 +99,10 @@ public class ForegroundEnforcementAccessResolverTest {
             // Validation
             verify(mAppImportanceFilter, times(1))
                     .assertCallerIsInForeground(anyInt(), anyInt(), any());
-        } finally {
-            mockitoSession.finishMocking();
-        }
     }
 
     @Test
     public void testIsAllowed_callerIsSandbox_dontAssertCallerForeground() {
-        MockitoSession mockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(ProcessCompatUtils.class).startMocking();
-
-        try {
             // Is Sandbox
             ExtendedMockito.doReturn(true).when(() -> ProcessCompatUtils.isSdkSandboxUid(anyInt()));
 
@@ -115,9 +114,6 @@ public class ForegroundEnforcementAccessResolverTest {
             // Validation
             verify(mAppImportanceFilter, never())
                     .assertCallerIsInForeground(anyInt(), anyInt(), any());
-        } finally {
-            mockitoSession.finishMocking();
-        }
     }
 
     @Test
@@ -152,6 +148,25 @@ public class ForegroundEnforcementAccessResolverTest {
                                 1, 1, mAppImportanceFilter, () -> /* enforced */ true)
                         .isAllowed(mContext);
 
+        // Validation
+        assertFalse(result);
+        verify(mAppImportanceFilter, times(1))
+                .assertCallerIsInForeground(anyInt(), anyInt(), any());
+    }
+
+    @Test
+    public void testIsAllowed_CatchesAllExceptions_returnsFalse() {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        // Setup
+        doThrow(new SecurityException())
+                .when(mAppImportanceFilter)
+                .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+        // Execute
+        final boolean result =
+                new ForegroundEnforcementAccessResolver(
+                                1, 1, mAppImportanceFilter, () -> /* enforced */ true)
+                        .isAllowed(mContext);
         // Validation
         assertFalse(result);
         verify(mAppImportanceFilter, times(1))

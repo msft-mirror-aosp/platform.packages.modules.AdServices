@@ -33,6 +33,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.shared.testing.common.FileHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import java.io.File;
@@ -44,10 +45,11 @@ import java.util.Locale;
 /** Util class for APK tests. */
 public class ApkTestUtil {
 
-    public static final String ADEXTSERVICES_PACKAGE_NAME = "com.google.android.ext.adservices.api";
     private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.SETTINGS";
     private static final int WINDOW_LAUNCH_TIMEOUT = 1000;
     private static final int SCROLL_TIMEOUT = 500;
+    public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 1000;
+
     /**
      * Check whether the device is supported. Adservices doesn't support non-phone device.
      *
@@ -64,6 +66,7 @@ public class ApkTestUtil {
     public static UiObject getConsentSwitch(UiDevice device) throws UiObjectNotFoundException {
         UiObject consentSwitch =
                 device.findObject(new UiSelector().className("android.widget.Switch"));
+        consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
 
         // Swipe the screen by the width of the toggle so it's not blocked by the nav bar on AOSP
         // devices.
@@ -72,13 +75,15 @@ public class ApkTestUtil {
                 500,
                 consentSwitch.getVisibleBounds().centerX(),
                 0,
-                1000);
+                100);
 
         return consentSwitch;
     }
+
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getElement(UiDevice device, int resId) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+        obj.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         if (!obj.exists()) {
             obj = device.findObject(new UiSelector().text(getString(resId).toUpperCase()));
         }
@@ -94,6 +99,12 @@ public class ApkTestUtil {
     public static void scrollToAndClick(UiDevice device, int resId)
             throws UiObjectNotFoundException {
         UiObject obj = scrollTo(device, resId);
+        // objects may be partially hidden by the status bar and nav bars.
+        obj.clickTopLeft();
+    }
+
+    public static void click(UiDevice device, int resId) throws UiObjectNotFoundException {
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
         // objects may be partially hidden by the status bar and nav bars.
         obj.clickTopLeft();
     }
@@ -149,6 +160,23 @@ public class ApkTestUtil {
         device.wait(Until.hasObject(By.pkg(PRIVACY_SANDBOX_UI).depth(0)), launchTimeout);
     }
 
+    /** Launch Privacy Sandbox Setting View with UX extra. */
+    public static void launchSettingViewGivenUx(
+            Context context, UiDevice device, int launchTimeout, String ux) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_activity_debug_mode true");
+
+        // Launch the setting view.
+        Intent intent = new Intent(PRIVACY_SANDBOX_UI);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("ux", ux);
+
+        context.startActivity(intent);
+
+        // Wait for the view to appear
+        device.wait(Until.hasObject(By.pkg(PRIVACY_SANDBOX_UI).depth(0)), launchTimeout);
+    }
+
     /** Returns the package name of the default browser of the device. */
     public static String getDefaultBrowserPkgName(UiDevice device, Context context) {
         Intent browserIntent = new Intent(Intent.ACTION_VIEW);
@@ -171,7 +199,10 @@ public class ApkTestUtil {
                     new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                             .format(Date.from(Instant.now()));
 
-            File screenshotFile = new File("/sdcard/Pictures/" + methodName + timeStamp + ".png");
+            File screenshotFile =
+                    new File(
+                            FileHelper.getAdServicesTestsOutputDir(),
+                            methodName + timeStamp + ".png");
             device.takeScreenshot(screenshotFile);
         } catch (RuntimeException e) {
             LogUtil.e("Failed to take screenshot: " + e.getMessage());

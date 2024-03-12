@@ -49,7 +49,7 @@ interface IAdServicesManager {
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
-    void recordNotificationDisplayed();
+    void recordNotificationDisplayed(boolean wasNotificationDisplayed);
 
     /**
      * Returns information whether Consent Notification was displayed or not.
@@ -62,7 +62,7 @@ interface IAdServicesManager {
      * Saves information to the storage that GA UX notification was displayed for the
      * first time to the user.
      */
-    void recordGaUxNotificationDisplayed();
+    void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed);
 
     /**
      * Returns information whether GA UX Consent Notification was displayed or not.
@@ -223,4 +223,15 @@ interface IAdServicesManager {
     /** Saves the wasU18NotificationDisplayed bit. */
     void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed);
 
+    /** Returns the current UX. */
+    String getUx();
+
+    /** Set the current UX. */
+    void setUx(in String ux);
+
+    /** Returns the current enrollement channel. */
+    String getEnrollmentChannel();
+
+    /** Set the current enrollment channel. */
+    void setEnrollmentChannel(in String enrollmentChannel);
 }

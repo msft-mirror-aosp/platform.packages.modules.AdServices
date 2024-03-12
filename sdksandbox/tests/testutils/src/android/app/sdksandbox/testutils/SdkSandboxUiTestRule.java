@@ -184,7 +184,9 @@ public class SdkSandboxUiTestRule implements TestRule {
                     activity -> {
                         mSdkSandboxManager.unloadSdk(mSdkName);
                     });
-            mActivityScenario.close();
+            if (mActivityScenario != null) {
+                mActivityScenario.close();
+            }
         }
 
         private ActivityScenario getActivityScenario() {

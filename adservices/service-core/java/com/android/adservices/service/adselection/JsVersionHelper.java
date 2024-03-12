@@ -23,6 +23,7 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableBiMap;
@@ -70,7 +71,10 @@ public class JsVersionHelper {
 
     /** Returns the URI with appended version query parameter. */
     public static AdServicesHttpClientRequest getRequestWithVersionHeader(
-            @NonNull Uri uri, @NonNull Map<Integer, Long> jsVersionMap, boolean useCache) {
+            @NonNull Uri uri,
+            @NonNull Map<Integer, Long> jsVersionMap,
+            boolean useCache,
+            @NonNull DevContext devContext) {
         ImmutableMap<String, String> requestProperties =
                 ImmutableMap.copyOf(
                         jsVersionMap.entrySet().stream()
@@ -83,6 +87,7 @@ public class JsVersionHelper {
                 .setRequestProperties(requestProperties)
                 .setUseCache(useCache)
                 .setResponseHeaderKeys(requestProperties.keySet())
+                .setDevContext(devContext)
                 .build();
     }
 

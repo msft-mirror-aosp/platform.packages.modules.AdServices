@@ -23,8 +23,10 @@ import android.widget.TextView;
 import androidx.annotation.RequiresApi;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.android.adservices.ui.ModeSelector;
+import com.android.adservices.ui.UxSelector;
 import com.android.adservices.ui.settings.activities.AdServicesBaseActivity;
 
 import java.util.function.Function;
@@ -39,13 +41,14 @@ import java.util.function.Function;
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public abstract class BaseActionDelegate implements ModeSelector {
+public abstract class BaseActionDelegate implements UxSelector {
     final AdServicesBaseActivity mActivity;
 
     public BaseActionDelegate(AdServicesBaseActivity activity) {
         mActivity = activity;
     }
 
+    // switches
     <T> void configureElement(
             int resId,
             View.OnClickListener onClickListener,
@@ -57,6 +60,7 @@ public abstract class BaseActionDelegate implements ModeSelector {
         liveData.observe(mActivity, observerProvider.apply(view));
     }
 
+    // on-change listener
     <T> void configureElement(
             int resId, LiveData<T> liveData, Function<View, Observer<T>> observerProvider) {
         View view = mActivity.findViewById(resId);
@@ -64,18 +68,21 @@ public abstract class BaseActionDelegate implements ModeSelector {
         liveData.observe(mActivity, observerProvider.apply(view));
     }
 
+    // buttons
     void configureElement(int resId, View.OnClickListener onClickListener) {
         View view = mActivity.findViewById(resId);
         view.setVisibility(View.VISIBLE);
         view.setOnClickListener(onClickListener);
     }
 
+    // text
     void configureElement(int resId, String text) {
         TextView textView = mActivity.findViewById(resId);
         textView.setVisibility(View.VISIBLE);
         textView.setText(text);
     }
 
+    // text
     void configureElement(int resId, int textResId) {
         TextView textView = mActivity.findViewById(resId);
         textView.setVisibility(View.VISIBLE);
@@ -85,6 +92,17 @@ public abstract class BaseActionDelegate implements ModeSelector {
     void configureLink(int resId) {
         ((TextView) mActivity.findViewById(resId))
                 .setMovementMethod(LinkMovementMethod.getInstance());
+    }
+
+    <T> void configureRecyclerView(int recyclerViewId, RecyclerView.Adapter adapter) {
+        // set adapter for recyclerView
+        RecyclerView recyclerView = mActivity.findViewById(recyclerViewId);
+        recyclerView.setLayoutManager(new LinearLayoutManager(mActivity));
+        recyclerView.setAdapter(adapter);
+    }
+
+    <T> void configureNotifyAdapterDataChange(LiveData<T> liveData, RecyclerView.Adapter adapter) {
+        liveData.observe(mActivity, liveDataList -> adapter.notifyDataSetChanged());
     }
 
     void showElements(int[] elements) {

@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
@@ -43,9 +44,12 @@ public final class EventReportPayload {
     private double mRandomizedTriggerRate;
     @Nullable private UnsignedLong mSourceDebugKey;
     @Nullable private UnsignedLong mTriggerDebugKey;
+    @NonNull private List<UnsignedLong> mTriggerDebugKeys;
+    @Nullable private Pair<Long, Long> mTriggerSummaryBucket;
 
     private EventReportPayload() {
         mAttributionDestinations = new ArrayList<>();
+        mTriggerDebugKeys = new ArrayList<>();
     }
 
     private EventReportPayload(EventReportPayload other) {
@@ -58,6 +62,8 @@ public final class EventReportPayload {
         mRandomizedTriggerRate = other.mRandomizedTriggerRate;
         mSourceDebugKey = other.mSourceDebugKey;
         mTriggerDebugKey = other.mTriggerDebugKey;
+        mTriggerDebugKeys = other.mTriggerDebugKeys;
+        mTriggerSummaryBucket = other.mTriggerSummaryBucket;
     }
 
     /**
@@ -79,6 +85,16 @@ public final class EventReportPayload {
         }
         if (mTriggerDebugKey != null) {
             eventPayloadJson.put("trigger_debug_key", mTriggerDebugKey.toString());
+        }
+        if (mTriggerDebugKeys.size() > 0) {
+            eventPayloadJson.put(
+                    "trigger_debug_keys",
+                    ReportUtil.serializeUnsignedLongs(mTriggerDebugKeys));
+        }
+        if (mTriggerSummaryBucket != null) {
+            eventPayloadJson.put(
+                    "trigger_summary_bucket",
+                    ReportUtil.serializeSummaryBucket(mTriggerSummaryBucket));
         }
 
         return eventPayloadJson;
@@ -161,6 +177,18 @@ public final class EventReportPayload {
         /** Trigger debug key */
         public @NonNull Builder setTriggerDebugKey(@Nullable UnsignedLong triggerDebugKey) {
             mBuilding.mTriggerDebugKey = triggerDebugKey;
+            return this;
+        }
+
+        /** Trigger debug keys */
+        public @NonNull Builder setTriggerDebugKeys(@Nullable List<UnsignedLong> triggerDebugKeys) {
+            mBuilding.mTriggerDebugKeys = triggerDebugKeys;
+            return this;
+        }
+
+        /** Set Trigger Summary Bucket */
+        public @NonNull Builder setTriggerSummaryBucket(@Nullable Pair<Long, Long> summaryBucket) {
+            mBuilding.mTriggerSummaryBucket = summaryBucket;
             return this;
         }
 

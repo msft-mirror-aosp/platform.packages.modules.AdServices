@@ -17,5 +17,5 @@ package com.android.tests.codeprovider.storagetest_1;
 interface IStorageTestSdk1Api {
     void verifySharedStorageIsUsable();
     void verifyPerSdkStorageIsUsable();
-    void createFilesInSharedStorage(int sizeInBytes, boolean inCacheDir);
+    void createFilesInStorage(int sizeInBytes);
 }

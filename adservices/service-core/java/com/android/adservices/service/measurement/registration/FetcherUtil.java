@@ -15,26 +15,23 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_FILTER_MAPS_PER_FILTER_SET;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
 import android.annotation.NonNull;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
-import com.android.adservices.service.measurement.util.AdIdEncryption;
-import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -42,6 +39,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Common handling for Response Based Registration
@@ -51,6 +50,7 @@ import java.util.Map;
 class FetcherUtil {
     static final String REDIRECT_LIST_HEADER_KEY = "Attribution-Reporting-Redirect";
     static final String REDIRECT_LOCATION_HEADER_KEY = "Location";
+    static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
 
     /**
      * Determine all redirects.
@@ -80,11 +80,85 @@ class FetcherUtil {
         return (responseCode / 100) == 2;
     }
 
+    /** Validates both string type and unsigned long parsing */
+    public static Optional<UnsignedLong> extractUnsignedLong(JSONObject obj, String key) {
+        try {
+            Object maybeValue = obj.get(key);
+            if (!(maybeValue instanceof String)) {
+                return Optional.empty();
+            }
+            return Optional.of(new UnsignedLong((String) maybeValue));
+        } catch (JSONException | NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "extractUnsignedLong: caught exception. Key: %s", key);
+            return Optional.empty();
+        }
+    }
+
+    /** Validates both string type and long parsing */
+    public static Optional<Long> extractLongString(JSONObject obj, String key) {
+        try {
+            Object maybeValue = obj.get(key);
+            if (!(maybeValue instanceof String)) {
+                return Optional.empty();
+            }
+            return Optional.of(Long.parseLong((String) maybeValue));
+        } catch (JSONException | NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "extractLongString: caught exception. Key: %s", key);
+            return Optional.empty();
+        }
+    }
+
+    /** Validates an integral number */
+    public static boolean is64BitInteger(Object obj) {
+        return (obj instanceof Integer) || (obj instanceof Long);
+    }
+
+    /** Validates both number type and long parsing */
+    public static Optional<Long> extractLong(JSONObject obj, String key) {
+        try {
+            Object maybeValue = obj.get(key);
+            if (!is64BitInteger(maybeValue)) {
+                return Optional.empty();
+            }
+            return Optional.of(Long.parseLong(String.valueOf(maybeValue)));
+        } catch (JSONException | NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "extractLong: caught exception. Key: %s", key);
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<Long> extractLookbackWindow(JSONObject obj) {
+        try {
+            long lookbackWindow = Long.parseLong(obj.optString(FilterMap.LOOKBACK_WINDOW));
+            if (lookbackWindow <= 0) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "extractLookbackWindow: non positive lookback window found: %d",
+                                lookbackWindow);
+                return Optional.empty();
+            }
+            return Optional.of(lookbackWindow);
+        } catch (NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            e,
+                            "extractLookbackWindow: caught exception. Key: %s",
+                            FilterMap.LOOKBACK_WINDOW);
+            return Optional.empty();
+        }
+    }
+
     /**
      * Validate aggregate key ID.
      */
     static boolean isValidAggregateKeyId(String id) {
-        return id != null && id.getBytes().length <= MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
+        return id != null
+                && id.getBytes().length
+                        <= FlagsFactory.getFlags()
+                                .getMeasurementMaxBytesPerAttributionAggregateKeyId();
     }
 
     /** Validate aggregate deduplication key. */
@@ -103,53 +177,83 @@ class FetcherUtil {
     /**
      * Validate aggregate key-piece.
      */
-    static boolean isValidAggregateKeyPiece(String keyPiece) {
+    static boolean isValidAggregateKeyPiece(String keyPiece, Flags flags) {
         if (keyPiece == null) {
             return false;
         }
         int length = keyPiece.getBytes().length;
-        // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have at
-        // most 32 digits.
-        return (keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))
-                && 2 < length && length < 35;
+        if (flags.getMeasurementEnableAraParsingAlignmentV1()) {
+            if (!(keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))) {
+                return false;
+            }
+            // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
+            // at most 32 digits.
+            if (length < 3 || length > 34) {
+                return false;
+            }
+            if (!HEX_PATTERN.matcher(keyPiece.substring(2)).matches()) {
+                return false;
+            }
+            return true;
+        } else {
+            // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
+            // at most 32 digits.
+            return (keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))
+                    && 2 < length && length < 35;
+        }
     }
 
-    /**
-     * Validate attribution filters JSONArray.
-     */
-    static boolean areValidAttributionFilters(@NonNull JSONArray filterSet) {
-        if (filterSet.length() > MAX_FILTER_MAPS_PER_FILTER_SET) {
+    /** Validate attribution filters JSONArray. */
+    static boolean areValidAttributionFilters(
+            @NonNull JSONArray filterSet, Flags flags, boolean canIncludeLookbackWindow) {
+        if (filterSet.length()
+                > FlagsFactory.getFlags().getMeasurementMaxFilterMapsPerFilterSet()) {
             return false;
         }
         for (int i = 0; i < filterSet.length(); i++) {
-            if (!areValidAttributionFilters(filterSet.optJSONObject(i))) {
+            if (!areValidAttributionFilters(
+                    filterSet.optJSONObject(i), flags, canIncludeLookbackWindow)) {
                 return false;
             }
         }
         return true;
     }
 
-    /**
-     * Validate attribution filters JSONObject.
-     */
-    static boolean areValidAttributionFilters(JSONObject filtersObj) {
-        if (filtersObj == null || filtersObj.length() > MAX_ATTRIBUTION_FILTERS) {
+    /** Validate attribution filters JSONObject. */
+    static boolean areValidAttributionFilters(
+            JSONObject filtersObj, Flags flags, boolean canIncludeLookbackWindow) {
+        if (filtersObj == null
+                || filtersObj.length()
+                        > FlagsFactory.getFlags().getMeasurementMaxAttributionFilters()) {
             return false;
         }
         Iterator<String> keys = filtersObj.keys();
         while (keys.hasNext()) {
             String key = keys.next();
-            if (key.getBytes().length > MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING) {
+            if (key.getBytes().length
+                    > FlagsFactory.getFlags().getMeasurementMaxBytesPerAttributionFilterString()) {
                 return false;
             }
+            if (flags.getMeasurementEnableLookbackWindowFilter()
+                    && FilterMap.LOOKBACK_WINDOW.equals(key)) {
+                if (!canIncludeLookbackWindow || extractLookbackWindow(filtersObj).isEmpty()) {
+                    return false;
+                }
+                continue;
+            }
             JSONArray values = filtersObj.optJSONArray(key);
-            if (values == null || values.length() > MAX_VALUES_PER_ATTRIBUTION_FILTER) {
+            if (values == null
+                    || values.length()
+                            > FlagsFactory.getFlags()
+                                    .getMeasurementMaxValuesPerAttributionFilter()) {
                 return false;
             }
             for (int i = 0; i < values.length(); i++) {
                 String value = values.optString(i);
                 if (value == null
-                        || value.getBytes().length > MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING) {
+                        || value.getBytes().length
+                                > FlagsFactory.getFlags()
+                                        .getMeasurementMaxBytesPerAttributionFilterString()) {
                     return false;
                 }
             }
@@ -157,21 +261,26 @@ class FetcherUtil {
         return true;
     }
 
+    static String getSourceRegistrantToLog(AsyncRegistration asyncRegistration) {
+        if (asyncRegistration.isSourceRequest()) {
+            return asyncRegistration.getRegistrant().toString();
+        }
+
+        return "";
+    }
+
     static void emitHeaderMetrics(
             Flags flags,
             AdServicesLogger logger,
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus) {
-        long headerSize = 0;
-        if (asyncFetchStatus.getResponseSize().isPresent()) {
-            headerSize = asyncFetchStatus.getResponseSize().get();
-        }
+        long headerSize = asyncFetchStatus.getResponseSize();
         long maxSize = flags.getMaxResponseBasedRegistrationPayloadSizeBytes();
         String adTechDomain = null;
 
         if (headerSize > maxSize) {
             adTechDomain =
-                    Web.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
+                    WebAddresses.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
                             .map(Uri::toString)
                             .orElse(null);
         }
@@ -185,7 +294,10 @@ class FetcherUtil {
                                 getSurfaceType(asyncRegistration),
                                 getStatus(asyncFetchStatus),
                                 getFailureType(asyncFetchStatus),
-                                asyncFetchStatus.getRegistrationDelay().get())
+                                asyncFetchStatus.getRegistrationDelay(),
+                                getSourceRegistrantToLog(asyncRegistration),
+                                asyncFetchStatus.getRetryCount(),
+                                asyncFetchStatus.isRedirectOnly())
                         .setAdTechDomain(adTechDomain)
                         .build());
     }
@@ -208,7 +320,8 @@ class FetcherUtil {
         if (field != null && !field.isEmpty()) {
             redirects.add(Uri.parse(field.get(0)));
             if (field.size() > 1) {
-                LogUtil.d("Expected one Location redirect only, others ignored!");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Expected one Location redirect only, others ignored!");
             }
         }
         return redirects;
@@ -231,24 +344,10 @@ class FetcherUtil {
         return size;
     }
 
-    public static String getEncryptedPlatformAdIdIfPresent(
-            AsyncRegistration asyncRegistration, String enrollmentId) {
-        if (asyncRegistration.isAppRequest()
-                && asyncRegistration.hasAdIdPermission()
-                && asyncRegistration.getPlatformAdId() != null) {
-            return AdIdEncryption.encryptAdIdAndEnrollmentSha256(
-                    asyncRegistration.getPlatformAdId(), enrollmentId);
-        } else {
-            return null;
-        }
-    }
-
     private static int getRegistrationType(AsyncRegistration asyncRegistration) {
-        if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_SOURCE
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE) {
+        if (asyncRegistration.isSourceRequest()) {
             return RegistrationEnumsValues.TYPE_SOURCE;
-        } else if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_TRIGGER
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER) {
+        } else if (asyncRegistration.isTriggerRequest()) {
             return RegistrationEnumsValues.TYPE_TRIGGER;
         } else {
             return RegistrationEnumsValues.TYPE_UNKNOWN;
@@ -266,11 +365,9 @@ class FetcherUtil {
     }
 
     private static int getSurfaceType(AsyncRegistration asyncRegistration) {
-        if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_SOURCE
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_TRIGGER) {
+        if (asyncRegistration.isAppRequest()) {
             return RegistrationEnumsValues.SURFACE_TYPE_APP;
-        } else if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER) {
+        } else if (asyncRegistration.isWebRequest()) {
             return RegistrationEnumsValues.SURFACE_TYPE_WEB;
         } else {
             return RegistrationEnumsValues.SURFACE_TYPE_UNKNOWN;
@@ -310,8 +407,6 @@ class FetcherUtil {
                         == AsyncFetchStatus.EntityStatus.VALIDATION_ERROR
                 || asyncFetchStatus.getEntityStatus() == AsyncFetchStatus.EntityStatus.PARSING_ERROR
                 || asyncFetchStatus.getEntityStatus()
-                        == AsyncFetchStatus.EntityStatus.HEADER_MISSING
-                || asyncFetchStatus.getEntityStatus()
                         == AsyncFetchStatus.EntityStatus.HEADER_ERROR) {
             return RegistrationEnumsValues.FAILURE_TYPE_PARSING;
         } else if (asyncFetchStatus.getEntityStatus()
@@ -323,6 +418,7 @@ class FetcherUtil {
             return RegistrationEnumsValues.FAILURE_TYPE_UNKNOWN;
         }
     }
+
     /** AdservicesMeasurementRegistrations atom enum values. */
     public interface RegistrationEnumsValues {
         int TYPE_UNKNOWN = 0;

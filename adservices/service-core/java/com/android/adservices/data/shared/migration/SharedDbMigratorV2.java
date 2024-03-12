@@ -18,14 +18,25 @@ package com.android.adservices.data.shared.migration;
 
 import android.database.sqlite.SQLiteDatabase;
 
-import com.android.adservices.data.DbHelper;
+import androidx.annotation.NonNull;
 
-/** Migrates Enrollment DB to version 2. */
-public class SharedDbMigratorV2 implements ISharedDbMigrator {
-    public SharedDbMigratorV2(DbHelper dbHelper) {}
+import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
+import com.android.adservices.data.shared.SharedDbHelper;
 
+/** Migrates Shared DB from user version 1 to 2, create EncryptionKey table if not have it. */
+public class SharedDbMigratorV2 extends AbstractSharedDbMigrator {
+
+    public SharedDbMigratorV2() {
+        super(2);
+    }
+
+    /**
+     * @param db shared db to migrate
+     */
     @Override
-    public void performMigration(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // todo (b/277964086) Updating Schema in M8
+    protected void performMigration(@NonNull SQLiteDatabase db) {
+        if (!SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES)) {
+            EncryptionKeyTables.CREATE_STATEMENTS_V2.forEach(db::execSQL);
+        }
     }
 }

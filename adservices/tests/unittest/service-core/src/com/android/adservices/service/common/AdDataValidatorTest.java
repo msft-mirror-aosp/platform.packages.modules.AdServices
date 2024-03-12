@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
@@ -24,11 +26,22 @@ import android.net.Uri;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.List;
+import java.util.Locale;
+
 public class AdDataValidatorTest {
+    private static final FrequencyCapAdDataValidator FREQUENCY_CAP_AD_DATA_VALIDATOR =
+            new FrequencyCapAdDataValidatorImpl();
+
+    private static final AdRenderIdValidator AD_RENDER_ID_VALIDATOR =
+            AdRenderIdValidator.createEnabledInstance(100);
 
     AdDataValidator mValidator =
             new AdDataValidator(
-                    ValidatorUtil.AD_TECH_ROLE_BUYER, CommonFixture.VALID_BUYER_1.toString());
+                    ValidatorUtil.AD_TECH_ROLE_BUYER,
+                    CommonFixture.VALID_BUYER_1.toString(),
+                    FREQUENCY_CAP_AD_DATA_VALIDATOR,
+                    AD_RENDER_ID_VALIDATOR);
 
     @Test
     public void testValidAdData() {
@@ -78,5 +91,43 @@ public class AdDataValidatorTest {
                                 JsonValidator.SHOULD_BE_A_VALID_JSON,
                                 AdDataValidator.AD_DATA_CLASS_NAME,
                                 AdDataValidator.METADATA_FIELD_NAME)));
+    }
+
+    @Test
+    public void testExceededFrequencyCapLimits() {
+        AdData adDataWithExceededFrequencyCapLimits =
+                AdDataFixture.getAdDataWithExceededFrequencyCapLimits(
+                        CommonFixture.VALID_BUYER_1, 0);
+
+        List<String> expectedViolations =
+                List.of(
+                        String.format(
+                                Locale.ENGLISH,
+                                "For %s, AdData should have no more than 10 ad counter keys",
+                                adDataWithExceededFrequencyCapLimits),
+                        String.format(
+                                Locale.ENGLISH,
+                                "For %s, FrequencyCapFilters should have no more than 20 filters",
+                                adDataWithExceededFrequencyCapLimits));
+
+        assertThat(mValidator.getValidationViolations(adDataWithExceededFrequencyCapLimits))
+                .containsExactlyElementsIn(expectedViolations);
+    }
+
+    @Test
+    public void testInvalidRenderId() {
+        AdData adDataWithInvalidRenderId =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdRenderId("0123456789")
+                        .build();
+
+        AdDataValidator validator =
+                new AdDataValidator(
+                        ValidatorUtil.AD_TECH_ROLE_BUYER,
+                        CommonFixture.VALID_BUYER_1.toString(),
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR,
+                        AdRenderIdValidator.createEnabledInstance(5));
+
+        assertThat(validator.getValidationViolations(adDataWithInvalidRenderId)).isNotEmpty();
     }
 }

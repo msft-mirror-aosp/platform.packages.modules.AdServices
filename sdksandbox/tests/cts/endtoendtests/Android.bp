@@ -30,6 +30,9 @@ android_test {
         "modules-utils-build",
         "SdkSandboxTestUtils",
         "CtsSdkProviderApi",
+        "CtsMediationTestSdkApi",
+        "sdk_sandbox_flags_lib",
+        "flag-junit",
     ],
     libs: [
         "android.test.base",
@@ -38,8 +41,9 @@ android_test {
         "framework-configinfrastructure",
     ],
     data: [
-        ":SdkSandboxManagerCtsProvider",
         ":EmptySdkProviderApp",
+        ":SdkSandboxManagerCtsProvider",
+        ":SdkSandboxMediationTestProvider",
     ],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",

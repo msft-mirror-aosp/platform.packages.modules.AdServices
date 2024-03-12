@@ -9,6 +9,7 @@ package com.android.server.sdksandbox {
     method @Deprecated public void enforceAllowedToSendBroadcast(@NonNull android.content.Intent);
     method public void enforceAllowedToStartActivity(@NonNull android.content.Intent);
     method public void enforceAllowedToStartOrBindService(@NonNull android.content.Intent);
+    method @NonNull public android.content.pm.ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(@NonNull android.content.pm.ApplicationInfo, boolean) throws android.content.pm.PackageManager.NameNotFoundException;
     method @NonNull public String getSdkSandboxProcessNameForInstrumentation(@NonNull android.content.pm.ApplicationInfo);
     method public void notifyInstrumentationFinished(@NonNull String, int);
     method public void notifyInstrumentationStarted(@NonNull String, int);

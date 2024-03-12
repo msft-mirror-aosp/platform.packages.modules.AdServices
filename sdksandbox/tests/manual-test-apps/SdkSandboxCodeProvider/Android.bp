@@ -23,6 +23,7 @@ java_defaults {
     target_sdk_version: "33",
     static_libs: [
         "SdkInterfaces",
+        "SdkSandboxTestUtils",
         "modules-utils-build",
     ],
     resource_dirs: ["res"],
@@ -38,6 +39,11 @@ android_test_helper_app {
     srcs: [
         "src/**/sdksandboxcode_1/*.java",
         "src/**/apiimplementation/*.java",
+    ],
+    static_libs: [
+        "androidx.media3.media3-common",
+        "androidx.media3.media3-exoplayer",
+        "androidx.media3.media3-ui",
     ],
     manifest: "AndroidManifest.xml",
     test_suites: ["general-tests"],
