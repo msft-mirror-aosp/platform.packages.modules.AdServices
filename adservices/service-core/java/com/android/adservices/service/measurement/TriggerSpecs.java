@@ -30,6 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -283,7 +284,7 @@ public class TriggerSpecs {
         for (EventReport eventReport : sourceEventReports) {
             // Delete pending reports since we may have different ones based on new trigger priority
             // ordering.
-            if (eventReport.getReportTime() >= triggerTime) {
+            if (eventReport.getReportTime() > triggerTime) {
                 reportsToDelete.add(eventReport);
                 continue;
             }
@@ -422,7 +423,7 @@ public class TriggerSpecs {
      *
      * @return String encoded the privacy parameters
      */
-    public String encodePrivacyParametersToJSONString() {
+    public String encodePrivacyParametersToJsonString() {
         JSONObject json = new JSONObject();
         try {
             json.put(
@@ -431,7 +432,7 @@ public class TriggerSpecs {
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
                     .e(
-                            "TriggerSpecs::encodePrivacyParametersToJSONString is unable to encode"
+                            "TriggerSpecs::encodePrivacyParametersToJsonString is unable to encode"
                                     + " PrivacyParams to JSON");
             return null;
         }
@@ -461,7 +462,7 @@ public class TriggerSpecs {
     private class PrivacyComputationParams {
         private final int[] mPerTypeNumWindowList;
         private final int[] mPerTypeCapList;
-        private final long mNumStates;
+        private final BigInteger mNumStates;
         private final double mFlipProbability;
         private final double mInformationGain;
 
@@ -491,7 +492,7 @@ public class TriggerSpecs {
                     json.getDouble(FlexEventReportJsonKeys.FLIP_PROBABILITY);
             mPerTypeNumWindowList = null;
             mPerTypeCapList = null;
-            mNumStates = -1;
+            mNumStates = BigInteger.valueOf(-1L);
             mInformationGain = -1.0;
         }
 

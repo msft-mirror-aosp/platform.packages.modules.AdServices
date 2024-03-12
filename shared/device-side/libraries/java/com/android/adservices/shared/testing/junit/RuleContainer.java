@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.test.longevity.concurrent;
+package com.android.adservices.shared.testing.junit;
 
 import org.junit.Rule;
 import org.junit.rules.MethodRule;
@@ -32,10 +32,8 @@ import java.util.List;
 /**
  * Data structure for ordering of {@link TestRule}/{@link MethodRule} instances. Copied from package
  * {@link org.junit.runners} which has RuleContainer class as this is package protected.
- *
- * @since 4.13
  */
-class RuleContainer {
+public final class RuleContainer {
     private final IdentityHashMap<Object, Integer> mOrderValues =
             new IdentityHashMap<Object, Integer>();
     private final List<TestRule> testRules = new ArrayList<TestRule>();

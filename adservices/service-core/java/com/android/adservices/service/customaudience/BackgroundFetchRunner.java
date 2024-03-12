@@ -140,7 +140,7 @@ public class BackgroundFetchRunner {
     }
 
     /** Updates a single given custom audience and persists the results. */
-    public FluentFuture<?> updateCustomAudience(
+    public FluentFuture<UpdateResultType> updateCustomAudience(
             @NonNull Instant jobStartTime,
             @NonNull final DBCustomAudienceBackgroundFetchData fetchData) {
         Objects.requireNonNull(jobStartTime);
@@ -192,7 +192,7 @@ public class BackgroundFetchRunner {
                                         e.getMessage());
                             }
 
-                            return null;
+                            return updatableData.getInitialUpdateResult();
                         },
                         AdServicesExecutors.getBackgroundExecutor());
     }

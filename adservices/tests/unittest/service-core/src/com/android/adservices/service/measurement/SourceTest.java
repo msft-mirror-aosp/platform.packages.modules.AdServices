@@ -173,7 +173,7 @@ public class SourceTest {
                         .setTriggerSpecsString(triggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                         .setEventAttributionStatus(null)
-                        .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString())
+                        .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJsonString())
                         .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .setDropSourceIfInstalled(true)
                         .build(),
@@ -225,7 +225,7 @@ public class SourceTest {
                         .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                         .setEventAttributionStatus(null)
-                        .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString())
+                        .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJsonString())
                         .setDropSourceIfInstalled(true)
                         .build());
     }
@@ -488,11 +488,11 @@ public class SourceTest {
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setPrivacyParameters(
-                                triggerSpecsValueSumBased.encodePrivacyParametersToJSONString())
+                                triggerSpecsValueSumBased.encodePrivacyParametersToJsonString())
                         .build(),
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setPrivacyParameters(
-                                triggerSpecsCountBased.encodePrivacyParametersToJSONString())
+                                triggerSpecsCountBased.encodePrivacyParametersToJsonString())
                         .build());
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder().setDropSourceIfInstalled(true).build(),
@@ -1227,7 +1227,7 @@ public class SourceTest {
         String encodedTriggerSpecs = originalTriggerSpecs.encodeToJson();
         String encodeddMaxReports = Integer.toString(originalTriggerSpecs.getMaxReports());
         String encodedPrivacyParameters =
-                originalTriggerSpecs.encodePrivacyParametersToJSONString();
+                originalTriggerSpecs.encodePrivacyParametersToJsonString();
         TriggerSpecs triggerSpecs =
                 new TriggerSpecs(
                         encodedTriggerSpecs,

@@ -39,6 +39,8 @@ import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivity
         implements UxSelector {
+    private UxSelector.EndUserUx mCurUx;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,14 +52,19 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
             OTAResourcesManager.applyOTAResources(context, false);
         }
         if (isUxStatesReady(this)) {
-            initWithUx(this, context);
+            mCurUx = initWithUx(this, context);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        initWithUx(this, getApplicationContext());
+        // if the intended UX is different from the current UX, then recreate activity to update.
+        // This may happen due to non-process stable changes such as PAS notification recorded as
+        // displayed in ConsentManager, which requires an updated UX to be displayed.
+        if (isUxStatesReady(this) && getEndUserUx(this) != mCurUx) {
+            recreate();
+        }
     }
 
     @Override

@@ -16,10 +16,8 @@
 
 package com.android.adservices.service.common;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
@@ -69,7 +67,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -712,8 +709,7 @@ public class AdServicesCommonServiceImplTest {
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
         assertThat(apiCallStats.getResultCode()).isEqualTo(STATUS_UNAUTHORIZED);
-        assertThat(apiCallStats.getFailureReason())
-                .isEqualTo(FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION);
+        assertThat(apiCallStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
         assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(350);
     }
 
@@ -735,15 +731,15 @@ public class AdServicesCommonServiceImplTest {
         CallerMetadata metadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(0).build();
         doReturn(INVALID_PACKAGE_NAME).when(mFlags).getAdServicesCommonStatesAllowList();
         mCommonService.getAdServicesCommonStates(params, metadata, callback);
-        callback.assertFailed(STATUS_CALLER_NOT_ALLOWED);
+        callback.assertFailed(STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST);
 
         ExtendedMockito.verify(
                 () -> PermissionHelper.hasAccessAdServicesCommonStatePermission(any(), any()));
         verify(mFlags, never()).isGetAdServicesCommonStatesApiEnabled();
         ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
-        assertThat(apiCallStats.getResultCode()).isEqualTo(STATUS_CALLER_NOT_ALLOWED);
-        assertThat(apiCallStats.getFailureReason())
-                .isEqualTo(FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
+        assertThat(apiCallStats.getResultCode())
+                .isEqualTo(STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST);
+        assertThat(apiCallStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
     }
@@ -760,12 +756,8 @@ public class AdServicesCommonServiceImplTest {
                 .when(mFlags)
                 .getAdServicesCommonStatesAllowList();
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
-        doReturn(AdServicesApiConsent.GIVEN)
-                .when(mConsentManager)
-                .getConsent(eq(AdServicesApiType.MEASUREMENTS));
-        doReturn(AdServicesApiConsent.REVOKED)
-                .when(mConsentManager)
-                .getConsent(eq(AdServicesApiType.FLEDGE));
+        doReturn(true).when(mConsentManager).isPasMeasurementConsentGiven();
+        doReturn(false).when(mConsentManager).isPasFledgeConsentGiven();
         SyncIAdServicesCommonStatesCallback callback =
                 new SyncIAdServicesCommonStatesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
