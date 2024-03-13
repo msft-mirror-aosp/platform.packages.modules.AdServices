@@ -105,6 +105,7 @@ filegroup {
         "java/com/android/adservices/service/CommonFlags.java",
         "java/com/android/adservices/service/CommonFlagsConstants.java",
         "java/com/android/adservices/service/CommonPhFlags.java",
+        "java/com/android/adservices/service/DeviceConfigFlagsHelper.java",
     ],
     path: "java",
     visibility: [
