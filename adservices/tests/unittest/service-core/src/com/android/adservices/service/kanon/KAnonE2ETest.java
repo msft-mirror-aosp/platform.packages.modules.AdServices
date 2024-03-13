@@ -117,6 +117,7 @@ import com.android.adservices.service.adselection.MultiCloudTestStrategyFactory;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
 import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -326,6 +327,7 @@ public class KAnonE2ETest {
     @Captor private ArgumentCaptor<KAnonJoinStatusStats> argumentCaptorJoinStats;
     @Mock private KeyAttestation mockKeyAttestation;
     @Mock private KeyAttestationCertificateChainRecord mockKeyAttestationCertificate;
+    @Mock private ObliviousHttpEncryptorFactory mockObliviousHttpEncryptorFactory;
     private UserProfileIdManager mUserProfileIdManager;
     private AnonymousCountingTokens mAnonymousCountingTokensSpy;
 
@@ -2113,6 +2115,8 @@ public class KAnonE2ETest {
         KAnonObliviousHttpEncryptorImpl kAnonObliviousHttpEncryptor =
                 new KAnonObliviousHttpEncryptorImpl(
                         encryptionKeyManager, AdServicesExecutors.getLightWeightExecutor());
+        when(mockObliviousHttpEncryptorFactory.getKAnonObliviousHttpEncryptor())
+                .thenReturn(kAnonObliviousHttpEncryptor);
         KAnonCallerImpl kAnonCaller =
                 new KAnonCallerImpl(
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2123,10 +2127,10 @@ public class KAnonE2ETest {
                         mUserProfileIdManager,
                         new BinaryHttpMessageDeserializer(),
                         mFlags,
-                        kAnonObliviousHttpEncryptor,
                         mKAnonMessageManager,
                         mAdServicesLoggerMock,
-                        keyAttestationFactory);
+                        keyAttestationFactory,
+                        mockObliviousHttpEncryptorFactory);
         KAnonSignJoinManager mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
                         mContext,
