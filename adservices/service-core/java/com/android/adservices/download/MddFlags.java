@@ -16,8 +16,10 @@
 
 package com.android.adservices.download;
 
+import static com.android.adservices.service.DeviceConfigFlagsHelper.getDeviceConfigFlag;
+
 import android.annotation.NonNull;
-import android.provider.DeviceConfig;
+
 
 import com.google.android.libraries.mobiledatadownload.Flags;
 
@@ -67,121 +69,94 @@ public class MddFlags implements Flags {
     @Override
     @SuppressWarnings("InlinedApi")
     public long maintenanceGcmTaskPeriod() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_MAINTENANCE_GCM_TASK_PERIOD_SECONDS,
-                /* defaultValue */ Flags.super.maintenanceGcmTaskPeriod());
+        return getDeviceConfigFlag(
+                KEY_MDD_MAINTENANCE_GCM_TASK_PERIOD_SECONDS,
+                Flags.super.maintenanceGcmTaskPeriod());
     }
 
     @Override
     @SuppressWarnings("InlinedApi")
     public long chargingGcmTaskPeriod() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_CHARGING_GCM_TASK_PERIOD_SECONDS,
-                /* defaultValue */ Flags.super.chargingGcmTaskPeriod());
+        return getDeviceConfigFlag(
+                KEY_MDD_CHARGING_GCM_TASK_PERIOD_SECONDS, Flags.super.chargingGcmTaskPeriod());
     }
 
     @Override
     @SuppressWarnings("InlinedApi")
     public long cellularChargingGcmTaskPeriod() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_CELLULAR_CHARGING_GCM_TASK_PERIOD_SECONDS,
-                /* defaultValue */ Flags.super.cellularChargingGcmTaskPeriod());
+        return getDeviceConfigFlag(
+                KEY_MDD_CELLULAR_CHARGING_GCM_TASK_PERIOD_SECONDS,
+                Flags.super.cellularChargingGcmTaskPeriod());
     }
 
     @Override
     @SuppressWarnings("InlinedApi")
     public long wifiChargingGcmTaskPeriod() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_WIFI_CHARGING_GCM_TASK_PERIOD_SECONDS,
-                /* defaultValue */ Flags.super.wifiChargingGcmTaskPeriod());
+        return getDeviceConfigFlag(
+                KEY_MDD_WIFI_CHARGING_GCM_TASK_PERIOD_SECONDS,
+                Flags.super.wifiChargingGcmTaskPeriod());
     }
 
     // MddSampleIntervals
     @Override
     @SuppressWarnings("InlinedApi")
     public int mddDefaultSampleInterval() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_DEFAULT_SAMPLE_INTERVAL,
-                /* defaultValue */ Flags.super.mddDefaultSampleInterval());
+        return getDeviceConfigFlag(
+                KEY_MDD_DEFAULT_SAMPLE_INTERVAL, Flags.super.mddDefaultSampleInterval());
     }
 
     @Override
     @SuppressWarnings("InlinedApi")
     public int mddDownloadEventsSampleInterval() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_DOWNLOAD_EVENTS_SAMPLE_INTERVAL,
-                /* defaultValue */ Flags.super.mddDownloadEventsSampleInterval());
+        return getDeviceConfigFlag(
+                KEY_MDD_DOWNLOAD_EVENTS_SAMPLE_INTERVAL,
+                Flags.super.mddDownloadEventsSampleInterval());
     }
 
     @Override
     @SuppressWarnings("InlinedApi")
     public int groupStatsLoggingSampleInterval() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_GROUP_STATS_LOGGING_SAMPLE_INTERVAL,
-                /* defaultValue */ Flags.super.groupStatsLoggingSampleInterval());
+        return getDeviceConfigFlag(
+                KEY_MDD_GROUP_STATS_LOGGING_SAMPLE_INTERVAL,
+                Flags.super.groupStatsLoggingSampleInterval());
     }
 
     @Override
     @SuppressWarnings("InlinedApi")
     public int apiLoggingSampleInterval() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_API_LOGGING_SAMPLE_INTERVAL,
-                /* defaultValue */ Flags.super.apiLoggingSampleInterval());
+        return getDeviceConfigFlag(
+                KEY_MDD_API_LOGGING_SAMPLE_INTERVAL, Flags.super.apiLoggingSampleInterval());
     }
 
     @Override
     @SuppressWarnings("InlinedApi")
     public int storageStatsLoggingSampleInterval() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_STORAGE_STATS_LOGGING_SAMPLE_INTERVAL,
-                /* defaultValue */ Flags.super.storageStatsLoggingSampleInterval());
+        return getDeviceConfigFlag(
+                KEY_MDD_STORAGE_STATS_LOGGING_SAMPLE_INTERVAL,
+                Flags.super.storageStatsLoggingSampleInterval());
     }
 
     @Override
     @SuppressWarnings("InlinedApi")
     public int networkStatsLoggingSampleInterval() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_NETWORK_STATS_LOGGING_SAMPLE_INTERVAL,
-                /* defaultValue */ Flags.super.networkStatsLoggingSampleInterval());
+        return getDeviceConfigFlag(
+                KEY_MDD_NETWORK_STATS_LOGGING_SAMPLE_INTERVAL,
+                Flags.super.networkStatsLoggingSampleInterval());
     }
 
     @Override
     @SuppressWarnings("InlinedApi")
     public int mobstoreFileServiceStatsSampleInterval() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_MOBSTORE_FILE_SERVICE_STATS_SAMPLE_INTERVAL,
-                /* defaultValue */ Flags.super.mobstoreFileServiceStatsSampleInterval());
+        return getDeviceConfigFlag(
+                KEY_MDD_MOBSTORE_FILE_SERVICE_STATS_SAMPLE_INTERVAL,
+                Flags.super.mobstoreFileServiceStatsSampleInterval());
     }
 
     @Override
     @SuppressWarnings("InlinedApi")
     public int mddAndroidSharingSampleInterval() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MDD_ANDROID_SHARING_SAMPLE_INTERVAL,
-                /* defaultValue */ Flags.super.mddAndroidSharingSampleInterval());
+        return getDeviceConfigFlag(
+                KEY_MDD_ANDROID_SHARING_SAMPLE_INTERVAL,
+                Flags.super.mddAndroidSharingSampleInterval());
     }
 }

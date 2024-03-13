@@ -52,6 +52,7 @@ import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.data.kanon.ServerParametersDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorFactory;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessage;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer;
@@ -135,6 +136,7 @@ public class KAnonCallerImplTest {
     @Mock private ObliviousHttpEncryptor mockKAnonOblivivousHttpEncryptorImpl;
     @Mock private AdServicesLogger mockAdServicesLogger;
     @Mock private KeyAttestationFactory mockKeyAttestationFactory;
+    @Mock private ObliviousHttpEncryptorFactory mockObliviousHttpEncryptorFactory;
     private UserProfileIdManager mUserProfileIdManager;
     private KAnonCallerImpl mKAnonCaller;
 
@@ -168,6 +170,8 @@ public class KAnonCallerImplTest {
         mTranscript = Transcript.parseDelimitedFrom(inputStream);
         UUID userId = UUID.randomUUID();
         when(mockUserProfileIdDao.getUserProfileId()).thenReturn(userId);
+        when(mockObliviousHttpEncryptorFactory.getKAnonObliviousHttpEncryptor())
+                .thenReturn(mockKAnonOblivivousHttpEncryptorImpl);
         mKAnonCaller =
                 Mockito.spy(
                         new KAnonCallerImpl(
@@ -179,10 +183,10 @@ public class KAnonCallerImplTest {
                                 mUserProfileIdManager,
                                 mockBinaryHttpMessageDeserializer,
                                 mFlags,
-                                mockKAnonOblivivousHttpEncryptorImpl,
                                 mKAnonMessageManager,
                                 mockAdServicesLogger,
-                                mockKeyAttestationFactory));
+                                mockKeyAttestationFactory,
+                                mockObliviousHttpEncryptorFactory));
     }
 
     @Test
@@ -199,10 +203,10 @@ public class KAnonCallerImplTest {
                                 mUserProfileIdManager,
                                 mockBinaryHttpMessageDeserializer,
                                 mFlags,
-                                mockKAnonOblivivousHttpEncryptorImpl,
                                 mKAnonMessageManager,
                                 mockAdServicesLogger,
-                                mockKeyAttestationFactory));
+                                mockKeyAttestationFactory,
+                                mockObliviousHttpEncryptorFactory));
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
@@ -238,10 +242,10 @@ public class KAnonCallerImplTest {
                                 mUserProfileIdManager,
                                 mockBinaryHttpMessageDeserializer,
                                 flagsWithBatchSizeOne,
-                                mockKAnonOblivivousHttpEncryptorImpl,
                                 mKAnonMessageManager,
                                 mockAdServicesLogger,
-                                mockKeyAttestationFactory));
+                                mockKeyAttestationFactory,
+                                mockObliviousHttpEncryptorFactory));
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(

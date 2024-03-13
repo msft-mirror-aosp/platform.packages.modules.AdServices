@@ -4,7 +4,6 @@ adigupt@google.com
 akshaymiterani@google.com
 arpanah@google.com
 binhnguyen@google.com
-chndn@google.com
 felipeal@google.com
 galarragas@google.com
 hanlixy@google.com
@@ -16,3 +15,6 @@ shwetachahar@google.com
 tccyp@google.com
 vikassahu@google.com
 yangwangyw@google.com
+
+per-file Flags.java = file: platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
+per-file PhFlags.java = file: platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA

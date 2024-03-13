@@ -77,8 +77,6 @@ public abstract class Topic {
             int topic,
             long taxonomyVersion,
             long modelVersion) {
-        Objects.requireNonNull(topic);
-
         return builder().setTopic(topic)
                 .setTaxonomyVersion(taxonomyVersion)
                 .setModelVersion(modelVersion)
@@ -101,8 +99,6 @@ public abstract class Topic {
             long taxonomyVersion,
             long modelVersion,
             int loggedTopic) {
-        Objects.requireNonNull(topic);
-
         return builder().setTopic(topic)
                 .setTaxonomyVersion(taxonomyVersion)
                 .setModelVersion(modelVersion)

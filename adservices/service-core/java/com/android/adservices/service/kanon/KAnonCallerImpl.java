@@ -45,6 +45,7 @@ import com.android.adservices.data.kanon.ServerParametersDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorFactory;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessage;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer;
@@ -119,7 +120,6 @@ import java.util.stream.Collectors;
 public class KAnonCallerImpl implements KAnonCaller {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
 
-    @NonNull private ObliviousHttpEncryptor mKAnonObliviousHttpEncryptor;
     @NonNull private ListeningExecutorService mLightweightExecutorService;
     @NonNull private AnonymousCountingTokens mAnonymousCountingTokens;
     @NonNull private Flags mFlags;
@@ -130,6 +130,7 @@ public class KAnonCallerImpl implements KAnonCaller {
     @NonNull private ServerParametersDao mServerParametersDao;
     @NonNull private BinaryHttpMessageDeserializer mBinaryHttpMessageDeserializer;
     @NonNull private AdServicesLogger mAdServicesLogger;
+    @NonNull private ObliviousHttpEncryptorFactory mObliviousHttpEncryptorFactory;
     @NonNull private UUID mClientId;
     @Nullable private String mServerParamVersion;
     @Nullable private String mClientParamsVersion;
@@ -160,27 +161,26 @@ public class KAnonCallerImpl implements KAnonCaller {
             @NonNull UserProfileIdManager userProfileIdManager,
             @NonNull BinaryHttpMessageDeserializer binaryHttpMessageDeserializer,
             @NonNull Flags flags,
-            @NonNull ObliviousHttpEncryptor kAnonObliviousHttpEncryptor,
             @NonNull KAnonMessageManager kAnonMessageManager,
             @NonNull AdServicesLogger adServicesLogger,
-            @NonNull KeyAttestationFactory keyAttestationFactory) {
+            @NonNull KeyAttestationFactory keyAttestationFactory,
+            @NonNull ObliviousHttpEncryptorFactory obliviousHttpEncryptorFactory) {
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(anonymousCountingTokens);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(clientParametersDao);
         Objects.requireNonNull(serverParametersDao);
         Objects.requireNonNull(userProfileIdManager);
-        Objects.requireNonNull(kAnonObliviousHttpEncryptor);
         Objects.requireNonNull(binaryHttpMessageDeserializer);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(kAnonMessageManager);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(keyAttestationFactory);
+        Objects.requireNonNull(obliviousHttpEncryptorFactory);
 
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mAnonymousCountingTokens = anonymousCountingTokens;
         mUserProfileIdManager = userProfileIdManager;
-        mKAnonObliviousHttpEncryptor = kAnonObliviousHttpEncryptor;
         mKAnonMessageManager = kAnonMessageManager;
         mServerParametersDao = serverParametersDao;
         mClientParametersDao = clientParametersDao;
@@ -188,6 +188,7 @@ public class KAnonCallerImpl implements KAnonCaller {
         mFlags = flags;
         mClientId = mUserProfileIdManager.getOrCreateId();
         mAdServicesLogger = adServicesLogger;
+        mObliviousHttpEncryptorFactory = obliviousHttpEncryptorFactory;
         mRequestMetadata =
                 RequestMetadata.newBuilder()
                         .setAndroidRequestMetadata(
@@ -955,13 +956,18 @@ public class KAnonCallerImpl implements KAnonCaller {
                             + messageEntities.get(i).getAdSelectionId());
             Token token = tokensSet.getTokens(i);
             KAnonMessageEntity currentMessage = messageEntities.get(i);
+            ObliviousHttpEncryptor kAnonObliviousHttpEncryptor =
+                    mObliviousHttpEncryptorFactory.getKAnonObliviousHttpEncryptor();
             joinFuturesList.add(
-                    FluentFuture.from(doJoinRequest(currentMessage, token))
+                    FluentFuture.from(
+                                    doJoinRequest(
+                                            currentMessage, token, kAnonObliviousHttpEncryptor))
                             .transformAsync(
                                     joinResponse ->
                                             deserializeJoinRequest(
                                                     joinResponse,
-                                                    currentMessage.getAdSelectionId()),
+                                                    currentMessage.getAdSelectionId(),
+                                                    kAnonObliviousHttpEncryptor),
                                     mLightweightExecutorService)
                             .transformAsync(
                                     deserializedJoinRequest ->
@@ -1057,7 +1063,9 @@ public class KAnonCallerImpl implements KAnonCaller {
 
     /** This method makes a JOIN for the given message and token. */
     private FluentFuture<AdServicesHttpClientResponse> doJoinRequest(
-            KAnonMessageEntity message, Token currentToken) {
+            KAnonMessageEntity message,
+            Token currentToken,
+            ObliviousHttpEncryptor kAnonObliviousHttpEncryptor) {
         BinaryHttpMessage binaryHttpMessage;
         try {
             binaryHttpMessage = createBinaryHttpRequest(message, currentToken);
@@ -1066,7 +1074,7 @@ public class KAnonCallerImpl implements KAnonCaller {
         }
         byte[] dataInBinaryHttpMessage = binaryHttpMessage.serialize();
         return FluentFuture.from(
-                        mKAnonObliviousHttpEncryptor.encryptBytes(
+                        kAnonObliviousHttpEncryptor.encryptBytes(
                                 dataInBinaryHttpMessage,
                                 message.getAdSelectionId(),
                                 mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs(),
@@ -1105,10 +1113,12 @@ public class KAnonCallerImpl implements KAnonCaller {
      * then parses it into {@link BinaryHttpMessage}.
      */
     private ListenableFuture<BinaryHttpMessage> deserializeJoinRequest(
-            AdServicesHttpClientResponse joinResponse, long contextId) {
+            AdServicesHttpClientResponse joinResponse,
+            long contextId,
+            ObliviousHttpEncryptor kAnonObliviousHttpEncryptor) {
         sLogger.v("Deserializing the encrypted join response");
         byte[] decryptedOhttpResponse =
-                mKAnonObliviousHttpEncryptor.decryptBytes(
+                kAnonObliviousHttpEncryptor.decryptBytes(
                         BaseEncoding.base64().decode(joinResponse.getResponseBody()), contextId);
         return immediateFuture(mBinaryHttpMessageDeserializer.deserialize(decryptedOhttpResponse));
     }
