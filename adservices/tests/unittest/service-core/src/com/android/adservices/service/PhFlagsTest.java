@@ -444,6 +444,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_VERBOSE_DEBUG_REP
 import static com.android.adservices.service.Flags.MSMT_API_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.MSMT_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.Flags.PAS_EXTENDED_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PRECOMPUTED_CLASSIFIER;
@@ -880,6 +881,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_ALL
 import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
 import static com.android.adservices.service.FlagsConstants.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
@@ -10755,6 +10757,23 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         expect.withMessage("getMddLoggerEnabled() when the global kill switch is on")
                 .that(mPhFlags.getMddLoggerEnabled())
                 .isFalse();
+    }
+
+    @Test
+    public void testGetPasExtendedMetricsEnabled() {
+        assertThat(mPhFlags.getPasExtendedMetricsEnabled())
+                .isEqualTo(PAS_EXTENDED_METRICS_ENABLED);
+
+        boolean phOverridingValue =
+                !PAS_EXTENDED_METRICS_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_PAS_EXTENDED_METRICS_ENABLED,
+                String.valueOf(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getPasExtendedMetricsEnabled())
+                .isEqualTo(phOverridingValue);
     }
 
     private void setMeasurementKillSwitch(boolean value) {
