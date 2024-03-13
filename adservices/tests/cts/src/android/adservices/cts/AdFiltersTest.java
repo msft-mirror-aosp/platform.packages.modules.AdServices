@@ -16,6 +16,8 @@
 
 package android.adservices.cts;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdDataFixture;
@@ -29,7 +31,8 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
-import org.junit.Ignore;
+import com.android.adservices.common.annotations.SetFlagEnabled;
+
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -37,6 +40,7 @@ import java.util.HashSet;
 
 /** Unit tests for {@link AdFilters}. */
 @SmallTest
+@SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public class AdFiltersTest {
 
     private static final String DIFFERENT_PACKAGE_NAME =
@@ -159,7 +163,6 @@ public class AdFiltersTest {
         assertThat(originalFilters.hashCode()).isNotEqualTo(differentFilters.hashCode());
     }
 
-    @Ignore
     @Test
     public void testBuildNoSettersAppInstallOnly_success() {
         final AdFilters originalFilters = new AdFilters.Builder().build();
@@ -167,7 +170,6 @@ public class AdFiltersTest {
         assertThat(originalFilters.getAppInstallFilters()).isNull();
     }
 
-    @Ignore
     @Test
     public void testBuildNullAdFiltersAppInstallOnly_success() {
         final AdFilters originalFilters =
@@ -178,14 +180,12 @@ public class AdFiltersTest {
         assertThat(originalFilters.getAppInstallFilters()).isNull();
     }
 
-    @Ignore
     @Test
     public void testBuildValidAdFiltersAppInstallOnly_success() {
         assertThat(APP_INSTALL_ONLY_FILTER.getAppInstallFilters())
                 .isEqualTo(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
     }
 
-    @Ignore
     @Test
     public void testParcelAdFiltersAppInstallOnly_success() {
         Parcel targetParcel = Parcel.obtain();
@@ -197,7 +197,6 @@ public class AdFiltersTest {
                 .isEqualTo(APP_INSTALL_ONLY_FILTER.getAppInstallFilters());
     }
 
-    @Ignore
     @Test
     public void testEqualsIdenticalAppInstallOnly_success() {
         final AdFilters identicalFilters =
@@ -208,7 +207,6 @@ public class AdFiltersTest {
         assertThat(APP_INSTALL_ONLY_FILTER.equals(identicalFilters)).isTrue();
     }
 
-    @Ignore
     @Test
     public void testEqualsDifferentAppInstallOnly_success() {
         final AdFilters differentFilters =
@@ -224,7 +222,6 @@ public class AdFiltersTest {
         assertThat(APP_INSTALL_ONLY_FILTER.equals(differentFilters)).isFalse();
     }
 
-    @Ignore
     @Test
     public void testHashCodeIdenticalAppInstallOnly_success() {
         final AdFilters identicalFilters =
@@ -235,7 +232,6 @@ public class AdFiltersTest {
         assertThat(APP_INSTALL_ONLY_FILTER.hashCode()).isEqualTo(identicalFilters.hashCode());
     }
 
-    @Ignore
     @Test
     public void testHashCodeDifferentAppInstallOnly_success() {
         final AdFilters differentFilters =
