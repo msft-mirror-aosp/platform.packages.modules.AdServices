@@ -21,7 +21,6 @@ import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
 import static com.android.adservices.service.Flags.ADSERVICES_ENABLED;
-import static com.android.adservices.service.Flags.ADSERVICES_ERROR_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.ADSERVICES_RELEASE_STAGE_FOR_COBALT;
 import static com.android.adservices.service.Flags.AD_ID_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.Flags.AD_SERVICES_MODULE_JOB_POLICY;
@@ -485,7 +484,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PER
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_SHA_CERTS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ERROR_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST;
@@ -4279,26 +4277,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getAdServicesEnabled()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetAdServicesErrorLoggingEnabled() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getAdServicesErrorLoggingEnabled())
-                .isEqualTo(ADSERVICES_ERROR_LOGGING_ENABLED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !ADSERVICES_ERROR_LOGGING_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ADSERVICES_ERROR_LOGGING_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAdServicesErrorLoggingEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test

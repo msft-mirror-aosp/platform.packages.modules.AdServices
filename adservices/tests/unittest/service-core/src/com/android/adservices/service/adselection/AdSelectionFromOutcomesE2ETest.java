@@ -39,6 +39,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.spy;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
@@ -62,7 +63,6 @@ import android.os.SystemClock;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.SdkLevelSupportRule;
@@ -219,7 +219,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private EncodedPayloadDao mEncodedPayloadDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
-    @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
+    private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private EnrollmentDao mEnrollmentDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private AdServicesHttpsClient mAdServicesHttpsClient;
@@ -235,11 +235,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Before
     public void setUp() throws Exception {
-        mAdSelectionEntryDaoSpy =
-                Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
-                        .build()
-                        .adSelectionEntryDao();
-
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
         mStaticMockSession =
@@ -248,6 +243,13 @@ public class AdSelectionFromOutcomesE2ETest {
                         .initMocks(this)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        mAdSelectionEntryDaoSpy =
+                spy(
+                        Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
+                                .build()
+                                .adSelectionEntryDao());
 
         // Initialize dependencies for the AdSelectionService
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
@@ -358,7 +360,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesPickHighestSuccess() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_HIGHEST_LOGIC_JS_PATH;
 
@@ -387,8 +388,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesPickHighestSuccessDifferentTables() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
-
         Flags auctionServerEnabledFlags =
                 new TestFlags() {
                     @Override
@@ -458,9 +457,7 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testSelectAdsFromOutcomesPickHighestSuccessUnifiedTables() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_HIGHEST_LOGIC_JS_PATH;
 
@@ -522,7 +519,6 @@ public class AdSelectionFromOutcomesE2ETest {
     @Test
     public void testSelectAdsFromOutcomesWaterfallMediationAdBidHigherThanBidFloorSuccess()
             throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_WATERFALL_LOGIC_JS_PATH;
 
@@ -548,7 +544,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesWaterfallMediationPrebuiltUriSuccess() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
 
         Map<Long, Double> adSelectionIdToBidMap = Map.of(AD_SELECTION_ID_1, 10.0);
@@ -586,7 +581,6 @@ public class AdSelectionFromOutcomesE2ETest {
     @Test
     public void testSelectAdsFromOutcomesWaterfallMediationAdBidLowerThanBidFloorSuccess()
             throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_WATERFALL_LOGIC_JS_PATH;
 
@@ -611,7 +605,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesReturnsNullSuccess() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_NONE_LOGIC_JS_PATH;
 
@@ -639,7 +632,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesInvalidAdSelectionConfigFromOutcomes() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = "/unreachableLogicJS/";
 
@@ -674,7 +666,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesJsReturnsFaultyAdSelectionIdFailure() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_FAULTY_LOGIC_JS_PATH;
 
@@ -705,9 +696,7 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testSelectAdsFromOutcomesWaterfallMalformedPrebuiltUriFailed() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
 
         Map<Long, Double> adSelectionIdToBidMap = Map.of(AD_SELECTION_ID_1, 10.0);
