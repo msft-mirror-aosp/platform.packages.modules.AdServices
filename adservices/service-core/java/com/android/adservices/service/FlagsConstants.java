@@ -997,6 +997,12 @@ public final class FlagsConstants {
     public static final String KEY_UI_OTA_STRINGS_FEATURE_ENABLED =
             "ui_ota_strings_feature_enabled";
 
+    public static final String KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL =
+            "mdd_ui_ota_resources_manifest_file_url";
+
+    public static final String KEY_UI_OTA_RESOURCES_FEATURE_ENABLED =
+            "ui_ota_resources_feature_enabled";
+
     public static final String KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE =
             "ui_ota_strings_download_deadline";
 
