@@ -1756,6 +1756,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
     }
 
+    @FeatureFlag boolean FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED = false;
+
+    /** Returns whether Consented Debugging is enabled for server auctions. */
+    default boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
+        return FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
+    }
+
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 

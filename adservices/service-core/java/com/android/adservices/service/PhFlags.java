@@ -2272,6 +2272,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
+                FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED);
+    }
+
+    @Override
     public boolean isDisableTopicsEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK),
@@ -4258,6 +4265,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 .KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED
                         + " = "
                         + getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerConsentedDebuggingEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS

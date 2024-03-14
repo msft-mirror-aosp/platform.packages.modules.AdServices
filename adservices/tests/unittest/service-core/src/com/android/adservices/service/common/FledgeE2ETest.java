@@ -122,6 +122,7 @@ import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.DBAdSelectionDebugReport;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -152,6 +153,7 @@ import com.android.adservices.service.adselection.MockAdIdWorker;
 import com.android.adservices.service.adselection.MultiCloudSupportStrategy;
 import com.android.adservices.service.adselection.MultiCloudTestStrategyFactory;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -358,6 +360,9 @@ public class FledgeE2ETest {
     private AdIdFetcher mAdIdFetcher;
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
     private RetryStrategyFactory mRetryStrategyFactory;
+    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    private ConsentedDebugConfigurationGeneratorFactory
+            mConsentedDebugConfigurationGeneratorFactory;
 
     @Before
     public void setUp() throws Exception {
@@ -420,6 +425,14 @@ public class FledgeE2ETest {
         mAdIdFetcher =
                 new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
+        mConsentedDebugConfigurationDao =
+                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, AdSelectionDatabase.class)
+                        .build()
+                        .consentedDebugConfigurationDao();
+        mConsentedDebugConfigurationGeneratorFactory =
+                new ConsentedDebugConfigurationGeneratorFactory(
+                        false, mConsentedDebugConfigurationDao);
+
         initClients(false, true, false, false, false);
 
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
@@ -1263,7 +1276,8 @@ public class FledgeE2ETest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1426,7 +1440,8 @@ public class FledgeE2ETest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -3186,7 +3201,8 @@ public class FledgeE2ETest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -4622,7 +4638,8 @@ public class FledgeE2ETest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
     }
 
     private AdSelectionTestCallback invokeRunAdSelection(
