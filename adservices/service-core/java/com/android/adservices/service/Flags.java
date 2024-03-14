@@ -758,7 +758,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION = 11.46173F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION = 11.5F;
 
     /** Returns max information gain for Flexible Event, dual destination Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
