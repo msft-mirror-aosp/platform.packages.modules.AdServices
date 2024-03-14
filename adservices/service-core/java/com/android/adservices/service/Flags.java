@@ -4879,4 +4879,12 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getPasExtendedMetricsEnabled() {
         return PAS_EXTENDED_METRICS_ENABLED;
     }
+
+    /** Default enablement for applying SPE (Scheduling Policy Engine) to pilot jobs. */
+    @FeatureFlag boolean DEFAULT_SPE_ON_PILOT_JOBS_ENABLED = false;
+
+    /** Returns the default enablement of applying SPE (Scheduling Policy Engine) to pilot jobs. */
+    default boolean getSpeOnPilotJobsEnabled() {
+        return DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
+    }
 }
