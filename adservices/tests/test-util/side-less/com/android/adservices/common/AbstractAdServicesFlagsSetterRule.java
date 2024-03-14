@@ -15,6 +15,7 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.common.AbstractAdServicesSystemPropertiesDumperRule.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX;
 import static com.android.adservices.service.FlagsConstants.ARRAY_SPLITTER_COMMA;
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 
@@ -43,9 +44,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         extends AbstractFlagsSetterRule<T> {
 
     private static final String ALLOWLIST_SEPARATOR = ARRAY_SPLITTER_COMMA;
-
-    // TODO(b/295321663): static import from AdServicesCommonConstants instead
-    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
 
     protected static final String LOGCAT_LEVEL_VERBOSE = "VERBOSE";
 

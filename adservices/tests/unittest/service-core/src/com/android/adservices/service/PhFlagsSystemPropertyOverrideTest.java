@@ -34,12 +34,14 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesSystemPropertiesDumperRule;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.fixture.TestableSystemProperties;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
@@ -48,6 +50,10 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     private final FlagGuard mGlobalKillSwitchGuard = value -> setGlobalKillSwitch(!value);
     private final FlagGuard mMsmtKillSwitchGuard = value -> setMsmmtKillSwitch(!value);
+
+    @Rule
+    public final AdServicesSystemPropertiesDumperRule sysPropDumper =
+            new AdServicesSystemPropertiesDumperRule();
 
     // Overriding DeviceConfig stub to avoid Read device config permission errors and to also
     // test the behavior of flags, when both device config and system properties are set.

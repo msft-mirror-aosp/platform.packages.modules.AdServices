@@ -38,7 +38,11 @@ public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String RESULT = "There is a person in a smiling bag.";
     private static final String ANOTHER_RESULT = "The owls are not what they seem.";
+
+    @SuppressWarnings("StaticAssignmentOfThrowable")
     private static final Exception ERROR = new Exception("Without chemicals, they point.");
+
+    @SuppressWarnings("StaticAssignmentOfThrowable")
     private static final Exception ANOTHER_ERROR = new Exception("D'OH!");
 
     @Test

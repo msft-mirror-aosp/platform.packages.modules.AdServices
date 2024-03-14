@@ -93,6 +93,29 @@ public class ReportEventRequestTest {
     }
 
     @Test
+    public void testBuildReportEventRequestSuccess_callAllSetters() throws Exception {
+        long otherAdSelectionId = AD_SELECTION_ID + 1;
+        String hoverKey = "hover";
+        String otherInteractionData = "otherInteractionData";
+
+        ReportEventRequest request =
+                new ReportEventRequest.Builder(
+                                AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, DESTINATIONS)
+                        .setAdSelectionId(otherAdSelectionId)
+                        .setKey(hoverKey)
+                        .setData(otherInteractionData)
+                        .setReportingDestinations(FLAG_REPORTING_DESTINATION_SELLER)
+                        .setInputEvent(INPUT_EVENT)
+                        .build();
+
+        assertEquals(otherAdSelectionId, request.getAdSelectionId());
+        assertEquals(hoverKey, request.getKey());
+        assertEquals(INPUT_EVENT, request.getInputEvent());
+        assertEquals(otherInteractionData, request.getData());
+        assertEquals(FLAG_REPORTING_DESTINATION_SELLER, request.getReportingDestinations());
+    }
+
+    @Test
     public void testFailsToBuildWithUnsetInteractionKey() {
         assertThrows(
                 NullPointerException.class,

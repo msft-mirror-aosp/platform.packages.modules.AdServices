@@ -113,9 +113,9 @@ class AdServicesOTAUtil:
         public_xml = ET.Element('resources')
 
         self._add_value_res(adservices_dict, public_xml, ota_res_values_dir)
-        self._add_file_res(adservices_dict, public_xml, ota_layout_dir, 'layout')
         self._add_file_res(adservices_dict, public_xml, ota_drawable_dir, 'drawable')
         self._add_file_res(adservices_dict, public_xml, ota_color_dir, 'color')
+        self._add_file_res(adservices_dict, public_xml, ota_layout_dir, 'layout')
         self._add_id_res(adservices_dict, public_xml, ota_layout_dir)
 
         ET.indent(public_xml, space='    ')

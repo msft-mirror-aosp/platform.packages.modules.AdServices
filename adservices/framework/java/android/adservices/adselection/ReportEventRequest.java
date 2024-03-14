@@ -48,10 +48,7 @@ public class ReportEventRequest {
     public static final long REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B = 64 * 1024; // 64 KB
 
     private static final String EVENT_DATA_SIZE_MAX_EXCEEDED =
-            String.format(
-                    Locale.ENGLISH,
-                    "Event data should not exceed %d bytes",
-                    REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B);
+            "Event data should not exceed " + REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B + " bytes";
 
     private final long mAdSelectionId;
     @NonNull private final String mEventKey;

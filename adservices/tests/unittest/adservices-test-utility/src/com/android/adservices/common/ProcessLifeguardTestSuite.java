@@ -85,6 +85,7 @@ public final class ProcessLifeguardTestSuite {
     private static final int SELF_DESTROY_TIMEOUT_MS = 200;
     private static final int WAITING_TIMEOUT_MS = SELF_DESTROY_TIMEOUT_MS * 2 + NAP_TIME_MS;
 
+    @SuppressWarnings("StaticAssignmentOfThrowable")
     private static final SecurityException SELF_DESTROYING_EXCEPTION =
             new SecurityException("BG THREAD, Y U NO SURVIVE?");
 

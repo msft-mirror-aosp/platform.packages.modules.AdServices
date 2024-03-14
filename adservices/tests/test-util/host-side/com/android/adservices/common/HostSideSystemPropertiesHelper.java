@@ -23,9 +23,6 @@ import com.google.errorprone.annotations.FormatString;
 /** Host-side implementation of {@link SystemPropertiesHelper.Interface}. */
 final class HostSideSystemPropertiesHelper extends SystemPropertiesHelper.Interface {
 
-    private static final Logger sLogger =
-            new Logger(ConsoleLogger.getInstance(), HostSideSystemPropertiesHelper.class);
-
     private static final HostSideSystemPropertiesHelper sInstance =
             new HostSideSystemPropertiesHelper();
 

@@ -32,7 +32,7 @@ public final class TestFailure extends Exception {
                 cause,
                 /* enableSuppression= */ false,
                 /* writableStackTrace= */ false);
-        mDump = "\n" + dump;
+        mDump = dump.toString();
         setStackTrace(cause.getStackTrace());
     }
 
