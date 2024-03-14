@@ -215,6 +215,7 @@ import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JO
 import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS;
@@ -646,6 +647,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACH
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
@@ -10595,15 +10597,28 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetFledgeDebuggableCustomAudienceEnabledStatusFlag() {
+    public void testGetFledgeCustomAudienceCliEnabledStatusFlag() {
         assertThat(mPhFlags.getFledgeCustomAudienceCLIEnabledStatus())
                 .isEqualTo(FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED);
 
-        boolean phOverridingValue = false;
+        boolean phOverridingValue = !FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
         overrideKAnonFlags(
                 Boolean.toString(phOverridingValue), KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED);
 
         assertThat(mPhFlags.getFledgeCustomAudienceCLIEnabledStatus()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetFledgConsentedDebuggingCliEnabledStatusFlag() {
+        assertThat(mPhFlags.getFledgeConsentedDebuggingCliEnabledStatus())
+                .isEqualTo(FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED);
+
+        boolean phOverridingValue = !FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED;
+        overrideKAnonFlags(
+                Boolean.toString(phOverridingValue), KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED);
+
+        assertThat(mPhFlags.getFledgeConsentedDebuggingCliEnabledStatus())
+                .isEqualTo(phOverridingValue);
     }
 
     @Test

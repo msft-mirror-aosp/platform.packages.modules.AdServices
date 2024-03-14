@@ -26,6 +26,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_M
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
@@ -5004,6 +5005,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeCustomAudienceCLIEnabledStatus());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED
+                        + " = "
+                        + getFledgeConsentedDebuggingCliEnabledStatus());
+        writer.println(
+                "\t"
                         + KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED
                         + " = "
                         + getAdServicesRetryStrategyEnabled());
@@ -5942,6 +5948,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
                 FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeConsentedDebuggingCliEnabledStatus() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED,
+                FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED);
     }
 
     @Override

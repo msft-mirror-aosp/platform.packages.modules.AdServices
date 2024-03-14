@@ -1316,6 +1316,10 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED =
             "fledge_is_custom_audience_cli_enabled";
 
+    /** Key for feature flagging consented debugging CLI. */
+    public static final String KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED =
+            "fledge_is_consented_debugging_cli_enabled";
+
     /** Key for AdServices' module job policy. */
     public static final String KEY_AD_SERVICES_MODULE_JOB_POLICY = "ad_services_module_job_policy";
 
