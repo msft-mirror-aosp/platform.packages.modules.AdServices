@@ -4864,4 +4864,12 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getEnableConsentManagerV2() {
         return DEFAULT_ENABLE_CONSENT_MANAGER_V2;
     }
+
+    /** Protected app signals API extended metrics flag. */
+    boolean PAS_EXTENDED_METRICS_ENABLED = false;
+
+    /** Returns whether the PAS API extended metrics is enabled. */
+    default boolean getPasExtendedMetricsEnabled() {
+        return PAS_EXTENDED_METRICS_ENABLED;
+    }
 }
