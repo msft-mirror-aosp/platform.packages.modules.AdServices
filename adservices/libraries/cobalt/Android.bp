@@ -41,6 +41,7 @@ android_library {
         "libprotobuf-java-lite",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
+    //TODO(b/329437190): Add AdServicesLintChecker lint.
 }
 
 // Schemas needs to be bundled via this android_library since Cobalt unit tests for schema
