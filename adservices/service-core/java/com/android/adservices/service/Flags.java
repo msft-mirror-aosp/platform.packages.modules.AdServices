@@ -758,7 +758,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION = 11.46173F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION = 11.5F;
 
     /** Returns max information gain for Flexible Event, dual destination Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
@@ -1754,6 +1754,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns whether the fledge GetAdSelectionData payload metrics are enabled. */
     default boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
         return FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
+    }
+
+    @FeatureFlag boolean FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED = false;
+
+    /** Returns whether Consented Debugging is enabled for server auctions. */
+    default boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
+        return FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
     }
 
     // Protected signals cleanup feature flag disabled by default
@@ -4863,5 +4870,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Gets the Consent Manager V2 enable flag. */
     default boolean getEnableConsentManagerV2() {
         return DEFAULT_ENABLE_CONSENT_MANAGER_V2;
+    }
+
+    /** Protected app signals API extended metrics flag. */
+    boolean PAS_EXTENDED_METRICS_ENABLED = false;
+
+    /** Returns whether the PAS API extended metrics is enabled. */
+    default boolean getPasExtendedMetricsEnabled() {
+        return PAS_EXTENDED_METRICS_ENABLED;
     }
 }

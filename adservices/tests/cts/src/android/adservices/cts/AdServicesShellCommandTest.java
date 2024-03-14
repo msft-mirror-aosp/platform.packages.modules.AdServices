@@ -24,6 +24,7 @@ import com.android.adservices.common.AbstractAdServicesShellCommandHelper;
 import com.android.adservices.common.AdServicesShellCommandHelper;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class AdServicesShellCommandTest extends CtsAdServicesDeviceTestCase {
@@ -38,6 +39,8 @@ public final class AdServicesShellCommandTest extends CtsAdServicesDeviceTestCas
         flags.setFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true);
     }
 
+    // TODO(b/308009734): Enable the tests once we fix the helper class for R/S
+    @Ignore
     @Test
     @FlakyTest(bugId = 327321849)
     public void testRunCommand_echoCommand() {
@@ -46,6 +49,8 @@ public final class AdServicesShellCommandTest extends CtsAdServicesDeviceTestCas
         expect.withMessage("out").that(out).isEqualTo(CMD_ECHO_OUT);
     }
 
+    // TODO(b/308009734): Enable the tests once we fix the helper class for R/S
+    @Ignore
     @Test
     @FlakyTest(bugId = 327321849)
     public void testRunCommandRwe_echoCommand() {
