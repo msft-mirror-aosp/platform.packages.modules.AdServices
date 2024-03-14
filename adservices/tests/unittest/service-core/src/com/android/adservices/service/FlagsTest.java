@@ -380,6 +380,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetPasExtendedMetricsEnabled() {
+        testFeatureFlag(
+                "PAS_EXTENDED_METRICS_ENABLED",
+                flags -> flags.getPasExtendedMetricsEnabled());
+    }
+
+    @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
         testMsmtFeatureFlagBackedByLegacyKillSwitchAndGuardedByMsmtEnabled(
                 "getMeasurementAttributionFallbackJobEnabled()",
