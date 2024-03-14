@@ -45,6 +45,7 @@ import com.android.adservices.data.adselection.datahandlers.AdSelectionInitializ
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.CoordinatorOriginUriValidator;
@@ -117,6 +118,9 @@ public class GetAdSelectionDataRunner {
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategy;
 
+    @NonNull
+    private final ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
+
     public GetAdSelectionDataRunner(
             @NonNull final Context context,
             @NonNull final MultiCloudSupportStrategy multiCloudSupportStrategy,
@@ -135,7 +139,10 @@ public class GetAdSelectionDataRunner {
             @NonNull final AuctionServerDebugReporting auctionServerDebugReporting,
             @NonNull final AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy) {
+            @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
+            @NonNull
+                    final ConsentedDebugConfigurationGenerator
+                            consentedDebugConfigurationGenerator) {
         Objects.requireNonNull(multiCloudSupportStrategy);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -150,6 +157,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(auctionServerDebugReporting);
         Objects.requireNonNull(adsRelevanceExecutionLogger);
         Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
+        Objects.requireNonNull(consentedDebugConfigurationGenerator);
 
         mObliviousHttpEncryptor =
                 multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
@@ -195,6 +203,7 @@ public class GetAdSelectionDataRunner {
         mAuctionServerDebugReporting = auctionServerDebugReporting;
         mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mAdServicesLogger = adServicesLogger;
+        mConsentedDebugConfigurationGenerator = consentedDebugConfigurationGenerator;
     }
 
     @VisibleForTesting
@@ -217,7 +226,8 @@ public class GetAdSelectionDataRunner {
             @NonNull AuctionServerDebugReporting auctionServerDebugReporting,
             @NonNull AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             @NonNull AdServicesLogger adServicesLogger,
-            @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy) {
+            @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
+            @NonNull ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator) {
         Objects.requireNonNull(multiCloudSupportStrategy);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -233,6 +243,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(auctionServerDebugReporting);
         Objects.requireNonNull(adsRelevanceExecutionLogger);
         Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
+        Objects.requireNonNull(consentedDebugConfigurationGenerator);
 
         mObliviousHttpEncryptor =
                 multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
@@ -278,6 +289,7 @@ public class GetAdSelectionDataRunner {
         mAuctionServerDebugReporting = auctionServerDebugReporting;
         mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mAdServicesLogger = adServicesLogger;
+        mConsentedDebugConfigurationGenerator = consentedDebugConfigurationGenerator;
     }
 
     /** Orchestrates GetAdSelectionData process. */
@@ -487,19 +499,25 @@ public class GetAdSelectionDataRunner {
             long adSelectionId,
             boolean isDebugReportingEnabled) {
         sLogger.v("Composing ProtectedAuctionInput with buyer inputs and publisher");
-        return ProtectedAuctionInput.newBuilder()
-                .putAllBuyerInput(
-                        compressedBuyerInputs.entrySet().parallelStream()
-                                .collect(
-                                        Collectors.toMap(
-                                                e -> e.getKey().toString(),
-                                                e -> ByteString.copyFrom(e.getValue().getData()))))
-                .setPublisherName(packageName)
-                .setEnableDebugReporting(isDebugReportingEnabled)
-                // TODO(b/288287435): Set generation ID as a UUID generated per request which is not
-                //  accessible in plaintext.
-                .setGenerationId(String.valueOf(adSelectionId))
-                .build();
+        ProtectedAuctionInput.Builder protectedAuctionInputBuilder =
+                ProtectedAuctionInput.newBuilder()
+                        .putAllBuyerInput(
+                                compressedBuyerInputs.entrySet().parallelStream()
+                                        .collect(
+                                                Collectors.toMap(
+                                                        e -> e.getKey().toString(),
+                                                        e ->
+                                                                ByteString.copyFrom(
+                                                                        e.getValue().getData()))))
+                        .setPublisherName(packageName)
+                        .setEnableDebugReporting(isDebugReportingEnabled)
+                        // TODO(b/288287435): Set generation ID as a UUID generated per request
+                        // which is not
+                        //  accessible in plaintext.
+                        .setGenerationId(String.valueOf(adSelectionId));
+        mConsentedDebugConfigurationGenerator.setConsentedDebugConfiguration(
+                protectedAuctionInputBuilder);
+        return protectedAuctionInputBuilder.build();
     }
 
     private AuctionServerPayloadFormattedData applyPayloadFormatter(
