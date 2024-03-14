@@ -1365,13 +1365,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
     }
 
-    boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
-
-    /** Returns whether to call trusted servers for off device ad selection. */
-    default boolean getAdSelectionOffDeviceEnabled() {
-        return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
-    }
-
     boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
 
     /** Returns whether to call trusted servers for off device ad selection. */

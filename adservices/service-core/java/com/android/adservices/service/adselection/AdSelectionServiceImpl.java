@@ -733,43 +733,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             boolean auctionServerEnabledForUpdateHistogram,
             @NonNull DebugReporting debugReporting) {
 
-        // TODO(b/249298855): Evolve off device ad selection logic.
-        if (mFlags.getAdSelectionOffDeviceEnabled()) {
-            runOffDeviceAdSelection(
-                    devContext,
-                    inputParams,
-                    partialCallback,
-                    adSelectionExecutionLogger,
-                    mAdSelectionServiceFilter,
-                    callingUid,
-                    auctionServerEnabledForUpdateHistogram,
-                    debugReporting,
-                    fullCallback);
-        } else {
-            runOnDeviceAdSelection(
-                    devContext,
-                    inputParams,
-                    partialCallback,
-                    adSelectionExecutionLogger,
-                    mAdSelectionServiceFilter,
-                    callingUid,
-                    auctionServerEnabledForUpdateHistogram,
-                    debugReporting,
-                    fullCallback);
-        }
-    }
-
-    private void runOnDeviceAdSelection(
-            DevContext devContext,
-            @NonNull AdSelectionInput inputParams,
-            @NonNull AdSelectionCallback callback,
-            @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
-            final int callerUid,
-            final boolean auctionServerEnabledForUpdateHistogram,
-            @NonNull DebugReporting debugReporting,
-            @Nullable AdSelectionCallback fullCallback) {
-
         OnDeviceAdSelectionRunner runner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -785,54 +748,18 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mFlags,
                         adSelectionExecutionLogger,
-                        adSelectionServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory.getAdFilterer(),
                         mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
                         mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                 mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         debugReporting,
-                        callerUid,
+                        callingUid,
                         mShouldUseUnifiedTables,
                         mRetryStrategyFactory.createRetryStrategy(
                                 mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()));
-        runner.runAdSelection(inputParams, callback, devContext, fullCallback);
-    }
-
-    private void runOffDeviceAdSelection(
-            DevContext devContext,
-            @NonNull AdSelectionInput inputParams,
-            @NonNull AdSelectionCallback callback,
-            @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
-            int callerUid,
-            boolean auctionServerEnabledForUpdateHistogram,
-            @NonNull DebugReporting debugReporting,
-            @Nullable AdSelectionCallback fullCallback) {
-        TrustedServerAdSelectionRunner runner =
-                new TrustedServerAdSelectionRunner(
-                        mContext,
-                        mCustomAudienceDao,
-                        mAdSelectionEntryDao,
-                        mEncryptionKeyDao,
-                        mEnrollmentDao,
-                        mAdServicesHttpsClient,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mScheduledExecutor,
-                        mAdServicesLogger,
-                        devContext,
-                        mFlags,
-                        adSelectionExecutionLogger,
-                        adSelectionServiceFilter,
-                        mAdFilteringFeatureFactory.getAdFilterer(),
-                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                        mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
-                                mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
-                        mAdRenderIdValidator,
-                        debugReporting,
-                        callerUid);
-        runner.runAdSelection(inputParams, callback, devContext, fullCallback);
+        runner.runAdSelection(inputParams, partialCallback, devContext, fullCallback);
     }
 
     /**
