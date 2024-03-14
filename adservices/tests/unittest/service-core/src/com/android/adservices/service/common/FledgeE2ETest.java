@@ -343,7 +343,7 @@ public class FledgeE2ETest {
 
     private static final Flags DEFAULT_FLAGS =
             new FledgeE2ETestFlags(
-                    false, true, true, true, false, false, false, false, false, false);
+                    false, true, true, true, false, false, false, false, false, false, false);
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
@@ -433,7 +433,7 @@ public class FledgeE2ETest {
                 new ConsentedDebugConfigurationGeneratorFactory(
                         false, mConsentedDebugConfigurationDao);
 
-        initClients(false, true, false, false, false);
+        initClients(false, true, false, false, false, false);
 
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
 
@@ -480,7 +480,7 @@ public class FledgeE2ETest {
     @Test
     public void testFledgeFlowSuccessWithDevOverridesRegisterAdBeaconDisabled() throws Exception {
         // Re init clients with registerAdBeacon false
-        initClients(false, false, false, false, false);
+        initClients(false, false, false, false, false, false);
 
         setupConsentGivenStubs();
 
@@ -542,7 +542,7 @@ public class FledgeE2ETest {
     public void testFledgeFlowSuccessWithDevOverridesWithAdCostCpcBillingEnabled()
             throws Exception {
         // Re init with cpc billing enabled
-        initClients(false, false, true, false, false);
+        initClients(false, false, true, false, false, false);
 
         setupConsentGivenStubs();
 
@@ -610,7 +610,7 @@ public class FledgeE2ETest {
     public void testFledgeFlowSuccessWithDevOverridesWithAdCostCpcBillingDisabled()
             throws Exception {
         // Re init with cpc billing enabled
-        initClients(false, false, false, false, false);
+        initClients(false, false, false, false, false, false);
 
         setupConsentGivenStubs();
 
@@ -678,7 +678,7 @@ public class FledgeE2ETest {
     public void testFledgeFlowSuccessWithMockServerReportsAdCostCpcBillingEnabled()
             throws Exception {
         // Re init with cpc billing enabled
-        initClients(false, true, true, false, false);
+        initClients(false, true, true, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -736,7 +736,7 @@ public class FledgeE2ETest {
     @Test
     public void testFledgeFlowSuccessWithMockServerWithDataVersionHeaderEnabled() throws Exception {
         // Re init with data version header enabled
-        initClients(false, true, false, true, false);
+        initClients(false, true, false, true, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -824,7 +824,7 @@ public class FledgeE2ETest {
     public void testFledgeFlowSuccessWithMockServerWithDataVersionHeaderDisabled()
             throws Exception {
         // Re init with data version header disabled
-        initClients(false, true, false, false, false);
+        initClients(false, true, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -913,7 +913,7 @@ public class FledgeE2ETest {
     public void testFledgeFlowSuccessWithMockServerReportsAdCostCpcBillingDisabled()
             throws Exception {
         // Re init with cpc billing enabled
-        initClients(false, true, false, false, false);
+        initClients(false, true, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -1031,7 +1031,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithDevOverridesGaUxEnabled() throws Exception {
-        initClients(true, true, false, false, false);
+        initClients(true, true, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -1169,7 +1169,7 @@ public class FledgeE2ETest {
     @Test
     public void testFledgeFlowSuccessWithDevOverridesWithRevokedUserConsentForAppGaUxEnabled()
             throws Exception {
-        initClients(true, true, false, false, false);
+        initClients(true, true, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -1948,7 +1948,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithDebugReportingSentImmediately() throws Exception {
-        initClients(false, false, true, false, false, true, false, true, false, false);
+        initClients(false, false, true, false, false, true, false, true, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2013,7 +2013,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithDebugReportingSentInBatch() throws Exception {
-        initClients(false, false, true, false, false, true, false, false, false, false);
+        initClients(false, false, true, false, false, true, false, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2108,7 +2108,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithDebugReportingDisabledWhenLatEnabled() throws Exception {
-        initClients(false, false, true, false, false, true, false, false, false, false);
+        initClients(false, false, true, false, false, true, false, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2177,7 +2177,7 @@ public class FledgeE2ETest {
     @Test
     public void testFledgeFlowSuccessWithDebugReportingDisabledWhenAdIdServiceDisabled()
             throws Exception {
-        initClients(false, false, true, false, false, true, false, false, true, false);
+        initClients(false, false, true, false, false, true, false, false, true, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2246,7 +2246,7 @@ public class FledgeE2ETest {
     @Test
     public void testFledgeFlowSuccessWithMockServer_DoesNotReportToBuyerWhenEnrollmentFails()
             throws Exception {
-        initClients(false, true, true, false, false, false, false, false, false, false);
+        initClients(false, true, true, false, false, false, false, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2346,18 +2346,27 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithMockServer_allFilters() throws Exception {
-        testFledgeFlowSuccessAllFilters(false);
+        testFledgeFlowSuccessAllFilters(false, false);
     }
 
     @Test
-    public void testFledgeFlowSuccessWithMockServer_allFiltersWithUnifiedTables() throws Exception {
-        testFledgeFlowSuccessAllFilters(true);
+    public void
+            testFledgeFlowSuccessWithMockServer_allFiltersWithUnifiedTablesAuctionServerDisabled()
+                    throws Exception {
+        testFledgeFlowSuccessAllFilters(true, false);
+    }
+
+    @Test
+    public void
+            testFledgeFlowSuccessWithMockServer_allFiltersWithUnifiedTablesAuctionServerEnabled()
+                    throws Exception {
+        testFledgeFlowSuccessAllFilters(true, true);
     }
 
     @Test
     public void testFledgeFlowSuccessWithMockServer_fetchAndJoinCustomAudienceFlow_noFilters()
             throws Exception {
-        initClients(true, true, false, false, false);
+        initClients(true, true, false, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
                 .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
@@ -2519,7 +2528,7 @@ public class FledgeE2ETest {
     @Test
     public void testFledgeFlowSuccessWithMockServer_fetchAndJoinCustomAudience_appInstallFilters()
             throws Exception {
-        initClients(true, true, false, false, false);
+        initClients(true, true, false, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
                 .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
@@ -2683,7 +2692,7 @@ public class FledgeE2ETest {
     @Test
     public void testFledgeFlowSuccessWithMockServer_fetchAndJoinCustomAudienceFlow_bothFilters()
             throws Exception {
-        initClients(true, true, false, false, false);
+        initClients(true, true, false, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
                 .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
@@ -2857,7 +2866,7 @@ public class FledgeE2ETest {
     @Test
     public void testFledgeFlowSuccessWithMockServer_fetchAndJoinCustomAudienceFlow_fcapFilters()
             throws Exception {
-        initClients(true, true, false, false, false);
+        initClients(true, true, false, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
                 .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
@@ -3053,7 +3062,8 @@ public class FledgeE2ETest {
                 /* registerAdBeaconEnabled= */ true,
                 /* cpcBillingEnabled= */ false,
                 /* dataVersionHeaderEnabled= */ false,
-                shouldUseUnifiedTables);
+                shouldUseUnifiedTables,
+                /* auctionServerEnabledReportImpression= */ false);
 
         setupAdSelectionConfig();
 
@@ -3343,7 +3353,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithAppInstallWithMockServer() throws Exception {
-        initClients(true, true, false, false, false);
+        initClients(true, true, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -3424,7 +3434,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithAppInstallFlagOffWithMockServer() throws Exception {
-        initClients(false, true, false, true, false, false, false, false, false, false);
+        initClients(false, true, false, true, false, false, false, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -3822,7 +3832,7 @@ public class FledgeE2ETest {
     @Test
     public void testSelectAdsWithFilterExceptionFromNullPointerExceptionDoesNotCrash()
             throws Exception {
-        initClients(false, false, false, false, false);
+        initClients(false, false, false, false, false, false);
         setupConsentGivenStubs();
         setupAdSelectionConfig();
 
@@ -4533,7 +4543,8 @@ public class FledgeE2ETest {
             boolean registerAdBeaconEnabled,
             boolean cpcBillingEnabled,
             boolean dataVersionHeaderEnabled,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            boolean auctionServerEnabledReportImpression) {
         initClients(
                 gaUXEnabled,
                 registerAdBeaconEnabled,
@@ -4544,7 +4555,8 @@ public class FledgeE2ETest {
                 dataVersionHeaderEnabled,
                 false,
                 false,
-                shouldUseUnifiedTables);
+                shouldUseUnifiedTables,
+                auctionServerEnabledReportImpression);
     }
 
     private void initClients(
@@ -4557,7 +4569,8 @@ public class FledgeE2ETest {
             boolean dataVersionHeaderEnabled,
             boolean debugReportSendImmediately,
             boolean adIdKillSwitch,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            boolean auctionServerEnabledReportImpression) {
         Flags flags =
                 new FledgeE2ETestFlags(
                         gaUXEnabled,
@@ -4569,7 +4582,8 @@ public class FledgeE2ETest {
                         dataVersionHeaderEnabled,
                         debugReportSendImmediately,
                         adIdKillSwitch,
-                        shouldUseUnifiedTables);
+                        shouldUseUnifiedTables,
+                        false);
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(
@@ -4938,8 +4952,16 @@ public class FledgeE2ETest {
                 .build();
     }
 
-    private void testFledgeFlowSuccessAllFilters(boolean shouldUseUnifiedTables) throws Exception {
-        initClients(true, true, false, false, shouldUseUnifiedTables);
+    private void testFledgeFlowSuccessAllFilters(
+            boolean shouldUseUnifiedTables, boolean auctionServerEnabledReportImpression)
+            throws Exception {
+        initClients(
+                true,
+                true,
+                false,
+                false,
+                shouldUseUnifiedTables,
+                auctionServerEnabledReportImpression);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -5262,6 +5284,7 @@ public class FledgeE2ETest {
         private final boolean mDebugReportsSendImmediately;
         private final boolean mAdIdKillSwitch;
         private final boolean mShouldUseUnifiedTables;
+        private final boolean mAuctionServerEnabledReportImpression;
 
         FledgeE2ETestFlags(
                 boolean isGaUxEnabled,
@@ -5273,7 +5296,8 @@ public class FledgeE2ETest {
                 boolean dataVersionHeaderEnabled,
                 boolean debugReportsSendImmediately,
                 boolean adIdKillSwitch,
-                boolean shouldUseUnifiedTables) {
+                boolean shouldUseUnifiedTables,
+                boolean auctionServerEnabledReportImpression) {
             mIsGaUxEnabled = isGaUxEnabled;
             mRegisterAdBeaconEnabled = registerAdBeaconEnabled;
             mFiltersEnabled = filtersEnabled;
@@ -5284,6 +5308,7 @@ public class FledgeE2ETest {
             mDebugReportsSendImmediately = debugReportsSendImmediately;
             mAdIdKillSwitch = adIdKillSwitch;
             mShouldUseUnifiedTables = shouldUseUnifiedTables;
+            mAuctionServerEnabledReportImpression = auctionServerEnabledReportImpression;
         }
 
         @Override
@@ -5385,6 +5410,11 @@ public class FledgeE2ETest {
         @Override
         public boolean getFledgeAuctionServerEnabledForReportEvent() {
             return false;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerEnabledForReportImpression() {
+            return mAuctionServerEnabledReportImpression;
         }
     }
 }

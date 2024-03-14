@@ -943,7 +943,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             callingUid,
                             mRetryStrategyFactory.createRetryStrategy(
                                     BinderFlagReader.readFlag(
-                                            mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)));
+                                            mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)),
+                            mShouldUseUnifiedTables);
             reporter.reportImpression(requestParams, callback);
         } else {
             ImpressionReporterLegacy reporter =
