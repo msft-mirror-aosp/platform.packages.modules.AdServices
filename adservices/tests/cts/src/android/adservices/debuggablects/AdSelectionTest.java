@@ -300,7 +300,6 @@ public class AdSelectionTest extends FledgeScenarioTest {
     }
 
     /** Test that buyer and seller receive win and loss debug reports (Remarketing CUJ 164). */
-    @FlakyTest(bugId = 300421625)
     @Test
     public void testAdSelection_withDebugReporting_happyPath() throws Exception {
         assumeTrue(isAdIdSupported());
@@ -312,12 +311,14 @@ public class AdSelectionTest extends FledgeScenarioTest {
 
         try {
             joinCustomAudience(SHOES_CA);
+            joinCustomAudience(SHIRTS_CA);
             setDebugReportingEnabledForTesting(true);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
         } finally {
             setDebugReportingEnabledForTesting(false);
             leaveCustomAudience(SHOES_CA);
+            joinCustomAudience(SHIRTS_CA);
         }
 
         assertThat(dispatcher.getCalledPaths())
@@ -354,7 +355,6 @@ public class AdSelectionTest extends FledgeScenarioTest {
      * Test that buyer and seller receive win and loss debug reports with reject reason (Remarketing
      * CUJ 170).
      */
-    @FlakyTest(bugId = 301334790)
     @Test
     public void testAdSelection_withDebugReportingAndRejectReason_happyPath() throws Exception {
         assumeTrue(isAdIdSupported());
