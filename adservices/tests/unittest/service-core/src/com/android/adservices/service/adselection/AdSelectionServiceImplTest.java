@@ -107,7 +107,6 @@ import android.webkit.WebView;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
@@ -696,7 +695,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessfullyReportsDataVersionHeader() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -839,7 +837,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessfullyReportsSellerDataVersionHeader() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -969,7 +966,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -1672,7 +1668,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessAndDoesNotCrashAfterBuyerReportThrowsAnException()
             throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
@@ -3082,7 +3077,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void
             testReportImpressionSucceedsButDesNotRegisterUrisWithInteractionKeySizeThatExceedsMax()
                     throws Exception {
@@ -6512,7 +6506,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -6747,7 +6740,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessThrottledSubsequentCallFailure() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
@@ -6884,7 +6876,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         // Instantiate a server with different domain from buyer and seller for reporting
@@ -7238,7 +7229,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessWithValidImpressionReportingSubdomains()
             throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());

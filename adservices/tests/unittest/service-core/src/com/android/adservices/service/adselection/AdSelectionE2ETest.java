@@ -109,7 +109,6 @@ import android.webkit.WebView;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
@@ -969,7 +968,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithAdCostCpcBillingEnabled()
             throws Exception {
         AdSelectionE2ETestFlags flagsWithCPCEnabled =
@@ -1249,7 +1247,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithDataVersionHeaderFlagDisabled()
             throws Exception {
         AdSelectionE2ETestFlags flagsWithDataVersionHeaderEnabled =
@@ -1395,7 +1392,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWinnerWithoutBuyerDataVersionHeader()
             throws Exception {
         AdSelectionE2ETestFlags flagsWithDataVersionHeaderEnabled =
@@ -1522,7 +1518,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithAdCostCpcBillingDisabled()
             throws Exception {
         AdSelectionE2ETestFlags flagsWithCPCDisabled =
@@ -3045,7 +3040,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
-    @FlakyTest(bugId = 304764127)
     @Test
     public void testRunAdSelectionContextualAds_UseOverrides_Success() throws Exception {
         // Logger calls come after the callback is returned
@@ -3531,7 +3525,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionOnlyContextualAds_NoCAsNoNetworkCall_Success() throws Exception {
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
@@ -3622,7 +3615,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testRunAdSelectionNoContextualAds_NoCAs_Failure() throws Exception {
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
@@ -4116,7 +4108,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionMultipleCAsNoCachingSuccess_v3BiddingLogic() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(DISPATCHER_V3_BIDDING_LOGIC);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
@@ -4490,7 +4481,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSucceedsWithOverride_preV3BiddingLogic() throws Exception {
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -4631,7 +4621,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSucceedsWithOverride_v3BiddingLogic() throws Exception {
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -6310,7 +6299,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
-    @FlakyTest(bugId = 304764127)
     @Test
     public void testRunAdSelectionImposesPerBuyerBiddingTimeout_v3BiddingLogic() throws Exception {
         // Logger calls come after the callback is returned
@@ -6914,7 +6902,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testRunAdSelectionMissingScoringSignalsFailure() throws Exception {
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -7436,7 +7423,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionThrottledSubsequentCallFailure() throws Exception {
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
