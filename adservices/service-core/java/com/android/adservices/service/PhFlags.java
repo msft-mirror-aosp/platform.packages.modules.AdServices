@@ -1978,13 +1978,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getAdSelectionOffDeviceEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED,
-                FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED);
-    }
-
-    @Override
     public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED,
@@ -4472,11 +4465,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FOREGROUND_STATUS_LEVEL
                         + " = "
                         + getForegroundStatuslLevelForValidation());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED
-                        + " = "
-                        + getAdSelectionOffDeviceEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES
