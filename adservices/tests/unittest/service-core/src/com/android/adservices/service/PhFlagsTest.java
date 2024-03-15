@@ -94,6 +94,7 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
@@ -883,8 +884,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_ALL
 import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
 import static com.android.adservices.service.FlagsConstants.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
-import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST;
@@ -900,6 +901,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOT
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED;
@@ -10792,8 +10794,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 String.valueOf(phOverridingValue),
                 /* makeDefault */ false);
 
-        assertThat(mPhFlags.getPasExtendedMetricsEnabled())
-                .isEqualTo(phOverridingValue);
+        assertThat(mPhFlags.getPasExtendedMetricsEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testSpeOnPilotJobsEnabled() {
+        boolean phOverrideValue = !DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
+
+        expect.withMessage("getSpeOnPilotJobsEnabled() by default")
+                .that(mPhFlags.getSpeOnPilotJobsEnabled())
+                .isEqualTo(DEFAULT_SPE_ON_PILOT_JOBS_ENABLED);
+
+        // Now overriding with the value from PH.
+        setSpeOnPilotJobsEnabled(phOverrideValue);
+        expect.withMessage("getSpeOnPilotJobsEnabled() when set by device config")
+                .that(mPhFlags.getSpeOnPilotJobsEnabled())
+                .isEqualTo(phOverrideValue);
     }
 
     private void setMeasurementKillSwitch(boolean value) {
@@ -10810,6 +10826,10 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     private void setEnableConsentManagerV2(boolean value) {
         setAdservicesFlag(KEY_ENABLE_CONSENT_MANAGER_V2, value);
+    }
+
+    private void setSpeOnPilotJobsEnabled(boolean value) {
+        setAdservicesFlag(KEY_SPE_ON_PILOT_JOBS_ENABLED, value);
     }
 
     private void verifyGetBooleanNotCalled(String name) {
