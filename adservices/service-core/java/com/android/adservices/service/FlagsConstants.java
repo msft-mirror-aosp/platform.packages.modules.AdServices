@@ -1337,6 +1337,8 @@ public final class FlagsConstants {
     public static final String KEY_ENABLE_CONSENT_MANAGER_V2 = "enable_consent_manager_v2";
 
     /** Key for PAS API extended metrics flag. */
-    public static final String KEY_PAS_EXTENDED_METRICS_ENABLED =
-            "pas_extended_metrics_enabled";
+    public static final String KEY_PAS_EXTENDED_METRICS_ENABLED = "pas_extended_metrics_enabled";
+
+    /** Key for enabling SPE on pilot background jobs. */
+    public static final String KEY_SPE_ON_PILOT_JOBS_ENABLED = "spe_on_pilot_jobs_enabled";
 }
