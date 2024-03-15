@@ -39,7 +39,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
-class ConsentedDebugShellCommand extends AbstractShellCommand {
+public class ConsentedDebugShellCommand extends AbstractShellCommand {
     @VisibleForTesting public static final String CMD = "consented_debug";
     // SUB COMMANDS
     @VisibleForTesting public static final String ENABLE_SUB_CMD = "enable";
@@ -127,8 +127,10 @@ class ConsentedDebugShellCommand extends AbstractShellCommand {
             out.print(output);
             return RESULT_OK;
         } catch (IllegalArgumentException exception) {
+            Log.e(TAG, "IllegalArgumentException while running consented_debug command", exception);
             return invalidArgsError(HELP, err, args);
         } catch (RuntimeException exception) {
+            Log.e(TAG, "RuntimeException while running consented_debug command", exception);
             err.print(exception.getMessage());
             return RESULT_GENERIC_ERROR;
         }

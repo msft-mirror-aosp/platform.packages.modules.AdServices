@@ -40,6 +40,8 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
+import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.shared.testing.common.BlockingCallableWrapper;
 
@@ -130,6 +132,23 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
         ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
         expect.withMessage("result").that(response.getResultCode()).isEqualTo(0);
         expect.withMessage("out").that(response.getOut()).contains("{\"custom_audiences\":[]}");
+        expect.withMessage("err").that(response.getErr()).isEmpty();
+    }
+
+    @Test
+    public void testRunShellCommand_consentDebug_view() throws Exception {
+        mShellCommandService.runShellCommand(
+                new ShellCommandParam(
+                        AdSelectionShellCommandFactory.COMMAND_PREFIX,
+                        ConsentedDebugShellCommand.CMD,
+                        ConsentedDebugShellCommand.VIEW_SUB_CMD),
+                mSyncIShellCommandCallback);
+
+        ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
+        expect.withMessage("result").that(response.getResultCode()).isEqualTo(0);
+        expect.withMessage("out")
+                .that(response.getOut())
+                .contains(ConsentedDebugShellCommand.VIEW_SUCCESS_NO_CONFIGURATION);
         expect.withMessage("err").that(response.getErr()).isEmpty();
     }
 
