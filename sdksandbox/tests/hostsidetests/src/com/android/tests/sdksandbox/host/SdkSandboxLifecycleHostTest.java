@@ -136,6 +136,24 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
     }
 
+    @Test
+    public void testSdkSandboxIsKilledOnAppUninstall() throws Exception {
+        startActivity(APP_PACKAGE, APP_ACTIVITY);
+        String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(APP_PACKAGE + '\n');
+        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+        uninstallPackage(APP_PACKAGE);
+        waitForProcessDeath(SANDBOX_1_PROCESS_NAME);
+        // Should no longer see app/sdk sandbox running
+        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).doesNotContain(APP_PACKAGE + '\n');
+        assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
+
+        // Reinstall the app for other tests.
+        installPackage(APP_APK);
+    }
+
     @Ignore("b/275299487")
     @Test
     public void testSandboxIsCreatedPerUser() throws Exception {
