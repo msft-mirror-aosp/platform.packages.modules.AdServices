@@ -29,6 +29,7 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 import android.platform.test.scenario.annotation.Scenario;
+import android.util.Log;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -47,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 public class LimitPerfTests extends AbstractSelectAdsLatencyTest {
     private static final String URL_PREFIX = "https://";
     private static final String BUYER = "performance-fledge-static-5jyy5ulagq-uc.a.run.app";
-    public static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
+    public static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/simple_logic";
 
     @Test
     public void test_joinBigCustomAudience() throws Exception {
@@ -111,6 +112,10 @@ public class LimitPerfTests extends AbstractSelectAdsLatencyTest {
             AD_SELECTION_CLIENT
                     .reportImpression(reportImpressionRequest)
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+            if ((i + 1) % 10 == 0) {
+                Log.i(TAG, "Completed " + (i + 1) + " auctions");
+            }
         }
 
         leaveAll(caList);
@@ -163,9 +168,7 @@ public class LimitPerfTests extends AbstractSelectAdsLatencyTest {
                 .setExpirationTime(Instant.now().plus(Duration.ofDays(1)))
                 // Daily update and bidding URLS are limited to 400 bytes
                 .setDailyUpdateUri(nBitUriFromAdtech(BUYER, 400))
-                .setBiddingLogicUri(
-                        nBitUriFromUri(
-                                CommonFixture.getUri(BUYER, BUYER_BIDDING_LOGIC_URI_PATH), 400))
+                .setBiddingLogicUri(CommonFixture.getUri(BUYER, BUYER_BIDDING_LOGIC_URI_PATH))
                 // User bidding signals are limited to 10,000 bytes
                 .setUserBiddingSignals(nBitAdSelectionSignals(10000))
                 /* TrustedBidding signals are limited to 10 KiB. We're adding as many keys objects

@@ -1,5 +1,5 @@
 {
-  "description": "Two sources followed by an install, a source and three triggers. The triggers are all attributed to the most recent source, whose priority matches the first and is higher than the second source's.",
+  "description": "Two sources(with no post install exclusivity window) followed by an install, a source and three triggers. The triggers are all attributed to the most recent source, whose priority matches the first and is higher than the second source's.",
   "input": {
     "sources": [
       {

@@ -22,8 +22,9 @@
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
-        <option name="cleanup-apks" value="true"/>
+        <option name="cleanup-apks" value="true" />
         <option name="test-file-name" value="CtsSdkSandboxInprocessTests.apk" />
+        <option name="test-file-name" value="SocketApp.apk" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
@@ -31,7 +32,7 @@
         <option name="instrument-sdk-sandbox" value="true" />
     </test>
     <object type="module_controller"
-            class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >
+        class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
         <option name="mainline-module-package-name" value="com.google.android.adservices" />
     </object>
 

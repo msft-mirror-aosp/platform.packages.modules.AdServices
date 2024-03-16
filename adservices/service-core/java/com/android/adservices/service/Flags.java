@@ -1365,13 +1365,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
     }
 
-    boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
-
-    /** Returns whether to call trusted servers for off device ad selection. */
-    default boolean getAdSelectionOffDeviceEnabled() {
-        return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
-    }
-
     boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
 
     /** Returns whether to call trusted servers for off device ad selection. */
@@ -4878,5 +4871,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns whether the PAS API extended metrics is enabled. */
     default boolean getPasExtendedMetricsEnabled() {
         return PAS_EXTENDED_METRICS_ENABLED;
+    }
+
+    /** Default enablement for applying SPE (Scheduling Policy Engine) to pilot jobs. */
+    @FeatureFlag boolean DEFAULT_SPE_ON_PILOT_JOBS_ENABLED = false;
+
+    /** Returns the default enablement of applying SPE (Scheduling Policy Engine) to pilot jobs. */
+    default boolean getSpeOnPilotJobsEnabled() {
+        return DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
     }
 }

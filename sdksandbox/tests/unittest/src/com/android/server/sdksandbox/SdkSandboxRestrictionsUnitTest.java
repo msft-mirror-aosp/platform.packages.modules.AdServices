@@ -58,6 +58,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.io.FileDescriptor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -997,6 +998,47 @@ public class SdkSandboxRestrictionsUnitTest {
                 .isTrue();
     }
 
+    @Test
+    public void setTestContentProviderAllowlist() {
+        ProviderInfo testCp = new ProviderInfo();
+        testCp.authority = "example";
+
+        assertThat(mSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(testCp))
+                .isFalse();
+
+        SdkSandboxShellCommand cmd =
+                new SdkSandboxShellCommand(
+                        mService,
+                        InstrumentationRegistry.getInstrumentation().getContext(),
+                        true,
+                        new ShellInjector());
+
+        assertThat(
+                        cmd.exec(
+                                mService,
+                                FileDescriptor.in,
+                                FileDescriptor.out,
+                                FileDescriptor.err,
+                                new String[] {
+                                    "append-test-allowlist", "content-provider", testCp.authority
+                                }))
+                .isEqualTo(0);
+
+        assertThat(mSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(testCp)).isTrue();
+
+        assertThat(
+                        cmd.exec(
+                                mService,
+                                FileDescriptor.in,
+                                FileDescriptor.out,
+                                FileDescriptor.err,
+                                new String[] {"clear-test-allowlists"}))
+                .isEqualTo(0);
+
+        assertThat(mSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(testCp))
+                .isFalse();
+    }
+
     private void testServiceRestriction(
             @Nullable String action,
             @Nullable String packageName,
@@ -1026,5 +1068,12 @@ public class SdkSandboxRestrictionsUnitTest {
         data.put("componentClassName", componentClassName);
         data.put("componentPackageName", componentPackageName);
         return data;
+    }
+
+    private static class ShellInjector extends SdkSandboxShellCommand.Injector {
+        @Override
+        int getCallingUid() {
+            return Process.SHELL_UID;
+        }
     }
 }

@@ -2149,6 +2149,7 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.SourceContract.ID + " IN source_ids",
                                 MeasurementTables.SourceContract.EVENT_TIME + " <= %1$d",
                                 MeasurementTables.SourceContract.EXPIRY_TIME + " > %1$d",
+                                MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW + " > 0",
                                 MeasurementTables.SourceContract.EVENT_TIME
                                         + " + "
                                         + MeasurementTables.SourceContract

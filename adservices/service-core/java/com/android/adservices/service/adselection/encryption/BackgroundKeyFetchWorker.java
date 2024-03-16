@@ -109,17 +109,17 @@ public class BackgroundKeyFetchWorker {
         return mFlags;
     }
 
-    private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
-        if (shouldStop.get()) {
-            sLogger.d("Stopping " + JOB_DESCRIPTION);
-            return FluentFuture.from(Futures.immediateVoidFuture())
-                    .transform(ignored -> null, AdServicesExecutors.getLightWeightExecutor());
-        }
+    private FluentFuture<Set<Integer>> fetchExpiredKeyTypes(Instant keyExpiryInstant) {
+        return FluentFuture.from(
+                AdServicesExecutors.getBackgroundExecutor()
+                        .submit(
+                                () ->
+                                        mKeyConfigManager.getExpiredAdSelectionEncryptionKeyTypes(
+                                                keyExpiryInstant)));
+    }
 
-        Instant keyExpiryInstant = mClock.instant();
-        Set<Integer> expiredKeyTypes =
-                mKeyConfigManager.getExpiredAdSelectionEncryptionKeyTypes(keyExpiryInstant);
-
+    private FluentFuture<Void> fetchNewKeys(
+            Set<Integer> expiredKeyTypes, Instant keyExpiryInstant, Supplier<Boolean> shouldStop) {
         if (expiredKeyTypes.isEmpty()) {
             return FluentFuture.from(Futures.immediateVoidFuture())
                     .transform(ignored -> null, AdServicesExecutors.getLightWeightExecutor());
@@ -170,6 +170,20 @@ public class BackgroundKeyFetchWorker {
                         TimeUnit.MILLISECONDS,
                         AdServicesExecutors.getScheduler())
                 .transform(ignored -> null, AdServicesExecutors.getLightWeightExecutor());
+    }
+
+    private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
+        if (shouldStop.get()) {
+            sLogger.d("Stopping " + JOB_DESCRIPTION);
+            return FluentFuture.from(Futures.immediateVoidFuture())
+                    .transform(ignored -> null, AdServicesExecutors.getLightWeightExecutor());
+        }
+        Instant keyExpiryInstant = mClock.instant();
+        return fetchExpiredKeyTypes(keyExpiryInstant)
+                .transformAsync(
+                        expiredKeyTypes ->
+                                fetchNewKeys(expiredKeyTypes, keyExpiryInstant, shouldStop),
+                        AdServicesExecutors.getBackgroundExecutor());
     }
 
     /**

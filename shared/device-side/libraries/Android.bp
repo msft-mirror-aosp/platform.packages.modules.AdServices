@@ -59,6 +59,7 @@ java_library {
         "adservices-shared-util",
     ],
     libs: [
+        "androidx.annotation_annotation",
         "framework-annotations-lib",
         "framework-statsd.stubs.module_lib",
         "auto_value_annotations",
@@ -95,6 +96,7 @@ java_library {
         "guava", // MoreExecutors, Executors...
     ],
     libs: [
+        "androidx.annotation_annotation",
         "framework-annotations-lib",
         "framework-statsd.stubs.module_lib",
         "auto_value_annotations",

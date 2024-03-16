@@ -1847,7 +1847,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     SdkSandboxManagerLocal getLocalManager() {
         return mInjector.getLocalManager();
     }
@@ -2295,7 +2295,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 Process.getAppUidForSdkSandboxUid(sdkSandboxUid));
     }
 
-    private class LocalImpl implements SdkSandboxManagerLocal {
+    class LocalImpl implements SdkSandboxManagerLocal {
+        // This allowlist is used to temporarily allow test ContentProviders to be accessed during
+        // testing. This is not combined with the existing allowlist and is checked independently.
+        private ArraySet<String> mTestCpAllowlist = new ArraySet<>();
+
         @Override
         public void registerAdServicesManagerService(IBinder iBinder, boolean published) {
             SdkSandboxManagerService.this.registerAdServicesManagerService(iBinder, published);
@@ -2420,7 +2424,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             try {
                 return !mSdkSandboxSettingsListener.areRestrictionsEnforced()
                         || StringHelper.doesInputMatchAnyWildcardPattern(
-                                getContentProviderAllowlist(), providerInfo.authority);
+                                getContentProviderAllowlist(), providerInfo.authority)
+                        || StringHelper.doesInputMatchAnyWildcardPattern(
+                                mTestCpAllowlist, providerInfo.authority);
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
@@ -2551,6 +2557,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         public int getEffectiveTargetSdkVersion(int sdkSandboxUid)
                 throws PackageManager.NameNotFoundException {
             return SdkSandboxManagerService.this.getEffectiveTargetSdkVersion(sdkSandboxUid);
+        }
+
+        void appendTestContentProviderAllowlist(@NonNull String[] testCpAllowlist) {
+            mTestCpAllowlist.addAll(Arrays.asList(testCpAllowlist));
+        }
+
+        void clearTestAllowlists() {
+            mTestCpAllowlist = new ArraySet<>();
         }
     }
 }

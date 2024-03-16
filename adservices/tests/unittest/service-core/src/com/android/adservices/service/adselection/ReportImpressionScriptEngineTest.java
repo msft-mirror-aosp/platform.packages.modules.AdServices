@@ -146,7 +146,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testCanCallScript() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
         args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
@@ -161,7 +160,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testThrowsJSExecutionExceptionIfFunctionNotFound() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
         args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
@@ -180,7 +178,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testThrowsIllegalStateExceptionIfScriptIsNotReturningJson() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
         args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
@@ -248,7 +245,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportResultSuccessfulCaseWithMoreResultsFieldsThanExpected() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -342,7 +338,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsInvalidInteractionKeyType() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -371,7 +366,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsInvalidInteractionReportingUriType() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -430,7 +424,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Null() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -458,7 +451,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Int() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -838,7 +830,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportWinFailsInvalidInteractionKeyType() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
@@ -867,7 +858,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportWinFailsInvalidInteractionReportingUriType() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
@@ -896,7 +886,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportWinFailsWhenRegisterAdBeaconCalledMoreThanOnce() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer"

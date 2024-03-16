@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
 import com.android.tradefed.device.DeviceNotAvailableException;
+import com.android.tradefed.device.INativeDevice;
 import com.android.tradefed.device.ITestDevice;
 
 import com.google.errorprone.annotations.FormatMethod;
@@ -110,7 +111,13 @@ public final class TestDeviceHelper {
     }
 
     public static int getApiLevel() {
-        return call(device -> device.getApiLevel());
+        int apiLevel = call(INativeDevice::getApiLevel);
+
+        if (apiLevel == INativeDevice.UNKNOWN_API_LEVEL) {
+            throw new DeviceUnavailableException("Unable to get API level from device");
+        }
+
+        return apiLevel;
     }
 
     public static String getProperty(String name) {
@@ -165,6 +172,10 @@ public final class TestDeviceHelper {
 
     private static final class DeviceUnavailableException extends IllegalStateException {
         private DeviceUnavailableException(DeviceNotAvailableException cause) {
+            super(cause);
+        }
+
+        private DeviceUnavailableException(String cause) {
             super(cause);
         }
     }

@@ -331,6 +331,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 flags -> flags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled());
     }
 
+    @Test
+    public void testGetSpeOnPilotJobsEnabled() {
+        testFeatureFlag(
+                "DEFAULT_SPE_ON_PILOT_JOBS_ENABLED", flags -> flags.getSpeOnPilotJobsEnabled());
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //

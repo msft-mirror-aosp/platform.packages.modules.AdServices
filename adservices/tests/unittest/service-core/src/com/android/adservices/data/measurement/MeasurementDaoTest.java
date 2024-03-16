@@ -166,6 +166,7 @@ public class MeasurementDaoTest {
             Uri.parse("android-app://not-installed-registrant");
 
     private static final long INSERTION_TIME = 1617297798;
+    private static final long COOLDOWN_WINDOW = TimeUnit.HOURS.toMillis(2);
 
     // Fake ID count for initializing triggers.
     private int mValueId = 1;
@@ -2405,10 +2406,12 @@ public class MeasurementDaoTest {
         insertSource(
                 createSourceForIATest(
                                 "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA1");
         insertSource(
                 createSourceForIATest("IA2", currentTimestamp, 50, -1, false, DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA2");
         // Should select id IA1 because it has higher priority
@@ -2429,10 +2432,12 @@ public class MeasurementDaoTest {
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
                 createSourceForIATest("IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA1");
         insertSource(
                 createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA2");
         // Should select id=IA2 as it is latest
@@ -2450,14 +2455,37 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void installAttribution_noCooldownWindow_ignoredToBeMarked() {
+        long currentTimestamp = System.currentTimeMillis();
+        insertSource(
+                createSourceForIATest("IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(0)
+                        .build(),
+                "IA1");
+        // Should select id=IA2 as it is latest
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.doInstallAttribution(
+                                    INSTALLED_PACKAGE, currentTimestamp);
+                        }));
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        assertFalse(getInstallAttributionStatus("IA1", db));
+
+        removeSources(Arrays.asList("IA1", "IA2"), db);
+    }
+
+    @Test
     public void testInstallAttribution_ignoreNewerSources() {
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
                 createSourceForIATest("IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA1");
         insertSource(
                 createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA2");
         // Should select id=IA1 as it is the only valid choice.
@@ -2503,6 +2531,7 @@ public class MeasurementDaoTest {
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
                 createSourceForIATest("IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA1");
         assertTrue(
@@ -2525,6 +2554,7 @@ public class MeasurementDaoTest {
         Source source =
                 createSourceForIATest(
                                 "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build();
 
         // Execution
@@ -2578,12 +2608,14 @@ public class MeasurementDaoTest {
                                 false,
                                 DEFAULT_ENROLLMENT_ID + "_1")
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example1.test"))
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA1");
         insertSource(
                 createSourceForIATest(
                                 "IA2", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_1")
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example1.test"))
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA2");
 
@@ -2592,12 +2624,14 @@ public class MeasurementDaoTest {
                 createSourceForIATest(
                                 "IA3", currentTimestamp, -1, 10, true, DEFAULT_ENROLLMENT_ID + "_2")
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example2.test"))
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA3");
         insertSource(
                 createSourceForIATest(
                                 "IA4", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_2")
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example2.test"))
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA4");
 
@@ -2611,12 +2645,14 @@ public class MeasurementDaoTest {
                                 false,
                                 DEFAULT_ENROLLMENT_ID + "_3")
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example3.test"))
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA5");
         insertSource(
                 createSourceForIATest(
                                 "IA6", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID + "_3")
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example3.test"))
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA6");
 
@@ -2625,6 +2661,7 @@ public class MeasurementDaoTest {
                 createSourceForIATest(
                                 "IA7", currentTimestamp, 5, 10, false, DEFAULT_ENROLLMENT_ID + "_4")
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example4.test"))
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA7");
         insertSource(
@@ -2636,6 +2673,7 @@ public class MeasurementDaoTest {
                                 false,
                                 DEFAULT_ENROLLMENT_ID + "_4")
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example4.test"))
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA8");
 
@@ -2645,6 +2683,7 @@ public class MeasurementDaoTest {
                 createSourceForIATest(
                                 "IA9", currentTimestamp, 5, 31, true, DEFAULT_ENROLLMENT_ID + "_5")
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example5.test"))
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA9");
         // Registered after install attribution
@@ -2657,6 +2696,7 @@ public class MeasurementDaoTest {
                                 false,
                                 DEFAULT_ENROLLMENT_ID + "_5")
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example5.test"))
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
                         .build(),
                 "IA10");
 

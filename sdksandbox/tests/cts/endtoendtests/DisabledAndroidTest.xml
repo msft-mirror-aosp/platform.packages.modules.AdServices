@@ -20,7 +20,6 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user"/>
-
     <option name="test-user-token" value="%TEST_USER%"/>
 
     <!-- IMPORTANT: This needs to come before SuiteApkInstaller
@@ -37,7 +36,7 @@
     <target_preparer
         class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="teardown-command"
-            value="pm --user %TEST_USER% uninstall com.android.ctssdkprovider"/>
+            value="pm uninstall --user %TEST_USER% com.android.ctssdkprovider"/>
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">

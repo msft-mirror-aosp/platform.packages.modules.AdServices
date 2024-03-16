@@ -77,6 +77,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.MAX_PERCENTAGE;
 
 import static java.lang.Float.parseFloat;
@@ -1974,13 +1975,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         }
 
         return numberOfEpochsToKeepInHistory;
-    }
-
-    @Override
-    public boolean getAdSelectionOffDeviceEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED,
-                FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED);
     }
 
     @Override
@@ -4473,11 +4467,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getForegroundStatuslLevelForValidation());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED
-                        + " = "
-                        + getAdSelectionOffDeviceEnabled());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES
                         + " = "
                         + getFledgeAuctionServerPayloadBucketSizes());
@@ -5981,9 +5970,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getPasExtendedMetricsEnabled() {
+        return getDeviceConfigFlag(KEY_PAS_EXTENDED_METRICS_ENABLED, PAS_EXTENDED_METRICS_ENABLED);
+    }
+
+    public boolean getSpeOnPilotJobsEnabled() {
         return getDeviceConfigFlag(
-                KEY_PAS_EXTENDED_METRICS_ENABLED,
-                PAS_EXTENDED_METRICS_ENABLED);
+                KEY_SPE_ON_PILOT_JOBS_ENABLED, DEFAULT_SPE_ON_PILOT_JOBS_ENABLED);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers
