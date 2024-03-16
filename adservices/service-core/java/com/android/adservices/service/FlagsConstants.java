@@ -599,9 +599,6 @@ public final class FlagsConstants {
             "fledge_ad_selection_off_device_overall_timeout_ms";
     public static final String KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION =
             "fledge_ad_selection_bidding_logic_js_version";
-    // Whether to call trusted servers for off device ad selection.
-    public static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED =
-            "fledge_ad_selection_off_device_enabled";
     public static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
             "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
     // Whether to compress the request object when calling trusted servers for off device ad
@@ -1337,6 +1334,8 @@ public final class FlagsConstants {
     public static final String KEY_ENABLE_CONSENT_MANAGER_V2 = "enable_consent_manager_v2";
 
     /** Key for PAS API extended metrics flag. */
-    public static final String KEY_PAS_EXTENDED_METRICS_ENABLED =
-            "pas_extended_metrics_enabled";
+    public static final String KEY_PAS_EXTENDED_METRICS_ENABLED = "pas_extended_metrics_enabled";
+
+    /** Key for enabling SPE on pilot background jobs. */
+    public static final String KEY_SPE_ON_PILOT_JOBS_ENABLED = "spe_on_pilot_jobs_enabled";
 }
