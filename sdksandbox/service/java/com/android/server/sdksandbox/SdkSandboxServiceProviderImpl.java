@@ -88,8 +88,6 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
             }
             Intent intent = new Intent().setComponent(componentName);
 
-            sdkSandboxConnection = new SdkSandboxConnection(serviceConnection);
-
             String callingPackageName = callingInfo.getPackageName();
             String sandboxProcessName = null;
             try {
@@ -144,6 +142,7 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                 notifyFailedBinding(serviceConnection);
                 return;
             }
+            sdkSandboxConnection = new SdkSandboxConnection(serviceConnection, sandboxProcessName);
             mAppSdkSandboxConnections.put(callingInfo, sdkSandboxConnection);
             Log.i(TAG, "Sdk sandbox has been bound");
         }
@@ -200,8 +199,7 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
     }
 
     @Override
-    public void stopSandboxService(CallingInfo callingInfo)
-            throws PackageManager.NameNotFoundException {
+    public void stopSandboxService(CallingInfo callingInfo) {
         synchronized (mLock) {
             SdkSandboxConnection sandbox = getSdkSandboxConnectionLocked(callingInfo);
 
@@ -216,7 +214,7 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
             }
             Intent intent = new Intent().setComponent(componentName);
             String callingPackageName = callingInfo.getPackageName();
-            String sandboxProcessName = toSandboxProcessName(callingInfo);
+            String sandboxProcessName = sandbox.getSandboxProcessName();
 
             mActivityManagerLocal.stopSdkSandboxService(
                     intent, callingInfo.getUid(), callingPackageName, sandboxProcessName);
@@ -347,7 +345,7 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
     }
 
     // Represents the connection to an SDK sandbox service.
-    static class SdkSandboxConnection {
+    private static class SdkSandboxConnection {
 
         private final Object mLock = new Object();
 
@@ -368,8 +366,11 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
         @GuardedBy("mLock")
         public boolean isBound = true;
 
-        SdkSandboxConnection(ServiceConnection serviceConnection) {
+        private final String mSandboxProcessName;
+
+        SdkSandboxConnection(ServiceConnection serviceConnection, String sandboxProcessName) {
             mServiceConnection = serviceConnection;
+            mSandboxProcessName = sandboxProcessName;
         }
 
         @SandboxStatus
@@ -423,6 +424,10 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
             synchronized (mLock) {
                 return mSdkSandboxService;
             }
+        }
+
+        public String getSandboxProcessName() {
+            return mSandboxProcessName;
         }
 
         public ServiceConnection getServiceConnection() {
