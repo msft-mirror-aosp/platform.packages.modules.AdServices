@@ -1538,6 +1538,12 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION = false;
+
+    default boolean getFledgeAuctionServerRefreshExpiredKeysDuringAuction() {
+        return FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION;
+    }
+
     /** Default value of the url to fetch keys for KAnon encryption */
     String FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI = "";
 

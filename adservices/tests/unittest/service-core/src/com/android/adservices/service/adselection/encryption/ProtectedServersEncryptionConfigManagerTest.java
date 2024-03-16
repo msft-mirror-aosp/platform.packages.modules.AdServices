@@ -372,6 +372,89 @@ public class ProtectedServersEncryptionConfigManagerTest {
     }
 
     @Test
+    public void test_getLatestOhttpKeyConfig_refreshFlagOn_withExpiredKey_returnsNewKey()
+            throws Exception {
+        when(mMockHttpClient.fetchPayload(Uri.parse(COORDINATOR_URL_AUCTION), DEV_CONTEXT_DISABLED))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(
+                                        AUCTION_KEY_1)));
+
+        mKeyManager =
+                new ProtectedServersEncryptionConfigManager(
+                        mProtectedServersEncryptionConfigDao,
+                        new RefreshKeysFlagOn(),
+                        mClock,
+                        mAuctionEncryptionKeyParser,
+                        mJoinEncryptionKeyParser,
+                        mMockHttpClient,
+                        mLightweightExecutor);
+
+        String expiredPublicKey = "t/dzKzHJKe7k//n2u7wDdvxRtgXy9SncfXz6g8JB/m4=";
+        mProtectedServersEncryptionConfigDao.insertKeys(
+                Arrays.asList(
+                        DBProtectedServersEncryptionConfig.builder()
+                                .setEncryptionKeyType(
+                                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
+                                                .AUCTION)
+                                .setKeyIdentifier("7b6724dc-839c-4108-bfa7-2e73eb19e5fe")
+                                .setPublicKey(expiredPublicKey)
+                                .setCoordinatorUrl(COORDINATOR_URL_AUCTION)
+                                .setExpiryTtlSeconds(-1L)
+                                .build()));
+
+        ObliviousHttpKeyConfig actualKeyConfig =
+                mKeyManager
+                        .getLatestOhttpKeyConfigOfType(
+                                AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                                TIMEOUT_MS,
+                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN))
+                        .get();
+
+        byte[] expectedPublicKey =
+                Base64.getDecoder()
+                        .decode(AUCTION_KEY_1.publicKey().getBytes(StandardCharsets.UTF_8));
+        byte[] expiredPublicKeyBytes = Base64.getDecoder().decode(expiredPublicKey);
+        assertThat(actualKeyConfig.getPublicKey()).isEqualTo(expectedPublicKey);
+        assertThat(actualKeyConfig.getPublicKey()).isNotEqualTo(expiredPublicKeyBytes);
+    }
+
+    @Test
+    public void test_getLatestOhttpKeyConfig_refreshFlagOff_withExpiredKey_returnsExpiredKey()
+            throws Exception {
+        when(mMockHttpClient.fetchPayload(Uri.parse(COORDINATOR_URL_AUCTION), DEV_CONTEXT_DISABLED))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(
+                                        AUCTION_KEY_1)));
+
+        String expiredPublicKey = "t/dzKzHJKe7k//n2u7wDdvxRtgXy9SncfXz6g8JB/m4=";
+        mProtectedServersEncryptionConfigDao.insertKeys(
+                Arrays.asList(
+                        DBProtectedServersEncryptionConfig.builder()
+                                .setEncryptionKeyType(
+                                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
+                                                .AUCTION)
+                                .setKeyIdentifier("7b6724dc-839c-4108-bfa7-2e73eb19e5fe")
+                                .setPublicKey(expiredPublicKey)
+                                .setCoordinatorUrl(COORDINATOR_URL_AUCTION)
+                                .setExpiryTtlSeconds(-1L)
+                                .build()));
+
+        ObliviousHttpKeyConfig actualKeyConfig =
+                mKeyManager
+                        .getLatestOhttpKeyConfigOfType(
+                                AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                                TIMEOUT_MS,
+                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN))
+                        .get();
+
+        byte[] expectedPublicKey =
+                Base64.getDecoder().decode(expiredPublicKey.getBytes(StandardCharsets.UTF_8));
+        assertThat(actualKeyConfig.getPublicKey()).isEqualTo(expectedPublicKey);
+    }
+
+    @Test
     public void test_getLatestOhttpKeyConfigOfType_withNoKeys_persistsToDatabase()
             throws Exception {
         when(mMockHttpClient.fetchPayload(Uri.parse(COORDINATOR_URL_AUCTION), DEV_CONTEXT_DISABLED))
@@ -460,6 +543,15 @@ public class ProtectedServersEncryptionConfigManagerTest {
         @Override
         public long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
             return EXPIRY_TTL_1SEC;
+        }
+    }
+
+    private static class RefreshKeysFlagOn
+            extends ProtectedServersEncryptionConfigManagerTestFlags {
+
+        @Override
+        public boolean getFledgeAuctionServerRefreshExpiredKeysDuringAuction() {
+            return true;
         }
     }
 
