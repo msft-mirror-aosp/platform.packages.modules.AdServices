@@ -17,9 +17,11 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesFlag;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
@@ -27,18 +29,21 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 import static com.android.adservices.service.FlagsTest.getConstantValue;
+import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesSystemPropertiesDumperRule;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.fixture.TestableSystemProperties;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
@@ -47,6 +52,10 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     private final FlagGuard mGlobalKillSwitchGuard = value -> setGlobalKillSwitch(!value);
     private final FlagGuard mMsmtKillSwitchGuard = value -> setMsmmtKillSwitch(!value);
+
+    @Rule
+    public final AdServicesSystemPropertiesDumperRule sysPropDumper =
+            new AdServicesSystemPropertiesDumperRule();
 
     // Overriding DeviceConfig stub to avoid Read device config permission errors and to also
     // test the behavior of flags, when both device config and system properties are set.
@@ -58,9 +67,48 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 .build();
     }
 
-    // TODO(b/326254556): add 2 tests (T and pre-T) for getGlobalKillSwitch() itself
+    @Test
+    @SpyStatic(SdkLevel.class)
+    public void testGetGlobalKillSwitch_TPlus() {
+        extendedMockito.mockIsAtLeastT(true);
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
+        // This is the value hardcoded by a constant on Flags.java
+        boolean constantValue = getConstantValue("GLOBAL_KILL_SWITCH");
+        expect.withMessage("GlobalKillSwitch default value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(constantValue);
+
+        // Only set global kill switch system property.
+        setSystemProperty(KEY_GLOBAL_KILL_SWITCH, !constantValue);
+        expect.withMessage("GlobalKillSwitch overridden value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(!constantValue);
+
+        // Now set the device config value as well, system property should still take precedence.
+        mockGetAdServicesFlag(KEY_GLOBAL_KILL_SWITCH, constantValue);
+        expect.withMessage("Overridden global_kill_switch system property value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(!constantValue);
+    }
+
+    @Test
+    @SpyStatic(SdkLevel.class)
+    public void testGetGlobalKillSwitch_TMinus() {
+        extendedMockito.mockIsAtLeastT(false);
+
+        // This is the value hardcoded by a constant on Flags.java
+        boolean constantValue = getConstantValue("GLOBAL_KILL_SWITCH");
+        expect.withMessage("GlobalKillSwitch default value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(constantValue);
+
+        // Set back-compat flag..
+        setGlobalKillSwitch(!constantValue);
+        expect.withMessage("GlobalKillSwitch overridden value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(!constantValue);
+    }
+
     @Test
     public void testGetTopicsEpochJobFlexMs() {
         testUnguardedFlag(
@@ -69,14 +117,12 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 flags -> flags.getTopicsEpochJobFlexMs());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetAdIdKillSwitch() {
         testUnguardedLegacyKillSwitch(
                 KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", flags -> flags.getAdIdKillSwitch());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetLegacyMeasurementKillSwitch() {
         testLegacyKillSwitch(
@@ -85,7 +131,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 flags -> flags.getLegacyMeasurementKillSwitch());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetMeasurementEnabled() {
         testFeatureFlagBackedByLegacyKillSwitch(
@@ -94,7 +139,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 flags -> flags.getMeasurementEnabled());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
         testFeatureFlagBackedByLegacyKillSwitch(
@@ -104,7 +148,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 flags -> flags.getMeasurementAttributionFallbackJobEnabled());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetCobaltLoggingEnabled() {
         testFeatureFlag(
@@ -113,7 +156,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 flags -> flags.getCobaltLoggingEnabled());
     }
 
-    @Ignore("TODO(b/326254556): fails when property is set outside test")
     @Test
     public void testGetMddLoggerEnabled() {
         testFeatureFlagBackedByLegacyKillSwitch(
@@ -303,7 +345,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                     .that(flaginator.getFlagValue(mPhFlags))
                     .isEqualTo(disabledValue);
 
-            // Make sure neither DeviceConfig or SystemProperty was called
+            // Make sure neither DeviceConfig nor SystemProperty was called
             verifyGetBooleanSystemPropertyNotCalled(flagName);
             verifyGetBooleanDeviceConfigFlagNotCalled(flagName);
 
@@ -348,13 +390,17 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
     }
 
     private void setGlobalKillSwitch(boolean value) {
-        ExtendedMockitoExpectations.mockGetAdServicesFlag(KEY_GLOBAL_KILL_SWITCH, value);
+        if (SdkLevel.isAtLeastT()) {
+            mockGetAdServicesFlag(KEY_GLOBAL_KILL_SWITCH, value);
+        } else {
+            mockGetAdServicesFlag(KEY_ENABLE_BACK_COMPAT, !value);
+        }
     }
 
     private void setMsmmtKillSwitch(boolean value) {
         // NOTE: need to set global kill-switch as well, as getMeasurementEnabled() calls it first
         setGlobalKillSwitch(value);
-        ExtendedMockitoExpectations.mockGetAdServicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
+        mockGetAdServicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
 
     private void setSystemProperty(String name, long value) {

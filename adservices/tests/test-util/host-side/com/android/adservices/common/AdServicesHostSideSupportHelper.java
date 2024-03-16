@@ -42,6 +42,12 @@ final class AdServicesHostSideSupportHelper extends AbstractDeviceSupportHelper 
     }
 
     @Override
+    protected boolean isLargeScreenDeviceByDefault() {
+        // TODO(b/311328290) implement large screen check in host side
+        return false;
+    }
+
+    @Override
     protected boolean hasGmsCore() {
         return call(device -> PackageUtil.exists(device, GMS_CORE_PACKAGE));
     }
