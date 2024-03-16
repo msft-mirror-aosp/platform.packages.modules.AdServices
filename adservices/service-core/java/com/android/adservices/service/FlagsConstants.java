@@ -642,6 +642,8 @@ public final class FlagsConstants {
             "fledge_auction_server_payload_bucket_sizes";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
             "fledge_auction_server_auction_key_fetch_uri";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION =
+            "fledge_auction_server_refresh_expired_keys_during_auction";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING =
             "fledge_auction_server_auction_key_sharding";
     public static final String KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI =

@@ -118,8 +118,11 @@ public class ProtectedServersEncryptionConfigManager
 
         return FluentFuture.from(
                         immediateFuture(
-                                getLatestKeyFromDatabase(
-                                        adSelectionEncryptionKeyType, fetchUri.toString())))
+                                mFlags.getFledgeAuctionServerRefreshExpiredKeysDuringAuction()
+                                        ? getLatestActiveKeyFromDatabase(
+                                                adSelectionEncryptionKeyType, fetchUri.toString())
+                                        : getLatestKeyFromDatabase(
+                                                adSelectionEncryptionKeyType, fetchUri.toString())))
                 .transformAsync(
                         encryptionKey ->
                                 encryptionKey == null
@@ -158,6 +161,8 @@ public class ProtectedServersEncryptionConfigManager
     public AdSelectionEncryptionKey getLatestKeyFromDatabase(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             @NonNull String coordinatorUrl) {
+        sLogger.d("Getting latest encryption key from database including expired keys");
+
         List<DBProtectedServersEncryptionConfig> keys =
                 mProtectedServersEncryptionConfigDao.getLatestExpiryNKeys(
                         EncryptionKeyConstants.from(adSelectionEncryptionKeyType),
@@ -172,10 +177,31 @@ public class ProtectedServersEncryptionConfigManager
                                 .collect(Collectors.toList()));
     }
 
+    @Nullable
+    private AdSelectionEncryptionKey getLatestActiveKeyFromDatabase(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
+            @NonNull String coordinatorUrl) {
+        sLogger.d("Getting latest encryption key from database excluding expired keys");
+        List<DBProtectedServersEncryptionConfig> keys =
+                mProtectedServersEncryptionConfigDao.getLatestExpiryNActiveKeys(
+                        EncryptionKeyConstants.from(adSelectionEncryptionKeyType),
+                        coordinatorUrl,
+                        mClock.instant(),
+                        getKeyCountForType(adSelectionEncryptionKeyType));
+
+        return keys.isEmpty()
+                ? null
+                : selectRandomDbKeyAndParse(
+                        keys.stream()
+                                .map(object -> toDbEncryptionKey(object))
+                                .collect(Collectors.toList()));
+    }
+
     FluentFuture<AdSelectionEncryptionKey> fetchPersistAndGetActiveKey(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             Uri coordinatorUrl,
             long timeoutMs) {
+        sLogger.d("Fetching keys");
         Instant fetchInstant = mClock.instant();
         return fetchAndPersistActiveKeysOfType(
                         adSelectionKeyType, fetchInstant, timeoutMs, coordinatorUrl)
