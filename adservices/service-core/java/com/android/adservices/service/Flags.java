@@ -758,7 +758,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION = 11.46173F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION = 11.5F;
 
     /** Returns max information gain for Flexible Event, dual destination Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
@@ -1365,13 +1365,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
     }
 
-    boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
-
-    /** Returns whether to call trusted servers for off device ad selection. */
-    default boolean getAdSelectionOffDeviceEnabled() {
-        return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
-    }
-
     boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
 
     /** Returns whether to call trusted servers for off device ad selection. */
@@ -1543,6 +1536,12 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns Uri to fetch auction encryption key for fledge ad selection. */
     default String getFledgeAuctionServerAuctionKeyFetchUri() {
         return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION = false;
+
+    default boolean getFledgeAuctionServerRefreshExpiredKeysDuringAuction() {
+        return FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION;
     }
 
     /** Default value of the url to fetch keys for KAnon encryption */
@@ -1756,6 +1755,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
     }
 
+    @FeatureFlag boolean FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED = false;
+
+    /** Returns whether Consented Debugging is enabled for server auctions. */
+    default boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
+        return FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
+    }
+
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 
@@ -1768,13 +1774,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     default boolean getAdServicesEnabled() {
         return ADSERVICES_ENABLED;
-    }
-
-    boolean ADSERVICES_ERROR_LOGGING_ENABLED = false;
-
-    /** Return {@code true} if error logging is enabled */
-    default boolean getAdServicesErrorLoggingEnabled() {
-        return ADSERVICES_ERROR_LOGGING_ENABLED;
     }
 
     /**
@@ -4862,5 +4861,29 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default int getAdServicesJsScriptEngineMaxRetryAttempts() {
         return DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
+    }
+
+    /** Default value for consent manager v2 flag */
+    boolean DEFAULT_ENABLE_CONSENT_MANAGER_V2 = false;
+
+    /** Gets the Consent Manager V2 enable flag. */
+    default boolean getEnableConsentManagerV2() {
+        return DEFAULT_ENABLE_CONSENT_MANAGER_V2;
+    }
+
+    /** Protected app signals API extended metrics flag. */
+    boolean PAS_EXTENDED_METRICS_ENABLED = false;
+
+    /** Returns whether the PAS API extended metrics is enabled. */
+    default boolean getPasExtendedMetricsEnabled() {
+        return PAS_EXTENDED_METRICS_ENABLED;
+    }
+
+    /** Default enablement for applying SPE (Scheduling Policy Engine) to pilot jobs. */
+    @FeatureFlag boolean DEFAULT_SPE_ON_PILOT_JOBS_ENABLED = false;
+
+    /** Returns the default enablement of applying SPE (Scheduling Policy Engine) to pilot jobs. */
+    default boolean getSpeOnPilotJobsEnabled() {
+        return DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
     }
 }

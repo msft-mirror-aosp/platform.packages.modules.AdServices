@@ -301,6 +301,73 @@ public class AdSelectionEncryptionKeyManagerTest {
     }
 
     @Test
+    public void test_getLatestOhttpKeyConfig_refreshFlagOn_withExpiredKey_returnsNewKey()
+            throws Exception {
+        mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION_TTL_1SECS));
+        addDelayToExpireKeys(EXPIRY_TTL_1SEC);
+        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI), DEV_CONTEXT_DISABLED))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                AuctionEncryptionKeyFixture
+                                        .mockAuctionKeyFetchResponseWithOneKey()));
+
+        mKeyManager =
+                new AdSelectionEncryptionKeyManager(
+                        mEncryptionKeyDao,
+                        new RefreshKeysFlagOn(),
+                        mClock,
+                        mAuctionEncryptionKeyParser,
+                        mJoinEncryptionKeyParser,
+                        mMockHttpClient,
+                        mLightweightExecutor);
+
+        ObliviousHttpKeyConfig actualKeyConfig =
+                mKeyManager
+                        .getLatestOhttpKeyConfigOfType(
+                                AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                                TIMEOUT_MS,
+                                null)
+                        .get();
+
+        byte[] expectedPublicKey =
+                Base64.getDecoder()
+                        .decode(AUCTION_KEY_1.publicKey().getBytes(StandardCharsets.UTF_8));
+        List<DBEncryptionKey> keys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION, 2);
+        assertThat(keys.size()).isEqualTo(1);
+        assertThat(actualKeyConfig.getPublicKey()).isEqualTo(expectedPublicKey);
+    }
+
+    @Test
+    public void test_getLatestOhttpKeyConfig_refreshFlagOff_withExpiredKey_returnsExpiredKey()
+            throws Exception {
+        mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION_TTL_1SECS));
+        addDelayToExpireKeys(EXPIRY_TTL_1SEC);
+        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI), DEV_CONTEXT_DISABLED))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                AuctionEncryptionKeyFixture
+                                        .mockAuctionKeyFetchResponseWithOneKey()));
+
+        ObliviousHttpKeyConfig actualKeyConfig =
+                mKeyManager
+                        .getLatestOhttpKeyConfigOfType(
+                                AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                                TIMEOUT_MS,
+                                null)
+                        .get();
+
+        byte[] expectedPublicKey =
+                Base64.getDecoder().decode(ENCRYPTION_KEY_AUCTION_TTL_1SECS.getPublicKey());
+        List<DBEncryptionKey> keys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION, 2);
+        assertThat(keys.size()).isEqualTo(1);
+        assertThat(actualKeyConfig.getPublicKey()).isEqualTo(expectedPublicKey);
+    }
+
+    @Test
     public void test_getLatestOhttpKeyConfigOfType_typeAuction_returnsLatestKey() throws Exception {
         mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION));
 
@@ -447,5 +514,13 @@ public class AdSelectionEncryptionKeyManagerTest {
 
     private void addDelayToExpireKeys(long delaySeconds) {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant().plusSeconds(delaySeconds));
+    }
+
+    private static class RefreshKeysFlagOn extends AdSelectionEncryptionKeyManagerTestFlags {
+
+        @Override
+        public boolean getFledgeAuctionServerRefreshExpiredKeysDuringAuction() {
+            return true;
+        }
     }
 }

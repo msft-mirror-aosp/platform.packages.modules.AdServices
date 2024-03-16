@@ -22,11 +22,9 @@ import android.content.Context;
 import android.os.Build;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.kanon.KAnonDatabase;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
-import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorFactory;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
@@ -70,15 +68,6 @@ public class KAnonSignJoinFactory {
                     new AdServicesHttpsClient(
                             AdServicesExecutors.getBlockingExecutor(),
                             CacheProviderFactory.create(mContext, FlagsFactory.getFlags()));
-            AdSelectionEncryptionKeyManager encryptionKeyManager =
-                    new AdSelectionEncryptionKeyManager(
-                            AdSelectionServerDatabase.getInstance(mContext).encryptionKeyDao(),
-                            FlagsFactory.getFlags(),
-                            adServicesHttpsClient,
-                            AdServicesExecutors.getLightWeightExecutor());
-            KAnonObliviousHttpEncryptorImpl kAnonObliviousHttpEncryptor =
-                    new KAnonObliviousHttpEncryptorImpl(
-                            encryptionKeyManager, AdServicesExecutors.getLightWeightExecutor());
             KAnonMessageManager kAnonMessageManager =
                     new KAnonMessageManager(
                             KAnonDatabase.getInstance(mContext).kAnonMessageDao(),
@@ -95,10 +84,10 @@ public class KAnonSignJoinFactory {
                             UserProfileIdManager.getInstance(mContext),
                             new BinaryHttpMessageDeserializer(),
                             FlagsFactory.getFlags(),
-                            kAnonObliviousHttpEncryptor,
                             kAnonMessageManager,
                             AdServicesLoggerImpl.getInstance(),
-                            keyAttestationFactory);
+                            keyAttestationFactory,
+                            new ObliviousHttpEncryptorFactory(mContext));
             mKAnonSignJoinManager =
                     new KAnonSignJoinManager(
                             mContext,
