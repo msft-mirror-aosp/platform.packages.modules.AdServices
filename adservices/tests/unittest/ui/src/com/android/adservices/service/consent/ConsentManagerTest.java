@@ -4865,4 +4865,158 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .getConsent(eq(AdServicesApiType.MEASUREMENTS));
         assertThat(spyConsentManager.isPasMeasurementConsentGiven()).isFalse();
     }
+
+    @Test
+    public void isMeasurementDataResetTest_ppapiAndAdExtDataServiceOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
+        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        spyConsentManager.setMeasurementDataReset(true);
+        assertThat(spyConsentManager.isMeasurementDataReset()).isTrue();
+        spyConsentManager.setMeasurementDataReset(false);
+        assertThat(spyConsentManager.isMeasurementDataReset()).isFalse();
+    }
+
+    @Test
+    public void isMeasurementDataResetTest_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.isMeasurementDataReset()).isFalse();
+
+        verify(mMockIAdServicesManager).isMeasurementDataReset();
+
+        doReturn(true).when(mMockIAdServicesManager).isMeasurementDataReset();
+        spyConsentManager.setMeasurementDataReset(true);
+
+        assertThat(spyConsentManager.isMeasurementDataReset()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).isMeasurementDataReset();
+        verify(mMockIAdServicesManager).setMeasurementDataReset(anyBoolean());
+    }
+
+    @Test
+    public void isMeasurementDataResetTest_PpApiAndSystemServer() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        Boolean isMeasurementDataReset = spyConsentManager.isMeasurementDataReset();
+
+        assertThat(isMeasurementDataReset).isFalse();
+
+        verify(mMockIAdServicesManager).isMeasurementDataReset();
+
+        doReturn(true).when(mMockIAdServicesManager).isMeasurementDataReset();
+        spyConsentManager.setMeasurementDataReset(true);
+
+        assertThat(spyConsentManager.isMeasurementDataReset()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).isMeasurementDataReset();
+        verify(mMockIAdServicesManager).setMeasurementDataReset(anyBoolean());
+    }
+
+    @Test
+    public void isMeasurementDataResetTest_appSearchOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        doReturn(false).when(mAppSearchConsentManagerMock).isMeasurementDataReset();
+        assertThat(spyConsentManager.isMeasurementDataReset()).isFalse();
+        verify(mAppSearchConsentManagerMock).isMeasurementDataReset();
+
+        doReturn(true).when(mAppSearchConsentManagerMock).isMeasurementDataReset();
+        spyConsentManager.setMeasurementDataReset(true);
+
+        assertThat(spyConsentManager.isMeasurementDataReset()).isTrue();
+
+        verify(mAppSearchConsentManagerMock, times(2)).isMeasurementDataReset();
+        verify(mAppSearchConsentManagerMock).setMeasurementDataReset(anyBoolean());
+    }
+
+    @Test
+    public void isPaDataResetTest_ppapiAndAdExtDataServiceOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
+        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        spyConsentManager.setPaDataReset(true);
+        assertThat(spyConsentManager.isPaDataReset()).isTrue();
+        spyConsentManager.setPaDataReset(false);
+        assertThat(spyConsentManager.isPaDataReset()).isFalse();
+    }
+
+    @Test
+    public void isPaDataResetTest_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.isPaDataReset()).isFalse();
+
+        verify(mMockIAdServicesManager).isPaDataReset();
+
+        doReturn(true).when(mMockIAdServicesManager).isPaDataReset();
+        spyConsentManager.setPaDataReset(true);
+
+        assertThat(spyConsentManager.isPaDataReset()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).isPaDataReset();
+        verify(mMockIAdServicesManager).setPaDataReset(anyBoolean());
+    }
+
+    @Test
+    public void isPaDataResetTest_PpApiAndSystemServer() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        Boolean isPaDataReset = spyConsentManager.isPaDataReset();
+
+        assertThat(isPaDataReset).isFalse();
+
+        verify(mMockIAdServicesManager).isPaDataReset();
+
+        doReturn(true).when(mMockIAdServicesManager).isPaDataReset();
+        spyConsentManager.setPaDataReset(true);
+
+        assertThat(spyConsentManager.isPaDataReset()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).isPaDataReset();
+        verify(mMockIAdServicesManager).setPaDataReset(anyBoolean());
+    }
+
+    @Test
+    public void isPaDataResetTest_appSearchOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        doReturn(false).when(mAppSearchConsentManagerMock).isPaDataReset();
+        assertThat(spyConsentManager.isPaDataReset()).isFalse();
+        verify(mAppSearchConsentManagerMock).isPaDataReset();
+
+        doReturn(true).when(mAppSearchConsentManagerMock).isPaDataReset();
+        spyConsentManager.setPaDataReset(true);
+
+        assertThat(spyConsentManager.isPaDataReset()).isTrue();
+
+        verify(mAppSearchConsentManagerMock, times(2)).isPaDataReset();
+        verify(mAppSearchConsentManagerMock).setPaDataReset(anyBoolean());
+    }
 }
