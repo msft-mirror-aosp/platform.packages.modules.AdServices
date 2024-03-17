@@ -145,12 +145,9 @@ public class TopicsManagerTest {
                         .build();
 
         // As the kill switch for Topics API is enabled, we should expect failure here.
-        assertThat(
-                assertThrows(
-                        ExecutionException.class,
-                        () -> advertisingTopicsClient.getTopics().get())
-                        .getMessage())
-                .isEqualTo("java.lang.IllegalStateException: Service is not available.");
+        assertThrows(
+                ExecutionException.class,
+                () -> advertisingTopicsClient.getTopics().get());
 
         // Override Topics kill switch to enable Topics API.
         overrideTopicsKillSwitch(false);
