@@ -82,6 +82,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -175,6 +176,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     + " the app is not debuggable.";
     @NonNull private final RetryStrategyFactory mRetryStrategyFactory;
 
+    @NonNull
+    private final ConsentedDebugConfigurationGeneratorFactory
+            mConsentedDebugConfigurationGeneratorFactory;
+
     @VisibleForTesting
     public AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -202,7 +207,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdIdFetcher adIdFetcher,
             @NonNull KAnonSignJoinFactory kAnonSignJoinFactory,
             boolean shouldUseUnifiedTables,
-            @NonNull RetryStrategyFactory retryStrategyFactory) {
+            @NonNull RetryStrategyFactory retryStrategyFactory,
+            @NonNull
+                    ConsentedDebugConfigurationGeneratorFactory
+                            consentedDebugConfigurationGeneratorFactory) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
@@ -225,6 +233,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(adIdFetcher);
         Objects.requireNonNull(kAnonSignJoinFactory);
         Objects.requireNonNull(retryStrategyFactory);
+        Objects.requireNonNull(consentedDebugConfigurationGeneratorFactory);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAppInstallDao = appInstallDao;
@@ -254,6 +263,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
         mRetryStrategyFactory = retryStrategyFactory;
+        mConsentedDebugConfigurationGeneratorFactory = consentedDebugConfigurationGeneratorFactory;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -320,7 +330,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 RetryStrategyFactory.createInstance(
                         BinderFlagReader.readFlag(
                                 () -> FlagsFactory.getFlags().getAdServicesRetryStrategyEnabled()),
-                        AdServicesExecutors.getLightWeightExecutor()));
+                        AdServicesExecutors.getLightWeightExecutor()),
+                new ConsentedDebugConfigurationGeneratorFactory(
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        FlagsFactory.getFlags()
+                                                .getFledgeAuctionServerConsentedDebuggingEnabled()),
+                        AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao()));
     }
 
     @Override
@@ -598,7 +614,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 auctionServerDebugReporting,
                                                 adsRelevanceExecutionLogger,
                                                 mAdServicesLogger,
-                                                getAuctionServerPayloadMetricsStrategy(mFlags));
+                                                getAuctionServerPayloadMetricsStrategy(mFlags),
+                                                mConsentedDebugConfigurationGeneratorFactory
+                                                        .create());
                                 runner.run(inputParams, callback);
                             }
 
@@ -628,7 +646,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                         .createForDebugReportingDisabled(),
                                                 adsRelevanceExecutionLogger,
                                                 mAdServicesLogger,
-                                                getAuctionServerPayloadMetricsStrategy(mFlags));
+                                                getAuctionServerPayloadMetricsStrategy(mFlags),
+                                                mConsentedDebugConfigurationGeneratorFactory
+                                                        .create());
                                 runner.run(inputParams, callback);
                             }
                         },
@@ -713,43 +733,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             boolean auctionServerEnabledForUpdateHistogram,
             @NonNull DebugReporting debugReporting) {
 
-        // TODO(b/249298855): Evolve off device ad selection logic.
-        if (mFlags.getAdSelectionOffDeviceEnabled()) {
-            runOffDeviceAdSelection(
-                    devContext,
-                    inputParams,
-                    partialCallback,
-                    adSelectionExecutionLogger,
-                    mAdSelectionServiceFilter,
-                    callingUid,
-                    auctionServerEnabledForUpdateHistogram,
-                    debugReporting,
-                    fullCallback);
-        } else {
-            runOnDeviceAdSelection(
-                    devContext,
-                    inputParams,
-                    partialCallback,
-                    adSelectionExecutionLogger,
-                    mAdSelectionServiceFilter,
-                    callingUid,
-                    auctionServerEnabledForUpdateHistogram,
-                    debugReporting,
-                    fullCallback);
-        }
-    }
-
-    private void runOnDeviceAdSelection(
-            DevContext devContext,
-            @NonNull AdSelectionInput inputParams,
-            @NonNull AdSelectionCallback callback,
-            @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
-            final int callerUid,
-            final boolean auctionServerEnabledForUpdateHistogram,
-            @NonNull DebugReporting debugReporting,
-            @Nullable AdSelectionCallback fullCallback) {
-
         OnDeviceAdSelectionRunner runner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -765,54 +748,18 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mFlags,
                         adSelectionExecutionLogger,
-                        adSelectionServiceFilter,
+                        mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory.getAdFilterer(),
                         mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
                         mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                 mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         debugReporting,
-                        callerUid,
+                        callingUid,
                         mShouldUseUnifiedTables,
                         mRetryStrategyFactory.createRetryStrategy(
                                 mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()));
-        runner.runAdSelection(inputParams, callback, devContext, fullCallback);
-    }
-
-    private void runOffDeviceAdSelection(
-            DevContext devContext,
-            @NonNull AdSelectionInput inputParams,
-            @NonNull AdSelectionCallback callback,
-            @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
-            int callerUid,
-            boolean auctionServerEnabledForUpdateHistogram,
-            @NonNull DebugReporting debugReporting,
-            @Nullable AdSelectionCallback fullCallback) {
-        TrustedServerAdSelectionRunner runner =
-                new TrustedServerAdSelectionRunner(
-                        mContext,
-                        mCustomAudienceDao,
-                        mAdSelectionEntryDao,
-                        mEncryptionKeyDao,
-                        mEnrollmentDao,
-                        mAdServicesHttpsClient,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mScheduledExecutor,
-                        mAdServicesLogger,
-                        devContext,
-                        mFlags,
-                        adSelectionExecutionLogger,
-                        adSelectionServiceFilter,
-                        mAdFilteringFeatureFactory.getAdFilterer(),
-                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                        mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
-                                mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
-                        mAdRenderIdValidator,
-                        debugReporting,
-                        callerUid);
-        runner.runAdSelection(inputParams, callback, devContext, fullCallback);
+        runner.runAdSelection(inputParams, partialCallback, devContext, fullCallback);
     }
 
     /**

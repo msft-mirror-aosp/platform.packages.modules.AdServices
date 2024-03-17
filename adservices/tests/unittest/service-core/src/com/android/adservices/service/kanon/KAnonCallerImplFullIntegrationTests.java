@@ -20,6 +20,7 @@ import static com.android.adservices.service.common.httpclient.AdServicesHttpUti
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -43,6 +44,8 @@ import com.android.adservices.data.kanon.ServerParametersDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
 import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorFactory;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer;
 import com.android.adservices.service.common.cache.CacheDatabase;
@@ -105,7 +108,6 @@ public class KAnonCallerImplFullIntegrationTests {
     private ClientParametersDao mClientParametersDao;
     private ServerParametersDao mServerParametersDao;
     private KAnonMessageDao mKAnonMessageDao;
-    private KAnonObliviousHttpEncryptorImpl mKAnonObliviousHttpEncryptor;
     private BinaryHttpMessageDeserializer mBinaryHttpMessageDeserializer;
     private KAnonMessageManager mKAnonMessageManager;
     private Flags mFlags;
@@ -126,6 +128,8 @@ public class KAnonCallerImplFullIntegrationTests {
     @Mock private UserProfileIdDao mockUserProfileIdDao;
     @Mock private AdServicesLogger mockAdServicesLogger;
     @Mock private KeyAttestationFactory mockKeyAttestationFactory;
+    @Mock private ObliviousHttpEncryptorFactory mObliviousHttpEncryptorFactory;
+
     private UserProfileIdManager mUserProfileIdManager;
 
     private final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -157,7 +161,7 @@ public class KAnonCallerImplFullIntegrationTests {
                 Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionKeyDao();
-        mKAnonObliviousHttpEncryptor =
+        ObliviousHttpEncryptor kAnonObliviousHttpEncryptor =
                 new KAnonObliviousHttpEncryptorImpl(
                         new AdSelectionEncryptionKeyManager(
                                 mEncryptionKeyDao,
@@ -165,6 +169,9 @@ public class KAnonCallerImplFullIntegrationTests {
                                 mAdServicesHttpsClient,
                                 AdServicesExecutors.getLightWeightExecutor()),
                         AdServicesExecutors.getLightWeightExecutor());
+        doReturn(kAnonObliviousHttpEncryptor)
+                .when(mObliviousHttpEncryptorFactory)
+                .getKAnonObliviousHttpEncryptor();
         mBinaryHttpMessageDeserializer = new BinaryHttpMessageDeserializer();
 
         when(mockClock.instant()).thenReturn(FIXED_INSTANT);
@@ -200,10 +207,10 @@ public class KAnonCallerImplFullIntegrationTests {
                                 mUserProfileIdManager,
                                 mBinaryHttpMessageDeserializer,
                                 mFlags,
-                                mKAnonObliviousHttpEncryptor,
                                 mKAnonMessageManager,
                                 mockAdServicesLogger,
-                                mockKeyAttestationFactory));
+                                mockKeyAttestationFactory,
+                                mObliviousHttpEncryptorFactory));
         CountDownLatch countDownLatch = new CountDownLatch(1);
         kAnonCaller.signAndJoinMessages(messageEntities);
 
@@ -240,10 +247,10 @@ public class KAnonCallerImplFullIntegrationTests {
                         mUserProfileIdManager,
                         mBinaryHttpMessageDeserializer,
                         mFlags,
-                        mKAnonObliviousHttpEncryptor,
                         mKAnonMessageManager,
                         mockAdServicesLogger,
-                        mockKeyAttestationFactory);
+                        mockKeyAttestationFactory,
+                        mObliviousHttpEncryptorFactory);
         CountDownLatch countdownLatch = new CountDownLatch(1);
         runner.signAndJoinMessages(messageEntities);
         countdownLatch.await();

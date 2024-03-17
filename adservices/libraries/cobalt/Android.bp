@@ -41,6 +41,10 @@ android_library {
         "libprotobuf-java-lite",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["RoomDatabaseChange"], // TODO(b/329688645): Add Room DB migration guardrail tests.
+    },
 }
 
 // Schemas needs to be bundled via this android_library since Cobalt unit tests for schema

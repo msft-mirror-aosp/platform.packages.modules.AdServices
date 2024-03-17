@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
+import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
@@ -29,6 +30,7 @@ import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
+import android.app.sdksandbox.testutils.FakeSdkSandboxActivityRegistryInjector;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
@@ -112,7 +114,7 @@ public class SdkSandboxTest {
     private static final SandboxLatencyInfo SANDBOX_LATENCY_INFO = new SandboxLatencyInfo();
 
     private static boolean sCustomizedSdkContextEnabled = SdkLevel.isAtLeastU();
-    private static SdkSandboxActivityRegistry sSdkSandboxActivityRegistry;
+    private SdkSandboxActivityRegistry mRegistry;
 
     private Context mContext;
     private InjectorForTest mInjector;
@@ -123,10 +125,12 @@ public class SdkSandboxTest {
     static class InjectorForTest extends SdkSandboxServiceImpl.Injector {
 
         private Context mContext;
+        private SdkSandboxActivityRegistry mRegistry;
 
-        InjectorForTest(Context context) {
+        InjectorForTest(Context context, SdkSandboxActivityRegistry registry) {
             super(context);
             mContext = context;
+            mRegistry = registry;
         }
 
         @Override
@@ -142,7 +146,7 @@ public class SdkSandboxTest {
         @Override
         @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
         SdkSandboxActivityRegistry getSdkSandboxActivityRegistry() {
-            return sSdkSandboxActivityRegistry;
+            return mRegistry;
         }
     }
 
@@ -160,7 +164,6 @@ public class SdkSandboxTest {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         "sdksandbox_customized_sdk_context_enabled");
         sCustomizedSdkContextEnabled &= Boolean.parseBoolean(stateManager.get());
-        sSdkSandboxActivityRegistry = Mockito.spy(SdkSandboxActivityRegistry.getInstance());
     }
 
     @Before
@@ -168,7 +171,7 @@ public class SdkSandboxTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .strictness(Strictness.LENIENT)
-                        .mockStatic(Process.class)
+                        .spyStatic(Process.class)
                         .startMocking();
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
 
@@ -186,7 +189,16 @@ public class SdkSandboxTest {
         mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
         Mockito.doReturn(mSpyPackageManager).when(mContext).getPackageManager();
 
-        mInjector = Mockito.spy(new InjectorForTest(mContext));
+        SdkSandboxLocalSingleton sdkSandboxLocalSingleton =
+                Mockito.mock(SdkSandboxLocalSingleton.class);
+        ISdkToServiceCallback serviceCallback = Mockito.mock(ISdkToServiceCallback.class);
+        Mockito.when(sdkSandboxLocalSingleton.getSdkToServiceCallback())
+                .thenReturn(serviceCallback);
+        FakeSdkSandboxActivityRegistryInjector activityRegistryInjector =
+                new FakeSdkSandboxActivityRegistryInjector(sdkSandboxLocalSingleton);
+        mRegistry = Mockito.spy(SdkSandboxActivityRegistry.getInstance(activityRegistryInjector));
+
+        mInjector = Mockito.spy(new InjectorForTest(mContext, mRegistry));
         mService = new SdkSandboxServiceImpl(mInjector);
     }
 
@@ -583,8 +595,7 @@ public class SdkSandboxTest {
         assertThat(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
                 .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
         if (SdkLevel.isAtLeastU()) {
-            Mockito.verify(sSdkSandboxActivityRegistry)
-                    .unregisterAllActivityHandlersForSdk(SDK_NAME);
+            Mockito.verify(mRegistry).unregisterAllActivityHandlersForSdk(SDK_NAME);
         }
     }
 
