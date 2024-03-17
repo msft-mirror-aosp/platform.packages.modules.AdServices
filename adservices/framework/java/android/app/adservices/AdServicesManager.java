@@ -662,4 +662,44 @@ public final class AdServicesManager {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    /** Returns whether the isMeasurementDataReset bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isMeasurementDataReset() {
+        try {
+            return mService.isMeasurementDataReset();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isMeasurementDataReset bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        try {
+            mService.setMeasurementDataReset(isMeasurementDataReset);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns whether the isPaDataReset bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isPaDataReset() {
+        try {
+            return mService.isPaDataReset();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isPaDataReset bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setPaDataReset(boolean isPaDataReset) {
+        try {
+            mService.setPaDataReset(isPaDataReset);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }

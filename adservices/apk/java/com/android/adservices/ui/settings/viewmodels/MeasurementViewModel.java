@@ -99,6 +99,8 @@ public class MeasurementViewModel extends AndroidViewModel {
     /** Reset all information related to Measurement */
     public void resetMeasurement() {
         mConsentManager.resetMeasurement();
+        // add the msmt data reset bit
+        mConsentManager.setMeasurementDataReset(true);
     }
 
     /** Returns an observable but immutable event enum representing an action on UI. */

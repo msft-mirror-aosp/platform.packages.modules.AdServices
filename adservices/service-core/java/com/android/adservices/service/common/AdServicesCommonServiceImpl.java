@@ -433,9 +433,9 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             callback.onFailure(resultCode);
                             return;
                         }
+                        ConsentManager consentManager = ConsentManager.getInstance();
                         if (mFlags.isGetAdServicesCommonStatesApiEnabled()) {
                             LogUtil.d("start getting states");
-                            ConsentManager consentManager = ConsentManager.getInstance();
                             AdServicesCommonStates adservicesCommonStates =
                                     new AdServicesCommonStates.Builder()
                                             .setMeasurementState(
@@ -451,6 +451,8 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                     new AdServicesCommonStatesResponse.Builder(
                                                     adservicesCommonStates)
                                             .build());
+                            consentManager.setMeasurementDataReset(false);
+                            consentManager.setPaDataReset(false);
                             return;
                         }
                         LogUtil.d("service is not started");
@@ -500,12 +502,18 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             ConsentManager consentManager, AdServicesApiType apiType) {
         if (apiType == AdServicesApiType.FLEDGE) {
             if (consentManager.isPasFledgeConsentGiven()) {
+                if (consentManager.isPaDataReset()) {
+                    return ConsentStatus.WAS_RESET;
+                }
                 return ConsentStatus.GIVEN;
             }
             return ConsentStatus.REVOKED;
         }
         if (apiType == AdServicesApiType.MEASUREMENTS) {
             if (consentManager.isPasMeasurementConsentGiven()) {
+                if (consentManager.isMeasurementDataReset()) {
+                    return ConsentStatus.WAS_RESET;
+                }
                 return ConsentStatus.GIVEN;
             }
             return ConsentStatus.REVOKED;

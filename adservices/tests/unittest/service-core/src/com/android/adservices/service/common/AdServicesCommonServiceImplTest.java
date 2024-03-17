@@ -758,6 +758,10 @@ public class AdServicesCommonServiceImplTest {
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(true).when(mConsentManager).isPasMeasurementConsentGiven();
         doReturn(false).when(mConsentManager).isPasFledgeConsentGiven();
+        doReturn(false).when(mConsentManager).isMeasurementDataReset();
+        doReturn(false).when(mConsentManager).isPaDataReset();
+        doNothing().when(mConsentManager).setMeasurementDataReset(anyBoolean());
+        doNothing().when(mConsentManager).setPaDataReset(anyBoolean());
         SyncIAdServicesCommonStatesCallback callback =
                 new SyncIAdServicesCommonStatesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
@@ -782,6 +786,47 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
+    public void testGetAdservicesCommonStates_getCommonStatus_reset() throws Exception {
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                PermissionHelper.hasAccessAdServicesCommonStatePermission(
+                                        any(), any()));
+        doReturn(true).when(mFlags).isGetAdServicesCommonStatesApiEnabled();
+        doReturn("com.android.adservices.servicecoretest")
+                .when(mFlags)
+                .getAdServicesCommonStatesAllowList();
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(true).when(mConsentManager).isPasMeasurementConsentGiven();
+        doReturn(false).when(mConsentManager).isPasFledgeConsentGiven();
+        doReturn(true).when(mConsentManager).isMeasurementDataReset();
+        doReturn(true).when(mConsentManager).isPaDataReset();
+        doNothing().when(mConsentManager).setMeasurementDataReset(anyBoolean());
+        doNothing().when(mConsentManager).setPaDataReset(anyBoolean());
+        SyncIAdServicesCommonStatesCallback callback =
+                new SyncIAdServicesCommonStatesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
+
+        GetAdServicesCommonStatesParams params =
+                new GetAdServicesCommonStatesParams.Builder(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME)
+                        .build();
+        CallerMetadata metadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(0).build();
+        mCommonService.getAdServicesCommonStates(params, metadata, callback);
+        AdServicesCommonStatesResponse response = callback.assertSuccess();
+        assertThat(response.getAdServicesCommonStates().getMeasurementState())
+                .isEqualTo(ConsentStatus.WAS_RESET);
+        assertThat(response.getAdServicesCommonStates().getPaState())
+                .isEqualTo(ConsentStatus.REVOKED);
+
+        ApiCallStats apiCallStats = mLogApiCallStatsCallback.assertResultReceived();
+        assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
+        assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
+        assertThat(apiCallStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
+        assertThat(apiCallStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
+        assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(350);
+    }
+
+    @Test
     public void testGetAdservicesCommonStates_NotEnabled() throws Exception {
         SyncIAdServicesCommonStatesCallback callback =
                 new SyncIAdServicesCommonStatesCallback(BINDER_CONNECTION_TIMEOUT_MS);
@@ -794,6 +839,11 @@ public class AdServicesCommonServiceImplTest {
         doReturn("com.android.adservices.servicecoretest")
                 .when(mFlags)
                 .getAdServicesCommonStatesAllowList();
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(true).when(mConsentManager).isMeasurementDataReset();
+        doReturn(false).when(mConsentManager).isPaDataReset();
+        doNothing().when(mConsentManager).setMeasurementDataReset(anyBoolean());
+        doNothing().when(mConsentManager).setPaDataReset(anyBoolean());
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
 
         GetAdServicesCommonStatesParams params =

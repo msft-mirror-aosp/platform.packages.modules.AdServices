@@ -127,6 +127,7 @@ public class AppsViewModel extends AndroidViewModel {
     public void resetApps() throws IOException {
         mConsentManager.resetApps();
         mApps.postValue(getAppsFromConsentManager());
+        mConsentManager.setPaDataReset(true);
     }
 
     /** Returns an observable but immutable event enum representing an view action on UI. */

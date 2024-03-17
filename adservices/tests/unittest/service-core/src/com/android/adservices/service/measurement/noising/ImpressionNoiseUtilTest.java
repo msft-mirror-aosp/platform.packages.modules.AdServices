@@ -17,11 +17,11 @@
 package com.android.adservices.service.measurement.noising;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
@@ -39,7 +39,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.quality.Strictness;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -67,7 +66,7 @@ public class ImpressionNoiseUtilTest {
                     (noiseParams, expectedReports, sequenceIndex) -> {
                         List<int[]> actualReports =
                                 ImpressionNoiseUtil.getReportConfigsForSequenceIndex(
-                                        noiseParams, BigInteger.valueOf((long) sequenceIndex));
+                                        noiseParams, sequenceIndex);
                         assertReportEquality(expectedReports, actualReports);
                     };
 
@@ -111,8 +110,7 @@ public class ImpressionNoiseUtilTest {
                         /* reportingWindowCount= */ 1,
                         /* destinationMultiplier */ 1);
 
-        ExtendedMockito.doReturn(BigInteger.ZERO)
-                .when(() -> ImpressionNoiseUtil.nextBigInteger(any(), any()));
+        ExtendedMockito.doReturn(0L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
 
         mStateSelectionTester.apply(
                 /* impressionNoise= */ noiseParams,
@@ -120,8 +118,7 @@ public class ImpressionNoiseUtilTest {
                 /* rand= */ ThreadLocalRandom.current()
         );
 
-        ExtendedMockito.doReturn(BigInteger.valueOf(2L))
-                .when(() -> ImpressionNoiseUtil.nextBigInteger(any(), any()));
+        ExtendedMockito.doReturn(2L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
 
         mStateSelectionTester.apply(
                 /* impressionNoise= */ noiseParams,
@@ -139,16 +136,14 @@ public class ImpressionNoiseUtilTest {
                         /* reportingWindowCount= */ 2,
                         /* destinationMultiplier */ 1);
 
-        ExtendedMockito.doReturn(BigInteger.valueOf(6L))
-                .when(() -> ImpressionNoiseUtil.nextBigInteger(any(), any()));
+        ExtendedMockito.doReturn(6L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
 
         mStateSelectionTester.apply(
                 /* impressionNoise= */ noiseParams,
                 /* expectedReports= */ Collections.singletonList(new int[] {0, 1, 0}),
                 /* rand= */ ThreadLocalRandom.current());
 
-        ExtendedMockito.doReturn(BigInteger.valueOf(2L))
-                .when(() -> ImpressionNoiseUtil.nextBigInteger(any(), any()));
+        ExtendedMockito.doReturn(2L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
 
         mStateSelectionTester.apply(
                 /* impressionNoise= */ noiseParams,
@@ -166,8 +161,7 @@ public class ImpressionNoiseUtilTest {
                         /* reportingWindowCount= */ 3,
                         /* destinationMultiplier */ 1);
 
-        ExtendedMockito.doReturn(BigInteger.valueOf(1416L))
-                .when(() -> ImpressionNoiseUtil.nextBigInteger(any(), any()));
+        ExtendedMockito.doReturn(1416L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
 
         mStateSelectionTester.apply(
                 /* impressionNoise= */ noiseParams,
@@ -175,8 +169,7 @@ public class ImpressionNoiseUtilTest {
                         new int[] {2, 2, 0}, new int[] {3, 1, 0}, new int[] {7, 0, 0}),
                 /* rand= */ ThreadLocalRandom.current());
 
-        ExtendedMockito.doReturn(BigInteger.valueOf(1112L))
-                .when(() -> ImpressionNoiseUtil.nextBigInteger(any(), any()));
+        ExtendedMockito.doReturn(1112L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
 
         mStateSelectionTester.apply(
                 /* impressionNoise= */ noiseParams,
@@ -345,8 +338,7 @@ public class ImpressionNoiseUtilTest {
                     throws JSONException {
         TriggerSpecs testTriggerSpecsObject = getValidTriggerSpecsForRandomOrderTest();
 
-        ExtendedMockito.doReturn(BigInteger.valueOf(3L))
-                .when(() -> ImpressionNoiseUtil.nextBigInteger(any(), any()));
+        ExtendedMockito.doReturn(3L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
 
         mStateSelectionTesterFlexEvent.apply(
                 testTriggerSpecsObject,
@@ -354,8 +346,7 @@ public class ImpressionNoiseUtilTest {
                 /*expectedReports=*/ Collections.singletonList(new int[] {1, 0, 0}),
                 ThreadLocalRandom.current());
 
-        ExtendedMockito.doReturn(BigInteger.valueOf(5L))
-                .when(() -> ImpressionNoiseUtil.nextBigInteger(any(), any()));
+        ExtendedMockito.doReturn(5L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
 
         mStateSelectionTesterFlexEvent.apply(
                 testTriggerSpecsObject,
@@ -368,8 +359,7 @@ public class ImpressionNoiseUtilTest {
     public void
             selectFlexEventReportRandomStateAndGenerateReportConfigs_doubleDestinationType_equal()
                     throws JSONException {
-        ExtendedMockito.doReturn(BigInteger.valueOf(16L))
-                .when(() -> ImpressionNoiseUtil.nextBigInteger(any(), any()));
+        ExtendedMockito.doReturn(16L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
 
         mStateSelectionTesterFlexEvent.apply(
                 getValidTriggerSpecsForRandomOrderTest(),
@@ -377,8 +367,7 @@ public class ImpressionNoiseUtilTest {
                 /*expectedReports=*/ Arrays.asList(new int[] {1, 1, 0}, new int[] {0, 0, 0}),
                 ThreadLocalRandom.current());
 
-        ExtendedMockito.doReturn(BigInteger.valueOf(12L))
-                .when(() -> ImpressionNoiseUtil.nextBigInteger(any(), any()));
+        ExtendedMockito.doReturn(12L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
 
         mStateSelectionTesterFlexEvent.apply(
                 getValidTriggerSpecsForRandomOrderTest(),
@@ -414,22 +403,6 @@ public class ImpressionNoiseUtilTest {
         final ImpressionNoiseParams data1 = createExample();
         final ImpressionNoiseParams data2 = createExample();
         assertEquals(data1.toString(), data2.toString());
-    }
-
-    @Test
-    public void nextBigInteger_boundZero_throws() {
-        ThreadLocalRandom rand = ThreadLocalRandom.current();
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> ImpressionNoiseUtil.nextBigInteger(rand, BigInteger.ZERO));
-    }
-
-    @Test
-    public void nextBigInteger_boundOne_returnsZero() {
-        ThreadLocalRandom rand = ThreadLocalRandom.current();
-        assertEquals(
-                BigInteger.ZERO,
-                ImpressionNoiseUtil.nextBigInteger(rand, BigInteger.ONE));
     }
 
     private ImpressionNoiseParams createExample() {

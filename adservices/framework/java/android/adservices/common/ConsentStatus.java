@@ -34,6 +34,7 @@ public class ConsentStatus {
     public static final int REVOKED = 2;
     public static final int GIVEN = 3;
     public static final int SERVICE_NOT_ENABLED = 4;
+    public static final int WAS_RESET = 5;
 
     /**
      * Result codes that are common across various APIs.
@@ -42,7 +43,7 @@ public class ConsentStatus {
      */
     @IntDef(
             prefix = {""},
-            value = {UNKNOWN, UNSET, REVOKED, GIVEN, SERVICE_NOT_ENABLED})
+            value = {UNKNOWN, UNSET, REVOKED, GIVEN, SERVICE_NOT_ENABLED, WAS_RESET})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ConsentStatusCode {}
 }

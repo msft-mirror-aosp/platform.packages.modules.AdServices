@@ -18,23 +18,51 @@ package com.android.adservices.service.measurement.noising;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.service.measurement.PrivacyParams;
 
-import com.google.common.math.BigIntegerMath;
-
 import org.junit.Test;
 
-import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CombinatoricsTest {
+    @Test
+    public void testCalcBinomialCoefficient() {
+        // Test Case: {n, k, expectedOutput}
+        int[][] testCases = {
+                {0, 0, 1}, {0, 1, 0}, {0, 2, 0}, {0, 3, 0}, {0, 4, 0}, {0, 5, 0},
+                {0, 6, 0}, {0, 7, 0}, {0, 8, 0}, {0, 9, 0}, {1, 0, 1}, {1, 1, 1},
+                {1, 2, 0}, {1, 3, 0}, {1, 4, 0}, {1, 5, 0}, {1, 6, 0}, {1, 7, 0},
+                {1, 8, 0}, {1, 9, 0}, {2, 0, 1}, {2, 1, 2}, {2, 2, 1}, {2, 3, 0},
+                {2, 4, 0}, {2, 5, 0}, {2, 6, 0}, {2, 7, 0}, {2, 8, 0}, {2, 9, 0},
+                {3, 0, 1}, {3, 1, 3}, {3, 2, 3}, {3, 3, 1}, {3, 4, 0}, {3, 5, 0},
+                {3, 6, 0}, {3, 7, 0}, {3, 8, 0}, {3, 9, 0}, {4, 0, 1}, {4, 1, 4},
+                {4, 2, 6}, {4, 3, 4}, {4, 4, 1}, {4, 5, 0}, {4, 6, 0}, {4, 7, 0},
+                {4, 8, 0}, {4, 9, 0}, {5, 0, 1}, {5, 1, 5}, {5, 2, 10}, {5, 3, 10},
+                {5, 4, 5}, {5, 5, 1}, {5, 6, 0}, {5, 7, 0}, {5, 8, 0}, {5, 9, 0},
+                {6, 0, 1}, {6, 1, 6}, {6, 2, 15}, {6, 3, 20}, {6, 4, 15}, {6, 5, 6},
+                {6, 6, 1}, {6, 7, 0}, {6, 8, 0}, {6, 9, 0}, {7, 0, 1}, {7, 1, 7},
+                {7, 2, 21}, {7, 3, 35}, {7, 4, 35}, {7, 5, 21}, {7, 6, 7}, {7, 7, 1},
+                {7, 8, 0}, {7, 9, 0}, {8, 0, 1}, {8, 1, 8}, {8, 2, 28}, {8, 3, 56},
+                {8, 4, 70}, {8, 5, 56}, {8, 6, 28}, {8, 7, 8}, {8, 8, 1}, {8, 9, 0},
+                {9, 0, 1}, {9, 1, 9}, {9, 2, 36}, {9, 3, 84}, {9, 4, 126}, {9, 5, 126},
+                {9, 6, 84}, {9, 7, 36}, {9, 8, 9}, {9, 9, 1},
+                {30, 3, 4060},
+                {100, 2, 4950},
+                {100, 5, 75287520},
+        };
+        Arrays.stream(testCases).forEach((testCase) ->
+                assertEquals(testCase[2],
+                        Combinatorics.getBinomialCoefficient(/*n=*/testCase[0], /*k=*/
+                                testCase[1])));
+    }
+
     @Test
     public void testGetKCombinationAtIndex() {
         // Test Case { {combinationIndex, k}, expectedOutput}
@@ -68,24 +96,21 @@ public class CombinatoricsTest {
                 {{2924, 3}, {26, 25, 24}},
         };
         Arrays.stream(testCases).forEach((testCase) ->
-                assertArrayEquals(
-                        Arrays.stream(testCase[1])
-                                .mapToObj(BigInteger::valueOf)
-                                .toArray(BigInteger[]::new),
+                assertArrayEquals(testCase[1],
                         Combinatorics.getKCombinationAtIndex(
-                                /*combinationIndex=*/ BigInteger.valueOf(testCase[0][0]),
+                                /*combinationIndex=*/ testCase[0][0],
                                 /*k=*/ (int) testCase[0][1])));
     }
 
     @Test
     public void testGetKCombinationNoRepeat() {
         for (int k = 1; k < 5; k++) {
-            Set<List<BigInteger>> seenCombinations = new HashSet<>();
-            for (long combinationIndex = 0L; combinationIndex < 1000L; combinationIndex++) {
-                List<BigInteger> combination =
-                        Arrays.stream(Combinatorics.getKCombinationAtIndex(
-                                BigInteger.valueOf(combinationIndex), k))
-                                        .collect(Collectors.toList());
+            Set<List<Long>> seenCombinations = new HashSet<>();
+            for (int combinationIndex = 0; combinationIndex < 3000; combinationIndex++) {
+                List<Long> combination =
+                        Arrays.stream(Combinatorics.getKCombinationAtIndex(combinationIndex,
+                                k)).boxed().collect(
+                                Collectors.toList());
                 assertTrue(seenCombinations.add(combination));
             }
         }
@@ -94,27 +119,23 @@ public class CombinatoricsTest {
     @Test
     public void testGetKCombinationMatchesDefinition() {
         for (int k = 1; k < 5; k++) {
-            for (long index = 0L; index < 1000L; index++) {
-                BigInteger[] combination = Combinatorics.getKCombinationAtIndex(
-                        BigInteger.valueOf(index), k);
-                BigInteger sum = BigInteger.ZERO;
+            for (int index = 0; index < 3000; index++) {
+                long[] combination = Combinatorics.getKCombinationAtIndex(index, k);
+                long sum = 0;
                 for (int i = 0; i < k; i++) {
-                    int n = combination[i].intValue();
-                    if (n >= k - i) {
-                        sum = sum.add(BigIntegerMath.binomial(n, k - i));
-                    }
+                    sum += Combinatorics.getBinomialCoefficient((int) combination[i], k - i);
                 }
-                assertEquals(sum, BigInteger.valueOf(index));
+                assertEquals(sum, (long) index);
             }
         }
     }
 
     @Test
     public void testGetNumberOfStarsAndBarsSequences() {
-        assertEquals(BigInteger.valueOf(3L), Combinatorics.getNumberOfStarsAndBarsSequences(
+        assertEquals(3L, Combinatorics.getNumberOfStarsAndBarsSequences(
                 /*numStars=*/1, /*numBars=*/2
         ));
-        assertEquals(BigInteger.valueOf(2925L), Combinatorics.getNumberOfStarsAndBarsSequences(
+        assertEquals(2925L, Combinatorics.getNumberOfStarsAndBarsSequences(
                 /*numStars=*/3, /*numBars=*/24
         ));
     }
@@ -128,12 +149,9 @@ public class CombinatoricsTest {
         };
 
         Arrays.stream(testCases).forEach((testCase) ->
-                assertArrayEquals(
-                        Arrays.stream(testCase[1])
-                                .mapToObj(BigInteger::valueOf)
-                                .toArray(BigInteger[]::new),
+                assertArrayEquals(testCase[1],
                         Combinatorics.getStarIndices(/*numStars=*/ (int) testCase[0][0],
-                                /*sequenceIndex=*/ BigInteger.valueOf(testCase[0][2]))));
+                                /*sequenceIndex=*/testCase[0][2])));
 
     }
 
@@ -146,13 +164,8 @@ public class CombinatoricsTest {
         };
 
         Arrays.stream(testCases).forEach((testCase) ->
-                assertArrayEquals(
-                        Arrays.stream(testCase[1])
-                                .mapToObj(BigInteger::valueOf)
-                                .toArray(BigInteger[]::new),
-                        Combinatorics.getBarsPrecedingEachStar(
-                            /*starIndices=*/ Arrays.stream(testCase[0])
-                                    .mapToObj(BigInteger::valueOf).toArray(BigInteger[]::new))));
+                assertArrayEquals(testCase[1],
+                        Combinatorics.getBarsPrecedingEachStar(/*starIndices=*/testCase[0])));
     }
 
     @Test
@@ -169,9 +182,28 @@ public class CombinatoricsTest {
                 .forEach(
                         (testCase) ->
                                 assertEquals(
-                                        BigInteger.valueOf((long) testCase[1][0]),
+                                        testCase[1][0],
                                         Combinatorics.getNumStatesArithmetic(
                                                 testCase[0][0], testCase[0][1], testCase[0][2])));
+    }
+
+    @Test
+    public void testNumStatesArithmeticOverflow() {
+        // Test Case: {numBucketIncrements, numTriggerData, numWindows}
+        int[][] testCasesOverflow = {
+            {3, Integer.MAX_VALUE - 1, 3},
+            {3, 8, Integer.MAX_VALUE - 1},
+            {8, 40, 26},
+        };
+
+        Arrays.stream(testCasesOverflow)
+                .forEach(
+                        (testCase) ->
+                                assertThrows(
+                                        ArithmeticException.class,
+                                        () ->
+                                                Combinatorics.getNumStatesArithmetic(
+                                                        testCase[0], testCase[1], testCase[2])));
     }
 
     @Test
@@ -196,7 +228,7 @@ public class CombinatoricsTest {
                 .forEach(
                         (testCase) ->
                                 assertEquals(
-                                        BigInteger.valueOf((long) testCase[1][0][0]),
+                                        testCase[1][0][0],
                                         Combinatorics.getNumStatesFlexApi(
                                                 testCase[0][0][0],
                                                 testCase[0][1],
@@ -217,8 +249,8 @@ public class CombinatoricsTest {
         Arrays.stream(testCases)
                 .forEach(
                         (testCase) -> {
-                            double result = 100 * Combinatorics.getFlipProbability(
-                                    BigInteger.valueOf((long) testCase[0]));
+                            double result =
+                                    100 * Combinatorics.getFlipProbability((int) testCase[0]);
                             assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
     }
@@ -239,51 +271,9 @@ public class CombinatoricsTest {
                         (testCase) -> {
                             double result =
                                     Combinatorics.getInformationGain(
-                                            BigInteger.valueOf((long) testCase[0]),
-                                            Combinatorics.getFlipProbability(
-                                                    BigInteger.valueOf((long) testCase[0])));
+                                            (int) testCase[0],
+                                            Combinatorics.getFlipProbability((int) testCase[0]));
                             assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
-    }
-
-    private static boolean atomReportStateSetMeetRequirement(
-            int totalCap,
-            int[] perTypeNumWindowList,
-            int[] perTypeCapList,
-            List<Combinatorics.AtomReportState> reportSet) {
-        // if number of report over max reports
-        if (reportSet.size() > totalCap) {
-            return false;
-        }
-        int[] perTypeReportList = new int[perTypeCapList.length];
-        // Initialize all elements to zero
-        for (int i = 0; i < perTypeCapList.length; i++) {
-            perTypeReportList[i] = 0;
-        }
-        for (Combinatorics.AtomReportState report : reportSet) {
-            int triggerDataIndex = report.getTriggerDataType();
-            // if the report window larger than total report window of this trigger data
-            // input perTypeNumWindowList is [3,3,3], and report windows index is 4, return false
-            if (report.getWindowIndex() + 1 > perTypeNumWindowList[triggerDataIndex]) {
-                return false;
-            }
-            perTypeReportList[triggerDataIndex]++;
-            // number of report for this trigger data over the per data limit
-            if (perTypeCapList[triggerDataIndex] < perTypeReportList[triggerDataIndex]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static class AtomReportStateComparator
-            implements Comparator<Combinatorics.AtomReportState> {
-        @Override
-        public int compare(Combinatorics.AtomReportState o1, Combinatorics.AtomReportState o2) {
-            if (o1.getTriggerDataType() != o2.getTriggerDataType()) {
-                return Integer.compare(o1.getTriggerDataType(), o2.getTriggerDataType());
-            }
-            return Integer.compare(o1.getWindowIndex(), o2.getWindowIndex());
-        }
     }
 }

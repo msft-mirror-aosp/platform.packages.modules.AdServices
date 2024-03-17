@@ -583,6 +583,33 @@ public final class ConsentManager {
         return null;
     }
 
+    @VisibleForTesting static final String IS_MEASUREMENT_DATA_RESET = "IS_MEASUREMENT_DATA_RESET";
+
+    /** Returns whether the isMeasurementDataReset bit is true. */
+    public boolean isMeasurementDataReset() {
+        return getValueWithLock(IS_MEASUREMENT_DATA_RESET);
+    }
+
+    /** Set the isMeasurementDataReset bit in system server. */
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) throws IOException {
+        setValueWithLock(
+                IS_MEASUREMENT_DATA_RESET,
+                isMeasurementDataReset,
+                /* callerName */ "isMeasurementDataReset");
+    }
+
+    @VisibleForTesting static final String IS_PA_DATA_RESET = "IS_Pa_DATA_RESET";
+
+    /** Returns whether the isPaDataReset bit is true. */
+    public boolean isPaDataReset() {
+        return getValueWithLock(IS_PA_DATA_RESET);
+    }
+
+    /** Set the isPaDataReset bit in system server. */
+    public void setPaDataReset(boolean isPaDataReset) throws IOException {
+        setValueWithLock(IS_PA_DATA_RESET, isPaDataReset, /* callerName */ "isPaDataReset");
+    }
+
     private boolean getValueWithLock(String key) {
         mReadWriteLock.readLock().lock();
         try {

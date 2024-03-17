@@ -41,8 +41,9 @@ public final class AdServicesCommonStates implements Parcelable {
     /**
      * Creates an object which represents the result from the getAdservicesCommonStates API.
      *
-     * @param measurementState a boolean indicating whether meansurement is allowed
-     * @param paState a boolean indicating whether fledge is allowed
+     * @param measurementState a {@link ConsentStatusCode} int indicating whether meansurement is
+     *     allowed
+     * @param paState a {@link ConsentStatusCode} indicating whether fledge is allowed
      */
     private AdServicesCommonStates(
             @ConsentStatusCode int measurementState, @ConsentStatusCode int paState) {
