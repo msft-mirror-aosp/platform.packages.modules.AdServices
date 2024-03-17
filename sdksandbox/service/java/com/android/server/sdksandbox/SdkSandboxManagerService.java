@@ -443,13 +443,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             || !intent.getPackage().equals(sdkSandboxPackageName)
                             || intent.getAction() == null
                             || !intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
-                        this.logSandboxActivityApiLatency(
-                                SdkSandboxStatsLog
-                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE,
-                                (int) (mInjector.elapsedRealtime() - timeEventStarted),
-                                callingUid);
                         return null;
                     }
 
@@ -457,13 +450,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     if (intent.getComponent() != null) {
                         final String componentPackageName = intent.getComponent().getPackageName();
                         if (!componentPackageName.equals(sdkSandboxPackageName)) {
-                            this.logSandboxActivityApiLatency(
-                                    SdkSandboxStatsLog
-                                            .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
-                                    SdkSandboxStatsLog
-                                            .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE,
-                                    (int) (mInjector.elapsedRealtime() - timeEventStarted),
-                                    callingUid);
                             return null;
                         }
                     }
@@ -1622,16 +1608,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // For T, we kill the sandbox by uid. For U, we kill a specific sandbox process.
         if (SdkLevel.isAtLeastU()) {
-            try {
-                mServiceProvider.stopSandboxService(currentCallingInfo);
-            } catch (PackageManager.NameNotFoundException e) {
-                // Just log the exception for the CallingUid for which package is not found to
-                // ensure other sandbox services are stopped
-                Log.e(
-                        TAG,
-                        "Failed to stop sandbox service for: " + currentCallingInfo.toString(),
-                        e);
-            }
+            mServiceProvider.stopSandboxService(currentCallingInfo);
         } else {
             // For apps with shared uid, unbind the sandboxes for all the remaining apps since we
             // kill the sandbox by uid.

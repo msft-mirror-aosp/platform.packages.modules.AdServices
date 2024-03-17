@@ -140,7 +140,11 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             long timeoutMs) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_LATEST_OHTTP_KEY_CONFIG);
-        return FluentFuture.from(immediateFuture(getLatestKeyOfType(adSelectionEncryptionKeyType)))
+        return FluentFuture.from(
+                        immediateFuture(
+                                mFlags.getFledgeAuctionServerRefreshExpiredKeysDuringAuction()
+                                        ? getLatestActiveKeyOfType(adSelectionEncryptionKeyType)
+                                        : getLatestKeyOfType(adSelectionEncryptionKeyType)))
                 .transformAsync(
                         encryptionKey ->
                                 encryptionKey == null
@@ -175,11 +179,14 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
     public AdSelectionEncryptionKey getLatestActiveKeyOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
                     int adSelectionEncryptionKeyType) {
+        sLogger.d("Getting latest encryption key from database excluding expired keys");
+
         List<DBEncryptionKey> keys =
                 mEncryptionKeyDao.getLatestExpiryNActiveKeysOfType(
                         EncryptionKeyConstants.from(adSelectionEncryptionKeyType),
                         mClock.instant(),
                         getKeyCountForType(adSelectionEncryptionKeyType));
+
 
         return keys.isEmpty() ? null : selectRandomDbKeyAndParse(keys);
     }
@@ -196,6 +203,8 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
     public AdSelectionEncryptionKey getLatestKeyOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
                     int adSelectionEncryptionKeyType) {
+        sLogger.d("Getting latest encryption key from database including expired keys");
+
         List<DBEncryptionKey> keys =
                 mEncryptionKeyDao.getLatestExpiryNKeysOfType(
                         EncryptionKeyConstants.from(adSelectionEncryptionKeyType),

@@ -623,4 +623,24 @@ public class AppSearchConsentManager {
             PrivacySandboxEnrollmentChannelCollection enrollmentChannel) {
         mAppSearchConsentWorker.setEnrollmentChannel(ux, enrollmentChannel);
     }
+
+    /** Save the isMeasurementDataReset bit. */
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        mAppSearchConsentWorker.setMeasurementDataReset(isMeasurementDataReset);
+    }
+
+    /** Returns whether the isMeasurementDataReset bit is true. */
+    public Boolean isMeasurementDataReset() {
+        return mAppSearchConsentWorker.isMeasurementDataReset();
+    }
+
+    /** Save the isPaDataReset bit. */
+    public void setPaDataReset(boolean isPaDataReset) {
+        mAppSearchConsentWorker.setPaDataReset(isPaDataReset);
+    }
+
+    /** Returns whether the isPaDataReset bit is true. */
+    public Boolean isPaDataReset() {
+        return mAppSearchConsentWorker.isPaDataReset();
+    }
 }

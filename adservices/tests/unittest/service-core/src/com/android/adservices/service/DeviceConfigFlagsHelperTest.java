@@ -26,7 +26,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import org.junit.Test;
 
 @SpyStatic(DeviceConfig.class)
-public final class PhFlagsHelpersTest extends AdServicesExtendedMockitoTestCase {
+public final class DeviceConfigFlagsHelperTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String NAME = "Flag, James Flag";
 
@@ -34,14 +34,15 @@ public final class PhFlagsHelpersTest extends AdServicesExtendedMockitoTestCase 
     public void testGetBooleanDeviceConfigFlag() {
         mockGetAdServicesFlag(NAME, true);
 
-        expect.that(PhFlags.getDeviceConfigFlag(NAME, /* defaultValue= */ false)).isTrue();
+        expect.that(DeviceConfigFlagsHelper.getDeviceConfigFlag(NAME, /* defaultValue= */ false))
+                .isTrue();
     }
 
     @Test
     public void testGetStringDeviceConfigFlag() {
         mockGetAdServicesFlag(NAME, "of the rose");
 
-        expect.that(PhFlags.getDeviceConfigFlag(NAME, /* defaultValue= */ "D'OH"))
+        expect.that(DeviceConfigFlagsHelper.getDeviceConfigFlag(NAME, /* defaultValue= */ "D'OH"))
                 .isEqualTo("of the rose");
     }
 
@@ -49,20 +50,23 @@ public final class PhFlagsHelpersTest extends AdServicesExtendedMockitoTestCase 
     public void testGetIntDeviceConfigFlag() {
         mockGetAdServicesFlag(NAME, 42);
 
-        expect.that(PhFlags.getDeviceConfigFlag(NAME, /* defaultValue= */ 108)).isEqualTo(42);
+        expect.that(DeviceConfigFlagsHelper.getDeviceConfigFlag(NAME, /* defaultValue= */ 108))
+                .isEqualTo(42);
     }
 
     @Test
     public void testGetLongDeviceConfigFlag() {
         mockGetAdServicesFlag(NAME, 42L);
 
-        expect.that(PhFlags.getDeviceConfigFlag(NAME, /* defaultValue= */ 108L)).isEqualTo(42L);
+        expect.that(DeviceConfigFlagsHelper.getDeviceConfigFlag(NAME, /* defaultValue= */ 108L))
+                .isEqualTo(42L);
     }
 
     @Test
     public void testGetFloatDeviceConfigFlag() {
         mockGetAdServicesFlag(NAME, 42f);
 
-        expect.that(PhFlags.getDeviceConfigFlag(NAME, /* defaultValue= */ 108f)).isEqualTo(42f);
+        expect.that(DeviceConfigFlagsHelper.getDeviceConfigFlag(NAME, /* defaultValue= */ 108f))
+                .isEqualTo(42f);
     }
 }

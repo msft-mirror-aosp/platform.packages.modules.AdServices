@@ -76,6 +76,7 @@ import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
@@ -114,9 +115,11 @@ import com.android.adservices.service.adselection.AuctionServerPayloadUnformatte
 import com.android.adservices.service.adselection.MockAdIdWorker;
 import com.android.adservices.service.adselection.MultiCloudSupportStrategy;
 import com.android.adservices.service.adselection.MultiCloudTestStrategyFactory;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
 import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -326,6 +329,7 @@ public class KAnonE2ETest {
     @Captor private ArgumentCaptor<KAnonJoinStatusStats> argumentCaptorJoinStats;
     @Mock private KeyAttestation mockKeyAttestation;
     @Mock private KeyAttestationCertificateChainRecord mockKeyAttestationCertificate;
+    @Mock private ObliviousHttpEncryptorFactory mockObliviousHttpEncryptorFactory;
     private UserProfileIdManager mUserProfileIdManager;
     private AnonymousCountingTokens mAnonymousCountingTokensSpy;
 
@@ -335,6 +339,9 @@ public class KAnonE2ETest {
 
     private Instant FIXED_INSTANT = Instant.now();
     private RetryStrategyFactory mRetryStrategyFactory;
+    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    private ConsentedDebugConfigurationGeneratorFactory
+            mConsentedDebugConfigurationGeneratorFactory;
 
     @Before
     public void setUp() throws IOException {
@@ -437,6 +444,13 @@ public class KAnonE2ETest {
         InputStream inputStream = CONTEXT.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
         mTranscript = Transcript.parseDelimitedFrom(inputStream);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
+        mConsentedDebugConfigurationDao =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
+                        .build()
+                        .consentedDebugConfigurationDao();
+        mConsentedDebugConfigurationGeneratorFactory =
+                new ConsentedDebugConfigurationGeneratorFactory(
+                        false, mConsentedDebugConfigurationDao);
     }
 
     @After
@@ -1943,7 +1957,8 @@ public class KAnonE2ETest {
                 mAdIdFetcher,
                 mKAnonSignJoinFactory,
                 false,
-                mRetryStrategyFactory);
+                mRetryStrategyFactory,
+                mConsentedDebugConfigurationGeneratorFactory);
     }
 
     public PersistAdSelectionResultTestCallback invokePersistAdSelectionResult(
@@ -2113,6 +2128,8 @@ public class KAnonE2ETest {
         KAnonObliviousHttpEncryptorImpl kAnonObliviousHttpEncryptor =
                 new KAnonObliviousHttpEncryptorImpl(
                         encryptionKeyManager, AdServicesExecutors.getLightWeightExecutor());
+        when(mockObliviousHttpEncryptorFactory.getKAnonObliviousHttpEncryptor())
+                .thenReturn(kAnonObliviousHttpEncryptor);
         KAnonCallerImpl kAnonCaller =
                 new KAnonCallerImpl(
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2123,10 +2140,10 @@ public class KAnonE2ETest {
                         mUserProfileIdManager,
                         new BinaryHttpMessageDeserializer(),
                         mFlags,
-                        kAnonObliviousHttpEncryptor,
                         mKAnonMessageManager,
                         mAdServicesLoggerMock,
-                        keyAttestationFactory);
+                        keyAttestationFactory,
+                        mockObliviousHttpEncryptorFactory);
         KAnonSignJoinManager mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
                         mContext,

@@ -107,7 +107,6 @@ import android.webkit.WebView;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
@@ -117,6 +116,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionFromOutcomesOverride;
@@ -136,6 +136,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -319,6 +320,9 @@ public class AdSelectionServiceImplTest {
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     private RetryStrategyFactory mRetryStrategyFactory;
+    private ConsentedDebugConfigurationGeneratorFactory
+            mConsentedDebugConfigurationGeneratorFactory;
+    @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
 
     public AdSelectionServiceImplTest() {}
 
@@ -424,6 +428,9 @@ public class AdSelectionServiceImplTest {
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
+        mConsentedDebugConfigurationGeneratorFactory =
+                new ConsentedDebugConfigurationGeneratorFactory(
+                        false, mConsentedDebugConfigurationDao);
     }
 
     @After
@@ -527,7 +534,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -651,7 +659,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -686,7 +695,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessfullyReportsDataVersionHeader() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -785,7 +793,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -828,7 +837,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessfullyReportsSellerDataVersionHeader() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -920,7 +928,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -957,7 +966,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -1043,7 +1051,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1169,7 +1178,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         true,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1287,7 +1297,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         true,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1390,7 +1401,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         true,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1500,7 +1512,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1626,7 +1639,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1654,7 +1668,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessAndDoesNotCrashAfterBuyerReportThrowsAnException()
             throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
@@ -1750,7 +1763,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1879,7 +1893,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2056,7 +2071,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2203,7 +2219,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2368,7 +2385,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2539,7 +2557,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2701,7 +2720,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2852,7 +2872,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3007,7 +3028,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3055,7 +3077,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void
             testReportImpressionSucceedsButDesNotRegisterUrisWithInteractionKeySizeThatExceedsMax()
                     throws Exception {
@@ -3178,7 +3199,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3356,7 +3378,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3503,7 +3526,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3613,7 +3637,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3722,7 +3747,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3837,7 +3863,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3947,7 +3974,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4052,7 +4080,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -4156,7 +4185,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -4261,7 +4291,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -4386,7 +4417,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -4536,7 +4568,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -4636,7 +4669,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4704,7 +4738,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4766,7 +4801,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4833,7 +4869,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4911,7 +4948,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4983,7 +5021,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5061,7 +5100,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5140,7 +5180,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -5260,7 +5301,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -5382,7 +5424,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -5498,7 +5541,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -5609,7 +5653,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
@@ -5648,7 +5693,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock, never()).shutdown();
@@ -5701,7 +5747,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -5770,7 +5817,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5840,7 +5888,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5901,7 +5950,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5964,7 +6014,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6021,7 +6072,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -6082,7 +6134,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -6184,7 +6237,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6302,7 +6356,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6423,7 +6478,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6450,7 +6506,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -6550,7 +6605,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6658,7 +6714,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
@@ -6683,7 +6740,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessThrottledSubsequentCallFailure() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
@@ -6767,7 +6823,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6819,7 +6876,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         // Instantiate a server with different domain from buyer and seller for reporting
@@ -6904,7 +6960,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7021,7 +7078,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7140,7 +7198,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7170,7 +7229,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessWithValidImpressionReportingSubdomains()
             throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
@@ -7281,7 +7339,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7415,7 +7474,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7534,7 +7594,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7666,7 +7727,8 @@ public class AdSelectionServiceImplTest {
                             mAdIdFetcher,
                             mUnusedKAnonSignJoinFactory,
                             false,
-                            mRetryStrategyFactory);
+                            mRetryStrategyFactory,
+                            mConsentedDebugConfigurationGeneratorFactory);
 
             ReportImpressionInput input =
                     new ReportImpressionInput.Builder()
@@ -7736,7 +7798,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7804,7 +7867,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7866,7 +7930,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7934,7 +7999,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8014,7 +8080,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8088,7 +8155,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8166,7 +8234,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8243,7 +8312,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8369,7 +8439,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8489,7 +8560,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8614,7 +8686,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8757,7 +8830,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         AdSelectionOverrideTestCallback overridesCallback =
                 callAddOverrideForSelectAds(
@@ -9444,7 +9518,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -9508,7 +9583,8 @@ public class AdSelectionServiceImplTest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -9553,7 +9629,8 @@ public class AdSelectionServiceImplTest {
                 mAdIdFetcher,
                 mUnusedKAnonSignJoinFactory,
                 false,
-                mRetryStrategyFactory);
+                mRetryStrategyFactory,
+                mConsentedDebugConfigurationGeneratorFactory);
     }
 
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {
