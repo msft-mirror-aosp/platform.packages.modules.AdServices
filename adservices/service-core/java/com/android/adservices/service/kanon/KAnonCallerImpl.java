@@ -37,8 +37,6 @@ import android.annotation.Nullable;
 import android.net.Uri;
 import android.util.Pair;
 
-
-import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.kanon.ClientParametersDao;
 import com.android.adservices.data.kanon.DBClientParameters;
@@ -47,6 +45,7 @@ import com.android.adservices.data.kanon.ServerParametersDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorFactory;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessage;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer;
@@ -82,22 +81,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
-
 import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
 import private_join_and_compute.anonymous_counting_tokens.AttestationScheme;
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
@@ -118,10 +101,25 @@ import private_join_and_compute.anonymous_counting_tokens.Token;
 import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
+
 public class KAnonCallerImpl implements KAnonCaller {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
 
-    @NonNull private ObliviousHttpEncryptor mKAnonObliviousHttpEncryptor;
     @NonNull private ListeningExecutorService mLightweightExecutorService;
     @NonNull private AnonymousCountingTokens mAnonymousCountingTokens;
     @NonNull private Flags mFlags;
@@ -132,6 +130,7 @@ public class KAnonCallerImpl implements KAnonCaller {
     @NonNull private ServerParametersDao mServerParametersDao;
     @NonNull private BinaryHttpMessageDeserializer mBinaryHttpMessageDeserializer;
     @NonNull private AdServicesLogger mAdServicesLogger;
+    @NonNull private ObliviousHttpEncryptorFactory mObliviousHttpEncryptorFactory;
     @NonNull private UUID mClientId;
     @Nullable private String mServerParamVersion;
     @Nullable private String mClientParamsVersion;
@@ -151,6 +150,7 @@ public class KAnonCallerImpl implements KAnonCaller {
     private final String ACT_JSON_KEY = "act";
     private final String HTTPS = "https";
     private final String SET_TYPE;
+    private final KAnonAction RECOVER_TOKENS_ACT = KAnonAction.RECOVER_TOKENS_ACT;
 
     public KAnonCallerImpl(
             @NonNull ExecutorService lightweightExecutorService,
@@ -161,27 +161,26 @@ public class KAnonCallerImpl implements KAnonCaller {
             @NonNull UserProfileIdManager userProfileIdManager,
             @NonNull BinaryHttpMessageDeserializer binaryHttpMessageDeserializer,
             @NonNull Flags flags,
-            @NonNull ObliviousHttpEncryptor kAnonObliviousHttpEncryptor,
             @NonNull KAnonMessageManager kAnonMessageManager,
             @NonNull AdServicesLogger adServicesLogger,
-            @NonNull KeyAttestationFactory keyAttestationFactory) {
+            @NonNull KeyAttestationFactory keyAttestationFactory,
+            @NonNull ObliviousHttpEncryptorFactory obliviousHttpEncryptorFactory) {
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(anonymousCountingTokens);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(clientParametersDao);
         Objects.requireNonNull(serverParametersDao);
         Objects.requireNonNull(userProfileIdManager);
-        Objects.requireNonNull(kAnonObliviousHttpEncryptor);
         Objects.requireNonNull(binaryHttpMessageDeserializer);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(kAnonMessageManager);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(keyAttestationFactory);
+        Objects.requireNonNull(obliviousHttpEncryptorFactory);
 
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mAnonymousCountingTokens = anonymousCountingTokens;
         mUserProfileIdManager = userProfileIdManager;
-        mKAnonObliviousHttpEncryptor = kAnonObliviousHttpEncryptor;
         mKAnonMessageManager = kAnonMessageManager;
         mServerParametersDao = serverParametersDao;
         mClientParametersDao = clientParametersDao;
@@ -189,6 +188,7 @@ public class KAnonCallerImpl implements KAnonCaller {
         mFlags = flags;
         mClientId = mUserProfileIdManager.getOrCreateId();
         mAdServicesLogger = adServicesLogger;
+        mObliviousHttpEncryptorFactory = obliviousHttpEncryptorFactory;
         mRequestMetadata =
                 RequestMetadata.newBuilder()
                         .setAndroidRequestMetadata(
@@ -208,7 +208,6 @@ public class KAnonCallerImpl implements KAnonCaller {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mSchemeParameters = KAnonUtil.getSchemeParameters();
     }
-
 
     /**
      * This method takes a list of {@link KAnonMessageEntity} as an argument and processes them by
@@ -259,10 +258,12 @@ public class KAnonCallerImpl implements KAnonCaller {
      * calls.
      */
     private ListenableFuture<Void> initializeClientAndServerParameters() {
+        sLogger.v("Starting initialize process for KAnon");
         long startTime = Instant.now().toEpochMilli();
         return FluentFuture.from(getOrUpdateServerAndClientParameters())
                 .transformAsync(
                         ignoredVoid -> {
+                            sLogger.v("Initialize process for KAnon successful");
                             if (mFlags.getFledgeKAnonLoggingEnabled()) {
                                 long latency = Instant.now().toEpochMilli() - startTime;
                                 KAnonInitializeStatusStats kAnonInitializeStatusStats =
@@ -288,7 +289,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                                 .KANON_ACTION_FAILURE_REASON_UNKNOWN_ERROR;
 
                                 if (e instanceof KAnonSignJoinException exception) {
-                                    sLogger.d(
+                                    sLogger.e(
                                             "Client and server parameters couldn't be initialized."
                                                     + " Failed during "
                                                     + exception.getAction());
@@ -316,6 +317,7 @@ public class KAnonCallerImpl implements KAnonCaller {
      * and join requests.
      */
     private ListenableFuture<Void> performSignAndJoinInBatches(List<KAnonMessageEntity> messages) {
+        sLogger.v("Starting sign and join process for " + messages.size() + "messages");
         List<ListenableFuture<Void>> signAndJoinBatchesFutures = new ArrayList<>();
         for (int i = 0; i < messages.size(); i = i + SIGN_BATCH_SIZE) {
             List<KAnonMessageEntity> messagesSublist =
@@ -334,10 +336,12 @@ public class KAnonCallerImpl implements KAnonCaller {
     }
 
     private ListenableFuture<TokensSet> signRequest(List<KAnonMessageEntity> messageEntities) {
+        sLogger.v("Starting sign process for batch with " + messageEntities.size() + " messages");
         long signRequestStartTime = Instant.now().toEpochMilli();
         return FluentFuture.from(performSignRequest(messageEntities))
                 .transformAsync(
                         tokensSet -> {
+                            sLogger.v("Sign process successful");
                             if (mFlags.getFledgeKAnonLoggingEnabled()) {
                                 long latency = Instant.now().toEpochMilli() - signRequestStartTime;
                                 KAnonSignStatusStats kAnonSignStatusStats =
@@ -362,7 +366,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                         KAnonSignJoinStatsConstants
                                                 .KANON_ACTION_FAILURE_REASON_UNKNOWN_ERROR;
                                 if (e instanceof KAnonSignJoinException exception) {
-                                    sLogger.d(
+                                    sLogger.e(
                                             "Failure during sign process. Failed during "
                                                     + exception.getAction());
                                     action = exception.getAction().ordinal();
@@ -400,6 +404,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                 mServerParametersDao.getActiveServerParameters(Instant.now());
 
         if (optionalDBClientParameters.isPresent() && !dbServerParametersList.isEmpty()) {
+            sLogger.v("Active server and active client parameters present in DB");
             DBClientParameters dbClientParameters = optionalDBClientParameters.get();
             return Futures.submit(
                     () ->
@@ -407,6 +412,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                     dbClientParameters, dbServerParametersList.get(0)),
                     mLightweightExecutorService);
         } else {
+            sLogger.v("Fetching new client and server parameters");
             // Get new server and client parameters.
             return FluentFuture.from(fetchNewServerParameters())
                     .transformAsync(
@@ -460,6 +466,7 @@ public class KAnonCallerImpl implements KAnonCaller {
     private ListenableFuture<Void> persistClientAndServerParams(
             Pair<RegisterClientResponse, GetServerPublicParamsResponse>
                     clientAndServerResponsePair) {
+        sLogger.v("Persisting newly generated server/client parameters in database");
         RegisterClientResponse registerClientResponse = clientAndServerResponsePair.first;
         GetServerPublicParamsResponse getServerPublicParamsResponse =
                 clientAndServerResponsePair.second;
@@ -468,13 +475,13 @@ public class KAnonCallerImpl implements KAnonCaller {
         byte[] clientPublicParametersBytes = mClientParameters.getPublicParameters().toByteArray();
         long clientParamsExpiryInSeconds =
                 registerClientResponse.getClientParamsExpiry().getSeconds();
+        Instant clientParamExpiryInstant = Instant.ofEpochSecond(clientParamsExpiryInSeconds);
         DBClientParameters clientParametersToSave =
                 DBClientParameters.builder()
                         .setClientPrivateParameters(clientPrivateParameterBytes)
                         .setClientPublicParameters(clientPublicParametersBytes)
                         .setClientId(mClientId)
-                        .setClientParametersExpiryInstant(
-                                Instant.ofEpochSecond(clientParamsExpiryInSeconds))
+                        .setClientParametersExpiryInstant(clientParamExpiryInstant)
                         .setClientParamsVersion(mClientParamsVersion)
                         .build();
 
@@ -486,8 +493,8 @@ public class KAnonCallerImpl implements KAnonCaller {
                         .setServerPublicParameters(mServerPublicParameters.toByteArray())
                         .setCreationInstant(Instant.now())
                         .setServerParamsVersion(mServerParamVersion)
-                        .setServerParamsJoinExpiryInstant(Instant.now().plusSeconds(10000))
-                        .setServerParamsSignExpiryInstant(Instant.now().plusSeconds(10000))
+                        .setServerParamsJoinExpiryInstant(clientParamExpiryInstant)
+                        .setServerParamsSignExpiryInstant(clientParamExpiryInstant)
                         .build();
         return Futures.submit(
                 () -> {
@@ -514,14 +521,14 @@ public class KAnonCallerImpl implements KAnonCaller {
         List<DBClientParameters> clientParametersFromDb =
                 mClientParametersDao.getActiveClientParameters(Instant.now());
         if (clientParametersFromDb.isEmpty()) {
-            LogUtil.d("Client parameters not found in the database");
+            sLogger.v("Client parameters not found in the database");
             return Optional.empty();
         } else {
             // TODO(b/324392549): Remove this after updating client param fetch query to search
             // with client id as well.
             DBClientParameters dbClientParameters = clientParametersFromDb.get(0);
             if (!mClientId.equals(dbClientParameters.getClientId())) {
-                LogUtil.d(
+                sLogger.v(
                         "Active client parameters found, but clientId  does not match with"
                                 + " userProfileId");
                 return Optional.empty();
@@ -533,7 +540,7 @@ public class KAnonCallerImpl implements KAnonCaller {
     private ListenableFuture<Void> fetchKeyAttestationChallenge() throws KAnonSignJoinException {
         if (mFlags.getFledgeKAnonKeyAttestationEnabled()) {
             long startTimeKeyAttestation = Instant.now().toEpochMilli();
-            LogUtil.d("Fetching key attestation challenge");
+            sLogger.v("Fetching key attestation challenge");
             Uri getChallengeUri = Uri.parse(mFlags.getFledgeKAnonGetChallengeUrl());
             return FluentFuture.from(
                             immediateFuture(
@@ -594,8 +601,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                             t -> {
                                 if (mFlags.getFledgeKAnonLoggingEnabled()) {
                                     long latency =
-                                            Instant.now().toEpochMilli()
-                                                    - startTimeKeyAttestation;
+                                            Instant.now().toEpochMilli() - startTimeKeyAttestation;
                                     int action = getActionFromExceptionForKeyAttestation(t);
                                     KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats =
                                             KAnonGetChallengeStatusStats.builder()
@@ -636,7 +642,7 @@ public class KAnonCallerImpl implements KAnonCaller {
 
     private ListenableFuture<GetServerPublicParamsResponse> fetchNewServerParameters()
             throws KAnonSignJoinException {
-        LogUtil.d("Fetching server parameters for KAnon Sign requests");
+        sLogger.v("Fetching server parameters for KAnon Sign requests");
         Uri getServerParamsUri = Uri.parse(mFlags.getFledgeKAnonFetchServerParamsUrl());
         return FluentFuture.from(
                         immediateFuture(
@@ -683,6 +689,7 @@ public class KAnonCallerImpl implements KAnonCaller {
     /** This method using {@link AnonymousCountingTokens} to generate new client parameters. */
     private GetServerPublicParamsResponse generateNewClientParameters(
             GetServerPublicParamsResponse getServerPublicParamsResponse) {
+        sLogger.v("Generating new client parameters");
         try {
             mServerPublicParameters = getServerPublicParamsResponse.getServerPublicParams();
             mServerParamVersion = getServerPublicParamsResponse.getServerParamsVersion();
@@ -706,7 +713,7 @@ public class KAnonCallerImpl implements KAnonCaller {
     private ListenableFuture<Pair<RegisterClientResponse, GetServerPublicParamsResponse>>
             registerNewClientParameters(
                     GetServerPublicParamsResponse getServerPublicParamsResponse) {
-
+        sLogger.v("Registering new client parameters");
         return FluentFuture.from(fetchKeyAttestationChallenge())
                 .transformAsync(
                         ignoredVoid -> {
@@ -767,7 +774,7 @@ public class KAnonCallerImpl implements KAnonCaller {
 
     private ListenableFuture<Void> updateMessagesStatusInDatabase(
             List<KAnonMessageEntity> messages, @KanonMessageEntityStatus int status) {
-        LogUtil.d("Updating message status to : " + status);
+        sLogger.v("Updating message status to : " + status);
         return Futures.submit(
                 () -> mKAnonMessageManager.updateMessagesStatus(messages, status),
                 mLightweightExecutorService);
@@ -816,7 +823,8 @@ public class KAnonCallerImpl implements KAnonCaller {
                 .catchingAsync(
                         KAnonSignJoinException.class,
                         e -> {
-                            LogUtil.d("Error in sign request method");
+                            sLogger.e(
+                                    "Error in sign request method, Failed with " + e.getMessage());
                             return FluentFuture.from(
                                             updateMessagesStatusInDatabase(messageEntities, FAILED))
                                     .transformAsync(
@@ -868,7 +876,7 @@ public class KAnonCallerImpl implements KAnonCaller {
             GeneratedTokensRequestProto generatedTokensRequestProto,
             AdServicesHttpClientResponse getTokensResponseHTTP)
             throws KAnonSignJoinException {
-        LogUtil.d("Starting to recover tokens from the GetTokensResponse");
+        sLogger.v("Starting to recover tokens from the GetTokensResponse");
         GetTokensResponse getTokensResponse;
         try {
             getTokensResponse =
@@ -892,7 +900,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                         mServerPublicParameters);
 
         if (isTokensResponseVerified) {
-            LogUtil.d("Tokens have been verified");
+            sLogger.v("Tokens have been verified");
             return FluentFuture.from(updateMessagesStatusInDatabase(messageEntities, SIGNED))
                     .transformAsync(
                             ignoredVoid ->
@@ -911,7 +919,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                     .catchingAsync(
                             InvalidProtocolBufferException.class,
                             t -> {
-                                LogUtil.d("Error while recovering tokens, marking them as failed");
+                                sLogger.e("Error while recovering tokens, marking them as failed");
                                 return FluentFuture.from(
                                                 updateMessagesStatusInDatabase(
                                                         messageEntities, FAILED))
@@ -922,13 +930,12 @@ public class KAnonCallerImpl implements KAnonCaller {
                                                                         "Error while recovering"
                                                                                 + " tokens",
                                                                         t,
-                                                                        KAnonAction
-                                                                              .RECOVER_TOKENS_ACT)),
+                                                                        RECOVER_TOKENS_ACT)),
                                                 mLightweightExecutorService);
                             },
                             mLightweightExecutorService);
         } else {
-            LogUtil.d("Verify tokens failed");
+            sLogger.v("Verify tokens failed");
             return FluentFuture.from(updateMessagesStatusInDatabase(messageEntities, FAILED))
                     .transformAsync(
                             ignoredVoid ->
@@ -944,18 +951,23 @@ public class KAnonCallerImpl implements KAnonCaller {
             List<KAnonMessageEntity> messageEntities, TokensSet tokensSet) {
         List<ListenableFuture<Void>> joinFuturesList = new ArrayList<>();
         for (int i = 0; i < messageEntities.size(); i++) {
-            LogUtil.d(
+            sLogger.v(
                     "Making join request for message with message adselection id: "
                             + messageEntities.get(i).getAdSelectionId());
             Token token = tokensSet.getTokens(i);
             KAnonMessageEntity currentMessage = messageEntities.get(i);
+            ObliviousHttpEncryptor kAnonObliviousHttpEncryptor =
+                    mObliviousHttpEncryptorFactory.getKAnonObliviousHttpEncryptor();
             joinFuturesList.add(
-                    FluentFuture.from(doJoinRequest(currentMessage, token))
+                    FluentFuture.from(
+                                    doJoinRequest(
+                                            currentMessage, token, kAnonObliviousHttpEncryptor))
                             .transformAsync(
                                     joinResponse ->
                                             deserializeJoinRequest(
                                                     joinResponse,
-                                                    currentMessage.getAdSelectionId()),
+                                                    currentMessage.getAdSelectionId(),
+                                                    kAnonObliviousHttpEncryptor),
                                     mLightweightExecutorService)
                             .transformAsync(
                                     deserializedJoinRequest ->
@@ -1007,7 +1019,7 @@ public class KAnonCallerImpl implements KAnonCaller {
 
     private BinaryHttpMessage createBinaryHttpRequest(
             KAnonMessageEntity message, Token currentToken) throws JSONException {
-
+        sLogger.v("Creating binary http request object for join request");
         String bbSignature =
                 BaseEncoding.base64()
                         .encode(currentToken.getTokenV0().getBbSignature().toByteArray());
@@ -1051,7 +1063,9 @@ public class KAnonCallerImpl implements KAnonCaller {
 
     /** This method makes a JOIN for the given message and token. */
     private FluentFuture<AdServicesHttpClientResponse> doJoinRequest(
-            KAnonMessageEntity message, Token currentToken) {
+            KAnonMessageEntity message,
+            Token currentToken,
+            ObliviousHttpEncryptor kAnonObliviousHttpEncryptor) {
         BinaryHttpMessage binaryHttpMessage;
         try {
             binaryHttpMessage = createBinaryHttpRequest(message, currentToken);
@@ -1060,7 +1074,7 @@ public class KAnonCallerImpl implements KAnonCaller {
         }
         byte[] dataInBinaryHttpMessage = binaryHttpMessage.serialize();
         return FluentFuture.from(
-                        mKAnonObliviousHttpEncryptor.encryptBytes(
+                        kAnonObliviousHttpEncryptor.encryptBytes(
                                 dataInBinaryHttpMessage,
                                 message.getAdSelectionId(),
                                 mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs(),
@@ -1099,10 +1113,12 @@ public class KAnonCallerImpl implements KAnonCaller {
      * then parses it into {@link BinaryHttpMessage}.
      */
     private ListenableFuture<BinaryHttpMessage> deserializeJoinRequest(
-            AdServicesHttpClientResponse joinResponse, long contextId) {
-        LogUtil.d("Deserializing the decrypted response");
+            AdServicesHttpClientResponse joinResponse,
+            long contextId,
+            ObliviousHttpEncryptor kAnonObliviousHttpEncryptor) {
+        sLogger.v("Deserializing the encrypted join response");
         byte[] decryptedOhttpResponse =
-                mKAnonObliviousHttpEncryptor.decryptBytes(
+                kAnonObliviousHttpEncryptor.decryptBytes(
                         BaseEncoding.base64().decode(joinResponse.getResponseBody()), contextId);
         return immediateFuture(mBinaryHttpMessageDeserializer.deserialize(decryptedOhttpResponse));
     }
@@ -1113,12 +1129,15 @@ public class KAnonCallerImpl implements KAnonCaller {
      */
     private ListenableFuture<Void> readAndUpdateStatusFromBinaryHttp(
             BinaryHttpMessage binaryHttpMessage, KAnonMessageEntity kAnonMessageEntity) {
+        sLogger.v("Reading the decrypted response status for join request");
         if (binaryHttpMessage.getResponseControlData().getFinalStatusCode() == 200) {
-            LogUtil.d(
-                    "Updating message status in database for message : "
+            sLogger.v(
+                    "Response code is 200. Updating message status to JOINED in database for"
+                        + " message : "
                             + kAnonMessageEntity.getAdSelectionId());
             return updateMessagesStatusInDatabase(List.of(kAnonMessageEntity), JOINED);
         } else {
+            sLogger.v("Non 200 response code for join request, Join call failed");
             throw new KAnonSignJoinException(
                     "Join called failed: Binary Http message status: "
                             + binaryHttpMessage.getResponseControlData().getFinalStatusCode(),

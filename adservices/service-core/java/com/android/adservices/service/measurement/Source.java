@@ -98,7 +98,7 @@ public class Source {
     @Nullable private List<AttributedTrigger> mAttributedTriggers;
     @Nullable private TriggerSpecs mTriggerSpecs;
     @Nullable private String mTriggerSpecsString;
-    @Nullable private Long mNumStates;
+    @Nullable private BigInteger mNumStates;
     @Nullable private Double mFlipProbability;
     @Nullable private Integer mMaxEventLevelReports;
     @Nullable private String mEventAttributionStatusString;
@@ -268,7 +268,7 @@ public class Source {
                 new EventReportWindowCalcDelegate(flags);
         int reportingWindowCountForNoising =
                 eventReportWindowCalcDelegate.getReportingWindowCountForNoising(this);
-        long numberOfStates =
+        BigInteger numberOfStates =
                 Combinatorics.getNumberOfStarsAndBarsSequences(
                         /*numStars=*/ eventReportWindowCalcDelegate.getMaxReportCount(this),
                         /*numBars=*/ getTriggerDataCardinality()
@@ -944,7 +944,7 @@ public class Source {
      * Returns the number of report states for the source (used only for computation and not
      * stored in the datastore)
      */
-    private Long getNumStates(Flags flags) {
+    private BigInteger getNumStates(Flags flags) {
         if (mNumStates == null) {
             buildPrivacyParameters(flags);
         }
@@ -1010,7 +1010,7 @@ public class Source {
     }
 
     /** Set the number of report states for the {@link Source}. */
-    private void setNumStates(long numStates) {
+    private void setNumStates(BigInteger numStates) {
         mNumStates = numStates;
     }
 

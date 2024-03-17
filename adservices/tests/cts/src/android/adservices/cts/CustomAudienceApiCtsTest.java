@@ -28,6 +28,8 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER
 import static android.adservices.customaudience.CustomAudienceFixture.getValidFetchUriByBuyer;
 
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
@@ -44,6 +46,7 @@ import static org.junit.Assert.assertTrue;
 import android.Manifest;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
+import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -63,6 +66,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.common.annotations.SetFlagDisabled;
 import com.android.adservices.common.annotations.SetFlagEnabled;
 import com.android.adservices.common.annotations.SetIntegerFlag;
 import com.android.adservices.service.devapi.DevContext;
@@ -269,6 +273,45 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithInvalidAdDataRenderUris));
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+    }
+
+    @Test
+    @SetFlagDisabled(KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED)
+    @SetIntegerFlag(name = KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH, value = 1)
+    public void testJoinCustomAudience_adRenderIdDisabled_invalidAdRenderIds_success()
+            throws Exception {
+        AdData adWithVeryLongAdRenderId =
+                AdDataFixture.getValidAdDataBuilderByBuyer(VALID_BUYER_1, 0)
+                        .setAdRenderId("this is a very very very very very long string")
+                        .build();
+        CustomAudience customAudienceWithInvalidAdDataRenderUris =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
+                        .setAds(ImmutableList.of(adWithVeryLongAdRenderId))
+                        .build();
+
+        joinCustomAudience(customAudienceWithInvalidAdDataRenderUris);
+    }
+
+    @Test
+    @SetFlagEnabled(KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED)
+    @SetIntegerFlag(name = KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH, value = 1)
+    public void testJoinCustomAudience_adRenderIdEnabled_invalidAdRenderIds_fail() {
+        AdData adWithVeryLongAdRenderId =
+                AdDataFixture.getValidAdDataBuilderByBuyer(VALID_BUYER_1, 0)
+                        .setAdRenderId("this is a very very very very very long string")
+                        .build();
+        CustomAudience customAudienceWithInvalidAdDataRenderUris =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
+                        .setAds(ImmutableList.of(adWithVeryLongAdRenderId))
+                        .build();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> joinCustomAudience(customAudienceWithInvalidAdDataRenderUris));
+
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
     }

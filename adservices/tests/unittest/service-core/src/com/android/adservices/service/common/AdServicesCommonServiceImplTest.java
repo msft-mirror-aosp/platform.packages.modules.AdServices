@@ -16,10 +16,8 @@
 
 package com.android.adservices.service.common;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
@@ -711,8 +709,7 @@ public class AdServicesCommonServiceImplTest {
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
         assertThat(apiCallStats.getResultCode()).isEqualTo(STATUS_UNAUTHORIZED);
-        assertThat(apiCallStats.getFailureReason())
-                .isEqualTo(FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION);
+        assertThat(apiCallStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
         assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(350);
     }
 
@@ -734,15 +731,15 @@ public class AdServicesCommonServiceImplTest {
         CallerMetadata metadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(0).build();
         doReturn(INVALID_PACKAGE_NAME).when(mFlags).getAdServicesCommonStatesAllowList();
         mCommonService.getAdServicesCommonStates(params, metadata, callback);
-        callback.assertFailed(STATUS_CALLER_NOT_ALLOWED);
+        callback.assertFailed(STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST);
 
         ExtendedMockito.verify(
                 () -> PermissionHelper.hasAccessAdServicesCommonStatePermission(any(), any()));
         verify(mFlags, never()).isGetAdServicesCommonStatesApiEnabled();
         ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
-        assertThat(apiCallStats.getResultCode()).isEqualTo(STATUS_CALLER_NOT_ALLOWED);
-        assertThat(apiCallStats.getFailureReason())
-                .isEqualTo(FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
+        assertThat(apiCallStats.getResultCode())
+                .isEqualTo(STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST);
+        assertThat(apiCallStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
     }
@@ -761,6 +758,10 @@ public class AdServicesCommonServiceImplTest {
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(true).when(mConsentManager).isPasMeasurementConsentGiven();
         doReturn(false).when(mConsentManager).isPasFledgeConsentGiven();
+        doReturn(false).when(mConsentManager).isMeasurementDataReset();
+        doReturn(false).when(mConsentManager).isPaDataReset();
+        doNothing().when(mConsentManager).setMeasurementDataReset(anyBoolean());
+        doNothing().when(mConsentManager).setPaDataReset(anyBoolean());
         SyncIAdServicesCommonStatesCallback callback =
                 new SyncIAdServicesCommonStatesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
@@ -785,6 +786,47 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
+    public void testGetAdservicesCommonStates_getCommonStatus_reset() throws Exception {
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                PermissionHelper.hasAccessAdServicesCommonStatePermission(
+                                        any(), any()));
+        doReturn(true).when(mFlags).isGetAdServicesCommonStatesApiEnabled();
+        doReturn("com.android.adservices.servicecoretest")
+                .when(mFlags)
+                .getAdServicesCommonStatesAllowList();
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(true).when(mConsentManager).isPasMeasurementConsentGiven();
+        doReturn(false).when(mConsentManager).isPasFledgeConsentGiven();
+        doReturn(true).when(mConsentManager).isMeasurementDataReset();
+        doReturn(true).when(mConsentManager).isPaDataReset();
+        doNothing().when(mConsentManager).setMeasurementDataReset(anyBoolean());
+        doNothing().when(mConsentManager).setPaDataReset(anyBoolean());
+        SyncIAdServicesCommonStatesCallback callback =
+                new SyncIAdServicesCommonStatesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
+
+        GetAdServicesCommonStatesParams params =
+                new GetAdServicesCommonStatesParams.Builder(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME)
+                        .build();
+        CallerMetadata metadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(0).build();
+        mCommonService.getAdServicesCommonStates(params, metadata, callback);
+        AdServicesCommonStatesResponse response = callback.assertSuccess();
+        assertThat(response.getAdServicesCommonStates().getMeasurementState())
+                .isEqualTo(ConsentStatus.WAS_RESET);
+        assertThat(response.getAdServicesCommonStates().getPaState())
+                .isEqualTo(ConsentStatus.REVOKED);
+
+        ApiCallStats apiCallStats = mLogApiCallStatsCallback.assertResultReceived();
+        assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
+        assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
+        assertThat(apiCallStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
+        assertThat(apiCallStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
+        assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(350);
+    }
+
+    @Test
     public void testGetAdservicesCommonStates_NotEnabled() throws Exception {
         SyncIAdServicesCommonStatesCallback callback =
                 new SyncIAdServicesCommonStatesCallback(BINDER_CONNECTION_TIMEOUT_MS);
@@ -797,6 +839,11 @@ public class AdServicesCommonServiceImplTest {
         doReturn("com.android.adservices.servicecoretest")
                 .when(mFlags)
                 .getAdServicesCommonStatesAllowList();
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(true).when(mConsentManager).isMeasurementDataReset();
+        doReturn(false).when(mConsentManager).isPaDataReset();
+        doNothing().when(mConsentManager).setMeasurementDataReset(anyBoolean());
+        doNothing().when(mConsentManager).setPaDataReset(anyBoolean());
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
 
         GetAdServicesCommonStatesParams params =
