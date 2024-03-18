@@ -26,6 +26,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_M
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
@@ -4975,6 +4976,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeKAnonSignJoinFeatureEnabled());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE
+                        + " = "
+                        + getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled());
+        writer.println(
+                "\t"
                         + KEY_KANON_FETCH_PARAMETERS_URL
                         + " = "
                         + getFledgeKAnonFetchServerParamsUrl());
@@ -5873,6 +5879,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
                         /*flagName */ FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE,
                         /*defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE,
+                FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED);
     }
 
     @Override
