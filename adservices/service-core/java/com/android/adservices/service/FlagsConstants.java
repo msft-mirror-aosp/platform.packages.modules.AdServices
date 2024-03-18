@@ -1287,6 +1287,10 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE =
             "fledge_kanon_sign_join_on_device_auction_enabled";
 
+    /** Key for kanon sign join on device feature flag */
+    public static final String KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE =
+            "fledge_kanon_sign_join_auction_server_enabled";
+
     /** Key for kanon fetch parameters url. */
     public static final String KEY_KANON_FETCH_PARAMETERS_URL = "kanon_fetch_parameters_url";
 

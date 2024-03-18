@@ -2254,6 +2254,11 @@ public class KAnonE2ETest {
         }
 
         @Override
+        public boolean getFledgeKAnonSignJoinFeatureAuctionServerEnabled() {
+            return mKAnonSignJoinEnabled;
+        }
+
+        @Override
         public boolean getFledgeAuctionServerKillSwitch() {
             return mFledgeAuctionServerKillSwitch;
         }

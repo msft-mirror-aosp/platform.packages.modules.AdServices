@@ -1982,6 +1982,11 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
         public int getFledgeKAnonPercentageImmediateSignJoinCalls() {
             return mPercentageImmediateJoinValue;
         }
+
+        @Override
+        public boolean getFledgeKAnonSignJoinFeatureAuctionServerEnabled() {
+            return mKAnonFeatureFlagEnabled;
+        }
     }
 
     static class PersistAdSelectionResultTestCallback
