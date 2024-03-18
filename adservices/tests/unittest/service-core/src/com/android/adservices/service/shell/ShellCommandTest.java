@@ -24,9 +24,15 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-abstract class ShellCommandTest<T extends ShellCommand> extends AdServicesMockitoTestCase {
+/**
+ * Abstract class to perform unit testing for a {@link ShellCommand}
+ *
+ * @param <T>
+ */
+public abstract class ShellCommandTest<T extends ShellCommand> extends AdServicesMockitoTestCase {
 
-    Result run(T cmd, String... args) {
+    /** Runs the provided shell command with its arguments. */
+    public Result run(T cmd, String... args) {
         StringWriter outStringWriter = new StringWriter();
         PrintWriter outPw = new PrintWriter(outStringWriter);
         StringWriter errStringWriter = new StringWriter();
@@ -38,24 +44,31 @@ abstract class ShellCommandTest<T extends ShellCommand> extends AdServicesMockit
         return new Result(out, err, status);
     }
 
-    void expectSuccess(Result actual, String expectedOut) {
+    /**
+     * Expects success in the result and the expected output from the execution of the Shell
+     * Command.
+     */
+    public void expectSuccess(Result actual, String expectedOut) {
         expect.withMessage("result").that(actual.mStatus).isEqualTo(0);
         expect.withMessage("out").that(actual.mOut).isEqualTo(expectedOut);
         expect.withMessage("err").that(actual.mErr).isEmpty();
     }
 
-    void expectSuccess(Result actual) {
+    /** Expects success in the result from the execution of the Shell Command. */
+    public void expectSuccess(Result actual) {
         expect.withMessage("result").that(actual.mStatus).isEqualTo(0);
         expect.withMessage("err").that(actual.mErr).isEmpty();
     }
 
-    void expectFailure(Result actual, String expectedErr) {
+    /** Expects failure in the result from the execution of the Shell Command. */
+    public void expectFailure(Result actual, String expectedErr) {
         expect.withMessage("result").that(actual.mStatus).isLessThan(0);
         expect.withMessage("out").that(actual.mOut).isEmpty();
         expect.withMessage("err").that(actual.mErr).endsWith(expectedErr);
     }
 
-    void runAndExpectInvalidArgument(T cmd, String syntax, String... args) throws Exception {
+    /** Expects invalid arguments in the result from the execution of the Shell Command. */
+    public void runAndExpectInvalidArgument(T cmd, String syntax, String... args) {
         Result actualResult = run(cmd, args);
         String expectedErr =
                 String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax);
@@ -70,10 +83,11 @@ abstract class ShellCommandTest<T extends ShellCommand> extends AdServicesMockit
         return out;
     }
 
-    static final class Result {
-        final String mOut;
-        final String mErr;
-        final int mStatus;
+    /** POJO to capture the Result of a {@link ShellCommand} */
+    public static final class Result {
+        public final String mOut;
+        public final String mErr;
+        public final int mStatus;
 
         Result(String out, String err, int status) {
             mOut = out;
