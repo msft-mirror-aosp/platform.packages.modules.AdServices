@@ -82,6 +82,10 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         getDevice().enableAdbRoot();
 
         mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
+
+        if (!getDevice().isPackageInstalled(APP_PACKAGE)) {
+            installPackage(APP_APK);
+        }
     }
 
     @After
@@ -149,9 +153,6 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).doesNotContain(APP_PACKAGE + '\n');
         assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
-
-        // Reinstall the app for other tests.
-        installPackage(APP_APK);
     }
 
     @Ignore("b/275299487")

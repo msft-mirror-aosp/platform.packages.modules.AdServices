@@ -19,7 +19,7 @@ package com.android.adservices.service.shell;
 import java.io.PrintWriter;
 
 /** Base interface to run the shell commands. */
-interface ShellCommand {
+public interface ShellCommand {
 
     /** Runs the shell command and returns the result. */
     int run(PrintWriter out, PrintWriter err, String[] args);

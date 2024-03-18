@@ -23,6 +23,7 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 
 import java.time.Instant;
 import java.util.List;
@@ -42,7 +43,8 @@ public abstract class ConsentedDebugConfigurationDao {
             @NonNull DBConsentedDebugConfiguration dbConsentedDebugConfiguration);
 
     /**
-     * Fetch the most recently created consented debug configurations which is not expired.
+     * Fetch the most recently created consented debug configurations whose expiry timestamp is
+     * after the given time.
      *
      * @param currentTime to compare against consented debug configuration expiry time
      * @param limit to specify how many consented debug configurations should be selected from DB.
@@ -61,4 +63,18 @@ public abstract class ConsentedDebugConfigurationDao {
     /** deletes all consented debug configurations. */
     @Query("DELETE FROM consented_debug_configuration")
     public abstract void deleteAllConsentedDebugConfigurations();
+
+    /**
+     * Deletes all existing {@link DBConsentedDebugConfiguration} and persist {@link
+     * DBConsentedDebugConfiguration}
+     *
+     * @param dbConsentedDebugConfiguration is {@link DBConsentedDebugConfiguration} to add to the
+     *     table consented_debug_configuration.
+     */
+    @Transaction
+    public void deleteExistingConsentedDebugConfigurationsAndPersist(
+            @NonNull DBConsentedDebugConfiguration dbConsentedDebugConfiguration) {
+        deleteAllConsentedDebugConfigurations();
+        persistConsentedDebugConfiguration(dbConsentedDebugConfiguration);
+    }
 }

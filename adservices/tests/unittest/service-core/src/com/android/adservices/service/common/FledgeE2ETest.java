@@ -111,8 +111,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -171,7 +170,8 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -180,14 +180,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.time.Duration;
@@ -208,7 +204,13 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class FledgeE2ETest {
+@SpyStatic(FlagsFactory.class)
+@MockStatic(BackgroundJobsManager.class)
+@MockStatic(ConsentManager.class)
+@MockStatic(AppImportanceFilter.class)
+@MockStatic(DebugReportSenderJobService.class)
+@MockStatic(BackgroundFetchJobService.class)
+public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
     public static final String CUSTOM_AUDIENCE_SEQ_2 = "/ca2";
     private static final String FETCH_CA_PATH = "/fetch";
@@ -226,8 +228,6 @@ public class FledgeE2ETest {
                                                     Duration.ofDays(1))
                                             .build()))
                     .build();
-    @Spy private static final Context CONTEXT_SPY = ApplicationProvider.getApplicationContext();
-
     private static final AdTechIdentifier LOCALHOST_BUYER =
             AdTechIdentifier.fromString("localhost");
     private static final Uri BUYER_DOMAIN_1 =
@@ -302,26 +302,18 @@ public class FledgeE2ETest {
 
     @Mock private AdServicesLogger mAdServicesLoggerMock;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule deviceSupportRule =
-            new AdServicesDeviceSupportedRule();
-
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
     // certain minimum version.
-    @Rule(order = 2)
+    @Rule(order = 11)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             WebViewSupportUtil.createJSSandboxAvailableRule(
                     ApplicationProvider.getApplicationContext());
 
-    @Rule(order = 3)
+    @Rule(order = 12)
     public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     @Mock private ConsentManager mConsentManagerMock;
-    private MockitoSession mStaticMockSession = null;
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private Throttler mMockThrottler;
@@ -348,7 +340,7 @@ public class FledgeE2ETest {
     private Uri mLocalhostBuyerDomain;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     private FledgeAllowListsFilter mFledgeAllowListsFilterSpy;
-    @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
+    @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     @Mock private File mMockDBAdSelectionFile;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
@@ -366,46 +358,33 @@ public class FledgeE2ETest {
 
     @Before
     public void setUp() throws Exception {
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .mockStatic(BackgroundFetchJobService.class)
-                        .mockStatic(ConsentManager.class)
-                        .mockStatic(AppImportanceFilter.class)
-                        .mockStatic(DebugReportSenderJobService.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-
-        doReturn(DEFAULT_FLAGS).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(DEFAULT_FLAGS);
 
         mFledgeAllowListsFilterSpy =
                 spy(new FledgeAllowListsFilter(DEFAULT_FLAGS, mAdServicesLoggerMock));
 
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, CustomAudienceDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncodedPayloadDao();
 
         mAdSelectionEntryDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, AdSelectionDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
         SharedStorageDatabase sharedDb =
-                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, SharedStorageDatabase.class).build();
+                Room.inMemoryDatabaseBuilder(mSpyContext, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDao = sharedDb.frequencyCapDao();
         AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, AdSelectionServerDatabase.class).build();
-        mEncryptionKeyDao = EncryptionKeyDao.getInstance(CONTEXT_SPY);
-        mEnrollmentDao = EnrollmentDao.getInstance(CONTEXT_SPY);
+                Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionServerDatabase.class).build();
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mSpyContext);
+        mEnrollmentDao = EnrollmentDao.getInstance(mSpyContext);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, DEFAULT_FLAGS);
 
@@ -418,15 +397,15 @@ public class FledgeE2ETest {
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache());
         mAdSelectionDebugReportDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, AdSelectionDebugReportingDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDebugReportingDatabase.class)
                         .build()
                         .getAdSelectionDebugReportDao();
-        mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(CONTEXT_SPY));
+        mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mSpyContext));
         mAdIdFetcher =
                 new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
         mConsentedDebugConfigurationDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, AdSelectionDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                         .build()
                         .consentedDebugConfigurationDao();
         mConsentedDebugConfigurationGeneratorFactory =
@@ -448,7 +427,7 @@ public class FledgeE2ETest {
                 .thenReturn(true);
 
         mLocalhostBuyerDomain = Uri.parse(mockWebServerRule.getServerBaseAddress());
-        when(CONTEXT_SPY.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
+        when(mSpyContext.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
         doNothing()
                 .when(mAdSelectionServiceFilterMock)
@@ -468,13 +447,6 @@ public class FledgeE2ETest {
                 .when(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
         mMockAdIdWorker.setResult(AdId.ZERO_OUT, true);
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -1243,7 +1215,7 @@ public class FledgeE2ETest {
         // reporting
         // due to package mismatch
         PackageManager packageManagerMock = mock(PackageManager.class);
-        when(CONTEXT_SPY.getPackageManager()).thenReturn(packageManagerMock);
+        when(mSpyContext.getPackageManager()).thenReturn(packageManagerMock);
         when(packageManagerMock.getPackagesForUid(Process.myUid()))
                 .thenReturn(new String[] {CommonFixture.TEST_PACKAGE_NAME, otherPackageName});
 
@@ -1263,7 +1235,7 @@ public class FledgeE2ETest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT_SPY,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1407,7 +1379,7 @@ public class FledgeE2ETest {
         // reporting
         // due to package mismatch
         PackageManager packageManagerMock = mock(PackageManager.class);
-        when(CONTEXT_SPY.getPackageManager()).thenReturn(packageManagerMock);
+        when(mSpyContext.getPackageManager()).thenReturn(packageManagerMock);
         when(packageManagerMock.getPackagesForUid(Process.myUid()))
                 .thenReturn(new String[] {CommonFixture.TEST_PACKAGE_NAME, otherPackageName});
 
@@ -1427,7 +1399,7 @@ public class FledgeE2ETest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT_SPY,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3188,7 +3160,7 @@ public class FledgeE2ETest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT_SPY,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4573,7 +4545,7 @@ public class FledgeE2ETest {
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(
-                        CONTEXT_SPY,
+                        mSpyContext,
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
                                 new CustomAudienceQuantityChecker(mCustomAudienceDao, flags),
@@ -4595,7 +4567,7 @@ public class FledgeE2ETest {
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
-                                CONTEXT_SPY,
+                                mSpyContext,
                                 mConsentManagerMock,
                                 flags,
                                 mAppImportanceFilterMock,
@@ -4625,7 +4597,7 @@ public class FledgeE2ETest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT_SPY,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),

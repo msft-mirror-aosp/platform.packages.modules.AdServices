@@ -17,9 +17,9 @@
 package com.android.adservices.service.shell;
 
 final class CustomAudienceArgs {
-    static final String OWNER = "owner";
-    static final String BUYER = "buyer";
-    static final String NAME = "name";
+    static final String OWNER = "--owner";
+    static final String BUYER = "--buyer";
+    static final String NAME = "--name";
 
     private CustomAudienceArgs() {
         throw new UnsupportedOperationException();

@@ -37,6 +37,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
@@ -69,13 +70,17 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     private OneTimeCommand mCmd;
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private BackgroundFetchRunner mBackgroundFetchRunner;
+    @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
     @Before
     public void setup() {
         mShellCommandFactorySupplier =
                 new TestShellCommandFactorySupplier(
-                        mFlags, mBackgroundFetchRunner, mCustomAudienceDao);
+                        mFlags,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        mConsentedDebugConfigurationDao);
         mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier);
     }
 
@@ -478,6 +483,11 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     private static final class ShellCommandFlags implements Flags {
         @Override
         public boolean getFledgeCustomAudienceCLIEnabledStatus() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeConsentedDebuggingCliEnabledStatus() {
             return true;
         }
     }

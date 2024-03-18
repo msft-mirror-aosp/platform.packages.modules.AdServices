@@ -48,6 +48,13 @@ public class UpdateSignalsRequestTest {
     }
 
     @Test
+    public void testSetUpdateUri() {
+        UpdateSignalsRequest request =
+                new UpdateSignalsRequest.Builder(URI).setUpdateUri(URI).build();
+        assertEquals(URI, request.getUpdateUri());
+    }
+
+    @Test
     public void testEqualsEqual() {
         UpdateSignalsRequest identical1 = new UpdateSignalsRequest.Builder(URI).build();
         UpdateSignalsRequest identical2 = new UpdateSignalsRequest.Builder(URI).build();

@@ -22,6 +22,7 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
+
 public final class CustomAudienceArgParserTest extends AdServicesUnitTestCase {
 
     private static final String CMD = "not-relevant-command not-relevant-sub-command";
@@ -31,10 +32,10 @@ public final class CustomAudienceArgParserTest extends AdServicesUnitTestCase {
     public void testParse_happyPath_success() {
         CustomAudienceArgParser customAudienceArgParser = new CustomAudienceArgParser();
 
-        customAudienceArgParser.parse(CMD, SUB_COMMAND, "--hello", "world");
+        customAudienceArgParser.parse(new String[] {CMD, SUB_COMMAND, "--hello", "world"});
 
         expect.withMessage("`--hello world` argument parses")
-                .that(customAudienceArgParser.getValue("hello"))
+                .that(customAudienceArgParser.getValue("--hello"))
                 .isEqualTo("world");
     }
 
@@ -43,13 +44,13 @@ public final class CustomAudienceArgParserTest extends AdServicesUnitTestCase {
         CustomAudienceArgParser customAudienceArgParser = new CustomAudienceArgParser();
 
         customAudienceArgParser.parse(
-                CMD, SUB_COMMAND, "--hello", "world", "--another", "argument");
+                new String[] {CMD, SUB_COMMAND, "--hello", "world", "--another", "argument"});
 
         expect.withMessage("`--hello world` argument parses")
-                .that(customAudienceArgParser.getValue("hello"))
+                .that(customAudienceArgParser.getValue("--hello"))
                 .isEqualTo("world");
         expect.withMessage("`--another argument` argument parses")
-                .that(customAudienceArgParser.getValue("another"))
+                .that(customAudienceArgParser.getValue("--another"))
                 .isEqualTo("argument");
     }
 
@@ -59,24 +60,24 @@ public final class CustomAudienceArgParserTest extends AdServicesUnitTestCase {
 
         // Same as above test, but with order swapped.
         customAudienceArgParser.parse(
-                CMD, SUB_COMMAND, "--another", "argument", "--hello", "world");
+                new String[] {CMD, SUB_COMMAND, "--another", "argument", "--hello", "world"});
 
         expect.withMessage("`--hello world` parses")
-                .that(customAudienceArgParser.getValue("hello"))
+                .that(customAudienceArgParser.getValue("--hello"))
                 .isEqualTo("world");
         expect.withMessage("`--another argument` parses")
-                .that(customAudienceArgParser.getValue("another"))
+                .that(customAudienceArgParser.getValue("--another"))
                 .isEqualTo("argument");
     }
 
     @Test
     public void testParse_withRequired_success() {
-        CustomAudienceArgParser customAudienceArgParser = new CustomAudienceArgParser("hello");
+        CustomAudienceArgParser customAudienceArgParser = new CustomAudienceArgParser("--hello");
 
-        customAudienceArgParser.parse(CMD, SUB_COMMAND, "--hello", "world");
+        customAudienceArgParser.parse(new String[] {CMD, SUB_COMMAND, "--hello", "world"});
 
         expect.withMessage("`--hello world` parses")
-                .that(customAudienceArgParser.getValue("hello"))
+                .that(customAudienceArgParser.getValue("--hello"))
                 .isEqualTo("world");
     }
 
@@ -84,11 +85,11 @@ public final class CustomAudienceArgParserTest extends AdServicesUnitTestCase {
     public void testParse_withUriArgument_success() {
         String uri = "http://google.com/about#abc123";
 
-        CustomAudienceArgParser customAudienceArgParser = new CustomAudienceArgParser("uri");
+        CustomAudienceArgParser customAudienceArgParser = new CustomAudienceArgParser("--uri");
 
-        customAudienceArgParser.parse(CMD, SUB_COMMAND, "--uri", uri);
+        customAudienceArgParser.parse(new String[] {CMD, SUB_COMMAND, "--uri", uri});
         expect.withMessage("`--uri` parses")
-                .that(customAudienceArgParser.getValue("uri"))
+                .that(customAudienceArgParser.getValue("--uri"))
                 .isEqualTo(uri);
     }
 
@@ -96,7 +97,7 @@ public final class CustomAudienceArgParserTest extends AdServicesUnitTestCase {
     public void testParse_noExtraArguments_success() {
         CustomAudienceArgParser customAudienceArgParser = new CustomAudienceArgParser();
 
-        customAudienceArgParser.parse(CMD, SUB_COMMAND);
+        customAudienceArgParser.parse(new String[] {CMD, SUB_COMMAND});
     }
 
     @Test

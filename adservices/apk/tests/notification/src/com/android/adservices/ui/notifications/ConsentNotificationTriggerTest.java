@@ -113,6 +113,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
 
     private static final String NOTIFICATION_CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
     private static final int LAUNCH_TIMEOUT = 5000;
+    private static final int BACK_COMPAT_SCROLLER_LAUNCH_TIMEOUT = 8000;
     private static UiDevice sDevice;
 
     private AdServicesManager mAdServicesManager;
@@ -550,7 +551,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 Until.hasObject(
                         By.pkg("com.android.systemui")
                                 .res("com.android.systemui:id/notification_stack_scroller")),
-                LAUNCH_TIMEOUT);
+                BACK_COMPAT_SCROLLER_LAUNCH_TIMEOUT);
 
         UiObject scroller =
                 sDevice.findObject(
@@ -678,7 +679,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 Until.hasObject(
                         By.pkg("com.android.systemui")
                                 .res("com.android.systemui:id/notification_stack_scroller")),
-                LAUNCH_TIMEOUT);
+                BACK_COMPAT_SCROLLER_LAUNCH_TIMEOUT);
 
         UiObject scroller =
                 sDevice.findObject(

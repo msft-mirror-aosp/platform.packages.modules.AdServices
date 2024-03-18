@@ -42,11 +42,13 @@ public final class CustomAudienceRefreshCommand extends AbstractShellCommand {
     public static final String CMD = "refresh";
     public static final String HELP =
             CMD
-                    + " --"
+                    + " "
                     + CustomAudienceArgs.OWNER
-                    + " <owner> --"
+                    + " <owner>"
+                    + " "
                     + CustomAudienceArgs.BUYER
-                    + " <buyer> --"
+                    + " <buyer>"
+                    + " "
                     + CustomAudienceArgs.NAME
                     + " <name>";
     @VisibleForTesting public static final int BACKGROUND_FETCH_TIMEOUT_FINAL_SECONDS = 3;

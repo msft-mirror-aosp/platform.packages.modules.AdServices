@@ -31,7 +31,6 @@ import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
-import com.google.common.annotations.VisibleForTesting;
 
 import java.time.Clock;
 
@@ -40,7 +39,6 @@ import java.time.Clock;
 public class KAnonSignJoinFactory {
 
     private static Context mContext;
-    private KAnonSignJoinManager mKAnonSignJoinManager;
 
     /**
      * Returns an instance for this class. Once you have the instance you can use {@link
@@ -51,52 +49,38 @@ public class KAnonSignJoinFactory {
         mContext = context;
     }
 
-    /**
-     * Returns an instance for this class. Once you have the instance you can use {@link
-     * KAnonSignJoinFactory#getKAnonSignJoinManager()} to create an instance of {@link
-     * KAnonSignJoinManager}. This constructor should only be used for testing.
-     */
-    @VisibleForTesting
-    public KAnonSignJoinFactory(@NonNull KAnonSignJoinManager kAnonSignJoinManager) {
-        mKAnonSignJoinManager = kAnonSignJoinManager;
-    }
-
     /** Returns an instance of {@link KAnonSignJoinManager}. */
     public KAnonSignJoinManager getKAnonSignJoinManager() {
-        if (mKAnonSignJoinManager == null) {
-            AdServicesHttpsClient adServicesHttpsClient =
-                    new AdServicesHttpsClient(
-                            AdServicesExecutors.getBlockingExecutor(),
-                            CacheProviderFactory.create(mContext, FlagsFactory.getFlags()));
-            KAnonMessageManager kAnonMessageManager =
-                    new KAnonMessageManager(
-                            KAnonDatabase.getInstance(mContext).kAnonMessageDao(),
-                            FlagsFactory.getFlags(),
-                            Clock.systemUTC());
-            KeyAttestationFactory keyAttestationFactory = new KeyAttestationFactory(mContext);
-            KAnonCallerImpl kAnonCaller =
-                    new KAnonCallerImpl(
-                            AdServicesExecutors.getLightWeightExecutor(),
-                            new AnonymousCountingTokensImpl(),
-                            adServicesHttpsClient,
-                            KAnonDatabase.getInstance(mContext).clientParametersDao(),
-                            KAnonDatabase.getInstance(mContext).serverParametersDao(),
-                            UserProfileIdManager.getInstance(mContext),
-                            new BinaryHttpMessageDeserializer(),
-                            FlagsFactory.getFlags(),
-                            kAnonMessageManager,
-                            AdServicesLoggerImpl.getInstance(),
-                            keyAttestationFactory,
-                            new ObliviousHttpEncryptorFactory(mContext));
-            mKAnonSignJoinManager =
-                    new KAnonSignJoinManager(
-                            mContext,
-                            kAnonCaller,
-                            kAnonMessageManager,
-                            FlagsFactory.getFlags(),
-                            Clock.systemUTC(),
-                            AdServicesLoggerImpl.getInstance());
-        }
-        return mKAnonSignJoinManager;
+        AdServicesHttpsClient adServicesHttpsClient =
+                new AdServicesHttpsClient(
+                        AdServicesExecutors.getBlockingExecutor(),
+                        CacheProviderFactory.create(mContext, FlagsFactory.getFlags()));
+        KAnonMessageManager kAnonMessageManager =
+                new KAnonMessageManager(
+                        KAnonDatabase.getInstance(mContext).kAnonMessageDao(),
+                        FlagsFactory.getFlags(),
+                        Clock.systemUTC());
+        KeyAttestationFactory keyAttestationFactory = new KeyAttestationFactory(mContext);
+        KAnonCallerImpl kAnonCaller =
+                new KAnonCallerImpl(
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        new AnonymousCountingTokensImpl(),
+                        adServicesHttpsClient,
+                        KAnonDatabase.getInstance(mContext).clientParametersDao(),
+                        KAnonDatabase.getInstance(mContext).serverParametersDao(),
+                        UserProfileIdManager.getInstance(mContext),
+                        new BinaryHttpMessageDeserializer(),
+                        FlagsFactory.getFlags(),
+                        kAnonMessageManager,
+                        AdServicesLoggerImpl.getInstance(),
+                        keyAttestationFactory,
+                        new ObliviousHttpEncryptorFactory(mContext));
+        return new KAnonSignJoinManager(
+                mContext,
+                kAnonCaller,
+                kAnonMessageManager,
+                FlagsFactory.getFlags(),
+                Clock.systemUTC(),
+                AdServicesLoggerImpl.getInstance());
     }
 }
