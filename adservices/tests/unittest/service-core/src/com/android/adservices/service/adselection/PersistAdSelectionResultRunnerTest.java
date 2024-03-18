@@ -396,7 +396,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerDataCompressor mDataCompressor;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
-    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
+    @Mock private KAnonSignJoinFactory mKAnonSignJoinFactoryMock;
     @Mock private KAnonSignJoinManager mKAnonSignJoinManagerMock;
     @Captor private ArgumentCaptor<List<KAnonMessageEntity>> mKAnonMessageEntitiesCaptor;
 
@@ -497,7 +497,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
     }
 
     @After
@@ -1081,7 +1081,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1178,7 +1178,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1351,7 +1351,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1577,7 +1577,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
 
@@ -1662,7 +1662,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         flagsWithKAnonDisabled,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(
                         (unused) -> {
@@ -1676,7 +1676,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
         countDownLatch.await();
 
         Assert.assertTrue(callback.mIsSuccess);
-        verifyZeroInteractions(mUnusedKAnonSignJoinFactory);
+        verifyZeroInteractions(mKAnonSignJoinFactoryMock);
     }
 
     @Test
@@ -1686,8 +1686,6 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
         doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
         PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
-        KAnonSignJoinFactory kAnonSignJoinFactory =
-                spy(new KAnonSignJoinFactory(mKAnonSignJoinManagerMock));
         PersistAdSelectionResultRunner persistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
                         mObliviousHttpEncryptorMock,
@@ -1707,7 +1705,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         flagsWithKAnonEnabled,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        kAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(
                         (unused) -> {
@@ -1729,8 +1727,6 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
         doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
         PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
-        KAnonSignJoinFactory kAnonSignJoinFactory =
-                spy(new KAnonSignJoinFactory(mKAnonSignJoinManagerMock));
         PersistAdSelectionResultRunner persistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
                         mObliviousHttpEncryptorMock,
@@ -1750,7 +1746,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         flagsWithKAnonEnabled,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        kAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(
                         (unused) -> {
@@ -1774,8 +1770,6 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
         doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
         PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
-        KAnonSignJoinFactory kAnonSignJoinFactory =
-                spy(new KAnonSignJoinFactory(mKAnonSignJoinManagerMock));
         PersistAdSelectionResultRunner persistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
                         mObliviousHttpEncryptorMock,
@@ -1795,7 +1789,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         flagsWithKAnonEnabled,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        kAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(
                         (unused) -> {
@@ -1904,7 +1898,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
     }
 
     private void verifyPersistAdSelectionResultApiUsageLog(int resultCode)
@@ -1919,6 +1913,9 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     }
 
     private PersistAdSelectionResultInput setupPersistRunnerMocksForKAnonTests() {
+        doReturn(mKAnonSignJoinManagerMock)
+                .when(mKAnonSignJoinFactoryMock)
+                .getKAnonSignJoinManager();
 
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
