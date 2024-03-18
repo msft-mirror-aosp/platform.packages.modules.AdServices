@@ -19,7 +19,6 @@ package com.android.adservices.service.shell;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
-
 /**
  * Base factory to run the shell command.
  *
@@ -27,7 +26,7 @@ import android.annotation.Nullable;
  *
  * <p>Each API can extend this factory to implement API specific shell commands.
  */
-interface ShellCommandFactory {
+public interface ShellCommandFactory {
     /**
      * Returns the implemented {@link ShellCommand} object for a particular cmd.
      *

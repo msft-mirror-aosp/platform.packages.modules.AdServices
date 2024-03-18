@@ -335,7 +335,7 @@ public class KAnonE2ETest {
 
     private final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String GOLDEN_TRANSCRIPT_PATH = "act/golden_transcript_1";
-    private KAnonSignJoinFactory mKAnonSignJoinFactory;
+    @Mock private KAnonSignJoinFactory mKAnonSignJoinFactoryMock;
 
     private Instant FIXED_INSTANT = Instant.now();
     private RetryStrategyFactory mRetryStrategyFactory;
@@ -1955,7 +1955,7 @@ public class KAnonE2ETest {
                 mMultiCloudSupportStrategy,
                 mAdSelectionDebugReportDaoSpy,
                 mAdIdFetcher,
-                mKAnonSignJoinFactory,
+                mKAnonSignJoinFactoryMock,
                 false,
                 mRetryStrategyFactory,
                 mConsentedDebugConfigurationGeneratorFactory);
@@ -2152,7 +2152,7 @@ public class KAnonE2ETest {
                         mFlags,
                         mockClock,
                         mAdServicesLoggerMock);
-        mKAnonSignJoinFactory = new KAnonSignJoinFactory(mKAnonSignJoinManager);
+        doReturn(mKAnonSignJoinManager).when(mKAnonSignJoinFactoryMock).getKAnonSignJoinManager();
         doAnswer(
                         (unused) -> {
                             countDownLatch.countDown();
