@@ -19,7 +19,12 @@ package com.android.adservices.spe;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_NOT_CONFIGURED_CORRECTLY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -39,6 +44,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 /** The AdServices' implementation of {@link JobServiceFactory}. */
+@RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesJobServiceFactory implements JobServiceFactory {
     private static final String PROTO_PROPERTY_FOR_LOGCAT = "AdServicesModuleJobPolicy";
     private static final Object SINGLETON_LOCK = new Object();
@@ -100,9 +106,15 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
         AdServicesJobInfo jobInfo = AdServicesJobInfo.getJobIdToJobInfoMap().get(jobId);
         try {
             switch (jobInfo) {
+                case MDD_MAINTENANCE_PERIODIC_TASK_JOB:
+                case MDD_CHARGING_PERIODIC_TASK_JOB:
+                case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
+                case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
+                    return MddJob.getInstance();
                 default:
                     throw new RuntimeException(
-                            "The job is not configured for the instance creation.");
+                            "The job isn't configured for jobWorker creation. Requested Job ID: "
+                                    + jobId);
             }
         } catch (Exception e) {
             LogUtil.e(e, "Creation of Adservices' Job Instance is failed for jobId = %d.", jobId);
@@ -142,5 +154,40 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
     @Override
     public ModuleSharedFlags getFlags() {
         return mFlags;
+    }
+
+    /**
+     * Reschedules the corresponding background job using the legacy(non-SPE) scheduling method.
+     *
+     * <p>Used by {@link AdServicesJobService} for a job scheduled by SPE (when migrating the job to
+     * using SPE framework).
+     *
+     * @param jobId the unique job ID for the background job to reschedule.
+     */
+    public void rescheduleJobWithLegacyMethod(int jobId) {
+        AdServicesJobInfo jobInfo = AdServicesJobInfo.getJobIdToJobInfoMap().get(jobId);
+
+        try {
+            switch (jobInfo) {
+                case MDD_MAINTENANCE_PERIODIC_TASK_JOB:
+                case MDD_CHARGING_PERIODIC_TASK_JOB:
+                case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
+                case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
+                    MddJob.scheduleAllMddJobs();
+                    return;
+                default:
+                    throw new RuntimeException(
+                            "The job isn't configured for jobWorker creation. Requested Job ID: "
+                                    + jobId);
+            }
+        } catch (Exception e) {
+            LogUtil.e(
+                    e,
+                    "Rescheduling the job using the legacy JobService is failed for jobId = %d.",
+                    jobId);
+            mErrorLogger.logError(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_NOT_CONFIGURED_CORRECTLY,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        }
     }
 }

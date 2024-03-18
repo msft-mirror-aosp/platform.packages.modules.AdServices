@@ -39,8 +39,10 @@ import static com.google.android.libraries.mobiledatadownload.TaskScheduler.WIFI
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.job.JobScheduler;
@@ -70,6 +72,7 @@ import org.mockito.Mock;
 @SpyStatic(EnrollmentDataDownloadManager.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MddFlags.class)
+@SpyStatic(MddJobService.class)
 @SpyStatic(MobileDataDownloadFactory.class)
 public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
     private static final com.google.android.libraries.mobiledatadownload.Flags sMddFlags =
@@ -129,13 +132,17 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
         FutureSyncCallback<Void> enrollmentCallBack = mockEnrollmentReadFromMdd();
 
         ListenableFuture<Void> unusedFuture = mMddJob.getExecutionFuture(sContext, mMockParams);
+        // Call it to suppress the linter.
+        unusedFuture.get();
 
         mddHandleTaskCallBack.assertResultReceived();
         enrollmentCallBack.assertResultReceived();
     }
 
     @Test
-    public void testScheduleAllMddJobs() {
+    public void testScheduleAllMddJobs_spe() {
+        when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(true);
+
         MddJob.scheduleAllMddJobs();
 
         verify(mMockAdServicesJobScheduler)
@@ -162,6 +169,17 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
                                 WIFI_CHARGING_PERIODIC_TASK,
                                 sMddFlags.wifiChargingGcmTaskPeriod() * MILLISECONDS_PER_SECOND,
                                 NETWORK_STATE_UNMETERED));
+    }
+
+    @Test
+    public void testScheduleAllMddJobs_legacy() {
+        when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(false);
+        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        MddJob.scheduleAllMddJobs();
+
+        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        verifyZeroInteractions(mMockAdServicesJobScheduler);
     }
 
     @Test

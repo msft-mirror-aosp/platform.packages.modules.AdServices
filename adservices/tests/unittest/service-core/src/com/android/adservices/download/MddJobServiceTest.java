@@ -82,6 +82,7 @@ import java.util.concurrent.Executors;
 
 /** Unit tests for {@link com.android.adservices.download.MddJobService} */
 @RequiresSdkLevelAtLeastS
+@SpyStatic(MddJob.class)
 @SpyStatic(MddJobService.class)
 @SpyStatic(MobileDataDownloadFactory.class)
 @SpyStatic(FlagsFactory.class)
@@ -146,6 +147,9 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         PersistableBundle bundle = new PersistableBundle();
         bundle.putString(KEY_MDD_TASK_TAG, WIFI_CHARGING_PERIODIC_TASK);
         when(mMockJobParameters.getExtras()).thenReturn(bundle);
+
+        // By default, do not use SPE.
+        when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(false);
     }
 
     @After
@@ -365,6 +369,15 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         // Verify no logging has happened even though logging is enabled because this field is not
         // logged
         verifyLoggingNotHappened(mLogger);
+    }
+
+    @Test
+    public void testOnStartJob_speEnabled() {
+        doNothing().when(MddJob::scheduleAllMddJobs);
+        when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(true);
+
+        assertThat(mSpyMddJobService.onStartJob(mMockJobParameters)).isFalse();
+        verify(MddJob::scheduleAllMddJobs);
     }
 
     private void testOnStartJob_killswitchIsOn() throws InterruptedException {

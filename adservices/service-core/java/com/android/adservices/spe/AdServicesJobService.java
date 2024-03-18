@@ -19,13 +19,18 @@ package com.android.adservices.spe;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_BACK_COMPAT_OTA;
 
 import android.app.job.JobParameters;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.shared.spe.framework.AbstractJobService;
 import com.android.adservices.shared.spe.framework.JobServiceFactory;
 
 /** The Adservices' implementation of {@link AbstractJobService}. */
+@RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesJobService extends AbstractJobService {
     @Override
     protected JobServiceFactory getJobServiceFactory() {
@@ -46,6 +51,19 @@ public final class AdServicesJobService extends AbstractJobService {
             skipAndCancelBackgroundJob(params, JOB_ENABLED_STATUS_DISABLED_FOR_BACK_COMPAT_OTA);
             return false;
         }
+
+        // Switch to the legacy job scheduling if SPE is disabled. Since job ID remains the same,
+        // the scheduled job will be cancelled and rescheduled with the legacy method.
+        //
+        // And after the job is rescheduled, it will execute once instantly so don't log execution
+        // stats here.
+        if (!FlagsFactory.getFlags().getSpeOnPilotJobsEnabled()) {
+            AdServicesJobServiceFactory factory =
+                    (AdServicesJobServiceFactory) getJobServiceFactory();
+            factory.rescheduleJobWithLegacyMethod(jobId);
+            return false;
+        }
+
         return super.onStartJob(params);
     }
 }
