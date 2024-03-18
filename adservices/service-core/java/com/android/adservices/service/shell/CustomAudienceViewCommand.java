@@ -39,11 +39,13 @@ final class CustomAudienceViewCommand extends AbstractShellCommand {
             CustomAudienceShellCommandFactory.COMMAND_PREFIX
                     + " "
                     + CMD
-                    + " --"
+                    + " "
                     + CustomAudienceArgs.OWNER
-                    + " <owner> --"
+                    + " <owner>"
+                    + " "
                     + CustomAudienceArgs.BUYER
-                    + " <buyer> --"
+                    + " <buyer>"
+                    + " "
                     + CustomAudienceArgs.NAME
                     + " <name>"
                     + "\n    View a custom audience. For a CA to appear here, it must be 1) "
