@@ -46,8 +46,7 @@ class BackCompatJobServiceDetector : Detector(), SourceCodeScanner {
                         "needs to be properly gated to avoid NoClassDefFoundError. " +
                         "NoClassDefFoundError can happen when new class is used in ExtServices " +
                         "build, and the error happens when the device OTA to old AdServices " +
-                        "build on T which does not contain the new class definition " +
-                        "(go/rbc-jobservice-lint)."
+                        "build on T which does not contain the new class definition."
 
         // The following list of classes can be safely used in adservices JobService field
         // initialiser
@@ -62,6 +61,7 @@ class BackCompatJobServiceDetector : Detector(), SourceCodeScanner {
                 explanation = """Rubidium Back Compat design introduces additional constraints
                     | on how JobServices can be used in AdServices codebase. Check the error
                     | message to find out the specific constraint not met""".trimMargin(),
+                moreInfo = "documentation/BackCompatJobServiceDetector.md",
                 category = Category.CORRECTNESS,
                 severity = Severity.WARNING,
                 implementation = Implementation(

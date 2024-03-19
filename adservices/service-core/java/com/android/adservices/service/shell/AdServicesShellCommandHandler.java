@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 
 // TODO(b/308009734): STOPSHIP - document that it's up to each command implementation to check about
@@ -198,7 +199,7 @@ public final class AdServicesShellCommandHandler {
             return null;
         }
         // Boolean.parse returns false when it's invalid
-        switch (arg.trim().toLowerCase()) {
+        switch (arg.trim().toLowerCase(Locale.ROOT)) {
             case "true":
                 return Boolean.TRUE;
             case "false":

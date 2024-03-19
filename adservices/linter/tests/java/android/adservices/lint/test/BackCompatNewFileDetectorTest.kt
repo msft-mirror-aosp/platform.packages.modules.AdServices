@@ -52,10 +52,10 @@ public final class FakeClass {
                 .issues(BackCompatNewFileDetector.ISSUE)
                 .run()
                 .expect("""
-                    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:8: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" (go/rb-extservices-ota-data-cleanup) [NewAdServicesFile]
+                    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:8: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" [NewAdServicesFile]
             File myFile1 = new File("pathname");
                            ~~~~~~~~~~~~~~~~~~~~
-    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:9: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" (go/rb-extservices-ota-data-cleanup) [NewAdServicesFile]
+    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:9: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" [NewAdServicesFile]
             File myFile2 = new File("parent", "child");
                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
     2 errors, 0 warnings
@@ -107,13 +107,13 @@ public final class FakeClass {
                 .issues(BackCompatNewFileDetector.ISSUE)
                 .run()
                 .expect("""
-                    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:9: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" (go/rb-extservices-ota-data-cleanup) [NewAdServicesFile]
+                    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:9: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" [NewAdServicesFile]
             context.getDatabasePath("stringName");
                     ~~~~~~~~~~~~~~~
-    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:10: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" (go/rb-extservices-ota-data-cleanup) [NewAdServicesFile]
+    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:10: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" [NewAdServicesFile]
             context.getSharedPreferences("stringName", intMode);
                     ~~~~~~~~~~~~~~~~~~~~
-    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:11: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" (go/rb-extservices-ota-data-cleanup) [NewAdServicesFile]
+    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:11: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" [NewAdServicesFile]
             Room.databaseBuilder(context, FakeClass.class, "stringName");
                  ~~~~~~~~~~~~~~~
     3 errors, 0 warnings

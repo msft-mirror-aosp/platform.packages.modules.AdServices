@@ -65,6 +65,7 @@ import static com.android.adservices.service.customaudience.CustomAudienceTimest
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceValidator.DAILY_UPDATE_URI_FIELD_NAME;
+import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullJsonResponseStringWithInvalidAdRenderId;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponse;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseString;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseStringWithAdRenderId;
@@ -1076,6 +1077,45 @@ public class FetchCustomAudienceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_withAdRenderId_onlyInvalidAdRenderIds_fail() throws Exception {
+        // Enable server auction Ad Render Ids
+        mFetchCustomAudienceImpl =
+                getImplWithFlags(
+                        new FetchCustomAudienceFlags() {
+                            @Override
+                            public boolean getFledgeAuctionServerAdRenderIdEnabled() {
+                                return true;
+                            }
+
+                            @Override
+                            public long getFledgeAuctionServerAdRenderIdMaxLength() {
+                                return 1;
+                            }
+                        });
+
+        // Respond with a complete custom audience with ad render ids including the request values
+        // as is.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullJsonResponseStringWithInvalidAdRenderId(
+                                                        BUYER))));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertFalse(callback.mIsSuccess);
+        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+
+        // Assert failure due to the invalid response is logged.
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
     }
 
     @Test
