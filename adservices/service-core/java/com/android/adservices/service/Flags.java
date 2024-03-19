@@ -3191,6 +3191,22 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return UI_OTA_STRINGS_FEATURE_ENABLED;
     }
 
+    /** UI OTA resources manifest file url, used for MDD download. */
+    String UI_OTA_RESOURCES_MANIFEST_FILE_URL = "";
+
+    /** UI OTA resources manifest file url. */
+    default String getUiOtaResourcesManifestFileUrl() {
+        return UI_OTA_RESOURCES_MANIFEST_FILE_URL;
+    }
+
+    /** UI OTA resources feature flag. */
+    boolean UI_OTA_RESOURCES_FEATURE_ENABLED = false;
+
+    /** Returns if UI OTA resources feature is enabled. */
+    default boolean getUiOtaResourcesFeatureEnabled() {
+        return UI_OTA_RESOURCES_FEATURE_ENABLED;
+    }
+
     /** Deadline for downloading UI OTA strings. */
     long UI_OTA_STRINGS_DOWNLOAD_DEADLINE = 86700000; /* 1 day */
 
