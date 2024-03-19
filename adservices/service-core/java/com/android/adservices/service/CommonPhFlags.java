@@ -35,6 +35,7 @@ public abstract class CommonPhFlags implements CommonFlags {
         return getFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, ADSERVICES_SHELL_COMMAND_ENABLED);
     }
 
+    @SuppressWarnings("AvoidDeviceConfigUsage") // Helper / infra method
     protected boolean getFlag(String name, boolean defaultValue) {
         return DeviceConfig.getBoolean(DeviceConfig.NAMESPACE_ADSERVICES, name, defaultValue);
     }
