@@ -51,6 +51,7 @@ java_library {
         ":statslog-adservices-java-gen"
     ],
     libs: [
+        "androidx.annotation_annotation",
         "framework-annotations-lib",
         "framework-statsd.stubs.module_lib",
         "auto_value_annotations",
