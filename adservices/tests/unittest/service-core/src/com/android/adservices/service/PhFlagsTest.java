@@ -224,10 +224,14 @@ import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JO
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
+import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE;
+import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
+import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_GET_TOKENS_URL;
+import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_HTTP_CLIENT_TIMEOUT_IN_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_JOIN_URL;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS;
@@ -665,9 +669,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACH
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED;
@@ -10643,6 +10651,60 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         overrideKAnonFlags(phOverridingValue, KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY);
 
         assertThat(mPhFlags.getFledgeKAnonUrlAuthorityToJoin()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testFledgeKAnonBackgroundJobRequiresBatteryNotLow() {
+        assertThat(mPhFlags.getFledgeKAnonBackgroundJobRequiresBatteryNotLow())
+                .isEqualTo(FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW);
+
+        boolean phOverridingValue = !FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
+        overrideKAnonFlags(
+                Boolean.toString(phOverridingValue),
+                KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW);
+
+        assertThat(mPhFlags.getFledgeKAnonBackgroundJobRequiresBatteryNotLow())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testFledgeKAnonBackgroundJobRequiresDeviceIdle() {
+        assertThat(mPhFlags.getFledgeKAnonBackgroundJobRequiresDeviceIdle())
+                .isEqualTo(FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE);
+
+        boolean phOverridingValue = !FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
+        overrideKAnonFlags(
+                Boolean.toString(phOverridingValue),
+                KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE);
+
+        assertThat(mPhFlags.getFledgeKAnonBackgroundJobRequiresDeviceIdle())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testFledgeKAnonBackgroundJobConnectionType() {
+        assertThat(mPhFlags.getFledgeKanonBackgroundJobConnectionType())
+                .isEqualTo(FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE);
+
+        int phOverridingValue = FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE + 1;
+        overrideKAnonFlags(
+                Integer.toString(phOverridingValue),
+                KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION);
+
+        assertThat(mPhFlags.getFledgeKanonBackgroundJobConnectionType())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testFledgeKAnonHttpClientTimeout() {
+        assertThat(mPhFlags.getFledgeKanonHttpClientTimeoutInMs())
+                .isEqualTo(FLEDGE_DEFAULT_KANON_HTTP_CLIENT_TIMEOUT_IN_MS);
+
+        int phOverridingValue = FLEDGE_DEFAULT_KANON_HTTP_CLIENT_TIMEOUT_IN_MS + 100;
+        overrideKAnonFlags(
+                Integer.toString(phOverridingValue), KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT);
+
+        assertThat(mPhFlags.getFledgeKanonHttpClientTimeoutInMs()).isEqualTo(phOverridingValue);
     }
 
     @Test

@@ -29,9 +29,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_B
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED;
@@ -5086,6 +5090,26 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeKAnonUrlAuthorityToJoin());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW
+                        + " = "
+                        + getFledgeKAnonBackgroundJobRequiresBatteryNotLow());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE
+                        + " = "
+                        + getFledgeKAnonBackgroundJobRequiresDeviceIdle());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION
+                        + " = "
+                        + getFledgeKanonBackgroundJobConnectionType());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT
+                        + " = "
+                        + getFledgeKanonHttpClientTimeoutInMs());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
                         + " = "
                         + getAdServicesCommonStatesAllowList());
@@ -6035,6 +6059,34 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public String getFledgeKAnonUrlAuthorityToJoin() {
         return getDeviceConfigFlag(
                 KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY, FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN);
+    }
+
+    @Override
+    public int getFledgeKanonHttpClientTimeoutInMs() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT,
+                FLEDGE_DEFAULT_KANON_HTTP_CLIENT_TIMEOUT_IN_MS);
+    }
+
+    @Override
+    public boolean getFledgeKAnonBackgroundJobRequiresBatteryNotLow() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW,
+                FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW);
+    }
+
+    @Override
+    public boolean getFledgeKAnonBackgroundJobRequiresDeviceIdle() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE,
+                FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE);
+    }
+
+    @Override
+    public int getFledgeKanonBackgroundJobConnectionType() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION,
+                FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE);
     }
 
     @Override

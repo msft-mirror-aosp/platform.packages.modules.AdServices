@@ -1325,6 +1325,18 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN =
             "fledge_kanon_set_type_to_sign_join";
 
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE =
+            "fledge_kanon_background_job_requires_device_idle";
+
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW =
+            "fledge_kanon_background_job_requires_battery_not_low";
+
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION =
+            "fledge_kanon_background_job_type_of_meter_connection";
+
+    public static final String KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT =
+            "fledge_kanon_http_client_timeout";
+
     /** Key for kanon join url authoriy. */
     public static final String KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY =
             "fledge_kanon_join_url_authoriy";
