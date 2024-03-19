@@ -88,6 +88,29 @@ public final class JobSpec {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof JobSpec that)) {
+            return false;
+        }
+
+        // There is no public method to compare to PersistableBundle. Ignore the difference on it
+        // for the reasons 1) only a few jobs will use this extra field. 2) this equals() method for
+        // JobSpec is not used in Production.
+        return mJobId == that.mJobId
+                && mJobPolicy.equals(that.mJobPolicy)
+                && mBackoffPolicy.equals(that.mBackoffPolicy)
+                && mShouldForceSchedule == that.mShouldForceSchedule;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mJobId, mJobPolicy, mBackoffPolicy, mShouldForceSchedule);
+    }
+
+    @Override
     public String toString() {
         return "JobSpec{"
                 + "mJobId="
