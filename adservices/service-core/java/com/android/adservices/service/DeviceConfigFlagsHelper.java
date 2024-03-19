@@ -27,6 +27,7 @@ import android.provider.DeviceConfig;
  *
  * @hide
  */
+@SuppressWarnings("AvoidDeviceConfigUsage") // Helper / infra class
 public final class DeviceConfigFlagsHelper {
 
     /** Gets the value of a boolean flag. */

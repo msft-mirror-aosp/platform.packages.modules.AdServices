@@ -35,8 +35,6 @@ import android.os.RemoteException;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -58,14 +56,10 @@ public class AppSetIdWorker {
     private static volatile AppSetIdWorker sAppSetIdWorker;
     private static final String APPSETID_DEFAULT = "00000000-0000-0000-0000-000000000000";
 
-    private final Context mContext;
-    private final Flags mFlags;
     private final ServiceBinder<IAppSetIdProviderService> mServiceBinder;
 
     // @VisibleForTesting(visibility = VisibleForTesting.Visibility.PROTECTED)
-    public AppSetIdWorker(Context context, Flags flags) {
-        mContext = context;
-        mFlags = flags;
+    public AppSetIdWorker(Context context) {
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
@@ -84,9 +78,7 @@ public class AppSetIdWorker {
         if (sAppSetIdWorker == null) {
             synchronized (AppSetIdWorker.class) {
                 if (sAppSetIdWorker == null) {
-                    sAppSetIdWorker =
-                            new AppSetIdWorker(
-                                    ApplicationContextSingleton.get(), FlagsFactory.getFlags());
+                    sAppSetIdWorker = new AppSetIdWorker(ApplicationContextSingleton.get());
                 }
             }
         }

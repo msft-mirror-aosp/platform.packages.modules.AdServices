@@ -4827,6 +4827,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
     }
 
+    /** Default value for status of consented debugging CLI feature */
+    boolean FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED = false;
+
+    /**
+     * @return the enabled status for custom audiences CLI feature.
+     */
+    default boolean getFledgeConsentedDebuggingCliEnabledStatus() {
+        return FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED;
+    }
+
     /** Default value for the base64 encoded Job Policy proto for AdServices. */
     @ConfigFlag String AD_SERVICES_MODULE_JOB_POLICY = "";
 

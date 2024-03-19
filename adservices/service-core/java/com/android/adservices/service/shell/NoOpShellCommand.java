@@ -29,7 +29,7 @@ public final class NoOpShellCommand extends AbstractShellCommand {
     public static final String RESPONSE_MSG = "%s is disabled.";
     private final String mCommandName;
 
-    NoOpShellCommand(@NonNull final String commandName) {
+    public NoOpShellCommand(@NonNull final String commandName) {
         Objects.requireNonNull(commandName, "commandName should be provided");
         mCommandName = commandName;
     }
