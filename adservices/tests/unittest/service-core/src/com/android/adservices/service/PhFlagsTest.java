@@ -481,6 +481,8 @@ import static com.android.adservices.service.Flags.TOPICS_TEST_ENCRYPTION_PUBLIC
 import static com.android.adservices.service.Flags.UI_DIALOG_FRAGMENT;
 import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
 import static com.android.adservices.service.Flags.UI_FEATURE_TYPE_LOGGING_ENABLED;
+import static com.android.adservices.service.Flags.UI_OTA_RESOURCES_FEATURE_ENABLED;
+import static com.android.adservices.service.Flags.UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
@@ -924,6 +926,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_EEA_COUNTRIES;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
 
@@ -7336,6 +7340,40 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getUiOtaStringsManifestFileUrl()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetUiOtaResourcesManifestFileUrl() {
+        assertThat(mPhFlags.getUiOtaResourcesManifestFileUrl())
+                .isEqualTo(UI_OTA_RESOURCES_MANIFEST_FILE_URL);
+
+        String phOverridingValue = UI_OTA_RESOURCES_MANIFEST_FILE_URL + "testFileUrl";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getUiOtaResourcesManifestFileUrl()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testUiOtaResourcesFeatureEnabled() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getUiOtaResourcesFeatureEnabled())
+                .isEqualTo(UI_OTA_RESOURCES_FEATURE_ENABLED);
+
+        boolean phOverridingValue = !UI_OTA_RESOURCES_FEATURE_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_UI_OTA_RESOURCES_FEATURE_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getUiOtaResourcesFeatureEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test

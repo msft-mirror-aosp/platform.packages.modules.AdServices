@@ -23,6 +23,10 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+
 /** Utility class to help do operations for the client app. */
 final class ClientAppUtils {
     private final String mPackageName;
@@ -41,17 +45,22 @@ final class ClientAppUtils {
     }
 
     /**
-     * Returns the command for starting the client app with/without mediation enabled.
+     * Returns the command for starting the client app with intent extras.
      *
-     * @param mediationEnabled for checking if mediation is enabled or disabled.
+     * @param clientArgs to pass to the client activity as intent extras.
      */
-    public String getStartAppCommand(boolean mediationEnabled) {
-        return "am start -n "
-                + mPackageName
-                + "/"
-                + mActivityName
-                + " --ez mediation_enabled "
-                + mediationEnabled;
+    public String getStartAppCommand(Map<String, Boolean> clientArgs) {
+        final ArrayList<String> commandFragments =
+                new ArrayList<>(
+                        Arrays.asList("am", "start", "-n", mPackageName + "/" + mActivityName));
+
+        for (Map.Entry<String, Boolean> argEntry : clientArgs.entrySet()) {
+            commandFragments.add("--ez");
+            commandFragments.add(argEntry.getKey());
+            commandFragments.add(String.valueOf(argEntry.getValue()));
+        }
+
+        return String.join(" ", commandFragments);
     }
 
     /**
