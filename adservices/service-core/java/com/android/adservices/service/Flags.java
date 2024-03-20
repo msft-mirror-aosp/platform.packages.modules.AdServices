@@ -4912,4 +4912,25 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getSpeOnPilotJobsEnabled() {
         return DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
     }
+
+    /** A feature flag to enable the use of Enrollment API Based Schema. */
+    @FeatureFlag boolean ENROLLMENT_API_BASED_SCHEMA_ENABLED = false;
+
+    /**
+     * @return the enabled status for enrollment api based schema.
+     */
+    default boolean getEnrollmentApiBasedSchemaEnabled() {
+        return ENROLLMENT_API_BASED_SCHEMA_ENABLED;
+    }
+
+    /** Whether to enable shared database schema version 4 */
+    @FeatureFlag boolean SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED = false;
+
+    /**
+     * @return if to enable shared database schema version 4.
+     */
+    default boolean getSharedDatabaseSchemaVersion4Enabled() {
+        return SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
+    }
 }
+
