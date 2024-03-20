@@ -81,14 +81,14 @@ public class LoadAd {
 
     @Before
     public void setup() throws Exception {
-        mClientAppUtils = new ClientAppUtils(sPackageName, sActivityName);
+        mClientAppUtils = new ClientAppUtils(sUiDevice, sPackageName, sActivityName);
         sUiDevice.executeShellCommand(mClientAppUtils.getStartAppCommand(sClientArgMap));
+        mClientAppUtils.initializeSdk();
     }
 
     @Test
     public void testLoadAd() throws Exception {
-        mClientAppUtils.loadAd(sUiDevice);
-        mClientAppUtils.assertAdLoaded(sUiDevice);
+        mClientAppUtils.loadAd();
         Thread.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
 }
