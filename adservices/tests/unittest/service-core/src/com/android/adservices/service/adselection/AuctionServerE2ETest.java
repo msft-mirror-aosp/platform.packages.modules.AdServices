@@ -605,6 +605,19 @@ public class AuctionServerE2ETest {
                 };
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
+        // Create a logging latch with count of 3, 2 for buyer input logs and 1 for api logs
+        CountDownLatch loggingLatch = new CountDownLatch(3);
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    loggingLatch.countDown();
+                    return null;
+                };
+        ExtendedMockito.doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logGetAdSelectionDataApiCalledStats(any());
+        ExtendedMockito.doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
 
         mAdSelectionService = createAdSelectionService(); // create the service again with new flags
 
@@ -653,6 +666,7 @@ public class AuctionServerE2ETest {
             }
         }
 
+        loggingLatch.await();
         // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics
         verify(mAdServicesLoggerMock, times(2))
                 .logGetAdSelectionDataBuyerInputGeneratedStats(
