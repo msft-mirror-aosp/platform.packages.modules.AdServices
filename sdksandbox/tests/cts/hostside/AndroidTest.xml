@@ -44,6 +44,11 @@
                 value="com.android.sdksandbox.cts.host.CtsSdkSandboxStorageHostTest" />
     </test>
 
+    <test class="com.android.tradefed.testtype.HostTest" >
+        <option name="class"
+                value="com.android.sdksandbox.cts.host.SdkSandboxInstallationTest" />
+    </test>
+
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >
         <option name="mainline-module-package-name" value="com.google.android.adservices" />
