@@ -829,10 +829,41 @@ public abstract class AdSelectionEntryDao {
     }
 
     /** Reads ReportingData from DB associated with the given adSelectionId. */
-    public ReportingData getReportingDataForId(long adSelectionId) {
+    public ReportingData getReportingDataForId(long adSelectionId, boolean shouldUseUnifiedTables) {
         if (doesAdSelectionIdExistInInitializationTable(adSelectionId)) {
-            return getReportingUris(adSelectionId);
-        } else if (doesAdSelectionIdExist(adSelectionId)) {
+            ReportingData uris = getReportingUris(adSelectionId);
+            if (!Objects.isNull(uris)) {
+                // Only return if Uris are found, otherwise try to compute if unified flag is on
+                return uris;
+            } else if (shouldUseUnifiedTables) {
+                DBReportingComputationInfo reportingComputationInfoById =
+                        getReportingComputationInfoById(adSelectionId);
+                ReportingComputationData reportingComputationData =
+                        ReportingComputationData.builder()
+                                .setBuyerDecisionLogicJs(
+                                        reportingComputationInfoById.getBuyerDecisionLogicJs())
+                                .setBuyerDecisionLogicUri(
+                                        reportingComputationInfoById.getBiddingLogicUri())
+                                .setSellerContextualSignals(
+                                        parseAdSelectionSignalsOrEmpty(
+                                                reportingComputationInfoById
+                                                        .getSellerContextualSignals()))
+                                .setBuyerContextualSignals(
+                                        parseAdSelectionSignalsOrEmpty(
+                                                reportingComputationInfoById
+                                                        .getBuyerContextualSignals()))
+                                .setWinningCustomAudienceSignals(
+                                        reportingComputationInfoById.getCustomAudienceSignals())
+                                .setWinningRenderUri(
+                                        reportingComputationInfoById.getWinningAdRenderUri())
+                                .setWinningBid(reportingComputationInfoById.getWinningAdBid())
+                                .build();
+                return ReportingData.builder()
+                        .setReportingComputationData(reportingComputationData)
+                        .build();
+            }
+        } else if (!shouldUseUnifiedTables && doesAdSelectionIdExist(adSelectionId)) {
+            // only look in old tables if unified tables flag is off
             DBAdSelectionEntry adSelectionEntry = getAdSelectionEntityById(adSelectionId);
             ReportingComputationData reportingComputationData =
                     ReportingComputationData.builder()
@@ -852,10 +883,9 @@ public abstract class AdSelectionEntryDao {
             return ReportingData.builder()
                     .setReportingComputationData(reportingComputationData)
                     .build();
-        } else {
-            // no reporting Info for this ad selection id
-            return null;
         }
+        // no reporting Info for this ad selection id
+        return null;
     }
 
     /**

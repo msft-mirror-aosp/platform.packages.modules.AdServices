@@ -16,7 +16,6 @@
 
 package android.sdksandbox.test.scenario.testsdk;
 
-import static com.google.common.truth.Truth.assertThat;
 
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -29,12 +28,17 @@ import java.util.Map;
 
 /** Utility class to help do operations for the client app. */
 final class ClientAppUtils {
+    private final UiDevice mUiDevice;
     private final String mPackageName;
     private final String mActivityName;
 
+    // Client app must use these resource ids for their buttons to be identified in test.
+    private static final String INITIALIZE_SDK_BUTTON = "initializeSdkButton";
     private static final String LOAD_AD_BUTTON = "loadAdButton";
     private static final long UI_NAVIGATION_WAIT_MS = 1000;
+    private static final int UI_WAIT_INITIALIZE_MS = 1000;
     private static final int UI_WAIT_LOAD_AD_MS = 1000;
+    private static final int UI_RETRIES_WAIT_INITIALIZE = 5;
     private static final int UI_RETRIES_WAIT_LOAD_AD = 5;
 
     public static final String AD_LOADED_BUTTON_TEXT = "Load Ad (Ad loaded)";
@@ -64,59 +68,86 @@ final class ClientAppUtils {
     }
 
     /**
+     * Finds the initializeSdk button.
+     *
+     * @return initialize SDK button.
+     */
+    public UiObject2 getInitializeSdkButton() {
+        return mUiDevice.wait(
+                Until.findObject(By.res(mPackageName, INITIALIZE_SDK_BUTTON)),
+                UI_NAVIGATION_WAIT_MS);
+    }
+
+    /**
      * Finds the loadAd button.
      *
-     * @param uiDevice is the device that is being used.
      * @return load ad button.
      */
-    public UiObject2 getLoadAdButton(UiDevice uiDevice) {
-        return uiDevice.wait(
+    public UiObject2 getLoadAdButton() {
+        return mUiDevice.wait(
                 Until.findObject(By.res(mPackageName, LOAD_AD_BUTTON)), UI_NAVIGATION_WAIT_MS);
+    }
+
+    // TODO: b/330389288 - make button required after updating client apps.
+    /** Initializes SDK by finding the initializeSdk button and clicking on it, if it exists. */
+    public void initializeSdk() throws InterruptedException {
+        UiObject2 initializeSdkButton = getInitializeSdkButton();
+        if (initializeSdkButton != null) {
+            initializeSdkButton.click();
+        }
+        assertInitialized();
+    }
+
+    private void assertInitialized() throws InterruptedException {
+        int retries = 0;
+        // wait until initialized.
+        while (retries < UI_RETRIES_WAIT_INITIALIZE) {
+            Thread.sleep(UI_WAIT_INITIALIZE_MS);
+            if (getLoadAdButton().isEnabled()) {
+                return;
+            }
+            retries++;
+        }
+        throw new AssertionError("SDK not initialized");
     }
 
     /**
      * Loads ad by finding the loadAd button and clicking on it.
      *
-     * @param uiDevice is the device that is being used.
      * @throws RuntimeException if load ad button is not found.
      */
-    public void loadAd(UiDevice uiDevice) throws RuntimeException {
-        UiObject2 loadAdButton = getLoadAdButton(uiDevice);
+    public void loadAd() throws InterruptedException {
+        UiObject2 loadAdButton = getLoadAdButton();
         if (loadAdButton != null) {
             loadAdButton.click();
         } else {
             throw new RuntimeException("Did not find 'Load Ad' button.");
         }
+        assertAdLoaded();
     }
 
-    /**
-     * Assert ad is loaded.
-     *
-     * @param uiDevice is the device that is being used.
-     */
-    public void assertAdLoaded(UiDevice uiDevice) throws Exception {
+    private void assertAdLoaded() throws InterruptedException {
         int retries = 0;
-        boolean adLoaded = false;
         // wait until Ad Loaded.
-        while (!adLoaded && retries < UI_RETRIES_WAIT_LOAD_AD) {
+        while (retries < UI_RETRIES_WAIT_LOAD_AD) {
             Thread.sleep(UI_WAIT_LOAD_AD_MS);
-            if (getLoadAdButton(uiDevice).getText().equals(ClientAppUtils.AD_LOADED_BUTTON_TEXT)) {
-                adLoaded = true;
+            if (getLoadAdButton().getText().equals(ClientAppUtils.AD_LOADED_BUTTON_TEXT)) {
+                return;
             }
             retries++;
         }
-
-        assertThat(getLoadAdButton(uiDevice).getText())
-                .isEqualTo(ClientAppUtils.AD_LOADED_BUTTON_TEXT);
+        throw new AssertionError("Ad not loaded");
     }
 
     /**
      * Constructor for {@link ClientAppUtils}.
      *
+     * @param uiDevice is the device that is being used.
      * @param packageName is the package name for the client app.
      * @param activityName is the activity name to start for the test.
      */
-    ClientAppUtils(String packageName, String activityName) {
+    ClientAppUtils(UiDevice uiDevice, String packageName, String activityName) {
+        this.mUiDevice = uiDevice;
         this.mPackageName = packageName;
         this.mActivityName = activityName;
     }

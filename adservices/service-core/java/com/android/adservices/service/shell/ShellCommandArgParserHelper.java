@@ -46,9 +46,9 @@ public class ShellCommandArgParserHelper {
             String value = args[i + 1];
             checkArgument(
                     key.startsWith("--") && !value.contains("--"),
-                    String.format(
-                            "Command line arguments `%s %s` must use the syntax `--key value`",
-                            key, value));
+                    "Command line arguments `%s %s` must use the syntax `--key value`",
+                    key,
+                    value);
             Log.d(TAG, String.format("arg value for arg %s is %s", key, value));
             argsMap.put(key, value);
         }

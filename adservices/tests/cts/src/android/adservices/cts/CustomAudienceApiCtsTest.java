@@ -64,11 +64,13 @@ import android.util.Pair;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.annotations.SetFlagDisabled;
 import com.android.adservices.common.annotations.SetFlagEnabled;
 import com.android.adservices.common.annotations.SetIntegerFlag;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -104,6 +106,15 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     private final ArrayList<Pair<AdTechIdentifier, String>> mCustomAudiencesToCleanUp =
             new ArrayList<>();
+
+    @Override
+    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
+        return AdServicesFlagsSetterRule.withAllLogcatTags()
+                .setGlobalKillSwitch(false)
+                .setFlag(FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
+                .setConsentManagerDebugMode(true)
+                .setPpapiAppAllowList(mPackageName);
+    }
 
     @Before
     public void setup() throws Exception {

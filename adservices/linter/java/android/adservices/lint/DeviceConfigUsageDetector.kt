@@ -55,7 +55,7 @@ class DeviceConfigUsageDetector : Detector(), SourceCodeScanner {
                       different flag mechanisms.
                     """,
                 category = Category.COMPLIANCE,
-                severity = Severity.WARNING,
+                severity = Severity.ERROR,
                 implementation = Implementation(DeviceConfigUsageDetector::class.java, Scope.JAVA_FILE_SCOPE))
     }
 }
