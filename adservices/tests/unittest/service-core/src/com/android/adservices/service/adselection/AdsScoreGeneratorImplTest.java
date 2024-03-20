@@ -116,6 +116,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1706,9 +1707,10 @@ public class AdsScoreGeneratorImplTest {
             AdSelectionSignals trustedScoringSignals,
             List<AdBiddingOutcome> adBiddingOutcomeList,
             int resultCode) {
-        int fetchedAdSelectionLogicScriptSizeInBytes = sellerDecisionLogicJs.getBytes().length;
+        int fetchedAdSelectionLogicScriptSizeInBytes =
+                sellerDecisionLogicJs.getBytes(StandardCharsets.UTF_8).length;
         int fetchedTrustedScoringSignalsDataSizeInBytes =
-                trustedScoringSignals.toString().getBytes().length;
+                trustedScoringSignals.toString().getBytes(StandardCharsets.UTF_8).length;
         int numOfCAsEnteringScoring =
                 adBiddingOutcomeList.stream()
                         .filter(Objects::nonNull)
@@ -1767,7 +1769,8 @@ public class AdsScoreGeneratorImplTest {
             String sellerDecisionLogicJs,
             List<AdBiddingOutcome> adBiddingOutcomeList,
             int resultCode) {
-        int fetchedAdSelectionLogicScriptSizeInBytes = sellerDecisionLogicJs.getBytes().length;
+        int fetchedAdSelectionLogicScriptSizeInBytes =
+                sellerDecisionLogicJs.getBytes(StandardCharsets.UTF_8).length;
         int numOfCAsEnteringScoring =
                 adBiddingOutcomeList.stream()
                         .filter(Objects::nonNull)
@@ -1829,9 +1832,10 @@ public class AdsScoreGeneratorImplTest {
             String sellerDecisionLogicJs,
             AdSelectionSignals trustedScoringSignals,
             List<AdBiddingOutcome> adBiddingOutcomeList) {
-        int fetchedAdSelectionLogicScriptSizeInBytes = sellerDecisionLogicJs.getBytes().length;
+        int fetchedAdSelectionLogicScriptSizeInBytes =
+                sellerDecisionLogicJs.getBytes(StandardCharsets.UTF_8).length;
         int fetchedTrustedScoringSignalsDataSizeInBytes =
-                trustedScoringSignals.toString().getBytes().length;
+                trustedScoringSignals.toString().getBytes(StandardCharsets.UTF_8).length;
         int numOfCAsEnteringScoring =
                 adBiddingOutcomeList.stream()
                         .filter(Objects::nonNull)
