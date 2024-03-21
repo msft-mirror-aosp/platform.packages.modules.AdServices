@@ -67,6 +67,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_SERVICE_
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.Flags.DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
@@ -548,6 +549,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
@@ -10810,6 +10812,21 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testEnableTabletRegionFix() {
+        boolean phOverrideValue = !DEFAULT_ENABLE_TABLET_REGION_FIX;
+
+        expect.withMessage("getEnableTabletRegionFix() by default")
+                .that(mPhFlags.getEnableTabletRegionFix())
+                .isEqualTo(DEFAULT_ENABLE_TABLET_REGION_FIX);
+
+        // Now overriding with the value from PH.
+        setEnableTabletRegionFix(phOverrideValue);
+        expect.withMessage("getEnableTabletRegionFix() when set by device config")
+                .that(mPhFlags.getEnableTabletRegionFix())
+                .isEqualTo(phOverrideValue);
+    }
+
+    @Test
     public void testGetMddLoggerEnabled() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
@@ -10951,12 +10968,17 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         setAdservicesFlag(KEY_SPE_ON_PILOT_JOBS_ENABLED, value);
     }
 
+
     private void setJobSchedulingLoggingEnabled(boolean value) {
         setAdservicesFlag(KEY_JOB_SCHEDULING_LOGGING_ENABLED, value);
     }
 
     private void setJobSchedulingLoggingSamplingRate(int value) {
         setAdservicesFlag(KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE, value);
+    }
+
+    private void setEnableTabletRegionFix(boolean value) {
+        setAdservicesFlag(KEY_ENABLE_TABLET_REGION_FIX, value);
     }
 
     private void verifyGetBooleanNotCalled(String name) {

@@ -4933,6 +4933,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
     }
 
+    /** Default value for table region fix flag. */
+    boolean DEFAULT_ENABLE_TABLET_REGION_FIX = false;
+
+    /**
+     * @return if to enable tablet region fix.
+     */
+    default boolean getEnableTabletRegionFix() {
+        return DEFAULT_ENABLE_TABLET_REGION_FIX;
+    }
+
     /** Default value for the enablement of background job scheduling logging. */
     @FeatureFlag boolean DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED = false;
 

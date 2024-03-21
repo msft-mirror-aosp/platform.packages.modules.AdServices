@@ -1362,4 +1362,7 @@ public final class FlagsConstants {
     /** Key for the sampling rate of job scheduling logging. */
     public static final String KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE =
             "job_scheduling_logging_sampling_rate";
+
+    /** Key for enabling tablet region fix. */
+    public static final String KEY_ENABLE_TABLET_REGION_FIX = "enable_tablet_region_fix";
 }
