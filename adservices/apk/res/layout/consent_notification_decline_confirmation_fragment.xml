@@ -30,9 +30,10 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
         <LinearLayout
-                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_gravity="center_horizontal"
+                style="@style/NotificationContainer">
             <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

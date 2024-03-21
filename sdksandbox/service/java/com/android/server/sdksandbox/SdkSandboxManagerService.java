@@ -405,7 +405,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String callingPackageName, SandboxLatencyInfo sandboxLatencyInfo) {
         sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.elapsedRealtime());
 
-        final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
+        final int callingUid = Binder.getCallingUid();
+        CallingInfo callingInfo;
+        if (Process.isSdkSandboxUid(callingUid)) {
+            callingInfo =
+                    CallingInfo.fromExternal(
+                            mContext,
+                            Process.getAppUidForSdkSandboxUid(callingUid),
+                            callingPackageName);
+        } else {
+            callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
+        }
 
         final List<SandboxedSdk> sandboxedSdks = new ArrayList<>();
         synchronized (mLock) {
@@ -1771,37 +1781,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
          *
          * @param clientPackageName package name of the app for which the sdk was loaded in the
          *     sandbox
+         * @param sandboxLatencyInfo object containing the information of latency metrics for the
+         *     api
          * @return List of {@link SandboxedSdk} containing all currently loaded sdks
          */
         @Override
-        public List<SandboxedSdk> getSandboxedSdks(String clientPackageName)
+        public List<SandboxedSdk> getSandboxedSdks(
+                String clientPackageName, SandboxLatencyInfo sandboxLatencyInfo)
                 throws RemoteException {
             // TODO(b/258195148): Write multiuser tests
             // TODO(b/242039497): Add authorisation checks to make sure only the sandbox calls this
             //  API.
-            int uid = Binder.getCallingUid();
-            if (Process.isSdkSandboxUid(uid)) {
-                uid = Process.getAppUidForSdkSandboxUid(uid);
-            }
-            CallingInfo callingInfo = new CallingInfo(uid, clientPackageName);
-            final List<SandboxedSdk> sandboxedSdks = new ArrayList<>();
-            synchronized (mLock) {
-                List<LoadSdkSession> loadedSdks = getLoadedSdksForApp(callingInfo);
-                for (int i = 0; i < loadedSdks.size(); i++) {
-                    LoadSdkSession sdk = loadedSdks.get(i);
-                    SandboxedSdk sandboxedSdk = sdk.getSandboxedSdk();
-                    if (sandboxedSdk != null) {
-                        sandboxedSdks.add(sandboxedSdk);
-                    } else {
-                        Log.e(
-                                TAG,
-                                "SandboxedSdk is null for SDK "
-                                        + sdk.mSdkName
-                                        + " despite being loaded");
-                    }
-                }
-            }
-            return sandboxedSdks;
+            return SdkSandboxManagerService.this.getSandboxedSdks(
+                    clientPackageName, sandboxLatencyInfo);
         }
 
         @Override

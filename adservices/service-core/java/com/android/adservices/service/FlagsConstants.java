@@ -1052,6 +1052,8 @@ public final class FlagsConstants {
     public static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
     public static final String KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING =
             "enrollment_enable_limited_logging";
+    public static final String KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED =
+            "enrollment_api_based_schema_enabled";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
@@ -1214,6 +1216,8 @@ public final class FlagsConstants {
             "enable_database_schema_version_8";
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_9 =
             "enable_database_schema_version_9";
+    public static final String KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED =
+            "shared_database_schema_version_4_enabled";
 
     public static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK =
             "notification_dmsmissed_on_click";
@@ -1350,4 +1354,12 @@ public final class FlagsConstants {
 
     /** Key for enabling SPE on pilot background jobs. */
     public static final String KEY_SPE_ON_PILOT_JOBS_ENABLED = "spe_on_pilot_jobs_enabled";
+
+    /** Key for enabling job scheduling logging rate. */
+    public static final String KEY_JOB_SCHEDULING_LOGGING_ENABLED =
+            "job_scheduling_logging_enabled";
+
+    /** Key for the sampling rate of job scheduling logging. */
+    public static final String KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE =
+            "job_scheduling_logging_sampling_rate";
 }

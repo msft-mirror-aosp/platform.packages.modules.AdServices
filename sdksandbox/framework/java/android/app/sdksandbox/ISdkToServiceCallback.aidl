@@ -23,9 +23,8 @@ import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 
 /** @hide */
 interface ISdkToServiceCallback {
-
    List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(in String clientPackageName);
-   List<SandboxedSdk> getSandboxedSdks(in String clientPackageName);
+   List<SandboxedSdk> getSandboxedSdks(in String clientPackageName, in SandboxLatencyInfo sandboxLatencyInfo);
    void loadSdk(in String callingPackageName,
                    in String sdkName,
                    in SandboxLatencyInfo sandboxLatencyInfo,

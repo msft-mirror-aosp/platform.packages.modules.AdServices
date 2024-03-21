@@ -28,7 +28,6 @@ import android.adservices.topics.Topic;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -89,7 +88,6 @@ public class TopicsConnectionTest {
         flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
-    @FlakyTest(bugId = 321944400)
     @Test
     public void testEnableGlobalKillSwitch() throws Exception {
         // First enable the Global Kill Switch and then connect to the TopicsService.

@@ -3325,14 +3325,12 @@ public class OnDeviceAdSelectionRunnerTest {
                         .getPerBuyerSignedContextualAds()
                         .get(CommonFixture.VALID_BUYER_1)
                         .getAdsWithBid());
-        assertEquals(
+        assertFalse(
                 "The contextual ads should have been filtered for Buyer 2",
-                Collections.emptyList(),
                 mAdSelectionConfigArgumentCaptor
                         .getValue()
                         .getPerBuyerSignedContextualAds()
-                        .get(CommonFixture.VALID_BUYER_2)
-                        .getAdsWithBid());
+                        .containsKey(CommonFixture.VALID_BUYER_2));
     }
 
     @Test

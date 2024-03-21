@@ -38,7 +38,8 @@ public class StubSdkToServiceLink extends ISdkToServiceCallback.Stub {
 
     @Override
     @NonNull
-    public List<SandboxedSdk> getSandboxedSdks(String clientName) {
+    public List<SandboxedSdk> getSandboxedSdks(
+            String clientName, SandboxLatencyInfo sandboxLatencyInfo) {
         ArrayList<SandboxedSdk> list = new ArrayList<>();
         SandboxedSdk sandboxedSdk = new SandboxedSdk(new Binder());
         list.add(sandboxedSdk);
