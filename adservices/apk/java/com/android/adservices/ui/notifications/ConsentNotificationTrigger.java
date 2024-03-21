@@ -23,6 +23,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_F
 import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+import static com.android.adservices.ui.ganotifications.ConsentNotificationPasFragment.IS_RENOTIFY_KEY;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -494,6 +495,7 @@ public class ConsentNotificationTrigger {
             @NonNull Context context, ConsentManager consentManager) {
         boolean isRenotify = isFledgeOrMsmtEnabled(consentManager);
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
+        intent.putExtra(IS_RENOTIFY_KEY, isRenotify);
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
