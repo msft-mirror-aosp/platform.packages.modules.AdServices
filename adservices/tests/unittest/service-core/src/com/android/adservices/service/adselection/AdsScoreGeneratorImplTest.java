@@ -20,9 +20,9 @@ import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DA
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
-import static com.android.adservices.data.adselection.CustomAudienceSignals.CONTEXTUAL_CA_NAME;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.data.adselection.CustomAudienceSignals.CONTEXTUAL_CA_NAME;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.QUERY_PARAM_RENDER_URIS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORES_COUNT_LESS_THAN_EXPECTED;
@@ -181,7 +181,7 @@ public class AdsScoreGeneratorImplTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        mFlags = new AdsScoreGeneratorImplTestFlags();
+        mFlags = new AdsScoreGeneratorImplTestFlags(false);
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
@@ -282,19 +282,7 @@ public class AdsScoreGeneratorImplTest {
                         ApplicationProvider.getApplicationContext(),
                         mAdServicesLoggerMock);
         when(mDebugReporting.isEnabled()).thenReturn(false);
-        mAdsScoreGenerator =
-                new AdsScoreGeneratorImpl(
-                        mMockAdSelectionScriptEngine,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mSchedulingExecutor,
-                        mWebClient,
-                        mDevContext,
-                        mAdSelectionEntryDao,
-                        mFlags,
-                        mAdSelectionExecutionLogger,
-                        mDebugReporting,
-                        false);
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
     }
 
     @Test
@@ -404,20 +392,7 @@ public class AdsScoreGeneratorImplTest {
     @Test
     public void testRunAdScoringSuccessWithDataVersionHeaderEnabled() throws Exception {
         // Re init generator
-        mAdsScoreGenerator =
-                new AdsScoreGeneratorImpl(
-                        mMockAdSelectionScriptEngine,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mSchedulingExecutor,
-                        mWebClient,
-                        mDevContext,
-                        mAdSelectionEntryDao,
-                        mFlags,
-                        mAdSelectionExecutionLogger,
-                        mDebugReporting,
-                        true);
-
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, true);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -536,20 +511,7 @@ public class AdsScoreGeneratorImplTest {
     @Test
     public void testRunAdScoringSuccessWithDataVersionHeaderDisabled() throws Exception {
         // Re init generator
-        mAdsScoreGenerator =
-                new AdsScoreGeneratorImpl(
-                        mMockAdSelectionScriptEngine,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mSchedulingExecutor,
-                        mWebClient,
-                        mDevContext,
-                        mAdSelectionEntryDao,
-                        mFlags,
-                        mAdSelectionExecutionLogger,
-                        mDebugReporting,
-                        false);
-
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -735,19 +697,7 @@ public class AdsScoreGeneratorImplTest {
                                 mAdSelectionExecutionLogger))
                 .thenAnswer(loggerAnswer);
 
-        AdsScoreGeneratorImpl adsScoreGenerator =
-                new AdsScoreGeneratorImpl(
-                        mMockAdSelectionScriptEngine,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mSchedulingExecutor,
-                        mWebClient,
-                        mDevContext,
-                        mAdSelectionEntryDao,
-                        mFlags,
-                        mAdSelectionExecutionLogger,
-                        mDebugReporting,
-                        false);
+        AdsScoreGenerator adsScoreGenerator = initAdScoreGenerator(mFlags, false);
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 adsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
@@ -792,6 +742,8 @@ public class AdsScoreGeneratorImplTest {
 
     @Test
     public void testRunAdScoringContextual_Success() throws Exception {
+        mFlags = new AdsScoreGeneratorImplTestFlags(true);
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -912,6 +864,8 @@ public class AdsScoreGeneratorImplTest {
 
     @Test
     public void testRunAdScoringContextual_withDebugReportingEnabled_Success() throws Exception {
+        mFlags = new AdsScoreGeneratorImplTestFlags(true);
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -999,19 +953,8 @@ public class AdsScoreGeneratorImplTest {
                                 mAdSelectionExecutionLogger))
                 .thenAnswer(loggerAnswer);
 
-        AdsScoreGeneratorImpl adsScoreGenerator =
-                new AdsScoreGeneratorImpl(
-                        mMockAdSelectionScriptEngine,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mSchedulingExecutor,
-                        mWebClient,
-                        mDevContext,
-                        mAdSelectionEntryDao,
-                        mFlags,
-                        mAdSelectionExecutionLogger,
-                        mDebugReporting,
-                        false);
+        AdsScoreGenerator adsScoreGenerator = initAdScoreGenerator(mFlags, false);
+
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 adsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
@@ -1061,6 +1004,8 @@ public class AdsScoreGeneratorImplTest {
 
     @Test
     public void testRunAdScoringContextual_UseOverride_Success() throws Exception {
+        mFlags = new AdsScoreGeneratorImplTestFlags(true);
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -1170,19 +1115,7 @@ public class AdsScoreGeneratorImplTest {
                                 mAdSelectionExecutionLogger))
                 .thenAnswer(loggerAnswer);
 
-        mAdsScoreGenerator =
-                new AdsScoreGeneratorImpl(
-                        mMockAdSelectionScriptEngine,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mSchedulingExecutor,
-                        mWebClient,
-                        mDevContext,
-                        mAdSelectionEntryDao,
-                        mFlags,
-                        mAdSelectionExecutionLogger,
-                        mDebugReporting,
-                        false);
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 mAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
@@ -1231,6 +1164,8 @@ public class AdsScoreGeneratorImplTest {
 
     @Test
     public void testRunAdScoringContextualScoresMismatch_Failure() throws Exception {
+        mFlags = new AdsScoreGeneratorImplTestFlags(true);
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -1451,19 +1386,7 @@ public class AdsScoreGeneratorImplTest {
                         .setCallingAppPackageName(myAppPackageName)
                         .build();
 
-        mAdsScoreGenerator =
-                new AdsScoreGeneratorImpl(
-                        mMockAdSelectionScriptEngine,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mSchedulingExecutor,
-                        mWebClient,
-                        mDevContext,
-                        mAdSelectionEntryDao,
-                        mFlags,
-                        mAdSelectionExecutionLogger,
-                        mDebugReporting,
-                        false);
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
@@ -1611,24 +1534,13 @@ public class AdsScoreGeneratorImplTest {
                         return 100;
                     }
                 };
-        mAdsScoreGenerator =
-                new AdsScoreGeneratorImpl(
-                        mMockAdSelectionScriptEngine,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mSchedulingExecutor,
-                        mWebClient,
-                        mDevContext,
-                        mAdSelectionEntryDao,
-                        flagsWithSmallerLimits,
-                        mAdSelectionExecutionLogger,
-                        mDebugReporting,
-                        false);
+        mAdsScoreGenerator = initAdScoreGenerator(flagsWithSmallerLimits, false);
 
         List<Double> scores = Arrays.asList(1.0, 2.0);
         mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
         Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
+        Uri conrwxdecisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1665,6 +1577,21 @@ public class AdsScoreGeneratorImplTest {
         verifyFailedAdScoringLoggingTimeout(
                 mAdBiddingOutcomeList,
                 AdServicesLoggerUtil.getResultCodeFromException(thrown.getCause()));
+    }
+
+    private AdsScoreGenerator initAdScoreGenerator(Flags flags, boolean dataVersionHeaderEnabled) {
+        return new AdsScoreGeneratorImpl(
+                mMockAdSelectionScriptEngine,
+                mLightweightExecutorService,
+                mBackgroundExecutorService,
+                mSchedulingExecutor,
+                mWebClient,
+                mDevContext,
+                mAdSelectionEntryDao,
+                flags,
+                mAdSelectionExecutionLogger,
+                mDebugReporting,
+                dataVersionHeaderEnabled);
     }
 
     private void verifyFailedAdScoringLoggingTimeout(
@@ -1940,9 +1867,15 @@ public class AdsScoreGeneratorImplTest {
 
     private static class AdsScoreGeneratorImplTestFlags implements Flags {
 
+        private final boolean mContextualAdsEnabled;
+
+        AdsScoreGeneratorImplTestFlags(boolean contextualAdsEnabled) {
+            mContextualAdsEnabled = contextualAdsEnabled;
+        }
+
         @Override
         public boolean getFledgeAdSelectionContextualAdsEnabled() {
-            return false;
+            return mContextualAdsEnabled;
         }
 
         @Override

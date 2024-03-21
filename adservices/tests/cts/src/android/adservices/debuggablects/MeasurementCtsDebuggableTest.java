@@ -664,10 +664,6 @@ public class MeasurementCtsDebuggableTest {
 
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
-                + "measurement_min_event_report_delay_millis 0");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
                 + "measurement_enable_configurable_aggregate_report_delay true");
 
         getUiDevice().executeShellCommand(
@@ -729,10 +725,6 @@ public class MeasurementCtsDebuggableTest {
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
                 + "measurement_event_reports_vtc_early_reporting_windows null");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_min_event_report_delay_millis null");
 
         getUiDevice().executeShellCommand(
                 "device_config put adservices "

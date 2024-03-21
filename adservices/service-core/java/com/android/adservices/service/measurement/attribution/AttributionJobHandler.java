@@ -292,7 +292,7 @@ class AttributionJobHandler {
                     // For flex event attribution, we delete attribution records of pending reports
                     // and process a new attribution state. The count of attributions affects the
                     // alloted report quota, as well as limits calculated in different code paths
-                    // form here so we retrieve it once and pass as needed.
+                    // from here so we retrieve it once and pass as needed.
                     long eventAttributionCount =
                             mFlags.getMeasurementEnableScopedAttributionRateLimit()
                                     ? measurementDao.getAttributionsPerRateLimitWindow(
@@ -1376,15 +1376,17 @@ class AttributionJobHandler {
     private boolean hasAttributionQuota(
             long attributionCount, Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        if (attributionCount >= mFlags.getMeasurementMaxAttributionPerRateLimitWindow()) {
+        int maxAttributionPerRateLimitWindow =
+                mFlags.getMeasurementMaxAttributionPerRateLimitWindow();
+        if (attributionCount >= maxAttributionPerRateLimitWindow) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(attributionCount),
+                    String.valueOf(maxAttributionPerRateLimitWindow),
                     measurementDao,
                     Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         }
-        return attributionCount < mFlags.getMeasurementMaxAttributionPerRateLimitWindow();
+        return attributionCount < maxAttributionPerRateLimitWindow;
     }
 
     private boolean hasAttributionQuota(
@@ -1403,7 +1405,7 @@ class AttributionJobHandler {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(attributionCount),
+                    String.valueOf(limit),
                     measurementDao,
                     Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         }
@@ -1590,7 +1592,7 @@ class AttributionJobHandler {
                             trigger.getRegistrationOrigin(),
                             trigger.getTriggerTime() - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
-            if (count >= mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()) {
+            if (count >= mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution()) {
                 mDebugReportApi.scheduleTriggerDebugReport(
                         source,
                         trigger,
@@ -1599,7 +1601,7 @@ class AttributionJobHandler {
                         Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
             }
 
-            return count < mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution();
+            return count < mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution();
         } else {
             LoggerFactory.getMeasurementLogger()
                     .d(

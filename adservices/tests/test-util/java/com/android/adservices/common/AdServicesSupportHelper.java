@@ -21,6 +21,8 @@ import static com.android.compatibility.common.util.ShellIdentityUtils.invokeSta
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -36,6 +38,9 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
     private static final String PLAY_STORE_USER_CERT =
             "F0:FD:6C:5B:41:0F:25:CB:25:C3:B5:33:46:C8:97:2F:"
                     + "AE:30:F8:EE:74:11:DF:91:04:80:AD:6B:2D:60:DB:83";
+
+    /** The minimum screen width for a 7-inch large screen device. */
+    public static final int SEVEN_INCH_TABLET_MINIMUM_SCREEN_WIDTH_DP = 600;
 
     private static final AdServicesSupportHelper sInstance = new AdServicesSupportHelper();
 
@@ -76,6 +81,11 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
     }
 
     @Override
+    protected boolean isLargeScreenDeviceByDefault() {
+        return isLargeScreen(mContext.getResources());
+    }
+
+    @Override
     protected boolean isDebuggable() {
         return AdservicesTestHelper.isDebuggable();
     }
@@ -84,5 +94,21 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
         super(AndroidLogger.getInstance(), DeviceSideSystemPropertiesHelper.getInstance());
 
         mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    }
+
+    private boolean isLargeScreen(Resources resources) {
+        if (resources == null) {
+            return false;
+        }
+        // Consider it to be large screen if it's either a) xlarge, or b) sw600dp.
+        boolean isXlarge =
+                (resources.getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK)
+                        > Configuration.SCREENLAYOUT_SIZE_LARGE;
+        boolean isSevenInchLargeScreen =
+                (resources.getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK)
+                                <= Configuration.SCREENLAYOUT_SIZE_LARGE
+                        && resources.getConfiguration().smallestScreenWidthDp
+                                >= SEVEN_INCH_TABLET_MINIMUM_SCREEN_WIDTH_DP;
+        return isXlarge || isSevenInchLargeScreen;
     }
 }

@@ -44,9 +44,10 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
             CustomAudienceShellCommandFactory.COMMAND_PREFIX
                     + " "
                     + CMD
-                    + " --"
+                    + " "
                     + CustomAudienceArgs.OWNER
-                    + " <owner> --"
+                    + " <owner>"
+                    + " "
                     + CustomAudienceArgs.BUYER
                     + " <buyer>"
                     + "\n    List custom audiences. See documentation for `view` for more info.";

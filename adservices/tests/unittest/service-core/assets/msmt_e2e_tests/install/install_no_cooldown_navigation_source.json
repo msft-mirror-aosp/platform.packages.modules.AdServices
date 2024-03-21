@@ -1,5 +1,5 @@
 {
-  "description": "Two sources followed by an install, a source and three triggers. The triggers are all attributed to the most recent source, whose priority matches the first and is higher than the second source's.",
+  "description": "Two sources(with no post install exclusivity window) followed by an install, a source and three triggers. The triggers are all attributed to the most recent source, whose priority matches the first and is higher than the second source's.",
   "input": {
     "sources": [
       {
@@ -142,11 +142,11 @@
   "output": {
     "event_level_results": [
       {
-        "report_time": "800435600001",
+        "report_time": "800432000001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "800435600",
+          "scheduled_report_time": "800432000",
           "source_event_id": "3",
           "trigger_data": "1",
           "source_type": "navigation",
@@ -154,11 +154,11 @@
         }
       },
       {
-        "report_time": "800867600001",
+        "report_time": "800864000001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "800867600",
+          "scheduled_report_time": "800864000",
           "source_event_id": "3",
           "trigger_data": "2",
           "source_type": "navigation",
@@ -166,11 +166,11 @@
         }
       },
       {
-        "report_time": "801990800001",
+        "report_time": "801987200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "801990800",
+          "scheduled_report_time": "801987200",
           "source_event_id": "3",
           "trigger_data": "3",
           "source_type": "navigation",

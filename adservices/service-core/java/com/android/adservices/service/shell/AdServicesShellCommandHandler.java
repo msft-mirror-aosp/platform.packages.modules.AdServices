@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 
 // TODO(b/308009734): STOPSHIP - document that it's up to each command implementation to check about
@@ -106,7 +107,7 @@ public final class AdServicesShellCommandHandler {
                     + " the given app, when using SDK sandbox or not.";
 
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
-    static final String TAG = "AdServicesShellCmd";
+    public static final String TAG = "AdServicesShellCmd";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
     private static final ShellCommandFactory COMMON_SHELL_COMMAND_FACTORY =
             CommonShellCommandFactory.getInstance();
@@ -198,7 +199,7 @@ public final class AdServicesShellCommandHandler {
             return null;
         }
         // Boolean.parse returns false when it's invalid
-        switch (arg.trim().toLowerCase()) {
+        switch (arg.trim().toLowerCase(Locale.ROOT)) {
             case "true":
                 return Boolean.TRUE;
             case "false":

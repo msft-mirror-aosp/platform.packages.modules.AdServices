@@ -22,10 +22,8 @@ import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -421,7 +419,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         if (!hasAccessAdServicesCommonStatePermission) {
                             LogUtil.e(UNAUTHORIZED_CALLER_MESSAGE);
                             resultCode = STATUS_UNAUTHORIZED;
-                            failureReason = FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
                             callback.onFailure(STATUS_UNAUTHORIZED);
                             return;
                         }
@@ -432,14 +429,13 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         param.getAppPackageName());
                         if (!appCanUseGetCommonStatesService) {
                             LogUtil.e(CALLER_NOT_ALLOWED_MESSAGE);
-                            resultCode = STATUS_CALLER_NOT_ALLOWED;
-                            failureReason = FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
-                            callback.onFailure(STATUS_CALLER_NOT_ALLOWED);
+                            resultCode = STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
+                            callback.onFailure(resultCode);
                             return;
                         }
+                        ConsentManager consentManager = ConsentManager.getInstance();
                         if (mFlags.isGetAdServicesCommonStatesApiEnabled()) {
                             LogUtil.d("start getting states");
-                            ConsentManager consentManager = ConsentManager.getInstance();
                             AdServicesCommonStates adservicesCommonStates =
                                     new AdServicesCommonStates.Builder()
                                             .setMeasurementState(
@@ -455,6 +451,8 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                     new AdServicesCommonStatesResponse.Builder(
                                                     adservicesCommonStates)
                                             .build());
+                            consentManager.setMeasurementDataReset(false);
+                            consentManager.setPaDataReset(false);
                             return;
                         }
                         LogUtil.d("service is not started");
@@ -469,7 +467,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                     } catch (Exception e) {
                         LogUtil.e("get error " + e.getMessage());
                         resultCode = STATUS_INTERNAL_ERROR;
-                        failureReason = FAILURE_REASON_UNSET;
                         try {
                             callback.onFailure(STATUS_INTERNAL_ERROR);
                         } catch (RemoteException ex) {
@@ -505,12 +502,18 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             ConsentManager consentManager, AdServicesApiType apiType) {
         if (apiType == AdServicesApiType.FLEDGE) {
             if (consentManager.isPasFledgeConsentGiven()) {
+                if (consentManager.isPaDataReset()) {
+                    return ConsentStatus.WAS_RESET;
+                }
                 return ConsentStatus.GIVEN;
             }
             return ConsentStatus.REVOKED;
         }
         if (apiType == AdServicesApiType.MEASUREMENTS) {
             if (consentManager.isPasMeasurementConsentGiven()) {
+                if (consentManager.isMeasurementDataReset()) {
+                    return ConsentStatus.WAS_RESET;
+                }
                 return ConsentStatus.GIVEN;
             }
             return ConsentStatus.REVOKED;

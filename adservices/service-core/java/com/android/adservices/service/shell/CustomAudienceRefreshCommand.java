@@ -16,12 +16,8 @@
 
 package com.android.adservices.service.shell;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
 
-import android.adservices.common.AdServicesStatusUtils.StatusCode;
 import android.adservices.common.AdTechIdentifier;
 import android.util.Log;
 
@@ -30,6 +26,7 @@ import androidx.annotation.VisibleForTesting;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.customaudience.BackgroundFetchRunner.UpdateResultType;
 
 import java.io.PrintWriter;
 import java.time.Clock;
@@ -45,11 +42,13 @@ public final class CustomAudienceRefreshCommand extends AbstractShellCommand {
     public static final String CMD = "refresh";
     public static final String HELP =
             CMD
-                    + " --"
+                    + " "
                     + CustomAudienceArgs.OWNER
-                    + " <owner> --"
+                    + " <owner>"
+                    + " "
                     + CustomAudienceArgs.BUYER
-                    + " <buyer> --"
+                    + " <buyer>"
+                    + " "
                     + CustomAudienceArgs.NAME
                     + " <name>";
     @VisibleForTesting public static final int BACKGROUND_FETCH_TIMEOUT_FINAL_SECONDS = 3;
@@ -58,11 +57,14 @@ public final class CustomAudienceRefreshCommand extends AbstractShellCommand {
     public static final String OUTPUT_ERROR_NO_CUSTOM_AUDIENCE = "Error: No custom audience found.";
 
     @VisibleForTesting
-    public static final String OUTPUT_ERROR_WITH_CODE =
-            "Failed to update custom audience. Error code: %d";
+    public static final String OUTPUT_ERROR_WITH_MESSAGE =
+            "Failed to update custom audience. Error message: %s";
 
     @VisibleForTesting
     public static final String OUTPUT_SUCCESS = "Successfully updated custom audience.";
+
+    @VisibleForTesting public static final String OUTPUT_ERROR_NETWORK = "NETWORK_FAILURE";
+    @VisibleForTesting public static final String OUTPUT_ERROR_UNKNOWN = "UNKNOWN_FAILURE";
 
     private final BackgroundFetchRunner mBackgroundFetchRunner;
     private final CustomAudienceArgParser mArgParser;
@@ -118,12 +120,14 @@ public final class CustomAudienceRefreshCommand extends AbstractShellCommand {
                         mArgParser.getValue(CustomAudienceArgs.OWNER),
                         AdTechIdentifier.fromString(mArgParser.getValue(CustomAudienceArgs.BUYER)));
         if (backgroundFetchData.isPresent()) {
-            int statusCode = refreshCustomAudience(backgroundFetchData.get());
-            if (statusCode == STATUS_SUCCESS) {
+            UpdateResultType updateResult = refreshCustomAudience(backgroundFetchData.get());
+            if (updateResult == UpdateResultType.SUCCESS) {
                 out.printf(OUTPUT_SUCCESS);
                 return RESULT_OK;
             } else {
-                err.printf(OUTPUT_ERROR_WITH_CODE, statusCode);
+                err.printf(
+                        OUTPUT_ERROR_WITH_MESSAGE,
+                        errorMessageFromCustomAudienceUpdateResult(updateResult));
                 return RESULT_GENERIC_ERROR;
             }
         } else {
@@ -137,8 +141,23 @@ public final class CustomAudienceRefreshCommand extends AbstractShellCommand {
         return CMD;
     }
 
-    @StatusCode
-    private int refreshCustomAudience(DBCustomAudienceBackgroundFetchData backgroundFetchData) {
+    private String errorMessageFromCustomAudienceUpdateResult(UpdateResultType updateResultType) {
+        switch (updateResultType) {
+            case NETWORK_FAILURE:
+            case NETWORK_READ_TIMEOUT_FAILURE:
+                return OUTPUT_ERROR_NETWORK;
+            case SUCCESS:
+                // Success has no appropriate message.
+            case UNKNOWN:
+            case RESPONSE_VALIDATION_FAILURE:
+            case K_ANON_FAILURE:
+            default:
+                return OUTPUT_ERROR_UNKNOWN;
+        }
+    }
+
+    private UpdateResultType refreshCustomAudience(
+            DBCustomAudienceBackgroundFetchData backgroundFetchData) {
         try {
             return mBackgroundFetchRunner
                     .updateCustomAudience(mClock.instant(), backgroundFetchData)
@@ -146,7 +165,7 @@ public final class CustomAudienceRefreshCommand extends AbstractShellCommand {
                     .get();
         } catch (InterruptedException | ExecutionException e) {
             Log.e(TAG, "Failed to update custom audience", e);
-            return STATUS_INTERNAL_ERROR;
+            return UpdateResultType.UNKNOWN;
         }
     }
 

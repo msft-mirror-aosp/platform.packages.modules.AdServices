@@ -133,7 +133,7 @@ public final class ImpressionNoiseUtil {
         return fakeReportConfigs;
     }
 
-    /** Wrapper for calls to ThreadLocalRandom visible for testing */
+    /** Wrapper for calls to ThreadLocalRandom. Bound must be positive. */
     @VisibleForTesting
     public static long nextLong(ThreadLocalRandom rand, long bound) {
         return rand.nextLong(bound);

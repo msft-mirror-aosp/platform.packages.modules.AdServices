@@ -15,6 +15,7 @@
  */
 package com.android.adservices.ui.settingsga;
 
+import static com.android.adservices.common.AndroidSdk.RVC;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
@@ -22,22 +23,19 @@ import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_EN
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 
-
-
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.RequiresSdkRange;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.SettingsTestUtil;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
+@RequiresSdkRange(atLeast = RVC, atMost = RVC)
 public final class SettingsRvcUxSelectorUiAutomatorTest extends AdServicesUiTestCase {
 
     @Rule(order = 11)
@@ -50,12 +48,6 @@ public final class SettingsRvcUxSelectorUiAutomatorTest extends AdServicesUiTest
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_DEBUG_UX, "RVC_UX")
                     .setCompatModeFlags();
-
-    @Before
-    public void setup() {
-        // This test is only enabled on R.
-        Assume.assumeTrue(SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS());
-    }
 
     @Test
     public void settingsRemoveMainToggleAndMeasurementEntryTest() throws Exception {

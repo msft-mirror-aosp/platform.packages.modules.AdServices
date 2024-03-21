@@ -19,14 +19,16 @@ package com.android.adservices.service.shell;
 import java.io.PrintWriter;
 import java.util.Arrays;
 
-abstract class AbstractShellCommand implements ShellCommand {
+/** Abstract class to implement common methods for every Shell Command */
+public abstract class AbstractShellCommand implements ShellCommand {
 
-    static final int RESULT_GENERIC_ERROR = -1;
-    static final int RESULT_OK = 0;
+    public static final int RESULT_GENERIC_ERROR = -1;
+    public static final int RESULT_OK = 0;
 
     static final String ERROR_TEMPLATE_INVALID_ARGS = "Invalid cmd (%s).\n\nSyntax: %s\n";
 
-    static int invalidArgsError(String syntax, PrintWriter err, String[] args) {
+    /** Method to return error in case of invalid arguments passed to a shell command. */
+    public static int invalidArgsError(String syntax, PrintWriter err, String[] args) {
         err.printf(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax);
         return RESULT_GENERIC_ERROR;
     }

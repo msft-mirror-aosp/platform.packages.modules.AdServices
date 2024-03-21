@@ -772,6 +772,7 @@ public abstract class AdSelectionRunner {
         ProtectedAudienceSignatureManager signatureManager =
                 new ProtectedAudienceSignatureManager(
                         mEnrollmentDao, mEncryptionKeyDao, isEnrollmentCheckEnabled);
+        SignedContextualAds filtered;
         for (Map.Entry<AdTechIdentifier, SignedContextualAds> entry :
                 adSelectionConfig.getPerBuyerSignedContextualAds().entrySet()) {
             if (!signatureManager.isVerified(entry.getKey(), entry.getValue())) {
@@ -781,8 +782,17 @@ public abstract class AdSelectionRunner {
                         entry.getKey());
                 continue;
             }
-            filteredContextualAdsMap.put(
-                    entry.getKey(), mAdFilterer.filterContextualAds(entry.getValue()));
+
+            filtered = mAdFilterer.filterContextualAds(entry.getValue());
+            if (filtered.getAdsWithBid().isEmpty()) {
+                sLogger.v(
+                        "All the ads are filtered for a contextual ads for buyer: %s. Contextual"
+                                + " ads object will be removed.",
+                        entry.getKey());
+                continue;
+            }
+
+            filteredContextualAdsMap.put(entry.getKey(), filtered);
             sLogger.v(
                     "Buyer '%s' has a valid signature. It's contextual ads filtered from "
                             + "%s ad(s) to %s ad(s)",

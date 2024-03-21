@@ -26,7 +26,6 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -276,46 +275,5 @@ public class CombinatoricsTest {
                                             Combinatorics.getFlipProbability((int) testCase[0]));
                             assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
-    }
-
-    private static boolean atomReportStateSetMeetRequirement(
-            int totalCap,
-            int[] perTypeNumWindowList,
-            int[] perTypeCapList,
-            List<Combinatorics.AtomReportState> reportSet) {
-        // if number of report over max reports
-        if (reportSet.size() > totalCap) {
-            return false;
-        }
-        int[] perTypeReportList = new int[perTypeCapList.length];
-        // Initialize all elements to zero
-        for (int i = 0; i < perTypeCapList.length; i++) {
-            perTypeReportList[i] = 0;
-        }
-        for (Combinatorics.AtomReportState report : reportSet) {
-            int triggerDataIndex = report.getTriggerDataType();
-            // if the report window larger than total report window of this trigger data
-            // input perTypeNumWindowList is [3,3,3], and report windows index is 4, return false
-            if (report.getWindowIndex() + 1 > perTypeNumWindowList[triggerDataIndex]) {
-                return false;
-            }
-            perTypeReportList[triggerDataIndex]++;
-            // number of report for this trigger data over the per data limit
-            if (perTypeCapList[triggerDataIndex] < perTypeReportList[triggerDataIndex]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static class AtomReportStateComparator
-            implements Comparator<Combinatorics.AtomReportState> {
-        @Override
-        public int compare(Combinatorics.AtomReportState o1, Combinatorics.AtomReportState o2) {
-            if (o1.getTriggerDataType() != o2.getTriggerDataType()) {
-                return Integer.compare(o1.getTriggerDataType(), o2.getTriggerDataType());
-            }
-            return Integer.compare(o1.getWindowIndex(), o2.getWindowIndex());
-        }
     }
 }

@@ -16,21 +16,19 @@
 
 package com.android.adservices.service.shell;
 
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
 import static com.android.internal.util.Preconditions.checkArgument;
 
 import android.util.ArrayMap;
-import android.util.Log;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
-import java.util.Arrays;
 import java.util.Map;
 
 // TODO(b/322395593): Refactor ArgParser to work better after M-04 release.
 final class CustomAudienceArgParser {
 
+    private static final int ARG_PARSE_START_INDEX = 2;
     private final ImmutableList<String> mRequiredArgs;
     private final Map<String, String> mParsedArgs = new ArrayMap<>();
 
@@ -50,17 +48,12 @@ final class CustomAudienceArgParser {
      * @throws IllegalArgumentException if any command line argument doesn't match expected format.
      * @throws IllegalArgumentException if any required command line argument is missing.
      */
-    Map<String, String> parse(String... args) {
-        checkArgument(args.length > 0, "No argument was passed to ArgParser.");
-        Log.v(TAG, "Parsing command line arguments: " + Arrays.toString(args));
+    Map<String, String> parse(String[] args) {
+        checkArgument(args.length > 0, "No argument was passed to CustomAudienceArgParser.");
         mParsedArgs.clear();
-        for (int i = 2; i < args.length; i += 2) {
-            checkArgument(
-                    i + 1 < args.length,
-                    "Required value for argument `%s` is not present",
-                    args[i]);
-            parseArgument(args[i], args[i + 1]);
-        }
+        ImmutableMap<String, String> cliArgs =
+                ShellCommandArgParserHelper.parseCliArguments(args, ARG_PARSE_START_INDEX);
+        mParsedArgs.putAll(cliArgs);
         verifyRequiredArgsArePresent();
         return mParsedArgs;
     }
@@ -74,35 +67,17 @@ final class CustomAudienceArgParser {
     String getValue(String key) {
         checkArgument(
                 mParsedArgs.containsKey(key),
-                String.format("Required command line argument `%s` is not present", key));
+                "Required command line argument `%s` is not present",
+                key);
         return mParsedArgs.get(key);
-    }
-
-    private void parseArgument(String key, String value) {
-        checkArgument(
-                key.startsWith("--") && !value.contains("--"),
-                String.format(
-                        "Command line arguments `%s %s` must use the syntax `--key value`",
-                        key, value));
-        key = key.substring(2); // Remove the "--".
-
-        checkArgument(
-                !Strings.isNullOrEmpty(key) && !Strings.isNullOrEmpty(value),
-                String.format(
-                        "Command line arguments `%s %s` must use the syntax `--key value`",
-                        key, value));
-        checkArgument(
-                !mParsedArgs.containsKey(key),
-                String.format(
-                        "Command line argument with key `%s` is defined multiple times", key));
-        mParsedArgs.put(key, value);
     }
 
     private void verifyRequiredArgsArePresent() {
         for (String arg : mRequiredArgs) {
             checkArgument(
                     mParsedArgs.containsKey(arg),
-                    String.format("Required command line argument `%s` is not present", arg));
+                    "Required command line argument `%s` is not present",
+                    arg);
         }
     }
 }
