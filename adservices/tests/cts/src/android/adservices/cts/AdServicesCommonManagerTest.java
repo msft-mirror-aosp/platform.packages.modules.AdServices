@@ -18,9 +18,11 @@ package android.adservices.cts;
 
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
+import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.UpdateAdIdRequest;
 import android.util.Log;
 
@@ -159,5 +161,16 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
                         .build();
         mCommonManager.updateAdId(
                 request, CALLBACK_EXECUTOR, new AdServicesOutcomeReceiverForTests<>());
+    }
+
+    @Test
+    @SetFlagDisabled(KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED)
+    public void testGetAdservicesCommonStates_notEnabled_rPlus() throws Exception {
+        AdServicesOutcomeReceiverForTests<AdServicesCommonStatesResponse> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+
+        mCommonManager.getAdservicesCommonStates(CALLBACK_EXECUTOR, receiver);
+
+        receiver.assertFailure(SecurityException.class);
     }
 }
