@@ -292,7 +292,7 @@ class AttributionJobHandler {
                     // For flex event attribution, we delete attribution records of pending reports
                     // and process a new attribution state. The count of attributions affects the
                     // alloted report quota, as well as limits calculated in different code paths
-                    // form here so we retrieve it once and pass as needed.
+                    // from here so we retrieve it once and pass as needed.
                     long eventAttributionCount =
                             mFlags.getMeasurementEnableScopedAttributionRateLimit()
                                     ? measurementDao.getAttributionsPerRateLimitWindow(

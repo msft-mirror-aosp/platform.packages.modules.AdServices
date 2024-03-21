@@ -996,6 +996,12 @@ public final class FlagsConstants {
     public static final String KEY_UI_OTA_STRINGS_FEATURE_ENABLED =
             "ui_ota_strings_feature_enabled";
 
+    public static final String KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL =
+            "mdd_ui_ota_resources_manifest_file_url";
+
+    public static final String KEY_UI_OTA_RESOURCES_FEATURE_ENABLED =
+            "ui_ota_resources_feature_enabled";
+
     public static final String KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE =
             "ui_ota_strings_download_deadline";
 
@@ -1046,6 +1052,8 @@ public final class FlagsConstants {
     public static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
     public static final String KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING =
             "enrollment_enable_limited_logging";
+    public static final String KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED =
+            "enrollment_api_based_schema_enabled";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
@@ -1208,6 +1216,8 @@ public final class FlagsConstants {
             "enable_database_schema_version_8";
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_9 =
             "enable_database_schema_version_9";
+    public static final String KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED =
+            "shared_database_schema_version_4_enabled";
 
     public static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK =
             "notification_dmsmissed_on_click";

@@ -3191,6 +3191,22 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return UI_OTA_STRINGS_FEATURE_ENABLED;
     }
 
+    /** UI OTA resources manifest file url, used for MDD download. */
+    String UI_OTA_RESOURCES_MANIFEST_FILE_URL = "";
+
+    /** UI OTA resources manifest file url. */
+    default String getUiOtaResourcesManifestFileUrl() {
+        return UI_OTA_RESOURCES_MANIFEST_FILE_URL;
+    }
+
+    /** UI OTA resources feature flag. */
+    boolean UI_OTA_RESOURCES_FEATURE_ENABLED = false;
+
+    /** Returns if UI OTA resources feature is enabled. */
+    default boolean getUiOtaResourcesFeatureEnabled() {
+        return UI_OTA_RESOURCES_FEATURE_ENABLED;
+    }
+
     /** Deadline for downloading UI OTA strings. */
     long UI_OTA_STRINGS_DOWNLOAD_DEADLINE = 86700000; /* 1 day */
 
@@ -4896,4 +4912,25 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getSpeOnPilotJobsEnabled() {
         return DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
     }
+
+    /** A feature flag to enable the use of Enrollment API Based Schema. */
+    @FeatureFlag boolean ENROLLMENT_API_BASED_SCHEMA_ENABLED = false;
+
+    /**
+     * @return the enabled status for enrollment api based schema.
+     */
+    default boolean getEnrollmentApiBasedSchemaEnabled() {
+        return ENROLLMENT_API_BASED_SCHEMA_ENABLED;
+    }
+
+    /** Whether to enable shared database schema version 4 */
+    @FeatureFlag boolean SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED = false;
+
+    /**
+     * @return if to enable shared database schema version 4.
+     */
+    default boolean getSharedDatabaseSchemaVersion4Enabled() {
+        return SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
+    }
 }
+

@@ -25,6 +25,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
@@ -78,6 +79,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.MAX_PERCENTAGE;
 
@@ -1942,6 +1944,27 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public String getUiOtaResourcesManifestFileUrl() {
+        return SystemProperties.get(
+                getSystemPropertyName(FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL),
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL,
+                        UI_OTA_RESOURCES_MANIFEST_FILE_URL));
+    }
+
+    @Override
+    public boolean getUiOtaResourcesFeatureEnabled() {
+        if (getGlobalKillSwitch()) {
+            return false;
+        }
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED),
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED,
+                        UI_OTA_RESOURCES_FEATURE_ENABLED));
+    }
+
+    @Override
     public long getUiOtaStringsDownloadDeadline() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE,
@@ -3189,6 +3212,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL
                         + " = "
                         + getUiOtaStringsManifestFileUrl());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL
+                        + " = "
+                        + getUiOtaStringsManifestFileUrl());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED
+                        + " = "
+                        + getUiOtaResourcesFeatureEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS
@@ -5232,6 +5265,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         uxMap.put(
                 FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
         uxMap.put(
+                FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED,
+                getUiOtaResourcesFeatureEnabled());
+        uxMap.put(
                 FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED,
                 isUiFeatureTypeLoggingEnabled());
         uxMap.put(FlagsConstants.KEY_ADSERVICES_ENABLED, getAdServicesEnabled());
@@ -5996,6 +6032,19 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getSpeOnPilotJobsEnabled() {
         return getDeviceConfigFlag(
                 KEY_SPE_ON_PILOT_JOBS_ENABLED, DEFAULT_SPE_ON_PILOT_JOBS_ENABLED);
+    }
+
+    @Override
+    public boolean getEnrollmentApiBasedSchemaEnabled() {
+        return getDeviceConfigFlag(
+                KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED, ENROLLMENT_API_BASED_SCHEMA_ENABLED);
+    }
+
+    @Override
+    public boolean getSharedDatabaseSchemaVersion4Enabled() {
+        return getDeviceConfigFlag(
+                KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED,
+                SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers

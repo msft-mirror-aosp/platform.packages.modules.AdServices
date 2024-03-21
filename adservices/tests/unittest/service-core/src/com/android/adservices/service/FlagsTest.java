@@ -337,6 +337,20 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "DEFAULT_SPE_ON_PILOT_JOBS_ENABLED", flags -> flags.getSpeOnPilotJobsEnabled());
     }
 
+    @Test
+    public void testGetEnrollmentApiBasedSchemaEnabled() {
+        testFeatureFlag(
+                "ENROLLMENT_API_BASED_SCHEMA_ENABLED",
+                flags -> flags.getEnrollmentApiBasedSchemaEnabled());
+    }
+
+    @Test
+    public void testGetSharedDatabaseSchemaVersion4Enabled() {
+        testFeatureFlag(
+                "SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED",
+                flags -> flags.getSharedDatabaseSchemaVersion4Enabled());
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //
