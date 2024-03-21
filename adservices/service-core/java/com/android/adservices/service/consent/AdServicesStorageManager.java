@@ -256,6 +256,15 @@ public final class AdServicesStorageManager implements IConsentStorage {
         mAdServicesManager.recordNotificationDisplayed(wasNotificationDisplayed);
     }
 
+    /**
+     * Saves information to the storage that Pas notification was displayed for the first time to
+     * the user.
+     */
+    @Override
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) throws IOException {
+        mAdServicesManager.recordPasNotificationDisplayed(wasPasDisplayed);
+    }
+
     /** Saves information to the storage that user interacted with consent manually. */
     @Override
     public void recordUserManualInteractionWithConsent(int interaction) {
@@ -374,6 +383,25 @@ public final class AdServicesStorageManager implements IConsentStorage {
     @Override
     public boolean wasU18NotificationDisplayed() {
         return mAdServicesManager.wasU18NotificationDisplayed();
+    }
+
+    @Override
+    public boolean wasPasNotificationDisplayed() throws IOException {
+        return mAdServicesManager.wasPasNotificationDisplayed();
+    }
+
+    /** Set the measurement data reset activity happens based on consent_source_of_truth. */
+    @Override
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        mAdServicesManager.setMeasurementDataReset(isMeasurementDataReset);
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    @Override
+    public boolean isMeasurementDataReset() throws IOException {
+        return mAdServicesManager.isMeasurementDataReset();
     }
 
     private PrivacySandboxUxCollection convertUxString(@NonNull String uxString) {
