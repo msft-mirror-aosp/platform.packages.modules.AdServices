@@ -470,10 +470,6 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
         return setSystemProperty(name, Boolean.toString(value));
     }
 
-    protected final T setSystemProperty(String name, long value) {
-        return setSystemProperty(name, Long.toString(value));
-    }
-
     private T setSystemProperty(String name, String value) {
         return setOrCacheSystemProperty(mSystemPropertiesPrefix + name, value);
     }
