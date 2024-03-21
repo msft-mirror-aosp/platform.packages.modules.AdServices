@@ -30,6 +30,7 @@ import androidx.test.core.app.ApplicationProvider;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// TODO(b/299104530): replace device_config usage by AdServicesFlagSetterRule
 public class TestUtil {
     private Instrumentation mInstrumentation;
     private String mTag;
@@ -63,7 +64,7 @@ public class TestUtil {
     }
 
     public void enableEnrollmentCheck(boolean enable) {
-        runShellCommand("setprop debug.adservices.disable_topics_enrollment_check " + enable);
+        runShellCommand("device_config put adservices disable_topics_enrollment_check " + enable);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
@@ -75,7 +76,7 @@ public class TestUtil {
     // Override the Percentage For Random Topic in the test.
     public void overridePercentageForRandomTopic(long overridePercentage) {
         runShellCommand(
-                "setprop debug.adservices.topics_percentage_for_random_topics "
+                "device_config put adservices topics_percentage_for_random_topics "
                         + overridePercentage);
     }
 
