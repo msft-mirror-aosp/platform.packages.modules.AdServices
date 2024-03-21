@@ -75,6 +75,32 @@ public final class NotificationActivityTestUtil {
         device.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
     }
 
+    /**
+     * Start PAS Renotify Notification.
+     *
+     * @param isEUActivity Is the activity EU.
+     * @param device UiDevice
+     * @throws InterruptedException Interrupted Exception
+     */
+    public static void startRenotifyPasActivity(boolean isEUActivity, UiDevice device)
+            throws InterruptedException {
+        if (sContext.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d("adservices", "this does not have read_device_config permission");
+        } else {
+            Log.d("adservices", "this has read_device_config permission");
+        }
+
+        String notificationPackage = NOTIFICATION_PACKAGE;
+        Intent intent = new Intent(notificationPackage);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("isEUDevice", isEUActivity);
+        intent.putExtra("IS_RENOTIFY_KEY", true);
+
+        sContext.startActivity(intent);
+        device.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
+    }
+
     /***
      * Click on the More button on the notification page.
      * @param device device
