@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection.signature;
 
+
 import com.android.adservices.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -43,7 +44,7 @@ public class ECDSASignatureVerifier implements SignatureVerifier {
 
     @VisibleForTesting
     protected static final String INVALID_KEY_ERROR =
-            "Given key is not suitable with the specified algorithm: ECDSA";
+            "Given key is either null or not suitable with the specified algorithm: ECDSA";
 
     @VisibleForTesting
     protected static final String SIGNATURE_VALIDATION_ERROR =
@@ -80,7 +81,7 @@ public class ECDSASignatureVerifier implements SignatureVerifier {
         } catch (InvalidKeySpecException error) {
             sLogger.e(error, KEY_SPEC_ERROR);
             throw new IllegalStateException(KEY_SPEC_ERROR, error);
-        } catch (InvalidKeyException error) {
+        } catch (NullPointerException | InvalidKeyException error) {
             sLogger.e(error, INVALID_KEY_ERROR);
             throw new IllegalStateException(INVALID_KEY_ERROR, error);
         } catch (SignatureException error) {

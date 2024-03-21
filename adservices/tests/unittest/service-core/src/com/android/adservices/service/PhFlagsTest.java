@@ -69,6 +69,8 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SY
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.Flags.DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MAINLINE_TRAIN_VERSION;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
@@ -123,6 +125,7 @@ import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLE
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_SIGNALS;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+import static com.android.adservices.service.Flags.ENROLLMENT_API_BASED_SCHEMA_ENABLED;
 import static com.android.adservices.service.Flags.ENROLLMENT_ENABLE_LIMITED_LOGGING;
 import static com.android.adservices.service.Flags.ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT;
@@ -461,6 +464,7 @@ import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_EN
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.RECORD_MANUAL_INTERACTION_ENABLED;
 import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
 import static com.android.adservices.service.Flags.TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
@@ -554,6 +558,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_P
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_BLOCKLIST_IDS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
@@ -694,6 +699,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FE
 import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINLINE_TRAIN_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_FLEX_MS;
@@ -905,6 +912,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOT
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
@@ -10836,11 +10844,9 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetPasExtendedMetricsEnabled() {
-        assertThat(mPhFlags.getPasExtendedMetricsEnabled())
-                .isEqualTo(PAS_EXTENDED_METRICS_ENABLED);
+        assertThat(mPhFlags.getPasExtendedMetricsEnabled()).isEqualTo(PAS_EXTENDED_METRICS_ENABLED);
 
-        boolean phOverridingValue =
-                !PAS_EXTENDED_METRICS_ENABLED;
+        boolean phOverridingValue = !PAS_EXTENDED_METRICS_ENABLED;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_PAS_EXTENDED_METRICS_ENABLED,
@@ -10865,6 +10871,66 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(phOverrideValue);
     }
 
+    @Test
+    public void testEnrollmentApiBasedSchemaEnabled() {
+        assertThat(mPhFlags.getEnrollmentApiBasedSchemaEnabled())
+                .isEqualTo(ENROLLMENT_API_BASED_SCHEMA_ENABLED);
+
+        boolean phOverridingValue = !ENROLLMENT_API_BASED_SCHEMA_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnrollmentApiBasedSchemaEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testSharedDatabaseSchemaVersion4Enabled() {
+        assertThat(mPhFlags.getSharedDatabaseSchemaVersion4Enabled())
+                .isEqualTo(SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED);
+
+        boolean phOverridingValue = !SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getSharedDatabaseSchemaVersion4Enabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetJobSchedulingLoggingEnabled() {
+        boolean phOverrideValue = !DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
+
+        expect.withMessage("getJobSchedulingLoggingEnabled() by default")
+                .that(mPhFlags.getJobSchedulingLoggingEnabled())
+                .isEqualTo(DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED);
+
+        // Now overriding with the value from PH.
+        setJobSchedulingLoggingEnabled(phOverrideValue);
+        expect.withMessage("getJobSchedulingLoggingEnabled() when set by device config")
+                .that(mPhFlags.getJobSchedulingLoggingEnabled())
+                .isEqualTo(phOverrideValue);
+    }
+
+    @Test
+    public void testGetJobSchedulingLoggingSamplingRate() {
+        int phOverrideValue = DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE + 1;
+
+        expect.withMessage("getJobSchedulingLoggingSamplingRate() by default")
+                .that(mPhFlags.getJobSchedulingLoggingSamplingRate())
+                .isEqualTo(DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE);
+
+        // Now overriding with the value from PH.
+        setJobSchedulingLoggingSamplingRate(phOverrideValue);
+        expect.withMessage("getJobSchedulingLoggingEnabled() when set by device config")
+                .that(mPhFlags.getJobSchedulingLoggingSamplingRate())
+                .isEqualTo(phOverrideValue);
+    }
+
     private void setMeasurementKillSwitch(boolean value) {
         setAdservicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
@@ -10883,6 +10949,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     private void setSpeOnPilotJobsEnabled(boolean value) {
         setAdservicesFlag(KEY_SPE_ON_PILOT_JOBS_ENABLED, value);
+    }
+
+    private void setJobSchedulingLoggingEnabled(boolean value) {
+        setAdservicesFlag(KEY_JOB_SCHEDULING_LOGGING_ENABLED, value);
+    }
+
+    private void setJobSchedulingLoggingSamplingRate(int value) {
+        setAdservicesFlag(KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE, value);
     }
 
     private void verifyGetBooleanNotCalled(String name) {
