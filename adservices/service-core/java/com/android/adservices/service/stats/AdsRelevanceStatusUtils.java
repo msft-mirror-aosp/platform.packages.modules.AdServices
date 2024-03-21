@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package com.android.adservices.service.stats;
 
 import android.annotation.IntDef;
 
@@ -29,6 +29,13 @@ import java.lang.annotation.RetentionPolicy;
  * @hide
  */
 public class AdsRelevanceStatusUtils {
+    /** The Ad Filtering is UNSET process. */
+    public static final int FILTER_PROCESS_TYPE_UNSET = 0;
+    /** The Ad Filtering is used in Custom Audiences process. */
+    public static final int FILTER_PROCESS_TYPE_CUSTOM_AUDIENCES = 1;
+    /** The Ad Filtering is used in Contextual Ads process. */
+    public static final int FILTER_PROCESS_TYPE_CONTEXTUAL_ADS = 2;
+
     /** The beacon comes from UNSET winner. */
     public static final int BEACON_SOURCE_UNSET = 0;
     /** The beacon comes from PROTECTED_SIGNALS winner. */
@@ -187,6 +194,17 @@ public class AdsRelevanceStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Size {}
+
+    /** Filter processing type */
+    @IntDef(
+            prefix = {"FILTER_PROCESS_TYPE_"},
+            value = {
+                FILTER_PROCESS_TYPE_UNSET,
+                FILTER_PROCESS_TYPE_CUSTOM_AUDIENCES,
+                FILTER_PROCESS_TYPE_CONTEXTUAL_ADS
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface FilterProcessType {}
 
     /** The type of server auction coordinator source. */
     @IntDef(

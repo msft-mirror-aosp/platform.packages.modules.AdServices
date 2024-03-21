@@ -196,6 +196,16 @@ public interface AdServicesLogger {
     void logGetAdSelectionDataBuyerInputGeneratedStats(
             GetAdSelectionDataBuyerInputGeneratedStats stats);
 
+    /** Logs AdFilteringProcessJoinCAReported stats. */
+    void logAdFilteringProcessJoinCAReportedStats(AdFilteringProcessJoinCAReportedStats stats);
+
+    /** Logs AdFilteringProcessAdSelectionReported stats. */
+    void logAdFilteringProcessAdSelectionReportedStats(
+            AdFilteringProcessAdSelectionReportedStats stats);
+
+    /** Logs AdCounterHistogramUpdaterReported stats. */
+    void logAdCounterHistogramUpdaterReportedStats(AdCounterHistogramUpdaterReportedStats stats);
+
     /** Logs TopicsEncryptionEpochComputationReported stats. */
     void logTopicsEncryptionEpochComputationReportedStats(
             TopicsEncryptionEpochComputationReportedStats stats);

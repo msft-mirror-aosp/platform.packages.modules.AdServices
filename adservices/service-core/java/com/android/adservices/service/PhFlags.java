@@ -1174,6 +1174,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED,
+                FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeFrequencyCapFilteringMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED,
+                FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED);
+    }
+
+    @Override
     @SuppressWarnings("InlinedApi")
     public boolean getFledgeFetchCustomAudienceEnabled() {
         return getDeviceConfigFlag(
@@ -4424,9 +4438,19 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeAppInstallFilteringEnabled());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED
+                        + " = "
+                        + getFledgeAppInstallFilteringMetricsEnabled());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED
                         + " = "
                         + getFledgeFrequencyCapFilteringEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED
+                        + " = "
+                        + getFledgeFrequencyCapFilteringMetricsEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED
