@@ -114,16 +114,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setFlag(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, value);
     }
 
-    /** Overrides the system property that defines the percentage for random topic. */
-    public T setTopicsPercentageForRandomTopicForTests(long value) {
-        return setSystemProperty(FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);
-    }
-
-    /** Overrides the system property used to disable topics enrollment check. */
-    public T setDisableTopicsEnrollmentCheckForTests(boolean value) {
-        return setSystemProperty(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
-    }
-
     /** Overrides the system property used to set ConsentManager notification debug mode keys. */
     public T setConsentNotifiedDebugMode(boolean value) {
         return setSystemProperty(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE, value);
