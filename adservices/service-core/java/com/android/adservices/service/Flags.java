@@ -4808,9 +4808,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /**
-     * This method returns the url authority that will be used in the
-     * {@link com.android.adservices.service.common.bhttp.BinaryHttpMessage}. This BinaryHttpMessage
-     * is sent as part of kanon http join request.
+     * This method returns the url authority that will be used in the {@link
+     * com.android.adservices.service.common.bhttp.BinaryHttpMessage}. This BinaryHttpMessage is
+     * sent as part of kanon http join request.
      */
     default String getFledgeKAnonUrlAuthorityToJoin() {
         return FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
@@ -4932,5 +4932,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getSharedDatabaseSchemaVersion4Enabled() {
         return SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
     }
-}
 
+    /** Default value for the enablement of background job scheduling logging. */
+    @FeatureFlag boolean DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED = false;
+
+    /** Returns the default value of the enablement of background job scheduling logging. */
+    default boolean getJobSchedulingLoggingEnabled() {
+        return DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
+    }
+
+    /** Default value of the sampling logging rate for job scheduling logging events. */
+    @ConfigFlag int DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE = 5;
+
+    /** Returns the sampling logging rate for job scheduling logging events. */
+    default int getJobSchedulingLoggingSamplingRate() {
+        return DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
+    }
+}
