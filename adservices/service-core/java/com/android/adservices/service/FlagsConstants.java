@@ -1354,4 +1354,12 @@ public final class FlagsConstants {
 
     /** Key for enabling SPE on pilot background jobs. */
     public static final String KEY_SPE_ON_PILOT_JOBS_ENABLED = "spe_on_pilot_jobs_enabled";
+
+    /** Key for enabling job scheduling logging rate. */
+    public static final String KEY_JOB_SCHEDULING_LOGGING_ENABLED =
+            "job_scheduling_logging_enabled";
+
+    /** Key for the sampling rate of job scheduling logging. */
+    public static final String KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE =
+            "job_scheduling_logging_sampling_rate";
 }

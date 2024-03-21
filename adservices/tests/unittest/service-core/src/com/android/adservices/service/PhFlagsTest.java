@@ -69,6 +69,8 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SY
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.Flags.DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MAINLINE_TRAIN_VERSION;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
@@ -697,6 +699,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FE
 import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINLINE_TRAIN_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_FLEX_MS;
@@ -10840,11 +10844,9 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetPasExtendedMetricsEnabled() {
-        assertThat(mPhFlags.getPasExtendedMetricsEnabled())
-                .isEqualTo(PAS_EXTENDED_METRICS_ENABLED);
+        assertThat(mPhFlags.getPasExtendedMetricsEnabled()).isEqualTo(PAS_EXTENDED_METRICS_ENABLED);
 
-        boolean phOverridingValue =
-                !PAS_EXTENDED_METRICS_ENABLED;
+        boolean phOverridingValue = !PAS_EXTENDED_METRICS_ENABLED;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_PAS_EXTENDED_METRICS_ENABLED,
@@ -10899,6 +10901,36 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mPhFlags.getSharedDatabaseSchemaVersion4Enabled()).isEqualTo(phOverridingValue);
     }
 
+    @Test
+    public void testGetJobSchedulingLoggingEnabled() {
+        boolean phOverrideValue = !DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
+
+        expect.withMessage("getJobSchedulingLoggingEnabled() by default")
+                .that(mPhFlags.getJobSchedulingLoggingEnabled())
+                .isEqualTo(DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED);
+
+        // Now overriding with the value from PH.
+        setJobSchedulingLoggingEnabled(phOverrideValue);
+        expect.withMessage("getJobSchedulingLoggingEnabled() when set by device config")
+                .that(mPhFlags.getJobSchedulingLoggingEnabled())
+                .isEqualTo(phOverrideValue);
+    }
+
+    @Test
+    public void testGetJobSchedulingLoggingSamplingRate() {
+        int phOverrideValue = DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE + 1;
+
+        expect.withMessage("getJobSchedulingLoggingSamplingRate() by default")
+                .that(mPhFlags.getJobSchedulingLoggingSamplingRate())
+                .isEqualTo(DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE);
+
+        // Now overriding with the value from PH.
+        setJobSchedulingLoggingSamplingRate(phOverrideValue);
+        expect.withMessage("getJobSchedulingLoggingEnabled() when set by device config")
+                .that(mPhFlags.getJobSchedulingLoggingSamplingRate())
+                .isEqualTo(phOverrideValue);
+    }
+
     private void setMeasurementKillSwitch(boolean value) {
         setAdservicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
@@ -10917,6 +10949,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     private void setSpeOnPilotJobsEnabled(boolean value) {
         setAdservicesFlag(KEY_SPE_ON_PILOT_JOBS_ENABLED, value);
+    }
+
+    private void setJobSchedulingLoggingEnabled(boolean value) {
+        setAdservicesFlag(KEY_JOB_SCHEDULING_LOGGING_ENABLED, value);
+    }
+
+    private void setJobSchedulingLoggingSamplingRate(int value) {
+        setAdservicesFlag(KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE, value);
     }
 
     private void verifyGetBooleanNotCalled(String name) {
