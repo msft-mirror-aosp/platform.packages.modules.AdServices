@@ -1566,7 +1566,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      */
     void clearSdkSandboxState() {
         synchronized (mLock) {
-            getSdkSandboxSettingsListener().setKillSwitchState(DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
+            getSdkSandboxSettingsListener()
+                    .setKillSwitchAndSetProperty(DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
         }
     }
 
@@ -1576,7 +1577,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      */
     void forceEnableSandbox() {
         synchronized (mLock) {
-            getSdkSandboxSettingsListener().setKillSwitchState(false);
+            getSdkSandboxSettingsListener().setKillSwitchAndSetProperty(false);
         }
     }
 
