@@ -149,6 +149,14 @@ public class TriggerSpecs {
         return mPrivacyParams.getInformationGain();
     }
 
+    /** @return whether the trigger specs have a valid report state count */
+    public boolean hasValidReportStateCount(Source source, Flags flags) {
+        if (mPrivacyParams == null) {
+            buildPrivacyParameters(source, flags);
+        }
+        return mPrivacyParams.hasValidReportStateCount();
+    }
+
     /** @return the probability to use fake report */
     public double getFlipProbability(Source source, Flags flags) {
         if (mPrivacyParams == null) {
@@ -461,9 +469,9 @@ public class TriggerSpecs {
     private class PrivacyComputationParams {
         private final int[] mPerTypeNumWindowList;
         private final int[] mPerTypeCapList;
-        private final long mNumStates;
-        private final double mFlipProbability;
-        private final double mInformationGain;
+        private long mNumStates;
+        private double mFlipProbability;
+        private double mInformationGain;
 
         PrivacyComputationParams(Source source, Flags flags) {
             mPerTypeNumWindowList = computePerTypeNumWindowList();
@@ -477,10 +485,19 @@ public class TriggerSpecs {
                 updatedPerTypeNumWindowList[i] = mPerTypeNumWindowList[i] * destinationMultiplier;
             }
 
-            // compute number of state and other privacy parameters
-            mNumStates =
-                    Combinatorics.getNumStatesFlexApi(
-                            mMaxEventLevelReports, updatedPerTypeNumWindowList, mPerTypeCapList);
+            long reportStateCountLimit = flags.getMeasurementMaxReportStatesPerSourceRegistration();
+
+            long numStates = Combinatorics.getNumStatesFlexApi(
+                    mMaxEventLevelReports,
+                    updatedPerTypeNumWindowList,
+                    mPerTypeCapList,
+                    reportStateCountLimit);
+
+            if (numStates > reportStateCountLimit) {
+                return;
+            }
+
+            mNumStates = numStates;
             mFlipProbability = Combinatorics.getFlipProbability(mNumStates);
             mInformationGain = Combinatorics.getInformationGain(mNumStates, mFlipProbability);
         }
@@ -493,6 +510,10 @@ public class TriggerSpecs {
             mPerTypeCapList = null;
             mNumStates = -1;
             mInformationGain = -1.0;
+        }
+
+        private boolean hasValidReportStateCount() {
+            return mNumStates != 0;
         }
 
         private double getFlipProbability() {

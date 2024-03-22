@@ -20,7 +20,6 @@ import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -113,15 +112,14 @@ public final class ImpressionNoiseUtil {
         }
         long numStates =
                 Combinatorics.getNumStatesFlexApi(
-                        params[0][0], updatedPerTypeNumWindowList, params[2]);
+                        params[0][0], updatedPerTypeNumWindowList, params[2], Long.MAX_VALUE);
         long sequenceIndex = nextLong(rand, numStates);
         List<Combinatorics.AtomReportState> rawFakeReports =
                 Combinatorics.getReportSetBasedOnRank(
                         params[0][0],
                         updatedPerTypeNumWindowList,
                         params[2],
-                        sequenceIndex,
-                        new HashMap<>());
+                        sequenceIndex);
         List<int[]> fakeReportConfigs = new ArrayList<>();
         for (Combinatorics.AtomReportState rawFakeReport : rawFakeReports) {
             int[] fakeReportConfig = new int[3];
