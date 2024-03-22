@@ -31,6 +31,7 @@ java_sdk_library {
     name: "service-adservices",
     srcs: [
         ":service-adservices-sources",
+        ":adservices-shared-flag-annotation-sources",
         ":adservices-service-common-flags-sources",
     ],
     sdk_version: "system_server_current",
