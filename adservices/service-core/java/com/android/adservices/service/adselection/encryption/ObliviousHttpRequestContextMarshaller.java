@@ -65,7 +65,8 @@ public class ObliviousHttpRequestContextMarshaller {
         return ObliviousHttpRequestContext.create(
                 ObliviousHttpKeyConfig.fromSerializedKeyConfig(dbEncryptionContext.getKeyConfig()),
                 EncapsulatedSharedSecret.create(dbEncryptionContext.getSharedSecret()),
-                dbEncryptionContext.getSeed());
+                dbEncryptionContext.getSeed(),
+                dbEncryptionContext.getHasMediaTypeChanged());
     }
 
     /** Inserts the given ObliviousHttpRequestContext into the DB. */
@@ -87,6 +88,7 @@ public class ObliviousHttpRequestContextMarshaller {
                         .setKeyConfig(requestContext.keyConfig().serializeKeyConfigToBytes())
                         .setSharedSecret(
                                 requestContext.encapsulatedSharedSecret().serializeToBytes())
+                        .setHasMediaTypeChanged(requestContext.hasMediaTypeChanged())
                         .build());
     }
 }

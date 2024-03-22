@@ -638,6 +638,8 @@ public final class FlagsConstants {
             "fledge_auction_server_enabled_for_select_ads_mediation";
     public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA =
             "fledge_auction_server_enable_ad_filter_in_get_ad_selection_data";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED =
+            "fledge_auction_server_media_type_change_enabled";
     public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             "fledge_auction_server_payload_bucket_sizes";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =

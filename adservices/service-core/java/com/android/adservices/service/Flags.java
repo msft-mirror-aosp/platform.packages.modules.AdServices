@@ -1417,6 +1417,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED = false;
+
+    /** Returns whether to use the server auction media type. */
+    default boolean getFledgeAuctionServerMediaTypeChangeEnabled() {
+        return FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
+    }
+
     ImmutableList<Integer> FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             ImmutableList.of(0, 1024, 2048, 4096, 8192, 16384, 32768, 65536);
 

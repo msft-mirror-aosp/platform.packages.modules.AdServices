@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection.encryption;
 
+import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN;
+
 import android.net.Uri;
 
 import androidx.annotation.Nullable;
@@ -62,10 +64,7 @@ public class KAnonObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             long keyFetchTimeoutMs,
             @Nullable Uri unusedCoordinatorUri) {
         return mEncryptionKeyManager
-                .getLatestOhttpKeyConfigOfType(
-                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN,
-                        keyFetchTimeoutMs,
-                        null)
+                .getLatestOhttpKeyConfigOfType(JOIN, keyFetchTimeoutMs, null)
                 .transform(key -> createAndSerializeRequest(key, plainText), mLightweightExecutor);
     }
 
@@ -91,7 +90,10 @@ public class KAnonObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             ObliviousHttpClient client = ObliviousHttpClient.create(config);
 
             Objects.requireNonNull(client);
-            ObliviousHttpRequest request = client.createObliviousHttpRequest(plainText);
+            ObliviousHttpRequest request =
+                    client.createObliviousHttpRequest(
+                            plainText,
+                            ObliviousHttpKeyConfig.useFledgeAuctionServerMediaTypeChange(JOIN));
 
             Objects.requireNonNull(request);
             // we will need this context later when we try to call the decrypt method.
