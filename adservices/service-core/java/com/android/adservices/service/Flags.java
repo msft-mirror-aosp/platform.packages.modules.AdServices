@@ -1324,6 +1324,22 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
     }
 
+    // Filtering feature flag disabled by default
+    boolean FLEDGE_APP_INSTALL_FILTERING_ENABLED = false;
+
+    /** Returns {@code true} if app install filtering of ads during ad selection is enabled. */
+    default boolean getFledgeAppInstallFilteringEnabled() {
+        return FLEDGE_APP_INSTALL_FILTERING_ENABLED;
+    }
+
+    // Filtering feature flag disabled by default
+    boolean FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED = false;
+
+    /** Returns {@code true} if frequency cap filtering of ads during ad selection is enabled. */
+    default boolean getFledgeFrequencyCapFilteringEnabled() {
+        return FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
+    }
+
     // Enable contextual Ads feature, based on Filtering feature enabled or not
     boolean FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 
