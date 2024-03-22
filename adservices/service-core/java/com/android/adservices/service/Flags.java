@@ -4808,9 +4808,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /**
-     * This method returns the url authority that will be used in the
-     * {@link com.android.adservices.service.common.bhttp.BinaryHttpMessage}. This BinaryHttpMessage
-     * is sent as part of kanon http join request.
+     * This method returns the url authority that will be used in the {@link
+     * com.android.adservices.service.common.bhttp.BinaryHttpMessage}. This BinaryHttpMessage is
+     * sent as part of kanon http join request.
      */
     default String getFledgeKAnonUrlAuthorityToJoin() {
         return FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
@@ -4911,5 +4911,41 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns the default enablement of applying SPE (Scheduling Policy Engine) to pilot jobs. */
     default boolean getSpeOnPilotJobsEnabled() {
         return DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
+    }
+
+    /** A feature flag to enable the use of Enrollment API Based Schema. */
+    @FeatureFlag boolean ENROLLMENT_API_BASED_SCHEMA_ENABLED = false;
+
+    /**
+     * @return the enabled status for enrollment api based schema.
+     */
+    default boolean getEnrollmentApiBasedSchemaEnabled() {
+        return ENROLLMENT_API_BASED_SCHEMA_ENABLED;
+    }
+
+    /** Whether to enable shared database schema version 4 */
+    @FeatureFlag boolean SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED = false;
+
+    /**
+     * @return if to enable shared database schema version 4.
+     */
+    default boolean getSharedDatabaseSchemaVersion4Enabled() {
+        return SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
+    }
+
+    /** Default value for the enablement of background job scheduling logging. */
+    @FeatureFlag boolean DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED = false;
+
+    /** Returns the default value of the enablement of background job scheduling logging. */
+    default boolean getJobSchedulingLoggingEnabled() {
+        return DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
+    }
+
+    /** Default value of the sampling logging rate for job scheduling logging events. */
+    @ConfigFlag int DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE = 5;
+
+    /** Returns the sampling logging rate for job scheduling logging events. */
+    default int getJobSchedulingLoggingSamplingRate() {
+        return DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
     }
 }

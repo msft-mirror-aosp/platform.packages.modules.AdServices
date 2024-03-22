@@ -32,6 +32,7 @@ import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
 
@@ -67,6 +68,7 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -220,8 +222,10 @@ public class ConsentManagerV2 {
      * existing instance will be returned.
      */
     @NonNull
-    public static ConsentManagerV2 getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    public static ConsentManagerV2 getInstance() {
+        Context context = ApplicationContextSingleton.get();
+
+        Trace.beginSection("ConsentManager#Initialization");
 
         if (sConsentManager == null) {
             synchronized (LOCK) {
@@ -322,6 +326,7 @@ public class ConsentManagerV2 {
                 }
             }
         }
+        Trace.endSection();
         return sConsentManager;
     }
 
@@ -752,6 +757,14 @@ public class ConsentManagerV2 {
      */
     public Boolean wasNotificationDisplayed() {
         return mConsentCompositeStorage.wasNotificationDisplayed();
+    }
+
+    /**
+     * Saves information to the storage that Pas notification was displayed for the first time to
+     * the user.
+     */
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
+        mConsentCompositeStorage.recordPasNotificationDisplayed(wasPasDisplayed);
     }
 
     /**
@@ -1343,14 +1356,14 @@ public class ConsentManagerV2 {
         mDatastore.put(ConsentConstants.CONSENT_KEY, isGiven);
     }
 
-    /* Returns the region od the device */
+    /** Returns the region od the device */
     private static int getConsentRegion(@NonNull Context context) {
         return DeviceRegionProvider.isEuDevice(context)
                 ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
                 : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
     }
 
-    /* Returns an object of ConsentMigrationStats */
+    /** Returns an object of ConsentMigrationStats */
     private static ConsentMigrationStats getConsentManagerStatsForLogging(
             AppConsents appConsents,
             ConsentMigrationStats.MigrationStatus migrationStatus,
@@ -1371,5 +1384,24 @@ public class ConsentManagerV2 {
                         .setRegion(getConsentRegion(context))
                         .build();
         return consentMigrationStats;
+    }
+
+    /** Returns whether the Fledge Consent is given. */
+    public boolean isPasFledgeConsentGiven() {
+        return mFlags.getPasUxEnabled()
+                && mConsentCompositeStorage.wasPasNotificationDisplayed()
+                && getConsent(AdServicesApiType.FLEDGE).isGiven();
+    }
+
+    /** Sets the isMeasurementDataReset bit to storage based on consent_source_of_truth. */
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        mConsentCompositeStorage.setMeasurementDataReset(isMeasurementDataReset);
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    public boolean isMeasurementDataReset() {
+        return mConsentCompositeStorage.isMeasurementDataReset();
     }
 }

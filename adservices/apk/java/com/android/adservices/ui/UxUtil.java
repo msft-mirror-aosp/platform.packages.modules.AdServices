@@ -25,6 +25,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
@@ -35,15 +36,20 @@ import java.util.stream.Stream;
 public class UxUtil {
 
     /** Returns whether the device is an EEA device. */
-    public static boolean isEeaDevice(FragmentActivity fragmentActivity, Context context) {
+    public static boolean isEeaDevice(FragmentActivity fragmentActivity) {
+        boolean enableConsentManagerV2 = FlagsFactory.getFlags().getEnableConsentManagerV2();
+
+        boolean isAdIdEnabled;
+        if (enableConsentManagerV2) {
+            isAdIdEnabled = ConsentManagerV2.getInstance().isAdIdEnabled();
+        } else {
+            isAdIdEnabled = ConsentManager.getInstance().isAdIdEnabled();
+        }
         return FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
                 ? fragmentActivity
                         .getIntent()
-                        .getBooleanExtra(
-                                  "isEUDevice",
-                                  UxStatesManager.getInstance().isEeaDevice())
-                : !ConsentManager.getInstance().isAdIdEnabled()
-                        || UxStatesManager.getInstance().isEeaDevice();
+                        .getBooleanExtra("isEUDevice", UxStatesManager.getInstance().isEeaDevice())
+                : !isAdIdEnabled || UxStatesManager.getInstance().isEeaDevice();
     }
 
     /** Returns if UXStates should be used. */
