@@ -765,6 +765,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
     }
 
+    long MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION = (1L << 32) - 1L;
+
+    /** Returns max repot states per source registration */
+    default long getMeasurementMaxReportStatesPerSourceRegistration() {
+        return MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION;
+    }
+
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
 
     /** Returns max event reports in Flexible Event API */

@@ -1106,6 +1106,9 @@ public final class FlagsConstants {
             KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION =
                     "measurement_flex_api_max_information_gain_dual_destination_navigation";
 
+    public static final String KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION =
+            "measurement_max_report_states_per_source_registration";
+
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS =
             "measurement_flex_api_max_event_reports";
 
