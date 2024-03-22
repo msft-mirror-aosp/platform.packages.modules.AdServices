@@ -16,9 +16,10 @@
 
 package com.android.adservices.service.shell;
 
-import static com.android.adservices.service.shell.EchoCommand.CMD_ECHO;
+import static com.android.adservices.service.shell.common.EchoCommand.CMD_ECHO;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.service.shell.common.EchoCommand;
 
 import org.junit.Test;
 
