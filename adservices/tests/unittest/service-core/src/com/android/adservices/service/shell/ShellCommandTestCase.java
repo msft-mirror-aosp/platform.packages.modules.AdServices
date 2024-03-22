@@ -29,7 +29,7 @@ import java.util.Arrays;
  *
  * @param <T>
  */
-public abstract class ShellCommandTest<T extends ShellCommand>
+public abstract class ShellCommandTestCase<T extends ShellCommand>
         extends AdServicesExtendedMockitoTestCase {
 
     /** Runs the provided shell command with its arguments. */

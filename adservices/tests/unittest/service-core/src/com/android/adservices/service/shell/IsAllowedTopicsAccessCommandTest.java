@@ -27,7 +27,7 @@ import org.junit.Test;
 
 @SpyStatic(AppManifestConfigHelper.class)
 public final class IsAllowedTopicsAccessCommandTest
-        extends ShellCommandTest<IsAllowedTopicsAccessCommand> {
+        extends ShellCommandTestCase<IsAllowedTopicsAccessCommand> {
     private static final String PKG_NAME = "d.h.a.r.m.a";
     private static final String ENROLLMENT_ID = "42";
     private static final String USES_SDK = "true";
