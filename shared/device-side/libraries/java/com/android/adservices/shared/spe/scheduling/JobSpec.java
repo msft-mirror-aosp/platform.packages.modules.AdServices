@@ -26,7 +26,7 @@ import java.util.Objects;
 
 /**
  * This class stores the specifications used to schedule a job using {@link PolicyJobScheduler},
- * which is a part of SPE (Schedule Policy Engine) framework.
+ * which is a part of SPE (Scheduling Policy Engine) framework.
  *
  * <p>An instance of {@link JobSpec} needed to be passed into {@link PolicyJobScheduler} with a job
  * ID and {@link JobPolicy} at least. And by default, a {@link JobSpec} is created with a default
