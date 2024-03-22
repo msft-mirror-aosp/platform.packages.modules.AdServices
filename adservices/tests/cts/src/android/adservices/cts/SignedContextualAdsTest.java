@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,34 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.cts;
 
 import static android.adservices.adselection.SignedContextualAdsFixture.AD_WITH_BID_1;
+
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.adselection.SignedContextualAds;
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
+import androidx.test.filters.SmallTest;
+
 import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.annotations.SetFlagEnabled;
 
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Collections;
 
-/** Unit tests for {@link SignedContextualAds} */
+@SmallTest
+@SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public class SignedContextualAdsTest {
     public static final byte[] TEST_SIGNATURE = new byte[] {0, 1, 2};
 
