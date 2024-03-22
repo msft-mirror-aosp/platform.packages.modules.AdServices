@@ -88,6 +88,23 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
+
 import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
 import private_join_and_compute.anonymous_counting_tokens.AttestationScheme;
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
@@ -107,22 +124,6 @@ import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters
 import private_join_and_compute.anonymous_counting_tokens.Token;
 import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
-
-import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 public class KAnonCallerImpl implements KAnonCaller {
 
@@ -1092,7 +1093,8 @@ public class KAnonCallerImpl implements KAnonCaller {
                         Fields.builder()
                                 .appendField(
                                         CONTENT_LENGTH_HDR,
-                                        Integer.toString(body.getBytes().length))
+                                        Integer.toString(body.getBytes(
+                                                StandardCharsets.UTF_8).length))
                                 .appendField(
                                         "Date",
                                         DateTimeFormatter.ofPattern(
