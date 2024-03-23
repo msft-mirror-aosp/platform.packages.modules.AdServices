@@ -16,7 +16,16 @@
 
 package com.android.adservices.shared.spe;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_JOB_NOT_CONFIGURED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
+
+import android.annotation.IntDef;
 import android.app.job.JobParameters;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /** Class to store constants used by background jobs. */
 public final class JobServiceConstants {
@@ -40,6 +49,9 @@ public final class JobServiceConstants {
 
     /** The suffix to compose the key to store job execution period */
     public static final String SHARED_PREFS_EXEC_PERIOD_SUFFIX = "_job_execution_period";
+
+    /** A utility string key that should NEVER be fetched */
+    public static final String UNAVAILABLE_KEY = "unavailableKey";
 
     /**
      * Value of the execution start timestamp when it's unavailable to achieve. For example, the
@@ -70,4 +82,32 @@ public final class JobServiceConstants {
 
     /** Maximum possible percentage for percentage variables. */
     public static final int MAX_PERCENTAGE = 100;
+
+    public static final int SKIP_REASON_JOB_NOT_CONFIGURED =
+            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_JOB_NOT_CONFIGURED;
+
+    @IntDef(
+            value = {
+                JOB_ENABLED_STATUS_ENABLED,
+                JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON,
+                JOB_ENABLED_STATUS_DISABLED_FOR_USER_CONSENT_REVOKED,
+                JOB_ENABLED_STATUS_DISABLED_FOR_BACK_COMPAT_OTA,
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface JobEnablementStatus {}
+
+    /** The job is enabled. */
+    public static final int JOB_ENABLED_STATUS_ENABLED = -1;
+
+    /** The job is disabled due to kill switch is ON. */
+    public static final int JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON =
+            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+
+    /** The job is disabled due to user consent is revoked. */
+    public static final int JOB_ENABLED_STATUS_DISABLED_FOR_USER_CONSENT_REVOKED =
+            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
+
+    /** The job is disabled due to ExtServices' job running on AdServices */
+    public static final int JOB_ENABLED_STATUS_DISABLED_FOR_BACK_COMPAT_OTA =
+            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 }

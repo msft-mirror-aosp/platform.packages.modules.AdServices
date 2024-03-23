@@ -19,6 +19,9 @@ option java_multiple_files = true;
 option java_package = "com.android.adservices.shared.proto";
 
 // The Policy used to schedule a background job in Scheduling Policy Engine (SPE).
+//
+// The SPE supports singular field: Integer, Long, Boolean, String, Enum, and current it doesn't
+// support repeated or composited field. Please file a request if it needs to be supported.
 message JobPolicy {
   // Unique identifier of a job.
   optional int32 job_id = 1; // ** REQUIRED field **

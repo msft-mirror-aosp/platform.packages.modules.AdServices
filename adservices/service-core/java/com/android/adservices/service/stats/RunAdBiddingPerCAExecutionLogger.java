@@ -29,6 +29,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -183,7 +184,7 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
         this.mGetBuyerDecisionLogicEndTimestamp = getServiceElapsedTimestamp();
         this.mFetchedBuyerDecisionLogicScriptSizeInBytes =
                 Objects.nonNull(buyerDecisionLogicJs)
-                        ? buyerDecisionLogicJs.getBytes().length
+                        ? buyerDecisionLogicJs.getBytes(StandardCharsets.UTF_8).length
                         : FIELD_UNSET;
     }
 

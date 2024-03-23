@@ -72,6 +72,7 @@ public abstract class EncryptionContextDao {
                         .setKeyConfig(requestContext.keyConfig().serializeKeyConfigToBytes())
                         .setSharedSecret(
                                 requestContext.encapsulatedSharedSecret().serializeToBytes())
+                        .setHasMediaTypeChanged(requestContext.hasMediaTypeChanged())
                         .build());
     }
 
@@ -92,7 +93,8 @@ public abstract class EncryptionContextDao {
                                         dbEncryptionContext.getKeyConfig()),
                                 EncapsulatedSharedSecret.create(
                                         dbEncryptionContext.getSharedSecret()),
-                                dbEncryptionContext.getSeed()))
+                                dbEncryptionContext.getSeed(),
+                                dbEncryptionContext.getHasMediaTypeChanged()))
                 .build();
     }
 }

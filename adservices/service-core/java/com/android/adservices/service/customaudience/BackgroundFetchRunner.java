@@ -43,6 +43,7 @@ import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 import com.google.common.util.concurrent.FluentFuture;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.CancellationException;
@@ -171,7 +172,11 @@ public class BackgroundFetchRunner {
                                 if (Objects.nonNull(updatableData.getAds())) {
                                     numOfAds = updatableData.getAds().size();
                                     adsDataSizeInBytes =
-                                            updatableData.getAds().toString().getBytes().length;
+                                            updatableData
+                                                    .getAds()
+                                                    .toString()
+                                                    .getBytes(StandardCharsets.UTF_8)
+                                                    .length;
                                 }
                                 resultCode = STATUS_SUCCESS;
                             } else {

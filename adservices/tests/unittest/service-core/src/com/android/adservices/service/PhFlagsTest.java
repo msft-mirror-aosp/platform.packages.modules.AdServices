@@ -180,6 +180,7 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_FORCE_S
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
@@ -613,6 +614,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
@@ -9386,6 +9388,21 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testFledgeAuctionServerMediaTypeChangeEnabled() {
+        enableAuctionServerBaseFlag();
+
+        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getFledgeAuctionServerMediaTypeChangeEnabled())
                 .isEqualTo(phOverridingValue);
     }
 

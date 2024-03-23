@@ -1655,7 +1655,7 @@ public class CustomAudienceBlobValidatorTest {
                                 Locale.ENGLISH,
                                 AdRenderIdValidator.AD_RENDER_ID_TOO_LONG,
                                 FLAGS_FOR_TEST.getFledgeAuctionServerAdRenderIdMaxLength(),
-                                tooLongAdRenderId.getBytes().length)));
+                                tooLongAdRenderId.getBytes(StandardCharsets.UTF_8).length)));
     }
 
     @Test

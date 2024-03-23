@@ -63,4 +63,9 @@ public abstract class KAnonMessageDao {
                     + " (corresponding_client_parameters_expiry_instant is NOT NULL AND"
                     + " corresponding_client_parameters_expiry_instant < :currentTime)")
     public abstract void removeExpiredEntities(Instant currentTime);
+
+    /** Returns the count of entries with the given status */
+    @Query("SELECT COUNT(*) FROM kanon_messages WHERE status = :status")
+    public abstract int getNumberOfMessagesWithStatus(
+            @KAnonMessageConstants.MessageStatus int status);
 }

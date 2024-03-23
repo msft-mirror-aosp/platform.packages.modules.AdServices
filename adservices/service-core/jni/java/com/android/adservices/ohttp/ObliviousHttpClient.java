@@ -40,11 +40,6 @@ import java.util.Arrays;
  * </ul>
  */
 public class ObliviousHttpClient {
-
-    // As defined in https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-03.html#section-4.2-3
-    // required to export a secret for decryption
-    private static String sResponseLabel = "message/bhttp response";
-
     // HPKE export methods require context strings
     // Context strings to export aead key and nonce as defined in
     // https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-03.html#section-4.2-3
@@ -75,9 +70,10 @@ public class ObliviousHttpClient {
      * Takes the plainText byte array and returns an ObliviousHttpRequest object which contains the
      * shared secret and the cipher text along with HPKE context.
      */
-    public ObliviousHttpRequest createObliviousHttpRequest(byte[] plainText) throws IOException {
+    public ObliviousHttpRequest createObliviousHttpRequest(
+            byte[] plainText, boolean hasMediaTypeChanged) throws IOException {
         byte[] seed = getSecureRandomBytes(mHpkeAlgorithmSpec.kem().seedLength());
-        return createObliviousHttpRequest(plainText, seed);
+        return createObliviousHttpRequest(plainText, seed, hasMediaTypeChanged);
     }
 
     /**
@@ -87,15 +83,16 @@ public class ObliviousHttpClient {
      * generated and cryptographically safe.
      */
     @VisibleForTesting
-    public ObliviousHttpRequest createObliviousHttpRequest(byte[] plainText, byte[] seed)
-            throws IOException {
+    public ObliviousHttpRequest createObliviousHttpRequest(
+            byte[] plainText, byte[] seed, boolean hasMediaTypeChanged) throws IOException {
         HpkeContextNativeRef hpkeContextNativeRef =
                 HpkeContextNativeRef.createHpkeContextReference();
         KemNativeRef kemNativeRef = mHpkeAlgorithmSpec.kem().kemNativeRefSupplier().get();
         KdfNativeRef kdfAlgorithmSpec = mHpkeAlgorithmSpec.kdf().kdfNativeRefSupplier().get();
         AeadNativeRef aeadNativeRef = mHpkeAlgorithmSpec.aead().aeadNativeRefSupplier().get();
 
-        RecipientKeyInfo recipientKeyInfo = mObliviousHttpKeyConfig.createRecipientKeyInfo();
+        RecipientKeyInfo recipientKeyInfo =
+                mObliviousHttpKeyConfig.createRecipientKeyInfo(hasMediaTypeChanged);
         OhttpJniWrapper ohttpJniWrapper = OhttpJniWrapper.getInstance();
         HpkeEncryptResponse encryptResponse =
                 ohttpJniWrapper.hpkeEncrypt(
@@ -111,7 +108,10 @@ public class ObliviousHttpClient {
 
         ObliviousHttpRequestContext requestContext =
                 ObliviousHttpRequestContext.create(
-                        mObliviousHttpKeyConfig, encryptResponse.encapsulatedSharedSecret(), seed);
+                        mObliviousHttpKeyConfig,
+                        encryptResponse.encapsulatedSharedSecret(),
+                        seed,
+                        hasMediaTypeChanged);
         return ObliviousHttpRequest.create(plainText, encryptResponse.cipherText(), requestContext);
     }
 
@@ -130,7 +130,7 @@ public class ObliviousHttpClient {
             throws IOException {
         OhttpJniWrapper ohttpJniWrapper = OhttpJniWrapper.getInstance();
 
-        // secret = context.Export("message/bhttp response", Nk)
+        // secret = context.Export("message/label response", Nk)
         byte[] secret = export(ohttpJniWrapper, requestContext);
 
         byte[] responseNonce = extractResponseNonce(encryptedResponse);
@@ -203,13 +203,17 @@ public class ObliviousHttpClient {
     private byte[] export(
             OhttpJniWrapper ohttpJniWrapper, ObliviousHttpRequestContext requestContext)
             throws IOException {
-        byte[] labelBytes = sResponseLabel.getBytes(StandardCharsets.US_ASCII);
+        byte[] labelBytes =
+                ObliviousHttpKeyConfig.getOhttpResponseLabel(requestContext.hasMediaTypeChanged())
+                        .getBytes(StandardCharsets.US_ASCII);
 
         // Regenerate HPKE context
         KemNativeRef kemNativeRef = mHpkeAlgorithmSpec.kem().kemNativeRefSupplier().get();
         KdfNativeRef kdfAlgorithmSpec = mHpkeAlgorithmSpec.kdf().kdfNativeRefSupplier().get();
         AeadNativeRef aeadNativeRef = mHpkeAlgorithmSpec.aead().aeadNativeRefSupplier().get();
-        RecipientKeyInfo recipientKeyInfo = mObliviousHttpKeyConfig.createRecipientKeyInfo();
+        RecipientKeyInfo recipientKeyInfo =
+                mObliviousHttpKeyConfig.createRecipientKeyInfo(
+                        requestContext.hasMediaTypeChanged());
         HpkeContextNativeRef hpkectx = HpkeContextNativeRef.createHpkeContextReference();
         ohttpJniWrapper.hpkeCtxSetupSenderWithSeed(
                 hpkectx,

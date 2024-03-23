@@ -29,6 +29,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
@@ -47,6 +48,8 @@ public class MainViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> mAdServicesConsent;
     private final ConsentManager mConsentManager;
 
+    private final ConsentManagerV2 mConsentManagerV2;
+
     /** UI event triggered by view model */
     public enum MainViewModelUiEvent {
         SWITCH_ON_PRIVACY_SANDBOX_BETA,
@@ -57,13 +60,23 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public MainViewModel(@NonNull Application application) {
-        this(application, ConsentManager.getInstance());
+        super(application);
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            mConsentManagerV2 = ConsentManagerV2.getInstance();
+            mConsentManager = null;
+            mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
+        } else {
+            mConsentManagerV2 = null;
+            mConsentManager = ConsentManager.getInstance();
+            mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
+        }
     }
 
     @VisibleForTesting
-    public MainViewModel(@NonNull Application application, ConsentManager consentManager) {
+    public MainViewModel(@NonNull Application application, ConsentManagerV2 consentManagerV2) {
         super(application);
-        mConsentManager = consentManager;
+        mConsentManagerV2 = consentManagerV2;
+        mConsentManager = null;
         mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
     }
 
@@ -83,17 +96,33 @@ public class MainViewModel extends AndroidViewModel {
      * @param newConsentValue the new value that user consent should be set to for PP APIs.
      */
     public void setConsent(Boolean newConsentValue) {
-        if (newConsentValue) {
-            mConsentManager.enable(getApplication());
+
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            if (newConsentValue) {
+                mConsentManagerV2.enable(getApplication());
+            } else {
+                mConsentManagerV2.disable(getApplication());
+            }
+            mAdServicesConsent.postValue(getConsentFromConsentManager());
+            if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                ConsentManagerV2.getInstance()
+                        .recordUserManualInteractionWithConsent(
+                                ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED);
+            }
         } else {
-            mConsentManager.disable(getApplication());
+            if (newConsentValue) {
+                mConsentManager.enable(getApplication());
+            } else {
+                mConsentManager.disable(getApplication());
+            }
+            mAdServicesConsent.postValue(getConsentFromConsentManager());
+            if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                ConsentManager.getInstance()
+                        .recordUserManualInteractionWithConsent(
+                                ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+            }
         }
-        mAdServicesConsent.postValue(getConsentFromConsentManager());
-        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-            ConsentManager.getInstance()
-                    .recordUserManualInteractionWithConsent(
-                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
-        }
+
     }
 
     /** Returns an observable but immutable event enum representing an view action on UI. */
@@ -139,26 +168,50 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     private boolean getConsentFromConsentManager() {
-        return mConsentManager.getConsent().isGiven();
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return mConsentManagerV2.getConsent().isGiven();
+        } else {
+            return mConsentManager.getConsent().isGiven();
+        }
     }
 
     public boolean getMeasurementConsentFromConsentManager() {
-        return mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return mConsentManagerV2.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+        } else {
+            return mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+        }
     }
 
     public boolean getTopicsConsentFromConsentManager() {
-        return mConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven();
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return mConsentManagerV2.getConsent(AdServicesApiType.TOPICS).isGiven();
+        } else {
+            return mConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven();
+        }
     }
 
     public boolean getAppsConsentFromConsentManager() {
-        return mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven();
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return mConsentManagerV2.getConsent(AdServicesApiType.FLEDGE).isGiven();
+        } else {
+            return mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven();
+        }
     }
 
     public int getCountOfTopics() {
-        return mConsentManager.getKnownTopicsWithConsent().size();
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return mConsentManagerV2.getKnownTopicsWithConsent().size();
+        } else {
+            return mConsentManager.getKnownTopicsWithConsent().size();
+        }
     }
 
     public int getCountOfApps() {
-        return mConsentManager.getKnownAppsWithConsent().size();
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return mConsentManagerV2.getKnownAppsWithConsent().size();
+        } else {
+            return mConsentManager.getKnownAppsWithConsent().size();
+        }
     }
 }

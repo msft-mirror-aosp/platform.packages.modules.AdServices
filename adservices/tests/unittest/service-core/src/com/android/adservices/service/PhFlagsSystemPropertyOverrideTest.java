@@ -172,7 +172,8 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
      *     default value of the flag
      * @param flaginator helper object used to get the value of the flag
      */
-    private void testUnguardedFlag(String name, long defaultValue, Flaginator<Long> flaginator) {
+    private void testUnguardedFlag(
+            String name, long defaultValue, Flaginator<Flags, Long> flaginator) {
         // Without any overriding, the value is the hard coded constant.
         expect.withMessage("getter for %s by default", name)
                 .that(flaginator.getFlagValue(mPhFlags))
@@ -199,7 +200,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
      * @param flaginator helper object used to get the value of the flag being tested
      */
     private void testFeatureFlag(
-            String flagName, String defaultValueConstant, Flaginator<Boolean> flaginator) {
+            String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
         testFeatureFlag(flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
     }
 
@@ -219,7 +220,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
             String flagName,
             String defaultValueConstant,
             FlagGuard guard,
-            Flaginator<Boolean> flaginator) {
+            Flaginator<Flags, Boolean> flaginator) {
         internalTestForFeatureFlag(
                 flagName, defaultValueConstant, FeatureFlagType.FEATURE_FLAG, guard, flaginator);
     }
@@ -235,7 +236,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
      * @param flaginator helper object used to get the value of the flag being tested
      */
     private void testFeatureFlagBackedByLegacyKillSwitch(
-            String flagName, String defaultValueConstant, Flaginator<Boolean> flaginator) {
+            String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
         testFeatureFlagBackedByLegacyKillSwitch(
                 flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
     }
@@ -255,7 +256,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
             String flagName,
             String defaultValueConstant,
             FlagGuard guard,
-            Flaginator<Boolean> flaginator) {
+            Flaginator<Flags, Boolean> flaginator) {
         internalTestForFeatureFlag(
                 flagName,
                 defaultValueConstant,
@@ -275,7 +276,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
      * @param flaginator helper object used to get the value of the flag being tested
      */
     private void testUnguardedLegacyKillSwitch(
-            String flagName, String defaultValueConstant, Flaginator<Boolean> flaginator) {
+            String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
         internalTestForFeatureFlag(
                 flagName,
                 defaultValueConstant,
@@ -292,7 +293,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
      * @param flaginator helper object used to get the value of the flag being tested
      */
     private void testLegacyKillSwitch(
-            String flagName, String defaultValueConstant, Flaginator<Boolean> flaginator) {
+            String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
         internalTestForFeatureFlag(
                 flagName,
                 defaultValueConstant,
@@ -307,7 +308,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
             String defaultValueConstant,
             FeatureFlagType type,
             @Nullable FlagGuard guard,
-            Flaginator<Boolean> flaginator) {
+            Flaginator<Flags, Boolean> flaginator) {
 
         // This is the value hardcoded by a constant on Flags.java
         boolean constantValue = getConstantValue(defaultValueConstant);

@@ -285,14 +285,21 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
         }
     }
 
+    public void setKillSwitchAndSetProperty(boolean enabled) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_DISABLE_SDK_SANDBOX,
+                Boolean.toString(enabled),
+                false);
+    }
+
+    /** Sets the killswitch without setting the property. Used for unit testing. */
     public void setKillSwitchState(boolean enabled) {
         synchronized (mLock) {
-            DeviceConfig.setProperty(
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    PROPERTY_DISABLE_SDK_SANDBOX,
-                    Boolean.toString(enabled),
-                    false);
-            mKillSwitchEnabled = enabled;
+            onPropertiesChanged(
+                    new DeviceConfig.Properties(
+                            DeviceConfig.NAMESPACE_ADSERVICES,
+                            Map.of(PROPERTY_DISABLE_SDK_SANDBOX, Boolean.toString(enabled))));
         }
     }
 

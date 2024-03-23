@@ -28,6 +28,8 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+
 public class AdSelectionSignalsTest {
 
     private static final String SIGNALS_STRING = "{\"a\":\"b\"}";
@@ -41,7 +43,9 @@ public class AdSelectionSignalsTest {
     @Test
     public void testAdSelectionSignalsGetSizeInBytes() {
         AdSelectionSignals identicalId = AdSelectionSignals.fromString(SIGNALS_STRING);
-        assertEquals(identicalId.toString().getBytes().length, SIGNALS_STRING.getBytes().length);
+        assertEquals(
+                identicalId.toString().getBytes(StandardCharsets.UTF_8).length,
+                SIGNALS_STRING.getBytes(StandardCharsets.UTF_8).length);
     }
 
     @Test

@@ -73,6 +73,14 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
+import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
+import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
+import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.Transcript;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
@@ -82,14 +90,6 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-
-import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
-import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
-import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
-import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
-import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
 // All the tests of this CL are ignored because they make calls to the actual server and these will
 // fail
@@ -212,7 +212,8 @@ public class KAnonCallerImplFullIntegrationTests {
                                 mockKeyAttestationFactory,
                                 mObliviousHttpEncryptorFactory));
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        kAnonCaller.signAndJoinMessages(messageEntities);
+        kAnonCaller.signAndJoinMessages(
+                messageEntities, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
 
         countDownLatch.await();
 
@@ -252,7 +253,8 @@ public class KAnonCallerImplFullIntegrationTests {
                         mockKeyAttestationFactory,
                         mObliviousHttpEncryptorFactory);
         CountDownLatch countdownLatch = new CountDownLatch(1);
-        runner.signAndJoinMessages(messageEntities);
+        runner.signAndJoinMessages(
+                messageEntities, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         countdownLatch.await();
 
         List<KAnonMessageEntity> messageEntitiesAfterProcessing =

@@ -62,6 +62,7 @@ public class DBEncryptionContextTest {
                         .setKeyConfig(keyConfig.serializeKeyConfigToBytes())
                         .setSharedSecret(SHARED_SECRET_BYTES)
                         .setSeed(SEED_BYTES)
+                        .setHasMediaTypeChanged(false)
                         .build();
 
         assertThat(dbEncryptionContext.getContextId()).isEqualTo(CONTEXT_ID_1);

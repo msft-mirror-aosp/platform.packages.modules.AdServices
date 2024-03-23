@@ -536,6 +536,8 @@ public class AggregateCryptoConverterTest {
     }
 
     private int getBytesLength(Map map, String keyName) {
-        return ((ByteString) map.get(new UnicodeString(keyName))).getBytes().length;
+        return ((ByteString) map.get(new UnicodeString(keyName)))
+                .getBytes()
+                .length;
     }
 }

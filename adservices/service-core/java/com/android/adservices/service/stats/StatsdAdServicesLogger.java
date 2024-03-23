@@ -552,7 +552,9 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                     stats.getAttemptedRegisteredBeacons(),
                     attemptedKeySizesRangeType,
                     stats.getTableNumRows(),
-                    stats.getAdServicesStatusCode());
+                    stats.getAdServicesStatusCode(),
+                    // TODO: b/329720016 - implement and flag
+                    0);
         }
     }
 
@@ -673,7 +675,12 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getTrustedBiddingSignalsKeysSizeMeanB(),
                 stats.getTrustedBiddingSignalsKeysSizeVarianceB(),
                 stats.getUserBiddingSignalsSizeMeanB(),
-                stats.getUserBiddingSignalsSizeVarianceB());
+                stats.getUserBiddingSignalsSizeVarianceB(),
+                // TODO: b/329720016 - implement and flag
+                0,
+                0,
+                0,
+                0);
     }
 
     @NonNull

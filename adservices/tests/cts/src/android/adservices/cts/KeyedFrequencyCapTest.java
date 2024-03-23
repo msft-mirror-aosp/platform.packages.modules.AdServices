@@ -384,4 +384,15 @@ public class KeyedFrequencyCapTest {
         json.remove(KeyedFrequencyCap.INTERVAL_FIELD_NAME);
         assertThrows(JSONException.class, () -> KeyedFrequencyCap.fromJson(json));
     }
+
+    @Test
+    public void testKeyedFrequencyCapDescribeContents() {
+        final KeyedFrequencyCap originalCap =
+                new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                        .build();
+        assertEquals("describeContents", 0, originalCap.describeContents());
+    }
 }

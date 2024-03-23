@@ -86,6 +86,18 @@ public class AdSelectionDatabaseMigrationTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testMigration4To5() throws IOException {
+        String adSelectionTable = "ad_selection";
+
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 4);
+        validateTableExistsInDatabase(db, adSelectionTable);
+
+        // Re-open the database with version 4 and provide MIGRATION_4_5 as the migration process.
+        db = helper.runMigrationsAndValidate(TEST_DB, 5, true);
+        validateTableExistsInDatabase(db, adSelectionTable);
+    }
+
+    @Test
     public void testMigration6To7() throws IOException {
         String adSelectionTable = "ad_selection";
         String adSelectionInitializationTable = "ad_selection_initialization";

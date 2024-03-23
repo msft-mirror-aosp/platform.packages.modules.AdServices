@@ -58,11 +58,9 @@ public class AdRenderIdValidatorTest {
         AdRenderIdValidator validator =
                 AdRenderIdValidator.createInstance(
                         new FlagsWithAuctionServerAdRenderIdSettings(
-                                // TODO - (b/328836816): Update the encoding for this test
-                                /* enabled= */ true, /* maxLength= */ SHORT_ID.getBytes().length));
+                                /* enabled= */ true,
+                                /* maxLength= */ SHORT_ID.getBytes(StandardCharsets.UTF_8).length));
 
-        assertThat(SHORT_ID.getBytes().length)
-                .isEqualTo(SHORT_ID.getBytes(StandardCharsets.UTF_8).length);
         assertThat(validator.getValidationViolations(SHORT_ID)).isEmpty();
         validator.validate(SHORT_ID);
     }

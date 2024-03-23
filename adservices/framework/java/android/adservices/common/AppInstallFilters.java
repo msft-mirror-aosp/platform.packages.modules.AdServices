@@ -29,6 +29,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -96,13 +97,13 @@ public final class AppInstallFilters implements Parcelable {
     }
 
     /**
-     * @return The estimated size of this object, in bytes.
+     * @return The estimated size of this object, in bytes using UTF_8 encoding.
      * @hide
      */
     public int getSizeInBytes() {
         int totalSize = 0;
         for (String packageName : mPackageNames) {
-            totalSize += packageName.getBytes().length;
+            totalSize += packageName.getBytes(StandardCharsets.UTF_8).length;
         }
         return totalSize;
     }

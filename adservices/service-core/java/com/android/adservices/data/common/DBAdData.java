@@ -23,6 +23,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -53,14 +54,16 @@ public class DBAdData {
 
     /** Returns the estimated size, in bytes, of the components of this object. */
     public int size() {
-        int totalSize = mRenderUri.toString().getBytes().length + mMetadata.getBytes().length;
+        int totalSize =
+                mRenderUri.toString().getBytes(StandardCharsets.UTF_8).length
+                        + mMetadata.getBytes(StandardCharsets.UTF_8).length;
         // Each int should cost about 4 bytes
         totalSize += 4 * mAdCounterKeys.size();
         if (mAdFilters != null) {
             totalSize += mAdFilters.getSizeInBytes();
         }
         if (mAdRenderId != null) {
-            totalSize += mAdRenderId.getBytes().length;
+            totalSize += mAdRenderId.getBytes(StandardCharsets.UTF_8).length;
         }
         return totalSize;
     }

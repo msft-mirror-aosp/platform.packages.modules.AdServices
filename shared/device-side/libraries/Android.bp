@@ -160,6 +160,19 @@ java_library {
     ],
 }
 
+filegroup {
+    name: "adservices-shared-flag-annotation-sources",
+    srcs: [
+        "java/com/android/adservices/shared/common/flags/ConfigFlag.java",
+        "java/com/android/adservices/shared/common/flags/FeatureFlag.java",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/adservices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    path: "java",
+}
+
 java_library {
     name: "adservices-shared-proto-utils",
     min_sdk_version: "30",

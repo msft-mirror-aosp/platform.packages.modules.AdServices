@@ -25,8 +25,10 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
 import com.android.internal.annotations.VisibleForTesting;
@@ -49,6 +51,8 @@ public class BlockedAppsViewModel extends AndroidViewModel {
     private final MutableLiveData<ImmutableList<App>> mBlockedApps;
     private final ConsentManager mConsentManager;
 
+    private final ConsentManagerV2 mConsentManagerV2;
+
     /** UI event triggered by view model */
     public enum BlockedAppsViewModelUiEvent {
         RESTORE_APP,
@@ -57,15 +61,24 @@ public class BlockedAppsViewModel extends AndroidViewModel {
     public BlockedAppsViewModel(@NonNull Application application) {
         super(application);
 
-        mConsentManager = ConsentManager.getInstance();
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            mConsentManagerV2 = ConsentManagerV2.getInstance();
+            mConsentManager = null;
+        } else {
+            mConsentManagerV2 = null;
+            mConsentManager = ConsentManager.getInstance();
+        }
+
         mBlockedApps = new MutableLiveData<>(getBlockedAppsFromConsentManager());
     }
 
     @VisibleForTesting
-    public BlockedAppsViewModel(@NonNull Application application, ConsentManager consentManager) {
+    public BlockedAppsViewModel(
+            @NonNull Application application, ConsentManagerV2 consentManagerV2) {
         super(application);
 
-        mConsentManager = consentManager;
+        mConsentManagerV2 = consentManagerV2;
+        mConsentManager = null;
         mBlockedApps = new MutableLiveData<>(getBlockedAppsFromConsentManager());
     }
 
@@ -84,7 +97,12 @@ public class BlockedAppsViewModel extends AndroidViewModel {
      * @param app the app to be restored.
      */
     public void restoreAppConsent(App app) throws IOException {
-        mConsentManager.restoreConsentForApp(app);
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            mConsentManagerV2.restoreConsentForApp(app);
+        } else {
+            mConsentManager.restoreConsentForApp(app);
+        }
+
         refresh();
     }
 
@@ -121,6 +139,10 @@ public class BlockedAppsViewModel extends AndroidViewModel {
     }
 
     private ImmutableList<App> getBlockedAppsFromConsentManager() {
-        return mConsentManager.getAppsWithRevokedConsent();
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return mConsentManagerV2.getAppsWithRevokedConsent();
+        } else {
+            return mConsentManager.getAppsWithRevokedConsent();
+        }
     }
 }

@@ -27,6 +27,7 @@ import com.google.common.io.BaseEncoding;
  */
 @AutoValue
 public abstract class ObliviousHttpRequestContext {
+
     /** Returns the Oblivious HTTP key config */
     public abstract ObliviousHttpKeyConfig keyConfig();
 
@@ -36,10 +37,16 @@ public abstract class ObliviousHttpRequestContext {
     /** The random seed that was used to construct the Hpke context */
     public abstract byte[] seed();
 
+    /** Returns whether it uses the changed media type */
+    public abstract boolean hasMediaTypeChanged();
+
     /** Create a OHTTP request context object */
     public static ObliviousHttpRequestContext create(
-            ObliviousHttpKeyConfig keyConfig, EncapsulatedSharedSecret enc, byte[] seed) {
-        return new AutoValue_ObliviousHttpRequestContext(keyConfig, enc, seed);
+            ObliviousHttpKeyConfig keyConfig,
+            EncapsulatedSharedSecret enc,
+            byte[] seed,
+            boolean hasMediaTypeChanged) {
+        return new AutoValue_ObliviousHttpRequestContext(keyConfig, enc, seed, hasMediaTypeChanged);
     }
 
     /** Serialize the byte array seed into a tring */

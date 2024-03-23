@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
 
@@ -142,19 +143,19 @@ public class DBAdDataTest {
     @Test
     public void testSize() {
         int[] size = new int[1];
-        size[0] += SAMPLE_AD_DATA.getRenderUri().toString().getBytes().length;
-        size[0] += SAMPLE_AD_DATA.getMetadata().getBytes().length;
+        size[0] += SAMPLE_AD_DATA.getRenderUri().toString().getBytes(StandardCharsets.UTF_8).length;
+        size[0] += SAMPLE_AD_DATA.getMetadata().getBytes(StandardCharsets.UTF_8).length;
         SAMPLE_AD_DATA.getAdCounterKeys().forEach(x -> size[0] += 4);
         size[0] += SAMPLE_AD_DATA.getAdFilters().getSizeInBytes();
-        size[0] += SAMPLE_AD_DATA.getAdRenderId().getBytes().length;
+        size[0] += SAMPLE_AD_DATA.getAdRenderId().getBytes(StandardCharsets.UTF_8).length;
         assertEquals(size[0], CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).build().size());
     }
 
     @Test
     public void testSizeNulls() {
         int[] size = new int[1];
-        size[0] += SAMPLE_AD_DATA.getRenderUri().toString().getBytes().length;
-        size[0] += SAMPLE_AD_DATA.getMetadata().getBytes().length;
+        size[0] += SAMPLE_AD_DATA.getRenderUri().toString().getBytes(StandardCharsets.UTF_8).length;
+        size[0] += SAMPLE_AD_DATA.getMetadata().getBytes(StandardCharsets.UTF_8).length;
         DBAdData dbAdData =
                 new DBAdData(
                         SAMPLE_AD_DATA.getRenderUri(),

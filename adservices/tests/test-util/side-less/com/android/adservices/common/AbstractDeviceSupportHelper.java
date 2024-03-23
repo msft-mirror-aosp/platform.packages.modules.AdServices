@@ -138,6 +138,9 @@ abstract class AbstractDeviceSupportHelper {
 
     protected abstract boolean isDebuggable();
 
+    @Nullable
+    protected abstract String getAdServicesPackageName();
+
     private boolean isDeviceSupportedByDefault() {
         return isPhone() && !isGoDevice();
     }

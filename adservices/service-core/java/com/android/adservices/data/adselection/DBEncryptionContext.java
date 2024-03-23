@@ -72,6 +72,11 @@ public abstract class DBEncryptionContext {
     @ColumnInfo(name = "creation_instant", defaultValue = "CURRENT_TIMESTAMP")
     public abstract Instant getCreationInstant();
 
+    /** The id associated with this encryption context. */
+    @AutoValue.CopyAnnotations
+    @ColumnInfo(name = "has_media_type_changed", defaultValue = "false")
+    public abstract boolean getHasMediaTypeChanged();
+
     /**
      * Returns an AutoValue builder for a {@link
      * com.android.adservices.data.adselection.DBEncryptionContext} entity.
@@ -87,7 +92,8 @@ public abstract class DBEncryptionContext {
             @NonNull Instant creationInstant,
             byte[] keyConfig,
             byte[] sharedSecret,
-            byte[] seed) {
+            byte[] seed,
+            boolean hasMediaTypeChanged) {
         return builder()
                 .setContextId(contextId)
                 .setEncryptionKeyType(encryptionKeyType)
@@ -95,6 +101,7 @@ public abstract class DBEncryptionContext {
                 .setKeyConfig(keyConfig)
                 .setSharedSecret(sharedSecret)
                 .setSeed(seed)
+                .setHasMediaTypeChanged(hasMediaTypeChanged)
                 .build();
     }
 
@@ -120,6 +127,9 @@ public abstract class DBEncryptionContext {
 
         /** Sets the creation instant. */
         public abstract Builder setCreationInstant(@NonNull Instant value);
+
+        /** Set whether is uses media type changed. */
+        public abstract Builder setHasMediaTypeChanged(boolean hasMediaTypeChanged);
 
         /** Builds the DBEncryptionContext. */
         public abstract DBEncryptionContext build();

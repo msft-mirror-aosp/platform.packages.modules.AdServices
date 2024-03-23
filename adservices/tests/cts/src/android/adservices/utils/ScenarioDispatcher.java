@@ -16,8 +16,6 @@
 
 package android.adservices.utils;
 
-import android.util.ArrayMap;
-import android.util.ArraySet;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -42,7 +40,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -66,11 +64,14 @@ public class ScenarioDispatcher extends Dispatcher {
             "x_fledge_buyer_bidding_logic_version";
     public static final int TIMEOUT_SEC = 8;
 
-    private final Map<Request, Response> mRequestToResponseMap;
+    private final ImmutableMap<Request, Response> mRequestToResponseMap;
     private final String mPrefix;
-    private final Map<String, String> mSubstitutionMap;
-    private final Map<String, String> mSubstitutionVariables;
-    private final Set<String> mCalledPaths;
+    private final ImmutableMap<String, String> mSubstitutionMap;
+    private final ImmutableMap<String, String> mSubstitutionVariables;
+
+    // The value is not used and we always insert a fixed value of 1.
+    private final ConcurrentHashMap<String, Integer> mCalledPaths;
+
     private final CountDownLatch mUniqueCallCount;
 
     /**
@@ -132,7 +133,8 @@ public class ScenarioDispatcher extends Dispatcher {
         if (!mUniqueCallCount.await(TIMEOUT_SEC, TimeUnit.SECONDS)) {
             sLogger.w("Timeout reached in getCalledPaths()");
         }
-        return ImmutableSet.copyOf(mCalledPaths);
+        sLogger.w("getCalledPaths() returning with  size: %s", mCalledPaths.size());
+        return ImmutableSet.copyOf(mCalledPaths.keySet());
     }
 
     private ScenarioDispatcher(String scenarioPath, String prefix)
@@ -141,21 +143,19 @@ public class ScenarioDispatcher extends Dispatcher {
         sLogger.v(String.format("Setting up scenario with file: %s", scenarioPath));
 
         JSONObject json = new JSONObject(loadTextResource(scenarioPath));
-
-        mCalledPaths = new ArraySet<>();
+        mCalledPaths = new ConcurrentHashMap<>();
         mSubstitutionMap = parseSubstitutions(json);
-        mSubstitutionVariables = new ArrayMap<>();
-        mSubstitutionVariables.put("{base_url}", BASE_ADDRESS + prefix);
-        // These additional domains are not supported locally, however they are populated to
-        // maintain compatibility with existing scenario files.
-        mSubstitutionVariables.put("{adtech1_url}", BASE_ADDRESS + prefix);
-        mSubstitutionVariables.put("{adtech2_url}", FAKE_ADDRESS_1 + prefix);
-        mSubstitutionVariables.put("{adtech3_url}", FAKE_ADDRESS_2 + prefix);
+        mSubstitutionVariables =
+                ImmutableMap.of(
+                        "{base_url}", BASE_ADDRESS + prefix,
+                        "{adtech1_url}", BASE_ADDRESS + prefix,
+                        "{adtech2_url}", FAKE_ADDRESS_1 + prefix,
+                        "{adtech3_url}", FAKE_ADDRESS_2 + prefix);
         mRequestToResponseMap = parseMocks(json);
         mUniqueCallCount = new CountDownLatch(mRequestToResponseMap.size());
     }
 
-    private static Map<String, String> parseSubstitutions(JSONObject json) {
+    private static ImmutableMap<String, String> parseSubstitutions(JSONObject json) {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         JSONObject substitutions;
         try {
@@ -174,7 +174,7 @@ public class ScenarioDispatcher extends Dispatcher {
         return builder.build();
     }
 
-    private Map<Request, Response> parseMocks(JSONObject json) throws JSONException {
+    private ImmutableMap<Request, Response> parseMocks(JSONObject json) throws JSONException {
         ImmutableMap.Builder<Request, Response> builder = ImmutableMap.builder();
         JSONArray mocks = json.getJSONArray("mocks");
         for (int i = 0; i < mocks.length(); i++) {
@@ -317,15 +317,15 @@ public class ScenarioDispatcher extends Dispatcher {
     }
 
     private synchronized void recordCalledPath(String path) {
-        if (mCalledPaths.contains(path)) {
+        if (mCalledPaths.containsKey(path)) {
             sLogger.v(
                     "Not recording path called at %s as already hit, latch count is %d/%d.",
                     path, mUniqueCallCount.getCount(), mRequestToResponseMap.size());
         } else {
-            mCalledPaths.add(path);
+            mCalledPaths.put(path, 1);
             mUniqueCallCount.countDown();
             sLogger.v(
-                    "Recording path called at %s, latch count is %d/%d.",
+                    "Recorded path called at %s, latch count is %d/%d.",
                     path, mUniqueCallCount.getCount(), mRequestToResponseMap.size());
         }
     }

@@ -1244,7 +1244,8 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                 .when(
                         () ->
                                 AdServicesStatsLog.write(
-                                        anyInt(), anyInt(), anyInt(), any(), anyInt(), anyInt()));
+                                        anyInt(), anyInt(), anyInt(), any(), anyInt(), anyInt(),
+                                        anyInt()));
 
         // Invoke logging call.
         mLogger.logDestinationRegisteredBeaconsReportedStats(stats);
@@ -1258,8 +1259,8 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(/* attemptedRegisteredBeacons */ 5),
                                 eq(/* attemptedKeySizesRangeType */ keySizeRangeTypeArray),
                                 eq(/* tableNumRows */ 25),
-                                eq(/* adServicesStatusCode */ 0)
-                        );
+                                eq(/* adServicesStatusCode */ 0),
+                                eq(/* beaconSource */ 0));
 
         verify(writeInvocation);
 
@@ -1299,7 +1300,8 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                 .when(
                         () ->
                                 AdServicesStatsLog.write(
-                                        anyInt(), anyInt(), anyInt(), any(), anyInt(), anyInt()));
+                                        anyInt(), anyInt(), anyInt(), any(), anyInt(), anyInt(),
+                                        anyInt()));
         // Invoke logging call.
         mLogger.logDestinationRegisteredBeaconsReportedStats(stats);
 
@@ -1647,7 +1649,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(25F),
                                 eq(26F),
                                 eq(27F),
-                                eq(28F));
+                                eq(28F),
+                                eq(0),
+                                eq(0),
+                                eq(0),
+                                eq(0));
 
         verify(writeInvocation);
 
