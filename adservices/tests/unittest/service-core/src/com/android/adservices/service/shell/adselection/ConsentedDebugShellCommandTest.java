@@ -45,7 +45,7 @@ import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.DBConsentedDebugConfiguration;
-import com.android.adservices.service.shell.ShellCommandTest;
+import com.android.adservices.service.shell.ShellCommandTestCase;
 
 import com.google.common.truth.Truth;
 
@@ -61,7 +61,8 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.UUID;
 
-public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDebugShellCommand> {
+public class ConsentedDebugShellCommandTest
+        extends ShellCommandTestCase<ConsentedDebugShellCommand> {
     private static final String DEBUG_TOKEN = UUID.randomUUID().toString();
     private static final String EXPIRY_IN_DAYS = "2";
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
@@ -222,7 +223,7 @@ public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDe
     public void test_disableConsentedDebugging_success() {
         doNothing().when(mConsentedDebugConfigurationDao).deleteAllConsentedDebugConfigurations();
 
-        ShellCommandTest.Result result = runSubCommandAndGetResult(DISABLE_SUB_CMD);
+        ShellCommandTestCase.Result result = runSubCommandAndGetResult(DISABLE_SUB_CMD);
 
         expectSuccess(result, DISABLE_SUCCESS);
     }
@@ -244,7 +245,7 @@ public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDe
                 .when(mConsentedDebugConfigurationDao)
                 .deleteAllConsentedDebugConfigurations();
 
-        ShellCommandTest.Result result = runSubCommandAndGetResult(DISABLE_SUB_CMD);
+        ShellCommandTestCase.Result result = runSubCommandAndGetResult(DISABLE_SUB_CMD);
 
         expectFailure(result, DISABLE_ERROR);
     }
