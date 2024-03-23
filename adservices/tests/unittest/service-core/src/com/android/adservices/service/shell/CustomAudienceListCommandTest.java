@@ -42,7 +42,7 @@ import org.mockito.Mock;
 import java.util.List;
 
 public final class CustomAudienceListCommandTest
-        extends ShellCommandTest<CustomAudienceListCommand> {
+        extends ShellCommandTestCase<CustomAudienceListCommand> {
 
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
     public static final String OWNER = CustomAudienceFixture.VALID_OWNER;

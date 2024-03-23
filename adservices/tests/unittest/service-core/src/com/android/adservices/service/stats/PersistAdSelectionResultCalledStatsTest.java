@@ -14,29 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell;
+package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.shell.common.EchoCommand.CMD_ECHO;
+import static android.adservices.common.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.service.shell.common.EchoCommand;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 
 import org.junit.Test;
 
-public final class CommonShellCommandFactoryTest extends AdServicesUnitTestCase {
-    private final ShellCommandFactory mFactory = new CommonShellCommandFactory();
+public class PersistAdSelectionResultCalledStatsTest extends AdServicesUnitTestCase {
+    private static final int WINNER_TYPE = WINNER_TYPE_PAS_WINNER;
 
     @Test
-    public void testGetShellCommand() {
-        expect.withMessage(CMD_ECHO)
-                .that(mFactory.getShellCommand(CMD_ECHO))
-                .isInstanceOf(EchoCommand.class);
-    }
+    public void testBuildPersistAdSelectionResultCalledStats() {
+        PersistAdSelectionResultCalledStats stats =
+                PersistAdSelectionResultCalledStats.builder()
+                        .setWinnerType(WINNER_TYPE)
+                        .build();
 
-    @Test
-    public void testGetShellCommand_invalidCommand() {
-        String cmd = "abc";
-
-        expect.withMessage(cmd).that(mFactory.getShellCommand(cmd)).isNull();
+        expect.that(stats.getWinnerType()).isEqualTo(WINNER_TYPE);
     }
 }

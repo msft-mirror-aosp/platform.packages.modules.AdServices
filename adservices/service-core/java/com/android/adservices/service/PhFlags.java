@@ -1131,6 +1131,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAppInstallFilteringEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED,
+                FLEDGE_APP_INSTALL_FILTERING_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeFrequencyCapFilteringEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED,
+                FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED);
+    }
+
+    @Override
     @SuppressWarnings("InlinedApi")
     public boolean getFledgeAdSelectionContextualAdsEnabled() {
         return getDeviceConfigFlag(
@@ -4352,6 +4366,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
                         + " = "
                         + getFledgeAdSelectionFilteringEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED
+                        + " = "
+                        + getFledgeAppInstallFilteringEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED
+                        + " = "
+                        + getFledgeFrequencyCapFilteringEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
