@@ -145,6 +145,7 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants;
@@ -327,6 +328,10 @@ public class KAnonE2ETest {
     @Captor private ArgumentCaptor<KAnonGetChallengeStatusStats> argumentCaptorGetChallenge;
     @Captor private ArgumentCaptor<KAnonSignStatusStats> argumentCaptorSignStats;
     @Captor private ArgumentCaptor<KAnonJoinStatusStats> argumentCaptorJoinStats;
+
+    @Captor
+    private ArgumentCaptor<KAnonImmediateSignJoinStatusStats> argumentCaptorImmediateSignJoinStats;
+
     @Mock private KeyAttestation mockKeyAttestation;
     @Mock private KeyAttestationCertificateChainRecord mockKeyAttestationCertificate;
     @Mock private ObliviousHttpEncryptorFactory mockObliviousHttpEncryptorFactory;
@@ -1434,6 +1439,11 @@ public class KAnonE2ETest {
                 .logKAnonJoinStats(argumentCaptorJoinStats.capture());
         KAnonJoinStatusStats kAnonJoinStatusStats = argumentCaptorJoinStats.getValue();
         assertThat(kAnonJoinStatusStats.getWasSuccessful()).isTrue();
+        verify(mAdServicesLoggerMock, times(1))
+                .logKAnonImmediateSignJoinStats(argumentCaptorImmediateSignJoinStats.capture());
+        KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats =
+                argumentCaptorImmediateSignJoinStats.getValue();
+        assertThat(kAnonImmediateSignJoinStatusStats.getTotalMessagesAttempted()).isEqualTo(1);
     }
 
     @Test
@@ -1626,7 +1636,6 @@ public class KAnonE2ETest {
         verify(mAdServicesLoggerMock, times(0)).logKAnonJoinStats(any());
     }
 
-
     private void assertGetChallengeRequest(RecordedRequest recordedRequest) {
         assertThat(recordedRequest.getMethod())
                 .isEqualTo(AdServicesHttpUtil.HttpMethodType.GET.name());
@@ -1711,8 +1720,12 @@ public class KAnonE2ETest {
 
     private PersistAdSelectionResultInput setupTestForPersistAdSelectionResult(
             CountDownLatch countDownLatch)
-            throws RemoteException, InterruptedException, IOException, KeyStoreException,
-                    NoSuchAlgorithmException, NoSuchProviderException {
+            throws RemoteException,
+                    InterruptedException,
+                    IOException,
+                    KeyStoreException,
+                    NoSuchAlgorithmException,
+                    NoSuchProviderException {
         setupMocksForKAnonWithCountdownlatch(countDownLatch);
         mAdSelectionService = createAdSelectionService();
 

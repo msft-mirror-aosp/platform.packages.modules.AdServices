@@ -28,6 +28,7 @@ import androidx.room.TypeConverters;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -77,9 +78,9 @@ public class DBTrustedBiddingData {
 
     /** Returns the estimated size, in bytes, of the strings contained in this object. */
     public int size() {
-        int totalSize = mUri.toString().getBytes().length;
+        int totalSize = mUri.toString().getBytes(StandardCharsets.UTF_8).length;
         for (String key : mKeys) {
-            totalSize += key.getBytes().length;
+            totalSize += key.getBytes(StandardCharsets.UTF_8).length;
         }
 
         return totalSize;

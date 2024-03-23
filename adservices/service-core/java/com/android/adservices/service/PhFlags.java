@@ -2086,6 +2086,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerMediaTypeChangeEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED,
+                FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED);
+    }
+
+    @Override
     public String getFledgeAuctionServerAuctionKeyFetchUri() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
@@ -2844,6 +2851,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public long getMeasurementMaxReportStatesPerSourceRegistration() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION,
+                MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
+    }
+
+    @Override
     public int getMeasurementFlexApiMaxEventReports() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS,
@@ -3585,6 +3599,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementFlexApiMaxInformationGainDualDestinationNavigation());
         writer.println(
                 "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxReportStatesPerSourceRegistration());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS
                         + " = "
                         + getMeasurementFlexApiMaxEventReports());
@@ -4261,6 +4281,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 .KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA
                         + " = "
                         + getFledgeAuctionServerEnableAdFilterInGetAdSelectionData());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerMediaTypeChangeEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI

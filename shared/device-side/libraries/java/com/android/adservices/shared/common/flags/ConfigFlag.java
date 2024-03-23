@@ -24,6 +24,8 @@ import java.lang.annotation.Target;
 /**
  * Annotation used to indicate a constant defines the default value of a flag used for configuration
  * purposes.
+ *
+ * @hide
  */
 @Retention(SOURCE)
 @Target({FIELD})

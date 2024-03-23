@@ -765,6 +765,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
     }
 
+    long MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION = (1L << 32) - 1L;
+
+    /** Returns max repot states per source registration */
+    default long getMeasurementMaxReportStatesPerSourceRegistration() {
+        return MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION;
+    }
+
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
 
     /** Returns max event reports in Flexible Event API */
@@ -1415,6 +1422,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns whether to enable ad filtering in get ad selection data API. */
     default boolean getFledgeAuctionServerEnableAdFilterInGetAdSelectionData() {
         return FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED = false;
+
+    /** Returns whether to use the server auction media type. */
+    default boolean getFledgeAuctionServerMediaTypeChangeEnabled() {
+        return FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
     }
 
     ImmutableList<Integer> FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
