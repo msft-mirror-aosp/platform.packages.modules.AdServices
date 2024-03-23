@@ -22,16 +22,15 @@ import static com.android.adservices.service.shell.AdServicesShellCommandHandler
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_ATTRIBUTION_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_TOPICS_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_SHORT_HELP;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.ERROR_EMPTY_COMMAND;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_TOPICS_ACCESS;
 import static com.android.adservices.service.shell.EchoCommand.CMD_ECHO;
 import static com.android.adservices.service.shell.EchoCommand.HELP_ECHO;
+import static com.android.adservices.service.shell.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.junit.Assert.assertThrows;
@@ -63,7 +62,6 @@ import java.util.Map;
 public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedMockitoTestCase {
     private static final String PKG_NAME = "d.h.a.r.m.a";
     private static final String ENROLLMENT_ID = "42";
-    private static final String USES_SDK = "true";
     private final Flags mFlags = new ShellCommandFlags();
 
     // mCmd is used on most tests methods, excepted those that runs more than one command
@@ -299,66 +297,6 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                         "result of %s %s %s",
                         CMD_IS_ALLOWED_AD_SELECTION_ACCESS, PKG_NAME, ENROLLMENT_ID)
                 .that(mCmd.runValid(CMD_IS_ALLOWED_AD_SELECTION_ACCESS, PKG_NAME, ENROLLMENT_ID))
-                .isEqualTo("true\n");
-    }
-
-    @Test
-    public void testRunIsAllowedTopicsAccess_invalid() throws Exception {
-        // no args
-        expectInvalidArgument(HELP_IS_ALLOWED_TOPICS_ACCESS, CMD_IS_ALLOWED_TOPICS_ACCESS);
-        // missing id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS, CMD_IS_ALLOWED_TOPICS_ACCESS, PKG_NAME);
-        // missing sdk
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                ENROLLMENT_ID);
-        // empty pkg
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                "",
-                ENROLLMENT_ID,
-                USES_SDK);
-        // empty id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                "",
-                USES_SDK);
-        // empty sdk
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                ENROLLMENT_ID,
-                "");
-        // non-boolean sdk
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                ENROLLMENT_ID,
-                "D'OH!");
-    }
-
-    @Test
-    public void testRunIsAllowedTopicsAudiencesAccess_valid() throws Exception {
-        doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedTopicsAccess(
-                                        /* useSandboxCheck= */ true, PKG_NAME, ENROLLMENT_ID));
-
-        expect.withMessage(
-                        "result of %s %s %s %s",
-                        CMD_IS_ALLOWED_TOPICS_ACCESS, PKG_NAME, ENROLLMENT_ID, USES_SDK)
-                .that(
-                        mCmd.runValid(
-                                CMD_IS_ALLOWED_TOPICS_ACCESS, PKG_NAME, ENROLLMENT_ID, USES_SDK))
                 .isEqualTo("true\n");
     }
 
