@@ -19,6 +19,7 @@ import static com.android.adservices.service.shell.AbstractShellCommand.ERROR_TE
 import static com.android.adservices.service.shell.AbstractShellCommand.RESULT_GENERIC_ERROR;
 import static com.android.adservices.service.shell.AbstractShellCommand.RESULT_OK;
 import static com.android.adservices.service.shell.EchoCommand.HELP_ECHO;
+import static com.android.adservices.service.shell.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
 
 import android.annotation.Nullable;
 import android.text.TextUtils;
@@ -32,7 +33,6 @@ import com.google.common.collect.ImmutableMap;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Objects;
 
 // TODO(b/308009734): STOPSHIP - document that it's up to each command implementation to check about
@@ -69,9 +69,6 @@ public final class AdServicesShellCommandHandler {
     static final String CMD_IS_ALLOWED_AD_SELECTION_ACCESS = "is-allowed-ad-selection-access";
 
     @VisibleForTesting
-    static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
-
-    @VisibleForTesting
     static final String HELP_IS_ALLOWED_ATTRIBUTION_ACCESS =
             CMD_IS_ALLOWED_ATTRIBUTION_ACCESS
                     + " <package_name> <enrollment_id>\n"
@@ -98,13 +95,6 @@ public final class AdServicesShellCommandHandler {
                     + " <package_name> <enrollment_id>\n"
                     + "    Checks if the given enrollment id is allowed to use the Ad "
                     + "Selection APIs in the given app.";
-
-    @VisibleForTesting
-    static final String HELP_IS_ALLOWED_TOPICS_ACCESS =
-            CMD_IS_ALLOWED_TOPICS_ACCESS
-                    + " <package_name> <enrollment_id> <using_sdk_sandbox>\n"
-                    + "    Checks if the given enrollment id is allowed to use the Topics APIs in"
-                    + " the given app, when using SDK sandbox or not.";
 
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
     public static final String TAG = "AdServicesShellCmd";
@@ -192,23 +182,6 @@ public final class AdServicesShellCommandHandler {
         return mArgs.length == expected + 1; // adds +1 for the cmd itself
     }
 
-    @Nullable
-    private Boolean getNextBooleanArg() {
-        String arg = getNextArg();
-        if (TextUtils.isEmpty(arg)) {
-            return null;
-        }
-        // Boolean.parse returns false when it's invalid
-        switch (arg.trim().toLowerCase(Locale.ROOT)) {
-            case "true":
-                return Boolean.TRUE;
-            case "false":
-                return Boolean.FALSE;
-            default:
-                return null;
-        }
-    }
-
     private int invalidArgsError(String syntax) {
         mErr.printf(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(mArgs), syntax);
         return RESULT_GENERIC_ERROR;
@@ -243,7 +216,6 @@ public final class AdServicesShellCommandHandler {
             case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
             case CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS:
             case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
-            case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 return runIsAllowedApiAccess(cmd);
             default:
                 // TODO (b/308009734): Move other shell commands implement ICommand interface.
@@ -280,10 +252,6 @@ public final class AdServicesShellCommandHandler {
                 break;
             case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
                 helpMsg = HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
-                break;
-            case CMD_IS_ALLOWED_TOPICS_ACCESS:
-                expectedArgs = 3;
-                helpMsg = HELP_IS_ALLOWED_TOPICS_ACCESS;
                 break;
         }
         if (!hasExactNumberOfArgs(expectedArgs)) {
@@ -343,25 +311,6 @@ public final class AdServicesShellCommandHandler {
                         TAG,
                         "isAllowedAdSelectionAccess("
                                 + pkgName
-                                + ", "
-                                + enrollmentId
-                                + ": "
-                                + isValid);
-                break;
-            case CMD_IS_ALLOWED_TOPICS_ACCESS:
-                Boolean usesSdkSandbox = getNextBooleanArg();
-                if (usesSdkSandbox == null) {
-                    return invalidArgsError(HELP_IS_ALLOWED_TOPICS_ACCESS);
-                }
-                isValid =
-                        AppManifestConfigHelper.isAllowedTopicsAccess(
-                                usesSdkSandbox, pkgName, enrollmentId);
-                Log.i(
-                        TAG,
-                        "isAllowedTopicAccess("
-                                + pkgName
-                                + ", "
-                                + usesSdkSandbox
                                 + ", "
                                 + enrollmentId
                                 + ": "

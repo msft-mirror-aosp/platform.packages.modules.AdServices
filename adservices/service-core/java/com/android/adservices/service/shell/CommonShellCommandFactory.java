@@ -17,6 +17,7 @@
 package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.EchoCommand.CMD_ECHO;
+import static com.android.adservices.service.shell.IsAllowedTopicsAccessCommand.CMD_IS_ALLOWED_TOPICS_ACCESS;
 
 import androidx.annotation.Nullable;
 
@@ -36,6 +37,9 @@ final class CommonShellCommandFactory implements ShellCommandFactory {
         switch (cmd) {
             case CMD_ECHO:
                 return new EchoCommand();
+            case CMD_IS_ALLOWED_TOPICS_ACCESS:
+                return new IsAllowedTopicsAccessCommand();
+
             default:
                 return null;
         }
