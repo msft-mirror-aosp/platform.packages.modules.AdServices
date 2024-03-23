@@ -16,11 +16,21 @@
 
 package com.android.adservices.service.shell;
 
-import static com.android.adservices.service.shell.EchoCommand.CMD_ECHO;
-import static com.android.adservices.service.shell.IsAllowedTopicsAccessCommand.CMD_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.adservices.service.shell.common.EchoCommand.CMD_ECHO;
+import static com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand.CMD_IS_ALLOWED_AD_SELECTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand.CMD_IS_ALLOWED_ATTRIBUTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand.CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand.CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.CMD_IS_ALLOWED_TOPICS_ACCESS;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.shell.common.EchoCommand;
+import com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand;
+import com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand;
+import com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand;
+import com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand;
+import com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand;
 
 /**
  * Factory class which handles common shell commands. API specific shell commands should be part of
@@ -39,7 +49,14 @@ final class CommonShellCommandFactory implements ShellCommandFactory {
                 return new EchoCommand();
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 return new IsAllowedTopicsAccessCommand();
-
+            case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
+                return new IsAllowedCustomAudiencesAccessCommand();
+            case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
+                return new IsAllowedAdSelectionAccessCommand();
+            case CMD_IS_ALLOWED_ATTRIBUTION_ACCESS:
+                return new IsAllowedAttributionAccessCommand();
+            case CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS:
+                return new IsAllowedProtectedSignalsAccessCommand();
             default:
                 return null;
         }

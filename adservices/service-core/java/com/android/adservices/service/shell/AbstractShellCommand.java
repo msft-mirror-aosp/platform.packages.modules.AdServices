@@ -45,7 +45,7 @@ public abstract class AbstractShellCommand implements ShellCommand {
      * invalid.
      */
     @Nullable
-    static Boolean toBoolean(String arg) {
+    public static Boolean toBoolean(String arg) {
         if (TextUtils.isEmpty(arg)) {
             return null;
         }
