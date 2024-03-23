@@ -25,7 +25,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
@@ -42,6 +44,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIG
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
@@ -77,6 +81,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.MAX_PERCENTAGE;
 
@@ -1126,6 +1131,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAppInstallFilteringEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED,
+                FLEDGE_APP_INSTALL_FILTERING_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeFrequencyCapFilteringEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED,
+                FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED);
+    }
+
+    @Override
     @SuppressWarnings("InlinedApi")
     public boolean getFledgeAdSelectionContextualAdsEnabled() {
         return getDeviceConfigFlag(
@@ -1941,6 +1960,27 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public String getUiOtaResourcesManifestFileUrl() {
+        return SystemProperties.get(
+                getSystemPropertyName(FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL),
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL,
+                        UI_OTA_RESOURCES_MANIFEST_FILE_URL));
+    }
+
+    @Override
+    public boolean getUiOtaResourcesFeatureEnabled() {
+        if (getGlobalKillSwitch()) {
+            return false;
+        }
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED),
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED,
+                        UI_OTA_RESOURCES_FEATURE_ENABLED));
+    }
+
+    @Override
     public long getUiOtaStringsDownloadDeadline() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE,
@@ -2057,6 +2097,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA,
                 FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerMediaTypeChangeEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED,
+                FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED);
     }
 
     @Override
@@ -2818,6 +2865,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public long getMeasurementMaxReportStatesPerSourceRegistration() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION,
+                MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
+    }
+
+    @Override
     public int getMeasurementFlexApiMaxEventReports() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS,
@@ -3190,6 +3244,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getUiOtaStringsManifestFileUrl());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL
+                        + " = "
+                        + getUiOtaStringsManifestFileUrl());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED
+                        + " = "
+                        + getUiOtaResourcesFeatureEnabled());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS
                         + " = "
                         + getDownloaderConnectionTimeoutMs());
@@ -3547,6 +3611,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION
                         + " = "
                         + getMeasurementFlexApiMaxInformationGainDualDestinationNavigation());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxReportStatesPerSourceRegistration());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS
@@ -4227,6 +4297,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeAuctionServerEnableAdFilterInGetAdSelectionData());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerMediaTypeChangeEnabled());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI
                         + " = "
                         + getFledgeAuctionServerAuctionKeyFetchUri());
@@ -4291,6 +4366,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
                         + " = "
                         + getFledgeAdSelectionFilteringEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED
+                        + " = "
+                        + getFledgeAppInstallFilteringEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED
+                        + " = "
+                        + getFledgeFrequencyCapFilteringEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
@@ -5011,6 +5096,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeCustomAudienceCLIEnabledStatus());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED
+                        + " = "
+                        + getFledgeConsentedDebuggingCliEnabledStatus());
+        writer.println(
+                "\t"
                         + KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED
                         + " = "
                         + getAdServicesRetryStrategyEnabled());
@@ -5225,6 +5315,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 getEnableRvcPostOtaNotification());
         uxMap.put(
                 FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
+        uxMap.put(
+                FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED,
+                getUiOtaResourcesFeatureEnabled());
         uxMap.put(
                 FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED,
                 isUiFeatureTypeLoggingEnabled());
@@ -5952,6 +6045,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeConsentedDebuggingCliEnabledStatus() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED,
+                FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED);
+    }
+
+    @Override
     public boolean getBackgroundJobsLoggingEnabled() {
         return !getBackgroundJobsLoggingKillSwitch();
     }
@@ -5980,9 +6080,36 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(KEY_PAS_EXTENDED_METRICS_ENABLED, PAS_EXTENDED_METRICS_ENABLED);
     }
 
+    @Override
     public boolean getSpeOnPilotJobsEnabled() {
         return getDeviceConfigFlag(
                 KEY_SPE_ON_PILOT_JOBS_ENABLED, DEFAULT_SPE_ON_PILOT_JOBS_ENABLED);
+    }
+
+    @Override
+    public boolean getEnrollmentApiBasedSchemaEnabled() {
+        return getDeviceConfigFlag(
+                KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED, ENROLLMENT_API_BASED_SCHEMA_ENABLED);
+    }
+
+    @Override
+    public boolean getSharedDatabaseSchemaVersion4Enabled() {
+        return getDeviceConfigFlag(
+                KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED,
+                SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED);
+    }
+
+    @Override
+    public boolean getJobSchedulingLoggingEnabled() {
+        return getDeviceConfigFlag(
+                KEY_JOB_SCHEDULING_LOGGING_ENABLED, DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED);
+    }
+
+    @Override
+    public int getJobSchedulingLoggingSamplingRate() {
+        return getDeviceConfigFlag(
+                KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE,
+                DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers

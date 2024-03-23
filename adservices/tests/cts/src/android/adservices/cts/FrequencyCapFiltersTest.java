@@ -18,6 +18,7 @@ package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.FrequencyCapFilters;
@@ -329,5 +330,21 @@ public class FrequencyCapFiltersTest {
         filtersBuilder.setKeyedFrequencyCapsForClickEvents(listBuilder.build());
 
         assertThrows(IllegalArgumentException.class, filtersBuilder::build);
+    }
+
+    @Test
+    public void testFrequencyCapFiltersDescribeContents() {
+        final FrequencyCapFilters originalFilters =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForWinEvents(
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
+                        .setKeyedFrequencyCapsForImpressionEvents(
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
+                        .setKeyedFrequencyCapsForViewEvents(
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
+                        .setKeyedFrequencyCapsForClickEvents(
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
+                        .build();
+        assertEquals("describeContents", 0, originalFilters.describeContents());
     }
 }

@@ -23,16 +23,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 @RunWith(Parameterized.class)
 public class CombinatoricsParameterizedTest {
@@ -54,21 +51,11 @@ public class CombinatoricsParameterizedTest {
                 {2, new int[] {2, 2}, new int[] {1, 1}},
                 {3, new int[] {2, 2}, new int[] {3, 3}},
                 {7, new int[] {2, 2}, new int[] {3, 3}},
-                // Default parameters for existing event reporting API. Since no local limited is
-                // set, just put max integer value here.
+                // Default parameters for existing event reporting API
                 {
                     3,
                     new int[] {3, 3, 3, 3, 3, 3, 3, 3},
-                    new int[] {
-                        Integer.MAX_VALUE,
-                        Integer.MAX_VALUE,
-                        Integer.MAX_VALUE,
-                        Integer.MAX_VALUE,
-                        Integer.MAX_VALUE,
-                        Integer.MAX_VALUE,
-                        Integer.MAX_VALUE,
-                        Integer.MAX_VALUE
-                    }
+                    new int[] {20, 20, 20, 20, 20, 20, 20, 20}
                 },
                 {4, new int[] {3, 3, 3, 3, 3, 3, 3, 3}, new int[] {3, 3, 3, 3, 3, 3, 3, 3}}
         });
@@ -84,17 +71,15 @@ public class CombinatoricsParameterizedTest {
 
     private static void getSingleRandomSelectReportSet_checkNoDuplication_success(
             int numBucketIncrements, int[] perTypeNumWindows, int[] perTypeCap) {
-        Map<List<Integer>, BigInteger> dp = new HashMap<>();
         ArrayList<List<Combinatorics.AtomReportState>> allReportSets =
                 new ArrayList<>();
-        BigInteger numberStates =
+        long numberStates =
                 Combinatorics.getNumStatesFlexApi(
-                        numBucketIncrements, perTypeNumWindows, perTypeCap);
-        for (BigInteger i = BigInteger.ZERO; i.compareTo(numberStates) < 0;
-                i = i.add(BigInteger.ONE)) {
+                        numBucketIncrements, perTypeNumWindows, perTypeCap, Long.MAX_VALUE);
+        for (long i = 0; i < numberStates; i++) {
             List<Combinatorics.AtomReportState> ithSet =
                     Combinatorics.getReportSetBasedOnRank(
-                            numBucketIncrements, perTypeNumWindows, perTypeCap, i, dp);
+                            numBucketIncrements, perTypeNumWindows, perTypeCap, i);
             Collections.sort(ithSet, new AtomReportStateComparator());
             allReportSets.add(ithSet);
         }
@@ -105,15 +90,13 @@ public class CombinatoricsParameterizedTest {
 
     private static void getSingleRandomSelectReportSet_checkReportSetsMeetRequirement_success(
             int numBucketIncrements, int[] perTypeNumWindows, int[] perTypeCap) {
-        Map<List<Integer>, BigInteger> dp = new HashMap<>();
-        BigInteger numberStates =
+        long numberStates =
                 Combinatorics.getNumStatesFlexApi(
-                        numBucketIncrements, perTypeNumWindows, perTypeCap);
-        for (BigInteger i = BigInteger.ZERO; i.compareTo(numberStates) < 0;
-                i = i.add(BigInteger.ONE)) {
+                        numBucketIncrements, perTypeNumWindows, perTypeCap, Long.MAX_VALUE);
+        for (long i = 0; i < numberStates; i++) {
             List<Combinatorics.AtomReportState> ithSet =
                     Combinatorics.getReportSetBasedOnRank(
-                            numBucketIncrements, perTypeNumWindows, perTypeCap, i, dp);
+                            numBucketIncrements, perTypeNumWindows, perTypeCap, i);
             assertTrue(
                     atomReportStateSetMeetRequirement(
                             numBucketIncrements, perTypeNumWindows, perTypeCap, ithSet));

@@ -605,6 +605,19 @@ public class AuctionServerE2ETest {
                 };
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
+        // Create a logging latch with count of 3, 2 for buyer input logs and 1 for api logs
+        CountDownLatch loggingLatch = new CountDownLatch(3);
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    loggingLatch.countDown();
+                    return null;
+                };
+        ExtendedMockito.doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logGetAdSelectionDataApiCalledStats(any());
+        ExtendedMockito.doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
 
         mAdSelectionService = createAdSelectionService(); // create the service again with new flags
 
@@ -653,6 +666,7 @@ public class AuctionServerE2ETest {
             }
         }
 
+        loggingLatch.await();
         // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics
         verify(mAdServicesLoggerMock, times(2))
                 .logGetAdSelectionDataBuyerInputGeneratedStats(
@@ -1005,7 +1019,8 @@ public class AuctionServerE2ETest {
                 adSelectionId,
                 persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
                         .getAdSelectionId());
-        ReportingData reportingData = mAdSelectionEntryDao.getReportingDataForId(adSelectionId);
+        ReportingData reportingData =
+                mAdSelectionEntryDao.getReportingDataForId(adSelectionId, false);
         Assert.assertEquals(
                 BUYER_REPORTING_URI, reportingData.getBuyerWinReportingUri().toString());
         Assert.assertEquals(
@@ -1114,7 +1129,8 @@ public class AuctionServerE2ETest {
                 adSelectionId,
                 persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
                         .getAdSelectionId());
-        ReportingData reportingData = mAdSelectionEntryDao.getReportingDataForId(adSelectionId);
+        ReportingData reportingData =
+                mAdSelectionEntryDao.getReportingDataForId(adSelectionId, false);
         Assert.assertEquals(
                 BUYER_REPORTING_URI, reportingData.getBuyerWinReportingUri().toString());
         Assert.assertEquals(
@@ -1342,8 +1358,48 @@ public class AuctionServerE2ETest {
     }
 
     @Test
-    public void testReportImpression_serverAuction_impressionAndInteractionReporting()
-            throws Exception {
+    public void
+            testReportImpression_serverAuction_impressionAndInteractionReportingUnifiedTablesDisabled()
+                    throws Exception {
+        Flags flagsWithUnifiedTablesDisabled =
+                new AuctionServerE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return false;
+                    }
+                };
+
+        // Re init service with new flags
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDaoSpy,
+                        mEncodedPayloadDaoSpy,
+                        mFrequencyCapDaoSpy,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mAdServicesHttpsClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        flagsWithUnifiedTablesDisabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDaoSpy,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        /* shouldUseUnifiedTables =*/ false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
+
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
@@ -1387,7 +1443,7 @@ public class AuctionServerE2ETest {
                         .build();
 
         GetAdSelectionDataTestCallback getAdSelectionDataTestCallback =
-                invokeGetAdSelectionData(mAdSelectionService, input);
+                invokeGetAdSelectionData(adSelectionService, input);
         long adSelectionId =
                 getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
 
@@ -1400,11 +1456,11 @@ public class AuctionServerE2ETest {
                         .build();
 
         PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
-                invokePersistAdSelectionResult(mAdSelectionService, persistAdSelectionResultInput);
+                invokePersistAdSelectionResult(adSelectionService, persistAdSelectionResultInput);
         Uri adRenderUriFromPersistAdSelectionResult =
                 persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
                         .getAdRenderUri();
-        assertTrue(persistAdSelectionResultTestCallback.mIsSuccess);
+        Assert.assertTrue(persistAdSelectionResultTestCallback.mIsSuccess);
         Assert.assertEquals(WINNER_AD_RENDER_URI, adRenderUriFromPersistAdSelectionResult);
         Assert.assertEquals(
                 adSelectionId,
@@ -1431,7 +1487,7 @@ public class AuctionServerE2ETest {
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
         ReportImpressionTestCallback reportImpressionCallback =
-                invokeReportImpression(mAdSelectionService, reportImpressionInput);
+                invokeReportImpression(adSelectionService, reportImpressionInput);
 
         // Invoke report interaction for buyer
         String buyerInteractionData = "buyer-interaction-data";
@@ -1445,7 +1501,7 @@ public class AuctionServerE2ETest {
                                 ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER)
                         .build();
         ReportInteractionsTestCallback reportBuyerInteractionsCallback =
-                invokeReportInteractions(mAdSelectionService, reportBuyerInteractionInput);
+                invokeReportInteractions(adSelectionService, reportBuyerInteractionInput);
 
         // Invoke report interaction for seller
         String sellerInteractionData = "seller-interaction-data";
@@ -1459,29 +1515,215 @@ public class AuctionServerE2ETest {
                                 ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)
                         .build();
         ReportInteractionsTestCallback reportSellerInteractionsCallback =
-                invokeReportInteractions(mAdSelectionService, reportSellerInteractionInput);
+                invokeReportInteractions(adSelectionService, reportSellerInteractionInput);
 
         // Wait for countdown latch
         boolean isCountdownDone =
                 reportImpressionCountDownLatch.await(
                         COUNTDOWN_LATCH_LIMIT_SECONDS, TimeUnit.SECONDS);
-        assertTrue(isCountdownDone);
+        Assert.assertTrue(isCountdownDone);
 
         // Assert report impression
-        assertTrue(reportImpressionCallback.mIsSuccess);
+        Assert.assertTrue(reportImpressionCallback.mIsSuccess);
         verify(mAdServicesHttpsClientSpy, times(1))
                 .getAndReadNothing(eq(Uri.parse(SELLER_REPORTING_URI)), any());
         verify(mAdServicesHttpsClientSpy, times(1))
                 .getAndReadNothing(eq(Uri.parse(BUYER_REPORTING_URI)), any());
 
         // Assert report interaction for buyer
-        assertTrue(reportBuyerInteractionsCallback.mIsSuccess);
+        Assert.assertTrue(reportBuyerInteractionsCallback.mIsSuccess);
         verify(mAdServicesHttpsClientSpy, times(1))
                 .postPlainText(
                         eq(Uri.parse(BUYER_INTERACTION_URI)), eq(buyerInteractionData), any());
 
         // Assert report interaction for seller
-        assertTrue(reportSellerInteractionsCallback.mIsSuccess);
+        Assert.assertTrue(reportSellerInteractionsCallback.mIsSuccess);
+        verify(mAdServicesHttpsClientSpy, times(1))
+                .postPlainText(
+                        eq(Uri.parse(SELLER_INTERACTION_URI)), eq(sellerInteractionData), any());
+    }
+
+    @Test
+    public void
+            testReportImpression_serverAuction_impressionAndInteractionReportingUnifiedTablesEnabled()
+                    throws Exception {
+        Flags flagsWithUnifiedTablesEnabled =
+                new AuctionServerE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return true;
+                    }
+                };
+
+        // Re init service with new flags
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDaoSpy,
+                        mEncodedPayloadDaoSpy,
+                        mFrequencyCapDaoSpy,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mAdServicesHttpsClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        flagsWithUnifiedTablesEnabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDaoSpy,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        /* shouldUseUnifiedTables =*/ true,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
+
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        CountDownLatch reportImpressionCountDownLatch = new CountDownLatch(4);
+        Answer<ListenableFuture<Void>> successReportImpressionGetAnswer =
+                invocation -> {
+                    reportImpressionCountDownLatch.countDown();
+                    return Futures.immediateFuture(null);
+                };
+        doAnswer(successReportImpressionGetAnswer)
+                .when(mAdServicesHttpsClientSpy)
+                .getAndReadNothing(any(Uri.class), any(DevContext.class));
+        doAnswer(successReportImpressionGetAnswer)
+                .when(mAdServicesHttpsClientSpy)
+                .postPlainText(any(Uri.class), any(String.class), any(DevContext.class));
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any()))
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
+        when(mObliviousHttpEncryptorMock.decryptBytes(any(byte[].class), anyLong()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                                WINNER_BUYER,
+                                WINNING_CUSTOM_AUDIENCE_NAME,
+                                WINNING_CUSTOM_AUDIENCE_OWNER)
+                        .setAds(
+                                DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(
+                                        WINNER_BUYER))
+                        .build(),
+                Uri.EMPTY,
+                false);
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback getAdSelectionDataTestCallback =
+                invokeGetAdSelectionData(adSelectionService, input);
+        long adSelectionId =
+                getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
+
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setSeller(SELLER)
+                        .setAdSelectionResult(prepareAuctionResultBytes())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
+                invokePersistAdSelectionResult(adSelectionService, persistAdSelectionResultInput);
+        Uri adRenderUriFromPersistAdSelectionResult =
+                persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
+                        .getAdRenderUri();
+        Assert.assertTrue(persistAdSelectionResultTestCallback.mIsSuccess);
+        Assert.assertEquals(WINNER_AD_RENDER_URI, adRenderUriFromPersistAdSelectionResult);
+        Assert.assertEquals(
+                adSelectionId,
+                persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
+                        .getAdSelectionId());
+        Assert.assertEquals(
+                BUYER_REPORTING_URI,
+                mAdSelectionEntryDao
+                        .getReportingUris(adSelectionId)
+                        .getBuyerWinReportingUri()
+                        .toString());
+        Assert.assertEquals(
+                SELLER_REPORTING_URI,
+                mAdSelectionEntryDao
+                        .getReportingUris(adSelectionId)
+                        .getSellerWinReportingUri()
+                        .toString());
+
+        // Invoke report impression
+        ReportImpressionInput reportImpressionInput =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setAdSelectionConfig(AdSelectionConfig.EMPTY)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        ReportImpressionTestCallback reportImpressionCallback =
+                invokeReportImpression(adSelectionService, reportImpressionInput);
+
+        // Invoke report interaction for buyer
+        String buyerInteractionData = "buyer-interaction-data";
+        ReportInteractionInput reportBuyerInteractionInput =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setInteractionKey(BUYER_INTERACTION_KEY)
+                        .setInteractionData(buyerInteractionData)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setReportingDestinations(
+                                ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER)
+                        .build();
+        ReportInteractionsTestCallback reportBuyerInteractionsCallback =
+                invokeReportInteractions(adSelectionService, reportBuyerInteractionInput);
+
+        // Invoke report interaction for seller
+        String sellerInteractionData = "seller-interaction-data";
+        ReportInteractionInput reportSellerInteractionInput =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setInteractionKey(SELLER_INTERACTION_KEY)
+                        .setInteractionData(sellerInteractionData)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setReportingDestinations(
+                                ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)
+                        .build();
+        ReportInteractionsTestCallback reportSellerInteractionsCallback =
+                invokeReportInteractions(adSelectionService, reportSellerInteractionInput);
+
+        // Wait for countdown latch
+        boolean isCountdownDone =
+                reportImpressionCountDownLatch.await(
+                        COUNTDOWN_LATCH_LIMIT_SECONDS, TimeUnit.SECONDS);
+        Assert.assertTrue(isCountdownDone);
+
+        // Assert report impression
+        Assert.assertTrue(reportImpressionCallback.mIsSuccess);
+        verify(mAdServicesHttpsClientSpy, times(1))
+                .getAndReadNothing(eq(Uri.parse(SELLER_REPORTING_URI)), any());
+        verify(mAdServicesHttpsClientSpy, times(1))
+                .getAndReadNothing(eq(Uri.parse(BUYER_REPORTING_URI)), any());
+
+        // Assert report interaction for buyer
+        Assert.assertTrue(reportBuyerInteractionsCallback.mIsSuccess);
+        verify(mAdServicesHttpsClientSpy, times(1))
+                .postPlainText(
+                        eq(Uri.parse(BUYER_INTERACTION_URI)), eq(buyerInteractionData), any());
+
+        // Assert report interaction for seller
+        Assert.assertTrue(reportSellerInteractionsCallback.mIsSuccess);
         verify(mAdServicesHttpsClientSpy, times(1))
                 .postPlainText(
                         eq(Uri.parse(SELLER_INTERACTION_URI)), eq(sellerInteractionData), any());
@@ -1933,6 +2175,113 @@ public class AuctionServerE2ETest {
                                                 mLightweightExecutorService),
                                         mEncryptionContextDao,
                                         seedBytes,
+                                        mLightweightExecutorService)),
+                        mAdSelectionDebugReportDaoSpy,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory);
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback callback = invokeGetAdSelectionData(service, input);
+        assertTrue(callback.mIsSuccess);
+        byte[] adSelectionResponse = callback.mGetAdSelectionDataResponse.getAdSelectionData();
+
+        ProtectedAuctionInput protectedAuctionInput =
+                getProtectedAuctionInputFromCipherText(adSelectionResponse, privKey);
+
+        Map<String, BuyerInput> buyerInputs = getDecompressedBuyerInputs(protectedAuctionInput);
+
+        Assert.assertEquals(CALLER_PACKAGE_NAME, protectedAuctionInput.getPublisherName());
+        Assert.assertEquals(2, buyerInputs.size());
+        assertTrue(buyerInputs.containsKey(DIFFERENT_BUYER.toString()));
+        assertTrue(buyerInputs.containsKey(WINNER_BUYER.toString()));
+        Assert.assertEquals(
+                1, buyerInputs.get(DIFFERENT_BUYER.toString()).getCustomAudiencesList().size());
+        Assert.assertEquals(
+                2, buyerInputs.get(WINNER_BUYER.toString()).getCustomAudiencesList().size());
+
+        List<String> actual =
+                Arrays.asList(
+                        buyerInputs.get(WINNER_BUYER.toString()).getCustomAudiences(0).getName(),
+                        buyerInputs.get(WINNER_BUYER.toString()).getCustomAudiences(1).getName());
+        List<String> expected = Arrays.asList(winnerBuyerCaOneName, winnerBuyerCaTwoName);
+        assertTrue(expected.containsAll(actual));
+    }
+
+    @Test
+    public void
+            testGetAdSelectionData_withOhttpGatewayDecryption_withServerAuctionMediaTypeChanged()
+                    throws Exception {
+        mFlags =
+                new AuctionServerE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeAuctionServerMediaTypeChangeEnabled() {
+                        return true;
+                    }
+                };
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        String winnerBuyerCaOneName = "Shoes CA of Buyer 1";
+        String winnerBuyerCaTwoName = "Shirts CA of Buyer 1";
+        String differentBuyerCaOneName = "Shoes CA Of Buyer 2";
+
+        Map<String, AdTechIdentifier> nameAndBuyersMap =
+                Map.of(
+                        winnerBuyerCaOneName, WINNER_BUYER,
+                        winnerBuyerCaTwoName, WINNER_BUYER,
+                        differentBuyerCaOneName, DIFFERENT_BUYER);
+        createAndPersistDBCustomAudiences(nameAndBuyersMap);
+
+        String privateKeyHex = "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
+        OhttpGatewayPrivateKey privKey =
+                OhttpGatewayPrivateKey.create(
+                        BaseEncoding.base16().lowerCase().decode(privateKeyHex));
+        DBEncryptionKey dbEncryptionKey =
+                DBEncryptionKey.builder()
+                        .setPublicKey("87ey8XZPXAd+/+ytKv2GFUWW5j9zdepSJ2G4gebDwyM=")
+                        .setKeyIdentifier("400bed24-c62f-46e0-a1ad-211361ad771a")
+                        .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
+                        .setExpiryTtlSeconds(TimeUnit.DAYS.toSeconds(7))
+                        .build();
+        mAuctionServerEncryptionKeyDao.insertAllKeys(ImmutableList.of(dbEncryptionKey));
+
+        AdSelectionService service =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDaoSpy,
+                        mEncodedPayloadDaoSpy,
+                        mFrequencyCapDaoSpy,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mAdServicesHttpsClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        MultiCloudTestStrategyFactory.getDisabledTestStrategy(
+                                new ObliviousHttpEncryptorImpl(
+                                        new AdSelectionEncryptionKeyManager(
+                                                mAuctionServerEncryptionKeyDao,
+                                                mFlags,
+                                                mAdServicesHttpsClientSpy,
+                                                mLightweightExecutorService),
+                                        mEncryptionContextDao,
                                         mLightweightExecutorService)),
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
@@ -2871,7 +3220,8 @@ public class AuctionServerE2ETest {
                 adSelectionId,
                 persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
                         .getAdSelectionId());
-        ReportingData reportingData = mAdSelectionEntryDao.getReportingDataForId(adSelectionId);
+        ReportingData reportingData =
+                mAdSelectionEntryDao.getReportingDataForId(adSelectionId, false);
         Assert.assertEquals(
                 BUYER_REPORTING_URI, reportingData.getBuyerWinReportingUri().toString());
         Assert.assertEquals(
@@ -3567,6 +3917,11 @@ public class AuctionServerE2ETest {
         @Override
         public boolean getFledgeAuctionServerRefreshExpiredKeysDuringAuction() {
             return mRefreshKeysDuringAuction;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerMediaTypeChangeEnabled() {
+            return false;
         }
     }
 }

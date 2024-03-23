@@ -123,6 +123,7 @@ public class ImpressionReporter {
     @NonNull private final DevContext mDevContext;
     private int mCallerUid;
     @NonNull private String mCallerAppPackageName;
+    private final boolean mShouldUseUnifiedTables;
 
     public ImpressionReporter(
             @NonNull Context context,
@@ -139,7 +140,8 @@ public class ImpressionReporter {
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             final int callerUid,
-            @NonNull final RetryStrategy retryStrategy) {
+            @NonNull final RetryStrategy retryStrategy,
+            boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
@@ -206,6 +208,7 @@ public class ImpressionReporter {
                         mDevContext);
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
+        mShouldUseUnifiedTables = shouldUseUnifiedTables;
     }
 
     /**
@@ -322,7 +325,8 @@ public class ImpressionReporter {
                 mBackgroundExecutorService.submit(
                         () -> {
                             ReportingData reportingData =
-                                    mAdSelectionEntryDao.getReportingDataForId(adSelectionId);
+                                    mAdSelectionEntryDao.getReportingDataForId(
+                                            adSelectionId, mShouldUseUnifiedTables);
                             Preconditions.checkArgument(
                                     !Objects.isNull(reportingData),
                                     UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID);

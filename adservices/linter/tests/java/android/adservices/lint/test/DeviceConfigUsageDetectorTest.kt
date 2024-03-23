@@ -53,10 +53,10 @@ public final class FakeClass {
                 .run()
                 .expect(
                         """
-                        src/com/android/adservices/FakeClass.java:7: Warning: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
+                        src/com/android/adservices/FakeClass.java:7: Error: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
         DeviceConfig.getString("Namespace", "Bond", "James Bond");
                      ~~~~~~~~~
-0 errors, 1 warnings
+1 errors, 0 warnings
                         """.trimIndent())
     }
 
@@ -78,10 +78,10 @@ public final class FakeClass {
                 .run()
                 .expect(
                         """
-                        src/com/android/adservices/FakeClass.java:7: Warning: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
+                        src/com/android/adservices/FakeClass.java:7: Error: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
         DeviceConfig.getBoolean("To Be", "Or Not To Be", true);
                      ~~~~~~~~~~
-0 errors, 1 warnings
+1 errors, 0 warnings
                         """.trimIndent())
     }
 
@@ -103,10 +103,10 @@ public final class FakeClass {
                 .run()
                 .expect(
                         """
-                        src/com/android/adservices/FakeClass.java:7: Warning: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
+                        src/com/android/adservices/FakeClass.java:7: Error: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
         DeviceConfig.getInt("MeaningOf", "Live, Universe, and Everything", 42);
                      ~~~~~~
-0 errors, 1 warnings
+1 errors, 0 warnings
                         """.trimIndent())
     }
 
@@ -128,10 +128,10 @@ public final class FakeClass {
                 .run()
                 .expect(
                         """
-                        src/com/android/adservices/FakeClass.java:7: Warning: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
+                        src/com/android/adservices/FakeClass.java:7: Error: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
         DeviceConfig.getLong("MeaningOf", "Live, Universe, and Everything", 42L);
                      ~~~~~~~
-0 errors, 1 warnings
+1 errors, 0 warnings
                         """.trimIndent())
     }
 
@@ -154,10 +154,10 @@ public final class FakeClass {
                 .run()
                 .expect(
                         """
-                        src/com/android/adservices/FakeClass.java:7: Warning: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
+                        src/com/android/adservices/FakeClass.java:7: Error: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
         DeviceConfig.getFloat("MeaningOf", "Live, Universe, and Everything", 4.20);
                      ~~~~~~~~
-0 errors, 1 warnings
+1 errors, 0 warnings
                         """.trimIndent())
     }
 
@@ -179,10 +179,10 @@ public final class FakeClass {
                 .run()
                 .expect(
                         """
-                        src/com/android/adservices/FakeClass.java:7: Warning: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
+                        src/com/android/adservices/FakeClass.java:7: Error: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
         DeviceConfig.getProperty("Of", "Ned Flanders");
                      ~~~~~~~~~~~
-0 errors, 1 warnings
+1 errors, 0 warnings
                         """.trimIndent())
     }
 
@@ -204,10 +204,10 @@ public final class FakeClass {
                 .run()
                 .expect(
                         """
-                        src/com/android/adservices/FakeClass.java:7: Warning: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
+                        src/com/android/adservices/FakeClass.java:7: Error: DO NOT CALL android.provider.DeviceConfig methods directly, but adservices-specifc helpers instead. For example, on PhFlags.java, you should call getDeviceConfigFlag(name, defaultValue). [AvoidDeviceConfigUsage]
         DeviceConfig.getProperties("Of", "Ned", "Flanders");
                      ~~~~~~~~~~~~~
-0 errors, 1 warnings
+1 errors, 0 warnings
                         """.trimIndent())
     }
 

@@ -18,17 +18,17 @@ package com.android.adservices.service.measurement.noising;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.PrivacyParams;
 
-import com.google.common.math.BigIntegerMath;
+import com.google.common.math.LongMath;
 
 import org.junit.Test;
 
-import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -68,24 +68,21 @@ public class CombinatoricsTest {
                 {{2924, 3}, {26, 25, 24}},
         };
         Arrays.stream(testCases).forEach((testCase) ->
-                assertArrayEquals(
-                        Arrays.stream(testCase[1])
-                                .mapToObj(BigInteger::valueOf)
-                                .toArray(BigInteger[]::new),
+                assertArrayEquals(testCase[1],
                         Combinatorics.getKCombinationAtIndex(
-                                /*combinationIndex=*/ BigInteger.valueOf(testCase[0][0]),
+                                /*combinationIndex=*/ testCase[0][0],
                                 /*k=*/ (int) testCase[0][1])));
     }
 
     @Test
     public void testGetKCombinationNoRepeat() {
         for (int k = 1; k < 5; k++) {
-            Set<List<BigInteger>> seenCombinations = new HashSet<>();
-            for (long combinationIndex = 0L; combinationIndex < 1000L; combinationIndex++) {
-                List<BigInteger> combination =
-                        Arrays.stream(Combinatorics.getKCombinationAtIndex(
-                                BigInteger.valueOf(combinationIndex), k))
-                                        .collect(Collectors.toList());
+            Set<List<Long>> seenCombinations = new HashSet<>();
+            for (int combinationIndex = 0; combinationIndex < 3000; combinationIndex++) {
+                List<Long> combination =
+                        Arrays.stream(Combinatorics.getKCombinationAtIndex(combinationIndex,
+                                k)).boxed().collect(
+                                Collectors.toList());
                 assertTrue(seenCombinations.add(combination));
             }
         }
@@ -94,27 +91,25 @@ public class CombinatoricsTest {
     @Test
     public void testGetKCombinationMatchesDefinition() {
         for (int k = 1; k < 5; k++) {
-            for (long index = 0L; index < 1000L; index++) {
-                BigInteger[] combination = Combinatorics.getKCombinationAtIndex(
-                        BigInteger.valueOf(index), k);
-                BigInteger sum = BigInteger.ZERO;
+            for (int index = 0; index < 3000; index++) {
+                long[] combination = Combinatorics.getKCombinationAtIndex(index, k);
+                long sum = 0;
                 for (int i = 0; i < k; i++) {
-                    int n = combination[i].intValue();
-                    if (n >= k - i) {
-                        sum = sum.add(BigIntegerMath.binomial(n, k - i));
+                    if ((int) combination[i] >= k - i) {
+                        sum += LongMath.binomial((int) combination[i], k - i);
                     }
                 }
-                assertEquals(sum, BigInteger.valueOf(index));
+                assertEquals(sum, (long) index);
             }
         }
     }
 
     @Test
     public void testGetNumberOfStarsAndBarsSequences() {
-        assertEquals(BigInteger.valueOf(3L), Combinatorics.getNumberOfStarsAndBarsSequences(
+        assertEquals(3L, Combinatorics.getNumberOfStarsAndBarsSequences(
                 /*numStars=*/1, /*numBars=*/2
         ));
-        assertEquals(BigInteger.valueOf(2925L), Combinatorics.getNumberOfStarsAndBarsSequences(
+        assertEquals(2925L, Combinatorics.getNumberOfStarsAndBarsSequences(
                 /*numStars=*/3, /*numBars=*/24
         ));
     }
@@ -128,12 +123,9 @@ public class CombinatoricsTest {
         };
 
         Arrays.stream(testCases).forEach((testCase) ->
-                assertArrayEquals(
-                        Arrays.stream(testCase[1])
-                                .mapToObj(BigInteger::valueOf)
-                                .toArray(BigInteger[]::new),
+                assertArrayEquals(testCase[1],
                         Combinatorics.getStarIndices(/*numStars=*/ (int) testCase[0][0],
-                                /*sequenceIndex=*/ BigInteger.valueOf(testCase[0][2]))));
+                                /*sequenceIndex=*/testCase[0][2])));
 
     }
 
@@ -146,13 +138,8 @@ public class CombinatoricsTest {
         };
 
         Arrays.stream(testCases).forEach((testCase) ->
-                assertArrayEquals(
-                        Arrays.stream(testCase[1])
-                                .mapToObj(BigInteger::valueOf)
-                                .toArray(BigInteger[]::new),
-                        Combinatorics.getBarsPrecedingEachStar(
-                            /*starIndices=*/ Arrays.stream(testCase[0])
-                                    .mapToObj(BigInteger::valueOf).toArray(BigInteger[]::new))));
+                assertArrayEquals(testCase[1],
+                        Combinatorics.getBarsPrecedingEachStar(/*starIndices=*/testCase[0])));
     }
 
     @Test
@@ -169,7 +156,7 @@ public class CombinatoricsTest {
                 .forEach(
                         (testCase) ->
                                 assertEquals(
-                                        BigInteger.valueOf((long) testCase[1][0]),
+                                        testCase[1][0],
                                         Combinatorics.getNumStatesArithmetic(
                                                 testCase[0][0], testCase[0][1], testCase[0][2])));
     }
@@ -196,11 +183,52 @@ public class CombinatoricsTest {
                 .forEach(
                         (testCase) ->
                                 assertEquals(
-                                        BigInteger.valueOf((long) testCase[1][0][0]),
+                                        testCase[1][0][0],
                                         Combinatorics.getNumStatesFlexApi(
                                                 testCase[0][0][0],
                                                 testCase[0][1],
-                                                testCase[0][2])));
+                                                testCase[0][2],
+                                                Long.MAX_VALUE)));
+    }
+
+    @Test
+    public void getNumStatesFlexApi_iterativeOverBound_returnsLongMaxValue() {
+        assertEquals(
+                Long.MAX_VALUE,
+                Combinatorics.getNumStatesFlexApi(
+                        20,
+                        new int[]{5, 5, 5, 5, 5, 5, 5, 5},
+                        new int[]{20, 19, 18, 17, 16, 15, 14, 13},
+                        Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
+    }
+
+    @Test
+    public void getNumStatesFlexApi_iterativeGreaterThanLong_throws() {
+        assertThrows(
+                ArithmeticException.class,
+                () ->
+                        Combinatorics.getNumStatesFlexApi(
+                                20,
+                                new int[]{5, 5, 5, 5, 5, 5, 5, 5,
+                                        5, 5, 5, 5, 5, 5, 5, 5,
+                                        5, 5, 5, 5, 5, 5, 5, 5,
+                                        5, 5, 5, 5, 5, 5, 5, 5},
+                                new int[]{20, 19, 18, 17, 16, 15, 14, 13,
+                                        20, 19, 18, 17, 16, 15, 14, 13,
+                                        20, 19, 18, 17, 16, 15, 14, 13,
+                                        20, 19, 18, 17, 16, 15, 14, 13},
+                                Long.MAX_VALUE - 1L));
+    }
+
+    @Test
+    public void getNumStatesFlexApi_arithmeticOverBound_returnsLongMaxValue() {
+        assertEquals(
+                Long.MAX_VALUE,
+                Combinatorics.getNumStatesFlexApi(
+                        20,
+                        new int[]{5, 5, 5, 5, 5, 5, 5, 5},
+                        new int[]{20, 20, 20, 20, 20, 20, 20, 20},
+                        Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
     }
 
     @Test
@@ -217,8 +245,8 @@ public class CombinatoricsTest {
         Arrays.stream(testCases)
                 .forEach(
                         (testCase) -> {
-                            double result = 100 * Combinatorics.getFlipProbability(
-                                    BigInteger.valueOf((long) testCase[0]));
+                            double result =
+                                    100 * Combinatorics.getFlipProbability((int) testCase[0]);
                             assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
     }
@@ -239,51 +267,9 @@ public class CombinatoricsTest {
                         (testCase) -> {
                             double result =
                                     Combinatorics.getInformationGain(
-                                            BigInteger.valueOf((long) testCase[0]),
-                                            Combinatorics.getFlipProbability(
-                                                    BigInteger.valueOf((long) testCase[0])));
+                                            (int) testCase[0],
+                                            Combinatorics.getFlipProbability((int) testCase[0]));
                             assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
-    }
-
-    private static boolean atomReportStateSetMeetRequirement(
-            int totalCap,
-            int[] perTypeNumWindowList,
-            int[] perTypeCapList,
-            List<Combinatorics.AtomReportState> reportSet) {
-        // if number of report over max reports
-        if (reportSet.size() > totalCap) {
-            return false;
-        }
-        int[] perTypeReportList = new int[perTypeCapList.length];
-        // Initialize all elements to zero
-        for (int i = 0; i < perTypeCapList.length; i++) {
-            perTypeReportList[i] = 0;
-        }
-        for (Combinatorics.AtomReportState report : reportSet) {
-            int triggerDataIndex = report.getTriggerDataType();
-            // if the report window larger than total report window of this trigger data
-            // input perTypeNumWindowList is [3,3,3], and report windows index is 4, return false
-            if (report.getWindowIndex() + 1 > perTypeNumWindowList[triggerDataIndex]) {
-                return false;
-            }
-            perTypeReportList[triggerDataIndex]++;
-            // number of report for this trigger data over the per data limit
-            if (perTypeCapList[triggerDataIndex] < perTypeReportList[triggerDataIndex]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static class AtomReportStateComparator
-            implements Comparator<Combinatorics.AtomReportState> {
-        @Override
-        public int compare(Combinatorics.AtomReportState o1, Combinatorics.AtomReportState o2) {
-            if (o1.getTriggerDataType() != o2.getTriggerDataType()) {
-                return Integer.compare(o1.getTriggerDataType(), o2.getTriggerDataType());
-            }
-            return Integer.compare(o1.getWindowIndex(), o2.getWindowIndex());
-        }
     }
 }

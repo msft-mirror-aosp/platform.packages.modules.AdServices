@@ -45,10 +45,11 @@ import java.util.Objects;
             @AutoMigration(from = 1, to = 2),
             @AutoMigration(from = 2, to = 3),
             @AutoMigration(from = 3, to = 4),
+            @AutoMigration(from = 4, to = 5),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionServerDatabase extends RoomDatabase {
-    public static final int DATABASE_VERSION = 4;
+    public static final int DATABASE_VERSION = 5;
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adselectionserver.db");
 
