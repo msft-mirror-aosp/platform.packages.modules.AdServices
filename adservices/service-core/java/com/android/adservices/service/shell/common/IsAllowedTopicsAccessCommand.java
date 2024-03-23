@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell;
+package com.android.adservices.service.shell.common;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
 
 import android.util.Log;
 
 import com.android.adservices.service.common.AppManifestConfigHelper;
+import com.android.adservices.service.shell.AbstractShellCommand;
 
 import java.io.PrintWriter;
 
@@ -28,9 +29,9 @@ import java.io.PrintWriter;
  * Command to check if the given enrollment id is allowed to use the Topics APIs in the given app,
  * when using SDK sandbox or not.
  */
-final class IsAllowedTopicsAccessCommand extends AbstractShellCommand {
-    static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
-    static final String HELP_IS_ALLOWED_TOPICS_ACCESS =
+public final class IsAllowedTopicsAccessCommand extends AbstractShellCommand {
+    public static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
+    public static final String HELP_IS_ALLOWED_TOPICS_ACCESS =
             CMD_IS_ALLOWED_TOPICS_ACCESS
                     + " <package_name> <enrollment_id> <using_sdk_sandbox>\n"
                     + "    Checks if the given enrollment id is allowed to use the Topics APIs in"

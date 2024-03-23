@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell;
+package com.android.adservices.service.shell.common;
 
-import static com.android.adservices.service.shell.IsAllowedTopicsAccessCommand.CMD_IS_ALLOWED_TOPICS_ACCESS;
-import static com.android.adservices.service.shell.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.CMD_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import com.android.adservices.service.common.AppManifestConfigHelper;
+import com.android.adservices.service.shell.ShellCommandTestCase;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
@@ -33,7 +34,7 @@ public final class IsAllowedTopicsAccessCommandTest
     private static final String USES_SDK = "true";
 
     @Test
-    public void testRunIsAllowedTopicsAccess_invalid() throws Exception {
+    public void testRun_invalid() throws Exception {
         IsAllowedTopicsAccessCommand cmd = new IsAllowedTopicsAccessCommand();
 
         // no args
@@ -62,7 +63,7 @@ public final class IsAllowedTopicsAccessCommandTest
     }
 
     @Test
-    public void testRunIsAllowedTopicsAudiencesAccess_valid() throws Exception {
+    public void testRun_valid() throws Exception {
         IsAllowedTopicsAccessCommand cmd = new IsAllowedTopicsAccessCommand();
         doReturn(true)
                 .when(
