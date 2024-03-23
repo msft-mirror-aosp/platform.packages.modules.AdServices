@@ -21,7 +21,7 @@ import static com.android.adservices.service.shell.EchoCommand.HELP_ECHO;
 
 import org.junit.Test;
 
-public final class EchoCommandTest extends ShellCommandTest<EchoCommand> {
+public final class EchoCommandTest extends ShellCommandTestCase<EchoCommand> {
 
     @Test
     public void testRun_invalid() throws Exception {
