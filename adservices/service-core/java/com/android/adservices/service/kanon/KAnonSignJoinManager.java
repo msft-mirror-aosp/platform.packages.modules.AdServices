@@ -98,7 +98,7 @@ public class KAnonSignJoinManager {
                         && clientParamsExpiryInstant.isBefore(mClock.instant())) {
                     sLogger.v(
                             "Message found in database but corresponding client parameters have"
-                                + " expired, message should be processed");
+                                    + " expired, message should be processed");
                     shouldProcessRightNow = true;
                 }
             }
@@ -139,7 +139,8 @@ public class KAnonSignJoinManager {
                 mKAnonMessageManager.persistNewAnonMessageEntities(messageAfterFiltering);
         if (shouldMakeKAnonCallsNow()) {
             sLogger.v("Processing message immediately from persist ad selection result API");
-            mKAnonCaller.signAndJoinMessages(insertedMessages);
+            mKAnonCaller.signAndJoinMessages(
+                    insertedMessages, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         } else {
             // TODO(b/326903508): Remove unused loggers. Use callback instead of logger
             // for testing.
@@ -159,6 +160,7 @@ public class KAnonSignJoinManager {
             return;
         }
         sLogger.v("Processing " + messageEntities.size() + " messages from database");
-        mKAnonCaller.signAndJoinMessages(messageEntities);
+        mKAnonCaller.signAndJoinMessages(
+                messageEntities, KAnonCaller.KAnonCallerSource.BACKGROUND_JOB);
     }
 }

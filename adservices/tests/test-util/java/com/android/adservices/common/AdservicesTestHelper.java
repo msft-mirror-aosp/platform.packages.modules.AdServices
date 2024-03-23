@@ -46,7 +46,9 @@ public final class AdservicesTestHelper {
      * @param context the context
      * @param logTag the tag used for logging
      * @return Adservices package name
+     * @deprecated use {@link AdServicesSupportHelper#getAdServicesPackageName()} instead.
      */
+    @Deprecated
     public static String getAdServicesPackageName(
             @NonNull Context context, @NonNull String logTag) {
         final Intent intent = new Intent(TOPICS_SERVICE_NAME);
@@ -69,7 +71,9 @@ public final class AdservicesTestHelper {
      *
      * @param context the context
      * @return Adservices package name
+     * @deprecated use {@link AdServicesSupportHelper#getAdServicesPackageName()} instead.
      */
+    @Deprecated
     public static String getAdServicesPackageName(@NonNull Context context) {
         return getAdServicesPackageName(context, DEFAULT_LOG_TAG);
     }

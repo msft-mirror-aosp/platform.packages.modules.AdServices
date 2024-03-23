@@ -146,4 +146,12 @@ public class AppInstallFiltersTest {
         assertThat(filtersArray[0]).isNull();
         assertThat(filtersArray[1]).isNull();
     }
+
+    @Test
+    public void testAppInstallFiltersDescribeContents_success() {
+        final AppInstallFilters originalFilters =
+                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
+
+        assertThat(originalFilters.describeContents()).isEqualTo(0);
+    }
 }

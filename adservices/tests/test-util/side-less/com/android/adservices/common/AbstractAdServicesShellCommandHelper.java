@@ -29,14 +29,12 @@ import java.util.Objects;
 public abstract class AbstractAdServicesShellCommandHelper {
     protected static final String TAG = "AdServicesShellCommand";
 
-    private static final String SHELL_ACTIVITY_COMPONENT_NAME =
-            "com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity";
+    @VisibleForTesting
+    static final String SHELL_ACTIVITY_NAME = "com.android.adservices.shell.ShellCommandActivity";
+
     private static final String SHELL_ACTIVITY_INTENT =
             "android.adservices.BACK_COMPACT_SHELL_COMMAND";
-    private static final String ENABLE_SHELL_ACTIVITY =
-            "pm enable " + SHELL_ACTIVITY_COMPONENT_NAME;
-    private static final String DISABLE_SHELL_ACTIVITY =
-            "pm disable " + SHELL_ACTIVITY_COMPONENT_NAME;
+
     private static final String INVALID_COMMAND_OUTPUT = "Unknown command:";
 
     private static final String CMD_ARGS = "cmd-args";
@@ -49,8 +47,11 @@ public abstract class AbstractAdServicesShellCommandHelper {
     private static final long TIMEOUT_ACTIVITY_FINISH_MILLIS = 2000;
 
     private final Logger mLog;
+    private final AbstractDeviceSupportHelper mAdServicesHelper;
 
-    protected AbstractAdServicesShellCommandHelper(RealLogger logger) {
+    protected AbstractAdServicesShellCommandHelper(
+            AbstractDeviceSupportHelper abstractAdServicesHelper, RealLogger logger) {
+        mAdServicesHelper = abstractAdServicesHelper;
         mLog = new Logger(logger, TAG);
     }
 
@@ -135,20 +136,24 @@ public abstract class AbstractAdServicesShellCommandHelper {
     protected abstract int getDeviceApiLevel();
 
     private String runShellCommandRS(String cmd) {
-        String res = runShellCommand(ENABLE_SHELL_ACTIVITY);
-        mLog.d("Output for command %s: %s", ENABLE_SHELL_ACTIVITY, res);
+        String componentName =
+                String.format(
+                        "%s/%s", mAdServicesHelper.getAdServicesPackageName(), SHELL_ACTIVITY_NAME);
+        String enableShellCommandActivity = "pm enable " + componentName;
+        String res = runShellCommand(enableShellCommandActivity);
+        mLog.d("Output for command %s: %s", enableShellCommandActivity, res);
 
         String[] argsList = cmd.split(" ");
         String args = String.join(",", argsList);
         res = runShellCommand(startShellActivity(args));
         mLog.d("Output for command %s: %s", startShellActivity(args), res);
 
-        res = runShellCommand(runDumpsysShellCommand());
-        mLog.d("Output for command %s: %s", runDumpsysShellCommand(), res);
+        res = runShellCommand(runDumpsysShellCommand(componentName));
+        mLog.d("Output for command %s: %s", runDumpsysShellCommand(componentName), res);
         String out = parseResultFromDumpsys(res);
 
-        checkShellCommandActivityFinished();
-        disableShellCommandActivity();
+        checkShellCommandActivityFinished(componentName);
+        disableShellCommandActivity(componentName);
         return out;
     }
 
@@ -177,9 +182,8 @@ public abstract class AbstractAdServicesShellCommandHelper {
     }
 
     @VisibleForTesting
-    String runDumpsysShellCommand() {
-        return String.format(
-                "dumpsys activity %s cmd %s", SHELL_ACTIVITY_COMPONENT_NAME, GET_RESULT_ARG);
+    String runDumpsysShellCommand(String componentName) {
+        return String.format("dumpsys activity %s cmd %s", componentName, GET_RESULT_ARG);
     }
 
     private String startShellActivity(String args) {
@@ -192,21 +196,22 @@ public abstract class AbstractAdServicesShellCommandHelper {
         return !out.contains("not found");
     }
 
-    private void checkShellCommandActivityFinished() {
+    private void checkShellCommandActivityFinished(String componentName) {
         mLog.d("Checking if ShellCommandActivity is finished");
         tryWaitForSuccess(
                 () -> {
-                    String res = runShellCommand(runDumpsysShellCommand());
-                    mLog.d("Output for command %s: %s", runDumpsysShellCommand(), res);
+                    String res = runShellCommand(runDumpsysShellCommand(componentName));
+                    mLog.d("Output for command %s: %s", runDumpsysShellCommand(componentName), res);
                     return res.contains(INVALID_COMMAND_OUTPUT);
                 },
                 "Failed to finish ShellCommandActivity",
                 TIMEOUT_ACTIVITY_FINISH_MILLIS);
     }
 
-    private void disableShellCommandActivity() {
-        String res = runShellCommand(DISABLE_SHELL_ACTIVITY);
-        mLog.d("Output for command %s: %s", DISABLE_SHELL_ACTIVITY, res);
+    private void disableShellCommandActivity(String componentName) {
+        String disableShellCommandActivity = String.format("pm enable %s", componentName);
+        String res = runShellCommand(disableShellCommandActivity);
+        mLog.d("Output for command %s: %s", disableShellCommandActivity, res);
 
         // Add some sleep to ensure shell command is disabled.
         try {

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats.kanon;
 
+import android.annotation.Nullable;
+
 import com.google.auto.value.AutoValue;
 
 @AutoValue
@@ -30,17 +32,23 @@ public abstract class KAnonBackgroundJobStatusStats {
     public abstract int getMessagesInDBLeft();
 
     /** Number of failed messages during the sign process in this background run. */
-    public abstract int getMessagesFailedToSign();
+    @Nullable
+    public abstract Integer getMessagesFailedToSign();
 
     /** Number of failed messages during the join process in this background run. */
-    public abstract int getMessagesFailedToJoin();
+    @Nullable
+    public abstract Integer getMessagesFailedToJoin();
 
     /** Latency for this KAnon background run. */
     public abstract int getLatencyInMs();
 
     /** Returns a {@link Builder} for {@link KAnonBackgroundJobStatusStats} */
     public static Builder builder() {
-        return new AutoValue_KAnonBackgroundJobStatusStats.Builder();
+        return new AutoValue_KAnonBackgroundJobStatusStats.Builder()
+                .setKAnonJobResult(0)
+                .setLatencyInMs(0)
+                .setMessagesFailedToJoin(0)
+                .setMessagesFailedToSign(0);
     }
 
     @AutoValue.Builder
@@ -55,10 +63,10 @@ public abstract class KAnonBackgroundJobStatusStats {
         public abstract Builder setMessagesInDBLeft(int messagesInDBLeft);
 
         /** Sets the number of messages failed in the sign process. */
-        public abstract Builder setMessagesFailedToSign(int messagesFailedToSign);
+        public abstract Builder setMessagesFailedToSign(@Nullable Integer messagesFailedToSign);
 
         /** Sets the number of messages failed in the join process. */
-        public abstract Builder setMessagesFailedToJoin(int messagesFailedToJoin);
+        public abstract Builder setMessagesFailedToJoin(@Nullable Integer messagesFailedToJoin);
 
         /** Sets the latency of the background job. */
         public abstract Builder setLatencyInMs(int latencyInMs);
