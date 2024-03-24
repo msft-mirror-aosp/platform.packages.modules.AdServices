@@ -34,6 +34,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -154,7 +155,7 @@ public class FetcherUtil {
     static boolean isValidAggregateKeyId(String id) {
         return id != null
                 && !id.isEmpty()
-                && id.getBytes().length
+                && id.getBytes(StandardCharsets.UTF_8).length
                         <= FlagsFactory.getFlags()
                                 .getMeasurementMaxBytesPerAttributionAggregateKeyId();
     }
@@ -179,7 +180,7 @@ public class FetcherUtil {
         if (keyPiece == null || keyPiece.isEmpty()) {
             return false;
         }
-        int length = keyPiece.getBytes().length;
+        int length = keyPiece.getBytes(StandardCharsets.UTF_8).length;
         if (!(keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))) {
             return false;
         }
@@ -231,7 +232,7 @@ public class FetcherUtil {
         while (keys.hasNext()) {
             String key = keys.next();
             if (shouldCheckFilterSize
-                    && key.getBytes().length
+                    && key.getBytes(StandardCharsets.UTF_8).length
                             > FlagsFactory.getFlags()
                                     .getMeasurementMaxBytesPerAttributionFilterString()) {
                 return false;
@@ -265,7 +266,7 @@ public class FetcherUtil {
                     return false;
                 }
                 if (shouldCheckFilterSize
-                        && ((String) value).getBytes().length
+                        && ((String) value).getBytes(StandardCharsets.UTF_8).length
                                 > FlagsFactory.getFlags()
                                         .getMeasurementMaxBytesPerAttributionFilterString()) {
                     return false;

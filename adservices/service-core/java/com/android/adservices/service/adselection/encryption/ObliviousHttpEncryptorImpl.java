@@ -39,6 +39,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Class to encrypt and decrypt bytes using OHTTP. */
+// TODO(b/328734393): Implement an OhttpEncryptorFactory
 public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private ProtectedServersEncryptionConfigManagerBase mEncryptionConfigManager;
@@ -104,7 +105,10 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             ObliviousHttpClient client = ObliviousHttpClient.create(config);
 
             Objects.requireNonNull(client);
-            ObliviousHttpRequest request = client.createObliviousHttpRequest(plainText);
+            ObliviousHttpRequest request =
+                    client.createObliviousHttpRequest(
+                            plainText,
+                            ObliviousHttpKeyConfig.useFledgeAuctionServerMediaTypeChange(AUCTION));
 
             Objects.requireNonNull(request);
             mObliviousHttpRequestContextMarshaller.insertAuctionEncryptionContext(

@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.Test;
 
-public final class NoOpShellCommandTest extends ShellCommandTest<NoOpShellCommand> {
+public final class NoOpShellCommandTest extends ShellCommandTestCase<NoOpShellCommand> {
 
     @Test
     public void test_success() {

@@ -19,7 +19,7 @@ package com.android.adservices.common;
 public final class HostSideAdServicesShellCommandHelper
         extends AbstractAdServicesShellCommandHelper {
     public HostSideAdServicesShellCommandHelper() {
-        super(ConsoleLogger.getInstance());
+        super(AdServicesHostSideSupportHelper.getInstance(), ConsoleLogger.getInstance());
     }
 
     @Override

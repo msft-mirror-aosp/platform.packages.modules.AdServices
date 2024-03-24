@@ -170,4 +170,46 @@ public class ConsentedDebugConfigurationDaoTest {
         assertThat(consentedDebugConfigurationsAfterDelete).isNotNull();
         assertThat(consentedDebugConfigurationsAfterDelete).isEmpty();
     }
+
+    @Test
+    public void testDeleteExistingConsentedDebugConfigurationsAndPersist() {
+        int largeLimit = 100;
+        DBConsentedDebugConfiguration dbConsentedDebugConfigurationBeforeDelete =
+                DBConsentedDebugConfiguration.create(
+                        null,
+                        IS_CONSENTED,
+                        UUID.randomUUID().toString(),
+                        CREATION_TIMESTAMP,
+                        EXPIRY_TIMESTAMP);
+        DBConsentedDebugConfiguration dbConsentedDebugConfigurationAfterDelete =
+                DBConsentedDebugConfiguration.create(
+                        null,
+                        IS_CONSENTED,
+                        UUID.randomUUID().toString(),
+                        CREATION_TIMESTAMP.plus(Duration.ofHours(1)),
+                        EXPIRY_TIMESTAMP);
+
+        mConsentedDebugConfigurationDao.deleteExistingConsentedDebugConfigurationsAndPersist(
+                dbConsentedDebugConfigurationBeforeDelete);
+        List<DBConsentedDebugConfiguration> dbConsentedDebugConfigurationsBeforeDelete =
+                mConsentedDebugConfigurationDao.getAllActiveConsentedDebugConfigurations(
+                        FIXED_NOW, largeLimit);
+        mConsentedDebugConfigurationDao.deleteExistingConsentedDebugConfigurationsAndPersist(
+                dbConsentedDebugConfigurationAfterDelete);
+        List<DBConsentedDebugConfiguration> dbConsentedDebugConfigurationsAfterDelete =
+                mConsentedDebugConfigurationDao.getAllActiveConsentedDebugConfigurations(
+                        FIXED_NOW, largeLimit);
+
+        assertThat(dbConsentedDebugConfigurationsBeforeDelete).isNotNull();
+        assertThat(dbConsentedDebugConfigurationsBeforeDelete).isNotEmpty();
+        assertThat(dbConsentedDebugConfigurationsBeforeDelete.size()).isEqualTo(1);
+        assertThat(dbConsentedDebugConfigurationsBeforeDelete.get(0).getDebugToken())
+                .isEqualTo(dbConsentedDebugConfigurationBeforeDelete.getDebugToken());
+
+        assertThat(dbConsentedDebugConfigurationsAfterDelete).isNotNull();
+        assertThat(dbConsentedDebugConfigurationsAfterDelete).isNotEmpty();
+        assertThat(dbConsentedDebugConfigurationsAfterDelete.size()).isEqualTo(1);
+        assertThat(dbConsentedDebugConfigurationsAfterDelete.get(0).getDebugToken())
+                .isEqualTo(dbConsentedDebugConfigurationAfterDelete.getDebugToken());
+    }
 }

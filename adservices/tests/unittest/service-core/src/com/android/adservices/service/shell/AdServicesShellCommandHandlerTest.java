@@ -18,25 +18,20 @@ package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.AbstractShellCommand.ERROR_TEMPLATE_INVALID_ARGS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_HELP;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_AD_SELECTION_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_ATTRIBUTION_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_TOPICS_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_SHORT_HELP;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.ERROR_EMPTY_COMMAND;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_TOPICS_ACCESS;
-import static com.android.adservices.service.shell.EchoCommand.CMD_ECHO;
-import static com.android.adservices.service.shell.EchoCommand.HELP_ECHO;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.adservices.service.shell.common.EchoCommand.CMD_ECHO;
+import static com.android.adservices.service.shell.common.EchoCommand.HELP_ECHO;
+import static com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand.HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand.HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
 
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
@@ -62,20 +57,23 @@ import java.util.Map;
 public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedMockitoTestCase {
     private static final String PKG_NAME = "d.h.a.r.m.a";
     private static final String ENROLLMENT_ID = "42";
-    private static final String USES_SDK = "true";
     private final Flags mFlags = new ShellCommandFlags();
 
     // mCmd is used on most tests methods, excepted those that runs more than one command
     private OneTimeCommand mCmd;
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private BackgroundFetchRunner mBackgroundFetchRunner;
+    @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
     @Before
     public void setup() {
         mShellCommandFactorySupplier =
                 new TestShellCommandFactorySupplier(
-                        mFlags, mBackgroundFetchRunner, mCustomAudienceDao);
+                        mFlags,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        mConsentedDebugConfigurationDao);
         mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier);
     }
 
@@ -139,222 +137,6 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         String result = mCmd.runValid(CMD_ECHO, "108");
 
         expect.withMessage("result of '%s 108'", CMD_ECHO).that(result).isEqualTo("108\n");
-    }
-
-    @Test
-    public void testRunIsAllowedAttributionAccess_invalid() throws Exception {
-        // no args
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_ATTRIBUTION_ACCESS, CMD_IS_ALLOWED_ATTRIBUTION_ACCESS);
-        // missing id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_ATTRIBUTION_ACCESS, CMD_IS_ALLOWED_ATTRIBUTION_ACCESS, PKG_NAME);
-        // empty pkg
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
-                CMD_IS_ALLOWED_ATTRIBUTION_ACCESS,
-                "",
-                ENROLLMENT_ID);
-        // empty id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
-                CMD_IS_ALLOWED_ATTRIBUTION_ACCESS,
-                PKG_NAME,
-                "");
-    }
-
-    @Test
-    public void testRunIsAllowedAttributionAccess_valid() throws Exception {
-        doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        PKG_NAME, ENROLLMENT_ID));
-
-        expect.withMessage(
-                        "result of %s %s %s",
-                        CMD_IS_ALLOWED_ATTRIBUTION_ACCESS, PKG_NAME, ENROLLMENT_ID)
-                .that(mCmd.runValid(CMD_IS_ALLOWED_ATTRIBUTION_ACCESS, PKG_NAME, ENROLLMENT_ID))
-                .isEqualTo("true\n");
-    }
-
-    @Test
-    public void testRunIsAllowedCustomAudiencesAccess_invalid() throws Exception {
-        // no args
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS, CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
-        // missing id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                PKG_NAME);
-        // empty pkg
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                "",
-                ENROLLMENT_ID);
-        // empty id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                PKG_NAME,
-                "");
-    }
-
-    @Test
-    public void testRunIsAllowedCustomAudiencesAccess_valid() throws Exception {
-        doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                        PKG_NAME, ENROLLMENT_ID));
-
-        expect.withMessage(
-                        "result of %s %s %s",
-                        CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS, PKG_NAME, ENROLLMENT_ID)
-                .that(
-                        mCmd.runValid(
-                                CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS, PKG_NAME, ENROLLMENT_ID))
-                .isEqualTo("true\n");
-    }
-
-    @Test
-    public void testRunIsAllowedProtectedSignalsAccess_invalid() throws Exception {
-        // no args
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS, CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
-        // missing id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                PKG_NAME);
-        // empty pkg
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                "",
-                ENROLLMENT_ID);
-        // empty id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                PKG_NAME,
-                "");
-    }
-
-    @Test
-    public void testRunIsAllowedProtectedSignalsAccess_valid() throws Exception {
-        doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
-                                        PKG_NAME, ENROLLMENT_ID));
-
-        expect.withMessage(
-                        "result of %s %s %s",
-                        CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS, PKG_NAME, ENROLLMENT_ID)
-                .that(
-                        mCmd.runValid(
-                                CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS, PKG_NAME, ENROLLMENT_ID))
-                .isEqualTo("true\n");
-    }
-
-    @Test
-    public void testRunIsAllowedAdSelectionAccess_invalid() throws Exception {
-        // no args
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_AD_SELECTION_ACCESS, CMD_IS_ALLOWED_AD_SELECTION_ACCESS);
-        // missing id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_AD_SELECTION_ACCESS, CMD_IS_ALLOWED_AD_SELECTION_ACCESS, PKG_NAME);
-        // empty pkg
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
-                CMD_IS_ALLOWED_AD_SELECTION_ACCESS,
-                "",
-                ENROLLMENT_ID);
-        // empty id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
-                CMD_IS_ALLOWED_AD_SELECTION_ACCESS,
-                PKG_NAME,
-                "");
-    }
-
-    @Test
-    public void testRunIsAllowedAdSelectionAccess_valid() throws Exception {
-        doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAdSelectionAccess(
-                                        PKG_NAME, ENROLLMENT_ID));
-
-        expect.withMessage(
-                        "result of %s %s %s",
-                        CMD_IS_ALLOWED_AD_SELECTION_ACCESS, PKG_NAME, ENROLLMENT_ID)
-                .that(mCmd.runValid(CMD_IS_ALLOWED_AD_SELECTION_ACCESS, PKG_NAME, ENROLLMENT_ID))
-                .isEqualTo("true\n");
-    }
-
-    @Test
-    public void testRunIsAllowedTopicsAccess_invalid() throws Exception {
-        // no args
-        expectInvalidArgument(HELP_IS_ALLOWED_TOPICS_ACCESS, CMD_IS_ALLOWED_TOPICS_ACCESS);
-        // missing id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS, CMD_IS_ALLOWED_TOPICS_ACCESS, PKG_NAME);
-        // missing sdk
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                ENROLLMENT_ID);
-        // empty pkg
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                "",
-                ENROLLMENT_ID,
-                USES_SDK);
-        // empty id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                "",
-                USES_SDK);
-        // empty sdk
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                ENROLLMENT_ID,
-                "");
-        // non-boolean sdk
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                ENROLLMENT_ID,
-                "D'OH!");
-    }
-
-    @Test
-    public void testRunIsAllowedTopicsAudiencesAccess_valid() throws Exception {
-        doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedTopicsAccess(
-                                        /* useSandboxCheck= */ true, PKG_NAME, ENROLLMENT_ID));
-
-        expect.withMessage(
-                        "result of %s %s %s %s",
-                        CMD_IS_ALLOWED_TOPICS_ACCESS, PKG_NAME, ENROLLMENT_ID, USES_SDK)
-                .that(
-                        mCmd.runValid(
-                                CMD_IS_ALLOWED_TOPICS_ACCESS, PKG_NAME, ENROLLMENT_ID, USES_SDK))
-                .isEqualTo("true\n");
     }
 
     @Test
@@ -478,6 +260,11 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     private static final class ShellCommandFlags implements Flags {
         @Override
         public boolean getFledgeCustomAudienceCLIEnabledStatus() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeConsentedDebuggingCliEnabledStatus() {
             return true;
         }
     }

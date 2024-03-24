@@ -26,7 +26,7 @@ import java.util.Objects;
 
 /**
  * This class stores the specifications used to schedule a job using {@link PolicyJobScheduler},
- * which is a part of SPE (Schedule Policy Engine) framework.
+ * which is a part of SPE (Scheduling Policy Engine) framework.
  *
  * <p>An instance of {@link JobSpec} needed to be passed into {@link PolicyJobScheduler} with a job
  * ID and {@link JobPolicy} at least. And by default, a {@link JobSpec} is created with a default
@@ -85,6 +85,29 @@ public final class JobSpec {
      */
     public boolean getShouldForceSchedule() {
         return mShouldForceSchedule;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof JobSpec that)) {
+            return false;
+        }
+
+        // There is no public method to compare to PersistableBundle. Ignore the difference on it
+        // for the reasons 1) only a few jobs will use this extra field. 2) this equals() method for
+        // JobSpec is not used in Production.
+        return mJobId == that.mJobId
+                && mJobPolicy.equals(that.mJobPolicy)
+                && mBackoffPolicy.equals(that.mBackoffPolicy)
+                && mShouldForceSchedule == that.mShouldForceSchedule;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mJobId, mJobPolicy, mBackoffPolicy, mShouldForceSchedule);
     }
 
     @Override
