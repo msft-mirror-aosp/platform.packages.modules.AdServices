@@ -205,6 +205,9 @@ public final class CustomAudience implements Parcelable {
      * The custom audience's name is an arbitrary string provided by the owner and buyer on creation
      * of the {@link CustomAudience} object.
      *
+     * <p>The overall size of the CA is limited and the size of this field is considered using
+     * {@link String#getBytes()} in {@code UTF-8} encoding.
+     *
      * @return the String name of the custom audience
      */
     @NonNull
@@ -315,6 +318,9 @@ public final class CustomAudience implements Parcelable {
      * <p>If not specified, or if an empty list is provided, the {@link CustomAudience} will not
      * participate in ad selection until a valid list of ads are provided via the daily update for
      * the custom audience.
+     *
+     * <p>The combined ads size of the CA is limited and the sizes of each ad's string fields are
+     * considered using {@link String#getBytes()} in {@code UTF-8} encoding.
      *
      * @return a {@link List} of {@link AdData} objects representing ads currently served by the
      *     custom audience
