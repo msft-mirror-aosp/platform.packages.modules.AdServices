@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell;
+package com.android.adservices.service.shell.common;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
 
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.android.adservices.service.shell.AbstractShellCommand;
 
 import java.io.PrintWriter;
 
@@ -28,10 +30,10 @@ import java.io.PrintWriter;
  *
  * <p>It just prints the given message.
  */
-final class EchoCommand extends AbstractShellCommand {
+public final class EchoCommand extends AbstractShellCommand {
     // This command is also used by the CTS and it should never change.
-    static final String CMD_ECHO = "echo";
-    static final String HELP_ECHO =
+    public static final String CMD_ECHO = "echo";
+    public static final String HELP_ECHO =
             CMD_ECHO + " <message>\n    Prints the given message (useful to check cmd is working).";
 
     @Override
