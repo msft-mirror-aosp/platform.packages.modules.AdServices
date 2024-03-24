@@ -225,6 +225,39 @@ public class Source {
     }
 
     /**
+     * Checks if the source has a valid number of report states and sets the value. mNumStates will
+     * not be set if invalid.
+     *
+     * @param flags flag values
+     */
+    public boolean validateAndSetNumReportStates(Flags flags) {
+        if (mTriggerSpecs == null) {
+            long reportStateCountLimit = flags.getMeasurementMaxReportStatesPerSourceRegistration();
+            EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
+                    new EventReportWindowCalcDelegate(flags);
+            int reportingWindowCountForNoising =
+                    eventReportWindowCalcDelegate.getReportingWindowCountForNoising(this);
+
+            int numStars = eventReportWindowCalcDelegate.getMaxReportCount(this);
+            int numBars = getTriggerDataCardinality()
+                    * reportingWindowCountForNoising
+                    * getDestinationTypeMultiplier(flags);
+
+            long numStates = Combinatorics.getNumberOfStarsAndBarsSequences(numStars, numBars);
+
+            if (numStates > reportStateCountLimit) {
+                return false;
+            }
+
+            setNumStates(numStates);
+
+            return true;
+        } else {
+            return mTriggerSpecs.hasValidReportStateCount(this, flags);
+        }
+    }
+
+    /**
      * Checks if the source has valid information gain
      *
      * @param flags flag values
@@ -264,18 +297,7 @@ public class Source {
             setFlipProbability(mTriggerSpecs.getFlipProbability(this, flags));
             return;
         }
-        EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
-                new EventReportWindowCalcDelegate(flags);
-        int reportingWindowCountForNoising =
-                eventReportWindowCalcDelegate.getReportingWindowCountForNoising(this);
-        long numberOfStates =
-                Combinatorics.getNumberOfStarsAndBarsSequences(
-                        /*numStars=*/ eventReportWindowCalcDelegate.getMaxReportCount(this),
-                        /*numBars=*/ getTriggerDataCardinality()
-                                * reportingWindowCountForNoising
-                                * getDestinationTypeMultiplier(flags));
-        setNumStates(numberOfStates);
-        setFlipProbability(Combinatorics.getFlipProbability(numberOfStates));
+        setFlipProbability(Combinatorics.getFlipProbability(getNumStates(flags)));
     }
 
     /** Should source report coarse destinations */
@@ -946,7 +968,7 @@ public class Source {
      */
     private Long getNumStates(Flags flags) {
         if (mNumStates == null) {
-            buildPrivacyParameters(flags);
+            validateAndSetNumReportStates(flags);
         }
         return mNumStates;
     }

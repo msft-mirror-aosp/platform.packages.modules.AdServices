@@ -270,6 +270,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
                 .thenReturn(Flags
                         .MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION);
+        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
         when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
         when(mFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
@@ -3199,13 +3201,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \""
                                                 + ALT_APP_DESTINATION
-                                                + "\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"456789\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + "\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"456789\","
+                                                + "  \"source_event_id\": \"987654321\","
                                                 + "\"web_destination\": \""
                                                 + ALT_WEB_DESTINATION
                                                 + "\""
@@ -3277,7 +3279,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2]}]\n";
+                        + "\"summary_buckets\": [1, 2]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 2;
         Source testSource =
@@ -3342,9 +3344,248 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3]}]\n";
+                        + "\"summary_buckets\": [1, 2, 3]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        // Navigation and Event source has different maximum information gain
+                        // threshold
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
+                        .build();
+
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        testSource,
+                        testSource.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+        // Assert
+        assertFalse(status);
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_flexEventApiInvalidEventExceedNumStatesArithmetic_fail()
+            throws DatastoreException, JSONException {
+        // setup
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        // Info gain is effectively zero, the failure is for exceeding the number of report states.
+        String triggerSpecsString =
+                "[{\"trigger_data\": [0, 1, 2, 3, 4, 5, 6, 7],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s, %s, %s]}, ",
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(5),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(11),
+                                TimeUnit.DAYS.toSeconds(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
+                                + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}]";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 20;
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        // Navigation and Event source has different maximum information gain
+                        // threshold
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
+                        .build();
+
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        testSource,
+                        testSource.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+        // Assert
+        assertFalse(status);
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_flexEventApiInvalidEventExceedNumStatesIterative_fail()
+            throws DatastoreException, JSONException {
+        // setup
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        // Info gain is effectively zero, the failure is for exceeding the number of report states.
+        // Different report caps and/or windows for different trigger data obliges the iterative
+        // state calculation method.
+        String triggerSpecsString =
+                "["
+                        + "{\"trigger_data\": [0, 1, 2, 3],"
+                                + "\"event_report_windows\": { "
+                                + "\"start_time\": \"0\", "
+                                + String.format(
+                                        "\"end_times\": [%s, %s, %s, %s, %s]}, ",
+                                        TimeUnit.DAYS.toSeconds(2),
+                                        TimeUnit.DAYS.toSeconds(5),
+                                        TimeUnit.DAYS.toSeconds(7),
+                                        TimeUnit.DAYS.toSeconds(11),
+                                        TimeUnit.DAYS.toSeconds(30))
+                                + "\"summary_window_operator\": \"count\", "
+                                + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
+                                        + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]},"
+                        + "{\"trigger_data\": [4, 5, 6, 7],"
+                                + "\"event_report_windows\": { "
+                                + "\"start_time\": \"0\", "
+                                + String.format(
+                                        "\"end_times\": [%s, %s, %s, %s]}, ",
+                                        TimeUnit.DAYS.toSeconds(5),
+                                        TimeUnit.DAYS.toSeconds(7),
+                                        TimeUnit.DAYS.toSeconds(11),
+                                        TimeUnit.DAYS.toSeconds(30))
+                                + "\"summary_window_operator\": \"count\", "
+                                + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
+                                        + "11, 12, 13, 14, 15, 16, 17, 18, 19]}]";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 20;
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        // Navigation and Event source has different maximum information gain
+                        // threshold
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
+                        .build();
+
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        testSource,
+                        testSource.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+        // Assert
+        assertFalse(status);
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_fullFlexHighBoundAndStateCountIterative_catchesException()
+            throws DatastoreException, JSONException {
+        // setup
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        // Allow the iterative calculation to overflow
+        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
+                .thenReturn(Long.MAX_VALUE - 1L);
+        // Info gain is effectively zero, the failure is for exceeding the number of report states.
+        // Different report caps and/or windows for different trigger data obliges the iterative
+        // state calculation method.
+        String triggerSpecsString =
+                "["
+                        + "{\"trigger_data\": [0, 1, 2, 3, 4, 5, 6, 7, "
+                                + "8, 9, 10, 11, 12, 13, 14, 15],"
+                                + "\"event_report_windows\": { "
+                                + "\"start_time\": \"0\", "
+                                + String.format(
+                                        "\"end_times\": [%s, %s, %s, %s, %s]}, ",
+                                        TimeUnit.DAYS.toSeconds(2),
+                                        TimeUnit.DAYS.toSeconds(5),
+                                        TimeUnit.DAYS.toSeconds(7),
+                                        TimeUnit.DAYS.toSeconds(11),
+                                        TimeUnit.DAYS.toSeconds(30))
+                                + "\"summary_window_operator\": \"count\", "
+                                + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
+                                        + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]},"
+                        + "{\"trigger_data\": [16, 17, 18, 19, 20, 21, 22, 23, "
+                                + "24, 25, 26, 27, 28, 29, 30, 31],"
+                                + "\"event_report_windows\": { "
+                                + "\"start_time\": \"0\", "
+                                + String.format(
+                                        "\"end_times\": [%s, %s, %s, %s]}, ",
+                                        TimeUnit.DAYS.toSeconds(5),
+                                        TimeUnit.DAYS.toSeconds(7),
+                                        TimeUnit.DAYS.toSeconds(11),
+                                        TimeUnit.DAYS.toSeconds(30))
+                                + "\"summary_window_operator\": \"count\", "
+                                + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
+                                        + "11, 12, 13, 14, 15, 16, 17, 18, 19]}]";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 20;
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -3508,7 +3749,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(14),
                                 TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 5]}]\n";
+                        + "\"summary_buckets\": [1, 2, 3, 5]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 4;
         Source testSource =
@@ -3570,7 +3811,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3]}]\n";
+                        + "\"summary_buckets\": [1, 2, 3]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
         Source testSource =
@@ -3634,7 +3875,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3]}]\n";
+                        + "\"summary_buckets\": [1, 2, 3]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
         Source testSource =
@@ -3692,7 +3933,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         + "\"start_time\": \"0\", "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toSeconds(7))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1]}]\n";
+                        + "\"summary_buckets\": [1]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 1;
         Source testSource =

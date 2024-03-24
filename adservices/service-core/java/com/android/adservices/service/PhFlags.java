@@ -1131,6 +1131,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAppInstallFilteringEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED,
+                FLEDGE_APP_INSTALL_FILTERING_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeFrequencyCapFilteringEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED,
+                FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED);
+    }
+
+    @Override
     @SuppressWarnings("InlinedApi")
     public boolean getFledgeAdSelectionContextualAdsEnabled() {
         return getDeviceConfigFlag(
@@ -2851,6 +2865,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public long getMeasurementMaxReportStatesPerSourceRegistration() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION,
+                MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
+    }
+
+    @Override
     public int getMeasurementFlexApiMaxEventReports() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS,
@@ -3590,6 +3611,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION
                         + " = "
                         + getMeasurementFlexApiMaxInformationGainDualDestinationNavigation());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxReportStatesPerSourceRegistration());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS
@@ -4339,6 +4366,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
                         + " = "
                         + getFledgeAdSelectionFilteringEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED
+                        + " = "
+                        + getFledgeAppInstallFilteringEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED
+                        + " = "
+                        + getFledgeFrequencyCapFilteringEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED

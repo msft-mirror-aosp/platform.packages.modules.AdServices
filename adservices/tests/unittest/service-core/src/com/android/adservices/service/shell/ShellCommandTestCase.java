@@ -18,7 +18,7 @@ package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.AbstractShellCommand.ERROR_TEMPLATE_INVALID_ARGS;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -29,7 +29,8 @@ import java.util.Arrays;
  *
  * @param <T>
  */
-public abstract class ShellCommandTest<T extends ShellCommand> extends AdServicesMockitoTestCase {
+public abstract class ShellCommandTestCase<T extends ShellCommand>
+        extends AdServicesExtendedMockitoTestCase {
 
     /** Runs the provided shell command with its arguments. */
     public Result run(T cmd, String... args) {

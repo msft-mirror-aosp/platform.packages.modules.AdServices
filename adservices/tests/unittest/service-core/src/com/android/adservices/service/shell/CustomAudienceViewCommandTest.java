@@ -39,7 +39,7 @@ import org.mockito.Mock;
 import java.util.List;
 
 public final class CustomAudienceViewCommandTest
-        extends ShellCommandTest<CustomAudienceViewCommand> {
+        extends ShellCommandTestCase<CustomAudienceViewCommand> {
 
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
     private static final String CA_NAME = CustomAudienceFixture.VALID_NAME;

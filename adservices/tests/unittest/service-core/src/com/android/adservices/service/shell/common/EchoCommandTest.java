@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell;
+package com.android.adservices.service.shell.common;
 
-import static com.android.adservices.service.shell.EchoCommand.CMD_ECHO;
-import static com.android.adservices.service.shell.EchoCommand.HELP_ECHO;
+import static com.android.adservices.service.shell.common.EchoCommand.CMD_ECHO;
+import static com.android.adservices.service.shell.common.EchoCommand.HELP_ECHO;
+
+import com.android.adservices.service.shell.ShellCommandTestCase;
 
 import org.junit.Test;
 
-public final class EchoCommandTest extends ShellCommandTest<EchoCommand> {
+public final class EchoCommandTest extends ShellCommandTestCase<EchoCommand> {
 
     @Test
     public void testRun_invalid() throws Exception {

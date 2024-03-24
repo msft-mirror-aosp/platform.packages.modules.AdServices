@@ -133,7 +133,7 @@
     <!-- Text for button to open Privacy Sandbox Settings from confirmation activity. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_confirmation_left_control_button_text">Privacy settings</string>
     <!-- Text for button to acknowledge and dismiss confirmation activity.  [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_confirmation_right_control_button_text">Got it</string>
+    <string name="notificationUI_confirmation_right_control_button_text" translatable="false">@string/notificationUI_right_control_button_text</string>
 
     <!-- ROW Notification UI strings ************************************************************-->
     <!-- Text for the main title of the ROW notification. [CHAR LIMIT=NONE] -->

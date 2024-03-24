@@ -753,6 +753,8 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
         doReturn(mConfiguredMaxEventReportsCount)
                 .when(flags)
                 .getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
+                .when(flags).getMeasurementMaxReportStatesPerSourceRegistration();
 
         // Execution
         double actualProbability =

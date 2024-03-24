@@ -44,7 +44,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 
 public class CustomAudienceRefreshCommandTest
-        extends ShellCommandTest<CustomAudienceRefreshCommand> {
+        extends ShellCommandTestCase<CustomAudienceRefreshCommand> {
 
     public static final Instant OVERRIDE_CURRENT_TIME = Instant.now();
     public static final Clock OVERRIDE_CLOCK =
@@ -84,7 +84,7 @@ public class CustomAudienceRefreshCommandTest
                                 Futures.immediateFuture(
                                         BackgroundFetchRunner.UpdateResultType.SUCCESS)));
 
-        ShellCommandTest.Result result =
+        ShellCommandTestCase.Result result =
                 runRefreshCustomAudienceCommand(
                         CustomAudienceRefreshCommand.BACKGROUND_FETCH_TIMEOUT_FINAL_SECONDS);
 
@@ -107,7 +107,7 @@ public class CustomAudienceRefreshCommandTest
                                 Futures.immediateFuture(
                                         BackgroundFetchRunner.UpdateResultType.SUCCESS)));
 
-        ShellCommandTest.Result result =
+        ShellCommandTestCase.Result result =
                 runRefreshCustomAudienceCommand(
                         CustomAudienceRefreshCommand.BACKGROUND_FETCH_TIMEOUT_FINAL_SECONDS);
 
@@ -131,7 +131,7 @@ public class CustomAudienceRefreshCommandTest
                                         BackgroundFetchRunner.UpdateResultType
                                                 .NETWORK_READ_TIMEOUT_FAILURE)));
 
-        ShellCommandTest.Result result =
+        ShellCommandTestCase.Result result =
                 runRefreshCustomAudienceCommand(
                         CustomAudienceRefreshCommand.BACKGROUND_FETCH_TIMEOUT_FINAL_SECONDS);
 
@@ -158,7 +158,7 @@ public class CustomAudienceRefreshCommandTest
                                 Futures.immediateFuture(
                                         BackgroundFetchRunner.UpdateResultType.UNKNOWN)));
 
-        ShellCommandTest.Result result =
+        ShellCommandTestCase.Result result =
                 runRefreshCustomAudienceCommand(
                         CustomAudienceRefreshCommand.BACKGROUND_FETCH_TIMEOUT_FINAL_SECONDS);
 
@@ -187,7 +187,7 @@ public class CustomAudienceRefreshCommandTest
                                                 BackgroundFetchRunner.UpdateResultType
                                                         .NETWORK_READ_TIMEOUT_FAILURE)));
 
-        ShellCommandTest.Result result = runRefreshCustomAudienceCommand(0);
+        ShellCommandTestCase.Result result = runRefreshCustomAudienceCommand(0);
 
         verify(mBackgroundFetchRunnerMock)
                 .updateCustomAudience(OVERRIDE_CURRENT_TIME, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA);
@@ -198,7 +198,7 @@ public class CustomAudienceRefreshCommandTest
                         CustomAudienceRefreshCommand.OUTPUT_ERROR_NETWORK));
     }
 
-    private ShellCommandTest.Result runRefreshCustomAudienceCommand(int timeoutInSeconds) {
+    private ShellCommandTestCase.Result runRefreshCustomAudienceCommand(int timeoutInSeconds) {
         return run(
                 new CustomAudienceRefreshCommand(
                         mBackgroundFetchRunnerMock,

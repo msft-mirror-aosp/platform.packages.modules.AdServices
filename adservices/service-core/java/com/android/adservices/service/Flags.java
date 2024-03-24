@@ -765,6 +765,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
     }
 
+    long MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION = (1L << 32) - 1L;
+
+    /** Returns max repot states per source registration */
+    default long getMeasurementMaxReportStatesPerSourceRegistration() {
+        return MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION;
+    }
+
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
 
     /** Returns max event reports in Flexible Event API */
@@ -1322,6 +1329,22 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
     default boolean getFledgeAdSelectionFilteringEnabled() {
         return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+    }
+
+    // Filtering feature flag disabled by default
+    boolean FLEDGE_APP_INSTALL_FILTERING_ENABLED = false;
+
+    /** Returns {@code true} if app install filtering of ads during ad selection is enabled. */
+    default boolean getFledgeAppInstallFilteringEnabled() {
+        return FLEDGE_APP_INSTALL_FILTERING_ENABLED;
+    }
+
+    // Filtering feature flag disabled by default
+    boolean FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED = false;
+
+    /** Returns {@code true} if frequency cap filtering of ads during ad selection is enabled. */
+    default boolean getFledgeFrequencyCapFilteringEnabled() {
+        return FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
     }
 
     // Enable contextual Ads feature, based on Filtering feature enabled or not
