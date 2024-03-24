@@ -549,6 +549,10 @@ public final class FlagsConstants {
             "fledge_ad_selection_expiration_window_s";
     public static final String KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
             "fledge_ad_selection_filtering_enabled";
+    public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED =
+            "fledge_app_install_filtering_enabled";
+    public static final String KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED =
+            "fledge_frequency_cap_filtering_enabled";
     public static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED =
             "fledge_fetch_custom_audience_enabled";
     public static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
@@ -638,6 +642,8 @@ public final class FlagsConstants {
             "fledge_auction_server_enabled_for_select_ads_mediation";
     public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA =
             "fledge_auction_server_enable_ad_filter_in_get_ad_selection_data";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED =
+            "fledge_auction_server_media_type_change_enabled";
     public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             "fledge_auction_server_payload_bucket_sizes";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
@@ -996,6 +1002,12 @@ public final class FlagsConstants {
     public static final String KEY_UI_OTA_STRINGS_FEATURE_ENABLED =
             "ui_ota_strings_feature_enabled";
 
+    public static final String KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL =
+            "mdd_ui_ota_resources_manifest_file_url";
+
+    public static final String KEY_UI_OTA_RESOURCES_FEATURE_ENABLED =
+            "ui_ota_resources_feature_enabled";
+
     public static final String KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE =
             "ui_ota_strings_download_deadline";
 
@@ -1046,6 +1058,8 @@ public final class FlagsConstants {
     public static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
     public static final String KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING =
             "enrollment_enable_limited_logging";
+    public static final String KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED =
+            "enrollment_api_based_schema_enabled";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
@@ -1095,6 +1109,9 @@ public final class FlagsConstants {
     public static final String
             KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION =
                     "measurement_flex_api_max_information_gain_dual_destination_navigation";
+
+    public static final String KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION =
+            "measurement_max_report_states_per_source_registration";
 
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS =
             "measurement_flex_api_max_event_reports";
@@ -1208,6 +1225,8 @@ public final class FlagsConstants {
             "enable_database_schema_version_8";
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_9 =
             "enable_database_schema_version_9";
+    public static final String KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED =
+            "shared_database_schema_version_4_enabled";
 
     public static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK =
             "notification_dmsmissed_on_click";
@@ -1344,4 +1363,12 @@ public final class FlagsConstants {
 
     /** Key for enabling SPE on pilot background jobs. */
     public static final String KEY_SPE_ON_PILOT_JOBS_ENABLED = "spe_on_pilot_jobs_enabled";
+
+    /** Key for enabling job scheduling logging rate. */
+    public static final String KEY_JOB_SCHEDULING_LOGGING_ENABLED =
+            "job_scheduling_logging_enabled";
+
+    /** Key for the sampling rate of job scheduling logging. */
+    public static final String KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE =
+            "job_scheduling_logging_sampling_rate";
 }

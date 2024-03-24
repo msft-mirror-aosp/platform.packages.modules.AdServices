@@ -36,7 +36,7 @@ class BackCompatNewFileDetector : Detector(), SourceCodeScanner {
                     message =
                     "Please use FileCompatUtils to ensure any newly added files have a name " +
                             "that begins with \"adservices\" or create the files in a subdirectory " +
-                            "called \"adservices/\" (go/rb-extservices-ota-data-cleanup)"
+                            "called \"adservices/\""
             )
     }
 
@@ -55,7 +55,7 @@ class BackCompatNewFileDetector : Detector(), SourceCodeScanner {
                     message =
                     "Please use FileCompatUtils to ensure any newly added files have a name " +
                             "that begins with \"adservices\" or create the files in a subdirectory " +
-                            "called \"adservices/\" (go/rb-extservices-ota-data-cleanup)"
+                            "called \"adservices/\""
             )
         }
     }
@@ -70,7 +70,7 @@ class BackCompatNewFileDetector : Detector(), SourceCodeScanner {
                             Newly added AdServices files must be indicated as AdServices files so they can be removed from ExtServices on S- after OTA. Please ensure the name of the file
                             begins with \"adservices\" or the file is created inside an \"adservices/\" subdirectory so that it can later be deleted by the AdServicesFileCleanupReceiver
                     """,
-                        moreInfo = "http://go/rb-extservices-ota-data-cleanup",
+                        moreInfo = "documentation/BackCompatNewFileDetector.md",
                         category = Category.COMPLIANCE,
                         severity = Severity.ERROR,
                         implementation =

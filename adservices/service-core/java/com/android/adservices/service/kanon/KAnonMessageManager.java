@@ -96,6 +96,15 @@ public class KAnonMessageManager {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Returns the number of messages with NOT_PROCESSED {@link KAnonMessageConstants.MessageStatus}
+     * status in the database.
+     */
+    public int getNumberOfUnprocessedMessagesInDB() {
+        return mKAnonMessageDao.getNumberOfMessagesWithStatus(
+                KAnonMessageConstants.MessageStatus.NOT_PROCESSED);
+    }
+
     /** Updates the status of messages in the table. */
     public void updateMessagesStatus(
             List<KAnonMessageEntity> messageEntities,
