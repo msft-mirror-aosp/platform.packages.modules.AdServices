@@ -56,6 +56,8 @@ public class SourceNoiseHandlerTest {
                 .when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS)
                 .when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
+        doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
+                .when(mFlags).getMeasurementMaxReportStatesPerSourceRegistration();
         mSourceNoiseHandler =
                 spy(new SourceNoiseHandler(mFlags, new EventReportWindowCalcDelegate(mFlags)));
     }

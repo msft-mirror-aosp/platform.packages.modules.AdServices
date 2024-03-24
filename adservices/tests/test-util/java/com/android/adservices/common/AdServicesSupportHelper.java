@@ -15,8 +15,6 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.common.AbstractDeviceSupportHelper.GMS_CORE_PACKAGE;
-import static com.android.adservices.common.AbstractDeviceSupportHelper.PLAY_STORE_PACKAGE;
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
 import android.app.ActivityManager;
@@ -88,6 +86,13 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
     @Override
     protected boolean isDebuggable() {
         return AdservicesTestHelper.isDebuggable();
+    }
+
+    // TODO(b/308009734): Add tests for getAdServicesPackageName().
+    @Override
+    @Nullable
+    public String getAdServicesPackageName() {
+        return AdservicesTestHelper.getAdServicesPackageName(mContext);
     }
 
     private AdServicesSupportHelper() {

@@ -289,7 +289,7 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
                 briefDescription = "Updated Room Database must have migration path and test.",
                 explanation =
                     "Room database update requires migration path configuration and testing.",
-                moreInfo = "http://go/rb-room-migration-enforcement",
+                moreInfo = "documentation/RoomDatabaseMigrationDetector.md",
                 category = Category.COMPLIANCE,
                 severity = Severity.ERROR,
                 implementation =

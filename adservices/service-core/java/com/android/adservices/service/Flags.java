@@ -765,6 +765,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
     }
 
+    long MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION = (1L << 32) - 1L;
+
+    /** Returns max repot states per source registration */
+    default long getMeasurementMaxReportStatesPerSourceRegistration() {
+        return MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION;
+    }
+
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
 
     /** Returns max event reports in Flexible Event API */
@@ -1324,6 +1331,22 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
     }
 
+    // Filtering feature flag disabled by default
+    boolean FLEDGE_APP_INSTALL_FILTERING_ENABLED = false;
+
+    /** Returns {@code true} if app install filtering of ads during ad selection is enabled. */
+    default boolean getFledgeAppInstallFilteringEnabled() {
+        return FLEDGE_APP_INSTALL_FILTERING_ENABLED;
+    }
+
+    // Filtering feature flag disabled by default
+    boolean FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED = false;
+
+    /** Returns {@code true} if frequency cap filtering of ads during ad selection is enabled. */
+    default boolean getFledgeFrequencyCapFilteringEnabled() {
+        return FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
+    }
+
     // Enable contextual Ads feature, based on Filtering feature enabled or not
     boolean FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 
@@ -1415,6 +1438,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns whether to enable ad filtering in get ad selection data API. */
     default boolean getFledgeAuctionServerEnableAdFilterInGetAdSelectionData() {
         return FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED = false;
+
+    /** Returns whether to use the server auction media type. */
+    default boolean getFledgeAuctionServerMediaTypeChangeEnabled() {
+        return FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
     }
 
     ImmutableList<Integer> FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
@@ -3191,6 +3221,22 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return UI_OTA_STRINGS_FEATURE_ENABLED;
     }
 
+    /** UI OTA resources manifest file url, used for MDD download. */
+    String UI_OTA_RESOURCES_MANIFEST_FILE_URL = "";
+
+    /** UI OTA resources manifest file url. */
+    default String getUiOtaResourcesManifestFileUrl() {
+        return UI_OTA_RESOURCES_MANIFEST_FILE_URL;
+    }
+
+    /** UI OTA resources feature flag. */
+    boolean UI_OTA_RESOURCES_FEATURE_ENABLED = false;
+
+    /** Returns if UI OTA resources feature is enabled. */
+    default boolean getUiOtaResourcesFeatureEnabled() {
+        return UI_OTA_RESOURCES_FEATURE_ENABLED;
+    }
+
     /** Deadline for downloading UI OTA strings. */
     long UI_OTA_STRINGS_DOWNLOAD_DEADLINE = 86700000; /* 1 day */
 
@@ -4792,9 +4838,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /**
-     * This method returns the url authority that will be used in the
-     * {@link com.android.adservices.service.common.bhttp.BinaryHttpMessage}. This BinaryHttpMessage
-     * is sent as part of kanon http join request.
+     * This method returns the url authority that will be used in the {@link
+     * com.android.adservices.service.common.bhttp.BinaryHttpMessage}. This BinaryHttpMessage is
+     * sent as part of kanon http join request.
      */
     default String getFledgeKAnonUrlAuthorityToJoin() {
         return FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
@@ -4825,6 +4871,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getFledgeCustomAudienceCLIEnabledStatus() {
         return FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
+    }
+
+    /** Default value for status of consented debugging CLI feature */
+    boolean FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED = false;
+
+    /**
+     * @return the enabled status for custom audiences CLI feature.
+     */
+    default boolean getFledgeConsentedDebuggingCliEnabledStatus() {
+        return FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED;
     }
 
     /** Default value for the base64 encoded Job Policy proto for AdServices. */
@@ -4885,5 +4941,41 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns the default enablement of applying SPE (Scheduling Policy Engine) to pilot jobs. */
     default boolean getSpeOnPilotJobsEnabled() {
         return DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
+    }
+
+    /** A feature flag to enable the use of Enrollment API Based Schema. */
+    @FeatureFlag boolean ENROLLMENT_API_BASED_SCHEMA_ENABLED = false;
+
+    /**
+     * @return the enabled status for enrollment api based schema.
+     */
+    default boolean getEnrollmentApiBasedSchemaEnabled() {
+        return ENROLLMENT_API_BASED_SCHEMA_ENABLED;
+    }
+
+    /** Whether to enable shared database schema version 4 */
+    @FeatureFlag boolean SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED = false;
+
+    /**
+     * @return if to enable shared database schema version 4.
+     */
+    default boolean getSharedDatabaseSchemaVersion4Enabled() {
+        return SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
+    }
+
+    /** Default value for the enablement of background job scheduling logging. */
+    @FeatureFlag boolean DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED = false;
+
+    /** Returns the default value of the enablement of background job scheduling logging. */
+    default boolean getJobSchedulingLoggingEnabled() {
+        return DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
+    }
+
+    /** Default value of the sampling logging rate for job scheduling logging events. */
+    @ConfigFlag int DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE = 5;
+
+    /** Returns the sampling logging rate for job scheduling logging events. */
+    default int getJobSchedulingLoggingSamplingRate() {
+        return DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
     }
 }

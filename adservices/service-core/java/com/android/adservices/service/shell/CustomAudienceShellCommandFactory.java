@@ -65,8 +65,7 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
                                         ShellCommand::getCommandName, Function.identity()));
     }
 
-    static ShellCommandFactory getInstance(Flags flags) {
-        Context context = ApplicationContextSingleton.get();
+    static ShellCommandFactory getInstance(Flags flags, Context context) {
         CustomAudienceDao customAudienceDao =
                 CustomAudienceDatabase.getInstance(context).customAudienceDao();
         return new CustomAudienceShellCommandFactory(

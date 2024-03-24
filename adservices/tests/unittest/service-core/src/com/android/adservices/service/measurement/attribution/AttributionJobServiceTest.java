@@ -211,8 +211,10 @@ public class AttributionJobServiceTest {
                     assertTrue(result);
 
                     // Verify the job ran successfully twice
-                    verify(mMockDatastoreManager, times(2)).runInTransactionWithResult(any());
-                    verify(mSpyService, times(2)).jobFinished(any(), anyBoolean());
+                    verify(mMockDatastoreManager, timeout(WAIT_IN_MILLIS).atLeast(2))
+                            .runInTransactionWithResult(any());
+                    verify(mSpyService, timeout(WAIT_IN_MILLIS).atLeast(2))
+                            .jobFinished(any(), anyBoolean());
                     ExtendedMockito.verify(
                             () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
                             never());

@@ -19,12 +19,16 @@ package com.android.adservices.common;
 import static android.os.Build.VERSION_CODES.S_V2;
 import static android.os.Build.VERSION_CODES.TIRAMISU;
 
+import static org.mockito.Mockito.when;
+
 import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
 
 import com.google.common.truth.Expect;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
 
 /**
  * Test case for {@link AbstractAdServicesShellCommandHelper} implementation.
@@ -32,7 +36,7 @@ import org.junit.Test;
  * <p>Since {@link AbstractAdServicesShellCommandHelper} is an abstract class, we provide fake
  * implementation of abstract methods.
  */
-public final class AbstractAdServicesShellCommandHelperTest {
+public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMockitoTestCase {
 
     private static final String CMD_ECHO = "echo";
     private static final String CMD_ECHO_OUT = "hello";
@@ -41,17 +45,27 @@ public final class AbstractAdServicesShellCommandHelperTest {
                     + ".android.ext.services/com.android.adservices.shell.ShellCommandActivity "
                     + "a3ccaeb pid=6721\n"
                     + CMD_ECHO_OUT;
+    private static final String ADEXTSERVICES_PACKAGE_NAME = "com.google.android.ext.services";
 
     private static final String SAMPLE_DUMPSYS_UNKNOWN_COMMAND_OUTPUT =
             "Unknown command:"
                 + " com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity";
+
+    @Mock AbstractDeviceSupportHelper mAbstractDeviceSupportHelper;
 
     @Rule public final Expect expect = Expect.create();
 
     private final Logger.RealLogger mRealLogger = StandardStreamsLogger.getInstance();
 
     private FakeAdServicesShellCommandHelper mAdServicesShellCommandHelper =
-            new FakeAdServicesShellCommandHelper(mRealLogger, TIRAMISU);
+            new FakeAdServicesShellCommandHelper(
+                    mAbstractDeviceSupportHelper, mRealLogger, TIRAMISU);
+
+    @Before
+    public void setup() {
+        when(mAbstractDeviceSupportHelper.getAdServicesPackageName())
+                .thenReturn(ADEXTSERVICES_PACKAGE_NAME);
+    }
 
     @Test
     public void testParseResultFromDumpsys_success() {
@@ -83,7 +97,8 @@ public final class AbstractAdServicesShellCommandHelperTest {
     @Test
     public void testRunCommand_deviceLevelS() {
         FakeAdServicesShellCommandHelper adServicesShellCommandHelperOnS =
-                new FakeAdServicesShellCommandHelper(mRealLogger, S_V2);
+                new FakeAdServicesShellCommandHelper(
+                        mAbstractDeviceSupportHelper, mRealLogger, S_V2);
 
         String res = adServicesShellCommandHelperOnS.runCommand("%s %s", CMD_ECHO, CMD_ECHO_OUT);
 
@@ -94,7 +109,10 @@ public final class AbstractAdServicesShellCommandHelperTest {
     public void testRunCommand_deviceLevelT_usesSdkSandbox() {
         FakeAdServicesShellCommandHelper adServicesShellCommandHelper =
                 new FakeAdServicesShellCommandHelper(
-                        mRealLogger, TIRAMISU, /* usesSdkSandbox= */ true);
+                        mAbstractDeviceSupportHelper,
+                        mRealLogger,
+                        TIRAMISU,
+                        /* usesSdkSandbox= */ true);
 
         String res = adServicesShellCommandHelper.runCommand("%s %s", CMD_ECHO, CMD_ECHO_OUT);
 
@@ -113,7 +131,8 @@ public final class AbstractAdServicesShellCommandHelperTest {
     @Test
     public void testRunCommandRwe_deviceLevelS() {
         FakeAdServicesShellCommandHelper adServicesShellCommandHelperOnS =
-                new FakeAdServicesShellCommandHelper(mRealLogger, S_V2);
+                new FakeAdServicesShellCommandHelper(
+                        mAbstractDeviceSupportHelper, mRealLogger, S_V2);
 
         CommandResult res =
                 adServicesShellCommandHelperOnS.runCommandRwe("%s %s", CMD_ECHO, CMD_ECHO_OUT);
@@ -126,7 +145,10 @@ public final class AbstractAdServicesShellCommandHelperTest {
     public void testRunCommandRwe_deviceLevelT_usesSdkSandbox() {
         FakeAdServicesShellCommandHelper adServicesShellCommandHelper =
                 new FakeAdServicesShellCommandHelper(
-                        mRealLogger, TIRAMISU, /* usesSdkSandbox= */ true);
+                        mAbstractDeviceSupportHelper,
+                        mRealLogger,
+                        TIRAMISU,
+                        /* usesSdkSandbox= */ true);
 
         CommandResult res =
                 adServicesShellCommandHelper.runCommandRwe("%s %s", CMD_ECHO, CMD_ECHO_OUT);
@@ -142,13 +164,19 @@ public final class AbstractAdServicesShellCommandHelperTest {
         private final boolean mUsesSdkSandbox;
         private int mDumpsysCommandCount;
 
-        FakeAdServicesShellCommandHelper(Logger.RealLogger logger, int deviceLevel) {
-            this(logger, deviceLevel, /* usesSdkSandbox= */ false);
+        FakeAdServicesShellCommandHelper(
+                AbstractDeviceSupportHelper deviceSupportHelper,
+                Logger.RealLogger logger,
+                int deviceLevel) {
+            this(deviceSupportHelper, logger, deviceLevel, /* usesSdkSandbox= */ false);
         }
 
         FakeAdServicesShellCommandHelper(
-                Logger.RealLogger logger, int deviceLevel, boolean usesSdkSandbox) {
-            super(logger);
+                AbstractDeviceSupportHelper deviceSupportHelper,
+                Logger.RealLogger logger,
+                int deviceLevel,
+                boolean usesSdkSandbox) {
+            super(deviceSupportHelper, logger);
             mUsesSdkSandbox = usesSdkSandbox;
             mDeviceLevel = deviceLevel;
             mDumpsysCommandCount = 0;
@@ -177,7 +205,10 @@ public final class AbstractAdServicesShellCommandHelperTest {
                 return CMD_ECHO_OUT;
             } else if (cmd.equals(ADSERVICES_MANAGER_SERVICE_CHECK)) {
                 return mUsesSdkSandbox ? " not found" : "found";
-            } else if (cmd.equals(runDumpsysShellCommand())) {
+            } else if (cmd.equals(
+                    runDumpsysShellCommand(
+                            String.format(
+                                    "%s/%s", ADEXTSERVICES_PACKAGE_NAME, SHELL_ACTIVITY_NAME)))) {
                 String out =
                         mDumpsysCommandCount == 0
                                 ? SAMPLE_DUMPSYS_OUTPUT

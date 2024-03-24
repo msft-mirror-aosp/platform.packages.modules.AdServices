@@ -38,8 +38,10 @@ import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
@@ -61,7 +63,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View inflatedView;
-        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity());
         if (mIsEUDevice) {
             inflatedView = inflater.inflate(
                     R.layout.consent_notification_screen_1_ga_v2_eu, container, false);
@@ -77,8 +79,14 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
         setupListeners(savedInstanceState);
 
         ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
-        ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
-        ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+        boolean isConsentManagerV2 = FlagsFactory.getFlags().getEnableConsentManagerV2();
+        if (isConsentManagerV2) {
+            ConsentManagerV2.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
+            ConsentManagerV2.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+        } else {
+            ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
+            ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+        }
     }
 
     @Override

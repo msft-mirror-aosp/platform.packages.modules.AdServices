@@ -30,7 +30,9 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -38,6 +40,8 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
+import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.shared.testing.common.BlockingCallableWrapper;
 
@@ -64,6 +68,10 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
                         .build()
                         .appInstallDao();
+        ConsentedDebugConfigurationDao consentedDebugConfigurationDao =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
+                        .build()
+                        .consentedDebugConfigurationDao();
         BackgroundFetchRunner backgroundFetchRunner =
                 new BackgroundFetchRunner(
                         customAudienceDao,
@@ -74,7 +82,10 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
                         CustomAudienceLoggerFactory.getNoOpInstance());
         ShellCommandFactorySupplier adServicesShellCommandHandlerFactory =
                 new TestShellCommandFactorySupplier(
-                        mFlags, backgroundFetchRunner, customAudienceDao);
+                        mFlags,
+                        backgroundFetchRunner,
+                        customAudienceDao,
+                        consentedDebugConfigurationDao);
         mShellCommandService =
                 new ShellCommandServiceImpl(
                         adServicesShellCommandHandlerFactory,
@@ -121,6 +132,23 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
         ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
         expect.withMessage("result").that(response.getResultCode()).isEqualTo(0);
         expect.withMessage("out").that(response.getOut()).contains("{\"custom_audiences\":[]}");
+        expect.withMessage("err").that(response.getErr()).isEmpty();
+    }
+
+    @Test
+    public void testRunShellCommand_consentDebug_view() throws Exception {
+        mShellCommandService.runShellCommand(
+                new ShellCommandParam(
+                        AdSelectionShellCommandFactory.COMMAND_PREFIX,
+                        ConsentedDebugShellCommand.CMD,
+                        ConsentedDebugShellCommand.VIEW_SUB_CMD),
+                mSyncIShellCommandCallback);
+
+        ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
+        expect.withMessage("result").that(response.getResultCode()).isEqualTo(0);
+        expect.withMessage("out")
+                .that(response.getOut())
+                .contains(ConsentedDebugShellCommand.VIEW_SUCCESS_NO_CONFIGURATION);
         expect.withMessage("err").that(response.getErr()).isEmpty();
     }
 
@@ -285,6 +313,11 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
     private static final class ShellCommandFlags implements Flags {
         @Override
         public boolean getFledgeCustomAudienceCLIEnabledStatus() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeConsentedDebuggingCliEnabledStatus() {
             return true;
         }
     }
