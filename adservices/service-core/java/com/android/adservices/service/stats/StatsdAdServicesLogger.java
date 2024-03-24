@@ -50,6 +50,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BID
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUSTOM_AUDIENCE_PROCESS_REPORTED;
 
 import android.annotation.NonNull;
@@ -682,6 +684,28 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 0,
                 0,
                 0);
+    }
+
+    @Override
+    public void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats) {
+        AdServicesStatsLog.write(
+                TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED,
+                stats.getCountOfTopicsBeforeEncryption(),
+                stats.getCountOfEmptyEncryptedTopics(),
+                stats.getCountOfEncryptedTopics(),
+                stats.getLatencyOfWholeEncryptionProcessMs(),
+                stats.getLatencyOfEncryptionPerTopicMs(),
+                stats.getLatencyOfPersistingEncryptedTopicsToDbMs());
+    }
+
+    @Override
+    public void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats) {
+        AdServicesStatsLog.write(
+                TOPICS_ENCRYPTION_GET_TOPICS_REPORTED,
+                stats.getCountOfEncryptedTopics(),
+                stats.getLatencyOfReadingEncryptedTopicsFromDbMs());
     }
 
     @NonNull

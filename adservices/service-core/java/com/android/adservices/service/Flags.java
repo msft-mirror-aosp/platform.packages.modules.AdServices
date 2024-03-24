@@ -119,6 +119,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return TOPICS_ENCRYPTION_ENABLED;
     }
 
+    /** Flag to enable Topics encryption metrics for Topics API. */
+    boolean TOPICS_ENCRYPTION_METRICS_ENABLED = false;
+
+    /** Returns the feature flag to enable Topics encryption metrics for Topics API. */
+    default boolean getTopicsEncryptionMetricsEnabled() {
+        return TOPICS_ENCRYPTION_METRICS_ENABLED;
+    }
+
     /** Flag to disable plaintext Topics for Topics API response. */
     boolean TOPICS_DISABLE_PLAINTEXT_RESPONSE = false;
 

@@ -296,6 +296,18 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
     }
 
+    @Override
+    public void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats) {
+        mStatsdAdServicesLogger.logTopicsEncryptionEpochComputationReportedStats(stats);
+    }
+
+    @Override
+    public void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats) {
+        mStatsdAdServicesLogger.logTopicsEncryptionGetTopicsReportedStats(stats);
+    }
+
     /** Logs api call error status using {@code CobaltLogger}. */
     private void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
         AppNameApiErrorLogger appNameApiErrorLogger = AppNameApiErrorLogger.getInstance();

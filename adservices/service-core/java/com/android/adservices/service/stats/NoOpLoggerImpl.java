@@ -167,4 +167,12 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     @Override
     public void logKAnonGetChallengeJobStats(
             KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats) {}
+
+    @Override
+    public void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats) {}
+
+    @Override
+    public void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats) {}
 }
