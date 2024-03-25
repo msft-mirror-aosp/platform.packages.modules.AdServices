@@ -17,6 +17,9 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_FAILED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
@@ -40,6 +43,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -218,16 +222,17 @@ public class MddJobService extends JobService {
      * @param context the context
      * @param forceSchedule a flag to indicate whether to force rescheduling the job.
      */
-    public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
+    @JobSchedulingResultCode
+    public static int scheduleIfNeeded(Context context, boolean forceSchedule) {
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             LogUtil.e("Mdd background task is disabled, skip scheduling.");
-            return false;
+            return SCHEDULING_RESULT_CODE_SKIPPED;
         }
 
         final JobScheduler jobscheduler = context.getSystemService(JobScheduler.class);
         if (jobscheduler == null) {
             LogUtil.e("Cannot fetch Job Scheduler!");
-            return false;
+            return SCHEDULING_RESULT_CODE_FAILED;
         }
 
         // Assign boolean local variable to each task to prevent short-circuit following tasks.
@@ -261,9 +266,11 @@ public class MddJobService extends JobService {
                         jobscheduler);
 
         return isMaintenancePeriodicTaskScheduled
-                && isChargingPeriodicTaskScheduled
-                && isCellularChargingPeriodicTaskScheduled
-                && isWifiChargingPeriodicTaskScheduled;
+                        && isChargingPeriodicTaskScheduled
+                        && isCellularChargingPeriodicTaskScheduled
+                        && isWifiChargingPeriodicTaskScheduled
+                ? SCHEDULING_RESULT_CODE_SUCCESSFUL
+                : SCHEDULING_RESULT_CODE_SKIPPED;
     }
 
     /**

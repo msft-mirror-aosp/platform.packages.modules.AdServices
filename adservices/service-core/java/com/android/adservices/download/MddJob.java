@@ -41,10 +41,13 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.JobPolicy.NetworkType;
+import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.framework.JobWorker;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.scheduling.JobSpec;
 import com.android.adservices.spe.AdServicesJobScheduler;
+import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.Flags;
@@ -155,8 +158,11 @@ public final class MddJob implements JobWorker {
     /** Scheduled all MDD background jobs. */
     public static void scheduleAllMddJobs() {
         if (!FlagsFactory.getFlags().getSpeOnPilotJobsEnabled()) {
-            MddJobService.scheduleIfNeeded(
-                    ApplicationContextSingleton.get(), /* forceSchedule= */ true);
+            int resultCode =
+                    MddJobService.scheduleIfNeeded(
+                            ApplicationContextSingleton.get(), /* forceSchedule= */ true);
+
+            logJobSchedulingLegacy(resultCode);
             return;
         }
 
@@ -207,6 +213,18 @@ public final class MddJob implements JobWorker {
                         .build();
 
         return new JobSpec.Builder(getMddTaskJobId(mddTag), jobPolicy).setExtras(extras).build();
+    }
+
+    @VisibleForTesting
+    static void logJobSchedulingLegacy(@JobSchedulingResultCode int resultCode) {
+        JobSchedulingLogger logger =
+                AdServicesJobServiceFactory.getInstance().getJobSchedulingLogger();
+
+        logger.recordOnSchedulingLegacy(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId(), resultCode);
+        logger.recordOnSchedulingLegacy(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId(), resultCode);
+        logger.recordOnSchedulingLegacy(
+                MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId(), resultCode);
+        logger.recordOnSchedulingLegacy(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId(), resultCode);
     }
 
     private static void scheduleMaintenanceJob(AdServicesJobScheduler scheduler, Flags flags) {
