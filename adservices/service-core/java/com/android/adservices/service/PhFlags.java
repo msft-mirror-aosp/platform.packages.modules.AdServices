@@ -3168,6 +3168,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableOdpWebTriggerRegistration() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION,
+                MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION);
+    }
+
+    @Override
     public String getAdServicesModuleJobPolicy() {
         return getDeviceConfigFlag(
                 KEY_AD_SERVICES_MODULE_JOB_POLICY, AD_SERVICES_MODULE_JOB_POLICY);
@@ -3693,6 +3700,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID
                         + " = "
                         + getMeasurementMaxLengthOfTriggerContextId());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION
+                        + " = "
+                        + getMeasurementEnableOdpWebTriggerRegistration());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS
