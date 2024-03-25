@@ -1272,7 +1272,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /**
-     * Returns the time out constant in milliseconds that limits the overall impression reporting
+     * Returns the timeout constant in milliseconds that limits the overall impression reporting
      * execution
      */
     default long getReportImpressionOverallTimeoutMs() {
@@ -1347,8 +1347,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
     }
 
-    // Enable contextual Ads feature, based on Filtering feature enabled or not
-    boolean FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+    boolean FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = false;
 
     /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
     default boolean getFledgeAdSelectionContextualAdsEnabled() {
