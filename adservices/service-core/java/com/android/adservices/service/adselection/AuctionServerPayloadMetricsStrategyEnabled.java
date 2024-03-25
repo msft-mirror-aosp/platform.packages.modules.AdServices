@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.AdsRelevanceStatusUtils;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
@@ -41,6 +42,13 @@ public class AuctionServerPayloadMetricsStrategyEnabled
     @Override
     public void setNumBuyers(GetAdSelectionDataApiCalledStats.Builder builder, int numBuyers) {
         builder.setNumBuyers(numBuyers);
+    }
+
+    @Override
+    public void setServerAuctionCoordinatorSource(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            @AdsRelevanceStatusUtils.ServerAuctionCoordinatorSource int coordinatorSource) {
+        // do nothing
     }
 
     @Override

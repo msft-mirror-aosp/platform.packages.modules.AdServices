@@ -20,11 +20,14 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
+import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.AdsRelevanceStatusUtils;
 import android.adservices.common.AssetFileDescriptorUtil;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
@@ -304,6 +307,9 @@ public class GetAdSelectionDataRunner {
 
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
         long adSelectionId = mAdSelectionIdGenerator.generateId();
+        mAuctionServerPayloadMetricsStrategy.setServerAuctionCoordinatorSource(
+                apiCalledStatsBuilder,
+                getServerAuctionCoordinatorSourceFromUri(inputParams.getCoordinatorOriginUri()));
 
         try {
             ListenableFuture<Void> filteredRequest =
@@ -623,5 +629,13 @@ public class GetAdSelectionDataRunner {
             sLogger.v("Get Ad Selection Data failed");
             mAdsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
         }
+    }
+
+    @AdsRelevanceStatusUtils.ServerAuctionCoordinatorSource
+    private int getServerAuctionCoordinatorSourceFromUri(@Nullable Uri coordinatorUri) {
+        if (mFlags.getFledgeAuctionServerMultiCloudEnabled() && coordinatorUri != null) {
+            return SERVER_AUCTION_COORDINATOR_SOURCE_API;
+        }
+        return SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
     }
 }

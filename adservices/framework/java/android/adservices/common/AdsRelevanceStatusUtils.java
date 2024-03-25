@@ -99,6 +99,13 @@ public class AdsRelevanceStatusUtils {
     public static final int SIZE_LARGE = 4;
     public static final int SIZE_VERY_LARGE = 5;
 
+    /** The auction coordinator source is UNSET. */
+    public static final int SERVER_AUCTION_COORDINATOR_SOURCE_UNSET = 0;
+    /** The auction coordinator source is DEFAULT. */
+    public static final int SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT = 1;
+    /** The auction coordinator source is API. */
+    public static final int SERVER_AUCTION_COORDINATOR_SOURCE_API = 2;
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},
@@ -180,4 +187,15 @@ public class AdsRelevanceStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Size {}
+
+    /** The type of server auction coordinator source. */
+    @IntDef(
+            prefix = {"SERVER_AUCTION_COORDINATOR_SOURCE_"},
+            value = {
+                SERVER_AUCTION_COORDINATOR_SOURCE_UNSET,
+                SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT,
+                SERVER_AUCTION_COORDINATOR_SOURCE_API
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ServerAuctionCoordinatorSource {}
 }
