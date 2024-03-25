@@ -37,6 +37,7 @@ import android.content.Context;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
+import android.provider.DeviceConfig;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -409,6 +410,58 @@ public class AdSelectionDataE2ETest {
 
         Assert.assertTrue(adSelectionOutcome.getRenderUri().toString().isEmpty());
 
+    }
+
+    @Test
+    public void runAdSelection_oneBuyerOneCaOneAd_dummyData_remarketingWinner_withMediaTypeChanged()
+            throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_auction_server_media_type_change_enabled",
+                "true",
+                false);
+
+        List<CustomAudience> customAudiences =
+                CustomAudienceTestFixture.readCustomAudiences(
+                        CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD);
+
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        SelectAdResponse selectAdResponse =
+                FakeAdExchangeServer.runServerAuction(
+                        CONTEXTUAL_SIGNALS_ONE_BUYER,
+                        outcome.getAdSelectionData(),
+                        SFE_ADDRESS,
+                        SERVER_RESPONSE_LOGGING_ENABLED);
+
+        PersistAdSelectionResultRequest persistAdSelectionResultRequest =
+                new PersistAdSelectionResultRequest.Builder()
+                        .setAdSelectionId(outcome.getAdSelectionId())
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .setAdSelectionResult(
+                                BaseEncoding.base64()
+                                        .decode(selectAdResponse.auctionResultCiphertext))
+                        .build();
+
+        AdSelectionOutcome adSelectionOutcome =
+                AD_SELECTION_CLIENT
+                        .persistAdSelectionResult(persistAdSelectionResultRequest)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+
+        Assert.assertEquals(
+                AD_WINNER_DOMAIN + getWinningAdRenderIdForDummyScripts(customAudiences),
+                adSelectionOutcome.getRenderUri().toString());
     }
 
     private String getWinningAdRenderIdForDummyScripts(List<CustomAudience> customAudiences) {
