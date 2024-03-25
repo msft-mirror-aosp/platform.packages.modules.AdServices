@@ -314,21 +314,15 @@ public class EnrollmentDataDownloadManager {
         SharedPreferences prefs =
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = prefs.edit();
-        if (buildId != null) {
-            edit.putInt(BUILD_ID, buildId.intValue());
-        }
-        if (fileGroupStatus != null) {
-            edit.putInt(FILE_GROUP_STATUS, fileGroupStatus.getNumber());
-        }
-        if (buildId != null || fileGroupStatus != null) {
-            if (!edit.commit()) {
-                LogUtil.e(
-                        "Saving shared preferences - %s , %s and %s failed",
-                        ENROLLMENT_SHARED_PREF, BUILD_ID, FILE_GROUP_STATUS);
-                ErrorLogUtil.e(
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
-            }
+        edit.putInt(BUILD_ID, buildId.intValue());
+        edit.putInt(FILE_GROUP_STATUS, fileGroupStatus.getNumber());
+        if (!edit.commit()) {
+            LogUtil.e(
+                    "Saving shared preferences - %s , %s and %s failed",
+                    ENROLLMENT_SHARED_PREF, BUILD_ID, FILE_GROUP_STATUS);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         }
     }
 }
