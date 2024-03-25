@@ -51,6 +51,7 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
  */
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationPasFragment extends Fragment {
+    public static final String IS_RENOTIFY_KEY = "IS_RENOTIFY_KEY";
     public static final String INFO_VIEW_EXPANDED_1 = "info_view_expanded_1";
     public static final String INFO_VIEW_EXPANDED_2 = "info_view_expanded_2";
     private boolean mIsInfoViewExpanded1 = false;
@@ -65,7 +66,7 @@ public class ConsentNotificationPasFragment extends Fragment {
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View inflatedView;
         mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
-        mIsRenotify = isFledgeOrMsmtEnabled();
+        mIsRenotify = requireActivity().getIntent().getBooleanExtra(IS_RENOTIFY_KEY, false);
         mIsFirstTimeRow = false;
         if (mIsRenotify) {
             // renotify version
