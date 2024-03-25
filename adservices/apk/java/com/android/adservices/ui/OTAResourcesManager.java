@@ -47,7 +47,6 @@ import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -62,7 +61,8 @@ public class OTAResourcesManager {
     private static final long BUNDLED_RESOURCES_VERSION = 2092;
     private static final long NO_OTA_RESOURCES_VERSION = -1;
     private static final String FILE_GROUP_NAME = "ui-ota-strings";
-    private static final String DOWNLOADED_OTA_FILE_ID = "resources.arsc";
+    public static final String DOWNLOADED_OTA_FILE_ID = "resources.arsc";
+    public static final String DOWNLOADED_OTA_APK_ID = "AdServicesOtaResourcesApp.apk";
     private static final ResourcesLoader OTAResourcesLoader = new ResourcesLoader();
 
     private static long sOTAResourcesVersion = NO_OTA_RESOURCES_VERSION;
@@ -88,45 +88,69 @@ public class OTAResourcesManager {
         Map<String, ClientFile> downloadedOTAFiles = getDownloadedFiles(context);
 
         // check if there are OTA Resources
-        if (downloadedOTAFiles == null || downloadedOTAFiles.size() <= 0) {
+        if (downloadedOTAFiles == null || downloadedOTAFiles.size() == 0) {
             return;
         }
         // get OTA strings file
-        ClientFile resourcesFile = downloadedOTAFiles.get(DOWNLOADED_OTA_FILE_ID);
-        if (resourcesFile == null) {
-            LogUtil.d("No OTA file");
+        File resourcesFile = getOtaFile(context, downloadedOTAFiles, DOWNLOADED_OTA_FILE_ID);
+        // get OTA resources apk
+        File resourcesApk = getOtaFile(context, downloadedOTAFiles, DOWNLOADED_OTA_APK_ID);
+        if (resourcesFile == null && resourcesApk == null) {
+            LogUtil.d("No OTA files");
             return;
         }
-        if (!resourcesFile.hasFileUri()) {
+
+        // Clear previous ResourceProvider
+        OTAResourcesLoader.clearProviders();
+        // Add new ResourceProvider created from arsc file
+        if (resourcesFile != null) {
+            try {
+                ParcelFileDescriptor fd = ParcelFileDescriptor.open(resourcesFile, MODE_READ_ONLY);
+                OTAResourcesLoader.addProvider(ResourcesProvider.loadFromTable(fd, null));
+                fd.close();
+            } catch (Exception e) {
+                LogUtil.e("Caught exception while adding OTA string provider: " + e.getMessage());
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
+                OTAResourcesLoader.clearProviders();
+            }
+        }
+        // Add new ResourceProvider created from OTA apk
+        else if (resourcesApk != null) {
+            try {
+                ParcelFileDescriptor fd = ParcelFileDescriptor.open(resourcesApk, MODE_READ_ONLY);
+                OTAResourcesLoader.addProvider(ResourcesProvider.loadFromApk(fd, null));
+                fd.close();
+            } catch (Exception e) {
+                LogUtil.e("Caught exception while adding OTA apk provider: " + e.getMessage());
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
+            }
+        }
+    }
+
+    private static File getOtaFile(
+            Context context, Map<String, ClientFile> otaFilesMap, String fileId) {
+        // get OTA file
+        ClientFile otaFile = otaFilesMap.get(fileId);
+        if (otaFile == null) {
+            LogUtil.d(fileId + " not found");
+            return null;
+        }
+        if (!otaFile.hasFileUri()) {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_OTA_FILE_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
-            return;
+            return null;
         }
         @SuppressLint("NewAdServicesFile")
-        File f = new File(context.getDataDir() + Uri.parse(resourcesFile.getFileUri()).getPath());
-        LogUtil.d("got this file:" + resourcesFile.getFileUri());
-        // Clear previous ResourceProvider and add new one created from arsc file
-        OTAResourcesLoader.clearProviders();
-        try {
-            ParcelFileDescriptor fd = ParcelFileDescriptor.open(f, MODE_READ_ONLY);
-            OTAResourcesLoader.addProvider(ResourcesProvider.loadFromTable(fd, null));
-            fd.close();
-        } catch (IOException e) {
-            LogUtil.e("Exception while trying to add ResourcesProvider:" + e);
-            ErrorLogUtil.e(
-                    e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
-            OTAResourcesLoader.clearProviders();
-        } catch (Exception e) {
-            LogUtil.e("Caught exception while adding providers: " + e.getMessage());
-            ErrorLogUtil.e(
-                    e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
-            OTAResourcesLoader.clearProviders();
-        }
+        File f = new File(context.getDataDir() + Uri.parse(otaFile.getFileUri()).getPath());
+        LogUtil.d("got this file:" + otaFile.getFileUri());
+        return f;
     }
 
     /**
