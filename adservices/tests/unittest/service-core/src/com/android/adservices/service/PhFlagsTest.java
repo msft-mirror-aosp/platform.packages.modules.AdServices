@@ -180,6 +180,7 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPT
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
@@ -617,6 +618,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
@@ -3896,6 +3898,51 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Boolean.toString(phOverridingFledgeAuctionServerEnabled),
                 /* makeDefault */ false);
         assertThat(mPhFlags.getFledgeAuctionServerApiUsageMetricsEnabled()).isEqualTo(false);
+    }
+
+    @Test
+    public void testGetFledgeAuctionServerKeyFetchMetricsEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgeAuctionServerKeyFetchMetricsEnabled())
+                .isEqualTo(
+                        FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED
+                                && FLEDGE_AUCTION_SERVER_ENABLED);
+
+        // Now overriding with the FLEDGE_AUCTION_SERVER_ENABLED from PH.
+        boolean phOverridingFledgeAuctionServerEnabled = !FLEDGE_AUCTION_SERVER_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_ENABLED,
+                Boolean.toString(phOverridingFledgeAuctionServerEnabled),
+                /* makeDefault */ false);
+
+        // Only turn on FLEDGE_AUCTION_SERVER_ENABLED,
+        // getFledgeAuctionServerKeyFetchMetricsEnabled() should still return false.
+        assertThat(mPhFlags.getFledgeAuctionServerKeyFetchMetricsEnabled()).isEqualTo(false);
+
+        // Now overriding with the FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED from PH.
+        boolean phOverridingFledgeAuctionServerKeyFetchMetricsEnabled =
+                phOverridingFledgeAuctionServerEnabled;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED,
+                Boolean.toString(phOverridingFledgeAuctionServerKeyFetchMetricsEnabled),
+                /* makeDefault */ false);
+
+        // Turn on both FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED and
+        // FLEDGE_AUCTION_SERVER_ENABLED, getFledgeAuctionServerKeyFetchMetricsEnabled() should
+        // return true.
+        assertThat(mPhFlags.getFledgeAuctionServerKeyFetchMetricsEnabled()).isEqualTo(true);
+
+        // Now flipping FLEDGE_AUCTION_SERVER_ENABLED,
+        // getFledgeAuctionServerKeyFetchMetricsEnabled() should return false.
+        phOverridingFledgeAuctionServerEnabled = !phOverridingFledgeAuctionServerEnabled;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_ENABLED,
+                Boolean.toString(phOverridingFledgeAuctionServerEnabled),
+                /* makeDefault */ false);
+        assertThat(mPhFlags.getFledgeAuctionServerKeyFetchMetricsEnabled()).isEqualTo(false);
     }
 
     @Test

@@ -3518,6 +3518,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return getFledgeAuctionServerEnabled() && FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED;
     }
 
+    // Fledge key fetch metrics flag.
+    boolean FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED = false;
+
+    /** Returns whether the fledge auction server key fetch metrics feature is enabled */
+    default boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
+        return getFledgeAuctionServerEnabled() && FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED;
+    }
+
     /**
      * Default allowlist of the enrollments for whom debug key insertion based on join key matching
      * is allowed.

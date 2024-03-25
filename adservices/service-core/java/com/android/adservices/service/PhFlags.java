@@ -2550,6 +2550,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
+        return getFledgeAuctionServerEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED,
+                        FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS,
