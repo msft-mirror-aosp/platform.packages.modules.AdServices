@@ -319,6 +319,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 AdSelectionDebugReportingDatabase.getInstance(context)
                         .getAdSelectionDebugReportDao(),
                 new AdIdFetcher(
+                        context,
                         AdIdWorker.getInstance(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler()),
