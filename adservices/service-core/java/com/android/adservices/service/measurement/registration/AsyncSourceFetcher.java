@@ -526,9 +526,13 @@ public class AsyncSourceFetcher {
         if (!json.isNull(SourceHeaderContract.MAX_EVENT_STATES)) {
             long maxEventStates =
                     Long.parseLong(json.optString(SourceHeaderContract.MAX_EVENT_STATES));
-            if (maxEventStates <= 0) {
+            if (maxEventStates <= 0
+                    || maxEventStates
+                            > mFlags.getMeasurementMaxReportStatesPerSourceRegistration()) {
                 LoggerFactory.getMeasurementLogger()
-                        .e("Max event states should be a positive integer.");
+                        .e(
+                                "Max event states should be a positive integer and smaller than max"
+                                        + " report states per source registration.");
                 return false;
             }
             builder.setMaxEventStates(maxEventStates);

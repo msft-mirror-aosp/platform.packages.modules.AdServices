@@ -4389,7 +4389,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns true when attribution scope is enabled. */
     default boolean getMeasurementEnableAttributionScope() {
-        return MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+        return getMeasurementFlexLiteApiEnabled() && MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
     }
 
     boolean MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK = false;

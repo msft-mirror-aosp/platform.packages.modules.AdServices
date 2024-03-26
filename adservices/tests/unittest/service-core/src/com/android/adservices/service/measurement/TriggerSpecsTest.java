@@ -247,6 +247,14 @@ public class TriggerSpecsTest {
     }
 
     @Test
+    public void testGetNumStates() {
+        Source source = SourceFixture.getMinimalValidSourceBuilder().build();
+        TriggerSpecs testObject =
+                new TriggerSpecs(SourceFixture.getTriggerSpecArrayCountValidBaseline(), 3, source);
+        assertEquals(220L, testObject.getNumStates(source, FakeFlagsFactory.getFlagsForTest()));
+    }
+
+    @Test
     public void getPrivacyParamsForComputationV2_equal() throws JSONException {
         TriggerSpecs testObject = SourceFixture.getValidTriggerSpecsCountBased();
         // Assertion

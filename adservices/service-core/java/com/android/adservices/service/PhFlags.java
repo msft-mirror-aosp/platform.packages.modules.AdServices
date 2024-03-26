@@ -3124,9 +3124,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getMeasurementEnableAttributionScope() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
-                MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE);
+        return getMeasurementFlexLiteApiEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
+                        MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE);
     }
 
     @Override

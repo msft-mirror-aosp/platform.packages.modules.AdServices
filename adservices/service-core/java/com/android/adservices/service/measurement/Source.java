@@ -58,6 +58,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class Source {
 
+    public static final long DEFAULT_MAX_EVENT_STATES = 3L;
+
     private String mId;
     private UnsignedLong mEventId;
     private Uri mPublisher;
@@ -247,7 +249,6 @@ public class Source {
                     * getDestinationTypeMultiplier(flags);
 
             long numStates = Combinatorics.getNumberOfStarsAndBarsSequences(numStars, numBars);
-
             if (numStates > reportStateCountLimit) {
                 return false;
             }
@@ -258,6 +259,34 @@ public class Source {
         } else {
             return mTriggerSpecs.hasValidReportStateCount(this, flags);
         }
+    }
+
+    /**
+     * Verifies whether the source contains a valid maximum event states value and assigns the
+     * default value if it's not specified in certain instances.
+     *
+     * @param flags flag values
+     */
+    public boolean validateAndSetMaxEventStates(Flags flags) {
+        if (!flags.getMeasurementEnableAttributionScope() || getAttributionScopeLimit() == null) {
+            return true;
+        }
+        Long numStates =
+                mTriggerSpecs == null
+                        ? getNumStates(flags)
+                        : mTriggerSpecs.getNumStates(this, flags);
+        if (numStates == null || numStates == 0L) {
+            throw new IllegalStateException(
+                    "Num states should be validated before validating max event states");
+        }
+        if (mMaxEventStates == null) {
+            // Fallback to default max event states.
+            setMaxEventStates(DEFAULT_MAX_EVENT_STATES);
+        }
+        if (getSourceType() == SourceType.EVENT && numStates > getMaxEventStates()) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -283,11 +312,30 @@ public class Source {
                 : flags.getMeasurementFlexApiMaxInformationGainNavigation();
     }
 
+    /**
+     * Compute information gain for the source given the numTriggerStates. Attribution scope limit
+     * and max event states will also be considered if attribution scope is enabled.
+     *
+     * @param flags flag values.
+     * @param flipProbability the flip probability, used only if attribution scope is not enabled.
+     * @param numTriggerStates num of trigger states.
+     */
+    public double getInformationGain(Flags flags, long numTriggerStates, double flipProbability) {
+        if (flags.getMeasurementEnableAttributionScope()) {
+            long attributionScopeLimit =
+                    getAttributionScopeLimit() == null ? 1L : getAttributionScopeLimit();
+            long maxEventStates = getMaxEventStates() == null ? 1L : getMaxEventStates();
+            return Combinatorics.getMaxInformationGainWithAttributionScope(
+                    numTriggerStates, attributionScopeLimit, maxEventStates);
+        }
+        return Combinatorics.getInformationGain(numTriggerStates, flipProbability);
+    }
+
     private boolean isFlexLiteApiValueValid(Flags flags) {
         if (!flags.getMeasurementFlexLiteApiEnabled()) {
             return true;
         }
-        return Combinatorics.getInformationGain(getNumStates(flags), getFlipProbability(flags))
+        return getInformationGain(flags, getNumStates(flags), getFlipProbability(flags))
                 <= getInformationGainThreshold(flags);
     }
 
@@ -1045,6 +1093,11 @@ public class Source {
         mNumStates = numStates;
     }
 
+    /** Set max event states for the {@link Source}. */
+    private void setMaxEventStates(long maxEventStates) {
+        mMaxEventStates = maxEventStates;
+    }
+
     /** Set flip probability for the {@link Source}. */
     private void setFlipProbability(double flipProbability) {
         mFlipProbability = flipProbability;
@@ -1171,15 +1224,15 @@ public class Source {
         return mWebDestinations != null && mWebDestinations.size() > 0;
     }
 
-    private static boolean areEqualNullableDestinations(List<Uri> destinations,
-            List<Uri> otherDestinations) {
+    private static boolean areEqualNullableDestinations(
+            List<Uri> destinations, List<Uri> otherDestinations) {
         if (destinations == null && otherDestinations == null) {
             return true;
         } else if (destinations == null || otherDestinations == null) {
             return false;
         } else {
-            return ImmutableMultiset.copyOf(destinations).equals(
-                    ImmutableMultiset.copyOf(otherDestinations));
+            return ImmutableMultiset.copyOf(destinations)
+                    .equals(ImmutableMultiset.copyOf(otherDestinations));
         }
     }
 
@@ -1235,9 +1288,7 @@ public class Source {
         return mMaxEventStates;
     }
 
-    /**
-     * Builder for {@link Source}.
-     */
+    /** Builder for {@link Source}. */
     public static final class Builder {
         private final Source mBuilding;
 

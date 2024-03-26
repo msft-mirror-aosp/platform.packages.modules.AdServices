@@ -340,7 +340,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_AGGREGATAB
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_REPORT;
@@ -8339,10 +8338,51 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementEnableAttributionScope() {
-        mFlagsTestHelper.testConfigFlag(
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
-                MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
-                Flags::getMeasurementEnableAttributionScope);
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled()).isFalse();
+        assertThat(mPhFlags.getMeasurementEnableAttributionScope()).isFalse();
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
+                Boolean.toString(false),
+                /* makeDefault */ false);
+        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled()).isFalse();
+        assertThat(mPhFlags.getMeasurementEnableAttributionScope()).isFalse();
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled()).isTrue();
+        assertThat(mPhFlags.getMeasurementEnableAttributionScope()).isTrue();
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
+                Boolean.toString(false),
+                /* makeDefault */ false);
+        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled()).isTrue();
+        assertThat(mPhFlags.getMeasurementEnableAttributionScope()).isFalse();
     }
 
     @Test
