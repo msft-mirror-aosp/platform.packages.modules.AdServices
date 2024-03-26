@@ -108,7 +108,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
         return AdServicesFlagsSetterRule.withAllLogcatTags()
                 .setGlobalKillSwitch(false)
                 .setFlag(FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
-                .setConsentManagerDebugMode(true)
+                .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                 .setPpapiAppAllowList(mPackageName);
     }
 
