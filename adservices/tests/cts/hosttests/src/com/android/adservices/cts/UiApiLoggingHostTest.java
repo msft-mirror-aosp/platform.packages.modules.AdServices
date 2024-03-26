@@ -16,8 +16,6 @@
 
 package com.android.adservices.cts;
 
-import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertNotNull;
@@ -83,8 +81,8 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
                     .setTopicsKillSwitch(false)
                     .setAdServicesEnabled(true)
                     .setMddBackgroundTaskKillSwitch(true)
-                    .setConsentManagerDebugMode(true)
-                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
+                    .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setFlag(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                     .setFlag(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, true);
 
     @Rule(order = 3)
