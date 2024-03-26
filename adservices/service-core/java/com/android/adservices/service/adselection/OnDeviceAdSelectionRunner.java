@@ -45,6 +45,7 @@ import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
@@ -100,7 +101,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final DebugReporting debugReporting,
             final int callerUid,
             boolean shouldUseUnifiedTables,
-            @NonNull final RetryStrategy retryStrategy) {
+            @NonNull final RetryStrategy retryStrategy,
+            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory) {
         super(
                 context,
                 customAudienceDao,
@@ -119,7 +121,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adCounterHistogramUpdater,
                 debugReporting,
                 callerUid,
-                shouldUseUnifiedTables);
+                shouldUseUnifiedTables,
+                kAnonSignJoinFactory);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(adCounterKeyCopier);
@@ -203,7 +206,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final DebugReporting debugReporting,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory) {
         super(
                 context,
                 customAudienceDao,
@@ -224,7 +228,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adCounterHistogramUpdater,
                 adSelectionExecutionLogger,
                 debugReporting,
-                shouldUseUnifiedTables);
+                shouldUseUnifiedTables,
+                kAnonSignJoinFactory);
 
         Objects.requireNonNull(adsScoreGenerator);
         Objects.requireNonNull(adServicesHttpsClient);

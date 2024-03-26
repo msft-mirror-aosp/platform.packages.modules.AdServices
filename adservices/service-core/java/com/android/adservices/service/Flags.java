@@ -4676,6 +4676,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value of the KAnon Sign/join feature flag */
     boolean FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED = false;
 
+    /** Default value of KAnon sign/join feature in On Device AdSelection path */
+    boolean FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED = false;
+
     /** Default value of k-anon fetch server parameters url. */
     String FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL = "";
 
@@ -4728,6 +4731,15 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getFledgeKAnonSignJoinFeatureEnabled() {
         return getFledgeAuctionServerEnabled() && FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
+    }
+
+    /**
+     * This is a feature flag for KAnon Sign/Join feature on the on device ad selection path.
+     *
+     * @return {@code true} if it's enabled, otherwise returns {@code false}.
+     */
+    default boolean getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled() {
+        return FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED;
     }
 
     /**
