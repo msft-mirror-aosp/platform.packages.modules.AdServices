@@ -24,6 +24,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 import static com.android.adservices.service.FlagsTest.getConstantValue;
 
+import static org.junit.Assert.assertThrows;
+
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -35,6 +37,7 @@ import com.android.modules.utils.build.SdkLevel;
 import com.google.common.truth.Expect;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /** Provides utility methods for tests */
 public final class PhFlagsTestHelper {
@@ -171,13 +174,13 @@ public final class PhFlagsTestHelper {
      *     "COBALT_LOGGING_ENABLED"} defining the default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testFeatureFlag(
+    public void testFeatureFlagGuardedByGlobalKs(
             String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlag(flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
+        testGuardedFeatureFlag(flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
     }
 
-    // TODO(b/326254556): remove if not used (other than by testFeatureFlag() above, which passes
-    // mGlobalKillSwitchGuard
+    // TODO(b/326254556): remove if not used (other than by testFeatureFlagGuardedByGlobalKs()
+    //  above, which passes mGlobalKillSwitchGuard.
     /**
      * Tests the behavior of a feature flag that is guarded by a "generic" guard (typically the
      * global kill switch and a per-API kill switch).
@@ -188,13 +191,90 @@ public final class PhFlagsTestHelper {
      * @param guard helper object used enable / disable the guarding flags
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testFeatureFlag(
+    public void testGuardedFeatureFlag(
             String flagName,
             String defaultValueConstant,
             FlagGuard guard,
             Flaginator<Flags, Boolean> flaginator) {
         testFeatureFlagBackedBySystemProperty(
                 flagName, defaultValueConstant, FeatureFlagType.FEATURE_FLAG, guard, flaginator);
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value and
+     * verifies that correct exception is thrown in case an illegal value is overridden and fetched.
+     */
+    public void testFeatureFlagDefaultOverriddenAndIllegalValue(
+            String flagName, Long defaultConstantValue, Flaginator<Flags, Long> flaginator) {
+        testFeatureFlagBackedByDeviceConfigOnly(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ defaultConstantValue + 1,
+                /* illegalValue= */ Optional.of(-1L));
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value and
+     * verifies that correct exception is thrown in case an illegal value is overridden and fetched.
+     */
+    public void testFeatureFlagDefaultOverriddenAndIllegalValue(
+            String flagName, Float defaultConstantValue, Flaginator<Flags, Float> flaginator) {
+        testFeatureFlagBackedByDeviceConfigOnly(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ defaultConstantValue + 1,
+                /* illegalValue= */ Optional.of(-1f));
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value and
+     * verifies that correct exception is thrown in case an illegal value is overridden and fetched.
+     */
+    public void testFeatureFlagDefaultOverriddenAndIllegalValue(
+            String flagName, Integer defaultConstantValue, Flaginator<Flags, Integer> flaginator) {
+        testFeatureFlagBackedByDeviceConfigOnly(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ defaultConstantValue + 1,
+                /* illegalValue= */ Optional.of(-1));
+    }
+
+    /** Tests the behavior of a feature flag and verifies default value, overridden value. */
+    public void testFeatureFlagDefaultAndOverriddenValueBackedByDeviceConfigOnly(
+            String flagName, Boolean defaultConstantValue, Flaginator<Flags, Boolean> flaginator) {
+        testFeatureFlagBackedByDeviceConfigOnly(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ !defaultConstantValue,
+                /* illegalValue= */ Optional.empty());
+    }
+
+    private <T> void testFeatureFlagBackedByDeviceConfigOnly(
+            String flagName,
+            T defaultConstantValue,
+            Flaginator<Flags, T> flaginator,
+            T overriddenValue,
+            Optional<T> illegalValue) {
+        // Without any overriding, the value is the hard coded constant.
+        mExpect.withMessage("getter of %s by default", flagName)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(defaultConstantValue);
+
+        setAdservicesFlag(flagName, "" + overriddenValue);
+        // After overriding, the flag returns the overridden value.
+        mExpect.withMessage("getter of %s after overriding ", flagName)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(overriddenValue);
+
+        if (illegalValue.isPresent()) {
+            setAdservicesFlag(flagName, "" + illegalValue.get());
+            // After overriding with illegal value, fetching of flag should throw exception.
+            assertThrows(IllegalArgumentException.class, () -> flaginator.getFlagValue(mPhFlags));
+        }
     }
 
     /**
