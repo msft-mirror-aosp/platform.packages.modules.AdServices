@@ -231,6 +231,7 @@ import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROU
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED;
+import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_FEATURE_AUCTION_SERVER_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_GET_TOKENS_URL;
@@ -663,6 +664,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AU
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
@@ -10625,7 +10627,9 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testKAnonSignJoinOnDeviceFlag() {
+        // set kanon sign join feature flag to true
         setFledgeAuctionServerEnabled(true);
+        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
         assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled())
                 .isEqualTo(FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED);
 
@@ -10636,6 +10640,41 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled())
                 .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testKAnonSignJoinAuctionServerFlag() {
+        // set kanon sign join feature flag to true
+        setFledgeAuctionServerEnabled(true);
+        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
+        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled())
+                .isEqualTo(FLEDGE_DEFAULT_KANON_FEATURE_AUCTION_SERVER_ENABLED);
+
+        boolean phOverridingValue = !FLEDGE_DEFAULT_KANON_FEATURE_AUCTION_SERVER_ENABLED;
+        overrideKAnonFlags(
+                Boolean.toString(phOverridingValue),
+                KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE);
+
+        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testKAnonSignJoinAuctionServerFlag_isOverwrittenByKAnonSignJoinFeatureFlag() {
+        // set kanon sign join feature flag to true
+        setFledgeAuctionServerEnabled(true);
+        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE);
+        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
+        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled())
+                .isEqualTo(true);
+
+        overrideKAnonFlags(
+                Boolean.toString(false),
+                KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
+
+        //Assert that KAnon_Sign_Join_Feature overwrites the KAnon_Sign_Join_Auction_Server flag
+        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled())
+                .isEqualTo(false);
     }
 
     @Test

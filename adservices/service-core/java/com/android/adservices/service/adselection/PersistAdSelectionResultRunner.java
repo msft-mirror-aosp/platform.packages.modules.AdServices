@@ -278,7 +278,7 @@ public class PersistAdSelectionResultRunner {
     }
 
     private void makeKAnonSignJoin(AuctionResult auctionResult, long adSelectionId) {
-        if (mFlags.getFledgeKAnonSignJoinFeatureEnabled()) {
+        if (mFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled()) {
             ListenableFuture<Void> signJoinFuture =
                     Futures.submitAsync(
                             () -> {
