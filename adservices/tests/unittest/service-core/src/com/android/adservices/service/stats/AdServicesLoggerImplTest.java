@@ -886,6 +886,22 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         verify(mStatsdLoggerMock).logTopicsEncryptionGetTopicsReportedStats(eq(stats));
     }
 
+    @Test
+    public void testLogShellCommandStats() {
+        @ShellCommandStats.Command int command = ShellCommandStats.COMMAND_ECHO;
+        @ShellCommandStats.CommandResult int result = ShellCommandStats.RESULT_SUCCESS;
+        int latency = 1000;
+        ShellCommandStats stats = new ShellCommandStats(command, result, latency);
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+
+        adServicesLogger.logShellCommandStats(stats);
+
+        ArgumentCaptor<ShellCommandStats> argumentCaptor =
+                ArgumentCaptor.forClass(ShellCommandStats.class);
+        verify(mStatsdLoggerMock).logShellCommandStats(argumentCaptor.capture());
+        expect.that(argumentCaptor.getValue()).isEqualTo(stats);
+    }
+
     private void mockAppNameApiErrorLogger() {
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(true);

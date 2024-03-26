@@ -175,4 +175,7 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     @Override
     public void logTopicsEncryptionGetTopicsReportedStats(
             TopicsEncryptionGetTopicsReportedStats stats) {}
+
+    @Override
+    public void logShellCommandStats(ShellCommandStats stats) {}
 }
