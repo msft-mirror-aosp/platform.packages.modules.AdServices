@@ -2146,6 +2146,7 @@ public class KAnonE2ETest {
         KAnonCallerImpl kAnonCaller =
                 new KAnonCallerImpl(
                         AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getBackgroundExecutor(),
                         mAnonymousCountingTokensSpy,
                         mAdServicesHttpsClientSpy,
                         mClientParametersDao,
