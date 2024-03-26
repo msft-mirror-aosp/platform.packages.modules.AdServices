@@ -224,6 +224,8 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
         when(mFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
+        when(mFlags.getMeasurementMaxLengthOfTriggerContextId())
+                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID);
         when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
                 .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
     }
@@ -6625,10 +6627,10 @@ public class AttributionJobHandlerTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterDataString(
-                                "[{\n"
+                                "{\n"
                                         + "  \"key_1\": [\"no_match\"],\n"
                                         + "  \"key_2\": [\"no_match\"]\n"
-                                        + "}]\n")
+                                        + "}\n")
                         .build();
         matchingSourceList.add(source);
 
@@ -6693,10 +6695,10 @@ public class AttributionJobHandlerTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterDataString(
-                                "[{\n"
+                                "{\n"
                                         + "  \"key_1\": [\"no_match\"],\n"
                                         + "  \"key_2\": [\"no_match\"]\n"
-                                        + "}]\n")
+                                        + "}\n")
                         .build();
         matchingSourceList.add(source);
 
@@ -7339,9 +7341,13 @@ public class AttributionJobHandlerTest {
                         + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN
                         + 1000L;
 
-        assertTrue(
-                report.getScheduledReportTime() > lowerBound
-                        && report.getScheduledReportTime() < upperBound);
+        if (trigger.getTriggerContextId() == null) {
+            assertTrue(
+                    report.getScheduledReportTime() > lowerBound
+                            && report.getScheduledReportTime() < upperBound);
+        } else {
+            assertEquals(trigger.getTriggerTime(), report.getScheduledReportTime());
+        }
 
         assertNull(report.getSourceDebugKey());
         assertEquals(trigger.getDebugKey(), report.getTriggerDebugKey());
@@ -7382,6 +7388,7 @@ public class AttributionJobHandlerTest {
                 expectedReport.getSourceRegistrationTime(),
                 actualReport.getSourceRegistrationTime());
         assertEquals(expectedReport.isFakeReport(), actualReport.isFakeReport());
+        assertEquals(expectedReport.getTriggerContextId(), actualReport.getTriggerContextId());
     }
 
     private static AggregateReport getExpectedAggregateReport(Trigger trigger, Source source) {

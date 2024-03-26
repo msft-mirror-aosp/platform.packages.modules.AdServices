@@ -17,8 +17,10 @@
 package com.android.adservices.service.shell.adselection;
 
 import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory.COMMAND_PREFIX;
-import static com.android.adservices.service.shell.adselection.ConsentedDebugEnableArgs.EXPIRY_IN_DAYS_ARG_NAME;
+import static com.android.adservices.service.shell.adselection.ConsentedDebugEnableArgs.EXPIRY_IN_HOURS_ARG_NAME;
+import static com.android.adservices.service.shell.adselection.ConsentedDebugEnableArgs.MAX_EXPIRY_IN_HOURS;
 import static com.android.adservices.service.shell.adselection.ConsentedDebugEnableArgs.SECRET_DEBUG_TOKEN_ARG_NAME;
+import static com.android.adservices.service.shell.adselection.ConsentedDebugEnableArgs.SECRET_DEBUG_TOKEN_MIN_LEN;
 import static com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand.CMD;
 import static com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand.DISABLE_ERROR;
 import static com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand.DISABLE_SUB_CMD;
@@ -64,7 +66,8 @@ import java.util.UUID;
 public class ConsentedDebugShellCommandTest
         extends ShellCommandTestCase<ConsentedDebugShellCommand> {
     private static final String DEBUG_TOKEN = UUID.randomUUID().toString();
-    private static final String EXPIRY_IN_DAYS = "2";
+    private static final int EXPIRY_IN_HOURS_INT = 48;
+    private static final String EXPIRY_IN_HOURS = String.valueOf(EXPIRY_IN_HOURS_INT);
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
 
     @Test
@@ -124,8 +127,8 @@ public class ConsentedDebugShellCommandTest
                 COMMAND_PREFIX,
                 CMD,
                 ENABLE_SUB_CMD,
-                EXPIRY_IN_DAYS_ARG_NAME,
-                EXPIRY_IN_DAYS);
+                EXPIRY_IN_HOURS_ARG_NAME,
+                EXPIRY_IN_HOURS);
 
         verify(mConsentedDebugConfigurationDao, never())
                 .deleteExistingConsentedDebugConfigurationsAndPersist(
@@ -141,9 +144,9 @@ public class ConsentedDebugShellCommandTest
                 CMD,
                 VIEW_SUB_CMD,
                 SECRET_DEBUG_TOKEN_ARG_NAME,
-                "small",
-                EXPIRY_IN_DAYS_ARG_NAME,
-                EXPIRY_IN_DAYS);
+                DEBUG_TOKEN.substring(0, SECRET_DEBUG_TOKEN_MIN_LEN),
+                EXPIRY_IN_HOURS_ARG_NAME,
+                EXPIRY_IN_HOURS);
 
         verify(mConsentedDebugConfigurationDao, never())
                 .deleteExistingConsentedDebugConfigurationsAndPersist(
@@ -160,7 +163,7 @@ public class ConsentedDebugShellCommandTest
                 VIEW_SUB_CMD,
                 SECRET_DEBUG_TOKEN_ARG_NAME,
                 DEBUG_TOKEN,
-                EXPIRY_IN_DAYS_ARG_NAME,
+                EXPIRY_IN_HOURS_ARG_NAME,
                 "Not a number");
 
         verify(mConsentedDebugConfigurationDao, never())
@@ -178,8 +181,8 @@ public class ConsentedDebugShellCommandTest
                 VIEW_SUB_CMD,
                 SECRET_DEBUG_TOKEN_ARG_NAME,
                 DEBUG_TOKEN,
-                EXPIRY_IN_DAYS_ARG_NAME,
-                "400");
+                EXPIRY_IN_HOURS_ARG_NAME,
+                String.valueOf(MAX_EXPIRY_IN_HOURS + 1));
 
         verify(mConsentedDebugConfigurationDao, never())
                 .deleteExistingConsentedDebugConfigurationsAndPersist(
@@ -266,7 +269,7 @@ public class ConsentedDebugShellCommandTest
         boolean isConsented = true;
         String debugToken = UUID.randomUUID().toString();
         Instant creationTimestamp = CommonFixture.FIXED_NOW;
-        Duration expiryDuration = Duration.ofDays(2);
+        Duration expiryDuration = Duration.ofHours(EXPIRY_IN_HOURS_INT);
         Instant expiryTimestamp = CommonFixture.FIXED_NOW.plus(expiryDuration);
         DBConsentedDebugConfiguration dbConsentedDebugConfiguration =
                 DBConsentedDebugConfiguration.builder()
@@ -369,8 +372,8 @@ public class ConsentedDebugShellCommandTest
                     ENABLE_SUB_CMD,
                     SECRET_DEBUG_TOKEN_ARG_NAME,
                     DEBUG_TOKEN,
-                    EXPIRY_IN_DAYS_ARG_NAME,
-                    EXPIRY_IN_DAYS);
+                    EXPIRY_IN_HOURS_ARG_NAME,
+                    EXPIRY_IN_HOURS);
         } else {
             return run(
                     new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao),

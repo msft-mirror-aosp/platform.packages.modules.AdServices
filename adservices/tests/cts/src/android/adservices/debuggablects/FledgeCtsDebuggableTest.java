@@ -2015,69 +2015,6 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    public void testAdSelection_errorGettingScoringLogic_failure() throws Exception {
-        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-
-        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
-        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
-
-        CustomAudience customAudience1 =
-                mCustomAudienceTestFixture.createCustomAudience(BUYER_1, bidsForBuyer1);
-
-        CustomAudience customAudience2 =
-                mCustomAudienceTestFixture.createCustomAudience(BUYER_2, bidsForBuyer2);
-
-        // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
-        mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
-        mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
-
-        // Skip adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
-
-        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
-                new AddCustomAudienceOverrideRequest.Builder()
-                        .setBuyer(customAudience1.getBuyer())
-                        .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
-                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
-                        .build();
-        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
-                new AddCustomAudienceOverrideRequest.Builder()
-                        .setBuyer(customAudience2.getBuyer())
-                        .setName(customAudience2.getName())
-                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
-                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
-                        .build();
-
-        // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
-        mTestCustomAudienceClient
-                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        mTestCustomAudienceClient
-                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Ad Selection will fail due to scoring logic not found, because the URI that is used to
-        // fetch scoring logic does not exist
-        Exception selectAdsException =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                mAdSelectionClient
-                                        .selectAds(AD_SELECTION_CONFIG)
-                                        .get(
-                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
-                                                TimeUnit.SECONDS));
-        // Sometimes a 400 status code is returned (ISE) instead of the network fetch timing out
-        assertThat(
-                        selectAdsException.getCause() instanceof TimeoutException
-                                || selectAdsException.getCause() instanceof IllegalStateException)
-                .isTrue();
-    }
-
-    @Test
     public void testAdSelectionFlow_skipNonActivatedCA_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 

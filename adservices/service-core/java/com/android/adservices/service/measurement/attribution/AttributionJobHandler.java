@@ -540,7 +540,10 @@ class AttributionJobHandler {
             }
 
             source.setAggregateContributions(newAggregateContributions.getAsInt());
-            long randomTime = getAggregateReportDelay();
+            long scheduledReportTime = trigger.getTriggerTime();
+            if (trigger.getTriggerContextId() == null) {
+                scheduledReportTime += getAggregateReportDelay();
+            }
             Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                     new DebugKeyAccessor(measurementDao).getDebugKeys(source, trigger);
             UnsignedLong sourceDebugKey = debugKeyPair.first;
@@ -556,7 +559,7 @@ class AttributionJobHandler {
                             .setPublisher(source.getRegistrant())
                             .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                             .setSourceRegistrationTime(getSourceRegistrationTime(source, trigger))
-                            .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
+                            .setScheduledReportTime(scheduledReportTime)
                             .setEnrollmentId(trigger.getEnrollmentId())
                             .setDebugCleartextPayload(
                                     AggregateReport.generateDebugPayload(contributions.get()))
@@ -571,7 +574,8 @@ class AttributionJobHandler {
                             .setTriggerDebugKey(triggerDebugKey)
                             .setSourceId(source.getId())
                             .setTriggerId(trigger.getId())
-                            .setRegistrationOrigin(trigger.getRegistrationOrigin());
+                            .setRegistrationOrigin(trigger.getRegistrationOrigin())
+                            .setTriggerContextId(trigger.getTriggerContextId());
             if (trigger.getAggregationCoordinatorOrigin() != null) {
                 aggregateReportBuilder.setAggregationCoordinatorOrigin(
                         trigger.getAggregationCoordinatorOrigin());
@@ -586,6 +590,7 @@ class AttributionJobHandler {
                 aggregateReportBuilder.setDedupKey(
                         aggregateDeduplicationKeyOptional.get().getDeduplicationKey().get());
             }
+
             AggregateReport aggregateReport = aggregateReportBuilder.build();
 
             if (mFlags.getMeasurementNullAggregateReportEnabled()
@@ -628,14 +633,18 @@ class AttributionJobHandler {
 
     private void generateNullAggregateReportForNonAttributedTrigger(
             IMeasurementDao measurementDao, Trigger trigger) throws DatastoreException {
-        float nullRate = mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime();
+        float nullRate =
+                trigger.getTriggerContextId() == null
+                        ? mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime()
+                        : 1;
+
         if (Math.random() < nullRate) {
             try {
                 AggregateReport nullReport =
                         // Although the WICG spec states the trigger time should be used here, we
                         // pass null because the source_registration_time is intended for exclusion
                         // anyway.
-                        getNullAggregateReport(trigger, null);
+                        getNullAggregateReport(trigger, /* sourceTime = */ null);
                 measurementDao.insertAggregateReport(nullReport);
             } catch (JSONException e) {
                 LoggerFactory.getMeasurementLogger()

@@ -159,6 +159,13 @@ public final class FlagsConstants {
     public static final String
             KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED =
                     "measurement_source_registration_time_optional_for_agg_reports_enabled";
+
+    public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID =
+            "measurement_enable_trigger_context_id";
+
+    public static final String KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID =
+            "measurement_max_length_of_trigger_context_id";
+
     public static final String KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS =
             "measurement_network_connect_timeout_ms";
     public static final String KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS =

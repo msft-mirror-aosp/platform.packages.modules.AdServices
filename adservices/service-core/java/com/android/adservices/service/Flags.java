@@ -4391,6 +4391,22 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
     }
 
+    /** Flag to enable context id for triggers */
+    boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
+
+    /** Returns true if trigger context id is enabled. */
+    default boolean getMeasurementEnableTriggerContextId() {
+        return MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID;
+    }
+
+    /** The maximum allowable length of a trigger context id. */
+    int MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID = 64;
+
+    /** Return the maximum allowable length of a trigger context id. */
+    default int getMeasurementMaxLengthOfTriggerContextId() {
+        return MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
