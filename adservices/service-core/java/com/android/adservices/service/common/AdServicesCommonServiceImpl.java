@@ -271,7 +271,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         boolean adserviceEnabled = mFlags.getAdServicesEnabled();
         if (adserviceEnabled
                 && mFlags.getGaUxFeatureEnabled()
-                && DeviceRegionProvider.isEuDevice(mContext, mFlags)) {
+                && DeviceRegionProvider.isEuDevice(mContext)) {
             // Check if GA UX was notice before
             ConsentManager consentManager = ConsentManager.getInstance();
             if (!consentManager.wasGaUxNotificationDisplayed()) {
@@ -300,7 +300,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     public boolean reconsentIfNeededForROW() {
         ConsentManager consentManager = ConsentManager.getInstance();
         return mFlags.getGaUxFeatureEnabled()
-                && !DeviceRegionProvider.isEuDevice(mContext, mFlags)
+                && !DeviceRegionProvider.isEuDevice(mContext)
                 && !consentManager.wasGaUxNotificationDisplayed()
                 && consentManager.wasNotificationDisplayed()
                 && consentManager.getConsent().isGiven();

@@ -23,6 +23,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETR
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
@@ -6167,6 +6168,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE,
                 DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE);
+    }
+
+    @Override
+    public boolean getEnableTabletRegionFix() {
+        return getDeviceConfigFlag(KEY_ENABLE_TABLET_REGION_FIX, DEFAULT_ENABLE_TABLET_REGION_FIX);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers
