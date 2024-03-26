@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Uvajamo novo funkcijo za zasebnost pri oglaševanju, ki se imenuje merjenje oglasov. Android deli samo zelo omejene podatke med aplikacijami, na primer kdaj vam je bil oglas prikazan, da bi aplikacijam pomagal meriti uspešnost oglasov."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Spremembe lahko izvedete v nastavitvah zasebnosti pri oglaševanju."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Aplikacije, ki jih uporabljate, lahko prosijo Android za podatke, da bodo lažje merile uspešnost oglasov. Android aplikacijam omogoča, da zbirajo samo omejene vrste podatkov."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Nove funkcije za zasebnost pri oglaševanju"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Zagotovite si več izbire glede tega, kakšne oglase vidite, in hkrati zaščitite svojo identiteto"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Posodobitve funkcij za zasebnost pri oglaševanju"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Zagotovite si več izbire glede tega, kakšne oglase vidite, in hkrati zaščitite svojo identiteto"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android bo funkcije za zasebnost pri oglaševanju razširil tako, da bo omejil, katere informacije lahko aplikacije pridobijo o vas, ko vam prikazujejo osebno prilagojene oglase."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Aplikacije in njihovi oglaševalski partnerji lahko uporabljajo vašo dejavnost v drugih aplikacijah v tej napravi za osebno prilagajanje oglasov, hkrati pa skrbijo za zagotavljanje zasebnosti in varnosti vaše identitete."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Več o oglasih na predlog aplikacij"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Aplikacije si bodo med seboj delile omejene vrste podatkov za razumevanje uspešnosti oglasov, na primer ob kateri uri vam je bil oglas prikazan."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Več o merjenju oglasov"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android beleži teme, ki vas zanimajo, na podlagi aplikacij, ki ste jih nedavno uporabljali. Aplikacije in njihovi oglaševalski partnerji lahko uporabljajo vašo dejavnost v drugih aplikacijah v tej napravi za osebno prilagajanje oglasov, hkrati pa skrbijo za zagotavljanje zasebnosti in varnosti vaše identitete."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Aplikacije, ki jih uporabljate, lahko tudi ugotavljajo, kaj vam je všeč, na podlagi dejavnosti v aplikacijah. Če redno uporabljate kuharske aplikacije, vam bodo morda prikazani oglasi za storitve dostave živil ali sorodno vsebino v drugih aplikacijah.\n\nAplikacije varno hranijo te podatke, da jih za osebno prilagajanje oglasov v drugih aplikacijah lahko uporabljajo samo njihovi oglaševalski partnerji."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Pozneje lahko aplikacija, ki jo uporabljate, prosi za te podatke – bodisi za teme oglasov bodisi za oglase, ki so jih predlagale aplikacije, ki ste jih uporabljali."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Aplikacije, ki jih uporabljate, lahko prosijo Android za podatke, da bodo lažje merile uspešnost oglasov. Android varuje vašo zasebnost tako, da omeji, katere podatke si aplikacije lahko delijo med seboj."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Kateri podatki so uporabljeni?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Aplikacije, ki jih uporabljate, lahko od Androida zahtevajo podatke zaradi merjenja uspešnosti oglasov. Android pomaga zaščititi vašo zasebnost tako, da omejuje podatke, ki jih lahko aplikacije medsebojno delijo."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Kako je moja identiteta zaščitena?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android uporablja več ukrepov za varovanje zasebnosti, da omeji deljenje informacij med aplikacijami in zaščiti vašo identiteto. Med drugim združuje podatke in jim dodaja šum.\n\nPodatki o merjenju oglasov se tudi redno izbrišejo iz naprave."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Vaša dejavnost v aplikaciji se lahko uporablja za predlaganje oglasov."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Kako aplikacije uporabljajo te podatke?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Aplikacije varno hranijo te podatke, da jih za osebno prilagajanje oglasov v drugih aplikacijah lahko uporabljajo samo njihovi oglaševalski partnerji. Če redno uporabljate kuharske aplikacije, vam bodo morda prikazani oglasi za storitve dostave živil ali sorodno vsebino v drugih aplikacijah."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Kako lahko upravljam te podatke?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Posameznim aplikacijam lahko preprečite posredovanje podatkov o svoji dejavnosti oglaševalskim partnerjem. Oglase na predlog aplikacij lahko kadar koli ponastavite ali izklopite v nastavitvah zasebnosti. Poleg tega Android redno samodejno briše te podatke."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Več o tem, kako vam Android pomaga zaščititi zasebnost"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Aplikacije in njihovi oglaševalski partnerji lahko uporabljajo vašo dejavnost v drugih aplikacijah v tej napravi za osebno prilagajanje oglasov, hkrati pa skrbijo za zasebnost in varnost podatkov o vas.\n\nČe redno uporabljate kuharske aplikacije, vam bodo morda prikazani oglasi za storitve dostave živil ali sorodno vsebino v drugih aplikacijah.\n\nAndroid redno samodejno briše vašo dejavnost, vendar pa lahko tudi aplikacijam preprečite posredovanje teh podatkov oglaševalskim partnerjem."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"Običajno je, da si aplikacije in oglaševalski partnerji zapomnijo stvari, ki vas zanimajo, zato da osebno prilagodijo vašo izkušnjo. Aplikacije varno hranijo te podatke, da jih za prikazovanje oglasov v drugih aplikacijah lahko uporabljajo samo njihovi oglaševalski partnerji.\n\nAplikaciji lahko preprečite posredovanje podatkov o dejavnosti oglaševalskim partnerjem. Android prav tako redno samodejno izbriše deljene podatkov o dejavnosti, zato je lahko aplikacija, ki jo znova uporabite, spet prikazana na seznamu.\n\nOsebno prilagajanje oglasa je odvisno od več dejavnikov, kot je ta nastavitev, nastavitev tem oglasov, nastavitev oglaševalskega ID-ja in tega, ali aplikacija, ki jo uporabljate, osebno prilagaja oglase.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Preberite več o oglasih na predlog aplikacij"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android uporablja več ukrepov za varovanje zasebnosti, da omeji deljenje informacij med aplikacijami in zaščiti vašo identiteto. Med drugim združuje podatke in jim dodaja šum.\n\nBrskalnik ima morda podobno nastavitev. Če je merjenje oglasov vklopljeno v Androidu in brskalniku, bo podjetje morda lahko merilo učinkovitost oglasa v aplikacijah, ki jih uporabljate, in na spletnih mestih, ki jih obiščete. Vaša zgodovina brskanja ostane zasebno shranjena v napravi.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Preberite več o merjenju oglasov"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android beleži teme, ki vas zanimajo, na podlagi aplikacij, ki ste jih uporabljali v zadnjih nekaj tednih.\n\nPozneje lahko aplikacija, ki jo uporabljate, prosi Android, da ji posreduje vaše teme, da bi osebno prilagodila oglase, ki jih vidite. Android posreduje največ tri teme, pri čemer ne razkrije vaše identitete niti informacij o vaši uporabi aplikacije.\n\nAndroid redno samodejno briše teme. Ob nadaljnji uporabi aplikacij se tema lahko znova prikaže na seznamu. Lahko pa blokirate teme, za katere ne želite, da jih Android posreduje aplikacijam.\n\nOsebno prilagajanje prikazanega oglasa je odvisno več dejavnikov, kot je ta nastavitev, nastavitve oglasov na predlog aplikacij, nastavitev oglaševalskega ID-ja in tega, ali aplikacija, ki jo uporabljate, osebno prilagaja oglase.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Preberite več o temah oglasov"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Barvna ilustracija simbolov, ki predstavljajo teme zanimanj, kot so glasba, novice in šport"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Barvna ilustracija ključavnice v krogu"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Majhna črno-bela ilustracija devetih pik, razporejenih v kvadrat"</string>
