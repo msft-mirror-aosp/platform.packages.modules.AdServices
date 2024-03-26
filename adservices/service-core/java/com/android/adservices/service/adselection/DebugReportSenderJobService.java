@@ -54,7 +54,6 @@ import java.util.concurrent.TimeoutException;
  * Debug report sender for FLEDGE Select Ads API, executing periodic pinging of debug reports and
  * cleanup..
  */
-// TODO(b/269798827): Enable for R.
 @SuppressLint("LineLength")
 @RequiresApi(Build.VERSION_CODES.S)
 public class DebugReportSenderJobService extends JobService {

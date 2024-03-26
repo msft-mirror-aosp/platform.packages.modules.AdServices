@@ -129,7 +129,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @VisibleForTesting
