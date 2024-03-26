@@ -33,9 +33,9 @@
         app:layout_constraintStart_toStartOf="parent" >
         <LinearLayout
             android:layout_height="wrap_content"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:paddingBottom="24dp"
+            android:paddingStart="@dimen/adservices_content_horizontal_padding"
+            android:paddingEnd="@dimen/adservices_content_horizontal_padding"
+            android:paddingBottom="@dimen/adservices_content_padding"
             android:orientation="vertical"
             android:layout_gravity="center_horizontal"
             style="@style/NotificationContainer">
@@ -62,7 +62,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:padding="24dp"
+                android:padding="@dimen/adservices_content_padding"
                 android:background="@drawable/ic_rounded_background"
                 android:orientation="vertical"
                 android:animateLayoutChanges="true">
@@ -126,7 +126,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:padding="24dp"
+                android:padding="@dimen/adservices_content_padding"
                 android:background="@drawable/ic_rounded_background"
                 android:orientation="vertical">
                 <TextView
