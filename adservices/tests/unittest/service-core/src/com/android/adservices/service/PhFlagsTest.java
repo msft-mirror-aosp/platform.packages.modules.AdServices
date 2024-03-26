@@ -226,6 +226,7 @@ import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_CUSTOM_AUDIENC
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED;
+import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_GET_TOKENS_URL;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_JOIN_URL;
@@ -654,6 +655,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AU
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B;
@@ -10562,6 +10564,21 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Boolean.toString(phOverridingValue), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
 
         assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testKAnonSignJoinOnDeviceFlag() {
+        setFledgeAuctionServerEnabled(true);
+        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled())
+                .isEqualTo(FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED);
+
+        boolean phOverridingValue = !FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED;
+        overrideKAnonFlags(
+                Boolean.toString(phOverridingValue),
+                KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE);
+
+        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled())
+                .isEqualTo(phOverridingValue);
     }
 
     @Test
