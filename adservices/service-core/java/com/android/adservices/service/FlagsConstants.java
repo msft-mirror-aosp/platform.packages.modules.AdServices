@@ -1085,6 +1085,10 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED =
             "fledge_auction_server_api_usage_metrics_enabled";
 
+    // Fledge auction server key fetch metrics flag
+    public static final String KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED =
+            "fledge_auction_server_key_fetch_metrics_enabled";
+
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
 
