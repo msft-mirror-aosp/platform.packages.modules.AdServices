@@ -1148,7 +1148,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @SuppressWarnings("InlinedApi")
     public boolean getFledgeAdSelectionContextualAdsEnabled() {
         return getDeviceConfigFlag(
-                FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
+                FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED,
                 FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED);
     }
 
@@ -4400,7 +4400,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeFrequencyCapFilteringEnabled());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
+                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED
                         + " = "
                         + getFledgeAdSelectionContextualAdsEnabled());
         writer.println(

@@ -20,7 +20,9 @@ import static android.adservices.common.CommonFixture.INVALID_EMPTY_BUYER;
 import static android.adservices.utils.CustomAudienceTestFixture.AD_URI_PREFIX;
 
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
@@ -29,6 +31,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
+import static com.android.adservices.service.FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_FROM_OUTCOMES_USE_CASE;
@@ -143,11 +146,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiresSdkLevelAtLeastS
 @SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
-@SetFlagDisabled(FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE)
-@SetIntegerFlag(name = FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, value = 0)
+@SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
+@SetFlagDisabled(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE)
 @SetFlagDisabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_CPC_BILLING_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED)
+@SetIntegerFlag(name = KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, value = 0)
 @SetLongFlag(
         name = KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
         value = EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS)
@@ -1136,7 +1140,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
     @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testFledgeSelectionFlow_WithContextualAds_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
@@ -1251,7 +1255,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
     @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testFledgeSelectionFlow_OnlyContextualAds_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
@@ -1330,7 +1334,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
     @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testFledgeSelectionFlow_WithUnauthorizedContextualAds_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
