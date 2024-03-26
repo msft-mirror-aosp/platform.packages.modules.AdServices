@@ -5352,6 +5352,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableBackCompatInit() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_BACK_COMPAT_INIT, DEFAULT_ENABLE_BACK_COMPAT_INIT);
+    }
+
+    @Override
     public boolean getEnableAdServicesSystemApi() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API,

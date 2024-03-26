@@ -365,6 +365,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED", Flags::getJobSchedulingLoggingEnabled);
     }
 
+    @Test
+    public void testGetEnableBackCompatInit() {
+        testFeatureFlag(
+                "DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //

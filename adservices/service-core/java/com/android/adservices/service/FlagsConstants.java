@@ -1040,6 +1040,8 @@ public final class FlagsConstants {
 
     public static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
 
+    public static final String KEY_ENABLE_BACK_COMPAT_INIT = "enable_back_compat_init";
+
     public static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
 
     public static final String KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA =
