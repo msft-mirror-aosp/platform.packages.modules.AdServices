@@ -4733,6 +4733,27 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     String FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN = "fledge";
 
     /**
+     * Default boolean for the field determining whether to run background job when the device's
+     * battery is low.
+     */
+    boolean FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW = true;
+
+    /**
+     * Default boolean for the field determining whether to run background job when the device is
+     * not idle.
+     */
+    boolean FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE = true;
+
+    /**
+     * Default value for connection type required field for kanon background job. See {@link
+     * JobInfo#NETWORK_TYPE_UNMETERED}
+     */
+    int FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE = 2;
+
+    /** Default value for kanon http client connect timeout in milliseconds */
+    int FLEDGE_DEFAULT_KANON_HTTP_CLIENT_TIMEOUT_IN_MS = 5000;
+
+    /**
      * This is a feature flag for KAnon Sign/Join feature.
      *
      * @return {@code true} if the feature is enabled, otherwise returns {@code false}.
@@ -4879,6 +4900,35 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default String getFledgeKAnonUrlAuthorityToJoin() {
         return FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
+    }
+
+    /** This method returns the value for kanon http client connect timeout in milliseconds. */
+    default int getFledgeKanonHttpClientTimeoutInMs() {
+        return FLEDGE_DEFAULT_KANON_HTTP_CLIENT_TIMEOUT_IN_MS;
+    }
+
+    /**
+     * This method returns the boolean field determining whether to run background job when the
+     * device's battery is low.
+     */
+    default boolean getFledgeKAnonBackgroundJobRequiresBatteryNotLow() {
+        return FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
+    }
+
+    /**
+     * This method returns the boolean field determining whether to run background job when the
+     * device is not idle.
+     */
+    default boolean getFledgeKAnonBackgroundJobRequiresDeviceIdle() {
+        return FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
+    }
+
+    /**
+     * This method returns the value for connection type required field for kanon background job.
+     * See {@link JobInfo#NETWORK_TYPE_UNMETERED}
+     */
+    default int getFledgeKanonBackgroundJobConnectionType() {
+        return FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE;
     }
 
     /*
