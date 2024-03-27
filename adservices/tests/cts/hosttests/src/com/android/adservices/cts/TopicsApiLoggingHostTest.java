@@ -16,6 +16,7 @@
 
 package com.android.adservices.cts;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -87,7 +88,7 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
                     .setTopicsKillSwitch(false)
                     .setAdServicesEnabled(true)
                     .setMddBackgroundTaskKillSwitch(true)
-                    .setConsentManagerDebugMode(true)
+                    .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                     .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true);
 
     @Rule(order = 3)
