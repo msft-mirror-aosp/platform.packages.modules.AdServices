@@ -383,7 +383,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
             if (!permitted) {
                 invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
-                EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance(mContext);
+                EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance();
                 Integer buildId = enrollmentUtil.getBuildId();
                 Integer dataFileGroupStatus = enrollmentUtil.getFileGroupStatus();
                 enrollmentUtil.logEnrollmentFailedStats(

@@ -138,7 +138,7 @@ public class MddJobService extends JobService {
                             String mddTag = getMddTag(params);
                             LogUtil.d("MddJobService.onStartJob for " + mddTag);
 
-                            return MobileDataDownloadFactory.getMdd(this, FlagsFactory.getFlags())
+                            return MobileDataDownloadFactory.getMdd(FlagsFactory.getFlags())
                                     .handleTask(mddTag);
                         },
                         AdServicesExecutors.getBackgroundExecutor());
@@ -152,7 +152,7 @@ public class MddJobService extends JobService {
 
                         sBlockingExecutor.execute(
                                 () -> {
-                                    EnrollmentDataDownloadManager.getInstance(MddJobService.this)
+                                    EnrollmentDataDownloadManager.getInstance()
                                             .readAndInsertEnrollmentDataFromMdd();
 
                                     // Logging has to happen before jobFinished() is called. Due to

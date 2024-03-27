@@ -218,7 +218,7 @@ public class ModelManagerTest {
         // classification because downloaded model build id is bigger.
         ClientFileGroup clientFileGroup =
                 ClientFileGroup.newBuilder().setBuildId(CLIENT_FILE_GROUP_BUILD_ID).build();
-        doReturn(clientFileGroup).when(() -> ModelManager.getClientFileGroup(any(Context.class)));
+        doReturn(clientFileGroup).when(() -> ModelManager.getClientFileGroup());
 
         mProductionModelManager =
                 new ModelManager(
