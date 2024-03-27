@@ -195,7 +195,8 @@ public class GetAdSelectionDataRunner {
                         AuctionServerDataCompressorFactory.getDataCompressor(
                                 mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()),
                         mFlags.getFledgeAuctionServerOmitAdsEnabled(),
-                        auctionServerPayloadMetricsStrategy);
+                        auctionServerPayloadMetricsStrategy,
+                        mFlags);
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
@@ -281,7 +282,8 @@ public class GetAdSelectionDataRunner {
                         AuctionServerDataCompressorFactory.getDataCompressor(
                                 mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()),
                         mFlags.getFledgeAuctionServerOmitAdsEnabled(),
-                        auctionServerPayloadMetricsStrategy);
+                        auctionServerPayloadMetricsStrategy,
+                        mFlags);
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());

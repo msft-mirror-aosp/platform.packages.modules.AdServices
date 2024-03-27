@@ -17,6 +17,10 @@
 package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
@@ -48,18 +52,17 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JS_FETCH;
 import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_BUYER_INPUT_GENERATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_BACKGROUND_JOB_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INITIALIZE_STATUS_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
@@ -96,6 +99,7 @@ import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusSt
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -1669,6 +1673,10 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setTrustedBiddingSignalsKeysSizeVarianceB(26F)
                         .setUserBiddingSignalsSizeMeanB(27F)
                         .setUserBiddingSignalsSizeVarianceB(28F)
+                        .setNumEncodedSignals(29)
+                        .setEncodedSignalsSizeMean(30)
+                        .setEncodedSignalsSizeMax(31)
+                        .setEncodedSignalsSizeMin(32)
                         .build();
         doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
@@ -1688,10 +1696,39 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(26F),
                                 eq(27F),
                                 eq(28F),
-                                eq(0),
-                                eq(0),
-                                eq(0),
-                                eq(0));
+                                eq(29),
+                                eq(30),
+                                eq(31),
+                                eq(32));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogEncodingJsFetchStats_success() {
+        EncodingFetchStats stats =
+                EncodingFetchStats.builder()
+                        .setJsDownloadTime(SIZE_MEDIUM)
+                        .setHttpResponseCode(404)
+                        .setFetchStatus(ENCODING_FETCH_STATUS_SUCCESS)
+                        .setAdTechId("com.google.android")
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyString()));
+
+        // Invoke logging call.
+        mLogger.logEncodingJsFetchStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(ENCODING_JS_FETCH),
+                                eq(SIZE_MEDIUM),
+                                eq(404),
+                                eq(ENCODING_FETCH_STATUS_SUCCESS),
+                                eq("com.google.android"));
 
         verify(writeInvocation);
 

@@ -23,6 +23,7 @@ import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusSt
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
 
 /** No-op version of {@link AdServicesLogger}. */
 public class NoOpLoggerImpl implements AdServicesLogger {
@@ -193,4 +194,7 @@ public class NoOpLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logShellCommandStats(ShellCommandStats stats) {}
+
+    @Override
+    public void logEncodingJsFetchStats(EncodingFetchStats stats) {}
 }

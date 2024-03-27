@@ -56,18 +56,18 @@ public class AdsRelevanceStatusUtils {
     /** The status of Json processing is OTHER_ERROR. */
     public static final int JSON_PROCESSING_STATUS_OTHER_ERROR = 5;
 
-    /** The status of JavaScript fetch is UNSET. */
-    public static final int JS_FETCH_STATUS_UNSET = 0;
-    /** The status of JavaScript fetch is SUCCESS. */
-    public static final int JS_FETCH_STATUS_SUCCESS = 1;
-    /** The status of JavaScript fetch is TOO_BIG. */
-    public static final int JS_FETCH_STATUS_TOO_BIG = 2;
-    /** The status of JavaScript fetch is TIMEOUT. */
-    public static final int JS_FETCH_STATUS_TIMEOUT = 3;
-    /** The status of JavaScript fetch is NETWORK_FAILURE. */
-    public static final int JS_FETCH_STATUS_NETWORK_FAILURE = 4;
-    /** The status of JavaScript fetch is OTHER_FAILURE. */
-    public static final int JS_FETCH_STATUS_OTHER_FAILURE = 5;
+    /** The status of encoding fetch is UNSET. */
+    public static final int ENCODING_FETCH_STATUS_UNSET = 0;
+    /** The status of encoding fetch is SUCCESS. */
+    public static final int ENCODING_FETCH_STATUS_SUCCESS = 1;
+    /** The status of encoding fetch is TOO_BIG. */
+    public static final int ENCODING_FETCH_STATUS_TOO_BIG = 2;
+    /** The status of encoding fetch is TIMEOUT. */
+    public static final int ENCODING_FETCH_STATUS_TIMEOUT = 3;
+    /** The status of encoding fetch is NETWORK_FAILURE. */
+    public static final int ENCODING_FETCH_STATUS_NETWORK_FAILURE = 4;
+    /** The status of encoding fetch is OTHER_FAILURE. */
+    public static final int ENCODING_FETCH_STATUS_OTHER_FAILURE = 5;
 
     /** The status of JavaScript run is UNSET. */
     public static final int JS_RUN_STATUS_UNSET = 0;
@@ -138,19 +138,19 @@ public class AdsRelevanceStatusUtils {
     @Retention(RetentionPolicy.SOURCE)
     public @interface JsonProcessingStatus {}
 
-    /** The status of JavaScript fetch. */
+    /** The status of encoding fetch. */
     @IntDef(
-            prefix = {"JS_FETCH_STATUS_"},
+            prefix = {"ENCODING_FETCH_STATUS_"},
             value = {
-                    JS_FETCH_STATUS_UNSET,
-                    JS_FETCH_STATUS_SUCCESS,
-                    JS_FETCH_STATUS_TOO_BIG,
-                    JS_FETCH_STATUS_TIMEOUT,
-                    JS_FETCH_STATUS_NETWORK_FAILURE,
-                    JS_FETCH_STATUS_OTHER_FAILURE
+                    ENCODING_FETCH_STATUS_UNSET,
+                    ENCODING_FETCH_STATUS_SUCCESS,
+                    ENCODING_FETCH_STATUS_TOO_BIG,
+                    ENCODING_FETCH_STATUS_TIMEOUT,
+                    ENCODING_FETCH_STATUS_NETWORK_FAILURE,
+                    ENCODING_FETCH_STATUS_OTHER_FAILURE
             })
     @Retention(RetentionPolicy.SOURCE)
-    public @interface JsFetchStatus {}
+    public @interface EncodingFetchStatus {}
 
     /** The status of JavaScript Run. */
     @IntDef(
@@ -216,4 +216,22 @@ public class AdsRelevanceStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ServerAuctionCoordinatorSource {}
+
+    /** Returns the size bucket for download time. */
+    @Size
+    public static int getDownloadTimeInBucketSize(int downloadTime) {
+        if (downloadTime < 0) {
+            return SIZE_UNSET;
+        } else if (downloadTime <= 50) {
+            return SIZE_VERY_SMALL;
+        } else if (downloadTime <= 200) {
+            return SIZE_SMALL;
+        } else if (downloadTime <= 1000) {
+            return SIZE_MEDIUM;
+        } else if (downloadTime <= 2000) {
+            return SIZE_LARGE;
+        } else {
+            return SIZE_VERY_LARGE;
+        }
+    }
 }

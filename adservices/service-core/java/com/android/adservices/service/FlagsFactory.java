@@ -118,5 +118,10 @@ public class FlagsFactory {
         public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
             return true;
         }
+
+        @Override
+        public boolean getPasExtendedMetricsEnabled() {
+            return true;
+        }
     }
 }

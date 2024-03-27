@@ -36,11 +36,13 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
+import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
 
 import com.google.common.base.Strings;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -101,6 +103,71 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
                 buyerStats);
         verify(mAdServicesLoggerMock, times(2))
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+    }
+
+    @Test
+    public void testLogGetAdSelectionDataBuyerInputGeneratedStatsWithPasMetricsDoesLog() {
+        ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptor =
+                ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
+        Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> buyerStats = new HashMap<>();
+        BuyerInputGeneratorIntermediateStats stats1 = new BuyerInputGeneratorIntermediateStats();
+        stats1.incrementNumCustomAudiences();
+        BuyerInputGeneratorIntermediateStats stats2 = new BuyerInputGeneratorIntermediateStats();
+        stats2.incrementNumCustomAudiences();
+        buyerStats.put(AdTechIdentifier.fromString("hello"), stats1);
+        buyerStats.put(AdTechIdentifier.fromString("hello2"), stats2);
+
+        int encodedSignalsCount = 5;
+        int encodedSignalsTotalSizeInBytes = 11;
+        int encodedSignalsMaxSizeInBytes = 3;
+        int encodedSignalsMinSizeInBytes = 2;
+
+        mAuctionServerPayloadMetricsStrategy
+                .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+                        buyerStats,
+                        encodedSignalsCount,
+                        encodedSignalsTotalSizeInBytes,
+                        encodedSignalsMaxSizeInBytes,
+                        encodedSignalsMinSizeInBytes);
+        verify(mAdServicesLoggerMock, times(2))
+                .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getAllValues().get(0);
+        assertThat(stats.getNumEncodedSignals()).isEqualTo(encodedSignalsCount);
+        assertThat(stats.getEncodedSignalsSizeMean()).isEqualTo(
+                encodedSignalsTotalSizeInBytes/encodedSignalsCount);
+        assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(encodedSignalsMaxSizeInBytes);
+        assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(encodedSignalsMinSizeInBytes);
+    }
+
+    @Test
+    public void
+        testLogGetAdSelectionDataBuyerInputGeneratedStatsWithPasMetricsDoesLog_emptyBuyerStats() {
+        ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptor =
+                ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
+        Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> buyerStats = new HashMap<>();
+
+        int encodedSignalsCount = 5;
+        int encodedSignalsTotalSizeInBytes = 11;
+        int encodedSignalsMaxSizeInBytes = 3;
+        int encodedSignalsMinSizeInBytes = 2;
+
+        mAuctionServerPayloadMetricsStrategy
+                .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+                        buyerStats,
+                        encodedSignalsCount,
+                        encodedSignalsTotalSizeInBytes,
+                        encodedSignalsMaxSizeInBytes,
+                        encodedSignalsMinSizeInBytes);
+        verify(mAdServicesLoggerMock, times(1))
+                .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getNumEncodedSignals()).isEqualTo(encodedSignalsCount);
+        assertThat(stats.getEncodedSignalsSizeMean()).isEqualTo(
+                encodedSignalsTotalSizeInBytes/encodedSignalsCount);
+        assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(encodedSignalsMaxSizeInBytes);
+        assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(encodedSignalsMinSizeInBytes);
     }
 
     @Test
