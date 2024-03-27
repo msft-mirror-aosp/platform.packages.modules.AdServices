@@ -94,7 +94,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -455,7 +454,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
         expect.that(loggedStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
 
-        verify(() -> AppNameApiErrorLogger.getInstance(any(), any()));
         verify(mMockAppNameApiErrorLogger)
                 .logErrorOccurrence(
                         packageName, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, STATUS_SUCCESS);
@@ -859,7 +857,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     private void mockAppNameApiErrorLogger() {
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(true);
-        doReturn(mMockAppNameApiErrorLogger)
-                .when(() -> AppNameApiErrorLogger.getInstance(any(), any()));
+        doReturn(mMockAppNameApiErrorLogger).when(() -> AppNameApiErrorLogger.getInstance());
     }
 }
