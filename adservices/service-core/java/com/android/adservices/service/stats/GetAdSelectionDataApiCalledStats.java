@@ -16,7 +16,10 @@
 
 package com.android.adservices.service.stats;
 
+import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
+
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdsRelevanceStatusUtils;
 
 import com.google.auto.value.AutoValue;
 
@@ -33,9 +36,14 @@ public abstract class GetAdSelectionDataApiCalledStats {
     @AdServicesStatusUtils.StatusCode
     public abstract int getStatusCode();
 
+    /** Return the coordinator source in this payload, i.e., DEFAULT or provided via API */
+    @AdsRelevanceStatusUtils.ServerAuctionCoordinatorSource
+    public abstract int getServerAuctionCoordinatorSource();
+
     /** Returns a generic builder. */
     public static Builder builder() {
-        return new AutoValue_GetAdSelectionDataApiCalledStats.Builder();
+        return new AutoValue_GetAdSelectionDataApiCalledStats.Builder()
+                .setServerAuctionCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET);
     }
 
     /** Builder class for GetAdSelectionDataApiCalledStats. */
@@ -49,6 +57,10 @@ public abstract class GetAdSelectionDataApiCalledStats {
 
         /** Sets the status code. */
         public abstract Builder setStatusCode(@AdServicesStatusUtils.StatusCode int statusCode);
+
+        /** Sets the coordinator source in this payload, i.e., DEFAULT or provided via API. */
+        public abstract Builder setServerAuctionCoordinatorSource(
+                @AdsRelevanceStatusUtils.ServerAuctionCoordinatorSource int coordinatorSource);
 
         /** Builds the {@link GetAdSelectionDataApiCalledStats} object. */
         public abstract GetAdSelectionDataApiCalledStats build();
