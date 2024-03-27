@@ -70,8 +70,8 @@ public final class EncryptionDataDownloadManager {
     @VisibleForTesting
     EncryptionDataDownloadManager(Context context, Flags flags) {
         mContext = context.getApplicationContext();
-        mMobileDataDownload = MobileDataDownloadFactory.getMdd(context, flags);
-        mFileStorage = MobileDataDownloadFactory.getFileStorage(context);
+        mMobileDataDownload = MobileDataDownloadFactory.getMdd(flags);
+        mFileStorage = MobileDataDownloadFactory.getFileStorage();
     }
 
     /** Gets an instance of EncryptionDataDownloadManager to be used. */
