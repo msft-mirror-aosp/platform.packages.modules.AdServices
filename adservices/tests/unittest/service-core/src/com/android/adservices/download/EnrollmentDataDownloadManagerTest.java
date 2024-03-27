@@ -66,7 +66,6 @@ import org.mockito.Mock;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
@@ -81,10 +80,6 @@ public class EnrollmentDataDownloadManagerTest {
     @Mock private SynchronousFileStorage mMockFileStorage;
 
     @Mock private EnrollmentDao mMockEnrollmentDao;
-
-    @Mock private ClientFileGroup mMockFileGroup;
-
-    @Mock private ClientFile mMockFile;
 
     @Mock private MobileDataDownload mMockMdd;
     @Mock private AdServicesLogger mLogger;
@@ -136,11 +131,17 @@ public class EnrollmentDataDownloadManagerTest {
                 new EnrollmentDataDownloadManager(
                         sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
-        when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
-        when(mMockFileGroup.getFileList()).thenReturn(Collections.singletonList(mMockFile));
-        when(mMockFileGroup.getBuildId()).thenReturn(1L);
-        when(mMockFile.getFileId()).thenReturn("adtech_enrollment_data.csv");
-        when(mMockFile.getFileUri()).thenReturn("adtech_enrollment_data.csv");
+        when(mMockMdd.getFileGroup(any()))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                ClientFileGroup.newBuilder()
+                                        .addFile(
+                                                ClientFile.newBuilder()
+                                                        .setFileId("adtech_enrollment_data.csv")
+                                                        .setFileUri("adtech_enrollment_data.csv")
+                                                        .build())
+                                        .setBuildId(1)
+                                        .build()));
         when(mMockFlags.getEnrollmentMddRecordDeletionEnabled()).thenReturn(false);
         when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(false);
         when(mMockFlags.getEncryptionKeyNetworkConnectTimeoutMs())
@@ -215,9 +216,15 @@ public class EnrollmentDataDownloadManagerTest {
                 new EnrollmentDataDownloadManager(
                         sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
-        when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
-        when(mMockFileGroup.getFileList()).thenReturn(Collections.singletonList(mMockFile));
-        when(mMockFile.getFileId()).thenReturn("wrong_file_id.csv");
+        when(mMockMdd.getFileGroup(any()))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                ClientFileGroup.newBuilder()
+                                        .addFile(
+                                                ClientFile.newBuilder()
+                                                        .setFileId("wrong_file_id.csv")
+                                                        .build())
+                                        .build()));
 
         verifyEnrollmentDataDownloadStatus(
                 EnrollmentDataDownloadManager.DownloadStatus.NO_FILE_AVAILABLE);
@@ -241,8 +248,6 @@ public class EnrollmentDataDownloadManagerTest {
 
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(Futures.immediateFailedFuture(new CancellationException()));
-        when(mMockFileGroup.getFileList()).thenReturn(Collections.singletonList(mMockFile));
-        when(mMockFile.getFileId()).thenReturn("adtech_enrollment_data.csv");
 
         verifyEnrollmentDataDownloadStatus(
                 EnrollmentDataDownloadManager.DownloadStatus.NO_FILE_AVAILABLE);
@@ -267,10 +272,16 @@ public class EnrollmentDataDownloadManagerTest {
                 new EnrollmentDataDownloadManager(
                         sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
-        when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
-        when(mMockFileGroup.getFileList()).thenReturn(Collections.singletonList(mMockFile));
-        when(mMockFile.getFileId()).thenReturn("adtech_enrollment_data.csv");
-        when(mMockFile.getFileUri()).thenReturn("adtech_enrollment_data.csv");
+        when(mMockMdd.getFileGroup(any()))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                ClientFileGroup.newBuilder()
+                                        .addFile(
+                                                ClientFile.newBuilder()
+                                                        .setFileId("adtech_enrollment_data.csv")
+                                                        .setFileUri("adtech_enrollment_data.csv")
+                                                        .build())
+                                        .build()));
         when(mMockFlags.getEnrollmentMddRecordDeletionEnabled()).thenReturn(false);
 
         ArgumentCaptor<EnrollmentData> captor = ArgumentCaptor.forClass(EnrollmentData.class);
@@ -299,11 +310,17 @@ public class EnrollmentDataDownloadManagerTest {
                 new EnrollmentDataDownloadManager(
                         sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
-        when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
-        when(mMockFileGroup.getFileList()).thenReturn(Collections.singletonList(mMockFile));
-        when(mMockFileGroup.getBuildId()).thenReturn(1L);
-        when(mMockFile.getFileId()).thenReturn("adtech_enrollment_data.csv");
-        when(mMockFile.getFileUri()).thenReturn("adtech_enrollment_data.csv");
+        when(mMockMdd.getFileGroup(any()))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                ClientFileGroup.newBuilder()
+                                        .addFile(
+                                                ClientFile.newBuilder()
+                                                        .setFileId("adtech_enrollment_data.csv")
+                                                        .setFileUri("adtech_enrollment_data.csv")
+                                                        .build())
+                                        .setBuildId(1)
+                                        .build()));
         when(mMockFlags.getEnrollmentMddRecordDeletionEnabled()).thenReturn(true);
         when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(false);
         when(mMockFlags.getEncryptionKeyNetworkConnectTimeoutMs())
