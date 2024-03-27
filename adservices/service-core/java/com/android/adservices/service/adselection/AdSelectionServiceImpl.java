@@ -319,6 +319,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 AdSelectionDebugReportingDatabase.getInstance(context)
                         .getAdSelectionDebugReportDao(),
                 new AdIdFetcher(
+                        context,
                         AdIdWorker.getInstance(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler()),
@@ -758,7 +759,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         callingUid,
                         mShouldUseUnifiedTables,
                         mRetryStrategyFactory.createRetryStrategy(
-                                mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()));
+                                mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()),
+                        mKAnonSignJoinFactory);
         runner.runAdSelection(inputParams, partialCallback, devContext, fullCallback);
     }
 

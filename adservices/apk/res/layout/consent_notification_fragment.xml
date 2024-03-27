@@ -33,9 +33,9 @@
         app:layout_constraintStart_toStartOf="parent" >
         <LinearLayout
             android:layout_height="wrap_content"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:paddingBottom="24dp"
+            android:paddingStart="@dimen/adservices_content_horizontal_padding"
+            android:paddingEnd="@dimen/adservices_content_horizontal_padding"
+            android:paddingBottom="@dimen/adservices_content_padding"
             android:orientation="vertical"
             android:layout_gravity="center_horizontal"
             style="@style/NotificationContainer">
@@ -64,7 +64,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:padding="24dp"
+                android:padding="@dimen/adservices_content_padding"
                 android:background="@drawable/ic_rounded_background"
                 android:orientation="vertical"
                 android:animateLayoutChanges="true">
@@ -75,7 +75,7 @@
                     style="@style/MainStyle.H4"
                     android:gravity="center_vertical"
                     android:drawableStart="@drawable/ic_notification_icon_1"
-                    android:drawablePadding="24dp"/>
+                    android:drawablePadding="@dimen/adservices_content_padding"/>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -128,7 +128,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:padding="24dp"
+                android:padding="@dimen/adservices_content_padding"
                 android:background="@drawable/ic_rounded_background"
                 android:orientation="vertical">
                 <TextView
@@ -138,7 +138,7 @@
                     style="@style/MainStyle.H4"
                     android:gravity="center_vertical"
                     android:drawableStart="@drawable/ic_notification_icon_2"
-                    android:drawablePadding="24dp"/>
+                    android:drawablePadding="@dimen/adservices_content_padding"/>
                 <TextView
                     android:layout_marginTop="12dp"
                     android:text="@string/notificationUI_container2_body_text"

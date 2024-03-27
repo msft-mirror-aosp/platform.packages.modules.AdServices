@@ -161,10 +161,12 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
                 new JobInfo.Builder(
                                 FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId(),
                                 new ComponentName(context, KAnonSignJoinBackgroundJobService.class))
-                        .setRequiresBatteryNotLow(true)
-                        .setRequiresDeviceIdle(true)
+                        .setRequiresBatteryNotLow(
+                                flags.getFledgeKAnonBackgroundJobRequiresBatteryNotLow())
+                        .setRequiresDeviceIdle(
+                                flags.getFledgeKAnonBackgroundJobRequiresDeviceIdle())
                         .setPeriodic(flags.getFledgeKAnonBackgroundProcessTimePeriodInMs())
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                        .setRequiredNetworkType(flags.getFledgeKanonBackgroundJobConnectionType())
                         .setPersisted(true)
                         .build();
         jobScheduler.schedule(job);

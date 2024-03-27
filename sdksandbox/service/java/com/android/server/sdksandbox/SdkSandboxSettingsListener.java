@@ -285,7 +285,7 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
         }
     }
 
-    public void setKillSwitchState(boolean enabled) {
+    void setKillSwitchState(boolean enabled) {
         synchronized (mLock) {
             DeviceConfig.setProperty(
                     DeviceConfig.NAMESPACE_ADSERVICES,
