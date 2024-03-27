@@ -18,6 +18,7 @@ package com.android.adservices.service;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesFlag;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
+import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
@@ -25,6 +26,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.FlagsTest.getConstantValue;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -105,10 +107,18 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetTopicsEpochJobFlexMs() {
-        mFlagsTestHelper.testUnguardedFlag(
+        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
                 KEY_TOPICS_EPOCH_JOB_FLEX_MS,
                 TOPICS_EPOCH_JOB_FLEX_MS,
                 flags -> flags.getTopicsEpochJobFlexMs());
+    }
+
+    @Test
+    public void testGetTopicsPercentageForRandomTopic() {
+        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                flags -> flags.getTopicsPercentageForRandomTopic());
     }
 
     @Test
