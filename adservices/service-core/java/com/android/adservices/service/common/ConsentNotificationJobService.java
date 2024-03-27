@@ -211,7 +211,7 @@ public class ConsentNotificationJobService extends JobService {
         }
 
         LogUtil.d("ConsentNotificationJobService.onStartJob");
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
 
         if (mConsentManager == null) {
             setConsentManager(ConsentManager.getInstance());
@@ -265,8 +265,7 @@ public class ConsentNotificationJobService extends JobService {
                                 }
                             } finally {
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                ConsentNotificationJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 CONSENT_NOTIFICATION_JOB_ID,
                                                 /* isSuccessful= */ true,
@@ -284,7 +283,7 @@ public class ConsentNotificationJobService extends JobService {
 
         boolean shouldRetry = true;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, CONSENT_NOTIFICATION_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -298,7 +297,7 @@ public class ConsentNotificationJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(CONSENT_NOTIFICATION_JOB_ID, skipReason);
         }
 
