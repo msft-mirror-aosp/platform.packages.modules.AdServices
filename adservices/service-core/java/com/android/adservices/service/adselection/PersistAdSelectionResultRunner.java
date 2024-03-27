@@ -57,6 +57,7 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonMessageEntity;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.kanon.KAnonSignJoinManager;
+import com.android.adservices.service.kanon.KAnonUtil;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
@@ -78,11 +79,8 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -280,14 +278,15 @@ public class PersistAdSelectionResultRunner {
     }
 
     private void makeKAnonSignJoin(AuctionResult auctionResult, long adSelectionId) {
-        if (mFlags.getFledgeKAnonSignJoinFeatureEnabled()) {
+        if (mFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled()) {
             ListenableFuture<Void> signJoinFuture =
                     Futures.submitAsync(
                             () -> {
                                 try {
+
                                     List<KAnonMessageEntity> messageEntities =
-                                            getKAnonEntitiesFromAuctionResult(
-                                                    auctionResult, adSelectionId);
+                                            KAnonUtil.getKAnonEntitiesFromAuctionResult(
+                                                    auctionResult.getAdRenderUrl(), adSelectionId);
                                     KAnonSignJoinManager kAnonSignJoinManager =
                                             mKAnonSignJoinFactory.getKAnonSignJoinManager();
                                     kAnonSignJoinManager.processNewMessages(messageEntities);
@@ -377,22 +376,6 @@ public class PersistAdSelectionResultRunner {
         return winningAd;
     }
 
-    private List<KAnonMessageEntity> getKAnonEntitiesFromAuctionResult(
-            AuctionResult auctionResult, long adSelectionId) throws NoSuchAlgorithmException {
-        MessageDigest md = MessageDigest.getInstance(SHA256);
-        String adRenderUrl = auctionResult.getAdRenderUrl();
-        byte[] digestedBytes = md.digest(adRenderUrl.getBytes(StandardCharsets.UTF_8));
-        KAnonMessageEntity kAnonMessageEntity =
-                KAnonMessageEntity.builder()
-                        .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
-                        .setAdSelectionId(adSelectionId)
-                        .setHashSet(
-                                Base64.getUrlEncoder()
-                                        .withoutPadding()
-                                        .encodeToString(digestedBytes))
-                        .build();
-        return List.of(kAnonMessageEntity);
-    }
 
     @NonNull
     private DBAdData fetchRemarketingAd(AuctionResult auctionResult) {

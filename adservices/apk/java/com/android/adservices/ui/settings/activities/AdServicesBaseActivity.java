@@ -48,7 +48,8 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
         Context context = getApplicationContext();
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
-        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()
+                || FlagsFactory.getFlags().getUiOtaResourcesFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context, false);
         }
         if (isUxStatesReady(this)) {

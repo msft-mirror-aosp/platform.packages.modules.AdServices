@@ -402,7 +402,11 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         .getAdSelectionDebugReportDao();
         mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mSpyContext));
         mAdIdFetcher =
-                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                new AdIdFetcher(
+                        mSpyContext,
+                        mMockAdIdWorker,
+                        mLightweightExecutorService,
+                        mScheduledExecutor);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
         mConsentedDebugConfigurationDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
@@ -4595,7 +4599,11 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags);
         mAdIdFetcher =
-                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                new AdIdFetcher(
+                        mSpyContext,
+                        mMockAdIdWorker,
+                        mLightweightExecutorService,
+                        mScheduledExecutor);
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
                 new AdSelectionServiceImpl(

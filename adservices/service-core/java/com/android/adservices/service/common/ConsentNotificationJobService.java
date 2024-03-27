@@ -247,8 +247,10 @@ public class ConsentNotificationJobService extends JobService {
                                     return;
                                 }
 
-                                if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
-                                    handleOtaStrings(
+                                if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()
+                                        || FlagsFactory.getFlags()
+                                                .getUiOtaResourcesFeatureEnabled()) {
+                                    handleOtaResources(
                                             params.getExtras()
                                                     .getLong(
                                                             FIRST_ENTRY_REQUEST_TIMESTAMP,
@@ -308,17 +310,17 @@ public class ConsentNotificationJobService extends JobService {
         return false;
     }
 
-    private void handleOtaStrings(long firstEntryRequestTimestamp, boolean isEeaNotification) {
+    private void handleOtaResources(long firstEntryRequestTimestamp, boolean isEeaNotification) {
         if (System.currentTimeMillis() - firstEntryRequestTimestamp
                 >= FlagsFactory.getFlags().getUiOtaStringsDownloadDeadline()) {
-            LogUtil.d("Passed OTA strings download deadline, sending" + " notification now.");
+            LogUtil.d("Passed OTA resources download deadline, sending" + " notification now.");
             AdServicesSyncUtil.getInstance().execute(this, isEeaNotification);
         } else {
-            sendNotificationIfOtaStringsDownloadCompleted(isEeaNotification);
+            sendNotificationIfOtaResourcesDownloadCompleted(isEeaNotification);
         }
     }
 
-    private void sendNotificationIfOtaStringsDownloadCompleted(boolean isEeaNotification) {
+    private void sendNotificationIfOtaResourcesDownloadCompleted(boolean isEeaNotification) {
         try {
             ClientFileGroup cfg =
                     MobileDataDownloadFactory.getMdd(this, FlagsFactory.getFlags())
@@ -330,7 +332,7 @@ public class ConsentNotificationJobService extends JobService {
                                             .build())
                             .get();
             if (cfg != null && cfg.getStatus() == ClientFileGroup.Status.DOWNLOADED) {
-                LogUtil.d("finished downloading OTA strings." + " Sending notification now.");
+                LogUtil.d("finished downloading OTA resources." + " Sending notification now.");
                 AdServicesSyncUtil.getInstance().execute(this, isEeaNotification);
                 return;
             }
@@ -341,7 +343,7 @@ public class ConsentNotificationJobService extends JobService {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
-        LogUtil.d("OTA strings are not yet downloaded.");
+        LogUtil.d("OTA resources are not yet downloaded.");
         return;
     }
 }

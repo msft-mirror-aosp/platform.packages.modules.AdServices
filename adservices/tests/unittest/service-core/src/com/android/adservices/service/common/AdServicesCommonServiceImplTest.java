@@ -61,9 +61,11 @@ import android.telephony.TelephonyManager;
 
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
 import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -75,21 +77,25 @@ import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.util.concurrent.CountDownLatch;
 
-public class AdServicesCommonServiceImplTest {
+@SpyStatic(ConsentNotificationJobService.class)
+@SpyStatic(ConsentManager.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(BackgroundJobsManager.class)
+@SpyStatic(PermissionHelper.class)
+@SpyStatic(UxStatesManager.class)
+@SpyStatic(PackageManagerCompatUtils.class)
+public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTestCase {
     private static final String UNUSED_AD_ID = "unused_ad_id";
 
     private AdServicesCommonServiceImpl mCommonService;
@@ -111,7 +117,6 @@ public class AdServicesCommonServiceImplTest {
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
-    private MockitoSession mStaticMockSession = null;
     private NoFailureSyncCallback<ApiCallStats> mLogApiCallStatsCallback;
 
     private final AdServicesLogger mAdServicesLogger =
@@ -119,18 +124,6 @@ public class AdServicesCommonServiceImplTest {
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(ConsentNotificationJobService.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(BackgroundJobsManager.class)
-                        .spyStatic(PermissionHelper.class)
-                        .spyStatic(UxStatesManager.class)
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
         mCommonService =
                 new AdServicesCommonServiceImpl(
                         mContext,
@@ -141,9 +134,13 @@ public class AdServicesCommonServiceImplTest {
                         mAdServicesLogger,
                         mClock);
         mLogApiCallStatsCallback = mockLogApiCallStats(mAdServicesLogger);
+        extendedMockito.mockGetFlags(mFlags);
         doReturn(true).when(mFlags).getAdServicesEnabled();
+
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
+
+
         ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
         doNothing()
                 .when(
@@ -160,6 +157,7 @@ public class AdServicesCommonServiceImplTest {
         doReturn(true).when(mEditor).commit();
         doReturn(true).when(mSharedPreferences).contains(anyString());
 
+
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
         // Set device to EU
@@ -169,13 +167,6 @@ public class AdServicesCommonServiceImplTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
         doReturn(true).when(mUxStatesManager).isEnrolledUser(mContext);
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     // For the old entry point logic, we only check the UX flag and user enrollment is irrelevant.

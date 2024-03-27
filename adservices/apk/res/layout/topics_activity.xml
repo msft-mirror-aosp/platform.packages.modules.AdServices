@@ -33,18 +33,18 @@
             <View
                 android:id="@+id/adservices_ppapi_title_spacing"
                 android:visibility="@integer/adservices_ppapi_title_spacing"
-                android:layout_height="18dp"
+                android:layout_height="@dimen/adservices_ppapi_title_spacing_height"
                 android:layout_width="match_parent"/>
             <TextView
                 android:id="@+id/topics_introduction"
-                android:paddingHorizontal="24dp"
+                android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                 android:text="@string/settingsUI_topics_view_subtitle"
                 style="@style/MainStyle.Body2" />
 
             <TextView
                 android:id="@+id/topics_ga_introduction"
                 android:layout_marginTop="18dp"
-                android:paddingHorizontal="24dp"
+                android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                 android:text="@string/settingsUI_topics_view_ga_subtitle"
                 style="@style/MainStyle.Body2"
                 android:visibility="gone"/>
@@ -60,7 +60,7 @@
                 android:id="@+id/no_topics_message"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="48dp"
+                android:layout_marginTop="@dimen/adservices_empty_list_margin_top"
                 android:layout_marginBottom="16dp"
                 android:gravity="center"
                 android:focusable="false"
@@ -77,8 +77,8 @@
                     android:id="@+id/no_topics_state"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="48dp"
-                    android:paddingHorizontal="24dp"
+                    android:layout_marginTop="@dimen/adservices_empty_list_margin_top"
+                    android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                     android:gravity="center"
                     android:text="@string/settingsUI_topics_view_no_topics_text"
                     android:textAppearance="@style/TextAppearance.Body2.Bold" />
@@ -96,20 +96,20 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:clipToPadding="false"
-                android:paddingHorizontal="24dp"
+                android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                 android:scrollbars="none" />
             <LinearLayout
                 android:id="@+id/empty_topics_hidden_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="24dp" >
+                android:paddingBottom="@dimen/adservices_content_padding" >
                 <LinearLayout
                     android:id="@+id/blocked_topics_button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="24dp"
+                    android:padding="@dimen/adservices_content_padding"
                     android:background="?android:attr/selectableItemBackground" >
                     <TextView
                         android:id="@+id/blocked_topics_button_child"
@@ -126,7 +126,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="24dp"
+                    android:padding="@dimen/adservices_content_padding"
                     android:background="?android:attr/selectableItemBackground" >
                     <TextView
                         android:id="@+id/reset_topics_button_child"
@@ -143,13 +143,13 @@
                     android:id="@+id/topics_view_footer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingHorizontal="24dp"
+                    android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                     android:paddingBottom="48dp"
                     android:orientation="vertical">
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
+                        android:layout_marginTop="@dimen/adservices_content_padding"
                         android:layout_marginStart="2dp"
                         android:src="@drawable/ic_info_icon"
                         tools:ignore="ContentDescription" />
@@ -166,7 +166,7 @@
                     android:id="@+id/topics_view_ga_footer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingHorizontal="24dp"
+                    android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                     android:paddingBottom="48dp"
                     android:orientation="vertical"
                     android:visibility="gone">
@@ -174,7 +174,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:layout_marginBottom="18dp"
+                        android:layout_marginBottom="@dimen/adservices_footer_content_padding"
                         android:src="@drawable/ic_info_icon"
                         tools:ignore="ContentDescription" />
                     <TextView

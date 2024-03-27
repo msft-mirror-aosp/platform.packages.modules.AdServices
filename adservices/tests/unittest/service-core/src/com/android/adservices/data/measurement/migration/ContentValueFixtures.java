@@ -222,6 +222,9 @@ public class ContentValueFixtures {
         // Added in V32
         public static final String AGGREGATABLE_SOURCE_REGISTRATION_TIME =
                 Trigger.SourceRegistrationTimeConfig.INCLUDE.name();
+
+        // Added in V33
+        public static final String TRIGGER_CONTEXT_ID = "sample_trigger_context_id";
     }
 
     public static class AttributionValues {
@@ -309,6 +312,9 @@ public class ContentValueFixtures {
 
         // Added in V27
         public static final int IS_FAKE_REPORT = 0;
+
+        // Added in V33
+        public static final String TRIGGER_CONTEXT_ID = "trigger_context_id";
     }
 
     public static class AggregateEncryptionKeyValues {
@@ -765,6 +771,10 @@ public class ContentValueFixtures {
                 SourceValues.TRIGGER_DATA_MATCHING);
         return values;
     }
+    /** Returns content values for source version 32 */
+    public static ContentValues generateSourceContentValuesV32() {
+        return generateSourceContentValuesV30();
+    }
 
     public static ContentValues generateSourceDestinationContentValuesV9() {
         ContentValues sourceDestination = new ContentValues();
@@ -981,10 +991,20 @@ public class ContentValueFixtures {
 
     /** Get ContentValues for V32 */
     public static ContentValues generateTriggerContentValuesV32() {
-        ContentValues values = generateTriggerContentValuesV20();
+        ContentValues values = generateTriggerContentValuesV31();
         values.put(
                 MeasurementTables.TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG,
                 TriggerValues.AGGREGATABLE_SOURCE_REGISTRATION_TIME);
+
+        return values;
+    }
+
+    /** Get ContentValues for V33 */
+    public static ContentValues generateTriggerContentValuesV33() {
+        ContentValues values = generateTriggerContentValuesV32();
+        values.put(
+                MeasurementTables.TriggerContract.TRIGGER_CONTEXT_ID,
+                TriggerValues.TRIGGER_CONTEXT_ID);
 
         return values;
     }
@@ -1418,6 +1438,21 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.AggregateReport.IS_FAKE_REPORT,
                 AggregateReportValues.IS_FAKE_REPORT);
+        return values;
+    }
+
+    /** Returns content values for aggregate report version 32 */
+    public static ContentValues generateAggregateReportContentValuesV32() {
+        ContentValues values = generateAggregateReportContentValuesV27();
+        return values;
+    }
+
+    /** Returns content values for aggregate report version 33 */
+    public static ContentValues generateAggregateReportContentValuesV33() {
+        ContentValues values = generateAggregateReportContentValuesV32();
+        values.put(
+                MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
+                AggregateReportValues.TRIGGER_CONTEXT_ID);
         return values;
     }
 

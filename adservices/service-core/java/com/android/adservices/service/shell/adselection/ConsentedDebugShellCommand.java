@@ -81,7 +81,7 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
                     + ConsentedDebugEnableArgs.SECRET_DEBUG_TOKEN_ARG_NAME
                     + " <min 6 character length token>"
                     + " "
-                    + ConsentedDebugEnableArgs.EXPIRY_IN_DAYS_ARG_NAME
+                    + ConsentedDebugEnableArgs.EXPIRY_IN_HOURS_ARG_NAME
                     + " <optional param to set expiry in days>";
 
     @VisibleForTesting

@@ -333,6 +333,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetFledgeAuctionServerKeyFetchMetricsEnabled() {
+        testFeatureFlag(
+                "FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED",
+                flags -> flags.getFledgeAuctionServerKeyFetchMetricsEnabled());
+    }
+
+    @Test
     public void testGetSpeOnPilotJobsEnabled() {
         testFeatureFlag(
                 "DEFAULT_SPE_ON_PILOT_JOBS_ENABLED", flags -> flags.getSpeOnPilotJobsEnabled());

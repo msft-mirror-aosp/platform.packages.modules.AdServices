@@ -90,14 +90,13 @@ public final class ShellCommandActivity extends Activity {
             finishSelf();
             return;
         }
+        AdServicesShellCommandHandler handler =
+                new AdServicesShellCommandHandler(
+                        mPrintWriter, new AdservicesShellCommandFactorySupplier());
         var unused =
                 mExecutorService.submit(
                         () -> {
-                            int res =
-                                    new AdServicesShellCommandHandler(
-                                                    mPrintWriter,
-                                                    new AdservicesShellCommandFactorySupplier())
-                                            .run(args);
+                            int res = handler.run(args);
                             Log.d(TAG, "Shell command completed with status: " + res);
                             mLatch.countDown();
                         });

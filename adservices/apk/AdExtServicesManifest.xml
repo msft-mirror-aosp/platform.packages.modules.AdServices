@@ -219,7 +219,6 @@
         <activity
             android:name="com.android.adservices.shell.ShellCommandActivity"
             android:exported="true"
-            android:enabled="false"
             android:theme="@style/Theme.SubSettingsBase"
             android:process=".adservices">
             <intent-filter android:priority="1">

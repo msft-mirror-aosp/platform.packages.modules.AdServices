@@ -1,4 +1,14 @@
 <resources>
   <dimen name="disabled_button_alpha" format="float">0.3</dimen>
   <dimen name="enabled_button_alpha" format="float">1.0</dimen>
+
+  <!-- Content -->
+  <dimen name="adservices_content_padding">24dp</dimen>
+  <dimen name="adservices_footer_content_padding">18dp</dimen>
+  <dimen name="adservices_content_horizontal_padding">24dp</dimen>
+  <dimen name="adservices_empty_list_margin_top">48dp</dimen>
+  <dimen name="adservices_ppapi_title_spacing_height">18dp</dimen>
+
+  <!-- Widgets -->
+  <dimen name="measurement_switch_bar_spacing_height">18dp</dimen>
 </resources>

@@ -34,16 +34,16 @@
             <View
                 android:id="@+id/adservices_ppapi_title_spacing"
                 android:visibility="@integer/adservices_ppapi_title_spacing"
-                android:layout_height="18dp"
+                android:layout_height="@dimen/adservices_ppapi_title_spacing_height"
                 android:layout_width="match_parent"/>
             <TextView
-                android:paddingHorizontal="24dp"
+                android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                 android:text="@string/settingsUI_measurement_view_intro_text"
                 style="@style/MainStyle.Body2" />
             <View
                 android:id="@+id/measurement_switch_bar_spacing"
                 android:visibility="@integer/measurement_switch_bar_spacing"
-                android:layout_height="18dp"
+                android:layout_height="@dimen/measurement_switch_bar_spacing_height"
                 android:layout_width="match_parent"/>
 
             <com.android.settingslib.widget.MainSwitchBar
@@ -58,7 +58,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
-                android:padding="24dp"
+                android:padding="@dimen/adservices_content_padding"
                 android:background="?android:attr/selectableItemBackground" >
                 <TextView
                     android:layout_width="wrap_content"
@@ -74,7 +74,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="24dp"
+                android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                 android:paddingBottom="48dp"
                 android:focusable="false"
                 android:orientation="vertical">
@@ -82,7 +82,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:layout_marginBottom="18dp"
+                    android:layout_marginBottom="@dimen/adservices_footer_content_padding"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />
                 <TextView

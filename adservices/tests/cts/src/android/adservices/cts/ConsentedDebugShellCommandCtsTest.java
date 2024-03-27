@@ -44,7 +44,7 @@ public class ConsentedDebugShellCommandCtsTest extends AdServicesCtsTestCase {
     private static final String SHELL_COMMAND_PREFIX =
             "cmd adservices_manager ad_selection consented_debug ";
     private static final String ENABLE_SHELL_COMMAND_TEMPLATE =
-            SHELL_COMMAND_PREFIX + "enable --secret_debug_token %s --expires_in_days %d";
+            SHELL_COMMAND_PREFIX + "enable --secret_debug_token %s --expires_in_hours %d";
     private static final String DISABLE_SHELL_COMMAND_TEMPLATE = SHELL_COMMAND_PREFIX + "disable";
     private static final String VIEW_SHELL_COMMAND_TEMPLATE = SHELL_COMMAND_PREFIX + "view";
 
@@ -64,8 +64,12 @@ public class ConsentedDebugShellCommandCtsTest extends AdServicesCtsTestCase {
     @Test
     public void testRun_consentedDebug_happyPath() {
         String debugToken = UUID.randomUUID().toString();
-        Log.d(TAG, "running cmd: " + String.format(ENABLE_SHELL_COMMAND_TEMPLATE, debugToken, 2));
-        ShellUtils.runShellCommand(ENABLE_SHELL_COMMAND_TEMPLATE, debugToken, 2);
+        int expiryInHours = 48;
+        Log.d(
+                TAG,
+                "running cmd: "
+                        + String.format(ENABLE_SHELL_COMMAND_TEMPLATE, debugToken, expiryInHours));
+        ShellUtils.runShellCommand(ENABLE_SHELL_COMMAND_TEMPLATE, debugToken, expiryInHours);
         Log.d(TAG, "running cmd: " + String.format(VIEW_SHELL_COMMAND_TEMPLATE));
         String viewBeforeDisableResponse = ShellUtils.runShellCommand(VIEW_SHELL_COMMAND_TEMPLATE);
         Log.d(TAG, "viewBeforeDisableResponse: " + viewBeforeDisableResponse);

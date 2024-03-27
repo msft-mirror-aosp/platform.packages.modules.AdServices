@@ -103,7 +103,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
         mDevice.waitForIdle();
 
         // start renotify notice
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ false, mDevice);
+        NotificationActivityTestUtil.startRenotifyPasActivity(/* isEuActivity= */ false, mDevice);
 
         UiObject2 pasNotificationHeader =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_pas_renotify_header_title);

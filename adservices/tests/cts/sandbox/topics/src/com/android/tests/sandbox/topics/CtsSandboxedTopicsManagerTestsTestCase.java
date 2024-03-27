@@ -34,6 +34,6 @@ abstract class CtsSandboxedTopicsManagerTestsTestCase extends AdServicesCtsTestC
                 // the test could fail if some other test set these properties(and didn't properly
                 // reset them)
                 .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
-                .setSystemProperty(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true);
+                .setFlag(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true);
     }
 }

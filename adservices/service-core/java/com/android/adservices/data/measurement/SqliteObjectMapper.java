@@ -305,6 +305,11 @@ public class SqliteObjectMapper {
                 (enumValue) ->
                         builder.setAggregatableSourceRegistrationTimeConfig(
                                 Trigger.SourceRegistrationTimeConfig.valueOf(enumValue)));
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.TRIGGER_CONTEXT_ID,
+                builder::setTriggerContextId);
+
         return builder.build();
     }
 
@@ -360,6 +365,10 @@ public class SqliteObjectMapper {
                 builder::setAggregationCoordinatorOrigin);
         setBooleanColumn(
                 cursor, MeasurementTables.AggregateReport.IS_FAKE_REPORT, builder::setIsFakeReport);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
+                builder::setTriggerContextId);
         return builder.build();
     }
 

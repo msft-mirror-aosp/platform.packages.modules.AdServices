@@ -16,6 +16,8 @@
 
 package com.android.adservices.cts;
 
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertNotNull;
@@ -87,7 +89,7 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
                     .setAdServicesEnabled(true)
                     .setMddBackgroundTaskKillSwitch(true)
                     .setConsentManagerDebugMode(true)
-                    .setDisableTopicsEnrollmentCheckForTests(true);
+                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true);
 
     @Rule(order = 3)
     public TestMetrics mMetrics = new TestMetrics();

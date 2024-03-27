@@ -16,6 +16,7 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.DeviceSideDeviceConfigHelper.callWithDeviceConfigPermissions;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
@@ -29,6 +30,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
 import android.os.Build;
 
@@ -110,9 +112,9 @@ public final class AdServicesFlagsSetterRule
                 .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
                 .setTopicsKillSwitch(false)
                 .setConsentManagerDebugMode(true)
-                .setDisableTopicsEnrollmentCheckForTests(true)
+                .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                 .setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, epochPeriodMs)
-                .setTopicsPercentageForRandomTopicForTests(pctRandomTopic)
+                .setFlag(KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, pctRandomTopic)
                 .setCompatModeFlags();
     }
 

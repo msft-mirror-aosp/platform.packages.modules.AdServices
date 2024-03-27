@@ -16,6 +16,8 @@
 
 package android.adservices.test.scenario.adservices.topics;
 
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
+
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.content.Context;
@@ -57,7 +59,7 @@ public class GetTopicsApiCall {
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setTopicsKillSwitch(false)
                     .setConsentManagerDebugMode(true)
-                    .setDisableTopicsEnrollmentCheckForTests(true)
+                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                     .setCompatModeFlags();
 
     private void measureGetTopics(String label) throws Exception {

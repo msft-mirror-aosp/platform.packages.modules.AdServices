@@ -85,6 +85,7 @@ public class MobileDataDownloadFactory {
     private static final String TOPICS_MANIFEST_ID = "TopicsManifestId";
     private static final String MEASUREMENT_MANIFEST_ID = "MeasurementManifestId";
     private static final String UI_OTA_STRINGS_MANIFEST_ID = "UiOtaStringsManifestId";
+    private static final String UI_OTA_RESOURCES_MANIFEST_ID = "UiOtaResourcesManifestId";
 
     private static final int MAX_ADB_LOGCAT_SIZE = 4000;
 
@@ -130,7 +131,7 @@ public class MobileDataDownloadFactory {
                                         getMeasurementManifestPopulator(
                                                 context, flags, fileStorage, fileDownloader))
                                 .addFileGroupPopulator(
-                                        getUiOtaStringsManifestPopulator(
+                                        getUiOtaResourcesManifestPopulator(
                                                 context, flags, fileStorage, fileDownloader))
                                 .setLoggerOptional(getMddLogger(flags))
                                 .setFlagsOptional(Optional.of(MddFlags.getInstance()))
@@ -317,7 +318,7 @@ public class MobileDataDownloadFactory {
 
     @NonNull
     @VisibleForTesting
-    static ManifestFileGroupPopulator getUiOtaStringsManifestPopulator(
+    static ManifestFileGroupPopulator getUiOtaResourcesManifestPopulator(
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull SynchronousFileStorage fileStorage,
@@ -325,8 +326,14 @@ public class MobileDataDownloadFactory {
 
         ManifestFileFlag manifestFileFlag =
                 ManifestFileFlag.newBuilder()
-                        .setManifestId(UI_OTA_STRINGS_MANIFEST_ID)
-                        .setManifestFileUrl(flags.getUiOtaStringsManifestFileUrl())
+                        .setManifestId(
+                                flags.getUiOtaResourcesFeatureEnabled()
+                                        ? UI_OTA_RESOURCES_MANIFEST_ID
+                                        : UI_OTA_STRINGS_MANIFEST_ID)
+                        .setManifestFileUrl(
+                                flags.getUiOtaResourcesFeatureEnabled()
+                                        ? flags.getUiOtaResourcesManifestFileUrl()
+                                        : flags.getUiOtaStringsManifestFileUrl())
                         .build();
 
         ManifestConfigFileParser manifestConfigFileParser =

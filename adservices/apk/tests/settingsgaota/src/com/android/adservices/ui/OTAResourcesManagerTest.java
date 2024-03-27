@@ -155,7 +155,7 @@ public class OTAResourcesManagerTest {
     }
 
     /**
-     * * Verify that MDD downloads an empty client file group, getDownloadedFiles returns a empty
+     * * Verify that MDD downloads an empty client file group, getDownloadedFiles returns an empty
      * map.
      */
     @Test
@@ -223,11 +223,11 @@ public class OTAResourcesManagerTest {
     }
 
     /**
-     * * Verify that when a valid file group but (non-asrc) was downloaded, * file descriptor was
+     * * Verify that when a valid file group but (non-ota) was downloaded, * file descriptor was
      * never used.
      */
     @Test
-    public void testRefreshOTAResources_nonArscClientFileGroup() throws Exception {
+    public void testRefreshOTAResources_nonOTAClientFileGroup() throws Exception {
         ClientFile testCf = ClientFile.newBuilder().setFileId("testFileId1").build();
 
         ClientFileGroup testCfg =
@@ -283,10 +283,13 @@ public class OTAResourcesManagerTest {
      * providers, file descriptor was never closed.
      */
     @Test
-    public void testRefreshOTAResources_nullResource() throws Exception {
+    public void testRefreshOTAResources_nullResourceArsc() throws Exception {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ClientFile testCf =
-                ClientFile.newBuilder().setFileId("resources.arsc").setFileUri("testUrl").build();
+                ClientFile.newBuilder()
+                        .setFileId(OTAResourcesManager.DOWNLOADED_OTA_FILE_ID)
+                        .setFileUri("testUrl")
+                        .build();
 
         ClientFileGroup testCfg =
                 ClientFileGroup.newBuilder()
@@ -310,6 +313,45 @@ public class OTAResourcesManagerTest {
                         ErrorLogUtil.e(
                                 any(Throwable.class),
                                 eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)));
+    }
+
+    /**
+     * * Verify that when a valid file group (apk) was downloaded but file descriptor contains no *
+     * providers, file descriptor was never closed.
+     */
+    @Test
+    public void testRefreshOTAResources_nullResourceApk() throws Exception {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        ClientFile testCf =
+                ClientFile.newBuilder()
+                        .setFileId(OTAResourcesManager.DOWNLOADED_OTA_APK_ID)
+                        .setFileUri("testUrl")
+                        .build();
+
+        ClientFileGroup testCfg =
+                ClientFileGroup.newBuilder()
+                        .setGroupName("testGroupName")
+                        .setOwnerPackage("testOwnerPackageName")
+                        .setVersionNumber(0)
+                        .setStatus(ClientFileGroup.Status.DOWNLOADED)
+                        .addFile(testCf)
+                        .build();
+
+        ListenableFuture<ClientFileGroup> testFuture = Futures.immediateFuture(testCfg);
+        doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
+        ExtendedMockito.doReturn(null)
+                .when(() -> ResourcesProvider.loadFromApk(mMockParcelFileDescriptor, null));
+
+        OTAResourcesManager.refreshOTAResources(mContext);
+
+        verify(mMockParcelFileDescriptor, times(0)).close();
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR),
                                 eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)));
     }
 }

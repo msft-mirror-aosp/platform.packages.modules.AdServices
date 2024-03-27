@@ -62,7 +62,7 @@
         <option name="run-command"
                 value="setprop debug.adservices.disable_fledge_enrollment_check false"/>
         <option name="run-command"
-                value="setprop debug.adservices.disable_topics_enrollment_check false"/>
+                value="device_config put adservices disable_topics_enrollment_check false"/>
 
         <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
         <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE"/>

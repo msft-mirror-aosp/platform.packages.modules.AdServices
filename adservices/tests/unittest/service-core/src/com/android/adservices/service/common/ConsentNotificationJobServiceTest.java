@@ -396,15 +396,30 @@ public class ConsentNotificationJobServiceTest {
         verify(mAdservicesSyncUtil, times(0)).getInstance();
     }
 
-    /** Test that when the OTA strings feature is disabled, the notification is sent immediately. */
+    /** Test that when the OTA resources feature is on, no notifications are sent immediately. */
     @Test
-    public void testOnStartJob_otaStringsFeatureDisabled() throws Exception {
+    public void testOnStartJob_otaResourcesFeatureEnabled() throws Exception {
+        mockAdIdEnabled();
+        mockEuDevice();
+        mockGaUxEnabled();
+        mockConsentDebugMode(/* enabled */ false);
+
+        mockOtaResourcesFeature(/* enabled */ true);
+        mockJobFinished();
+
+        verify(mAdservicesSyncUtil, times(0)).getInstance();
+    }
+
+    /** Test that when the OTA features are disabled, the notification is sent immediately. */
+    @Test
+    public void testOnStartJob_otaFeatureDisabled() throws Exception {
         mockAdIdEnabled();
         mockEuDevice();
         mockGaUxEnabled();
         mockConsentDebugMode(/* enabled */ false);
 
         mockOtaStringsFeature(/* enabled */ false);
+        mockOtaResourcesFeature(/* enabled */ false);
         mockJobFinished();
 
         verify(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
@@ -419,6 +434,21 @@ public class ConsentNotificationJobServiceTest {
         mockConsentDebugMode(/* enabled */ false);
 
         mockOtaStringsFeature(/* enabled */ true);
+        when(mFlags.getUiOtaStringsDownloadDeadline()).thenReturn(Long.valueOf(0));
+        mockJobFinished();
+
+        verify(mAdservicesSyncUtil, times(1)).execute(any(Context.class), any(Boolean.class));
+    }
+
+    /** Test that the notification will be sent immediately when OTA deadline passed. */
+    @Test
+    public void testOnStartJob_otaResourcesDeadlinePassed() throws Exception {
+        mockAdIdEnabled();
+        mockEuDevice();
+        mockGaUxEnabled();
+        mockConsentDebugMode(/* enabled */ false);
+
+        mockOtaResourcesFeature(/* enabled */ true);
         when(mFlags.getUiOtaStringsDownloadDeadline()).thenReturn(Long.valueOf(0));
         mockJobFinished();
 
@@ -482,6 +512,11 @@ public class ConsentNotificationJobServiceTest {
     private void mockOtaStringsFeature(boolean enabled) {
         doReturn(mFlags).when(FlagsFactory::getFlags);
         when(mFlags.getUiOtaStringsFeatureEnabled()).thenReturn(enabled);
+    }
+
+    private void mockOtaResourcesFeature(boolean enabled) {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        when(mFlags.getUiOtaResourcesFeatureEnabled()).thenReturn(enabled);
     }
 
     private void mockConsentDebugMode(boolean enabled) {
