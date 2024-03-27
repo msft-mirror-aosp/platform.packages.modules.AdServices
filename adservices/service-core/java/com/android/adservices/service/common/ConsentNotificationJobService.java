@@ -323,7 +323,7 @@ public class ConsentNotificationJobService extends JobService {
     private void sendNotificationIfOtaResourcesDownloadCompleted(boolean isEeaNotification) {
         try {
             ClientFileGroup cfg =
-                    MobileDataDownloadFactory.getMdd(this, FlagsFactory.getFlags())
+                    MobileDataDownloadFactory.getMdd(FlagsFactory.getFlags())
                             .getFileGroup(
                                     GetFileGroupRequest.newBuilder()
                                             .setGroupName(

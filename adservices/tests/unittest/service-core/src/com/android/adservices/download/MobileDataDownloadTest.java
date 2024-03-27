@@ -160,9 +160,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         mockMddFlags();
 
-        mFileStorage = MobileDataDownloadFactory.getFileStorage(mContext);
-        mFileDownloader =
-                MobileDataDownloadFactory.getFileDownloader(mContext, mMockFlags, mFileStorage);
+        mFileStorage = MobileDataDownloadFactory.getFileStorage();
+        mFileDownloader = MobileDataDownloadFactory.getFileDownloader(mMockFlags, mFileStorage);
 
         mDbHelper = DbTestUtil.getSharedDbHelperForTest();
 
@@ -630,9 +629,9 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             @NonNull Flags flags,
             @NonNull ImmutableList<FileGroupPopulator> fileGroupPopulators) {
         context = context.getApplicationContext();
-        SynchronousFileStorage fileStorage = MobileDataDownloadFactory.getFileStorage(context);
+        SynchronousFileStorage fileStorage = MobileDataDownloadFactory.getFileStorage();
         FileDownloader fileDownloader =
-                MobileDataDownloadFactory.getFileDownloader(context, flags, fileStorage);
+                MobileDataDownloadFactory.getFileDownloader(flags, fileStorage);
         NetworkUsageMonitor networkUsageMonitor =
                 new NetworkUsageMonitor(
                         context,
@@ -671,7 +670,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         FileGroupPopulator fileGroupPopulator =
                 MobileDataDownloadFactory.getMeasurementManifestPopulator(
-                        mContext, mMockFlags, mFileStorage, mFileDownloader);
+                        mMockFlags, mFileStorage, mFileDownloader);
 
         mMdd =
                 getMddForTesting(
@@ -695,7 +694,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         FileGroupPopulator fileGroupPopulator =
                 MobileDataDownloadFactory.getTopicsManifestPopulator(
-                        mContext, mMockFlags, mFileStorage, mFileDownloader);
+                        mMockFlags, mFileStorage, mFileDownloader);
 
         mMdd =
                 getMddForTesting(
@@ -716,7 +715,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             throws ExecutionException, InterruptedException, TimeoutException {
         FileGroupPopulator fileGroupPopulator =
                 MobileDataDownloadFactory.getUiOtaResourcesManifestPopulator(
-                        mContext, mMockFlags, mFileStorage, mFileDownloader);
+                        mMockFlags, mFileStorage, mFileDownloader);
 
         mMdd =
                 getMddForTesting(
@@ -748,8 +747,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
         assertThat(clientFileGroup.getVersionNumber()).isEqualTo(fileGroupVersion);
 
-        doReturn(mMdd)
-                .when(() -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
+        doReturn(mMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
 
         EnrollmentDataDownloadManager enrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(mContext, mMockFlags);

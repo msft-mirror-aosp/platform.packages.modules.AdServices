@@ -131,7 +131,7 @@ public class TopicsService extends Service {
             writer.println("Build is Debuggable, dumping information for TopicsService");
             EpochManager.getInstance(this).dump(writer, args);
             CacheManager.getInstance(this).dump(writer, args);
-            MobileDataDownloadFactory.dump(this, writer);
+            MobileDataDownloadFactory.dump(writer);
             writer.println("=== User Consent State For Topics Service ===");
             writer.println("User Consent is given: " + hasUserConsent());
         } else {

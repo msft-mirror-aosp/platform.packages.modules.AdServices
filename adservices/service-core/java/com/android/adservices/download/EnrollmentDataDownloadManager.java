@@ -31,7 +31,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.util.Pair;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
@@ -46,6 +45,7 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
@@ -91,7 +91,7 @@ public class EnrollmentDataDownloadManager {
                 context,
                 flags,
                 AdServicesLoggerImpl.getInstance(),
-                EnrollmentUtil.getInstance(context),
+                EnrollmentUtil.getInstance(),
                 new EncryptionKeyFetcher(MDD_DOWNLOAD_JOB));
     }
 
@@ -103,8 +103,8 @@ public class EnrollmentDataDownloadManager {
             EnrollmentUtil enrollmentUtil,
             EncryptionKeyFetcher encryptionKeyFetcher) {
         mContext = context.getApplicationContext();
-        mMobileDataDownload = MobileDataDownloadFactory.getMdd(context, flags);
-        mFileStorage = MobileDataDownloadFactory.getFileStorage(context);
+        mMobileDataDownload = MobileDataDownloadFactory.getMdd(flags);
+        mFileStorage = MobileDataDownloadFactory.getFileStorage();
         mFlags = flags;
         mLogger = logger;
         mEnrollmentUtil = enrollmentUtil;
@@ -112,16 +112,16 @@ public class EnrollmentDataDownloadManager {
     }
 
     /** Gets an instance of EnrollmentDataDownloadManager to be used. */
-    public static EnrollmentDataDownloadManager getInstance(@NonNull Context context) {
+    public static EnrollmentDataDownloadManager getInstance() {
         if (sEnrollmentDataDownloadManager == null) {
             synchronized (EnrollmentDataDownloadManager.class) {
                 if (sEnrollmentDataDownloadManager == null) {
                     sEnrollmentDataDownloadManager =
                             new EnrollmentDataDownloadManager(
-                                    context,
+                                    ApplicationContextSingleton.get(),
                                     FlagsFactory.getFlags(),
                                     AdServicesLoggerImpl.getInstance(),
-                                    EnrollmentUtil.getInstance(context),
+                                    EnrollmentUtil.getInstance(),
                                     new EncryptionKeyFetcher(MDD_DOWNLOAD_JOB));
                 }
             }
