@@ -379,7 +379,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Deprecated
     @SuppressWarnings("UnusedMethod") // will be used as more kill switches are refactored
     private void testLegacyMsmtKillSwitchGuardedByMsmtKillSwitch(
-            String getterName, String killSwitchName, Flaginator<Boolean> flaginator) {
+            String getterName, String killSwitchName, Flaginator<Flags, Boolean> flaginator) {
         boolean defaultKillSwitchValue = getConstantValue(killSwitchName);
 
         // Getter
@@ -448,7 +448,8 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFlag(
                 "getJobSchedulingLoggingSamplingRate()",
                 DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE,
-                (Flaginator<Integer>) flags -> (int) flags.getJobSchedulingLoggingSamplingRate());
+                (Flaginator<Flags, Integer>)
+                        flags -> (int) flags.getJobSchedulingLoggingSamplingRate());
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -456,19 +457,19 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void testRampedUpKillSwitchGuardedByGlobalKillSwitch(
-            String name, Flaginator<Boolean> flaginator) {
+            String name, Flaginator<Flags, Boolean> flaginator) {
         internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
                 name, flaginator, /* expectedValue= */ false);
     }
 
     private void testNewKillSwitchGuardedByGlobalKillSwitch(
-            String name, Flaginator<Boolean> flaginator) {
+            String name, Flaginator<Flags, Boolean> flaginator) {
         internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
                 name, flaginator, /* expectedValue= */ true);
     }
 
     private void testFeatureFlagGuardedByGlobalKillSwitch(
-            String name, Flaginator<Boolean> flaginator) {
+            String name, Flaginator<Flags, Boolean> flaginator) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -484,7 +485,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", name).that(defaultValue).isFalse();
     }
 
-    private void testFeatureFlag(String name, Flaginator<Boolean> flaginator) {
+    private void testFeatureFlag(String name, Flaginator<Flags, Boolean> flaginator) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -506,13 +507,15 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", name).that(defaultValue).isFalse();
     }
 
-    private void testFlag(String getterName, long defaultValue, Flaginator<Long> flaginator) {
+    private void testFlag(
+            String getterName, long defaultValue, Flaginator<Flags, Long> flaginator) {
         expect.withMessage("%s", getterName)
                 .that(flaginator.getFlagValue(mFlags))
                 .isEqualTo(defaultValue);
     }
 
-    private void testFlag(String getterName, int defaultValue, Flaginator<Integer> flaginator) {
+    private void testFlag(
+            String getterName, int defaultValue, Flaginator<Flags, Integer> flaginator) {
         expect.withMessage("%s", getterName)
                 .that(flaginator.getFlagValue(mFlags))
                 .isEqualTo(defaultValue);
@@ -523,13 +526,15 @@ public final class FlagsTest extends AdServicesUnitTestCase {
      */
     @Deprecated
     private void testKillSwitchBeingConvertedAndGuardedByGlobalKillSwitch(
-            String name, Flaginator<Boolean> flaginator) {
+            String name, Flaginator<Flags, Boolean> flaginator) {
         internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
                 name, flaginator, /* expectedValue= */ false);
     }
 
     private void testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
-            String getterName, boolean defaultKillSwitchValue, Flaginator<Boolean> flaginator) {
+            String getterName,
+            boolean defaultKillSwitchValue,
+            Flaginator<Flags, Boolean> flaginator) {
         expect.withMessage("%s when global kill_switch is on", getterName)
                 .that(flaginator.getFlagValue(mGlobalKsOnFlags))
                 .isFalse();
@@ -539,7 +544,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     private void testMsmtFeatureFlagBackedByLegacyKillSwitchAndGuardedByMsmtEnabled(
-            String getterName, String killSwitchName, Flaginator<Boolean> flaginator) {
+            String getterName, String killSwitchName, Flaginator<Flags, Boolean> flaginator) {
         boolean defaultKillSwitchValue = getConstantValue(killSwitchName);
         boolean defaultValue = !defaultKillSwitchValue;
 
@@ -555,7 +560,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", killSwitchName).that(defaultKillSwitchValue).isFalse();
     }
 
-    private void testRetiredFeatureFlag(String name, Flaginator<Boolean> flaginator) {
+    private void testRetiredFeatureFlag(String name, Flaginator<Flags, Boolean> flaginator) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -567,13 +572,17 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", name).that(defaultValue).isTrue();
     }
 
+    static <T> T getConstantValue(String name) {
+        return getConstantValue(Flags.class, name);
+    }
+
     // Not passing type (and using type.cast(value)) because most of the flags are primitive types
     // (like boolean) and T would be their object equivalent (like Boolean)
     @SuppressWarnings("TypeParameterUnusedInFormals")
-    static <T> T getConstantValue(String name) {
+    static <T> T getConstantValue(Class<?> clazz, String name) {
         Field field;
         try {
-            field = Flags.class.getDeclaredField(name);
+            field = clazz.getDeclaredField(name);
         } catch (NoSuchFieldException | SecurityException e) {
             throw new IllegalArgumentException("Could not get field " + name + ": " + e);
         }
@@ -601,7 +610,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     // Should not be called directly
     private void internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
-            String name, Flaginator<Boolean> flaginator, boolean expectedValue) {
+            String name, Flaginator<Flags, Boolean> flaginator, boolean expectedValue) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -617,7 +626,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", name).that(defaultValue).isEqualTo(expectedValue);
     }
 
-    private static class GlobalKillSwitchAwareFlags implements Flags {
+    static class GlobalKillSwitchAwareFlags implements Flags {
         private final boolean mGlobalKsOnFlags;
 
         GlobalKillSwitchAwareFlags(boolean globalKsEnabled) {

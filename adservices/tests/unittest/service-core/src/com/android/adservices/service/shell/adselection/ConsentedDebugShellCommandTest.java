@@ -17,8 +17,10 @@
 package com.android.adservices.service.shell.adselection;
 
 import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory.COMMAND_PREFIX;
-import static com.android.adservices.service.shell.adselection.ConsentedDebugEnableArgs.EXPIRY_IN_DAYS_ARG_NAME;
+import static com.android.adservices.service.shell.adselection.ConsentedDebugEnableArgs.EXPIRY_IN_HOURS_ARG_NAME;
+import static com.android.adservices.service.shell.adselection.ConsentedDebugEnableArgs.MAX_EXPIRY_IN_HOURS;
 import static com.android.adservices.service.shell.adselection.ConsentedDebugEnableArgs.SECRET_DEBUG_TOKEN_ARG_NAME;
+import static com.android.adservices.service.shell.adselection.ConsentedDebugEnableArgs.SECRET_DEBUG_TOKEN_MIN_LEN;
 import static com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand.CMD;
 import static com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand.DISABLE_ERROR;
 import static com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand.DISABLE_SUB_CMD;
@@ -45,7 +47,7 @@ import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.DBConsentedDebugConfiguration;
-import com.android.adservices.service.shell.ShellCommandTest;
+import com.android.adservices.service.shell.ShellCommandTestCase;
 
 import com.google.common.truth.Truth;
 
@@ -61,9 +63,11 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.UUID;
 
-public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDebugShellCommand> {
+public class ConsentedDebugShellCommandTest
+        extends ShellCommandTestCase<ConsentedDebugShellCommand> {
     private static final String DEBUG_TOKEN = UUID.randomUUID().toString();
-    private static final String EXPIRY_IN_DAYS = "2";
+    private static final int EXPIRY_IN_HOURS_INT = 48;
+    private static final String EXPIRY_IN_HOURS = String.valueOf(EXPIRY_IN_HOURS_INT);
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
 
     @Test
@@ -123,8 +127,8 @@ public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDe
                 COMMAND_PREFIX,
                 CMD,
                 ENABLE_SUB_CMD,
-                EXPIRY_IN_DAYS_ARG_NAME,
-                EXPIRY_IN_DAYS);
+                EXPIRY_IN_HOURS_ARG_NAME,
+                EXPIRY_IN_HOURS);
 
         verify(mConsentedDebugConfigurationDao, never())
                 .deleteExistingConsentedDebugConfigurationsAndPersist(
@@ -140,9 +144,9 @@ public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDe
                 CMD,
                 VIEW_SUB_CMD,
                 SECRET_DEBUG_TOKEN_ARG_NAME,
-                "small",
-                EXPIRY_IN_DAYS_ARG_NAME,
-                EXPIRY_IN_DAYS);
+                DEBUG_TOKEN.substring(0, SECRET_DEBUG_TOKEN_MIN_LEN),
+                EXPIRY_IN_HOURS_ARG_NAME,
+                EXPIRY_IN_HOURS);
 
         verify(mConsentedDebugConfigurationDao, never())
                 .deleteExistingConsentedDebugConfigurationsAndPersist(
@@ -159,7 +163,7 @@ public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDe
                 VIEW_SUB_CMD,
                 SECRET_DEBUG_TOKEN_ARG_NAME,
                 DEBUG_TOKEN,
-                EXPIRY_IN_DAYS_ARG_NAME,
+                EXPIRY_IN_HOURS_ARG_NAME,
                 "Not a number");
 
         verify(mConsentedDebugConfigurationDao, never())
@@ -177,8 +181,8 @@ public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDe
                 VIEW_SUB_CMD,
                 SECRET_DEBUG_TOKEN_ARG_NAME,
                 DEBUG_TOKEN,
-                EXPIRY_IN_DAYS_ARG_NAME,
-                "400");
+                EXPIRY_IN_HOURS_ARG_NAME,
+                String.valueOf(MAX_EXPIRY_IN_HOURS + 1));
 
         verify(mConsentedDebugConfigurationDao, never())
                 .deleteExistingConsentedDebugConfigurationsAndPersist(
@@ -222,7 +226,7 @@ public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDe
     public void test_disableConsentedDebugging_success() {
         doNothing().when(mConsentedDebugConfigurationDao).deleteAllConsentedDebugConfigurations();
 
-        ShellCommandTest.Result result = runSubCommandAndGetResult(DISABLE_SUB_CMD);
+        ShellCommandTestCase.Result result = runSubCommandAndGetResult(DISABLE_SUB_CMD);
 
         expectSuccess(result, DISABLE_SUCCESS);
     }
@@ -244,7 +248,7 @@ public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDe
                 .when(mConsentedDebugConfigurationDao)
                 .deleteAllConsentedDebugConfigurations();
 
-        ShellCommandTest.Result result = runSubCommandAndGetResult(DISABLE_SUB_CMD);
+        ShellCommandTestCase.Result result = runSubCommandAndGetResult(DISABLE_SUB_CMD);
 
         expectFailure(result, DISABLE_ERROR);
     }
@@ -265,7 +269,7 @@ public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDe
         boolean isConsented = true;
         String debugToken = UUID.randomUUID().toString();
         Instant creationTimestamp = CommonFixture.FIXED_NOW;
-        Duration expiryDuration = Duration.ofDays(2);
+        Duration expiryDuration = Duration.ofHours(EXPIRY_IN_HOURS_INT);
         Instant expiryTimestamp = CommonFixture.FIXED_NOW.plus(expiryDuration);
         DBConsentedDebugConfiguration dbConsentedDebugConfiguration =
                 DBConsentedDebugConfiguration.builder()
@@ -368,8 +372,8 @@ public class ConsentedDebugShellCommandTest extends ShellCommandTest<ConsentedDe
                     ENABLE_SUB_CMD,
                     SECRET_DEBUG_TOKEN_ARG_NAME,
                     DEBUG_TOKEN,
-                    EXPIRY_IN_DAYS_ARG_NAME,
-                    EXPIRY_IN_DAYS);
+                    EXPIRY_IN_HOURS_ARG_NAME,
+                    EXPIRY_IN_HOURS);
         } else {
             return run(
                     new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao),

@@ -204,8 +204,8 @@ public class SdkSandboxTest {
 
     @After
     public void teardown() throws Exception {
-        mService.getClientSharedPreferences().edit().clear().commit();
-        mStaticMockSession.finishMocking();
+        if (mService != null) mService.getClientSharedPreferences().edit().clear().commit();
+        if (mStaticMockSession != null) mStaticMockSession.finishMocking();
     }
 
     @Test

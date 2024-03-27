@@ -260,6 +260,18 @@ public class AdFiltersTest {
         assertThat(originalFilters.toString()).isEqualTo(expectedString);
     }
 
+    @Test
+    public void testAdFiltersDescribeContents() {
+        final AdFilters adFilters =
+                new AdFilters.Builder()
+                        .setFrequencyCapFilters(
+                                FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
+                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                        .build();
+
+        assertThat(adFilters.describeContents()).isEqualTo(0);
+    }
+
     private String getAppInstallString() {
         String toReturn = "";
         if (AdDataFixture.APP_INSTALL_ENABLED) {

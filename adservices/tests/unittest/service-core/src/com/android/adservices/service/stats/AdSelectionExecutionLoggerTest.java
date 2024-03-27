@@ -87,6 +87,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -208,9 +209,10 @@ public class AdSelectionExecutionLoggerTest {
                     .size();
     private static final String SCRIPT_STRING = "The fetched script string.";
     public static final int FETCHED_AD_SELECTION_LOGIC_SCRIPT_SIZE_IN_BYTES =
-            SCRIPT_STRING.getBytes().length;
+            SCRIPT_STRING.getBytes(StandardCharsets.UTF_8).length;
     public static final int FETCHED_TRUSTED_SCORING_SIGNALS_DATA_SIZE_IN_BYTES =
-            SCRIPT_STRING.getBytes().length;
+            SCRIPT_STRING.getBytes(StandardCharsets.UTF_8).length;
+
     @Captor
     ArgumentCaptor<RunAdSelectionProcessReportedStats>
             mRunAdSelectionProcessReportedStatsArgumentCaptor;

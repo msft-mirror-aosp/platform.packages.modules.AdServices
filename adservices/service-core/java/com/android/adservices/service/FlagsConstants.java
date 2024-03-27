@@ -549,6 +549,10 @@ public final class FlagsConstants {
             "fledge_ad_selection_expiration_window_s";
     public static final String KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
             "fledge_ad_selection_filtering_enabled";
+    public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED =
+            "fledge_app_install_filtering_enabled";
+    public static final String KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED =
+            "fledge_frequency_cap_filtering_enabled";
     public static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED =
             "fledge_fetch_custom_audience_enabled";
     public static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
@@ -638,6 +642,8 @@ public final class FlagsConstants {
             "fledge_auction_server_enabled_for_select_ads_mediation";
     public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA =
             "fledge_auction_server_enable_ad_filter_in_get_ad_selection_data";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED =
+            "fledge_auction_server_media_type_change_enabled";
     public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             "fledge_auction_server_payload_bucket_sizes";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
@@ -1103,6 +1109,9 @@ public final class FlagsConstants {
     public static final String
             KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION =
                     "measurement_flex_api_max_information_gain_dual_destination_navigation";
+
+    public static final String KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION =
+            "measurement_max_report_states_per_source_registration";
 
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS =
             "measurement_flex_api_max_event_reports";

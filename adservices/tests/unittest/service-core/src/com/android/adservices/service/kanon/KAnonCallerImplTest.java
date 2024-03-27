@@ -21,16 +21,19 @@ import static android.adservices.exceptions.AdServicesNetworkException.ERROR_SER
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.EMPTY_BODY;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_OHTTP_CONTENT_TYPE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE;
+import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_INITIALIZE_FAILED;
+import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_SUCCESS;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 import static org.junit.Assert.assertThrows;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.exceptions.AdServicesNetworkException;
@@ -68,6 +71,8 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
@@ -80,18 +85,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 
 import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
@@ -104,6 +102,15 @@ import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
 import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 import private_join_and_compute.anonymous_counting_tokens.Transcript;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KAnonCallerImplTest {
@@ -139,6 +146,10 @@ public class KAnonCallerImplTest {
     @Mock private ObliviousHttpEncryptorFactory mockObliviousHttpEncryptorFactory;
     private UserProfileIdManager mUserProfileIdManager;
     private KAnonCallerImpl mKAnonCaller;
+    @Captor private ArgumentCaptor<KAnonBackgroundJobStatusStats> argumentCaptorBackgroundJobStats;
+
+    @Captor
+    private ArgumentCaptor<KAnonImmediateSignJoinStatusStats> argumentCaptorImmediateSignJoinStats;
 
     private final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String GOLDEN_TRANSCRIPT_PATH = "act/golden_transcript_1";
@@ -217,7 +228,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        kAnonCaller.signAndJoinMessages(kanonMessageList);
+        kAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         countdownLatch.await();
 
         List<KAnonMessageEntity> messagesFromDBAfter =
@@ -257,7 +269,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        kAnonCaller.signAndJoinMessages(kanonMessageList);
+        kAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         countdownLatch.await();
 
         List<KAnonMessageEntity> messagesFromDBAfter =
@@ -288,7 +301,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        mKAnonCaller.signAndJoinMessages(kanonMessageList);
+        mKAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
@@ -311,7 +325,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        mKAnonCaller.signAndJoinMessages(kanonMessageList);
+        mKAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
@@ -334,7 +349,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        mKAnonCaller.signAndJoinMessages(kanonMessageList);
+        mKAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
@@ -358,7 +374,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        mKAnonCaller.signAndJoinMessages(kanonMessageList);
+        mKAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
@@ -402,7 +419,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        mKAnonCaller.signAndJoinMessages(kanonMessageList);
+        mKAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
@@ -410,6 +428,153 @@ public class KAnonCallerImplTest {
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
         assertThat(kanonMessageListAfter.size()).isEqualTo(kanonMessageList.size());
+    }
+
+    @Test
+    public void test_signedJoinedSuccessfully_shouldCaptureImmediateSignJoinStats()
+            throws IOException, InterruptedException {
+        KAnonCallerImpl kAnonCaller =
+                Mockito.spy(
+                        new KAnonCallerImpl(
+                                mLightweightExecutorService,
+                                mockAnonymousCountingTokens,
+                                mockAdServicesHttpClient,
+                                mClientParametersDao,
+                                mServerParametersDao,
+                                mUserProfileIdManager,
+                                mockBinaryHttpMessageDeserializer,
+                                mFlags,
+                                mKAnonMessageManager,
+                                mockAdServicesLogger,
+                                mockKeyAttestationFactory,
+                                mockObliviousHttpEncryptorFactory));
+        CountDownLatch countdownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countdownLatch);
+        when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any()))
+                .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
+        createAndPersistKAnonMessages();
+        List<KAnonMessageEntity> kanonMessageList =
+                mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
+                        2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
+
+        kAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
+        countdownLatch.await();
+
+        verify(mockAdServicesLogger, times(1))
+                .logKAnonImmediateSignJoinStats(argumentCaptorImmediateSignJoinStats.capture());
+        KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats =
+                argumentCaptorImmediateSignJoinStats.getValue();
+        assertThat(kAnonImmediateSignJoinStatusStats.getTotalMessagesAttempted()).isEqualTo(2);
+        assertThat(kAnonImmediateSignJoinStatusStats.getKAnonJobResult())
+                .isEqualTo(KANON_JOB_RESULT_SUCCESS);
+    }
+
+    @Test
+    public void test_signedJoinedSuccessfully_shouldCaptureBackgroundJobStats()
+            throws IOException, InterruptedException {
+        KAnonCallerImpl kAnonCaller =
+                Mockito.spy(
+                        new KAnonCallerImpl(
+                                mLightweightExecutorService,
+                                mockAnonymousCountingTokens,
+                                mockAdServicesHttpClient,
+                                mClientParametersDao,
+                                mServerParametersDao,
+                                mUserProfileIdManager,
+                                mockBinaryHttpMessageDeserializer,
+                                mFlags,
+                                mKAnonMessageManager,
+                                mockAdServicesLogger,
+                                mockKeyAttestationFactory,
+                                mockObliviousHttpEncryptorFactory));
+        CountDownLatch countdownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countdownLatch);
+        when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any()))
+                .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
+        createAndPersistKAnonMessages();
+        List<KAnonMessageEntity> kanonMessageList =
+                mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
+                        2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
+
+        // extra messages to check that we log unprocessed messages correctly.
+        DBKAnonMessage dbKAnonMessage =
+                DBKAnonMessage.builder()
+                        .setStatus(KAnonMessageConstants.MessageStatus.NOT_PROCESSED)
+                        .setCorrespondingClientParametersExpiryInstant(null)
+                        .setKanonHashSet(
+                                "types/fledge/sets/nEW2Xx96S2B1zRqAgXsX4mRl0MAhgKcYZBb-12123")
+                        .setExpiryInstant(Instant.now().plusSeconds(7200))
+                        .setCreatedAt(Instant.now())
+                        .setAdSelectionId(12356678)
+                        .build();
+        mKAnonMessageDao.insertKAnonMessage(dbKAnonMessage);
+
+        kAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.BACKGROUND_JOB);
+        countdownLatch.await();
+
+        verify(mockAdServicesLogger, times(1))
+                .logKAnonBackgroundJobStats(argumentCaptorBackgroundJobStats.capture());
+        KAnonBackgroundJobStatusStats kAnonBackgroundJobStatusStats =
+                argumentCaptorBackgroundJobStats.getValue();
+        assertThat(kAnonBackgroundJobStatusStats.getTotalMessagesAttempted()).isEqualTo(2);
+        assertThat(kAnonBackgroundJobStatusStats.getKAnonJobResult())
+                .isEqualTo(KANON_JOB_RESULT_SUCCESS);
+        assertThat(kAnonBackgroundJobStatusStats.getMessagesInDBLeft()).isEqualTo(1);
+    }
+
+    @Test
+    public void registerClientUnsuccessful_shouldCaptureKAnonImmediateSignJoinStats()
+            throws IOException, InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countDownLatch);
+        createAndPersistKAnonMessages();
+        mClientParametersDao.deleteAllClientParameters();
+        mServerParametersDao.deleteAllServerParameters();
+        mClientParameters = mTranscript.getClientParameters();
+        RegisterClientRequest registerClientRequest =
+                RegisterClientRequest.newBuilder()
+                        .setClientPublicParams(mClientParameters.getPublicParameters())
+                        .setRequestMetadata(mRequestMetadata)
+                        .setServerParamsVersion(mServerParamVersion)
+                        .build();
+        AdServicesHttpClientRequest registerClientParametersRequest =
+                AdServicesHttpClientRequest.create(
+                        Uri.parse(mFlags.getFledgeKAnonRegisterClientParametersUrl()),
+                        REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE,
+                        ImmutableSet.of(),
+                        false,
+                        DEV_CONTEXT_DISABLED,
+                        AdServicesHttpUtil.HttpMethodType.POST,
+                        registerClientRequest.toByteArray());
+        when(mockAdServicesHttpClient.performRequestGetResponseInBase64String(
+                        registerClientParametersRequest))
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new AdServicesNetworkException(ERROR_SERVER)));
+
+        List<KAnonMessageEntity> kanonMessageList =
+                mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
+                        2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
+
+        mKAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
+        countDownLatch.await();
+
+        List<KAnonMessageEntity> kanonMessageListAfter =
+                mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
+                        2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
+
+        assertThat(kanonMessageListAfter.size()).isEqualTo(kanonMessageList.size());
+        verify(mockAdServicesLogger, times(1))
+                .logKAnonImmediateSignJoinStats(argumentCaptorImmediateSignJoinStats.capture());
+        KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats =
+                argumentCaptorImmediateSignJoinStats.getValue();
+        assertThat(kAnonImmediateSignJoinStatusStats.getKAnonJobResult())
+                .isEqualTo(KANON_JOB_RESULT_INITIALIZE_FAILED);
     }
 
     @Test
@@ -439,7 +604,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        mKAnonCaller.signAndJoinMessages(kanonMessageList);
+        mKAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
@@ -471,7 +637,10 @@ public class KAnonCallerImplTest {
     @Test
     public void signJoinMessages_withEmptyList_throwsIllegalArgumentException() {
         assertThrows(
-                IllegalArgumentException.class, () -> mKAnonCaller.signAndJoinMessages(List.of()));
+                IllegalArgumentException.class,
+                () ->
+                        mKAnonCaller.signAndJoinMessages(
+                                List.of(), KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN));
     }
 
     private void createAndPersistKAnonMessages() {

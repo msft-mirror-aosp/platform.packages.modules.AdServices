@@ -63,7 +63,8 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         Trace.beginSection("AdServicesSettingsMainActivity#OnCreate");
         // Only for main view, we want to use the most up to date OTA strings on the device to
         // create the ResourcesLoader.
-        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()
+                || FlagsFactory.getFlags().getUiOtaResourcesFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
             // apply to activity context as well since activity context has been created already.
             OTAResourcesManager.applyOTAResources(this, false);

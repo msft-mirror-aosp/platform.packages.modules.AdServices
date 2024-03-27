@@ -89,7 +89,8 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
         Context context = getApplicationContext();
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()
+                || FlagsFactory.getFlags().getUiOtaResourcesFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context, true);
         }
 
