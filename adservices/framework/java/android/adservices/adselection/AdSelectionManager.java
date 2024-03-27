@@ -65,7 +65,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well as
  * report impressions.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
