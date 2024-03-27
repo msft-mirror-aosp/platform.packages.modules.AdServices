@@ -59,9 +59,11 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOI
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_API_CALLED;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_NO_OP;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_TOO_BIG;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
@@ -1925,6 +1927,34 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(8),
                                 eq(5),
                                 eq(4),
+                                eq(3));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogServerAuctionBackgroundKeyFetchScheduledStats_success() {
+        ServerAuctionBackgroundKeyFetchScheduledStats stats =
+                ServerAuctionBackgroundKeyFetchScheduledStats.builder()
+                        .setStatus(BACKGROUND_KEY_FETCH_STATUS_NO_OP)
+                        .setCountAuctionUrls(2)
+                        .setCountJoinUrls(3)
+                        .build();
+
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logServerAuctionBackgroundKeyFetchScheduledStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED),
+                                eq(BACKGROUND_KEY_FETCH_STATUS_NO_OP),
+                                eq(2),
                                 eq(3));
 
         verify(writeInvocation);
