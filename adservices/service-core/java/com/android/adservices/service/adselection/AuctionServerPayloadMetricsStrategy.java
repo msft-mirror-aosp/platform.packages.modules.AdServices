@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.AdsRelevanceStatusUtils;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
@@ -30,6 +31,11 @@ import java.util.Map;
 public interface AuctionServerPayloadMetricsStrategy {
     /** Sets the number of buyers to the {@link GetAdSelectionDataApiCalledStats#builder()} */
     void setNumBuyers(GetAdSelectionDataApiCalledStats.Builder builder, int numBuyers);
+
+    /** Sets the number of buyers to the {@link GetAdSelectionDataApiCalledStats#builder()} */
+    void setServerAuctionCoordinatorSource(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            @AdsRelevanceStatusUtils.ServerAuctionCoordinatorSource int coordinatorSource);
 
     /** Invokes the logger to log {@link GetAdSelectionDataApiCalledStats} */
     void logGetAdSelectionDataApiCalledStats(

@@ -36,7 +36,6 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.util.Objects;
 
 /** Custom Audience Service */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceService extends Service {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

@@ -16,33 +16,42 @@
 
 package com.android.socketapp;
 
-import android.app.Application;
+import android.app.Activity;
+import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
+import android.os.Bundle;
 import android.util.Log;
 
 import java.io.IOException;
 
-public class SocketApp extends Application {
+public class SocketApp extends Activity {
 
     private static final String SOCKET_NAME = "SocketApp";
     private static final String TAG = "SocketApp";
+    private static final String SDK_NAME = "com.android.socketsdkprovider";
 
     @Override
-    public void onCreate() {
-        super.onCreate();
+    protected void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
 
         new Thread(this::connect).start();
+
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        getApplicationContext()
+                .getSystemService(SdkSandboxManager.class)
+                .loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
     }
 
     private void connect() {
         Log.i(TAG, "waiting connections from app");
         try (LocalServerSocket serverSocket = new LocalServerSocket(SOCKET_NAME);
                 LocalSocket localSocket = serverSocket.accept()) {
-            // Read and send back.
-            localSocket.getOutputStream().write(localSocket.getInputStream().read());
+            throw new IOException("This should not happen");
         } catch (IOException e) {
-            Log.e(TAG, "Socket error", e);
+            throw new RuntimeException("Crashing test app", e);
         }
     }
 }

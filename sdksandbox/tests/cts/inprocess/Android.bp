@@ -43,6 +43,7 @@ android_test {
     ],
     data: [
         ":SocketApp",
+        ":SocketSdkProvider",
     ],
     test_suites: [
         "cts",
