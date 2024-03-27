@@ -1001,6 +1001,8 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     private final Flags mPhFlags = PhFlags.getInstance();
     private final Flags mTestFlags = FlagsFactory.getFlagsForTest();
 
+    private final PhFlagsTestHelper mFlagsTestHelper = new PhFlagsTestHelper(mPhFlags, expect);
+
     @Override
     protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
         return newDefaultAdServicesExtendedMockitoRuleBuilder()
@@ -1010,26 +1012,10 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetTopicsEpochJobPeriodMs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getTopicsEpochJobPeriodMs()).isEqualTo(TOPICS_EPOCH_JOB_PERIOD_MS);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue = TOPICS_EPOCH_JOB_PERIOD_MS + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getTopicsEpochJobPeriodMs()).isEqualTo(phOverridingValue);
-
-        long illegalPhOverridingValue = -1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
-                Long.toString(illegalPhOverridingValue),
-                /* makeDefault */ false);
-        assertThrows(IllegalArgumentException.class, mPhFlags::getTopicsEpochJobPeriodMs);
+                TOPICS_EPOCH_JOB_PERIOD_MS,
+                flags -> flags.getTopicsEpochJobPeriodMs());
     }
 
     @Test
@@ -1085,152 +1071,58 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetTopicsNumberOfRandomTopics() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getTopicsNumberOfRandomTopics())
-                .isEqualTo(TOPICS_NUMBER_OF_RANDOM_TOPICS);
-
-        long phOverridingValue = TOPICS_NUMBER_OF_RANDOM_TOPICS + 4;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getTopicsNumberOfRandomTopics()).isEqualTo(phOverridingValue);
-
-        // Validate that topicsNumberOfRandomTopics got from PH >= 0
-        long illegalPhOverridingValue = -1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
-                Long.toString(illegalPhOverridingValue),
-                /* makeDefault */ false);
-        assertThrows(IllegalArgumentException.class, mPhFlags::getTopicsNumberOfRandomTopics);
+                TOPICS_NUMBER_OF_RANDOM_TOPICS,
+                flags -> flags.getTopicsNumberOfRandomTopics());
     }
 
     @Test
     public void testGetTopicsNumberOfTopTopics() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getTopicsNumberOfTopTopics()).isEqualTo(TOPICS_NUMBER_OF_TOP_TOPICS);
-
-        long phOverridingValue = TOPICS_NUMBER_OF_TOP_TOPICS + 5;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getTopicsNumberOfTopTopics()).isEqualTo(phOverridingValue);
-
-        // Validate that topicsNumberOfTopTopics got from PH >= 0
-        long illegalPhOverridingValue = -1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
-                Long.toString(illegalPhOverridingValue),
-                /* makeDefault */ false);
-        assertThrows(IllegalArgumentException.class, mPhFlags::getTopicsNumberOfTopTopics);
+                TOPICS_NUMBER_OF_TOP_TOPICS,
+                flags -> flags.getTopicsNumberOfTopTopics());
     }
 
     @Test
     public void testGetTopicsNumberOfLookBackEpochs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getTopicsNumberOfLookBackEpochs())
-                .isEqualTo(TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
-
-        long phOverridingValue = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS + 6;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getTopicsNumberOfLookBackEpochs()).isEqualTo(phOverridingValue);
-
-        // Validate that topicsNumberOfLookBackEpochs got from PH >= 0
-        long illegalPhOverridingValue = -1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
-                Long.toString(illegalPhOverridingValue),
-                /* makeDefault */ false);
-        assertThrows(IllegalArgumentException.class, mPhFlags::getTopicsNumberOfLookBackEpochs);
+                TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
+                flags -> flags.getTopicsNumberOfLookBackEpochs());
     }
 
     @Test
     public void testGetTopicsPrivacyBudgetForTopicIdDistribution() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getTopicsPrivacyBudgetForTopicIdDistribution())
-                .isEqualTo(TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION);
-
-        float phOverridingValue = TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION + 5f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
-                Double.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getTopicsPrivacyBudgetForTopicIdDistribution())
-                .isEqualTo(phOverridingValue);
-
-        // Validate that topicsPrivacyBudgetForTopicIdDistribution got from PH >= phOverridingValue
-        // + 1
-        float illegalPhOverridingValue = -1f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
-                Double.toString(illegalPhOverridingValue),
-                /* makeDefault */ false);
-        assertThrows(
-                IllegalArgumentException.class,
-                mPhFlags::getTopicsPrivacyBudgetForTopicIdDistribution);
+                TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
+                flags -> flags.getTopicsPrivacyBudgetForTopicIdDistribution());
     }
 
     @Test
     public void testGetTopicsDisableDirectAppCalls() {
-        assertThat(mPhFlags.getTopicsDisableDirectAppCalls())
-                .isEqualTo(TOPICS_DISABLE_DIRECT_APP_CALLS);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !TOPICS_DISABLE_DIRECT_APP_CALLS;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValueBackedByDeviceConfigOnly(
                 KEY_TOPICS_DISABLE_DIRECT_APP_CALLS,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getTopicsDisableDirectAppCalls()).isEqualTo(phOverridingValue);
+                TOPICS_DISABLE_DIRECT_APP_CALLS,
+                flags -> flags.getTopicsDisableDirectAppCalls());
     }
 
     @Test
     public void testGetTopicsEncryptionEnabled() {
-        assertThat(mPhFlags.getTopicsEncryptionEnabled()).isEqualTo(TOPICS_ENCRYPTION_ENABLED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !TOPICS_ENCRYPTION_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValueBackedByDeviceConfigOnly(
                 KEY_TOPICS_ENCRYPTION_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getTopicsEncryptionEnabled()).isEqualTo(phOverridingValue);
+                TOPICS_ENCRYPTION_ENABLED,
+                flags -> flags.getTopicsEncryptionEnabled());
     }
 
     @Test
     public void testGetTopicsDisablePlaintextResponse() {
-        assertThat(mPhFlags.getTopicsDisablePlaintextResponse())
-                .isEqualTo(TOPICS_DISABLE_PLAINTEXT_RESPONSE);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !TOPICS_DISABLE_PLAINTEXT_RESPONSE;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValueBackedByDeviceConfigOnly(
                 KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getTopicsDisablePlaintextResponse()).isEqualTo(phOverridingValue);
+                TOPICS_DISABLE_PLAINTEXT_RESPONSE,
+                flags -> flags.getTopicsDisablePlaintextResponse());
     }
 
     @Test
@@ -1398,51 +1290,18 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetCobaltLoggingJobPeriodMs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getCobaltLoggingJobPeriodMs()).isEqualTo(COBALT_LOGGING_JOB_PERIOD_MS);
-
-        long phOverridingValue = COBALT_LOGGING_JOB_PERIOD_MS + 4;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_COBALT_LOGGING_JOB_PERIOD_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getCobaltLoggingJobPeriodMs()).isEqualTo(phOverridingValue);
-
-        // Validate that maintenanceJobPeriodMs got from PH > 0
-        long illegalPhOverridingValue = -1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_COBALT_LOGGING_JOB_PERIOD_MS,
-                Long.toString(illegalPhOverridingValue),
-                /* makeDefault */ false);
-        assertThrows(IllegalArgumentException.class, mPhFlags::getCobaltLoggingJobPeriodMs);
+                COBALT_LOGGING_JOB_PERIOD_MS,
+                flags -> flags.getCobaltLoggingJobPeriodMs());
     }
 
     @Test
     public void testGetCobaltUploadServiceUnbindDelayMs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getCobaltUploadServiceUnbindDelayMs())
-                .isEqualTo(COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS);
-
-        long phOverridingValue = COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS + 4;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getCobaltUploadServiceUnbindDelayMs()).isEqualTo(phOverridingValue);
-
-        // Validate that maintenanceJobPeriodMs got from PH > 0
-        long illegalPhOverridingValue = -1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS,
-                Long.toString(illegalPhOverridingValue),
-                /* makeDefault */ false);
-        assertThrows(IllegalArgumentException.class, mPhFlags::getCobaltUploadServiceUnbindDelayMs);
+                COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS,
+                flags -> flags.getCobaltUploadServiceUnbindDelayMs());
     }
 
     @Test
