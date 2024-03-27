@@ -660,7 +660,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 GET_AD_SELECTION_DATA_API_CALLED,
                 stats.getPayloadSizeKb(),
                 stats.getNumBuyers(),
-                stats.getStatusCode());
+                stats.getStatusCode(),
+                stats.getServerAuctionCoordinatorSource());
     }
 
     @Override
