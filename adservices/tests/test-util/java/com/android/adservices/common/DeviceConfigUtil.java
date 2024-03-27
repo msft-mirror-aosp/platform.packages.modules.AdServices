@@ -43,6 +43,11 @@ public final class DeviceConfigUtil {
         return set;
     }
 
+    /** Sets the value of {@code name} flag in the AdServices namespace. */
+    public static boolean setAdservicesFlag(String name, String value) {
+        return setDeviceConfigFlag(NAMESPACE_ADSERVICES, name, value);
+    }
+
     /** Sets the value of {@code boolean} flag in the AdServices namespace. */
     public static boolean setAdservicesFlag(String name, boolean value) {
         return setDeviceConfigFlag(NAMESPACE_ADSERVICES, name, Boolean.toString(value));

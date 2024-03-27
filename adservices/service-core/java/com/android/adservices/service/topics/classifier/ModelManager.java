@@ -88,7 +88,6 @@ import java.util.concurrent.ExecutionException;
  *
  * <p>ModelManager will select the right model to serve Classifier.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ModelManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();

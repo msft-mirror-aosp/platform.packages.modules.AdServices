@@ -86,7 +86,6 @@ import java.util.concurrent.Executor;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsServiceImpl extends ITopicsService.Stub {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();

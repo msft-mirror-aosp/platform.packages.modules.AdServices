@@ -55,7 +55,6 @@ import java.util.Random;
 import java.util.Set;
 
 /** A class to manage Epoch computation. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class EpochManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();

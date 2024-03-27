@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -23,6 +24,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
@@ -65,6 +67,13 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
     public void testSetNumBuyersSetsNumBuyers() {
         mAuctionServerPayloadMetricsStrategy.setNumBuyers(mBuilder, 2);
         verify(mBuilder).setNumBuyers(2);
+    }
+
+    @Test
+    public void testSetServerAuctionCoordinatorSourceDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy.setServerAuctionCoordinatorSource(
+                mBuilder, SERVER_AUCTION_COORDINATOR_SOURCE_API);
+        verifyZeroInteractions(mBuilder);
     }
 
     @Test

@@ -36,7 +36,6 @@ import com.android.adservices.service.devapi.DevContext;
 import java.util.Objects;
 
 /** Composite filter for protected signals requests. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

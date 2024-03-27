@@ -40,7 +40,6 @@ import java.util.concurrent.Executor;
  * This class represents the data access object for the Topics that the user opts out of. By default
  * all topics are opted in.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @Document
 class AppSearchTopicsConsentDao extends AppSearchDao {

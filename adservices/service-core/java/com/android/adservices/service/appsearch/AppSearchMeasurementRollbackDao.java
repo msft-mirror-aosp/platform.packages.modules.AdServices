@@ -36,7 +36,6 @@ import java.util.concurrent.Executor;
  * This class represents the data access object for the information stored in AppSearch regarding
  * whether the user deleted some data from the measurement db.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @Document
 class AppSearchMeasurementRollbackDao extends AppSearchDao {

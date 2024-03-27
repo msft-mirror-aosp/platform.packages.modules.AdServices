@@ -40,7 +40,6 @@ import java.util.concurrent.Executor;
 /**
  * AppSetIdManager provides APIs for app and ad-SDKs to access appSetId for non-monetizing purpose.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppSetIdManager {
     /**

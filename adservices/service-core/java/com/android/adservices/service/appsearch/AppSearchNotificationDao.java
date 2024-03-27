@@ -36,7 +36,6 @@ import java.util.concurrent.Executor;
  * This class represents the data access object for the notification related data written to
  * AppSearch. This includes whether a notification was displayed (Beta or GA format).
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @Document
 class AppSearchNotificationDao extends AppSearchDao {

@@ -63,7 +63,6 @@ import java.util.stream.Collectors;
  *
  * <p>IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with AppSearchConsentManager.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppSearchConsentStorageManager implements IConsentStorage {
 

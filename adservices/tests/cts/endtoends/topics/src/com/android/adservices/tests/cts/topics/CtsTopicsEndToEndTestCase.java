@@ -17,6 +17,7 @@ package com.android.adservices.tests.cts.topics;
 
 import static com.android.adservices.service.FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 
@@ -35,7 +36,7 @@ abstract class CtsTopicsEndToEndTestCase extends AdServicesCtsTestCase {
                 .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)
                 .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true)
                 .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
-                .setConsentManagerDebugMode(true)
+                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                 .setCompatModeFlags();
     }
 }

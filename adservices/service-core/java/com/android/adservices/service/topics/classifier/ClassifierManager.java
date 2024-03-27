@@ -48,7 +48,6 @@ import java.util.stream.Stream;
  * Manager class to control the classifier behaviour between available types of classifier based on
  * classifier flags.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ClassifierManager implements Classifier {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();

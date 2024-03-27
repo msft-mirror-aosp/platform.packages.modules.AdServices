@@ -55,7 +55,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /** Class to manage blocked {@link Topic}s. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();

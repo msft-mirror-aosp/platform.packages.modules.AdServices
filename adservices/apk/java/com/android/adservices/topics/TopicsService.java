@@ -53,7 +53,6 @@ import java.io.PrintWriter;
 import java.util.Objects;
 
 /** Topics Service */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsService extends Service {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();

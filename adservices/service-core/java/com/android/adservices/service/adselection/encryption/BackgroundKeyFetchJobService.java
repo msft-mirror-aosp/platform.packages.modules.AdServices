@@ -53,8 +53,6 @@ import java.util.concurrent.TimeoutException;
  * Background fetch for Fledge encryption key fetch from the Key Management Servers and periodic
  * deletion of expired keys.
  */
-// TODO(b/269798827): Enable for R.
-
 @SuppressLint("LineLength")
 @RequiresApi(Build.VERSION_CODES.S)
 public class BackgroundKeyFetchJobService extends JobService {

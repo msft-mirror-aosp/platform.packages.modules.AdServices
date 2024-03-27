@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
@@ -813,6 +814,22 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setPayloadSizeKb(64)
                         .setNumBuyers(3)
                         .setStatusCode(STATUS_SUCCESS)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logGetAdSelectionDataApiCalledStats(stats);
+
+        verify(mStatsdLoggerMock).logGetAdSelectionDataApiCalledStats(eq(stats));
+    }
+
+    @Test
+    public void testLogGetAdSelectionDataApiCalledStats_withSourceCoordinator() {
+        GetAdSelectionDataApiCalledStats stats =
+                GetAdSelectionDataApiCalledStats.builder()
+                        .setPayloadSizeKb(64)
+                        .setNumBuyers(3)
+                        .setStatusCode(STATUS_SUCCESS)
+                        .setServerAuctionCoordinatorSource(
+                                SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT)
                         .build();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         adServicesLogger.logGetAdSelectionDataApiCalledStats(stats);

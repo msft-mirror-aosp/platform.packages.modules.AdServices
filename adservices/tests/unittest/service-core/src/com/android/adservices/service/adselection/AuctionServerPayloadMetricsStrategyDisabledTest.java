@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -50,6 +52,13 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
     @Test
     public void testSetNumBuyerDoesNothing() {
         mAuctionServerPayloadMetricsStrategy.setNumBuyers(mBuilder, 2);
+        verifyZeroInteractions(mBuilder);
+    }
+
+    @Test
+    public void testSetServerAuctionCoordinatorSourceDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy.setServerAuctionCoordinatorSource(
+                mBuilder, SERVER_AUCTION_COORDINATOR_SOURCE_API);
         verifyZeroInteractions(mBuilder);
     }
 

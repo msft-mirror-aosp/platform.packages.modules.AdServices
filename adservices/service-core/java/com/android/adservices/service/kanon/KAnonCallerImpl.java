@@ -130,6 +130,7 @@ public class KAnonCallerImpl implements KAnonCaller {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
 
     @NonNull private ListeningExecutorService mLightweightExecutorService;
+    @NonNull private ListeningExecutorService mBackgroundExecutorService;
     @NonNull private AnonymousCountingTokens mAnonymousCountingTokens;
     @NonNull private Flags mFlags;
     @NonNull private UserProfileIdManager mUserProfileIdManager;
@@ -162,7 +163,8 @@ public class KAnonCallerImpl implements KAnonCaller {
     private final KAnonAction RECOVER_TOKENS_ACT = KAnonAction.RECOVER_TOKENS_ACT;
 
     public KAnonCallerImpl(
-            @NonNull ExecutorService lightweightExecutorService,
+            @NonNull ListeningExecutorService lightweightExecutorService,
+            @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull AnonymousCountingTokens anonymousCountingTokens,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull ClientParametersDao clientParametersDao,
@@ -175,6 +177,7 @@ public class KAnonCallerImpl implements KAnonCaller {
             @NonNull KeyAttestationFactory keyAttestationFactory,
             @NonNull ObliviousHttpEncryptorFactory obliviousHttpEncryptorFactory) {
         Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(anonymousCountingTokens);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(clientParametersDao);
@@ -187,7 +190,8 @@ public class KAnonCallerImpl implements KAnonCaller {
         Objects.requireNonNull(keyAttestationFactory);
         Objects.requireNonNull(obliviousHttpEncryptorFactory);
 
-        mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mLightweightExecutorService = lightweightExecutorService;
+        mBackgroundExecutorService = backgroundExecutorService;
         mAnonymousCountingTokens = anonymousCountingTokens;
         mUserProfileIdManager = userProfileIdManager;
         mKAnonMessageManager = kAnonMessageManager;
@@ -243,7 +247,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                 FluentFuture.from(initializeClientAndServerParameters())
                         .transformAsync(
                                 ignoredVoid -> performSignAndJoinInBatches(messageEntities),
-                                mLightweightExecutorService);
+                                mBackgroundExecutorService);
         Futures.addCallback(
                 signJoinFuture,
                 new FutureCallback<Void>() {
@@ -278,7 +282,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                         mAdServicesLogger.logKAnonSignJoinStatus();
                     }
                 },
-                mLightweightExecutorService);
+                mBackgroundExecutorService);
     }
 
     private void logBackgroundJobStats(long latency, int numberOfMessagesAttempted, int jobResult) {
@@ -326,7 +330,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                             }
                             return immediateVoidFuture();
                         },
-                        mLightweightExecutorService)
+                        mBackgroundExecutorService)
                 .catchingAsync(
                         Throwable.class,
                         e -> {
@@ -359,7 +363,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                             }
                             return immediateFailedFuture(e);
                         },
-                        mLightweightExecutorService);
+                        mBackgroundExecutorService);
     }
 
     /**
@@ -376,10 +380,10 @@ public class KAnonCallerImpl implements KAnonCaller {
                     FluentFuture.from(immediateVoidFuture())
                             .transformAsync(
                                     ignoredVoid -> signRequest(messagesSublist),
-                                    mLightweightExecutorService)
+                                    mBackgroundExecutorService)
                             .transformAsync(
                                     tokensSet -> joinRequest(messagesSublist, tokensSet),
-                                    mLightweightExecutorService));
+                                    mBackgroundExecutorService));
         }
         return Futures.whenAllComplete(signAndJoinBatchesFutures)
                 .call(() -> null, mLightweightExecutorService);
@@ -404,7 +408,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                             }
                             return immediateFuture(tokensSet);
                         },
-                        mLightweightExecutorService)
+                        mBackgroundExecutorService)
                 .catchingAsync(
                         Throwable.class,
                         e -> {
@@ -435,7 +439,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                             }
                             return immediateFailedFuture(e);
                         },
-                        mLightweightExecutorService);
+                        mBackgroundExecutorService);
     }
 
     private ListenableFuture<Void> joinRequest(
@@ -460,7 +464,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                     () ->
                             updateServerAndClientParams(
                                     dbClientParameters, dbServerParametersList.get(0)),
-                    mLightweightExecutorService);
+                    mBackgroundExecutorService);
         } else {
             sLogger.v("Fetching new client and server parameters");
             // Get new server and client parameters.
@@ -470,15 +474,15 @@ public class KAnonCallerImpl implements KAnonCaller {
                                     immediateFuture(
                                             generateNewClientParameters(
                                                     getServerPublicParamsResponse)),
-                            mLightweightExecutorService)
+                            mBackgroundExecutorService)
                     .transformAsync(
                             getServerPublicParamsResponse ->
                                     registerNewClientParameters(getServerPublicParamsResponse),
-                            mLightweightExecutorService)
+                            mBackgroundExecutorService)
                     .transformAsync(
                             clientAndServerResponsePair ->
                                     persistClientAndServerParams(clientAndServerResponsePair),
-                            mLightweightExecutorService);
+                            mBackgroundExecutorService);
         }
     }
 
@@ -553,7 +557,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                     mServerParametersDao.insertServerParameters(serverParametersToSave);
                     mClientParametersDao.insertClientParameters(clientParametersToSave);
                 },
-                mLightweightExecutorService);
+                mBackgroundExecutorService);
     }
 
     /**
@@ -606,7 +610,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                             fetchChallengeRequest ->
                                     mAdServicesHttpsClient.performRequestGetResponseInBase64String(
                                             fetchChallengeRequest),
-                            mLightweightExecutorService)
+                            mBackgroundExecutorService)
                     .transformAsync(
                             response -> {
                                 GetKeyAttestationChallengeResponse getAttestationResponse =
@@ -625,7 +629,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                 updateRequestMetadata(attestationCertificateInBytes);
                                 return immediateFuture(attestationCertificateInBytes.length);
                             },
-                            mLightweightExecutorService)
+                            mBackgroundExecutorService)
                     .transformAsync(
                             attestationCertificateSize -> {
                                 if (mFlags.getFledgeKAnonLoggingEnabled()) {
@@ -645,7 +649,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                 }
                                 return immediateVoidFuture();
                             },
-                            mLightweightExecutorService)
+                            mBackgroundExecutorService)
                     .catchingAsync(
                             Throwable.class,
                             t -> {
@@ -668,7 +672,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                                 t,
                                                 KAnonAction.GET_CHALLENGE_HTTP_CALL));
                             },
-                            mLightweightExecutorService);
+                            mBackgroundExecutorService);
         } else {
             return immediateVoidFuture();
         }
@@ -707,7 +711,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                         fetchParamRequest ->
                                 mAdServicesHttpsClient.performRequestGetResponseInBase64String(
                                         fetchParamRequest),
-                        mLightweightExecutorService)
+                        mBackgroundExecutorService)
                 .catchingAsync(
                         Throwable.class,
                         t ->
@@ -716,7 +720,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                                 "Error while making the http call",
                                                 t,
                                                 KAnonAction.SERVER_PARAM_HTTP_CALL)),
-                        mLightweightExecutorService)
+                        mBackgroundExecutorService)
                 .transformAsync(
                         response -> {
                             GetServerPublicParamsResponse getServerPublicParamsResponse;
@@ -733,7 +737,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                             }
                             return immediateFuture(getServerPublicParamsResponse);
                         },
-                        mLightweightExecutorService);
+                        mBackgroundExecutorService);
     }
 
     /** This method using {@link AnonymousCountingTokens} to generate new client parameters. */
@@ -787,12 +791,12 @@ public class KAnonCallerImpl implements KAnonCaller {
                                             .setBodyInBytes(registerClientRequest.toByteArray())
                                             .build());
                         },
-                        mLightweightExecutorService)
+                        mBackgroundExecutorService)
                 .transformAsync(
                         registerClientParametersRequest ->
                                 mAdServicesHttpsClient.performRequestGetResponseInBase64String(
                                         registerClientParametersRequest),
-                        mLightweightExecutorService)
+                        mBackgroundExecutorService)
                 .catchingAsync(
                         Throwable.class,
                         t ->
@@ -801,7 +805,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                                 "Error while making the http call",
                                                 t,
                                                 KAnonAction.REGISTER_CLIENT_HTTP_CALL)),
-                        mLightweightExecutorService)
+                        mBackgroundExecutorService)
                 .transformAsync(
                         response -> {
                             RegisterClientResponse registerClientResponse;
@@ -819,7 +823,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                     Pair.create(
                                             registerClientResponse, getServerPublicParamsResponse));
                         },
-                        mLightweightExecutorService);
+                        mBackgroundExecutorService);
     }
 
     private ListenableFuture<Void> updateMessagesStatusInDatabase(
@@ -827,7 +831,7 @@ public class KAnonCallerImpl implements KAnonCaller {
         sLogger.v("Updating message status to : " + status);
         return Futures.submit(
                 () -> mKAnonMessageManager.updateMessagesStatus(messages, status),
-                mLightweightExecutorService);
+                mBackgroundExecutorService);
     }
 
     /**
@@ -861,7 +865,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                                 "Error while making the http call",
                                                 t,
                                                 KAnonAction.GET_TOKENS_REQUEST_HTTP_CALL)),
-                        mLightweightExecutorService)
+                        mBackgroundExecutorService)
                 .transformAsync(
                         getTokensResponseHTTP ->
                                 recoverTokens(
@@ -869,7 +873,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                         messagesSet,
                                         generatedTokensRequestProto,
                                         getTokensResponseHTTP),
-                        mLightweightExecutorService)
+                        mBackgroundExecutorService)
                 .catchingAsync(
                         KAnonSignJoinException.class,
                         e -> {
@@ -879,9 +883,9 @@ public class KAnonCallerImpl implements KAnonCaller {
                                             updateMessagesStatusInDatabase(messageEntities, FAILED))
                                     .transformAsync(
                                             ignoredVoid -> immediateFailedFuture(e),
-                                            mLightweightExecutorService);
+                                            mBackgroundExecutorService);
                         },
-                        mLightweightExecutorService);
+                        mBackgroundExecutorService);
     }
 
     private String getStringToSignJoinFromMessage(KAnonMessageEntity kAnonMessageEntity) {
@@ -965,7 +969,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                                     mClientParameters.getPublicParameters(),
                                                     mClientParameters.getPrivateParameters(),
                                                     mServerPublicParameters)),
-                            mLightweightExecutorService)
+                            mBackgroundExecutorService)
                     .catchingAsync(
                             InvalidProtocolBufferException.class,
                             t -> {
@@ -981,9 +985,9 @@ public class KAnonCallerImpl implements KAnonCaller {
                                                                                 + " tokens",
                                                                         t,
                                                                         RECOVER_TOKENS_ACT)),
-                                                mLightweightExecutorService);
+                                                mBackgroundExecutorService);
                             },
-                            mLightweightExecutorService);
+                            mBackgroundExecutorService);
         } else {
             sLogger.v("Verify tokens failed");
             return FluentFuture.from(updateMessagesStatusInDatabase(messageEntities, FAILED))
@@ -993,7 +997,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                             new KAnonSignJoinException(
                                                     "Verify tokens response failed",
                                                     KAnonAction.VERIFY_TOKENS_RESPONSE_ACT)),
-                            mLightweightExecutorService);
+                            mBackgroundExecutorService);
         }
     }
 
@@ -1018,12 +1022,12 @@ public class KAnonCallerImpl implements KAnonCaller {
                                                     joinResponse,
                                                     currentMessage.getAdSelectionId(),
                                                     kAnonObliviousHttpEncryptor),
-                                    mLightweightExecutorService)
+                                    mBackgroundExecutorService)
                             .transformAsync(
                                     deserializedJoinRequest ->
                                             readAndUpdateStatusFromBinaryHttp(
                                                     deserializedJoinRequest, currentMessage),
-                                    mLightweightExecutorService)
+                                    mBackgroundExecutorService)
                             .transformAsync(
                                     ignoredVoid -> {
                                         if (mFlags.getFledgeKAnonLoggingEnabled()) {
@@ -1041,7 +1045,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                         }
                                         return immediateVoidFuture();
                                     },
-                                    mLightweightExecutorService)
+                                    mBackgroundExecutorService)
                             .catchingAsync(
                                     Throwable.class,
                                     e -> {
@@ -1061,7 +1065,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                         }
                                         return immediateFailedFuture(e);
                                     },
-                                    mLightweightExecutorService));
+                                    mBackgroundExecutorService));
         }
         return Futures.whenAllComplete(joinFuturesList)
                 .call(() -> null, mLightweightExecutorService);
@@ -1142,12 +1146,12 @@ public class KAnonCallerImpl implements KAnonCaller {
                                                 .setBodyInBytes(byteRequest)
                                                 .setDevContext(DEV_CONTEXT_DISABLED)
                                                 .build()),
-                        mLightweightExecutorService)
+                        mBackgroundExecutorService)
                 .transformAsync(
                         joinRequest ->
                                 mAdServicesHttpsClient.performRequestGetResponseInBase64String(
                                         joinRequest),
-                        mLightweightExecutorService)
+                        mBackgroundExecutorService)
                 .catchingAsync(
                         Throwable.class,
                         t -> {
@@ -1156,7 +1160,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                     t,
                                     KAnonAction.JOIN_HTTP_CALL);
                         },
-                        mLightweightExecutorService);
+                        mBackgroundExecutorService);
     }
 
     /**

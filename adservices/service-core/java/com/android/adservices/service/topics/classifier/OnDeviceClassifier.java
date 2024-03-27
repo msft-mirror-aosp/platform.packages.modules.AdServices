@@ -56,7 +56,6 @@ import java.util.stream.Collectors;
 /**
  * This Classifier classifies app into list of Topics using the on-device classification ML Model.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class OnDeviceClassifier implements Classifier {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();

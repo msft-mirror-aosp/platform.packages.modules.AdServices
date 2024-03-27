@@ -66,7 +66,6 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * <p>This class is thread safe.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 public class CacheManager {

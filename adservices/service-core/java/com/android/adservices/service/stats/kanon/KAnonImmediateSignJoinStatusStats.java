@@ -40,7 +40,9 @@ public abstract class KAnonImmediateSignJoinStatusStats {
     public abstract int getLatencyInMs();
 
     public static Builder builder() {
-        return new AutoValue_KAnonImmediateSignJoinStatusStats.Builder();
+        return new AutoValue_KAnonImmediateSignJoinStatusStats.Builder()
+                .setMessagesFailedToJoin(0)
+                .setMessagesFailedToSign(0);
     }
 
     @AutoValue.Builder

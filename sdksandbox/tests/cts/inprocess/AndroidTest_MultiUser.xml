@@ -25,10 +25,38 @@
         <option name="test-package-name" value="com.android.sdksandbox.tests.cts.inprocesstests" />
     </target_preparer>
 
+    <!-- IMPORTANT: This needs to come before SuiteApkInstaller
+
+       SuiteApkInstaller is not able to uninstall the Sdk-Provider.apk because the test
+       app that requires it is still installed at that point. This means the apk would
+       stay on the test device after the test ends.
+
+       This preparer, during tear down, runs after SuiteApkInstaller and will finally
+       uninstall the provider, leaving the device in a clean state.
+
+       See b/314294893 for more details.
+      -->
+    <option name="test-user-token" value="%TEST_USER%" />
+    <target_preparer
+        class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="teardown-command"
+            value="pm uninstall --user %TEST_USER% com.android.socketsdkprovider" />
+    </target_preparer>
+
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
         <option name="test-file-name" value="CtsSdkSandboxInprocessTests.apk" />
+        <option name="test-file-name" value="SocketSdkProvider.apk" />
         <option name="test-file-name" value="SocketApp.apk" />
+    </target_preparer>
+
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="svc power stayon true"/>
+        <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
+        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
+        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
+        <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
+        <option name="teardown-command" value="svc power stayon false" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

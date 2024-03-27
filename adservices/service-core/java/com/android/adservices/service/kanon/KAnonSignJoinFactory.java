@@ -67,6 +67,7 @@ public class KAnonSignJoinFactory {
         KAnonCallerImpl kAnonCaller =
                 new KAnonCallerImpl(
                         AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getBackgroundExecutor(),
                         new AnonymousCountingTokensImpl(),
                         adServicesHttpsClient,
                         KAnonDatabase.getInstance(mContext).clientParametersDao(),

@@ -91,7 +91,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /** Encapsulates the Impression Reporting logic */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ImpressionReporter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

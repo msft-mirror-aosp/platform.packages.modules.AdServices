@@ -102,7 +102,6 @@ import java.util.stream.Collectors;
  *
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AdSelectionRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

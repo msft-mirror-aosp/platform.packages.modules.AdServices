@@ -144,7 +144,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetCobaltLoggingEnabled() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testFeatureFlagGuardedByGlobalKs(
                 KEY_COBALT_LOGGING_ENABLED,
                 "COBALT_LOGGING_ENABLED",
                 flags -> flags.getCobaltLoggingEnabled());

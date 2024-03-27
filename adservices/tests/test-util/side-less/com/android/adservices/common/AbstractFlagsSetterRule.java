@@ -62,6 +62,7 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>>
 
     private final String mDeviceConfigNamespace;
     private final DeviceConfigHelper mDeviceConfig;
+    // TODO(b/328101177): move system properties to its own rule
     private final String mSystemPropertiesPrefix;
     private final SystemPropertiesHelper mSystemProperties;
 
@@ -457,11 +458,7 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>>
     }
 
     public T setSystemProperty(String name, boolean value) {
-        return setSystemProperty(name, Boolean.toString(value));
-    }
-
-    private T setSystemProperty(String name, String value) {
-        return setOrCacheSystemProperty(mSystemPropertiesPrefix + name, value);
+        return setOrCacheSystemProperty(mSystemPropertiesPrefix + name, Boolean.toString(value));
     }
 
     private T setOrCacheLogtagSystemProperty(String name, String value) {

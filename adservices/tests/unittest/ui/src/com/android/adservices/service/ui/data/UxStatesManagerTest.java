@@ -29,9 +29,7 @@ import static org.mockito.Mockito.verify;
 
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
-import android.os.Build;
 
-import androidx.annotation.RequiresApi;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
@@ -56,8 +54,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class UxStatesManagerTest {
 
     private Context mContext;

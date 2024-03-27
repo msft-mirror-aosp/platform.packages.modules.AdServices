@@ -56,7 +56,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the Set App Install Advertisers logic */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppInstallAdvertisersSetter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

@@ -16,42 +16,43 @@
 
 package com.android.socketapp;
 
-import android.app.Activity;
-import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.SandboxedSdk;
+import android.app.sdksandbox.SandboxedSdkProvider;
+import android.content.Context;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
+import android.os.Binder;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 
 import java.io.IOException;
 
-public class SocketApp extends Activity {
+/* This Provider is used to test sockets to and from SDK sandbox processes. */
+public class SocketSdkProvider extends SandboxedSdkProvider {
 
-    private static final String SOCKET_NAME = "SocketApp";
-    private static final String TAG = "SocketApp";
-    private static final String SDK_NAME = "com.android.socketsdkprovider";
+    private static final String SOCKET_NAME = "SocketSdkProvider";
+    private static final String TAG = "SocketSdkProvider";
 
     @Override
-    protected void onCreate(Bundle bundle) {
-        super.onCreate(bundle);
-
+    public final SandboxedSdk onLoadSdk(Bundle params) {
         new Thread(this::connect).start();
 
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        getApplicationContext()
-                .getSystemService(SdkSandboxManager.class)
-                .loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        callback.assertLoadSdkIsSuccessful();
+        return new SandboxedSdk(new Binder());
+    }
+
+    @Override
+    public final View getView(Context windowContext, Bundle params, int width, int height) {
+        return null;
     }
 
     private void connect() {
-        Log.i(TAG, "waiting connections from app");
+        Log.i(TAG, "waiting connections from sandbox");
         try (LocalServerSocket serverSocket = new LocalServerSocket(SOCKET_NAME);
                 LocalSocket localSocket = serverSocket.accept()) {
             throw new IOException("This should not happen");
         } catch (IOException e) {
-            throw new RuntimeException("Crashing test app", e);
+            throw new RuntimeException("Crashing test sandbox", e);
         }
     }
 }
