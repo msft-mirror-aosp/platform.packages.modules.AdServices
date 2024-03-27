@@ -134,9 +134,9 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
         extendedMockito.mockGetFlags(mMockFlags);
 
-        doReturn(mSpyMobileDataDownload).when(() -> MobileDataDownloadFactory.getMdd(any(), any()));
+        doReturn(mSpyMobileDataDownload).when(() -> MobileDataDownloadFactory.getMdd(any()));
         doReturn(mSpyEnrollmentDataDownloadManager)
-                .when(() -> EnrollmentDataDownloadManager.getInstance(any()));
+                .when(() -> EnrollmentDataDownloadManager.getInstance());
 
         doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
 
@@ -399,8 +399,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         // Killswitch is off.
         mockMddBackgroundTaskKillSwitch(/* toBeReturned */ false);
 
-        doReturn(mMockMdd)
-                .when(() -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
+        doReturn(mMockMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
 
         JobServiceCallback callback = createJobFinishedCallback(mSpyMddJobService);
 
@@ -409,7 +408,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         callback.assertJobFinished();
 
         // Check that Mdd.handleTask is executed.
-        verify(() -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
+        verify(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
         verify(mMockMdd).handleTask(WIFI_CHARGING_PERIODIC_TASK);
     }
 
