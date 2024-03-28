@@ -23,8 +23,8 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 
 import java.util.List;
 
-/** Replacement for {@link AdFiltererImpl} if filtering is turned off. */
-public final class AdFiltererNoOpImpl implements AdFilterer {
+/** Replacement for {@link AppInstallAdFiltererImpl} if app install filtering is turned off. */
+public final class AppInstallAdFiltererNoOpImpl implements AppInstallAdFilterer {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
@@ -53,6 +53,6 @@ public final class AdFiltererNoOpImpl implements AdFilterer {
     }
 
     private static void logSkip() {
-        sLogger.v("Ad filtering is disabled, skipping");
+        sLogger.v("App install filtering is disabled, skipping");
     }
 }

@@ -58,10 +58,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
-public class FrequencyCapFiltererImplTest {
-    private static final String PACKAGE_NAME_TO_FILTER =
-            CommonFixture.TEST_PACKAGE_NAME_1 + ".filter";
-
+public class FrequencyCapAdFiltererImplTest {
     private static final AdData.Builder AD_DATA_BUILDER =
             AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0);
 
@@ -81,15 +78,15 @@ public class FrequencyCapFiltererImplTest {
                             CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/decisionPath/"));
 
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
-    private AdFilterer mAdFilterer;
+    private FrequencyCapAdFilterer mFrequencyCapAdFilterer;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
-        mAdFilterer =
-                new FrequencyCapFiltererImpl(
+        mFrequencyCapAdFilterer =
+                new FrequencyCapAdFiltererImpl(
                         mFrequencyCapDaoMock, CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
     }
 
@@ -101,7 +98,7 @@ public class FrequencyCapFiltererImplTest {
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
 
-        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
+        assertEquals(contextualAds, mFrequencyCapAdFilterer.filterContextualAds(contextualAds));
     }
 
     @Test
@@ -119,7 +116,7 @@ public class FrequencyCapFiltererImplTest {
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
 
-        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
+        assertEquals(contextualAds, mFrequencyCapAdFilterer.filterContextualAds(contextualAds));
         verifyNoMoreInteractions(mFrequencyCapDaoMock);
     }
 
@@ -145,7 +142,7 @@ public class FrequencyCapFiltererImplTest {
         final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER.setAdsWithBid(adsWithBid).build();
 
-        assertThat(mAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
+        assertThat(mFrequencyCapAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
                 .containsExactlyElementsIn(adsWithBid);
 
         verifyNoMoreInteractions(mFrequencyCapDaoMock);
@@ -173,7 +170,7 @@ public class FrequencyCapFiltererImplTest {
         final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER.setAdsWithBid(adsWithBid).build();
 
-        assertThat(mAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
+        assertThat(mFrequencyCapAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
                 .containsExactlyElementsIn(adsWithBid);
 
         verify(
@@ -215,7 +212,7 @@ public class FrequencyCapFiltererImplTest {
         final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER.setAdsWithBid(adsWithBid).build();
 
-        assertThat(mAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
+        assertThat(mFrequencyCapAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
                 .containsExactly(new AdWithBid(dataNoFilters, 2.0));
         verify(mFrequencyCapDaoMock)
                 .getNumEventsForBuyerAfterTime(anyInt(), any(), anyInt(), any());
@@ -241,7 +238,7 @@ public class FrequencyCapFiltererImplTest {
         final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER.setAdsWithBid(adsWithBid).build();
 
-        assertThat(mAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
+        assertThat(mFrequencyCapAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
                 .containsExactlyElementsIn(adsWithBid);
 
         verifyNoMoreInteractions(mFrequencyCapDaoMock);
@@ -252,7 +249,7 @@ public class FrequencyCapFiltererImplTest {
         List<DBCustomAudience> caList =
                 DBCustomAudienceFixture.getListOfBuyersCustomAudiences(
                         Arrays.asList(CommonFixture.VALID_BUYER_1, CommonFixture.VALID_BUYER_2));
-        assertEquals(caList, mAdFilterer.filterCustomAudiences(caList));
+        assertEquals(caList, mFrequencyCapAdFilterer.filterCustomAudiences(caList));
     }
 
     @Test
@@ -278,7 +275,7 @@ public class FrequencyCapFiltererImplTest {
                         caWithEmptyFrequencyCapFilters,
                         DBCustomAudienceFixture.VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS);
 
-        assertThat(mAdFilterer.filterCustomAudiences(inputList))
+        assertThat(mFrequencyCapAdFilterer.filterCustomAudiences(inputList))
                 .containsExactlyElementsIn(inputList);
 
         verifyNoMoreInteractions(mFrequencyCapDaoMock);
@@ -313,7 +310,7 @@ public class FrequencyCapFiltererImplTest {
                         caWithEmptyFrequencyCapFilters,
                         DBCustomAudienceFixture.VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS);
 
-        assertThat(mAdFilterer.filterCustomAudiences(inputList))
+        assertThat(mFrequencyCapAdFilterer.filterCustomAudiences(inputList))
                 .containsExactlyElementsIn(inputList);
 
         verify(
@@ -400,7 +397,7 @@ public class FrequencyCapFiltererImplTest {
                         caWithNonWinFrequencyCapFilters,
                         DBCustomAudienceFixture.VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS);
 
-        assertThat(mAdFilterer.filterCustomAudiences(inputList))
+        assertThat(mFrequencyCapAdFilterer.filterCustomAudiences(inputList))
                 .containsExactly(
                         caWithEmptyFrequencyCapFilters,
                         DBCustomAudienceFixture.VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS);
@@ -457,7 +454,7 @@ public class FrequencyCapFiltererImplTest {
                         caWithWinFrequencyCapFilters,
                         DBCustomAudienceFixture.VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS);
 
-        assertThat(mAdFilterer.filterCustomAudiences(inputList))
+        assertThat(mFrequencyCapAdFilterer.filterCustomAudiences(inputList))
                 .containsExactly(
                         caWithEmptyFrequencyCapFilters,
                         DBCustomAudienceFixture.VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS);
