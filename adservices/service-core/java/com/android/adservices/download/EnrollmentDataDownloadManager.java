@@ -270,7 +270,6 @@ public class EnrollmentDataDownloadManager {
         }
     }
 
-    @VisibleForTesting
     public enum DownloadStatus {
         SUCCESS,
         NO_FILE_AVAILABLE,
