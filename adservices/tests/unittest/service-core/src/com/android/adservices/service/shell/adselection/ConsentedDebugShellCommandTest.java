@@ -142,9 +142,9 @@ public class ConsentedDebugShellCommandTest
                 HELP,
                 COMMAND_PREFIX,
                 CMD,
-                VIEW_SUB_CMD,
+                ENABLE_SUB_CMD,
                 SECRET_DEBUG_TOKEN_ARG_NAME,
-                DEBUG_TOKEN.substring(0, SECRET_DEBUG_TOKEN_MIN_LEN),
+                DEBUG_TOKEN.substring(0, SECRET_DEBUG_TOKEN_MIN_LEN - 1),
                 EXPIRY_IN_HOURS_ARG_NAME,
                 EXPIRY_IN_HOURS);
 
@@ -160,7 +160,7 @@ public class ConsentedDebugShellCommandTest
                 HELP,
                 COMMAND_PREFIX,
                 CMD,
-                VIEW_SUB_CMD,
+                ENABLE_SUB_CMD,
                 SECRET_DEBUG_TOKEN_ARG_NAME,
                 DEBUG_TOKEN,
                 EXPIRY_IN_HOURS_ARG_NAME,
@@ -178,7 +178,7 @@ public class ConsentedDebugShellCommandTest
                 HELP,
                 COMMAND_PREFIX,
                 CMD,
-                VIEW_SUB_CMD,
+                ENABLE_SUB_CMD,
                 SECRET_DEBUG_TOKEN_ARG_NAME,
                 DEBUG_TOKEN,
                 EXPIRY_IN_HOURS_ARG_NAME,
@@ -239,7 +239,8 @@ public class ConsentedDebugShellCommandTest
                 COMMAND_PREFIX,
                 CMD,
                 DISABLE_SUB_CMD,
-                "extraArgs");
+                "--extraArgs",
+                "extraArgValue");
     }
 
     @Test
@@ -261,7 +262,8 @@ public class ConsentedDebugShellCommandTest
                 COMMAND_PREFIX,
                 CMD,
                 VIEW_SUB_CMD,
-                "extraArgs");
+                "--extraArgs",
+                "extraArgValue");
     }
 
     @Test
