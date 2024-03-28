@@ -17,7 +17,7 @@
 package com.android.adservices.signals;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
@@ -36,7 +36,7 @@ import android.os.IBinder;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -55,7 +55,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @SpyStatic(ConsentManager.class)
 @SpyStatic(ProtectedSignalsServiceImpl.class)
 @SpyStatic(PackageChangedReceiver.class)
-@SpyStatic(MddJobService.class)
+@SpyStatic(MddJob.class)
 @RunWith(MockitoJUnitRunner.class)
 public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockitoTestCase {
 
@@ -81,7 +81,7 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
         assertNull(binder);
 
         verifyZeroInteractions(mConsentManagerMock);
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
+        verify(MddJob::scheduleAllMddJobs, never());
     }
 
     /**
@@ -96,7 +96,7 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
         assertNull(binder);
 
         verifyZeroInteractions(mConsentManagerMock);
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
+        verify(MddJob::scheduleAllMddJobs, never());
     }
 
     /**
@@ -113,7 +113,7 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
                 .getConsent(eq(AdServicesApiType.FLEDGE));
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(MddJob::scheduleAllMddJobs);
 
         ProtectedSignalsService protectedSignalsServiceSpy =
                 new ProtectedSignalsService(mFlagsWithKillSwitchOffGaUxEnabled);
@@ -128,7 +128,7 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
         verify(mConsentManagerMock, never()).getConsent();
         verify(mConsentManagerMock).getConsent(eq(AdServicesApiType.FLEDGE));
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        verify(MddJob::scheduleAllMddJobs);
     }
 
     private Intent getIntentForProtectedSignalsService() {
