@@ -94,7 +94,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -455,7 +454,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
         expect.that(loggedStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
 
-        verify(() -> AppNameApiErrorLogger.getInstance(any(), any()));
         verify(mMockAppNameApiErrorLogger)
                 .logErrorOccurrence(
                         packageName, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, STATUS_SUCCESS);
@@ -856,10 +854,57 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         verify(mStatsdLoggerMock).logGetAdSelectionDataBuyerInputGeneratedStats(eq(stats));
     }
 
+    @Test
+    public void testLogTopicsEncryptionEpochComputationReportedStats() {
+        TopicsEncryptionEpochComputationReportedStats stats =
+                TopicsEncryptionEpochComputationReportedStats.builder()
+                        .setCountOfTopicsBeforeEncryption(10)
+                        .setCountOfEmptyEncryptedTopics(9)
+                        .setCountOfEncryptedTopics(8)
+                        .setLatencyOfWholeEncryptionProcessMs(5)
+                        .setLatencyOfEncryptionPerTopicMs(4)
+                        .setLatencyOfPersistingEncryptedTopicsToDbMs(3)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logTopicsEncryptionEpochComputationReportedStats(stats);
+
+        verify(mStatsdLoggerMock).logTopicsEncryptionEpochComputationReportedStats(eq(stats));
+    }
+
+    @Test
+    public void testLogTopicsEncryptionGetTopicsReportedStats() {
+        TopicsEncryptionGetTopicsReportedStats stats =
+                TopicsEncryptionGetTopicsReportedStats.builder()
+                        .setCountOfEncryptedTopics(5)
+                        .setLatencyOfReadingEncryptedTopicsFromDbMs(100)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logTopicsEncryptionGetTopicsReportedStats(stats);
+
+        verify(mStatsdLoggerMock).logTopicsEncryptionGetTopicsReportedStats(eq(stats));
+    }
+
+    @Test
+    public void testLogShellCommandStats() {
+        @ShellCommandStats.Command int command = ShellCommandStats.COMMAND_ECHO;
+        @ShellCommandStats.CommandResult int result = ShellCommandStats.RESULT_SUCCESS;
+        int latency = 1000;
+        ShellCommandStats stats = new ShellCommandStats(command, result, latency);
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+
+        adServicesLogger.logShellCommandStats(stats);
+
+        ArgumentCaptor<ShellCommandStats> argumentCaptor =
+                ArgumentCaptor.forClass(ShellCommandStats.class);
+        verify(mStatsdLoggerMock).logShellCommandStats(argumentCaptor.capture());
+        expect.that(argumentCaptor.getValue()).isEqualTo(stats);
+    }
+
     private void mockAppNameApiErrorLogger() {
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(true);
-        doReturn(mMockAppNameApiErrorLogger)
-                .when(() -> AppNameApiErrorLogger.getInstance(any(), any()));
+        doReturn(mMockAppNameApiErrorLogger).when(() -> AppNameApiErrorLogger.getInstance());
     }
 }

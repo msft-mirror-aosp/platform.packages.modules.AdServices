@@ -92,6 +92,8 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_DISABLE_DIRECT_APP_CALLS =
             "topics_disable_direct_app_calls";
     public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
+    public static final String KEY_TOPICS_ENCRYPTION_METRICS_ENABLED =
+            "topics_encryption_metrics_enabled";
     public static final String KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE =
             "topics_disable_plaintext_response";
     public static final String KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY =
@@ -562,6 +564,8 @@ public final class FlagsConstants {
             "fledge_frequency_cap_filtering_enabled";
     public static final String KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED =
             "fledge_ad_selection_contextual_ads_enabled";
+    public static final String KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED =
+            "fledge_ad_selection_contextual_ads_metrics_enabled";
     public static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED =
             "fledge_fetch_custom_audience_enabled";
     public static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
@@ -1039,6 +1043,8 @@ public final class FlagsConstants {
             "adservices_consent_migration_logging_enabled";
 
     public static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
+
+    public static final String KEY_ENABLE_BACK_COMPAT_INIT = "enable_back_compat_init";
 
     public static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
 

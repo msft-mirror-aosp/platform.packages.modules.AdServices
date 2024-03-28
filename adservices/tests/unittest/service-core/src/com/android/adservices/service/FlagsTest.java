@@ -35,6 +35,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION
 import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
+import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
 
 import android.util.Log;
 
@@ -361,8 +362,16 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetJobSchedulingLoggingEnabled() {
+        testFlag(
+                "getJobSchedulingLoggingEnabled()",
+                DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED,
+                flags -> flags.getJobSchedulingLoggingEnabled());
+    }
+
+    @Test
+    public void testGetEnableBackCompatInit() {
         testFeatureFlag(
-                "DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED", Flags::getJobSchedulingLoggingEnabled);
+                "DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -523,6 +532,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     private void testFlag(
             String getterName, int defaultValue, Flaginator<Flags, Integer> flaginator) {
+        expect.withMessage("%s", getterName)
+                .that(flaginator.getFlagValue(mFlags))
+                .isEqualTo(defaultValue);
+    }
+
+    private void testFlag(
+            String getterName, boolean defaultValue, Flaginator<Flags, Boolean> flaginator) {
         expect.withMessage("%s", getterName)
                 .that(flaginator.getFlagValue(mFlags))
                 .isEqualTo(defaultValue);

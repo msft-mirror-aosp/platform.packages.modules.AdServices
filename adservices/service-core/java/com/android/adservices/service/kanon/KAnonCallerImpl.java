@@ -27,8 +27,6 @@ import static com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessa
 import static com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus.JOINED;
 import static com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus.SIGNED;
 import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_INITIALIZE_FAILED;
-import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_SOME_OR_ALL_JOIN_FAILED;
-import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_SOME_OR_ALL_SIGN_FAILED;
 import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_SUCCESS;
 import static com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants.KANON_JOB_RESULT_UNSET;
 
@@ -81,7 +79,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -102,7 +99,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
@@ -253,33 +249,44 @@ public class KAnonCallerImpl implements KAnonCaller {
                 new FutureCallback<Void>() {
                     @Override
                     public void onSuccess(Void result) {
-                        long latency = Instant.now().toEpochMilli() - startTime;
-                        if (source.equals(KAnonCallerSource.BACKGROUND_JOB)) {
-                            logBackgroundJobStats(
-                                    latency, messageEntities.size(), KANON_JOB_RESULT_SUCCESS);
+                        try {
+                            long latency = Instant.now().toEpochMilli() - startTime;
+                            if (source.equals(KAnonCallerSource.BACKGROUND_JOB)) {
+                                logBackgroundJobStats(
+                                        latency, messageEntities.size(), KANON_JOB_RESULT_SUCCESS);
+                            }
+                            if (source.equals(KAnonCallerSource.IMMEDIATE_SIGN_JOIN)) {
+                                logImmediateJoinStats(
+                                        latency, messageEntities.size(), KANON_JOB_RESULT_SUCCESS);
+                            }
+                            // TODO(b/326903508): Remove unused loggers. Use callback instead of
+                            // logger
+                            // for testing.
+                            mAdServicesLogger.logKAnonSignJoinStatus();
+                        } catch (Throwable t) {
+                            sLogger.e(t, "Error while logging telemetry stats");
                         }
-                        if (source.equals(KAnonCallerSource.IMMEDIATE_SIGN_JOIN)) {
-                            logImmediateJoinStats(
-                                    latency, messageEntities.size(), KANON_JOB_RESULT_SUCCESS);
-                        }
-                        // TODO(b/326903508): Remove unused loggers. Use callback instead of logger
-                        // for testing.
-                        mAdServicesLogger.logKAnonSignJoinStatus();
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
-                        long latency = Instant.now().toEpochMilli() - startTime;
-                        int result = getKAnonJobResultFromException(t);
-                        if (source.equals(KAnonCallerSource.BACKGROUND_JOB)) {
-                            logBackgroundJobStats(latency, messageEntities.size(), result);
+                        try {
+                            sLogger.e(t, "Failure during sign join process");
+                            long latency = Instant.now().toEpochMilli() - startTime;
+                            int result = getKAnonJobResultFromException(t);
+                            if (source.equals(KAnonCallerSource.BACKGROUND_JOB)) {
+                                logBackgroundJobStats(latency, messageEntities.size(), result);
+                            }
+                            if (source.equals(KAnonCallerSource.IMMEDIATE_SIGN_JOIN)) {
+                                logImmediateJoinStats(latency, messageEntities.size(), result);
+                            }
+                            // TODO(b/326903508): Remove unused loggers. Use callback instead of
+                            // logger
+                            // for testing.
+                            mAdServicesLogger.logKAnonSignJoinStatus();
+                        } catch (Throwable e) {
+                            sLogger.e(e, "Error while logging telemetry stats");
                         }
-                        if (source.equals(KAnonCallerSource.IMMEDIATE_SIGN_JOIN)) {
-                            logImmediateJoinStats(latency, messageEntities.size(), result);
-                        }
-                        // TODO(b/326903508): Remove unused loggers. Use callback instead of logger
-                        // for testing.
-                        mAdServicesLogger.logKAnonSignJoinStatus();
                     }
                 },
                 mBackgroundExecutorService);
@@ -1097,8 +1104,8 @@ public class KAnonCallerImpl implements KAnonCaller {
                         Fields.builder()
                                 .appendField(
                                         CONTENT_LENGTH_HDR,
-                                        Integer.toString(body.getBytes(
-                                                StandardCharsets.UTF_8).length))
+                                        Integer.toString(
+                                                body.getBytes(StandardCharsets.UTF_8).length))
                                 .appendField(
                                         "Date",
                                         DateTimeFormatter.ofPattern(

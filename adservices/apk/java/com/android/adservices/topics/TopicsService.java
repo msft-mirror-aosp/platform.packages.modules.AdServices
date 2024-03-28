@@ -28,7 +28,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
@@ -101,7 +101,7 @@ public class TopicsService extends Service {
     private void schedulePeriodicJobs() {
         MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         EncryptionKeyJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
-        MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        MddJob.scheduleAllMddJobs();
         EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
     }
 
@@ -131,7 +131,7 @@ public class TopicsService extends Service {
             writer.println("Build is Debuggable, dumping information for TopicsService");
             EpochManager.getInstance(this).dump(writer, args);
             CacheManager.getInstance(this).dump(writer, args);
-            MobileDataDownloadFactory.dump(this, writer);
+            MobileDataDownloadFactory.dump(writer);
             writer.println("=== User Consent State For Topics Service ===");
             writer.println("User Consent is given: " + hasUserConsent());
         } else {

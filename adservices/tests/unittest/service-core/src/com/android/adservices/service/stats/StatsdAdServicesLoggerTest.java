@@ -27,6 +27,7 @@ import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTran
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchStatus.IO_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_SHELL_COMMAND_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
@@ -48,15 +49,16 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFE
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_BUYER_INPUT_GENERATED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_BACKGROUND_JOB_STATUS_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INITIALIZE_STATUS_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_BACKGROUND_JOB_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INITIALIZE_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.PrecomputedClassifierStatus;
@@ -1690,6 +1692,81 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
         verify(writeInvocation);
 
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogTopicsEncryptionEpochComputationReportedStats_success() {
+        TopicsEncryptionEpochComputationReportedStats stats =
+                TopicsEncryptionEpochComputationReportedStats.builder()
+                        .setCountOfTopicsBeforeEncryption(10)
+                        .setCountOfEmptyEncryptedTopics(9)
+                        .setCountOfEncryptedTopics(8)
+                        .setLatencyOfWholeEncryptionProcessMs(5)
+                        .setLatencyOfEncryptionPerTopicMs(4)
+                        .setLatencyOfPersistingEncryptedTopicsToDbMs(3)
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logTopicsEncryptionEpochComputationReportedStats(stats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED),
+                                eq(10),
+                                eq(9),
+                                eq(8),
+                                eq(5),
+                                eq(4),
+                                eq(3));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogTopicsEncryptionGetTopicsReportedStats_success() {
+        TopicsEncryptionGetTopicsReportedStats stats =
+                TopicsEncryptionGetTopicsReportedStats.builder()
+                        .setCountOfEncryptedTopics(5)
+                        .setLatencyOfReadingEncryptedTopicsFromDbMs(100)
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logTopicsEncryptionGetTopicsReportedStats(stats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(TOPICS_ENCRYPTION_GET_TOPICS_REPORTED),
+                                eq(5),
+                                eq(100));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogShellCommandStats() {
+        @ShellCommandStats.Command int command = ShellCommandStats.COMMAND_ECHO;
+        @ShellCommandStats.CommandResult int result = ShellCommandStats.RESULT_SUCCESS;
+        int latency = 1000;
+        ShellCommandStats stats = new ShellCommandStats(command, result, latency);
+
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
+
+        mLogger.logShellCommandStats(stats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                ADSERVICES_SHELL_COMMAND_CALLED, command, result, latency);
+        verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 }

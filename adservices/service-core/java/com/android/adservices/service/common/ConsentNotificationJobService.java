@@ -37,7 +37,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
@@ -89,7 +89,7 @@ public class ConsentNotificationJobService extends JobService {
                 sharedPref.getLong(FIRST_ENTRY_REQUEST_TIMESTAMP, currentTimestamp);
         if (firstEntryRequestTimestamp == currentTimestamp) {
             // schedule the background download tasks for OTA resources at the first PPAPI request.
-            MddJobService.scheduleIfNeeded(context, /* forceSchedule */ false);
+            MddJob.scheduleAllMddJobs();
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putLong(FIRST_ENTRY_REQUEST_TIMESTAMP, currentTimestamp);
             if (!editor.commit()) {
@@ -207,7 +207,7 @@ public class ConsentNotificationJobService extends JobService {
             LogUtil.d(
                     "Disabling ConsentNotificationJobService job because it's running in"
                             + " ExtServices on T+");
-            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
+            return skipAndCancelBackgroundJob(params, /* skipReason= */ 0, /* doRecord= */ false);
         }
 
         LogUtil.d("ConsentNotificationJobService.onStartJob");
@@ -323,7 +323,7 @@ public class ConsentNotificationJobService extends JobService {
     private void sendNotificationIfOtaResourcesDownloadCompleted(boolean isEeaNotification) {
         try {
             ClientFileGroup cfg =
-                    MobileDataDownloadFactory.getMdd(this, FlagsFactory.getFlags())
+                    MobileDataDownloadFactory.getMdd(FlagsFactory.getFlags())
                             .getFileGroup(
                                     GetFileGroupRequest.newBuilder()
                                             .setGroupName(

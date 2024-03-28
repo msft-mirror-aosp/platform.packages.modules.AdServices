@@ -142,6 +142,9 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logSignatureVerificationStats(SignatureVerificationStats stats) {}
+
+    @Override
     public void logAppManifestConfigCall(AppManifestConfigCall call) {}
 
     @Override
@@ -167,4 +170,15 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     @Override
     public void logKAnonGetChallengeJobStats(
             KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats) {}
+
+    @Override
+    public void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats) {}
+
+    @Override
+    public void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats) {}
+
+    @Override
+    public void logShellCommandStats(ShellCommandStats stats) {}
 }

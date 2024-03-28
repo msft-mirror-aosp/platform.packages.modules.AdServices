@@ -23,6 +23,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import java.util.List;
 
 /** Interface for filtering ads out of an ad selection auction. */
+// TODO(b/330840774) rename to FrequencyCapAdFilterer once we deprecate adfilterer
 public interface AdFilterer {
     /**
      * Takes a list of CAs and returns an identical list with any ads that should be filtered
