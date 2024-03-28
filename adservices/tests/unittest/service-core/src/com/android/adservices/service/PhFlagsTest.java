@@ -42,9 +42,7 @@ import static com.android.adservices.service.Flags.COBALT_LOGGING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
 import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_RESET_TOKEN;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.Flags.DEBUG_UX;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
@@ -60,7 +58,6 @@ import static com.android.adservices.service.Flags.DEFAULT_BACKGROUND_JOB_SAMPLI
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
-import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
@@ -539,10 +536,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_J
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
@@ -7687,22 +7681,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testConsentManagerOTADebugMode() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getConsentManagerOTADebugMode())
-                .isEqualTo(DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
-
-        boolean phOverridingValue = true;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getConsentManagerOTADebugMode()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
     public void testPasUxEnabled_isRowUser() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(DEFAULT_PAS_UX_ENABLED);
@@ -9695,37 +9673,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testConsentNotificationActivityDebugMode() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getConsentNotificationActivityDebugMode())
-                .isEqualTo(CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
-
-        boolean phOverridingValue = !CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ !CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
-
-        assertThat(mPhFlags.getConsentNotificationActivityDebugMode()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testConsentNotifiedDebugMode() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getConsentNotifiedDebugMode()).isEqualTo(CONSENT_NOTIFIED_DEBUG_MODE);
-
-        boolean phOverridingValue = !CONSENT_NOTIFIED_DEBUG_MODE;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_CONSENT_NOTIFIED_DEBUG_MODE,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getConsentNotifiedDebugMode()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
     public void testConsentAlreadyInteractedFix() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getConsentAlreadyInteractedEnableMode())
@@ -9738,7 +9685,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Boolean.toString(phOverridingValue),
                 /* makeDefault */ false);
 
-        assertThat(mPhFlags.getConsentNotifiedDebugMode()).isEqualTo(phOverridingValue);
+        assertThat(mPhFlags.getConsentAlreadyInteractedEnableMode()).isEqualTo(phOverridingValue);
     }
 
     @Test
