@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Odlučili ste da nećete sudjelovati"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Zahvaljujemo na odgovoru. Uključen je Privacy Sandbox za vaš uređaj.\n\nAko se predomislite ili želite saznati više, otvorite postavke privatnosti."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Postavke privatnosti"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Shvaćam"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Dio ste beta verzije"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox uključen je za vaš uređaj i aplikacije mogu ispitati nove, privatnije načine za prikazivanje oglasa. Beta verziju uvijek možete isključiti u postavkama privatnosti."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Shvaćam"</string>
