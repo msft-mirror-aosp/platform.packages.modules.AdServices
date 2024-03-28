@@ -195,4 +195,12 @@ public interface AdServicesLogger {
     /** Logs stats for GetAdSelectionDataBuyerInputGenerated */
     void logGetAdSelectionDataBuyerInputGeneratedStats(
             GetAdSelectionDataBuyerInputGeneratedStats stats);
+
+    /** Logs TopicsEncryptionEpochComputationReported stats. */
+    void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats);
+
+    /** Logs TopicsEncryptionGetTopicsReported stats */
+    void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats);
 }

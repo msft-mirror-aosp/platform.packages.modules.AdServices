@@ -854,6 +854,38 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         verify(mStatsdLoggerMock).logGetAdSelectionDataBuyerInputGeneratedStats(eq(stats));
     }
 
+    @Test
+    public void testLogTopicsEncryptionEpochComputationReportedStats() {
+        TopicsEncryptionEpochComputationReportedStats stats =
+                TopicsEncryptionEpochComputationReportedStats.builder()
+                        .setCountOfTopicsBeforeEncryption(10)
+                        .setCountOfEmptyEncryptedTopics(9)
+                        .setCountOfEncryptedTopics(8)
+                        .setLatencyOfWholeEncryptionProcessMs(5)
+                        .setLatencyOfEncryptionPerTopicMs(4)
+                        .setLatencyOfPersistingEncryptedTopicsToDbMs(3)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logTopicsEncryptionEpochComputationReportedStats(stats);
+
+        verify(mStatsdLoggerMock).logTopicsEncryptionEpochComputationReportedStats(eq(stats));
+    }
+
+    @Test
+    public void testLogTopicsEncryptionGetTopicsReportedStats() {
+        TopicsEncryptionGetTopicsReportedStats stats =
+                TopicsEncryptionGetTopicsReportedStats.builder()
+                        .setCountOfEncryptedTopics(5)
+                        .setLatencyOfReadingEncryptedTopicsFromDbMs(100)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logTopicsEncryptionGetTopicsReportedStats(stats);
+
+        verify(mStatsdLoggerMock).logTopicsEncryptionGetTopicsReportedStats(eq(stats));
+    }
+
     private void mockAppNameApiErrorLogger() {
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(true);

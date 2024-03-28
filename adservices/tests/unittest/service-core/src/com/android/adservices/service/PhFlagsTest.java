@@ -486,6 +486,7 @@ import static com.android.adservices.service.Flags.TOPICS_COBALT_LOGGING_ENABLED
 import static com.android.adservices.service.Flags.TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.Flags.TOPICS_DISABLE_PLAINTEXT_RESPONSE;
 import static com.android.adservices.service.Flags.TOPICS_ENCRYPTION_ENABLED;
+import static com.android.adservices.service.Flags.TOPICS_ENCRYPTION_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
@@ -947,6 +948,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_COBALT_LO
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENCRYPTION_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
@@ -1115,6 +1117,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_TOPICS_ENCRYPTION_ENABLED,
                 TOPICS_ENCRYPTION_ENABLED,
                 flags -> flags.getTopicsEncryptionEnabled());
+    }
+
+    @Test
+    public void testGetTopicsEncryptionMetricsEnabled() {
+        assertThat(mPhFlags.getTopicsEncryptionEnabled()).isEqualTo(
+                TOPICS_ENCRYPTION_METRICS_ENABLED);
+
+        // Now overriding with the value from PH.
+        boolean phOverridingValue = !TOPICS_ENCRYPTION_METRICS_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_ENCRYPTION_METRICS_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getTopicsEncryptionMetricsEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test

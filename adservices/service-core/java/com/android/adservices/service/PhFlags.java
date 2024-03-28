@@ -244,6 +244,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsEncryptionMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_ENCRYPTION_METRICS_ENABLED,
+                TOPICS_ENCRYPTION_METRICS_ENABLED);
+    }
+
+    @Override
     public boolean getTopicsDisablePlaintextResponse() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE,
