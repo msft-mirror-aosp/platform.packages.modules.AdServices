@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"בחרת שלא להשתתף"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"תודה על התשובה. ארגז החול לפרטיות מושבת במכשיר.\n\nכדי להפעיל אותו או לקבל מידע נוסף, אפשר לעבור להגדרות הפרטיות."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"הגדרות הפרטיות"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"הבנתי"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"הצטרפת לתוכנית הבטא"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"ארגז החול לפרטיות מופעל במכשיר שלך, והאפליקציות יכולות לבדוק איך להציג לך מודעות בדרכים חדשות ופרטיות יותר. אפשר להשבית את תוכנית הבטא בכל שלב בהגדרות הפרטיות."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"הבנתי"</string>

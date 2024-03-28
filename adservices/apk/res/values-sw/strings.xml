@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Umechagua kutoshiriki"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Asante kwa jibu lako. Kipengele cha Mazingira ya Faragha kimezimwa kwenye kifaa chako.\n\nIwapo utabadili mawazo yako au utataka kupata maelezo zaidi, nenda kwenye mipangilio ya faragha."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Mipangilio ya faragha"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Nimeelewa"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Umejiunga kwenye toleo la beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Kipengele cha Mazingira ya Faragha kimewashwa kwenye kifaa chako, na programu zinaweza kujaribu njia hizi mpya zenye faragha zaidi ili zikuonyeshe matangazo. Unaweza kuzima toleo la beta wakati wowote kwenye mipangilio ya faragha."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Nimeelewa"</string>

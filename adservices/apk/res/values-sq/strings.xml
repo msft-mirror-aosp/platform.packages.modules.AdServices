@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Ke zgjedhur të mos marrësh pjesë"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Faleminderit për përgjigjen. Privacy Sandbox është çaktivizuar për pajisjen tënde.\n\nNëse ndryshon mendje ose dëshiron të mësosh më shumë, shko te cilësimet e privatësisë."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Cilësimet e privatësisë"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"E kuptova"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Je pjesë e versionit beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox është aktiv për pajisjen tënde dhe aplikacionet mund t\'i testojnë këto mënyra të reja më private për të të shfaqur reklama. Mund ta çaktivizosh versionin beta në çdo kohë te cilësimet e privatësisë."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"E kuptova"</string>

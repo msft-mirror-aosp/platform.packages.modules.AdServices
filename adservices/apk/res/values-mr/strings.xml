@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"तुम्ही सहभागी न होण्याचे निवडले आहे"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"तुमच्या प्रतिसादाबद्दल धन्यवाद. तुमच्या डिव्हाइससाठी प्रायव्हसी सॅंडबाॅक्स बंद केला आहे.\n\nतुम्ही तुमचा विचार बदलल्यास किंवा अधिक जाणून घ्यायचे असल्यास, तुमच्या गोपनीयता सेटिंग्जवर जा."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"गोपनीयता सेटिंग्ज"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"समजले"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"तुम्ही बीटाचा भाग आहात"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"तुमच्या डिव्हाइससाठी प्रायव्हसी सॅंडबाॅक्स सुरू केला आहे आणि अ‍ॅप्स तुम्हाला जाहिराती दाखवण्यासाठी या नवीन आणखी खाजगी मार्गांची चाचणी घेऊ शकतात. तुम्ही तुमच्या गोपनीयता सेटिंग्जमध्ये बीटा कधीही बंद करू शकता."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"समजले"</string>
