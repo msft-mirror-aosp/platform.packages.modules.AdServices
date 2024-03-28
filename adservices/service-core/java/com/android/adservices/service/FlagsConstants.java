@@ -560,8 +560,12 @@ public final class FlagsConstants {
             "fledge_ad_selection_filtering_enabled";
     public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED =
             "fledge_app_install_filtering_enabled";
+    public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED =
+            "fledge_app_install_filtering_metrics_enabled";
     public static final String KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED =
             "fledge_frequency_cap_filtering_enabled";
+    public static final String KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED =
+            "fledge_frequency_cap_filtering_metrics_enabled";
     public static final String KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED =
             "fledge_ad_selection_contextual_ads_enabled";
     public static final String KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED =

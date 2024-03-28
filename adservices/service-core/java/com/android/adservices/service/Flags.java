@@ -1369,6 +1369,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED;
     }
 
+    boolean FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED = false;
+
+    /** Returns {@code true} if App Install Filtering metrics is enabled. */
+    default boolean getFledgeAppInstallFilteringMetricsEnabled() {
+        return FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED;
+    }
+
+    boolean FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED = false;
+
+    /** Returns {@code true} if Frequency Cap Filtering metrics is enabled. */
+    default boolean getFledgeFrequencyCapFilteringMetricsEnabled() {
+        return FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED;
+    }
+
     // Enable FLEDGE fetchAndJoinCustomAudience API.
     boolean FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED = false;
 

@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_COUNTER_HISTOGRAM_UPDATER_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_AD_SELECTION_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_JOIN_CA_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_SHELL_COMMAND_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
@@ -686,6 +689,61 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 0,
                 0,
                 0);
+    }
+
+    @Override
+    public void logAdFilteringProcessJoinCAReportedStats(
+            AdFilteringProcessJoinCAReportedStats stats) {
+        AdServicesStatsLog.write(
+                AD_FILTERING_PROCESS_JOIN_CA_REPORTED,
+                stats.getStatusCode(),
+                stats.getCountOfAdsWithKeysMuchSmallerThanLimitation(),
+                stats.getCountOfAdsWithKeysSmallerThanLimitation(),
+                stats.getCountOfAdsWithKeysEqualToLimitation(),
+                stats.getCountOfAdsWithKeysLargerThanLimitation(),
+                stats.getCountOfAdsWithEmptyKeys(),
+                stats.getCountOfAdsWithFiltersMuchSmallerThanLimitation(),
+                stats.getCountOfAdsWithFiltersSmallerThanLimitation(),
+                stats.getCountOfAdsWithFiltersEqualToLimitation(),
+                stats.getCountOfAdsWithFiltersLargerThanLimitation(),
+                stats.getCountOfAdsWithEmptyFilters(),
+                stats.getTotalNumberOfUsedKeys(),
+                stats.getTotalNumberOfUsedFilters());
+    }
+
+    @Override
+    public void logAdFilteringProcessAdSelectionReportedStats(
+            AdFilteringProcessAdSelectionReportedStats stats) {
+        AdServicesStatsLog.write(
+                AD_FILTERING_PROCESS_AD_SELECTION_REPORTED,
+                stats.getLatencyInMillisOfAllAdFiltering(),
+                stats.getLatencyInMillisOfAppInstallFiltering(),
+                stats.getLatencyInMillisOfFcapFilters(),
+                stats.getStatusCode(),
+                stats.getNumOfAdsFilteredOutOfBidding(),
+                stats.getNumOfCustomAudiencesFilteredOutOfBidding(),
+                stats.getTotalNumOfAdsBeforeFiltering(),
+                stats.getTotalNumOfCustomAudiencesBeforeFiltering(),
+                stats.getNumOfPackageInAppInstallFilters(),
+                stats.getNumOfDbOperations(),
+                stats.getFilterProcessType(),
+                stats.getNumOfContextualAdsFiltered(),
+                stats.getNumOfAdCounterKeysInFcapFilters(),
+                stats.getNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures(),
+                stats.getNumOfContextualAdsFilteredOutOfBiddingNoAds(),
+                stats.getTotalNumOfContextualAdsBeforeFiltering());
+    }
+
+    @Override
+    public void logAdCounterHistogramUpdaterReportedStats(
+            AdCounterHistogramUpdaterReportedStats stats) {
+        AdServicesStatsLog.write(
+                AD_COUNTER_HISTOGRAM_UPDATER_REPORTED,
+                stats.getLatencyInMillis(),
+                stats.getStatusCode(),
+                stats.getTotalNumberOfEventsInDatabaseAfterInsert(),
+                stats.getNumberOfInsertedEvent(),
+                stats.getNumberOfEvictedEvent());
     }
 
     @Override
