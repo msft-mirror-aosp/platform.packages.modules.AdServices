@@ -19,6 +19,7 @@ package com.android.adservices.shared.spe.framework;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.spe.scheduling.PolicyJobScheduler;
 
@@ -52,6 +53,9 @@ public interface JobServiceFactory {
 
     /** Gets an instance of {@link JobServiceLogger}. */
     JobServiceLogger getJobServiceLogger();
+
+    /** Gets an instance of {@link JobSchedulingLogger}. */
+    JobSchedulingLogger getJobSchedulingLogger();
 
     /** Gets an instance of {@link AdServicesErrorLogger}. */
     AdServicesErrorLogger getErrorLogger();

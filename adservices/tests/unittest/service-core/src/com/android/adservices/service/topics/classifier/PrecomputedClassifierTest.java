@@ -18,7 +18,6 @@ package com.android.adservices.service.topics.classifier;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -91,8 +90,7 @@ public class PrecomputedClassifierTest {
                         .startMocking();
 
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(null)
-                .when(() -> ModelManager.getDownloadedFiles(any(Context.class)));
+        ExtendedMockito.doReturn(null).when(() -> ModelManager.getDownloadedFiles());
 
         mModelManager =
                 new ModelManager(

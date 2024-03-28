@@ -38,7 +38,7 @@
                     android:id="@+id/main_view_ga_pic"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/main_view_pic_margin"
                     android:src="@drawable/ic_main_view_ga_image"
                     android:contentDescription="@string/ic_main_view_ga_image_description"
                     />
@@ -68,13 +68,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
-                android:paddingBottom="48dp"
+                android:paddingBottom="@dimen/adservices_content_2x_padding"
                 android:focusable="false"
                 android:orientation="vertical">
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />
                 <TextView

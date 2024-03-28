@@ -68,14 +68,14 @@
                     android:text="@string/settingsUI_measurement_view_reset_title"
                     android:textAppearance="@style/TextAppearance.H5"
                     android:drawableStart="@drawable/ic_restart_alt_24dp"
-                    android:drawablePadding="28dp"/>
+                    android:drawablePadding="@dimen/adservices_drawable_padding"/>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
-                android:paddingBottom="48dp"
+                android:paddingBottom="@dimen/adservices_content_2x_padding"
                 android:focusable="false"
                 android:orientation="vertical">
                 <ImageView

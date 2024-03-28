@@ -36,7 +36,7 @@ public abstract class AdSelectionEncryptionKey {
     public @interface AdSelectionEncryptionKeyType {
         int UNASSIGNED = 0;
         int AUCTION = 1;
-        int JOIN = 2;
+        int JOIN = 3;
     }
     /** Encryption key type of this key. */
     @AdSelectionEncryptionKeyType

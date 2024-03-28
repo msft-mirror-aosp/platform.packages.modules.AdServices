@@ -686,10 +686,12 @@ public class ConsentManager {
 
         asyncExecute(
                 () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(
                     () -> mFrequencyCapDao.deleteHistogramDataBySourceApp(app.getPackageName()));
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(
@@ -746,9 +748,11 @@ public class ConsentManager {
                 /* errorLogger= */ null);
 
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(mProtectedSignalsDao::deleteAllSignals);
@@ -776,9 +780,11 @@ public class ConsentManager {
                 /* errorLogger= */ null);
 
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(mProtectedSignalsDao::deleteAllSignals);

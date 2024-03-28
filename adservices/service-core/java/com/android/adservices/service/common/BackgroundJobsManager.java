@@ -46,6 +46,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.cobalt.CobaltJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -84,7 +85,7 @@ public class BackgroundJobsManager {
         scheduleTopicsBackgroundJobs(context);
 
         // TODO(b/296146348): Remove MDD Background Jobs from scheduleAllBackgroundJobs
-        scheduleMddBackgroundJobs(context);
+        scheduleMddBackgroundJobs();
 
         scheduleMeasurementBackgroundJobs(context);
     }
@@ -165,7 +166,7 @@ public class BackgroundJobsManager {
         if (!FlagsFactory.getFlags().getTopicsKillSwitch()) {
             EpochJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             MaintenanceJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
-            scheduleMddBackgroundJobs(context);
+            scheduleMddBackgroundJobs();
             scheduleEncryptionKeyBackgroundJobs(context);
             scheduleCobaltBackgroundJob(context);
         }
@@ -174,12 +175,10 @@ public class BackgroundJobsManager {
     /**
      * Tries to schedule all the Mdd related background jobs if the MddBackgroundTaskKillSwitch is
      * disabled.
-     *
-     * @param context application context.
      */
-    public static void scheduleMddBackgroundJobs(@NonNull Context context) {
+    public static void scheduleMddBackgroundJobs() {
         if (!FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
-            MddJobService.scheduleIfNeeded(context, /* forceSchedule */ false);
+            MddJob.scheduleAllMddJobs();
         }
     }
 
@@ -234,7 +233,7 @@ public class BackgroundJobsManager {
             VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
                     context, /* forceSchedule= */ false);
             DebugReportingFallbackJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
-            scheduleMddBackgroundJobs(context);
+            scheduleMddBackgroundJobs();
             scheduleEncryptionKeyBackgroundJobs(context);
             scheduleCobaltBackgroundJob(context);
         }
@@ -269,7 +268,7 @@ public class BackgroundJobsManager {
 
         jobScheduler.cancel(CONSENT_NOTIFICATION_JOB.getJobId());
 
-        MddJobService.unscheduleAllJobs(jobScheduler);
+        MddJob.unscheduleAllJobs(jobScheduler);
 
         jobScheduler.cancel(ENCRYPTION_KEY_PERIODIC_JOB.getJobId());
 

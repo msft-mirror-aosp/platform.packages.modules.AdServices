@@ -17,6 +17,9 @@
 package com.android.adservices.spe;
 
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.spe.scheduling.JobSpec;
@@ -24,6 +27,7 @@ import com.android.adservices.shared.spe.scheduling.PolicyJobScheduler;
 import com.android.internal.annotations.GuardedBy;
 
 /** The Adservices' implementation of {@link PolicyJobScheduler}. */
+@RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesJobScheduler extends PolicyJobScheduler<AdServicesJobService> {
     private static final Object SINGLETON_LOCK = new Object();
 

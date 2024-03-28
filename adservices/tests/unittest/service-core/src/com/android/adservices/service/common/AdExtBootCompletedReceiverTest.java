@@ -67,8 +67,9 @@ public class AdExtBootCompletedReceiverTest {
     private static final Intent sIntent = new Intent();
     private static final String TEST_PACKAGE_NAME = "test";
     private static final String AD_SERVICES_APK_PKG_SUFFIX = "android.adservices.api";
-    private static final int NUM_ACTIVITIES_TO_DISABLE = 7;
-    private static final int NUM_SERVICE_CLASSES_TO_DISABLE = 7;
+    private static final int NUM_ACTIVITIES = 7;
+    private static final int NUM_SERVICE_CLASSES = 8;
+    private static final int NUM_SERVICE_CLASSES_TO_ENABLE_ON_R = 3;
 
     @Mock Flags mMockFlags;
     @Mock Context mContext;
@@ -211,7 +212,7 @@ public class AdExtBootCompletedReceiverTest {
         // Call the method we're testing.
         bootCompletedReceiver.updateAdExtServicesActivities(mContext, true);
 
-        verify(mPackageManager, times(7))
+        verify(mPackageManager, times(NUM_ACTIVITIES))
                 .setComponentEnabledSetting(
                         any(ComponentName.class),
                         eq(PackageManager.COMPONENT_ENABLED_STATE_ENABLED),
@@ -228,7 +229,7 @@ public class AdExtBootCompletedReceiverTest {
         // Call the method we're testing.
         bootCompletedReceiver.updateAdExtServicesActivities(mContext, false);
 
-        verify(mPackageManager, times(NUM_ACTIVITIES_TO_DISABLE))
+        verify(mPackageManager, times(NUM_ACTIVITIES))
                 .setComponentEnabledSetting(
                         any(ComponentName.class),
                         eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
@@ -245,7 +246,7 @@ public class AdExtBootCompletedReceiverTest {
         // Call the method we're testing.
         bootCompletedReceiver.updateAdExtServicesServices(mContext, /* shouldEnable= */ false);
 
-        verify(mPackageManager, times(NUM_SERVICE_CLASSES_TO_DISABLE))
+        verify(mPackageManager, times(NUM_SERVICE_CLASSES))
                 .setComponentEnabledSetting(
                         any(ComponentName.class),
                         eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
@@ -253,8 +254,8 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testUpdateAdExtServicesServices_sminus() {
-        Assume.assumeFalse(SdkLevel.isAtLeastT());
+    public void testEnableAdExtServicesServices_onS() {
+        Assume.assumeTrue(SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT());
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
         setCommonMocks(TEST_PACKAGE_NAME);
@@ -262,10 +263,44 @@ public class AdExtBootCompletedReceiverTest {
         // Call the method we're testing
         bootCompletedReceiver.updateAdExtServicesServices(mContext, /* shouldEnable= */ true);
 
-        verify(mPackageManager, times(NUM_SERVICE_CLASSES_TO_DISABLE))
+        verify(mPackageManager, times(NUM_SERVICE_CLASSES))
                 .setComponentEnabledSetting(
                         any(ComponentName.class),
                         eq(PackageManager.COMPONENT_ENABLED_STATE_ENABLED),
+                        eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    public void testEnableAdExtServicesServices_onR() {
+        Assume.assumeFalse(SdkLevel.isAtLeastS());
+        AdExtBootCompletedReceiver bootCompletedReceiver =
+                Mockito.spy(new AdExtBootCompletedReceiver());
+        setCommonMocks(TEST_PACKAGE_NAME);
+
+        // Call the method we're testing
+        bootCompletedReceiver.updateAdExtServicesServices(mContext, /* shouldEnable= */ true);
+
+        verify(mPackageManager, times(NUM_SERVICE_CLASSES_TO_ENABLE_ON_R))
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_ENABLED),
+                        eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    public void testDisableAdExtServicesServices_onSMinus() {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
+        AdExtBootCompletedReceiver bootCompletedReceiver =
+                Mockito.spy(new AdExtBootCompletedReceiver());
+        setCommonMocks(TEST_PACKAGE_NAME);
+
+        // Call the method we're testing
+        bootCompletedReceiver.updateAdExtServicesServices(mContext, /* shouldEnable= */ false);
+
+        verify(mPackageManager, times(NUM_SERVICE_CLASSES))
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
                         eq(PackageManager.DONT_KILL_APP));
     }
 

@@ -147,6 +147,34 @@ public final class MockitoExpectations {
         when(flag.getBackgroundJobsLoggingKillSwitch()).thenReturn(overrideValue);
     }
 
+    /** Mocks a call to {@link Flags#getCobaltLoggingEnabled()}, returning overrideValue. */
+    public static void mockCobaltLoggingEnabled(Flags flags, boolean enabled) {
+        when(flags.getCobaltLoggingEnabled()).thenReturn(enabled);
+    }
+
+    /**
+     * Mocks a call to {@link Flags#getAppNameApiErrorCobaltLoggingEnabled()}, returning
+     * overrideValue.
+     */
+    public static void mockAppNameApiErrorCobaltLoggingEnabled(Flags flags, boolean enabled) {
+        when(flags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(enabled);
+    }
+
+    /**
+     * Mocks a call to {@link Flags#getAdservicesReleaseStageForCobalt()}, returning {@code DEBUG}
+     * as the testing release stage.
+     */
+    public static void mockAdservicesReleaseStageForCobalt(Flags flags) {
+        when(flags.getAdservicesReleaseStageForCobalt()).thenReturn("DEBUG");
+    }
+
+    /** Mocks calls to override Cobalt app name api error logging related flags. */
+    public static void mockCobaltLoggingFlags(Flags flags, boolean override) {
+        mockCobaltLoggingEnabled(flags, override);
+        mockAppNameApiErrorCobaltLoggingEnabled(flags, override);
+        mockAdservicesReleaseStageForCobalt(flags);
+    }
+
     /**
      * Mock {@link AdServicesJobServiceLogger#persistJobExecutionData(int, long)} to wait for it to
      * complete.

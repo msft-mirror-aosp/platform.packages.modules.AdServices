@@ -127,7 +127,7 @@ class PlayerViewProvider {
                     new ExoPlayer.Builder(mContext)
                             .setAudioAttributes(audioAttributes, true)
                             .build();
-            mPlayer.addListener(new PlayerLoggingListener(mLogger));
+            mPlayer.addListener(new PlayerListener(mPlayer, mLogger));
             mPlayer.setPlayWhenReady(mAutoPlay);
             mPlayer.setMediaItem(mMediaItem);
             boolean hasStartPosition = mAutoPlayPosition != C.TIME_UNSET;
@@ -153,11 +153,14 @@ class PlayerViewProvider {
         }
     }
 
-    private static class PlayerLoggingListener implements Player.Listener {
+    private static class PlayerListener implements Player.Listener {
+
+        private final Player mPlayer;
 
         private final PlayerViewLogger mLogger;
 
-        private PlayerLoggingListener(PlayerViewLogger logger) {
+        private PlayerListener(Player player, PlayerViewLogger logger) {
+            mPlayer = player;
             mLogger = logger;
         }
 
@@ -169,11 +172,19 @@ class PlayerViewProvider {
         @Override
         public void onPlaybackStateChanged(int playbackState) {
             mLogger.info("Player onPlaybackStateChanged, playbackState = " + playbackState);
+            if (playbackState == Player.STATE_READY) {
+                // Unmute at new playback
+                mPlayer.setVolume(1);
+            }
         }
 
         @Override
         public void onIsPlayingChanged(boolean isPlaying) {
             mLogger.info("Player onIsPlayingChanged, isPlaying = " + isPlaying);
+            if (!isPlaying) {
+                // For testing, mute the video when it is paused until end of current playback.
+                mPlayer.setVolume(0);
+            }
         }
 
         @Override

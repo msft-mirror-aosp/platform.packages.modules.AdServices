@@ -21,6 +21,7 @@ import android.annotation.Nullable;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 
 import java.util.Map;
@@ -37,15 +38,19 @@ public final class TestJobServiceFactory implements JobServiceFactory {
     private final ModuleJobPolicy mModuleJobPolicy;
     private final AdServicesErrorLogger mErrorLogger;
 
+    private final JobSchedulingLogger mJobSchedulingLogger;
+
     public TestJobServiceFactory(
             @Nullable JobWorker jobWorker,
             @Nullable JobServiceLogger logger,
             @Nullable ModuleJobPolicy moduleJobPolicy,
-            @Nullable AdServicesErrorLogger errorLogger) {
+            @Nullable AdServicesErrorLogger errorLogger,
+            @Nullable JobSchedulingLogger jobSchedulingLogger) {
         mJobWorker = jobWorker;
         mJobServiceLogger = logger;
         mModuleJobPolicy = moduleJobPolicy;
         mErrorLogger = errorLogger;
+        mJobSchedulingLogger = jobSchedulingLogger;
     }
 
     @Override
@@ -85,5 +90,10 @@ public final class TestJobServiceFactory implements JobServiceFactory {
     @Override
     public ModuleSharedFlags getFlags() {
         return new ModuleSharedFlags() {};
+    }
+
+    @Override
+    public JobSchedulingLogger getJobSchedulingLogger() {
+        return mJobSchedulingLogger;
     }
 }

@@ -42,7 +42,7 @@
                 style="@style/MainStyle.Body2" />
             <TextView
                 android:id="@+id/apps_ga_introduction"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="@dimen/adservices_content_three_quarter_padding"
                 android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                 android:text="@string/settingsUI_apps_view_ga_subtitle"
                 style="@style/MainStyle.Body2"
@@ -60,7 +60,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/adservices_empty_list_margin_top"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="@dimen/adservices_empty_list_margin_bottom"
                 android:gravity="center"
                 android:focusable="false"
                 android:visibility="gone"
@@ -84,7 +84,7 @@
                 <Button
                     android:id="@+id/blocked_apps_when_empty_state_button"
                     style="@style/MainStyle.PrimaryButton"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="@dimen/adservices_empty_state_btn_margin"
                     android:text="@string/settingsUI_blocked_apps_title"/>
             </LinearLayout>
 
@@ -92,7 +92,7 @@
                 android:id="@+id/apps_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="@dimen/adservices_empty_state_btn_margin"
                 android:clipToPadding="false"
                 android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                 android:scrollbars="none" />
@@ -112,7 +112,7 @@
                     android:text="@string/settingsUI_blocked_apps_title"
                     android:textAppearance="@style/TextAppearance.H5"
                     android:drawableStart="@drawable/ic_chevron_right_24dp"
-                    android:drawablePadding="28dp"/>
+                    android:drawablePadding="@dimen/adservices_drawable_padding"/>
             </LinearLayout>
 
             <LinearLayout
@@ -136,7 +136,7 @@
                         android:text="@string/settingsUI_reset_apps_title"
                         android:textAppearance="@style/TextAppearance.H5"
                         android:drawableStart="@drawable/ic_restart_alt_24dp"
-                        android:drawablePadding="28dp"/>
+                        android:drawablePadding="@dimen/adservices_drawable_padding"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -144,7 +144,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
-                    android:paddingBottom="48dp"
+                    android:paddingBottom="@dimen/adservices_content_2x_padding"
                     android:orientation="vertical">
                     <ImageView
                         android:layout_width="wrap_content"
@@ -167,7 +167,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
-                    android:paddingBottom="48dp"
+                    android:paddingBottom="@dimen/adservices_content_2x_padding"
                     android:orientation="vertical"
                     android:visibility="gone">
                     <ImageView

@@ -53,7 +53,7 @@ import android.app.job.JobScheduler;
 
 import com.android.adservices.cobalt.CobaltJobService;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
@@ -90,7 +90,7 @@ import org.mockito.Mock;
 @SpyStatic(DeleteUninstalledJobService.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MaintenanceJobService.class)
-@SpyStatic(MddJobService.class)
+@SpyStatic(MddJob.class)
 @SpyStatic(EncryptionKeyJobService.class)
 @SpyStatic(AsyncRegistrationQueueJobService.class)
 @SpyStatic(AsyncRegistrationFallbackJobService.class)
@@ -123,7 +123,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         doNothing().when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing().when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
         doReturn(true).when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
-        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(MddJob::scheduleAllMddJobs);
         doReturn(true).when(() -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing()
                 .when(() -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -598,7 +598,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
     }
 
     private void assertMddJobsScheduled(int numberOfTimes) {
-        verify(() -> MddJobService.scheduleIfNeeded(any(), eq(false)), times(numberOfTimes));
+        verify(MddJob::scheduleAllMddJobs, times(numberOfTimes));
     }
 
     private void assertEncryptionKeyJobsScheduled(int numberOfTimes) {

@@ -119,6 +119,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return TOPICS_ENCRYPTION_ENABLED;
     }
 
+    /** Flag to enable Topics encryption metrics for Topics API. */
+    boolean TOPICS_ENCRYPTION_METRICS_ENABLED = false;
+
+    /** Returns the feature flag to enable Topics encryption metrics for Topics API. */
+    default boolean getTopicsEncryptionMetricsEnabled() {
+        return TOPICS_ENCRYPTION_METRICS_ENABLED;
+    }
+
     /** Flag to disable plaintext Topics for Topics API response. */
     boolean TOPICS_DISABLE_PLAINTEXT_RESPONSE = false;
 
@@ -1352,6 +1360,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
     default boolean getFledgeAdSelectionContextualAdsEnabled() {
         return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
+    }
+
+    boolean FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED = false;
+
+    /** Returns {@code true} if contextual ads signing metrics collection is enabled */
+    default boolean getFledgeAdSelectionContextualAdsMetricsEnabled() {
+        return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED;
     }
 
     // Enable FLEDGE fetchAndJoinCustomAudience API.
@@ -2639,6 +2654,17 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns value of enable Back Compat */
     default boolean getEnableBackCompat() {
         return ENABLE_BACK_COMPAT;
+    }
+
+    /**
+     * Enable Back Compat feature init flag. When enabled, the back compat feature is initialized
+     * (if it hasn't been initialized already) within the enableAdServices system API.
+     */
+    @FeatureFlag boolean DEFAULT_ENABLE_BACK_COMPAT_INIT = false;
+
+    /** Returns value of enable Back Compat */
+    default boolean getEnableBackCompatInit() {
+        return DEFAULT_ENABLE_BACK_COMPAT_INIT;
     }
 
     /**
@@ -5067,21 +5093,5 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getEnableTabletRegionFix() {
         return DEFAULT_ENABLE_TABLET_REGION_FIX;
-    }
-
-    /** Default value for the enablement of background job scheduling logging. */
-    @FeatureFlag boolean DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED = false;
-
-    /** Returns the default value of the enablement of background job scheduling logging. */
-    default boolean getJobSchedulingLoggingEnabled() {
-        return DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
-    }
-
-    /** Default value of the sampling logging rate for job scheduling logging events. */
-    @ConfigFlag int DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE = 5;
-
-    /** Returns the sampling logging rate for job scheduling logging events. */
-    default int getJobSchedulingLoggingSamplingRate() {
-        return DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
     }
 }

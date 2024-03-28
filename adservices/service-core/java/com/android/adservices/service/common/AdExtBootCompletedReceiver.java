@@ -23,6 +23,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 
@@ -35,9 +36,9 @@ import com.android.modules.utils.build.SdkLevel;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /** Handles the BootCompleted initialization for AdExtServices APK on S-. */
-// TODO(b/269798827): Enable for R.
 public class AdExtBootCompletedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -158,8 +159,15 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
 
         try {
             String packageName = context.getPackageName();
-            updateComponents(
-                    context, PackageManagerCompatUtils.SERVICE_CLASSES, packageName, shouldEnable);
+            List<String> servicesToUpdate =
+                    PackageManagerCompatUtils.SERVICE_CLASSES_AND_ENABLE_STATUS_ON_R_PAIRS.stream()
+                            // If enabling, enable services that are only supported on current
+                            // SDK version. If disabling, it's safe to disable all service
+                            // components just in case they were enabled prior.
+                            .filter(p -> !shouldEnable || p.second <= Build.VERSION.SDK_INT)
+                            .map(p -> p.first)
+                            .collect(Collectors.toList());
+            updateComponents(context, servicesToUpdate, packageName, shouldEnable);
             LogUtil.d("Updated state of AdExtServices services: [enable=" + shouldEnable + "]");
         } catch (Exception e) {
             LogUtil.e("Error when updating services: " + e.getMessage());

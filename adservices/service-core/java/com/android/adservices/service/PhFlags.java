@@ -244,6 +244,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsEncryptionMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_ENCRYPTION_METRICS_ENABLED,
+                TOPICS_ENCRYPTION_METRICS_ENABLED);
+    }
+
+    @Override
     public boolean getTopicsDisablePlaintextResponse() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE,
@@ -1157,6 +1164,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED,
                 FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAdSelectionContextualAdsMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED,
+                FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED);
     }
 
     @Override
@@ -4420,6 +4434,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeAdSelectionContextualAdsEnabled());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED
+                        + " = "
+                        + getFledgeAdSelectionContextualAdsMetricsEnabled());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS
                         + " = "
                         + getFledgeAuctionServerAuctionKeyFetchTimeoutMs());
@@ -5349,6 +5368,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 && getDeviceConfigFlag(
                         FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
                         DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED);
+    }
+
+    @Override
+    public boolean getEnableBackCompatInit() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_BACK_COMPAT_INIT, DEFAULT_ENABLE_BACK_COMPAT_INIT);
     }
 
     @Override

@@ -195,4 +195,21 @@ public interface AdServicesLogger {
     /** Logs stats for GetAdSelectionDataBuyerInputGenerated */
     void logGetAdSelectionDataBuyerInputGeneratedStats(
             GetAdSelectionDataBuyerInputGeneratedStats stats);
+
+    /** Logs TopicsEncryptionEpochComputationReported stats. */
+    void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats);
+
+    /** Logs TopicsEncryptionGetTopicsReported stats */
+    void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats);
+
+    /** Logs stats for shell command indicating success/failure, latency. */
+    void logShellCommandStats(ShellCommandStats stats);
+
+    /**
+     * Logs stats for signature verification for {@link
+     * android.adservices.adselection.SignedContextualAds} during on-device ad selection auction
+     */
+    void logSignatureVerificationStats(SignatureVerificationStats stats);
 }

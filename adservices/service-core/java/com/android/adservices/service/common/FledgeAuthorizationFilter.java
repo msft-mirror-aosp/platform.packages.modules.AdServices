@@ -94,7 +94,7 @@ public class FledgeAuthorizationFilter {
                 context.getPackageManager(),
                 EnrollmentDao.getInstance(context),
                 adServicesLogger,
-                EnrollmentUtil.getInstance(context));
+                EnrollmentUtil.getInstance());
     }
 
     /**

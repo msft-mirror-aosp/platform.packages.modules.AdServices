@@ -244,7 +244,7 @@ public class BackgroundFetchWorker {
                                             jobStartTime);
                                     mBackgroundFetchRunner.deleteDisallowedOwnerCustomAudiences();
                                     mBackgroundFetchRunner.deleteDisallowedBuyerCustomAudiences();
-                                    if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
+                                    if (mFlags.getFledgeAppInstallFilteringEnabled()) {
                                         mBackgroundFetchRunner
                                                 .deleteDisallowedPackageAppInstallEntries();
                                     }

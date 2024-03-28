@@ -92,6 +92,15 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+
 import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
 import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
@@ -103,15 +112,6 @@ import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
 import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 import private_join_and_compute.anonymous_counting_tokens.Transcript;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KAnonCallerImplTest {
@@ -476,6 +476,54 @@ public class KAnonCallerImplTest {
         assertThat(kAnonImmediateSignJoinStatusStats.getTotalMessagesAttempted()).isEqualTo(2);
         assertThat(kAnonImmediateSignJoinStatusStats.getKAnonJobResult())
                 .isEqualTo(KANON_JOB_RESULT_SUCCESS);
+    }
+
+    @Test
+    public void test_signedJoinedSuccessfully_loggingThrowsError_processDoesNotCrash()
+            throws IOException, InterruptedException {
+        KAnonCallerImpl kAnonCaller =
+                Mockito.spy(
+                        new KAnonCallerImpl(
+                                mLightweightExecutorService,
+                                mBackgroundExecutorService,
+                                mockAnonymousCountingTokens,
+                                mockAdServicesHttpClient,
+                                mClientParametersDao,
+                                mServerParametersDao,
+                                mUserProfileIdManager,
+                                mockBinaryHttpMessageDeserializer,
+                                mFlags,
+                                mKAnonMessageManager,
+                                mockAdServicesLogger,
+                                mockKeyAttestationFactory,
+                                mockObliviousHttpEncryptorFactory));
+        CountDownLatch countdownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countdownLatch);
+        when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any()))
+                .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
+        createAndPersistKAnonMessages();
+        List<KAnonMessageEntity> kanonMessageList =
+                mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
+                        2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
+
+        doAnswer(
+                        (unused) -> {
+                            countdownLatch.countDown();
+                            throw new NullPointerException();
+                        })
+                .when(mockAdServicesLogger)
+                .logKAnonImmediateSignJoinStats(any());
+        kAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
+        countdownLatch.await();
+
+        // process does not crash
+        verify(mockAdServicesLogger, times(1))
+                .logKAnonImmediateSignJoinStats(argumentCaptorImmediateSignJoinStats.capture());
+        KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats =
+                argumentCaptorImmediateSignJoinStats.getValue();
+        assertThat(kAnonImmediateSignJoinStatusStats.getTotalMessagesAttempted()).isEqualTo(2);
     }
 
     @Test

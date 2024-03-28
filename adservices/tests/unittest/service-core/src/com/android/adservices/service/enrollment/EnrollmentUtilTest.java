@@ -42,7 +42,7 @@ public class EnrollmentUtilTest {
 
     @Test
     public void logEnrollmentFileDownloadStats_nullInput_defaultValuesUsed() {
-        EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance(sContext);
+        EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance();
         boolean isSuccessful = true;
         String buildId = null;
         int defaultBuildId = -1;
@@ -52,7 +52,7 @@ public class EnrollmentUtilTest {
 
     @Test
     public void logEnrollmentFailedStats_nullInput_defaultValuesUsed() {
-        EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance(sContext);
+        EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance();
         int buildId = -1;
         int fileGroupStatus = 0;
         int enrollmentRecordCount = 2;

@@ -25,6 +25,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
 import static com.android.adservices.service.Flags.AD_ID_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
@@ -141,6 +142,8 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
 
         extendedMockito.mockGetFlags(mMockFlags);
         extendedMockito.mockGetCallingUidOrThrow(); // expected calling by its test uid by default
+
+        mockCobaltLoggingFlags(mMockFlags, false);
     }
 
     @Test

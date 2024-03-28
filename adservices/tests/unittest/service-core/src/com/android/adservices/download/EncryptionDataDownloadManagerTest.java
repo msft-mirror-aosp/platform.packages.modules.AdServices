@@ -80,8 +80,8 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
 
     @Test
     public void testReadFileAndInsertIntoDatabaseSuccess() throws Exception {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage(any())));
-        doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any(), any())));
+        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
         doReturn(mMockEncryptionKeyDao).when(() -> (EncryptionKeyDao.getInstance(any())));
         when(mMockFileStorage.open(any(), any()))
                 .thenReturn(
@@ -112,7 +112,7 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
 
     @Test
     public void testReadFileAndInsertIntoDatabaseFailure_missingFileGroup() throws Exception {
-        doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any(), any())));
+        doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
         when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(null));
 
         mEncryptionDataDownloadManager = new EncryptionDataDownloadManager(sContext, mMockFlags);
@@ -124,7 +124,7 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
 
     @Test
     public void testReadFileAndInsertIntoDatabaseFailure_emptyFileList() throws Exception {
-        doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any(), any())));
+        doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
         when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
         when(mMockFileGroup.getFileList()).thenReturn(/* Empty list */ List.of());
 

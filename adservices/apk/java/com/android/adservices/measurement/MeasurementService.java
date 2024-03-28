@@ -25,7 +25,7 @@ import android.os.IBinder;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -111,7 +111,7 @@ public class MeasurementService extends Service {
         EventFallbackReportingJobService.scheduleIfNeeded(this, false);
         DeleteExpiredJobService.scheduleIfNeeded(this, false);
         DeleteUninstalledJobService.scheduleIfNeeded(this, false);
-        MddJobService.scheduleIfNeeded(this, false);
+        MddJob.scheduleAllMddJobs();
         AsyncRegistrationQueueJobService.scheduleIfNeeded(this, false);
         AsyncRegistrationFallbackJobService.scheduleIfNeeded(this, false);
         DebugReportingFallbackJobService.scheduleIfNeeded(this, false);

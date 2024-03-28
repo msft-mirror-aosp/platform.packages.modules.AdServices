@@ -116,7 +116,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -198,7 +198,7 @@ import java.util.stream.Collectors;
 @SpyStatic(VerboseDebugReportingFallbackJobService.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MaintenanceJobService.class)
-@SpyStatic(MddJobService.class)
+@SpyStatic(MddJob.class)
 @SpyStatic(EncryptionKeyJobService.class)
 @SpyStatic(CobaltJobService.class)
 @SpyStatic(UiStatsLogger.class)
@@ -258,14 +258,15 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
 
         extendedMockito.mockGetFlags(mMockFlags);
-        doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+        doReturn(true).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
+        doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         doReturn(true).when(mMockFlags).getEnrollmentEnableLimitedLogging();
         doReturn(mAdServicesLoggerImplMock).when(AdServicesLoggerImpl::getInstance);
         doReturn(true).when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         doReturn(true)
                 .when(() -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        doNothing().when(MddJob::scheduleAllMddJobs);
         doReturn(true)
                 .when(
                         () ->
@@ -292,7 +293,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .when(() -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing().when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
         doReturn(true).when(() -> EpochJobService.scheduleIfNeeded(any(), anyBoolean()));
-        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(MddJob::scheduleAllMddJobs);
         doNothing().when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing()
                 .when(() -> EventFallbackReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -607,7 +608,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         verify(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
         verify(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-        verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)), times(3));
+        verify(MddJob::scheduleAllMddJobs, times(3));
         verify(
                 () -> EncryptionKeyJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 times(2));
@@ -662,7 +663,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 never());
-        verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)), never());
+        verify(MddJob::scheduleAllMddJobs, never());
         verify(
                 () -> EncryptionKeyJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 never());
@@ -794,8 +795,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testDataIsResetAfterConsentIsRevokedFilteringDisabled() throws IOException {
-        doReturn(false).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+    public void testDataIsResetAfterConsentIsRevokedFrequencyCapFilteringDisabled()
+            throws IOException {
+        doReturn(false).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         mConsentManager.disable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptOutSelected());
@@ -807,7 +809,29 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mEnrollmentDaoSpy).deleteAll();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
-        verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
+        verifyZeroInteractions(mFrequencyCapDaoMock);
+        verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mProtectedSignalsDaoMock).deleteAllSignals();
+        verify(mUserProfileIdManagerMock).deleteId();
+    }
+
+    @Test
+    public void testDataIsResetAfterConsentIsRevokedAppInstallFilteringDisabled()
+            throws IOException {
+        doReturn(false).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
+        mConsentManager.disable(mSpyContext);
+
+        verify(() -> UiStatsLogger.logOptOutSelected());
+
+        SystemClock.sleep(1000);
+        verify(mTopicsWorkerMock).clearAllTopicsData(any());
+        // TODO(b/240988406): change to test for correct method call
+        verify(mAppConsentDaoSpy).clearAllConsentData();
+        verify(mEnrollmentDaoSpy).deleteAll();
+        verify(mMeasurementImplMock).deleteAllMeasurementData(any());
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verifyZeroInteractions(mAppInstallDaoMock);
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mUserProfileIdManagerMock).deleteId();
     }
@@ -832,8 +856,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testDataIsResetAfterConsentIsGivenFilteringDisabled() throws IOException {
-        doReturn(false).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+    public void testDataIsResetAfterConsentIsGivenFrequencyCapFilteringDisabled()
+            throws IOException {
+        doReturn(false).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         mConsentManager.enable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptInSelected());
@@ -844,7 +869,27 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
-        verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
+        verifyZeroInteractions(mFrequencyCapDaoMock);
+        verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mUserProfileIdManagerMock).deleteId();
+        verify(mUserProfileIdManagerMock).getOrCreateId();
+    }
+
+    @Test
+    public void testDataIsResetAfterConsentIsGivenAppInstallFilteringDisabled() throws IOException {
+        doReturn(false).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
+        mConsentManager.enable(mSpyContext);
+
+        verify(() -> UiStatsLogger.logOptInSelected());
+
+        SystemClock.sleep(1000);
+        verify(mTopicsWorkerMock).clearAllTopicsData(any());
+        // TODO(b/240988406): change to test for correct method call
+        verify(mAppConsentDaoSpy).clearAllConsentData();
+        verify(mMeasurementImplMock).deleteAllMeasurementData(any());
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verifyZeroInteractions(mAppInstallDaoMock);
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
     }

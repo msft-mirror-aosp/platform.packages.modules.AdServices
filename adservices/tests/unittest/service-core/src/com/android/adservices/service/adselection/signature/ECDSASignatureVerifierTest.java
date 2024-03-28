@@ -18,27 +18,29 @@ package com.android.adservices.service.adselection.signature;
 
 import static com.android.adservices.service.adselection.signature.ECDSASignatureVerifier.ECDSA_WITH_SHA256_SIGNING_ALGORITHM;
 import static com.android.adservices.service.adselection.signature.ECDSASignatureVerifier.EC_KEY_ALGORITHM;
-import static com.android.adservices.service.adselection.signature.ECDSASignatureVerifier.KEY_SPEC_ERROR;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.service.stats.SignatureVerificationLogger;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.security.Signature;
-import java.security.spec.InvalidKeySpecException;
 
 public class ECDSASignatureVerifierTest {
+    @Mock SignatureVerificationLogger mSignatureVerificationLoggerMock;
     private static final String MESSAGE = "Hello, world!";
     private static final int KEY_SIZE = 256;
     private SignatureVerifier mSignatureVerifier;
@@ -51,7 +53,11 @@ public class ECDSASignatureVerifierTest {
 
     @Before
     public void setup() throws Exception {
-        mSignatureVerifier = new ECDSASignatureVerifier();
+        MockitoAnnotations.initMocks(this);
+        boolean isContextualAdsLoggingEnabled = true;
+        mSignatureVerifier =
+                new ECDSASignatureVerifier(
+                        mSignatureVerificationLoggerMock, isContextualAdsLoggingEnabled);
         mDataBytes = MESSAGE.getBytes(StandardCharsets.UTF_8);
 
         // Generate a key pair for testing
@@ -80,13 +86,24 @@ public class ECDSASignatureVerifierTest {
     }
 
     @Test
-    public void testVerifySignature_malformedKey_invalidKeyException() {
+    public void testVerifySignature_malformedKey_failureLogged() {
         byte[] malformedKey = new byte[] {1, 2, 3};
-        ThrowingRunnable runnable =
-                () -> mSignatureVerifier.verify(malformedKey, mDataBytes, mSignatureBytes);
+        boolean isVerified = mSignatureVerifier.verify(malformedKey, mDataBytes, mSignatureBytes);
 
-        Exception exception = assertThrows(IllegalStateException.class, runnable);
-        assertTrue(exception.getCause() instanceof InvalidKeySpecException);
-        assertTrue(exception.getMessage().contains(KEY_SPEC_ERROR));
+        assertFalse(isVerified);
+        verify(mSignatureVerificationLoggerMock).addFailureDetailCountOfKeysWithWrongFormat();
+    }
+
+    @Test
+    public void testVerifySignature_malformedKeyLoggingOff_noInteractions() {
+        byte[] malformedKey = new byte[] {1, 2, 3};
+        boolean isContextualAdsLoggingEnabled = false;
+        SignatureVerifier signatureVerifier =
+                new ECDSASignatureVerifier(
+                        mSignatureVerificationLoggerMock, isContextualAdsLoggingEnabled);
+        boolean isVerified = signatureVerifier.verify(malformedKey, mDataBytes, mSignatureBytes);
+
+        assertFalse(isVerified);
+        verifyZeroInteractions(mSignatureVerificationLoggerMock);
     }
 }

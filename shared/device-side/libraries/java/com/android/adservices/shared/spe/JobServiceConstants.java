@@ -20,6 +20,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_JOB_NOT_CONFIGURED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME;
+import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED__RESULT_CODE__SCHEDULING_RESULT_CODE_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED__RESULT_CODE__SCHEDULING_RESULT_CODE_SKIPPED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED__RESULT_CODE__SCHEDULING_RESULT_CODE_SUCCESSFUL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED__SCHEDULER_TYPE__SCHEDULER_TYPE_JOB_SCHEDULER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED__SCHEDULER_TYPE__SCHEDULER_TYPE_SPE;
 
 import android.annotation.IntDef;
 import android.app.job.JobParameters;
@@ -110,4 +116,38 @@ public final class JobServiceConstants {
     /** The job is disabled due to ExtServices' job running on AdServices */
     public static final int JOB_ENABLED_STATUS_DISABLED_FOR_BACK_COMPAT_OTA =
             AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+
+    /** Shorter version for scheduler type - SPE. */
+    public static final int SCHEDULER_TYPE_SPE =
+            BACKGROUND_JOB_SCHEDULING_REPORTED__SCHEDULER_TYPE__SCHEDULER_TYPE_SPE;
+
+    /** Shorter version for scheduler type - Job Scheduler. */
+    public static final int SCHEDULER_TYPE_JOB_SCHEDULER =
+            BACKGROUND_JOB_SCHEDULING_REPORTED__SCHEDULER_TYPE__SCHEDULER_TYPE_JOB_SCHEDULER;
+
+    /** Shorter version for unknown module name. */
+    public static final int EXECUTION_LOGGING_UNKNOWN_MODULE_NAME =
+            BACKGROUND_JOB_SCHEDULING_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME;
+
+    /** Shorter version for unknown module name. */
+    public static final int SCHEDULING_LOGGING_UNKNOWN_MODULE_NAME =
+            BACKGROUND_JOB_SCHEDULING_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME;
+
+    @IntDef(
+            value = {
+                SCHEDULING_RESULT_CODE_SUCCESSFUL,
+                SCHEDULING_RESULT_CODE_FAILED,
+                SCHEDULING_RESULT_CODE_SKIPPED,
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface JobSchedulingResultCode {}
+
+    public static final int SCHEDULING_RESULT_CODE_SUCCESSFUL =
+            BACKGROUND_JOB_SCHEDULING_REPORTED__RESULT_CODE__SCHEDULING_RESULT_CODE_SUCCESSFUL;
+
+    public static final int SCHEDULING_RESULT_CODE_FAILED =
+            BACKGROUND_JOB_SCHEDULING_REPORTED__RESULT_CODE__SCHEDULING_RESULT_CODE_FAILED;
+
+    public static final int SCHEDULING_RESULT_CODE_SKIPPED =
+            BACKGROUND_JOB_SCHEDULING_REPORTED__RESULT_CODE__SCHEDULING_RESULT_CODE_SKIPPED;
 }

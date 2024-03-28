@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_SHELL_COMMAND_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
@@ -42,14 +43,17 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTIO
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_BACKGROUND_JOB_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INITIALIZE_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SIGNATURE_VERIFICATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUSTOM_AUDIENCE_PROCESS_REPORTED;
 
 import android.annotation.NonNull;
@@ -682,6 +686,54 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 0,
                 0,
                 0);
+    }
+
+    @Override
+    public void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats) {
+        AdServicesStatsLog.write(
+                TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED,
+                stats.getCountOfTopicsBeforeEncryption(),
+                stats.getCountOfEmptyEncryptedTopics(),
+                stats.getCountOfEncryptedTopics(),
+                stats.getLatencyOfWholeEncryptionProcessMs(),
+                stats.getLatencyOfEncryptionPerTopicMs(),
+                stats.getLatencyOfPersistingEncryptedTopicsToDbMs());
+    }
+
+    @Override
+    public void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats) {
+        AdServicesStatsLog.write(
+                TOPICS_ENCRYPTION_GET_TOPICS_REPORTED,
+                stats.getCountOfEncryptedTopics(),
+                stats.getLatencyOfReadingEncryptedTopicsFromDbMs());
+    }
+
+    @Override
+    public void logShellCommandStats(ShellCommandStats stats) {
+        AdServicesStatsLog.write(
+                ADSERVICES_SHELL_COMMAND_CALLED, stats.command, stats.result, stats.latencyMillis);
+    }
+
+    @Override
+    public void logSignatureVerificationStats(SignatureVerificationStats stats) {
+        AdServicesStatsLog.write(
+                SIGNATURE_VERIFICATION,
+                stats.getSerializationLatency(),
+                stats.getKeyFetchLatency(),
+                stats.getVerificationLatency(),
+                stats.getNumOfKeysFetched(),
+                stats.getSignatureVerificationStatus().getValue(),
+                stats.getFailedSignatureBuyerEnrollmentId(),
+                stats.getFailedSignatureSellerEnrollmentId(),
+                stats.getFailedSignatureCallerPackageName(),
+                stats.getFailureDetailUnknownError(),
+                stats.getFailureDetailNoEnrollmentDataForBuyer(),
+                stats.getFailureDetailNoKeysFetchedForBuyer(),
+                stats.getFailureDetailWrongSignatureFormat(),
+                stats.getFailureDetailCountOfKeysWithWrongFormat(),
+                stats.getFailureDetailCountOfKeysFailedToVerifySignature());
     }
 
     @NonNull

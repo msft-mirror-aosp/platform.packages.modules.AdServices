@@ -19,7 +19,12 @@ package com.android.adservices.spe;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_NOT_CONFIGURED_CORRECTLY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -30,6 +35,7 @@ import com.android.adservices.shared.proto.ModuleJobPolicy;
 import com.android.adservices.shared.proto.ProtoParser;
 import com.android.adservices.shared.spe.framework.JobServiceFactory;
 import com.android.adservices.shared.spe.framework.JobWorker;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.GuardedBy;
@@ -39,6 +45,8 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 /** The AdServices' implementation of {@link JobServiceFactory}. */
+// TODO(b/331610744): Do null check for constructor members.
+@RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesJobServiceFactory implements JobServiceFactory {
     private static final String PROTO_PROPERTY_FOR_LOGCAT = "AdServicesModuleJobPolicy";
     private static final Object SINGLETON_LOCK = new Object();
@@ -51,17 +59,20 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
     private final AdServicesErrorLogger mErrorLogger;
     private final Executor mExecutor;
     private final JobServiceLogger mJobServiceLogger;
+    private final JobSchedulingLogger mJobSchedulingLogger;
     private final Map<Integer, String> mJobIdTojobNameMap;
 
     @VisibleForTesting
     public AdServicesJobServiceFactory(
             JobServiceLogger jobServiceLogger,
+            JobSchedulingLogger jobSchedulingLogger,
             ModuleJobPolicy moduleJobPolicy,
             AdServicesErrorLogger errorLogger,
             Map<Integer, String> jobIdTojobNameMap,
             Executor executor,
             Flags flags) {
         mJobServiceLogger = jobServiceLogger;
+        mJobSchedulingLogger = jobSchedulingLogger;
         mModuleJobPolicy = moduleJobPolicy;
         mErrorLogger = errorLogger;
         mJobIdTojobNameMap = jobIdTojobNameMap;
@@ -84,6 +95,10 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
                         new AdServicesJobServiceFactory(
                                 AdServicesJobServiceLogger.getInstance(
                                         ApplicationContextSingleton.get()),
+                                new JobSchedulingLogger(
+                                        new AdServicesStatsdJobServiceLogger(),
+                                        AdServicesExecutors.getBackgroundExecutor(),
+                                        FlagsFactory.getFlags()),
                                 policy,
                                 AdServicesErrorLoggerImpl.getInstance(),
                                 AdServicesJobInfo.getJobIdToJobNameMap(),
@@ -100,9 +115,15 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
         AdServicesJobInfo jobInfo = AdServicesJobInfo.getJobIdToJobInfoMap().get(jobId);
         try {
             switch (jobInfo) {
+                case MDD_MAINTENANCE_PERIODIC_TASK_JOB:
+                case MDD_CHARGING_PERIODIC_TASK_JOB:
+                case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
+                case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
+                    return MddJob.getInstance();
                 default:
                     throw new RuntimeException(
-                            "The job is not configured for the instance creation.");
+                            "The job isn't configured for jobWorker creation. Requested Job ID: "
+                                    + jobId);
             }
         } catch (Exception e) {
             LogUtil.e(e, "Creation of Adservices' Job Instance is failed for jobId = %d.", jobId);
@@ -142,5 +163,45 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
     @Override
     public ModuleSharedFlags getFlags() {
         return mFlags;
+    }
+
+    @Override
+    public JobSchedulingLogger getJobSchedulingLogger() {
+        return mJobSchedulingLogger;
+    }
+
+    /**
+     * Reschedules the corresponding background job using the legacy(non-SPE) scheduling method.
+     *
+     * <p>Used by {@link AdServicesJobService} for a job scheduled by SPE (when migrating the job to
+     * using SPE framework).
+     *
+     * @param jobId the unique job ID for the background job to reschedule.
+     */
+    public void rescheduleJobWithLegacyMethod(int jobId) {
+        AdServicesJobInfo jobInfo = AdServicesJobInfo.getJobIdToJobInfoMap().get(jobId);
+
+        try {
+            switch (jobInfo) {
+                case MDD_MAINTENANCE_PERIODIC_TASK_JOB:
+                case MDD_CHARGING_PERIODIC_TASK_JOB:
+                case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
+                case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
+                    MddJob.scheduleAllMddJobs();
+                    return;
+                default:
+                    throw new RuntimeException(
+                            "The job isn't configured for jobWorker creation. Requested Job ID: "
+                                    + jobId);
+            }
+        } catch (Exception e) {
+            LogUtil.e(
+                    e,
+                    "Rescheduling the job using the legacy JobService is failed for jobId = %d.",
+                    jobId);
+            mErrorLogger.logError(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_NOT_CONFIGURED_CORRECTLY,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        }
     }
 }

@@ -80,7 +80,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                 flags,
                 flags.isEnableEnrollmentTestSeed(),
                 AdServicesLoggerImpl.getInstance(),
-                EnrollmentUtil.getInstance(context));
+                EnrollmentUtil.getInstance());
     }
 
     @VisibleForTesting
@@ -115,7 +115,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                                 flags,
                                 flags.isEnableEnrollmentTestSeed(),
                                 AdServicesLoggerImpl.getInstance(),
-                                EnrollmentUtil.getInstance(context));
+                                EnrollmentUtil.getInstance());
             }
             return sSingleton;
         }

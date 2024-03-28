@@ -177,7 +177,7 @@ public abstract class E2EMockTest extends E2ETest {
                         mFlags,
                         /* enable seed */ true,
                         AdServicesLoggerImpl.getInstance(),
-                        EnrollmentUtil.getInstance(sContext));
+                        EnrollmentUtil.getInstance());
 
         mAsyncSourceFetcher =
                 spy(
