@@ -66,6 +66,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_DATA_SER
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_BACK_COMPAT_INIT;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
@@ -556,6 +557,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADSERVICE
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT_INIT;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
@@ -11096,6 +11098,21 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(phOverrideValue);
     }
 
+    @Test
+    public void testEnableBackCompatInit() {
+        boolean phOverrideValue = true;
+
+        expect.withMessage("getEnableBackCompatInit() by default")
+                .that(mPhFlags.getEnableBackCompatInit())
+                .isEqualTo(DEFAULT_ENABLE_BACK_COMPAT_INIT);
+
+        // Now overriding with the value from PH.
+        setEnableBackCompatInit(phOverrideValue);
+        expect.withMessage("getEnableBackCompatInit() when set by device config")
+                .that(mPhFlags.getEnableBackCompatInit())
+                .isEqualTo(phOverrideValue);
+    }
+
     private void setMeasurementKillSwitch(boolean value) {
         setAdservicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
@@ -11132,5 +11149,9 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     private void verifyGetBooleanNotCalled(String name) {
         ExtendedMockitoExpectations.verifyGetBooleanDeviceConfigFlagNotCalled(
                 DeviceConfig.NAMESPACE_ADSERVICES, name);
+    }
+
+    private void setEnableBackCompatInit(boolean value) {
+        setAdservicesFlag(KEY_ENABLE_BACK_COMPAT_INIT, value);
     }
 }

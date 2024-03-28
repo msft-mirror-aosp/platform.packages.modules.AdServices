@@ -2650,6 +2650,17 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /**
+     * Enable Back Compat feature init flag. When enabled, the back compat feature is initialized
+     * (if it hasn't been initialized already) within the enableAdServices system API.
+     */
+    @FeatureFlag boolean DEFAULT_ENABLE_BACK_COMPAT_INIT = false;
+
+    /** Returns value of enable Back Compat */
+    default boolean getEnableBackCompatInit() {
+        return DEFAULT_ENABLE_BACK_COMPAT_INIT;
+    }
+
+    /**
      * Enable AppSearch read for consent data feature flag. The default value is false which means
      * AppSearch is not considered as source of truth after OTA. This flag should be enabled for OTA
      * support of consent data on T+ devices.
