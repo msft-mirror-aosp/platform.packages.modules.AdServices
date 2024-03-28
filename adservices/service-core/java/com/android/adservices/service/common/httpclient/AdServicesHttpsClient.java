@@ -38,8 +38,8 @@ import com.android.adservices.service.common.cache.DBCacheEntry;
 import com.android.adservices.service.common.cache.HttpCache;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
-import com.android.adservices.service.stats.pas.FetchProcessLogger;
-import com.android.adservices.service.stats.pas.FetchProcessLoggerNoLoggingImpl;
+import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.service.stats.FetchProcessLoggerNoLoggingImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Charsets;
@@ -254,6 +254,23 @@ public class AdServicesHttpsClient {
     }
 
     /**
+     * Performs a GET request on the given URI in order to fetch a payload. with FetchProcessLogger
+     * logging.
+     *
+     * @param uri a {@link Uri} pointing to a target server, converted to a URL for fetching
+     * @return a string containing the fetched payload
+     */
+    @NonNull
+    public ListenableFuture<AdServicesHttpClientResponse> fetchPayloadWithLogging(
+            @NonNull Uri uri,
+            @NonNull DevContext devContext,
+            @NonNull FetchProcessLogger fetchProcessLogger) {
+        return fetchPayloadWithLogging(
+                AdServicesHttpClientRequest.builder().setUri(uri).setDevContext(devContext).build(),
+                fetchProcessLogger);
+    }
+
+    /**
      * Performs a GET request on the given URI in order to fetch a payload.
      *
      * @param uri a {@link Uri} pointing to a target server, converted to a URL for fetching
@@ -374,7 +391,9 @@ public class AdServicesHttpsClient {
             }
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
             Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
+            fetchProcessLogger.startNetworkCallTimestamp();
             int responseCode = urlConnection.getResponseCode();
+            fetchProcessLogger.logServerAuctionKeyFetchCalledStatsFromNetwork(responseCode);
             LogUtil.v("Received %s response status code.", responseCode);
             if (isSuccessfulResponse(responseCode)) {
                 inputStream = new BufferedInputStream(urlConnection.getInputStream());
@@ -575,6 +594,18 @@ public class AdServicesHttpsClient {
      */
     public ListenableFuture<AdServicesHttpClientResponse> performRequestGetResponseInBase64String(
             @NonNull AdServicesHttpClientRequest request) {
+        return performRequestGetResponseInBase64StringWithLogging(
+                request, new FetchProcessLoggerNoLoggingImpl());
+    }
+
+    /**
+     * Performs an HTTP request according to the request object and returns the response in byte
+     * array.
+     */
+    public ListenableFuture<AdServicesHttpClientResponse>
+            performRequestGetResponseInBase64StringWithLogging(
+                    @NonNull AdServicesHttpClientRequest request,
+                    @NonNull FetchProcessLogger fetchProcessLogger) {
         Objects.requireNonNull(request.getUri());
         return ClosingFuture.from(
                         mExecutorService.submit(() -> mUriConverter.toUrl(request.getUri())))
@@ -588,7 +619,8 @@ public class AdServicesHttpsClient {
                                                                 closer,
                                                                 request,
                                                                 ResponseBodyType
-                                                                        .BASE64_ENCODED_STRING))),
+                                                                        .BASE64_ENCODED_STRING,
+                                                                fetchProcessLogger))),
                         mExecutorService)
                 .finishToFuture();
     }
@@ -601,6 +633,7 @@ public class AdServicesHttpsClient {
             @NonNull AdServicesHttpClientRequest request) {
         Objects.requireNonNull(request.getUri());
         LogUtil.d("Making request expecting a response in plain string");
+        FetchProcessLogger fetchProcessLogger = new FetchProcessLoggerNoLoggingImpl();
         return ClosingFuture.from(
                         mExecutorService.submit(() -> mUriConverter.toUrl(request.getUri())))
                 .transformAsync(
@@ -612,8 +645,8 @@ public class AdServicesHttpsClient {
                                                                 url,
                                                                 closer,
                                                                 request,
-                                                                ResponseBodyType
-                                                                        .PLAIN_TEXT_STRING))),
+                                                                ResponseBodyType.PLAIN_TEXT_STRING,
+                                                                fetchProcessLogger))),
                         mExecutorService)
                 .finishToFuture();
     }
@@ -622,7 +655,8 @@ public class AdServicesHttpsClient {
             @NonNull URL url,
             @NonNull ClosingFuture.DeferredCloser closer,
             AdServicesHttpClientRequest request,
-            ResponseBodyType responseType)
+            ResponseBodyType responseType,
+            @NonNull FetchProcessLogger fetchProcessLogger)
             throws IOException, AdServicesNetworkException {
         HttpsURLConnection urlConnection;
         try {
@@ -652,7 +686,9 @@ public class AdServicesHttpsClient {
             }
 
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
+            fetchProcessLogger.startNetworkCallTimestamp();
             int responseCode = urlConnection.getResponseCode();
+            fetchProcessLogger.logServerAuctionKeyFetchCalledStatsFromNetwork(responseCode);
             LogUtil.v("Received %s response status code.", responseCode);
 
             if (isSuccessfulResponse(responseCode)) {

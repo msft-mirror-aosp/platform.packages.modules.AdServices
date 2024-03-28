@@ -300,6 +300,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logServerAuctionKeyFetchCalledStats(ServerAuctionKeyFetchCalledStats stats) {
+        mStatsdAdServicesLogger.logServerAuctionKeyFetchCalledStats(stats);
+    }
+
+    @Override
     public void logGetAdSelectionDataBuyerInputGeneratedStats(
             GetAdSelectionDataBuyerInputGeneratedStats stats) {
         mStatsdAdServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
