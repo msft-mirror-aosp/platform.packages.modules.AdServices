@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 
+import androidx.annotation.NonNull;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
@@ -37,6 +38,12 @@ import androidx.media3.ui.PlayerView;
  */
 public class AppVideoView extends Activity {
     static final String VIDEO_URL_KEY = "video-url";
+
+    private static final String MEDIA_ITEM_KEY = "com.android.sdksandboxclient.MEDIA_ITEM_KEY";
+    private static final String AUTO_PLAY_POSITION_KEY =
+            "com.android.sdksandboxclient.AUTO_PLAY_POSITION_KEY";
+    private static final String AUTO_PLAY_ENABLED_KEY =
+            "com.android.sdksandboxclient.AUTO_PLAY_ENABLED_KEY";
 
     private PlayerView mPlayerView;
     private EditText mVideoUrlEdit;
@@ -58,12 +65,21 @@ public class AppVideoView extends Activity {
 
         registerStartAppVideoButton();
 
-        final Bundle extras = getIntent().getExtras();
-        final String videoUrl = extras == null ? null : extras.getString(VIDEO_URL_KEY);
-        if (videoUrl != null) {
-            mVideoUrlEdit.setText(videoUrl);
-            startVideo(videoUrl);
+        if (!restorePlaybackParams(icicle)) {
+            // No saved state, try start video from Intent params.
+            final Bundle extras = getIntent().getExtras();
+            final String videoUrl = extras == null ? null : extras.getString(VIDEO_URL_KEY);
+            if (videoUrl != null) {
+                mVideoUrlEdit.setText(videoUrl);
+                startVideo(videoUrl);
+            }
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        savePlaybackParams(outState);
     }
 
     @Override
@@ -86,6 +102,38 @@ public class AppVideoView extends Activity {
                     final String videoUrl = mVideoUrlEdit.getText().toString();
                     startVideo(videoUrl);
                 });
+    }
+
+    private void savePlaybackParams(@NonNull Bundle outState) {
+        if (mCurrentMediaItem == null) {
+            return;
+        }
+
+        final MediaItem.LocalConfiguration configuration = mCurrentMediaItem.localConfiguration;
+        if (configuration == null) {
+            return;
+        }
+
+        outState.putParcelable(MEDIA_ITEM_KEY, configuration.uri);
+        outState.putLong(AUTO_PLAY_POSITION_KEY, mAutoPlayPosition);
+        outState.putBoolean(AUTO_PLAY_ENABLED_KEY, mAutoPlay);
+    }
+
+    private boolean restorePlaybackParams(Bundle icicle) {
+        if (icicle == null) {
+            return false;
+        }
+
+        final Uri mediaItemUri = icicle.getParcelable(MEDIA_ITEM_KEY, Uri.class);
+        if (mediaItemUri == null) {
+            return false;
+        }
+
+        mCurrentMediaItem = MediaItem.fromUri(mediaItemUri);
+        mAutoPlayPosition = icicle.getLong(AUTO_PLAY_POSITION_KEY);
+        mAutoPlay = icicle.getBoolean(AUTO_PLAY_ENABLED_KEY);
+
+        return true;
     }
 
     private void startVideo(String videoUrl) {
