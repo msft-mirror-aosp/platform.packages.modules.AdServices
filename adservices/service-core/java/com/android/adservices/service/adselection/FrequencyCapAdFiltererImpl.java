@@ -24,7 +24,6 @@ import android.adservices.common.KeyedFrequencyCap;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -36,22 +35,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/** Holds filters to remove ads from the selectAds auction. */
-public final class AdFiltererImpl implements AdFilterer {
+/** Holds frequency cap filters to remove ads from the selectAds auction. */
+public final class FrequencyCapAdFiltererImpl implements FrequencyCapAdFilterer {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Clock mClock;
-    @NonNull private final AppInstallDao mAppInstallDao;
     @NonNull private final FrequencyCapDao mFrequencyCapDao;
 
-    public AdFiltererImpl(
-            @NonNull AppInstallDao appInstallDao,
-            @NonNull FrequencyCapDao frequencyCapDao,
-            @NonNull Clock clock) {
-        Objects.requireNonNull(appInstallDao);
+    public FrequencyCapAdFiltererImpl(
+            @NonNull FrequencyCapDao frequencyCapDao, @NonNull Clock clock) {
         Objects.requireNonNull(frequencyCapDao);
         Objects.requireNonNull(clock);
-        mAppInstallDao = appInstallDao;
         mFrequencyCapDao = frequencyCapDao;
         mClock = clock;
     }
@@ -73,7 +67,9 @@ public final class AdFiltererImpl implements AdFilterer {
         try {
             List<DBCustomAudience> toReturn = new ArrayList<>();
             Instant currentTime = mClock.instant();
-            sLogger.v("Applying filters to %d CAs with current time %s.", cas.size(), currentTime);
+            sLogger.v(
+                    "Applying frequency cap filters to %d CAs with current time %s.",
+                    cas.size(), currentTime);
             int totalAds = 0;
             int remainingAds = 0;
             for (DBCustomAudience ca : cas) {
@@ -82,7 +78,7 @@ public final class AdFiltererImpl implements AdFilterer {
                 List<DBAdData> filteredAds = new ArrayList<>();
                 totalAds += ca.getAds().size();
                 for (DBAdData ad : ca.getAds()) {
-                    if (doesAdPassFilters(
+                    if (doesAdPassFrequencyCapFilters(
                             ad, ca.getBuyer(), ca.getOwner(), ca.getName(), currentTime)) {
                         filteredAds.add(ad);
                     }
@@ -94,7 +90,7 @@ public final class AdFiltererImpl implements AdFilterer {
                 Tracing.endAsyncSection(Tracing.FILTERER_FOR_EACH_CA, forEachCATraceCookie);
             }
             sLogger.v(
-                    "Filtering finished. %d CAs of the original %d remain. "
+                    "Frequency cap filtering finished. %d CAs of the original %d remain. "
                             + "%d Ads of the original %d remain.",
                     toReturn.size(), cas.size(), remainingAds, totalAds);
             return toReturn;
@@ -117,17 +113,18 @@ public final class AdFiltererImpl implements AdFilterer {
             List<AdWithBid> adsList = new ArrayList<>();
             Instant currentTime = mClock.instant();
             sLogger.v(
-                    "Applying filters to %d contextual ads with current time %s.",
+                    "Applying frequency cap filters to %d contextual ads with current time %s.",
                     contextualAds.getAdsWithBid().size(), currentTime);
             for (AdWithBid ad : contextualAds.getAdsWithBid()) {
                 DBAdData dbAdData = new DBAdData.Builder(ad.getAdData()).build();
-                if (doesAdPassFilters(
+                if (doesAdPassFrequencyCapFilters(
                         dbAdData, contextualAds.getBuyer(), null, null, currentTime)) {
                     adsList.add(ad);
                 }
             }
             sLogger.v(
-                    "Filtering finished. %d contextual ads of the original %d remain.",
+                    "Frequency cap filtering finished. %d contextual ads of the original %d"
+                            + " remain.",
                     adsList.size(), contextualAds.getAdsWithBid().size());
 
             return new SignedContextualAds.Builder(contextualAds).setAdsWithBid(adsList).build();
@@ -136,47 +133,13 @@ public final class AdFiltererImpl implements AdFilterer {
         }
     }
 
-    private boolean doesAdPassFilters(
-            DBAdData ad,
-            AdTechIdentifier buyer,
-            String customAudienceOwner,
-            String customAudienceName,
-            Instant currentTime) {
-        if (ad.getAdFilters() == null) {
-            return true;
-        }
-        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FOR_EACH_AD);
-        boolean passes =
-                doesAdPassAppInstallFilters(ad, buyer)
-                        && doesAdPassFrequencyCapFilters(
-                                ad, buyer, customAudienceOwner, customAudienceName, currentTime);
-        Tracing.endAsyncSection(Tracing.FILTERER_FOR_EACH_AD, traceCookie);
-        return passes;
-    }
-
-    private boolean doesAdPassAppInstallFilters(DBAdData ad, AdTechIdentifier buyer) {
-        /* This could potentially be optimized by grouping the ads by package name before running
-         * the queries, but unless the DB cache is playing poorly with these queries there might
-         * not be a major performance improvement.
-         */
-        if (ad.getAdFilters().getAppInstallFilters() == null) {
-            return true;
-        }
-        for (String packageName : ad.getAdFilters().getAppInstallFilters().getPackageNames()) {
-            if (mAppInstallDao.canBuyerFilterPackage(buyer, packageName)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private boolean doesAdPassFrequencyCapFilters(
             DBAdData ad,
             AdTechIdentifier buyer,
             String customAudienceOwner,
             String customAudienceName,
             Instant currentTime) {
-        if (ad.getAdFilters().getFrequencyCapFilters() == null) {
+        if (ad.getAdFilters() == null || ad.getAdFilters().getFrequencyCapFilters() == null) {
             return true;
         }
         final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FOR_EACH_AD);
