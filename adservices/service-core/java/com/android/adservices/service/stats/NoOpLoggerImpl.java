@@ -142,6 +142,9 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logSignatureVerificationStats(SignatureVerificationStats stats) {}
+
+    @Override
     public void logAppManifestConfigCall(AppManifestConfigCall call) {}
 
     @Override
