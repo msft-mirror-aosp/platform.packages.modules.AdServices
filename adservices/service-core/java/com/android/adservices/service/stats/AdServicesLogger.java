@@ -203,4 +203,7 @@ public interface AdServicesLogger {
     /** Logs TopicsEncryptionGetTopicsReported stats */
     void logTopicsEncryptionGetTopicsReportedStats(
             TopicsEncryptionGetTopicsReportedStats stats);
+
+    /** Logs stats for shell command indicating success/failure, latency. */
+    void logShellCommandStats(ShellCommandStats stats);
 }
