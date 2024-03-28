@@ -1362,6 +1362,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
     }
 
+    boolean FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED = false;
+
+    /** Returns {@code true} if contextual ads signing metrics collection is enabled */
+    default boolean getFledgeAdSelectionContextualAdsMetricsEnabled() {
+        return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED;
+    }
+
     // Enable FLEDGE fetchAndJoinCustomAudience API.
     boolean FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED = false;
 

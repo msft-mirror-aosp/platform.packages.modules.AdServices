@@ -313,6 +313,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logShellCommandStats(stats);
     }
 
+    @Override
+    public void logSignatureVerificationStats(SignatureVerificationStats stats) {
+        mStatsdAdServicesLogger.logSignatureVerificationStats(stats);
+    }
+
     /** Logs api call error status using {@code CobaltLogger}. */
     private void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
         AppNameApiErrorLogger appNameApiErrorLogger = AppNameApiErrorLogger.getInstance();
