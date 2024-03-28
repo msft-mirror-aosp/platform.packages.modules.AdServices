@@ -16,6 +16,8 @@
 
 package com.android.adservices.download;
 
+import static com.android.adservices.download.EncryptionKeyConverterUtil.createEncryptionKeyFromJson;
+
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
@@ -62,7 +64,7 @@ public final class EncryptionDataDownloadManager {
     private final Context mContext;
     private final MobileDataDownload mMobileDataDownload;
     private final SynchronousFileStorage mFileStorage;
-    private final LoggerFactory.Logger mLogger = LoggerFactory.getLogger();
+    private static final LoggerFactory.Logger LOGGER = LoggerFactory.getLogger();
 
     private static final String GROUP_NAME = "encryption-keys";
     private static final String DOWNLOADED_ENCRYPTION_DATA_FILE_TYPE = ".json";
@@ -98,7 +100,7 @@ public final class EncryptionDataDownloadManager {
      * Find, open and read the encryption keys data file from MDD. Insert all keys into database.
      */
     public ListenableFuture<DownloadStatus> readAndInsertEncryptionDataFromMdd() {
-        mLogger.v("Reading encryption MDD data for group name: %s", GROUP_NAME);
+        LOGGER.v("Reading encryption MDD data for group name: %s", GROUP_NAME);
         List<ClientConfigProto.ClientFile> jsonKeyFiles = getEncryptionDataFiles();
         if (jsonKeyFiles == null || jsonKeyFiles.isEmpty()) {
             return Futures.immediateFuture(DownloadStatus.NO_FILE_AVAILABLE);
@@ -107,7 +109,7 @@ public final class EncryptionDataDownloadManager {
         for (ClientConfigProto.ClientFile clientFile : jsonKeyFiles) {
             Optional<List<EncryptionKey>> encryptionKeys = processDownloadedFile(clientFile);
             if (!encryptionKeys.isPresent()) {
-                mLogger.d("Parsing keys failed for %s ", clientFile.getFileId());
+                LOGGER.d("Parsing keys failed for %s ", clientFile.getFileId());
             }
         }
         return Futures.immediateFuture(DownloadStatus.SUCCESS);
@@ -122,7 +124,7 @@ public final class EncryptionDataDownloadManager {
                     mMobileDataDownload.getFileGroup(getFileGroupRequest);
             ClientConfigProto.ClientFileGroup fileGroup = fileGroupFuture.get();
             if (fileGroup == null) {
-                mLogger.d("MDD has not downloaded the Encryption Data Files yet.");
+                LOGGER.d("MDD has not downloaded the Encryption Data Files yet.");
                 return null;
             }
 
@@ -135,7 +137,7 @@ public final class EncryptionDataDownloadManager {
             return jsonKeyFiles;
 
         } catch (ExecutionException | InterruptedException e) {
-            mLogger.e(e, "Unable to load MDD file group for encryption.");
+            LOGGER.e(e, "Unable to load MDD file group for encryption.");
             // TODO(b/329334770): Add CEL log
             return null;
         }
@@ -143,7 +145,7 @@ public final class EncryptionDataDownloadManager {
 
     private Optional<List<EncryptionKey>> processDownloadedFile(
             ClientConfigProto.ClientFile encryptionDataFile) {
-        mLogger.d("Inserting Encryption MDD data into DB.");
+        LOGGER.d("Inserting Encryption MDD data into DB.");
         try (InputStream inputStream =
                         mFileStorage.open(
                                 Uri.parse(encryptionDataFile.getFileUri()),
@@ -157,27 +159,21 @@ public final class EncryptionDataDownloadManager {
             List<EncryptionKey> encryptionKeys = new ArrayList<>();
             for (int index = 0; index < jsonArray.length(); index++) {
                 JSONObject jsonKeyObject = jsonArray.getJSONObject(index);
-                EncryptionKey key = createEncryptionKeyFromJson(jsonKeyObject);
-                encryptionKeys.add(key);
+                Optional<EncryptionKey> keyOptional = createEncryptionKeyFromJson(jsonKeyObject);
+                keyOptional.ifPresent(encryptionKeys::add);
             }
 
             EncryptionKeyDao encryptionKeyDao = EncryptionKeyDao.getInstance(mContext);
+            LOGGER.v("Adding %d encryption keys to the database.", encryptionKeys.size());
             encryptionKeyDao.insert(encryptionKeys);
 
             return Optional.of(encryptionKeys);
         } catch (IOException | JSONException e) {
-            mLogger.e(
+            LOGGER.e(
                     e,
                     "Parsing of encryption keys failed for %s.",
                     encryptionDataFile.getFileUri());
             return Optional.empty();
         }
-    }
-
-    private EncryptionKey createEncryptionKeyFromJson(JSONObject jsonObject) throws JSONException {
-        EncryptionKey.Builder builder = new EncryptionKey.Builder();
-        builder.setEnrollmentId(jsonObject.getString("enrollmentId"));
-        // TODO(b/329334769): Implement JSON parsing based on version types.
-        return builder.build();
     }
 }
