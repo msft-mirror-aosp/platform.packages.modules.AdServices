@@ -35,6 +35,7 @@ import com.android.adservices.download.MddJob;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -56,6 +57,7 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
     private AdServicesJobServiceFactory mFactory;
 
     @Mock private JobServiceLogger mMockJobServiceLogger;
+    @Mock private JobSchedulingLogger mMockJobSchedulingLogger;
 
     @Mock private ModuleJobPolicy mMockModuleJobPolicy;
 
@@ -69,6 +71,7 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
         mFactory =
                 new AdServicesJobServiceFactory(
                         mMockJobServiceLogger,
+                        mMockJobSchedulingLogger,
                         mMockModuleJobPolicy,
                         mMockErrorLogger,
                         sJobIdToNameMap,
@@ -144,6 +147,11 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
     @Test
     public void testGetJobServiceLogger() {
         assertThat(mFactory.getJobServiceLogger()).isSameInstanceAs(mMockJobServiceLogger);
+    }
+
+    @Test
+    public void testGetJobSchedulingLogger() {
+        assertThat(mFactory.getJobSchedulingLogger()).isSameInstanceAs(mMockJobSchedulingLogger);
     }
 
     @Test
