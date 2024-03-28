@@ -1,33 +1,28 @@
 {
-  "description": "Trigger verbose debug report not created without source debug permission",
+  "description": "Lookback window with millisecond precision.",
   "input": {
     "registrations": [
       {
-        "timestamp": "0",
         "registration_request": {
-          "context_origin": "https://source.test",
           "attribution_src_url": "https://reporter.test/register-source",
-          "Attribution-Reporting-Eligible": "navigation-source"
+          "context_origin": "https://source.test",
+          "Attribution-Reporting-Eligible": "event-source"
         },
         "responses": [
           {
             "url": "https://reporter.test/register-source",
             "response": {
               "Attribution-Reporting-Register-Source": {
-                "destination": "https://destination.test",
                 "source_event_id": "123",
-                "filter_data": {
-                  "x": ["y"]
-                }
+                "destination": "https://destination.test",
+                "expiry": "86400"
               }
             }
           }
-        ]
+        ],
+        "timestamp": "0"
       },
-      // No matching top-level filter data, verbose debug report is not created
-      // as there's no debug permission for the source.
       {
-        "timestamp": "1000",
         "registration_request": {
           "attribution_src_url": "https://reporter.test/register-trigger",
           "context_origin": "https://destination.test"
@@ -35,22 +30,21 @@
         "responses": [
           {
             "url": "https://reporter.test/register-trigger",
-            "debug_permission": true,
             "response": {
               "Attribution-Reporting-Register-Trigger": {
                 "event_trigger_data": [
                   {
-                    "trigger_data": "7"
+                    "trigger_data": "1",
+                    "filters": {
+                      "_lookback_window": 1
+                    }
                   }
-                ],
-                "filters": {
-                  "x": ["z"]
-                },
-                "debug_reporting": true
+                ]
               }
             }
           }
-        ]
+        ],
+        "timestamp": "1001"
       }
     ]
   },
