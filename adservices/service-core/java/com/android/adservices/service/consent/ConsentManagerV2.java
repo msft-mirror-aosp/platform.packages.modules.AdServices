@@ -603,10 +603,12 @@ public class ConsentManagerV2 {
 
         asyncExecute(
                 () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(
                     () -> mFrequencyCapDao.deleteHistogramDataBySourceApp(app.getPackageName()));
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
         }
     }
 
@@ -631,9 +633,11 @@ public class ConsentManagerV2 {
         mConsentCompositeStorage.clearAllAppConsentData();
 
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
         }
     }
 
@@ -647,9 +651,11 @@ public class ConsentManagerV2 {
     public void clearKnownAppsWithConsent() throws IOException {
         mConsentCompositeStorage.clearKnownAppsWithConsent();
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
         }
     }
 
