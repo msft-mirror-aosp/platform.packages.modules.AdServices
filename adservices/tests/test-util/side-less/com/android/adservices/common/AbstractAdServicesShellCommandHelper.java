@@ -19,6 +19,7 @@ package com.android.adservices.common;
 import com.android.adservices.common.Logger.RealLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Supplier;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
@@ -28,21 +29,29 @@ import java.util.Objects;
 public abstract class AbstractAdServicesShellCommandHelper {
     protected static final String TAG = "AdServicesShellCommand";
 
-    static final String SHELL_ACTIVITY_COMPONENT_NAME =
-            "com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity";
-    static final String SHELL_ACTIVITY_INTENT = "android.adservices.BACK_COMPACT_SHELL_COMMAND";
+    @VisibleForTesting
+    static final String SHELL_ACTIVITY_NAME = "com.android.adservices.shell.ShellCommandActivity";
 
-    static final String ENABLE_SHELL_ACTIVITY = "pm enable " + SHELL_ACTIVITY_COMPONENT_NAME;
-    static final String START_SHELL_ACTIVITY = "am start -W -a " + SHELL_ACTIVITY_INTENT;
+    private static final String SHELL_ACTIVITY_INTENT =
+            "android.adservices.BACK_COMPACT_SHELL_COMMAND";
 
-    static final String DISABLE_SHELL_ACTIVITY = "pm disable " + SHELL_ACTIVITY_COMPONENT_NAME;
+    private static final String INVALID_COMMAND_OUTPUT = "Unknown command:";
+
+    private static final String CMD_ARGS = "cmd-args";
+    private static final String GET_RESULT_ARG = "get-result";
 
     @VisibleForTesting
     static final String ADSERVICES_MANAGER_SERVICE_CHECK = "service check adservices_manager";
 
-    private final Logger mLog;
+    private static final long WAIT_SAMPLE_INTERVAL_MILLIS = 1000;
+    private static final long TIMEOUT_ACTIVITY_FINISH_MILLIS = 3000;
 
-    protected AbstractAdServicesShellCommandHelper(RealLogger logger) {
+    private final Logger mLog;
+    private final AbstractDeviceSupportHelper mAdServicesHelper;
+
+    protected AbstractAdServicesShellCommandHelper(
+            AbstractDeviceSupportHelper abstractAdServicesHelper, RealLogger logger) {
+        mAdServicesHelper = abstractAdServicesHelper;
         mLog = new Logger(logger, TAG);
     }
 
@@ -127,17 +136,19 @@ public abstract class AbstractAdServicesShellCommandHelper {
     protected abstract int getDeviceApiLevel();
 
     private String runShellCommandRS(String cmd) {
-        String res = runShellCommand(ENABLE_SHELL_ACTIVITY);
-        mLog.d("Output for command %s: %s", ENABLE_SHELL_ACTIVITY, res);
-        res = runShellCommand(START_SHELL_ACTIVITY);
-        mLog.d("Output for command %s: %s", START_SHELL_ACTIVITY, res);
+        String[] argsList = cmd.split(" ");
+        String args = String.join(",", argsList);
+        String res = runShellCommand(startShellActivity(args));
+        mLog.d("Output for command %s: %s", startShellActivity(args), res);
 
-        res = runShellCommand(runDumpsysShellCommand(cmd));
-        mLog.d("Output for command %s: %s", runDumpsysShellCommand(cmd), res);
+        String componentName =
+                String.format(
+                        "%s/%s", mAdServicesHelper.getAdServicesPackageName(), SHELL_ACTIVITY_NAME);
+        res = runShellCommand(runDumpsysShellCommand(componentName));
+        mLog.d("Output for command %s: %s", runDumpsysShellCommand(componentName), res);
         String out = parseResultFromDumpsys(res);
 
-        res = runShellCommand(DISABLE_SHELL_ACTIVITY);
-        mLog.d("Output for command %s: %s", DISABLE_SHELL_ACTIVITY, res);
+        checkShellCommandActivityFinished(componentName);
         return out;
     }
 
@@ -166,13 +177,50 @@ public abstract class AbstractAdServicesShellCommandHelper {
     }
 
     @VisibleForTesting
-    String runDumpsysShellCommand(String cmd) {
-        return String.format("dumpsys activity %s cmd %s", SHELL_ACTIVITY_COMPONENT_NAME, cmd);
+    String runDumpsysShellCommand(String componentName) {
+        return String.format("dumpsys activity %s cmd %s", componentName, GET_RESULT_ARG);
+    }
+
+    private String startShellActivity(String args) {
+        return String.format(
+                "am start -W -a %s --esa %s %s", SHELL_ACTIVITY_INTENT, CMD_ARGS, args);
     }
 
     boolean isAdServicesManagerServicePublished() {
         String out = runShellCommand(ADSERVICES_MANAGER_SERVICE_CHECK);
         return !out.contains("not found");
+    }
+
+    private void checkShellCommandActivityFinished(String componentName) {
+        mLog.d("Checking if ShellCommandActivity is finished");
+        tryWaitForSuccess(
+                () -> {
+                    String res = runShellCommand(runDumpsysShellCommand(componentName));
+                    mLog.d("Output for command %s: %s", runDumpsysShellCommand(componentName), res);
+                    return res.contains(INVALID_COMMAND_OUTPUT);
+                },
+                "Failed to finish ShellCommandActivity",
+                TIMEOUT_ACTIVITY_FINISH_MILLIS);
+    }
+
+    // TODO(b/328107990): Create a generic method and move this to a CTS helper class.
+    private void tryWaitForSuccess(
+            Supplier<Boolean> successCondition, String failureMessage, long maxTimeoutMillis) {
+        long epoch = System.currentTimeMillis();
+        while (System.currentTimeMillis() - epoch <= maxTimeoutMillis) {
+            try {
+                mLog.d("Sleep for %dms before we check for result", WAIT_SAMPLE_INTERVAL_MILLIS);
+                Thread.sleep(WAIT_SAMPLE_INTERVAL_MILLIS);
+                if (successCondition.get()) {
+                    mLog.d("ShellCommandActivity is finished");
+                    return;
+                }
+            } catch (InterruptedException e) {
+                mLog.e("Thread interrupted, %s", failureMessage);
+                Thread.currentThread().interrupt();
+            }
+        }
+        mLog.e("Timeout %dms happened, %s", maxTimeoutMillis, failureMessage);
     }
 
     /** Contains the result of a shell command. */

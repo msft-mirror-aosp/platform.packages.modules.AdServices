@@ -135,10 +135,9 @@ public class E2EInteropMockTest extends E2EMockTest {
             Map.of(
                     // TODO (b/295382171): remove this after the flag is removed.
                     "measurement_enable_max_aggregate_reports_per_source", "true",
-                    "measurement_min_event_report_delay_millis", "0",
-                    "measurement_source_registration_time_optional_for_agg_reports_enabled",
-                            "true",
-                    "measurement_flexible_event_reporting_api_enabled", "true");
+                    "measurement_source_registration_time_optional_for_agg_reports_enabled", "true",
+                    "measurement_flexible_event_reporting_api_enabled", "true",
+                    "measurement_enable_trigger_context_id", "true");
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {

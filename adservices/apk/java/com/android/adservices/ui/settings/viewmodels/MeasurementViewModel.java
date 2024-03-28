@@ -28,6 +28,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.widget.MainSwitchBar;
@@ -46,6 +47,8 @@ public class MeasurementViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> mMeasurementConsent;
     private final ConsentManager mConsentManager;
 
+    private final ConsentManagerV2 mConsentManagerV2;
+
     /** UI event in measurement triggered by view model */
     public enum MeasurementViewModelUiEvent {
         SWITCH_ON_MEASUREMENT,
@@ -55,14 +58,25 @@ public class MeasurementViewModel extends AndroidViewModel {
 
     public MeasurementViewModel(@NonNull Application application) {
         super(application);
-        mConsentManager = ConsentManager.getInstance();
+        // We can not call both getInstance since, there are migration logic in getInstance, don't
+        // want to migrate twice to cause some unknown issues
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            mConsentManagerV2 = ConsentManagerV2.getInstance();
+            mConsentManager = null;
+        } else {
+            mConsentManagerV2 = null;
+            mConsentManager = ConsentManager.getInstance();
+        }
+
         mMeasurementConsent = new MutableLiveData<>(getMeasurementConsentFromConsentManager());
     }
 
     @VisibleForTesting
-    public MeasurementViewModel(@NonNull Application application, ConsentManager consentManager) {
+    public MeasurementViewModel(
+            @NonNull Application application, ConsentManagerV2 consentManagerV2) {
         super(application);
-        mConsentManager = consentManager;
+        mConsentManagerV2 = consentManagerV2;
+        mConsentManager = null;
         mMeasurementConsent = new MutableLiveData<>(true);
     }
 
@@ -83,22 +97,44 @@ public class MeasurementViewModel extends AndroidViewModel {
      *     Measurement PP APIs.
      */
     public void setMeasurementConsent(Boolean newMeasurementConsentValue) {
-        if (newMeasurementConsentValue) {
-            mConsentManager.enable(getApplication(), AdServicesApiType.MEASUREMENTS);
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            if (newMeasurementConsentValue) {
+                mConsentManagerV2.enable(getApplication(), AdServicesApiType.MEASUREMENTS);
+            } else {
+                mConsentManagerV2.disable(getApplication(), AdServicesApiType.MEASUREMENTS);
+            }
+            mMeasurementConsent.postValue(getMeasurementConsentFromConsentManager());
+            if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                mConsentManagerV2.recordUserManualInteractionWithConsent(
+                        ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED);
+            }
         } else {
-            mConsentManager.disable(getApplication(), AdServicesApiType.MEASUREMENTS);
+            if (newMeasurementConsentValue) {
+                mConsentManager.enable(getApplication(), AdServicesApiType.MEASUREMENTS);
+            } else {
+                mConsentManager.disable(getApplication(), AdServicesApiType.MEASUREMENTS);
+            }
+            mMeasurementConsent.postValue(getMeasurementConsentFromConsentManager());
+            if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                ConsentManager.getInstance()
+                        .recordUserManualInteractionWithConsent(
+                                ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+            }
         }
-        mMeasurementConsent.postValue(getMeasurementConsentFromConsentManager());
-        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-            ConsentManager.getInstance()
-                    .recordUserManualInteractionWithConsent(
-                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
-        }
+
     }
 
     /** Reset all information related to Measurement */
     public void resetMeasurement() {
-        mConsentManager.resetMeasurement();
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            mConsentManagerV2.resetMeasurement();
+            // add the msmt data reset bit
+            mConsentManagerV2.setMeasurementDataReset(true);
+        } else {
+            mConsentManager.resetMeasurement();
+            // add the msmt data reset bit
+            mConsentManager.setMeasurementDataReset(true);
+        }
     }
 
     /** Returns an observable but immutable event enum representing an action on UI. */
@@ -134,6 +170,10 @@ public class MeasurementViewModel extends AndroidViewModel {
     }
 
     private boolean getMeasurementConsentFromConsentManager() {
-        return mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return mConsentManagerV2.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+        } else {
+            return mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+        }
     }
 }

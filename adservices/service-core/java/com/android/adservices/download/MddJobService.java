@@ -114,7 +114,14 @@ public class MddJobService extends JobService {
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d("Disabling MddJobService job because it's running in ExtServices on T+");
             return skipAndCancelBackgroundJob(
-                    params, jobId, /* skipReason=*/ 0, /* doRecord=*/ false);
+                    params, jobId, /* skipReason= */ 0, /* doRecord= */ false);
+        }
+
+        // Reschedule jobs with SPE if it's enabled. Note scheduled jobs by this MddJobService will
+        // be cancelled for the same job ID.
+        if (FlagsFactory.getFlags().getSpeOnPilotJobsEnabled()) {
+            MddJob.scheduleAllMddJobs();
+            return false;
         }
 
         // Record the invocation of onStartJob() for logging purpose.
@@ -127,7 +134,7 @@ public class MddJobService extends JobService {
                     params,
                     jobId,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
-                    /* doRecord=*/ true);
+                    /* doRecord= */ true);
         }
 
         // This service executes each incoming job on a Handler running on the application's
@@ -138,7 +145,7 @@ public class MddJobService extends JobService {
                             String mddTag = getMddTag(params);
                             LogUtil.d("MddJobService.onStartJob for " + mddTag);
 
-                            return MobileDataDownloadFactory.getMdd(this, FlagsFactory.getFlags())
+                            return MobileDataDownloadFactory.getMdd(FlagsFactory.getFlags())
                                     .handleTask(mddTag);
                         },
                         AdServicesExecutors.getBackgroundExecutor());
@@ -152,7 +159,7 @@ public class MddJobService extends JobService {
 
                         sBlockingExecutor.execute(
                                 () -> {
-                                    EnrollmentDataDownloadManager.getInstance(MddJobService.this)
+                                    EnrollmentDataDownloadManager.getInstance()
                                             .readAndInsertEnrollmentDataFromMdd();
 
                                     // Logging has to happen before jobFinished() is called. Due to

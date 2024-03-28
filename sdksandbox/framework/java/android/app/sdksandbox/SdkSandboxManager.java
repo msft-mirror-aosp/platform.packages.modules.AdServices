@@ -154,6 +154,15 @@ public final class SdkSandboxManager {
     public static final String EXTRA_SANDBOXED_ACTIVITY_HANDLER =
             "android.app.sdksandbox.extra.SANDBOXED_ACTIVITY_HANDLER";
 
+    /**
+     * The key for an element in {@link Activity} intent extra params, the value is set while
+     * calling {@link #startSdkSandboxActivity(Activity, IBinder)}.
+     *
+     * @hide
+     */
+    public static final String EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME =
+            "android.app.sdksandbox.extra.EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME";
+
     private static final String TAG = "SdkSandboxManager";
     private TimeProvider mTimeProvider;
 
@@ -701,6 +710,7 @@ public final class SdkSandboxManager {
 
         Bundle params = new Bundle();
         params.putBinder(EXTRA_SANDBOXED_ACTIVITY_HANDLER, sdkActivityToken);
+        params.putLong(EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME, timeEventStarted);
         intent.putExtras(params);
 
         fromActivity.startActivity(intent);

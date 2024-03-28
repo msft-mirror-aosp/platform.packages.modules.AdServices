@@ -375,6 +375,7 @@ public class AggregateReportingJobHandler {
                                         && aggregateReport.getTriggerDebugKey() != null
                                 ? "enabled"
                                 : null)
+                .setTriggerContextId(aggregateReport.getTriggerContextId())
                 .build()
                 .toJson(key, mFlags);
     }

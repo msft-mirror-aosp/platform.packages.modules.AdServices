@@ -578,6 +578,26 @@ public class ConsentCompositeStorage implements IConsentStorage {
         }
     }
 
+    /**
+     * Saves information to the storage that Pas notification was displayed for the first time to
+     * the user.
+     */
+    @Override
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.recordPasNotificationDisplayed(wasPasDisplayed);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDatastoreManualInteractionException(e);
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     /** Saves information to the storage that user interacted with consent manually. */
     @Override
     public void recordUserManualInteractionWithConsent(int interaction) {
@@ -796,6 +816,59 @@ public class ConsentCompositeStorage implements IConsentStorage {
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean wasPasNotificationDisplayed() {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                return storage.wasPasNotificationDisplayed();
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                return true;
+            }
+        }
+        return true;
+    }
+
+    /** Set the measurement data reset activity happens based on consent_source_of_truth. */
+    @Override
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.setMeasurementDataReset(isMeasurementDataReset);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+            }
+        }
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    @Override
+    public boolean isMeasurementDataReset() {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                return storage.isMeasurementDataReset();
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                return false;
+            }
+        }
+        return false;
     }
 
     private static void logDataStoreWhileRecordingException(IOException e) {

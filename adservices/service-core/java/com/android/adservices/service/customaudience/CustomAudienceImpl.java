@@ -29,6 +29,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.Validator;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.internal.annotations.GuardedBy;
@@ -57,6 +58,7 @@ public class CustomAudienceImpl {
     @NonNull private final Validator<CustomAudience> mCustomAudienceValidator;
     @NonNull private final Clock mClock;
     @NonNull private final Flags mFlags;
+    private final boolean mAuctionServerRequestFlagsEnabled;
 
     @VisibleForTesting
     public CustomAudienceImpl(
@@ -76,6 +78,8 @@ public class CustomAudienceImpl {
         mCustomAudienceValidator = customAudienceValidator;
         mClock = clock;
         mFlags = flags;
+        mAuctionServerRequestFlagsEnabled =
+                BinderFlagReader.readFlag(flags::getFledgeAuctionServerRequestFlagsEnabled);
     }
 
     /**
@@ -95,7 +99,7 @@ public class CustomAudienceImpl {
                         new CustomAudienceImpl(
                                 customAudienceDao,
                                 new CustomAudienceQuantityChecker(customAudienceDao, flags),
-                                CustomAudienceValidator.getInstance(context),
+                                CustomAudienceValidator.getInstance(context, flags),
                                 Clock.systemUTC(),
                                 flags);
             }
@@ -143,7 +147,8 @@ public class CustomAudienceImpl {
                         currentTime,
                         customAudienceDefaultExpireIn,
                         dataConversionStrategy,
-                        isDebuggableCustomAudience);
+                        isDebuggableCustomAudience,
+                        mAuctionServerRequestFlagsEnabled);
 
         sLogger.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(

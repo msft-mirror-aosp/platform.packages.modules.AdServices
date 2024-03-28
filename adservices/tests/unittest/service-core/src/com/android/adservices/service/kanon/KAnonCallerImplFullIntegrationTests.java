@@ -20,6 +20,7 @@ import static com.android.adservices.service.common.httpclient.AdServicesHttpUti
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -43,6 +44,8 @@ import com.android.adservices.data.kanon.ServerParametersDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
 import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorFactory;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer;
 import com.android.adservices.service.common.cache.CacheDatabase;
@@ -58,6 +61,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -70,6 +74,14 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
+import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
+import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
+import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.Transcript;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
@@ -79,14 +91,6 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-
-import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
-import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
-import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
-import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
-import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
 // All the tests of this CL are ignored because they make calls to the actual server and these will
 // fail
@@ -98,14 +102,14 @@ public class KAnonCallerImplFullIntegrationTests {
     private static final long MAX_AGE_SECONDS = 1200000;
     private static final long MAX_ENTRIES = 20;
 
-    private ExecutorService mLightweightExecutorService;
+    private ListeningExecutorService mLightweightExecutorService;
+    private ListeningExecutorService mBackgroundExecutorService;
     private AnonymousCountingTokens mAnonymousCountingTokens;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
     private ClientParametersDao mClientParametersDao;
     private ServerParametersDao mServerParametersDao;
     private KAnonMessageDao mKAnonMessageDao;
-    private KAnonObliviousHttpEncryptorImpl mKAnonObliviousHttpEncryptor;
     private BinaryHttpMessageDeserializer mBinaryHttpMessageDeserializer;
     private KAnonMessageManager mKAnonMessageManager;
     private Flags mFlags;
@@ -126,6 +130,8 @@ public class KAnonCallerImplFullIntegrationTests {
     @Mock private UserProfileIdDao mockUserProfileIdDao;
     @Mock private AdServicesLogger mockAdServicesLogger;
     @Mock private KeyAttestationFactory mockKeyAttestationFactory;
+    @Mock private ObliviousHttpEncryptorFactory mObliviousHttpEncryptorFactory;
+
     private UserProfileIdManager mUserProfileIdManager;
 
     private final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -143,6 +149,7 @@ public class KAnonCallerImplFullIntegrationTests {
         HttpCache cache = new FledgeHttpCache(cacheEntryDao, MAX_AGE_SECONDS, MAX_ENTRIES);
         mAdServicesHttpsClient = new AdServicesHttpsClient(mExecutorService, cache);
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        mLightweightExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mAnonymousCountingTokens = new AnonymousCountingTokensImpl();
         KAnonDatabase kAnonDatabase =
                 Room.inMemoryDatabaseBuilder(CONTEXT, KAnonDatabase.class).build();
@@ -157,7 +164,7 @@ public class KAnonCallerImplFullIntegrationTests {
                 Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionKeyDao();
-        mKAnonObliviousHttpEncryptor =
+        ObliviousHttpEncryptor kAnonObliviousHttpEncryptor =
                 new KAnonObliviousHttpEncryptorImpl(
                         new AdSelectionEncryptionKeyManager(
                                 mEncryptionKeyDao,
@@ -165,6 +172,9 @@ public class KAnonCallerImplFullIntegrationTests {
                                 mAdServicesHttpsClient,
                                 AdServicesExecutors.getLightWeightExecutor()),
                         AdServicesExecutors.getLightWeightExecutor());
+        doReturn(kAnonObliviousHttpEncryptor)
+                .when(mObliviousHttpEncryptorFactory)
+                .getKAnonObliviousHttpEncryptor();
         mBinaryHttpMessageDeserializer = new BinaryHttpMessageDeserializer();
 
         when(mockClock.instant()).thenReturn(FIXED_INSTANT);
@@ -193,6 +203,7 @@ public class KAnonCallerImplFullIntegrationTests {
                 Mockito.spy(
                         new KAnonCallerImpl(
                                 mLightweightExecutorService,
+                                mBackgroundExecutorService,
                                 mAnonymousCountingTokens,
                                 mAdServicesHttpsClient,
                                 mClientParametersDao,
@@ -200,12 +211,13 @@ public class KAnonCallerImplFullIntegrationTests {
                                 mUserProfileIdManager,
                                 mBinaryHttpMessageDeserializer,
                                 mFlags,
-                                mKAnonObliviousHttpEncryptor,
                                 mKAnonMessageManager,
                                 mockAdServicesLogger,
-                                mockKeyAttestationFactory));
+                                mockKeyAttestationFactory,
+                                mObliviousHttpEncryptorFactory));
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        kAnonCaller.signAndJoinMessages(messageEntities);
+        kAnonCaller.signAndJoinMessages(
+                messageEntities, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
 
         countDownLatch.await();
 
@@ -233,6 +245,7 @@ public class KAnonCallerImplFullIntegrationTests {
         KAnonCallerImpl runner =
                 new KAnonCallerImpl(
                         mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAnonymousCountingTokens,
                         mAdServicesHttpsClient,
                         mClientParametersDao,
@@ -240,12 +253,13 @@ public class KAnonCallerImplFullIntegrationTests {
                         mUserProfileIdManager,
                         mBinaryHttpMessageDeserializer,
                         mFlags,
-                        mKAnonObliviousHttpEncryptor,
                         mKAnonMessageManager,
                         mockAdServicesLogger,
-                        mockKeyAttestationFactory);
+                        mockKeyAttestationFactory,
+                        mObliviousHttpEncryptorFactory);
         CountDownLatch countdownLatch = new CountDownLatch(1);
-        runner.signAndJoinMessages(messageEntities);
+        runner.signAndJoinMessages(
+                messageEntities, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         countdownLatch.await();
 
         List<KAnonMessageEntity> messageEntitiesAfterProcessing =

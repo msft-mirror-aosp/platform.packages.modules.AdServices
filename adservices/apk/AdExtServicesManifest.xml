@@ -17,12 +17,12 @@
  */
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:androidprv="http://schemas.android.com/apk/prv/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="android.ext.services"
-    android:versionCode="309999900"
-    android:versionName="2019-09"
-    coreApp="true">
+          xmlns:androidprv="http://schemas.android.com/apk/prv/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="android.ext.services"
+          android:versionCode="309999900"
+          android:versionName="2019-09"
+          coreApp="true">
 
     <!-- Declare the broadcast as protected so only the system service can send it.  The AdServices
     System Service will send this broadcast to the AdServices module where there is a package
@@ -219,7 +219,6 @@
         <activity
             android:name="com.android.adservices.shell.ShellCommandActivity"
             android:exported="true"
-            android:enabled="false"
             android:theme="@style/Theme.SubSettingsBase"
             android:process=".adservices">
             <intent-filter android:priority="1">
@@ -229,6 +228,7 @@
         </activity>
 
         <service android:name="com.android.adservices.adselection.AdSelectionService"
+                 android:enabled="@bool/isAtLeastS"
                  android:exported="true"
                  android:visibleToInstantApps="false"
                  android:process=".adservices">
@@ -239,6 +239,7 @@
 
         <service android:name=
                      "com.android.adservices.customaudience.CustomAudienceService"
+                 android:enabled="@bool/isAtLeastS"
                  android:exported="true"
                  android:visibleToInstantApps="false"
                  android:process=".adservices">
@@ -250,6 +251,7 @@
 
         <service android:name=
                      "android.adservices.signals.ProtectedSignalsService"
+                 android:enabled="@bool/isAtLeastS"
                  android:exported="true"
                  android:visibleToInstantApps="false"
                  android:process=".adservices">
@@ -260,6 +262,7 @@
         </service>
 
         <service android:name="com.android.adservices.topics.TopicsService"
+                 android:enabled="@bool/isAtLeastS"
                  android:exported="true"
                  android:visibleToInstantApps="false"
                  android:process=".adservices">
@@ -278,6 +281,7 @@
         </service>
 
         <service android:name="com.android.adservices.appsetid.AppSetIdService"
+                 android:enabled="@bool/isAtLeastS"
                  android:exported="true"
                  android:visibleToInstantApps="false"
                  android:process=".adservices">
@@ -302,6 +306,12 @@
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.AD_SERVICES_COMMON_SERVICE"/>
             </intent-filter>
+        </service>
+
+        <!-- The JobService schedules all jobs for AdServices using SPE framework. -->
+        <service android:name="com.android.adservices.spe.AdServicesJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
         </service>
 
         <!-- Daily maintenance Job. -->

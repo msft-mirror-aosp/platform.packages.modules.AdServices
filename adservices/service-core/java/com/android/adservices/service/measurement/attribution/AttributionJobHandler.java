@@ -292,7 +292,7 @@ class AttributionJobHandler {
                     // For flex event attribution, we delete attribution records of pending reports
                     // and process a new attribution state. The count of attributions affects the
                     // alloted report quota, as well as limits calculated in different code paths
-                    // form here so we retrieve it once and pass as needed.
+                    // from here so we retrieve it once and pass as needed.
                     long eventAttributionCount =
                             mFlags.getMeasurementEnableScopedAttributionRateLimit()
                                     ? measurementDao.getAttributionsPerRateLimitWindow(
@@ -540,7 +540,10 @@ class AttributionJobHandler {
             }
 
             source.setAggregateContributions(newAggregateContributions.getAsInt());
-            long randomTime = getAggregateReportDelay();
+            long scheduledReportTime = trigger.getTriggerTime();
+            if (trigger.getTriggerContextId() == null) {
+                scheduledReportTime += getAggregateReportDelay();
+            }
             Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                     new DebugKeyAccessor(measurementDao).getDebugKeys(source, trigger);
             UnsignedLong sourceDebugKey = debugKeyPair.first;
@@ -556,7 +559,7 @@ class AttributionJobHandler {
                             .setPublisher(source.getRegistrant())
                             .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                             .setSourceRegistrationTime(getSourceRegistrationTime(source, trigger))
-                            .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
+                            .setScheduledReportTime(scheduledReportTime)
                             .setEnrollmentId(trigger.getEnrollmentId())
                             .setDebugCleartextPayload(
                                     AggregateReport.generateDebugPayload(contributions.get()))
@@ -571,7 +574,8 @@ class AttributionJobHandler {
                             .setTriggerDebugKey(triggerDebugKey)
                             .setSourceId(source.getId())
                             .setTriggerId(trigger.getId())
-                            .setRegistrationOrigin(trigger.getRegistrationOrigin());
+                            .setRegistrationOrigin(trigger.getRegistrationOrigin())
+                            .setTriggerContextId(trigger.getTriggerContextId());
             if (trigger.getAggregationCoordinatorOrigin() != null) {
                 aggregateReportBuilder.setAggregationCoordinatorOrigin(
                         trigger.getAggregationCoordinatorOrigin());
@@ -586,6 +590,7 @@ class AttributionJobHandler {
                 aggregateReportBuilder.setDedupKey(
                         aggregateDeduplicationKeyOptional.get().getDeduplicationKey().get());
             }
+
             AggregateReport aggregateReport = aggregateReportBuilder.build();
 
             if (mFlags.getMeasurementNullAggregateReportEnabled()
@@ -628,14 +633,18 @@ class AttributionJobHandler {
 
     private void generateNullAggregateReportForNonAttributedTrigger(
             IMeasurementDao measurementDao, Trigger trigger) throws DatastoreException {
-        float nullRate = mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime();
+        float nullRate =
+                trigger.getTriggerContextId() == null
+                        ? mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime()
+                        : 1;
+
         if (Math.random() < nullRate) {
             try {
                 AggregateReport nullReport =
                         // Although the WICG spec states the trigger time should be used here, we
                         // pass null because the source_registration_time is intended for exclusion
                         // anyway.
-                        getNullAggregateReport(trigger, null);
+                        getNullAggregateReport(trigger, /* sourceTime = */ null);
                 measurementDao.insertAggregateReport(nullReport);
             } catch (JSONException e) {
                 LoggerFactory.getMeasurementLogger()
@@ -886,7 +895,10 @@ class AttributionJobHandler {
             }
         }
 
-        if (getMatchingEffectiveTriggerData(eventTrigger, source).isEmpty()) {
+        Optional<UnsignedLong> maybeEffectiveTriggerData =
+                getMatchingEffectiveTriggerData(eventTrigger, source);
+
+        if (maybeEffectiveTriggerData.isEmpty()) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
@@ -896,8 +908,8 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        if (source.getTriggerSpecs() == null
-                && !isTriggerFallsWithinWindow(source, trigger, measurementDao)) {
+        if (!isTriggerFallsWithinWindow(
+                source, trigger, maybeEffectiveTriggerData.get(), measurementDao)) {
             return TriggeringStatus.DROPPED;
         }
 
@@ -959,7 +971,13 @@ class AttributionJobHandler {
             }
         // The source is using flexible event API
         } else if (!generateFlexEventReports(
-                source, trigger, eventTrigger, attributionCount, debugKeyPair, measurementDao)) {
+                source,
+                trigger,
+                eventTrigger,
+                maybeEffectiveTriggerData.get(),
+                attributionCount,
+                debugKeyPair,
+                measurementDao)) {
             return TriggeringStatus.DROPPED;
         }
 
@@ -1010,6 +1028,7 @@ class AttributionJobHandler {
             Source source,
             Trigger trigger,
             EventTrigger eventTrigger,
+            UnsignedLong effectiveTriggerData,
             long attributionCount,
             Pair<UnsignedLong, UnsignedLong> debugKeyPair,
             IMeasurementDao measurementDao) throws DatastoreException {
@@ -1018,21 +1037,6 @@ class AttributionJobHandler {
         }
 
         TriggerSpecs triggerSpecs = source.getTriggerSpecs();
-
-        Optional<UnsignedLong> maybeEffectiveTriggerData =
-                getMatchingEffectiveTriggerData(eventTrigger, source);
-
-        if (maybeEffectiveTriggerData.isEmpty()) {
-            mDebugReportApi.scheduleTriggerDebugReport(
-                    source,
-                    trigger,
-                    null,
-                    measurementDao,
-                    Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
-            return false;
-        }
-
-        UnsignedLong effectiveTriggerData = maybeEffectiveTriggerData.get();
 
         // Store the current bucket index for each trigger data
         Map<UnsignedLong, Integer> triggerDataToBucketIndexMap = new HashMap<>();
@@ -1381,15 +1385,17 @@ class AttributionJobHandler {
     private boolean hasAttributionQuota(
             long attributionCount, Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        if (attributionCount >= mFlags.getMeasurementMaxAttributionPerRateLimitWindow()) {
+        int maxAttributionPerRateLimitWindow =
+                mFlags.getMeasurementMaxAttributionPerRateLimitWindow();
+        if (attributionCount >= maxAttributionPerRateLimitWindow) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(attributionCount),
+                    String.valueOf(maxAttributionPerRateLimitWindow),
                     measurementDao,
                     Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         }
-        return attributionCount < mFlags.getMeasurementMaxAttributionPerRateLimitWindow();
+        return attributionCount < maxAttributionPerRateLimitWindow;
     }
 
     private boolean hasAttributionQuota(
@@ -1408,7 +1414,7 @@ class AttributionJobHandler {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(attributionCount),
+                    String.valueOf(limit),
                     measurementDao,
                     Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         }
@@ -1595,7 +1601,7 @@ class AttributionJobHandler {
                             trigger.getRegistrationOrigin(),
                             trigger.getTriggerTime() - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
-            if (count >= mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()) {
+            if (count >= mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution()) {
                 mDebugReportApi.scheduleTriggerDebugReport(
                         source,
                         trigger,
@@ -1604,7 +1610,7 @@ class AttributionJobHandler {
                         Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
             }
 
-            return count < mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution();
+            return count < mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution();
         } else {
             LoggerFactory.getMeasurementLogger()
                     .d(
@@ -1841,11 +1847,15 @@ class AttributionJobHandler {
     }
 
     private boolean isTriggerFallsWithinWindow(
-            Source source, Trigger trigger, IMeasurementDao measurementDao)
-            throws DatastoreException {
+            Source source,
+            Trigger trigger,
+            UnsignedLong effectiveTriggerData,
+            IMeasurementDao measurementDao) throws DatastoreException {
         MomentPlacement momentPlacement =
                 mEventReportWindowCalcDelegate.fallsWithinWindow(
-                        source, trigger.getTriggerTime(), trigger.getDestinationType());
+                        source,
+                        trigger,
+                        effectiveTriggerData);
         if (momentPlacement == MomentPlacement.BEFORE) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,

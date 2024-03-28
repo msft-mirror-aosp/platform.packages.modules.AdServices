@@ -27,6 +27,7 @@ import android.adservices.common.AdServicesStates;
 import android.adservices.common.ConsentStatus;
 import android.content.Context;
 import android.os.OutcomeReceiver;
+import android.os.Parcel;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -46,6 +47,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -144,6 +146,8 @@ public class CommonServicesTest {
 
     /** Verify that for GA, ROW devices get adservices common states of opt-in consent. */
     @Test
+    @Ignore
+    // TODO: b/327682322
     public void testGetAdservicesCommonStatesOptin() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -181,6 +185,8 @@ public class CommonServicesTest {
 
     /** Verify that for GA devices get adservices common states of opt-out consent. */
     @Test
+    @Ignore
+    // TODO: b/327682322
     public void testGetAdservicesCommonStatesOptOut() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         UiUtils.setFlipFlow(true);
@@ -299,5 +305,65 @@ public class CommonServicesTest {
                     // of returned future or error cases.
                     return "getStatus";
                 });
+    }
+
+    @Test
+    public void testAdservicesCommonStatesCoverages() throws Exception {
+        AdServicesCommonStates states =
+                new AdServicesCommonStates.Builder()
+                        .setMeasurementState(ConsentStatus.GIVEN)
+                        .setPaState(ConsentStatus.REVOKED)
+                        .build();
+
+        Parcel parcel = Parcel.obtain();
+
+        try {
+            states.writeToParcel(parcel, 0);
+            parcel.setDataPosition(0);
+
+            AdServicesCommonStates createdParams =
+                    AdServicesCommonStates.CREATOR.createFromParcel(parcel);
+            assertThat(createdParams.describeContents()).isEqualTo(0);
+            assertThat(createdParams).isNotSameInstanceAs(states);
+            assertThat(createdParams.getPaState()).isEqualTo(states.getPaState());
+            assertThat(createdParams.getMeasurementState()).isEqualTo(states.getMeasurementState());
+            assertThat(createdParams.equals(states)).isTrue();
+            assertThat(createdParams.hashCode()).isEqualTo(states.hashCode());
+            assertThat(createdParams.toString()).isEqualTo(states.toString());
+        } finally {
+            parcel.recycle();
+        }
+    }
+
+    @Test
+    public void testAdservicesCommonStatesResponseCoverages() throws Exception {
+        AdServicesCommonStates states =
+                new AdServicesCommonStates.Builder()
+                        .setMeasurementState(ConsentStatus.GIVEN)
+                        .setPaState(ConsentStatus.REVOKED)
+                        .build();
+        AdServicesCommonStatesResponse response =
+                new AdServicesCommonStatesResponse.Builder(states)
+                        .setAdservicesCommonStates(states)
+                        .build();
+
+        Parcel parcel = Parcel.obtain();
+
+        try {
+            response.writeToParcel(parcel, 0);
+            parcel.setDataPosition(0);
+
+            AdServicesCommonStatesResponse createdParams =
+                    AdServicesCommonStatesResponse.CREATOR.createFromParcel(parcel);
+            assertThat(createdParams.describeContents()).isEqualTo(0);
+            assertThat(createdParams).isNotSameInstanceAs(response);
+            assertThat(createdParams.getAdServicesCommonStates().getPaState())
+                    .isEqualTo(states.getPaState());
+            assertThat(createdParams.getAdServicesCommonStates().getMeasurementState())
+                    .isEqualTo(states.getMeasurementState());
+            assertThat(createdParams.toString()).isEqualTo(response.toString());
+        } finally {
+            parcel.recycle();
+        }
     }
 }

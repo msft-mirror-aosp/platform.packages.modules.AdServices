@@ -19,6 +19,7 @@ package com.android.adservices.service.stats;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
@@ -43,12 +44,6 @@ public interface AdServicesLogger {
 
     /** Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object. */
     void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs);
-
-    /**
-     * Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object with
-     * failure reason.
-     */
-    void logFledgeApiCallStats(int apiName, int latencyMs, ApiCallStats.Result result);
 
     /** Logs measurement registrations response size. */
     void logMeasurementRegistrationsResponseSize(MeasurementRegistrationResponseStats stats);
@@ -190,4 +185,31 @@ public interface AdServicesLogger {
      */
     void logKAnonImmediateSignJoinStats(
             KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats);
+
+    /** Logs status for get challenge method during kAnon sign join process. */
+    void logKAnonGetChallengeJobStats(KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats);
+
+    /** Logs stats for GetAdSelectionDataApiCalled */
+    void logGetAdSelectionDataApiCalledStats(GetAdSelectionDataApiCalledStats stats);
+
+    /** Logs stats for GetAdSelectionDataBuyerInputGenerated */
+    void logGetAdSelectionDataBuyerInputGeneratedStats(
+            GetAdSelectionDataBuyerInputGeneratedStats stats);
+
+    /** Logs TopicsEncryptionEpochComputationReported stats. */
+    void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats);
+
+    /** Logs TopicsEncryptionGetTopicsReported stats */
+    void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats);
+
+    /** Logs stats for shell command indicating success/failure, latency. */
+    void logShellCommandStats(ShellCommandStats stats);
+
+    /**
+     * Logs stats for signature verification for {@link
+     * android.adservices.adselection.SignedContextualAds} during on-device ad selection auction
+     */
+    void logSignatureVerificationStats(SignatureVerificationStats stats);
 }

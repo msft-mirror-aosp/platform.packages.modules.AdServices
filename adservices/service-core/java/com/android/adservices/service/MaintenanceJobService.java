@@ -49,7 +49,6 @@ import java.util.List;
 import java.util.Objects;
 
 /** Maintenance job to clean up. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class MaintenanceJobService extends JobService {
     private static final int MAINTENANCE_JOB_ID = MAINTENANCE_JOB.getJobId();

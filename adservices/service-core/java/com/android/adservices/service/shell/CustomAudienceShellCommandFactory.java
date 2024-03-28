@@ -16,14 +16,19 @@
 
 package com.android.adservices.service.shell;
 
+import android.content.Context;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -41,12 +46,18 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
 
     @VisibleForTesting
     CustomAudienceShellCommandFactory(
-            boolean isCustomAudienceCliEnabled, @NonNull CustomAudienceDao customAudienceDao) {
+            boolean isCustomAudienceCliEnabled,
+            BackgroundFetchRunner backgroundFetchRunner,
+            CustomAudienceDao customAudienceDao) {
         mIsCustomAudienceCliEnabled = isCustomAudienceCliEnabled;
         Set<ShellCommand> allCommands =
                 ImmutableSet.of(
                         new CustomAudienceListCommand(customAudienceDao),
-                        new CustomAudienceViewCommand(customAudienceDao));
+                        new CustomAudienceViewCommand(customAudienceDao),
+                        new CustomAudienceRefreshCommand(
+                                backgroundFetchRunner,
+                                customAudienceDao,
+                                AdServicesExecutors.getScheduler()));
         mAllCommandsMap =
                 allCommands.stream()
                         .collect(
@@ -54,11 +65,20 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
                                         ShellCommand::getCommandName, Function.identity()));
     }
 
-    static ShellCommandFactory getInstance(Flags flags) {
+    static ShellCommandFactory getInstance(Flags flags, Context context) {
+        CustomAudienceDao customAudienceDao =
+                CustomAudienceDatabase.getInstance(context).customAudienceDao();
         return new CustomAudienceShellCommandFactory(
                 flags.getFledgeCustomAudienceCLIEnabledStatus(),
-                CustomAudienceDatabase.getInstance(ApplicationContextSingleton.get())
-                        .customAudienceDao());
+                new BackgroundFetchRunner(
+                        customAudienceDao,
+                        SharedStorageDatabase.getInstance(context).appInstallDao(),
+                        ApplicationContextSingleton.get().getPackageManager(),
+                        EnrollmentDao.getInstance(context),
+                        flags,
+                        // Avoid logging metrics when using shell commands (such as daily update).
+                        CustomAudienceLoggerFactory.getNoOpInstance()),
+                customAudienceDao);
     }
 
     @Nullable

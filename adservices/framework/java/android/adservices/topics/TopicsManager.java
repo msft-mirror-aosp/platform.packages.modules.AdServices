@@ -51,7 +51,6 @@ import java.util.concurrent.Executor;
  * <p>The instance of the {@link TopicsManager} can be obtained using {@link
  * Context#getSystemService} and {@link TopicsManager} class.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class TopicsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
@@ -80,7 +79,6 @@ public final class TopicsManager {
      */
     @NonNull
     public static TopicsManager get(@NonNull Context context) {
-        // TODO(b/269798827): Enable for R.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
             throw new ServiceUnavailableException();
         }
@@ -96,7 +94,6 @@ public final class TopicsManager {
      * @hide
      */
     public TopicsManager(Context context) {
-        // TODO(b/269798827): Enable for R.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
             throw new ServiceUnavailableException();
         }
