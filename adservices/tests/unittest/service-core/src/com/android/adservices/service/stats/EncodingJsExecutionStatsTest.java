@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;

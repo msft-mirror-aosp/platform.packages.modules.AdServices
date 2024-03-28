@@ -17,10 +17,10 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.AdsRelevanceStatusUtils;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 

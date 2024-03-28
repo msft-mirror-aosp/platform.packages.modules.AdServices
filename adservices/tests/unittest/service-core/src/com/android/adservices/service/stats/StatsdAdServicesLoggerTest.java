@@ -17,8 +17,6 @@
 package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
-import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
@@ -27,6 +25,9 @@ import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTran
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchStatus.IO_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_COUNTER_HISTOGRAM_UPDATER_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_AD_SELECTION_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_JOIN_CA_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_SHELL_COMMAND_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
@@ -57,6 +58,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOI
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
@@ -1689,6 +1692,137 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(0),
                                 eq(0),
                                 eq(0));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogAdFilteringProcessJoinCAReportedStats_success() {
+        AdFilteringProcessJoinCAReportedStats stats =
+                AdFilteringProcessJoinCAReportedStats.builder()
+                        .setStatusCode(0)
+                        .setCountOfAdsWithKeysMuchSmallerThanLimitation(1)
+                        .setCountOfAdsWithKeysSmallerThanLimitation(2)
+                        .setCountOfAdsWithKeysEqualToLimitation(3)
+                        .setCountOfAdsWithKeysLargerThanLimitation(4)
+                        .setCountOfAdsWithEmptyKeys(5)
+                        .setCountOfAdsWithFiltersMuchSmallerThanLimitation(6)
+                        .setCountOfAdsWithFiltersSmallerThanLimitation(7)
+                        .setCountOfAdsWithFiltersEqualToLimitation(8)
+                        .setCountOfAdsWithFiltersLargerThanLimitation(9)
+                        .setCountOfAdsWithEmptyFilters(10)
+                        .setTotalNumberOfUsedKeys(11)
+                        .setTotalNumberOfUsedFilters(12)
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logAdFilteringProcessJoinCAReportedStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_FILTERING_PROCESS_JOIN_CA_REPORTED),
+                                eq(0),
+                                eq(1),
+                                eq(2),
+                                eq(3),
+                                eq(4),
+                                eq(5),
+                                eq(6),
+                                eq(7),
+                                eq(8),
+                                eq(9),
+                                eq(10),
+                                eq(11),
+                                eq(12));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogAdFilteringProcessAdSelectionReportedStats_success() {
+        AdFilteringProcessAdSelectionReportedStats stats =
+                AdFilteringProcessAdSelectionReportedStats.builder()
+                        .setLatencyInMillisOfAllAdFiltering(100)
+                        .setLatencyInMillisOfAppInstallFiltering(1)
+                        .setLatencyInMillisOfFcapFilters(200)
+                        .setStatusCode(0)
+                        .setNumOfAdsFilteredOutOfBidding(3)
+                        .setNumOfCustomAudiencesFilteredOutOfBidding(5)
+                        .setTotalNumOfAdsBeforeFiltering(7)
+                        .setTotalNumOfCustomAudiencesBeforeFiltering(2)
+                        .setNumOfPackageInAppInstallFilters(4)
+                        .setNumOfDbOperations(6)
+                        .setFilterProcessType(0)
+                        .setNumOfContextualAdsFiltered(10)
+                        .setNumOfAdCounterKeysInFcapFilters(1)
+                        .setNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures(2)
+                        .setNumOfContextualAdsFilteredOutOfBiddingNoAds(3)
+                        .setTotalNumOfContextualAdsBeforeFiltering(4)
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logAdFilteringProcessAdSelectionReportedStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_FILTERING_PROCESS_AD_SELECTION_REPORTED),
+                                eq(100),
+                                eq(1),
+                                eq(200),
+                                eq(0),
+                                eq(3),
+                                eq(5),
+                                eq(7),
+                                eq(2),
+                                eq(4),
+                                eq(6),
+                                eq(0),
+                                eq(10),
+                                eq(1),
+                                eq(2),
+                                eq(3),
+                                eq(4));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogAdCounterHistogramUpdaterReportedStats_success() {
+        AdCounterHistogramUpdaterReportedStats stats =
+                AdCounterHistogramUpdaterReportedStats.builder()
+                        .setLatencyInMillis(100)
+                        .setStatusCode(0)
+                        .setTotalNumberOfEventsInDatabaseAfterInsert(1)
+                        .setNumberOfInsertedEvent(2)
+                        .setNumberOfEvictedEvent(3)
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logAdCounterHistogramUpdaterReportedStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_COUNTER_HISTOGRAM_UPDATER_REPORTED),
+                                eq(100),
+                                eq(0),
+                                eq(1),
+                                eq(2),
+                                eq(3));
 
         verify(writeInvocation);
 

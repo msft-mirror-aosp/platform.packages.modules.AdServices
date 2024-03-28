@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 
 import static org.mockito.Mockito.verifyZeroInteractions;
 

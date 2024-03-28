@@ -297,6 +297,24 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logAdFilteringProcessJoinCAReportedStats(
+            AdFilteringProcessJoinCAReportedStats stats) {
+        mStatsdAdServicesLogger.logAdFilteringProcessJoinCAReportedStats(stats);
+    }
+
+    @Override
+    public void logAdFilteringProcessAdSelectionReportedStats(
+            AdFilteringProcessAdSelectionReportedStats stats) {
+        mStatsdAdServicesLogger.logAdFilteringProcessAdSelectionReportedStats(stats);
+    }
+
+    @Override
+    public void logAdCounterHistogramUpdaterReportedStats(
+            AdCounterHistogramUpdaterReportedStats stats) {
+        mStatsdAdServicesLogger.logAdCounterHistogramUpdaterReportedStats(stats);
+    }
+
+    @Override
     public void logTopicsEncryptionEpochComputationReportedStats(
             TopicsEncryptionEpochComputationReportedStats stats) {
         mStatsdAdServicesLogger.logTopicsEncryptionEpochComputationReportedStats(stats);
