@@ -93,6 +93,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.pas.FetchProcessLogger;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -357,7 +358,9 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                                         .setResponseBody(AdSelectionE2ETest.USE_BID_AS_SCORE_JS)
                                         .build()))
                 .when(mAdServicesHttpsClientMock)
-                .fetchPayload(any(AdServicesHttpClientRequest.class));
+                .fetchPayloadWithLogging(
+                        any(AdServicesHttpClientRequest.class),
+                        any(FetchProcessLogger.class));
     }
 
     @Test

@@ -58,4 +58,16 @@ public interface AuctionServerPayloadMetricsStrategy {
             Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats,
             DBCustomAudience dbCustomAudience,
             BiddingAuctionServers.BuyerInput.CustomAudience customAudience);
+
+    /**
+     * Loops thorough each buyer and logs {@link
+     * com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats}
+     * with extended PAS metrics
+     */
+    void logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+            Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> statsMap,
+            int encodedSignalsCount,
+            int encodedSignalsTotalSizeInBytes,
+            int encodedSignalsMaxSizeInBytes,
+            int encodedSignalsMinSizeInBytes);
 }

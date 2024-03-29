@@ -162,6 +162,7 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.pas.FetchProcessLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -7972,7 +7973,9 @@ public class AdSelectionServiceImplTest {
                                                         .build())
                                         .build()))
                 .when(mClientSpy)
-                .fetchPayload(any(AdServicesHttpClientRequest.class));
+                .fetchPayloadWithLogging(
+                        any(AdServicesHttpClientRequest.class),
+                        any(FetchProcessLogger.class));
         doReturn(Futures.immediateVoidFuture()).when(mClientSpy).getAndReadNothing(any(), any());
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
@@ -8055,7 +8058,9 @@ public class AdSelectionServiceImplTest {
                 .that(callback.mIsSuccess)
                 .isTrue();
 
-        verify(mClientSpy).fetchPayload(any(AdServicesHttpClientRequest.class));
+        verify(mClientSpy).fetchPayloadWithLogging(
+                any(AdServicesHttpClientRequest.class),
+                any(FetchProcessLogger.class));
         verify(mClientSpy).getAndReadNothing(eq(buyerReportingUriWithSubdomain), eq(mDevContext));
         verify(mClientSpy).getAndReadNothing(eq(sellerReportingUriWithSubdomain), eq(mDevContext));
 
