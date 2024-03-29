@@ -66,11 +66,10 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
 
     // Output error messages
     @VisibleForTesting
-    public static final String ENABLE_ERROR =
-            "Exception while enabling consented debug configuration.";
+    public static final String ENABLE_ERROR = "Unable to enable consented debug configuration.";
 
     @VisibleForTesting
-    public static final String DISABLE_ERROR = "Exception while disabling consented debugging.";
+    public static final String DISABLE_ERROR = "Unable to disable consented debugging.";
 
     @VisibleForTesting
     public static final String VIEW_ERROR = "Unable to fetch consented debug configuration";
@@ -116,6 +115,10 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
             String subCommand = validateAndReturnSubCommand(args);
             ImmutableMap<String, String> cliArgs =
                     ShellCommandArgParserHelper.parseCliArguments(args, SUB_COMMAND_ARG_INDEX);
+            Log.d(
+                    TAG,
+                    String.format(
+                            "running sub command %s in consented debug shell command", subCommand));
             String output;
             switch (subCommand) {
                 case ENABLE_SUB_CMD -> output = runEnableSubCommand(cliArgs);
