@@ -782,7 +782,10 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     @Override
     public void logShellCommandStats(ShellCommandStats stats) {
         AdServicesStatsLog.write(
-                ADSERVICES_SHELL_COMMAND_CALLED, stats.command, stats.result, stats.latencyMillis);
+                ADSERVICES_SHELL_COMMAND_CALLED,
+                stats.getCommand(),
+                stats.getResult(),
+                stats.getLatencyMillis());
     }
 
     @Override
