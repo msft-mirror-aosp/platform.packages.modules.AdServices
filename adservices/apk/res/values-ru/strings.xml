@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Вы отказались от участия в программе"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Благодарим за ответ. Технологии Privacy Sandbox отключены.\n\nЧтобы ознакомиться с информацией о бета-тестировании или снова принять в нем участие, перейдите в настройки конфиденциальности."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Открыть настройки"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"ОК"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Вы участвуете в бета-тестировании"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"На вашем устройстве включены технологии Privacy Sandbox, поэтому приложения могут опробовать новые варианты показа рекламы с более высоким уровнем конфиденциальности. Чтобы отказаться от участия в бета-тестировании, перейдите в настройки конфиденциальности."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"ОК"</string>

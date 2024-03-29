@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"ທ່ານໄດ້ເລືອກທີ່ຈະບໍ່ເຂົ້າຮ່ວມ"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"ຂໍຂອບໃຈສຳລັບຄຳຕອບຂອງທ່ານ. Privacy Sandbox ຖືກເປີດໄວ້ສຳລັບອຸປະກອນຂອງທ່ານ.\n\nຫາກທ່ານປ່ຽນໃຈ ຫຼື ຕ້ອງການສຶກສາເພີ່ມເຕີມ, ກະລຸນາເຂົ້າໄປການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວ"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"ເຂົ້າໃຈແລ້ວ"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"ທ່ານເປັນສ່ວນໜຶ່ງຂອງເວີຊັນເບຕ້າ"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox ໄດ້ເປີດນຳໃຊ້ສຳລັບອຸປະກອນຂອງທ່ານ ແລະ ແອັບຕ່າງໆສາມາດທົດສອບການສະແດງໂຄສະນາແບບໃໝ່ທີ່ມີຄວາມເປັນສ່ວນຕົວຫຼາຍຂຶ້ນເຫຼົ່ານີ້ໃຫ້ທ່ານໄດ້. ທ່ານສາມາດປິດເວີຊັນເບຕ້າຕອນໃດກໍໄດ້ຢູ່ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"ເຂົ້າໃຈແລ້ວ"</string>
