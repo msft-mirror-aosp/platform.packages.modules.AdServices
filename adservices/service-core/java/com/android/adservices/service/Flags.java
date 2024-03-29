@@ -5141,4 +5141,12 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getEnableTabletRegionFix() {
         return DEFAULT_ENABLE_TABLET_REGION_FIX;
     }
+
+    /** Default value for custom error code sampling enabled. */
+    @FeatureFlag boolean DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED = false;
+
+    /** Returns {@code boolean} determining whether custom error code sampling is enabled. */
+    default boolean getCustomErrorCodeSamplingEnabled() {
+        return DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
+    }
 }

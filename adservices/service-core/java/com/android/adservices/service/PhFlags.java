@@ -22,9 +22,11 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODU
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
@@ -6321,6 +6323,19 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getEnableTabletRegionFix() {
         return getDeviceConfigFlag(KEY_ENABLE_TABLET_REGION_FIX, DEFAULT_ENABLE_TABLET_REGION_FIX);
+    }
+
+    @Override
+    public String getEncodedErrorCodeListPerSampleInterval() {
+        return getDeviceConfigFlag(
+                KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL,
+                ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL);
+    }
+
+    @Override
+    public boolean getCustomErrorCodeSamplingEnabled() {
+        return getDeviceConfigFlag(
+                KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED, DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers

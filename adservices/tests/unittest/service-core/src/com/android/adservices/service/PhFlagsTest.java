@@ -58,6 +58,7 @@ import static com.android.adservices.service.Flags.DEFAULT_BACKGROUND_JOB_SAMPLI
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.Flags.DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
@@ -66,6 +67,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_BACK_COMPAT_IN
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
+import static com.android.adservices.service.Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS;
 import static com.android.adservices.service.Flags.DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
@@ -174,7 +176,6 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENABLED
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING;
-import static com.android.adservices.service.Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID;
@@ -441,9 +442,9 @@ import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_ORI
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
 import static com.android.adservices.service.Flags.MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
-import static com.android.adservices.service.Flags.MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
@@ -518,7 +519,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_S
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
@@ -542,6 +542,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_K
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.FlagsConstants.KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
@@ -567,6 +568,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRY
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
@@ -907,9 +909,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
@@ -977,6 +979,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
+import static com.android.adservices.shared.common.flags.ModuleSharedFlags.ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -9655,6 +9658,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_ENABLE_BACK_COMPAT_INIT,
                 DEFAULT_ENABLE_BACK_COMPAT_INIT,
                 Flags::getEnableBackCompatInit);
+    }
+
+    @Test
+    public void testGetCustomErrorCodeSamplingEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED,
+                DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED,
+                Flags::getCustomErrorCodeSamplingEnabled);
+    }
+
+    @Test
+    public void testGetEncodedErrorCodeListPerSampleInterval() {
+        mFlagsTestHelper.testFeatureFlag(
+                KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL,
+                ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL,
+                Flags::getEncodedErrorCodeListPerSampleInterval);
     }
 
     private void setMeasurementKillSwitch(boolean value) {

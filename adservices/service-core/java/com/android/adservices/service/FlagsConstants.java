@@ -1422,4 +1422,15 @@ public final class FlagsConstants {
 
     /** Key for enabling tablet region fix. */
     public static final String KEY_ENABLE_TABLET_REGION_FIX = "enable_tablet_region_fix";
+
+    /**
+     * Key for getting base64 encoded String which describes a map of sampling interval to a list of
+     * error codes.
+     */
+    public static final String KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL =
+            "encoded_error_code_list_per_sample_interval";
+
+    /** Key for enabling custom error code sampling. */
+    public static final String KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED =
+            "custom_error_code_sampling_enabled";
 }
