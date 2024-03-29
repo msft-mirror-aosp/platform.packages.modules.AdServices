@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Anda telah memilih untuk tidak mengambil bahagian"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Terima kasih atas respons anda. Kotak Pasir Privasi telah dimatikan untuk peranti anda.\n\nJika anda berubah fikiran atau ingin mengetahui lebih lanjut, pergi ke tetapan privasi anda."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Tetapan privasi"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Anda merupakan sebahagian daripada beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Kotak Pasir Privasi telah dihidupkan untuk peranti anda dan apl boleh menguji cara baharu yang lebih peribadi ini untuk memaparkan iklan kepada anda. Anda boleh mematikan beta pada bila-bila masa dalam tetapan privasi anda."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"OK"</string>

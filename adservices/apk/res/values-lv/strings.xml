@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Izvēlējāties nepiedalīties"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Paldies par atbildi! Jūsu ierīcē ir ieslēgta konfidencialitātes smilškaste.\n\nJa pārdomājat vai vēlaties iegūt plašāku informāciju, atveriet konfidencialitātes iestatījumus."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Konfidencialitātes iestatījumi"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Labi"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Jūs piedalāties beta programmā"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Konfidencialitātes smilškaste ir ieslēgta jūsu ierīcei, un lietotnes var testēt šos jaunos reklāmu rādīšanas veidus, kas nodrošina lielāku konfidencialitāti. Savos konfidencialitātes iestatījumos varat jebkurā laikā izslēgt beta versiju."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Labi"</string>

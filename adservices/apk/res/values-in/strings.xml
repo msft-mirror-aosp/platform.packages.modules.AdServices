@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Anda telah memilih untuk tidak berpartisipasi"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Terima kasih atas respons Anda. Privacy Sandbox dinonaktifkan untuk perangkat Anda.\n\nJika Anda berubah pikiran atau ingin mempelajari lebih lanjut, buka setelan privasi."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Setelan privasi"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Oke"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Anda berpartisipasi dalam program beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox aktif untuk perangkat Anda, dan aplikasi dapat menguji cara baru yang lebih pribadi ini untuk menampilkan iklan kepada Anda. Anda dapat menonaktifkan program beta kapan saja di setelan privasi."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Oke"</string>
