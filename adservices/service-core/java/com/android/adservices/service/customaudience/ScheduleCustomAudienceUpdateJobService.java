@@ -72,7 +72,7 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
 
         LoggerFactory.getFledgeLogger().d("ScheduleCustomAudienceUpdateJobService.onStartJob");
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID);
 
         if (!FlagsFactory.getFlags().getFledgeScheduleCustomAudienceUpdateEnabled()) {
@@ -109,8 +109,7 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
                                         .d("Schedule Custom Audience Update job completed");
 
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                ScheduleCustomAudienceUpdateJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
                                                 /* isSuccessful= */ true,
@@ -124,8 +123,7 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
                                 boolean shouldRetry = false;
                                 LoggerFactory.getFledgeLogger()
                                         .e(t, "Schedule Custom Audience Update job worker failed");
-                                AdServicesJobServiceLogger.getInstance(
-                                                ScheduleCustomAudienceUpdateJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
                                                 /* isSuccessful= */ false,
@@ -144,7 +142,7 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
         ScheduleCustomAudienceUpdateWorker.getInstance(this).stopWork();
 
         boolean shouldRetry = true;
-        AdServicesJobServiceLogger.getInstance(ScheduleCustomAudienceUpdateJobService.this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(
                         params, SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID, shouldRetry);
 
@@ -221,7 +219,7 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(
                             SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID, skipReason);
         }

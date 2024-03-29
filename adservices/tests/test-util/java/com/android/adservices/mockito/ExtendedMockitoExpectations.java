@@ -203,9 +203,9 @@ public final class ExtendedMockitoExpectations {
         return logger;
     }
 
-    /** Mocks {@link AdServicesJobServiceLogger#getInstance(Context)} to return a mocked logger. */
+    /** Mocks {@link AdServicesJobServiceLogger#getInstance()} to return a mocked logger. */
     public static void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
-        doReturn(logger).when(() -> AdServicesJobServiceLogger.getInstance(any(Context.class)));
+        doReturn(logger).when(() -> AdServicesJobServiceLogger.getInstance());
     }
 
     /**
