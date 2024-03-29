@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Pokrećemo novu funkciju privatnosti pri izloženosti oglasima koja se naziva mjerenje oglasa. Da pomogne aplikacijama da izmjere performanse oglasa, Android dijeli samo veoma ograničene informacije između aplikacija, naprimjer kada vam se prikaže oglas."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Možete unijeti promjene u postavkama privatnosti pri izloženosti oglasima."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Aplikacije koje koristite mogu od Androida zatražiti informacije koje će im pomoći da izmjere performanse svojih oglasa. Android omogućava aplikacijama da prikupljaju samo ograničene vrste podataka."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Nove funkcije privatnosti pri izloženosti oglasima"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Dobijte više izbora u pogledu oglasa koji vam se prikazuju uz zaštitu identiteta"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Ažuriranja funkcija privatnosti pri izloženosti oglasima"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Dobijte više izbora u pogledu oglasa koji vam se prikazuju uz zaštitu identiteta"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android proširuje funkcije privatnosti pri izloženosti oglasima da ograniči informacije koje aplikacije mogu saznati o vama prilikom prikazivanja personaliziranih oglasa."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Aplikacije i njihovi partneri u oglašavanju mogu koristiti vašu aktivnost u drugim aplikacijama na ovom uređaju radi personalizacije oglasa uz očuvanje privatnosti i sigurnosti vašeg identiteta."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Više o oglasima koje predlažu aplikacije"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Ograničene vrste podataka se dijele između aplikacija radi uvida u performanse njihovih oglasa, kao što je doba dana kada vam je oglas prikazan."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Više o mjerenju oglasa"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android bilježi teme koje vas zanimaju na osnovu aplikacija koje ste nedavno koristili. Aplikacije i njihovi partneri u oglašavanju također mogu koristiti vašu aktivnost u drugim aplikacijama na ovom uređaju radi personalizacije oglasa uz očuvanje privatnosti i sigurnosti vašeg identiteta."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Aplikacije koje koristite također mogu utvrđivati šta vam se sviđa na osnovu vaše aktivnosti aplikacije. Naprimjer, ako redovno koristite aplikacije za kuhanje, u drugim aplikacijama vam se mogu prikazivati oglasi za usluge isporuke namirnica ili povezani sadržaj.\n\nAplikacije mogu sigurno pohranjivati te informacije da ih mogu koristiti samo partneri u oglašavanju radi personalizacije oglasa u drugim aplikacijama."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Kasnije, aplikacija koju koristite može zatražiti ove informacije – vaše teme oglasa ili oglase koje predlažu aplikacije koje ste koristili."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Aplikacije koje koristite mogu od Androida zatražiti informacije koje će im pomoći da izmjere performanse svojih oglasa. Android pomaže u zaštiti vaše privatnosti ograničavanjem informacija koje aplikacije mogu dijeliti međusobno."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Koji podaci se koriste?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Aplikacije koje koristite mogu od Androida zatražiti informacije koje im pomažu da izmjere performanse svojih oglasa. Android pomaže u zaštiti vaše privatnosti ograničavanjem informacija koje aplikacije mogu dijeliti jedna s drugom."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Kako se štiti moj identitet?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android koristi više mjera zaštite privatnosti, kao što su agregacija podataka i dodavanje šuma u njih, da ograniči informacije koje aplikacije mogu međusobno dijeliti i pomogne u zaštiti vašeg identiteta.\n\nPodaci o mjerenju oglasa također se redovno brišu s vašeg uređaja."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Vaša aktivnost aplikacije se može koristiti da vam predlažemo oglase."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Kako aplikacije koriste ove podatke?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Aplikacije mogu sigurno pohranjivati te informacije da ih mogu koristiti samo partneri u oglašavanju radi personalizacije oglasa u drugim aplikacijama. Naprimjer, ako redovno koristite aplikacije za kuhanje, u drugim aplikacijama vam se mogu prikazivati oglasi za usluge isporuke namirnica ili povezani sadržaj."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Kako mogu upravljati ovim podacima?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Možete blokirati da određene aplikacije dijele vašu aktivnost s partnerima u oglašavanju. U postavkama privatnosti u bilo kojem trenutku možete poništiti ili isključiti oglase koje predlažu aplikacije. Android također redovno automatski briše ove podatke."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Saznajte više o tome kako Android pomaže u zaštiti vaše privatnosti"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Aplikacije i njihovi partneri u oglašavanju mogu koristiti vašu aktivnost u drugim aplikacijama na ovom uređaju radi personalizacije oglasa uz očuvanje privatnosti i sigurnosti vaših informacija.\n\nNaprimjer, ako redovno koristite aplikacije za kuhanje, u drugim aplikacijama vam se mogu prikazivati oglasi za usluge isporuke namirnica ili povezani sadržaj.\n\nAndroid redovno automatski briše vašu aktivnost, ali i vi možete blokirati da aplikacije dijele ove informacije sa svojim partnerima u oglašavanju."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"Uobičajeno je da aplikacije i njihovi partneri u oglašavanju pamte stvari za koje ste zainteresirani radi personalizacije vašeg iskustva. Aplikacije mogu sigurno pohranjivati te informacije da ih mogu koristiti samo partneri u oglašavanju radi prikaza oglasa u drugim aplikacijama.\n\nMožete blokirati da aplikacija dijeli podatke o aktivnosti s partnerima u oglašavanju. Android također redovno automatski briše dijeljene podatke o aktivnosti, tako da se aplikacija koju ponovo koristite može opet pojaviti na ovoj listi.\n\nPersonalizacija oglasa koji vam se prikazuje može ovisiti o mnogim faktorima, kao što su ova postavka, postavka teme oglasa, postavke ID-a za oglašavanje, kao i o tome personalizira li aplikacija koju koristite oglase.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Saznajte više o oglasima koje predlažu aplikacije"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android koristi više mjera zaštite privatnosti, kao što su agregacija podataka i dodavanje šuma u njih, da ograniči informacije koje aplikacije mogu međusobno dijeliti i pomogne u zaštiti vašeg identiteta.\n\nVaš preglednik može imati sličnu postavku. Ako je mjerenje oglasa uključeno i za Android i za preglednik, kompanija će možda moći mjeriti efikasnost oglasa između aplikacija koje koristite i web lokacija koje posjećujete. Historija pregledanja se održava privatnom na vašem uređaju.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Saznajte više o mjerenju oglasa"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android bilježi teme koje vas zanimaju na osnovu aplikacija koje ste koristili u posljednjih nekoliko sedmica.\n\nKasnije, aplikacija koju koristite može od Androida zatražiti vaše teme da personalizira oglase koji vam se prikazuju. Android dijeli do 3 teme štiteći pritom vaš identitet i informacije o korištenju aplikacije.\n\nAndroid redovno automatski briše teme. Dok nastavljate koristiti aplikacije, tema se može ponovo pojaviti na listi. Ili možete blokirati teme koje ne želite da Android dijeli s aplikacijama.\n\nPersonalizacija oglasa koji vam se prikazuje može ovisiti o mnogim faktorima, kao što su ova postavka, postavka oglasa koje predlažu aplikacije, postavke ID-a za oglašavanje, kao i o tome personalizira li aplikacija koju koristite oglase.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Saznajte više o temama oglasa"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Ilustracija simbola u boji koji predstavljaju teme interesovanja kao što su muzika, vijesti i sportovi"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Ilustracija u boji brave unutar kruga"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Mala crno-bijela ilustracija devet tačaka koje oblikuju kvadrat"</string>
@@ -355,7 +332,7 @@
     <string name="topic10068" msgid="7999222744500155387">"Dizajn"</string>
     <string name="topic10069" msgid="3345227631449580699">"Slikarstvo"</string>
     <string name="topic10070" msgid="8921241315781663883">"Fotografska i digitalna umjetnost"</string>
-    <string name="topic10071" msgid="5802889978655775195">"Automobili i vozila"</string>
+    <string name="topic10071" msgid="5802889978655775195">"Automobili i druga vozila"</string>
     <string name="topic10072" msgid="7699714565299422080">"Teretni kamioni i prikolice"</string>
     <string name="topic10073" msgid="8309536003187424408">"Klasična vozila"</string>
     <string name="topic10074" msgid="7682849385993670574">"Vozila po narudžbi i vozila visokih performansi"</string>
@@ -499,7 +476,7 @@
     <string name="topic10212" msgid="2364530251853656532">"Hrana i piće"</string>
     <string name="topic10213" msgid="805716705436663130">"Kuhanje i recepti"</string>
     <string name="topic10214" msgid="726298155737413779">"Roštilj i grilovanje"</string>
-    <string name="topic10215" msgid="1502589059550612499">"Kuhinje"</string>
+    <string name="topic10215" msgid="1502589059550612499">"Nacionalne kuhinje"</string>
     <string name="topic10216" msgid="7699499757302291329">"Vegetarijanska kuhinja"</string>
     <string name="topic10217" msgid="2160292055279553771">"Veganska kuhinja"</string>
     <string name="topic10218" msgid="4090671581843003332">"Zdrava ishrana"</string>
@@ -564,7 +541,7 @@
     <string name="topic10277" msgid="5888643119731566320">"Internet i telekomunikacije"</string>
     <string name="topic10278" msgid="1736187026108921963">"E-pošta i razmjena poruka"</string>
     <string name="topic10279" msgid="9034205050642228743">"E-pošta"</string>
-    <string name="topic10280" msgid="3168053876492638177">"Tekstualne i instant poruke"</string>
+    <string name="topic10280" msgid="3168053876492638177">"Razmjena tekstualnih i instant poruka"</string>
     <string name="topic10281" msgid="582764575763317221">"Glasovni i video chat"</string>
     <string name="topic10282" msgid="7165187778548433480">"ISP-i"</string>
     <string name="topic10283" msgid="4990902662337451282">"Pružaoci telefonskih usluga"</string>
@@ -627,7 +604,7 @@
     <string name="topic10340" msgid="259457452971577855">"Sigurnost djece na internetu"</string>
     <string name="topic10341" msgid="9138253009638520984">"Ljubavni"</string>
     <string name="topic10342" msgid="3272595442607863965">"Naučna fantastika i fantazija"</string>
-    <string name="topic10343" msgid="7170264926050881882">"Kućni ljubimci i životinje"</string>
+    <string name="topic10343" msgid="7170264926050881882">"Kućni ljubimci i druge životinje"</string>
     <string name="topic10344" msgid="6956876217624431965">"Hrana za kućne ljubimce i pribor za njegu kućnih ljubimaca"</string>
     <string name="topic10345" msgid="8114717708270133007">"Kućni ljubimci"</string>
     <string name="topic10346" msgid="3632598362312784148">"Ptice"</string>
