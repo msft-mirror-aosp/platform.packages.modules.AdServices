@@ -368,8 +368,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                                         .build()))
                 .when(mAdServicesHttpsClientMock)
                 .fetchPayloadWithLogging(
-                        any(AdServicesHttpClientRequest.class),
-                        any(FetchProcessLogger.class));
+                        any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class));
     }
 
     @Test

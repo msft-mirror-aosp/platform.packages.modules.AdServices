@@ -8041,8 +8041,7 @@ public class AdSelectionServiceImplTest {
                                         .build()))
                 .when(mClientSpy)
                 .fetchPayloadWithLogging(
-                        any(AdServicesHttpClientRequest.class),
-                        any(FetchProcessLogger.class));
+                        any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class));
         doReturn(Futures.immediateVoidFuture()).when(mClientSpy).getAndReadNothing(any(), any());
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
@@ -8126,9 +8125,9 @@ public class AdSelectionServiceImplTest {
                 .that(callback.mIsSuccess)
                 .isTrue();
 
-        verify(mClientSpy).fetchPayloadWithLogging(
-                any(AdServicesHttpClientRequest.class),
-                any(FetchProcessLogger.class));
+        verify(mClientSpy)
+                .fetchPayloadWithLogging(
+                        any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class));
         verify(mClientSpy).getAndReadNothing(eq(buyerReportingUriWithSubdomain), eq(mDevContext));
         verify(mClientSpy).getAndReadNothing(eq(sellerReportingUriWithSubdomain), eq(mDevContext));
 
