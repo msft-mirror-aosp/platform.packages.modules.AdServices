@@ -128,14 +128,28 @@ public final class ShellCommandStats {
     @Retention(SOURCE)
     public @interface CommandResult {}
 
-    @Command public final int command;
-    @CommandResult public final int result;
-    public final int latencyMillis;
+    private final int mCommand;
+    private final int mResult;
+    public final int mLatencyMillis;
 
     public ShellCommandStats(@Command int command, @CommandResult int result, int latencyMillis) {
-        this.command = command;
-        this.result = result;
-        this.latencyMillis = latencyMillis;
+        this.mCommand = command;
+        this.mResult = result;
+        this.mLatencyMillis = latencyMillis;
+    }
+
+    @Command
+    public int getCommand() {
+        return mCommand;
+    }
+
+    @CommandResult
+    public int getResult() {
+        return mResult;
+    }
+
+    public int getLatencyMillis() {
+        return mLatencyMillis;
     }
 
     @Override
@@ -143,8 +157,8 @@ public final class ShellCommandStats {
         return String.format(
                 Locale.ROOT,
                 "ShellCommandStats[command=%d, result=%d, latencyMillis=%d]",
-                command,
-                result,
-                latencyMillis);
+                mCommand,
+                mResult,
+                mLatencyMillis);
     }
 }

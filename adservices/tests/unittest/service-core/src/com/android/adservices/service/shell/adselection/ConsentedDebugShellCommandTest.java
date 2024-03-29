@@ -36,6 +36,10 @@ import static com.android.adservices.service.shell.adselection.ConsentedDebugShe
 import static com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand.VIEW_ERROR;
 import static com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand.VIEW_SUB_CMD;
 import static com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand.VIEW_SUCCESS_NO_CONFIGURATION;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_CONSENTED_DEBUG_DISABLE;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_GENERIC_ERROR;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -48,6 +52,7 @@ import android.adservices.common.CommonFixture;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.DBConsentedDebugConfiguration;
 import com.android.adservices.service.shell.ShellCommandTestCase;
+import com.android.adservices.service.stats.ShellCommandStats;
 
 import com.google.common.truth.Truth;
 
@@ -75,6 +80,7 @@ public class ConsentedDebugShellCommandTest
         runAndExpectInvalidArgument(
                 new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao),
                 HELP,
+                ShellCommandStats.COMMAND_UNKNOWN,
                 COMMAND_PREFIX,
                 CMD);
     }
@@ -84,6 +90,7 @@ public class ConsentedDebugShellCommandTest
         runAndExpectInvalidArgument(
                 new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao),
                 HELP,
+                ShellCommandStats.COMMAND_UNKNOWN,
                 COMMAND_PREFIX,
                 CMD,
                 "unknown");
@@ -98,7 +105,7 @@ public class ConsentedDebugShellCommandTest
 
         Result result = runEnableSubCommandAndGetResult(true);
 
-        expectSuccess(result, ENABLE_SUCCESS);
+        expectSuccess(result, ENABLE_SUCCESS, COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE);
         verify(mConsentedDebugConfigurationDao)
                 .deleteExistingConsentedDebugConfigurationsAndPersist(
                         any(DBConsentedDebugConfiguration.class));
@@ -113,7 +120,7 @@ public class ConsentedDebugShellCommandTest
 
         Result result = runEnableSubCommandAndGetResult(false);
 
-        expectSuccess(result, ENABLE_SUCCESS);
+        expectSuccess(result, ENABLE_SUCCESS, COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE);
         verify(mConsentedDebugConfigurationDao)
                 .deleteExistingConsentedDebugConfigurationsAndPersist(
                         any(DBConsentedDebugConfiguration.class));
@@ -124,6 +131,7 @@ public class ConsentedDebugShellCommandTest
         runAndExpectInvalidArgument(
                 new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao),
                 HELP,
+                COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE,
                 COMMAND_PREFIX,
                 CMD,
                 ENABLE_SUB_CMD,
@@ -140,6 +148,7 @@ public class ConsentedDebugShellCommandTest
         runAndExpectInvalidArgument(
                 new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao),
                 HELP,
+                COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE,
                 COMMAND_PREFIX,
                 CMD,
                 ENABLE_SUB_CMD,
@@ -158,6 +167,7 @@ public class ConsentedDebugShellCommandTest
         runAndExpectInvalidArgument(
                 new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao),
                 HELP,
+                COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE,
                 COMMAND_PREFIX,
                 CMD,
                 ENABLE_SUB_CMD,
@@ -176,6 +186,7 @@ public class ConsentedDebugShellCommandTest
         runAndExpectInvalidArgument(
                 new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao),
                 HELP,
+                COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE,
                 COMMAND_PREFIX,
                 CMD,
                 ENABLE_SUB_CMD,
@@ -194,9 +205,10 @@ public class ConsentedDebugShellCommandTest
         runAndExpectInvalidArgument(
                 new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao),
                 HELP,
+                COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE,
                 COMMAND_PREFIX,
                 CMD,
-                VIEW_SUB_CMD,
+                ENABLE_SUB_CMD,
                 SECRET_DEBUG_TOKEN_ARG_NAME,
                 DEBUG_TOKEN,
                 "--random_arg",
@@ -216,7 +228,11 @@ public class ConsentedDebugShellCommandTest
 
         Result result = runEnableSubCommandAndGetResult(true);
 
-        expectFailure(result, ENABLE_ERROR);
+        expectFailure(
+                result,
+                ENABLE_ERROR,
+                COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE,
+                RESULT_GENERIC_ERROR);
         verify(mConsentedDebugConfigurationDao)
                 .deleteExistingConsentedDebugConfigurationsAndPersist(
                         any(DBConsentedDebugConfiguration.class));
@@ -228,7 +244,7 @@ public class ConsentedDebugShellCommandTest
 
         ShellCommandTestCase.Result result = runSubCommandAndGetResult(DISABLE_SUB_CMD);
 
-        expectSuccess(result, DISABLE_SUCCESS);
+        expectSuccess(result, DISABLE_SUCCESS, COMMAND_AD_SELECTION_CONSENTED_DEBUG_DISABLE);
     }
 
     @Test
@@ -236,6 +252,7 @@ public class ConsentedDebugShellCommandTest
         runAndExpectInvalidArgument(
                 new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao),
                 HELP,
+                COMMAND_AD_SELECTION_CONSENTED_DEBUG_DISABLE,
                 COMMAND_PREFIX,
                 CMD,
                 DISABLE_SUB_CMD,
@@ -251,7 +268,11 @@ public class ConsentedDebugShellCommandTest
 
         ShellCommandTestCase.Result result = runSubCommandAndGetResult(DISABLE_SUB_CMD);
 
-        expectFailure(result, DISABLE_ERROR);
+        expectFailure(
+                result,
+                DISABLE_ERROR,
+                COMMAND_AD_SELECTION_CONSENTED_DEBUG_DISABLE,
+                RESULT_GENERIC_ERROR);
     }
 
     @Test
@@ -259,6 +280,7 @@ public class ConsentedDebugShellCommandTest
         runAndExpectInvalidArgument(
                 new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao),
                 HELP,
+                COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW,
                 COMMAND_PREFIX,
                 CMD,
                 VIEW_SUB_CMD,
@@ -287,7 +309,7 @@ public class ConsentedDebugShellCommandTest
 
         Result result = runSubCommandAndGetResult(VIEW_SUB_CMD);
 
-        expectSuccess(result);
+        expectSuccess(result, COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW);
         assertConsentedDebugConfigurationJson(
                 result.mOut, isConsented, debugToken, creationTimestamp, expiryTimestamp);
     }
@@ -301,7 +323,8 @@ public class ConsentedDebugShellCommandTest
 
         Result result = runSubCommandAndGetResult(VIEW_SUB_CMD);
 
-        expectSuccess(result, VIEW_SUCCESS_NO_CONFIGURATION);
+        expectSuccess(
+                result, VIEW_SUCCESS_NO_CONFIGURATION, COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW);
     }
 
     @Test
@@ -313,7 +336,8 @@ public class ConsentedDebugShellCommandTest
 
         Result result = runSubCommandAndGetResult(VIEW_SUB_CMD);
 
-        expectSuccess(result, VIEW_SUCCESS_NO_CONFIGURATION);
+        expectSuccess(
+                result, VIEW_SUCCESS_NO_CONFIGURATION, COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW);
     }
 
     @Test
@@ -325,7 +349,11 @@ public class ConsentedDebugShellCommandTest
 
         Result result = runSubCommandAndGetResult(VIEW_SUB_CMD);
 
-        expectFailure(result, VIEW_ERROR);
+        expectFailure(
+                result,
+                VIEW_ERROR,
+                COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW,
+                RESULT_GENERIC_ERROR);
     }
 
     private void assertConsentedDebugConfigurationJson(
