@@ -18,6 +18,9 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
@@ -38,7 +41,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.NUM_OF_ELIGIBLE_TO_UPDATE_CAS;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.RESULT_CODE;
@@ -110,6 +112,7 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -847,6 +850,10 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setTrustedBiddingSignalsKeysSizeVarianceB(26F)
                         .setUserBiddingSignalsSizeMeanB(27F)
                         .setUserBiddingSignalsSizeVarianceB(28F)
+                        .setNumEncodedSignals(29)
+                        .setEncodedSignalsSizeMean(30)
+                        .setEncodedSignalsSizeMax(31)
+                        .setEncodedSignalsSizeMin(32)
                         .build();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         adServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
@@ -968,6 +975,21 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                 ArgumentCaptor.forClass(ShellCommandStats.class);
         verify(mStatsdLoggerMock).logShellCommandStats(argumentCaptor.capture());
         expect.that(argumentCaptor.getValue()).isEqualTo(stats);
+    }
+
+    @Test
+    public void testLogEncodingJsFetchStats() {
+        EncodingFetchStats stats =
+                EncodingFetchStats.builder()
+                        .setJsDownloadTime(SIZE_MEDIUM)
+                        .setHttpResponseCode(404)
+                        .setFetchStatus(ENCODING_FETCH_STATUS_SUCCESS)
+                        .setAdTechId("com.google.android")
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEncodingJsFetchStats(stats);
+
+        verify(mStatsdLoggerMock).logEncodingJsFetchStats(eq(stats));
     }
 
     private void mockAppNameApiErrorLogger() {

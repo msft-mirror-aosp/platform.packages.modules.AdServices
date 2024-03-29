@@ -82,4 +82,17 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
                 mPerBuyerStatsMock, mDBCustomAudienceMock, mCustomAudienceMock);
         verifyZeroInteractions(mPerBuyerStatsMock, mDBCustomAudienceMock, mCustomAudienceMock);
     }
+
+    @Test
+    public void
+        testLogGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetricsDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy
+                .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+                        mPerBuyerStatsMock,
+                        /* encodedSignalsCount */ 0,
+                        /* encodedSignalsTotalSizeInBytes */ 0,
+                        /* encodedSignalsMaxSizeInBytes */ 0,
+                        /* encodedSignalsMinSizeInBytes */ 0);
+        verifyZeroInteractions(mPerBuyerStatsMock);
+    }
 }

@@ -59,4 +59,14 @@ public class AuctionServerPayloadMetricsStrategyDisabled
             BiddingAuctionServers.BuyerInput.CustomAudience customAudience) {
         // do nothing
     }
+
+    @Override
+    public void logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+            Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> statsMap,
+            int encodedSignalsCount,
+            int encodedSignalsTotalSizeInBytes,
+            int encodedSignalsMaxSizeInBytes,
+            int encodedSignalsMinSizeInBytes) {
+        // do nothing
+    }
 }

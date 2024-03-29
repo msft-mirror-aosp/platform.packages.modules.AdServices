@@ -25,6 +25,7 @@ import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusSt
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -334,6 +335,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logSignatureVerificationStats(SignatureVerificationStats stats) {
         mStatsdAdServicesLogger.logSignatureVerificationStats(stats);
+    }
+
+    @Override
+    public void logEncodingJsFetchStats(EncodingFetchStats stats) {
+        mStatsdAdServicesLogger.logEncodingJsFetchStats(stats);
     }
 
     /** Logs api call error status using {@code CobaltLogger}. */

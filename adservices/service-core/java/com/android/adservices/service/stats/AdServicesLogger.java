@@ -24,6 +24,7 @@ import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusSt
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
 
 /** Interface for Adservices logger. */
 public interface AdServicesLogger {
@@ -222,4 +223,7 @@ public interface AdServicesLogger {
      * android.adservices.adselection.SignedContextualAds} during on-device ad selection auction
      */
     void logSignatureVerificationStats(SignatureVerificationStats stats);
+
+    /** Logs stats for EncodingFetchStats */
+    void logEncodingJsFetchStats(EncodingFetchStats stats);
 }
