@@ -16,17 +16,13 @@
 
 package com.android.adservices.service.adselection.debug;
 
-import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ConsentedDebugConfiguration;
+
+import java.util.Optional;
 
 /** Interface to generated consented debug configurations for auction servers. */
 public interface ConsentedDebugConfigurationGenerator {
 
-    /**
-     * Sets the consented debug configuration in ProtectedAuctionInput
-     *
-     * @param protectedAuctionInputBuilder The builder
-     * @return the input builder after setting the consented debug configuration
-     */
-    ProtectedAuctionInput.Builder setConsentedDebugConfiguration(
-            ProtectedAuctionInput.Builder protectedAuctionInputBuilder);
+    /** * @return Optional containing the consented debug configuration. */
+    Optional<ConsentedDebugConfiguration> getConsentedDebugConfiguration();
 }

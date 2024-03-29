@@ -159,6 +159,7 @@ import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -324,6 +325,7 @@ public class AdSelectionServiceImplTest {
     private ConsentedDebugConfigurationGeneratorFactory
             mConsentedDebugConfigurationGeneratorFactory;
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    @Mock private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
     public AdSelectionServiceImplTest() {}
 
@@ -536,7 +538,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -661,7 +664,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -795,7 +799,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -930,7 +935,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1053,7 +1059,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1194,7 +1201,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables = */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1335,7 +1343,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables = */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1477,7 +1486,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables = */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1613,7 +1623,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables = */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1741,7 +1752,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables = */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1861,7 +1873,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables = */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1979,7 +1992,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables = */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2101,7 +2115,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables = */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2212,7 +2227,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2339,7 +2355,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2463,7 +2480,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2593,7 +2611,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2771,7 +2790,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2919,7 +2939,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3085,7 +3106,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3257,7 +3279,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3420,7 +3443,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3572,7 +3596,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3728,7 +3753,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3899,7 +3925,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4078,7 +4105,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4226,7 +4254,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4337,7 +4366,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4447,7 +4477,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4563,7 +4594,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4674,7 +4706,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4780,7 +4813,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -4885,7 +4919,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -4991,7 +5026,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -5117,7 +5153,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -5268,7 +5305,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -5369,7 +5407,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5438,7 +5477,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5501,7 +5541,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5569,7 +5610,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5648,7 +5690,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5721,7 +5764,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5800,7 +5844,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5880,7 +5925,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6001,7 +6047,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6124,7 +6171,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6241,7 +6289,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6353,7 +6402,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
@@ -6393,7 +6443,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock, never()).shutdown();
@@ -6447,7 +6498,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -6517,7 +6569,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6588,7 +6641,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6650,7 +6704,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6714,7 +6769,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6772,7 +6828,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -6834,7 +6891,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -6937,7 +6995,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7056,7 +7115,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7178,7 +7238,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7305,7 +7366,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7414,7 +7476,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
@@ -7523,7 +7586,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7660,7 +7724,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7778,7 +7843,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7898,7 +7964,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8041,7 +8108,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8178,7 +8246,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8298,7 +8367,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8431,7 +8501,8 @@ public class AdSelectionServiceImplTest {
                             mUnusedKAnonSignJoinFactory,
                             false,
                             mRetryStrategyFactory,
-                            mConsentedDebugConfigurationGeneratorFactory);
+                            mConsentedDebugConfigurationGeneratorFactory,
+                            mEgressConfigurationGenerator);
 
             ReportImpressionInput input =
                     new ReportImpressionInput.Builder()
@@ -8502,7 +8573,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8571,7 +8643,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8634,7 +8707,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8703,7 +8777,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8784,7 +8859,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8859,7 +8935,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8938,7 +9015,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9016,7 +9094,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9143,7 +9222,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9264,7 +9344,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9390,7 +9471,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9534,7 +9616,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionOverrideTestCallback overridesCallback =
                 callAddOverrideForSelectAds(
@@ -10222,7 +10305,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -10287,7 +10371,8 @@ public class AdSelectionServiceImplTest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -10333,7 +10418,8 @@ public class AdSelectionServiceImplTest {
                 mUnusedKAnonSignJoinFactory,
                 false,
                 mRetryStrategyFactory,
-                mConsentedDebugConfigurationGeneratorFactory);
+                mConsentedDebugConfigurationGeneratorFactory,
+                mEgressConfigurationGenerator);
     }
 
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {

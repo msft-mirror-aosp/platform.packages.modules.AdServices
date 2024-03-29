@@ -1764,6 +1764,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
     }
 
+    /** Default value for feature flag for PAS unlimited egress in Server auctions. */
+    boolean DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS = true;
+
+    /**
+     * @return feature flag to enable PAS unlimited egress in Server auctions
+     */
+    default boolean getFledgeAuctionServerEnablePasUnlimitedEgress() {
+        return DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS;
+    }
+
     boolean FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED = false;
     long FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH = 12L;
 
