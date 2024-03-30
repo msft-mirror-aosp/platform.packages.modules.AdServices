@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Päätit olla osallistumatta"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Kiitos vastauksestasi. Privacy Sandbox on laitettu pois päältä laitteellasi.\n\nJos muutat mielesi tai haluat lukea lisää, siirry yksityisyysasetuksiin."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Yksityisyysasetukset"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Osallistut betaohjelmaan"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox on päällä laitteellasi, ja sovellukset voivat kokeilla näitä uusia, aiempaa yksityisempiä tapoja näyttää sinulle mainoksia. Voit laittaa betaohjelman pois päältä milloin tahansa yksityisyysasetuksista."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"OK"</string>

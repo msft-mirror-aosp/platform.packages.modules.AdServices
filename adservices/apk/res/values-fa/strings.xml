@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"انتخاب کرده‌اید که شرکت نکنید"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"از پاسختان سپاس‌گزاریم. «جعبه شنی حریم خصوصی» برای دستگاه خاموش شده است.\n\nاگر نظرتان تغییر کرد یا خواستید اطلاعات بیشتری کسب کنید، به تنظیمات حریم خصوصی بروید."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"تنظیمات حریم خصوصی"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"متوجه‌ام"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"شما عضوی از نسخه بتا هستید"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"«جعبه شنی حریم خصوصی» در دستگاهتان روشن است و برنامه‌ها می‌توانند این روش‌های خصوصی‌تر جدید را برای نمایش آگهی به شما آزمایش کنند. هرزمان خواستید می‌توانید نسخه بتا را در تنظیمات حریم خصوصی خاموش کنید."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"متوجه‌ام"</string>

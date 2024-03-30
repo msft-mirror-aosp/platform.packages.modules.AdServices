@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"თქვენ გადაწყვიტეთ, რომ არ მიიღოთ მონაწილეობა"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"გმადლობთ პასუხისთვის. Privacy Sandbox გამორთულია თქვენს მოწყობილობაზე.\n\nთუ გადაიფიქრებთ ან მეტის გაგებას მოისურვებთ, გადადით კონფიდენციალურობის პარამეტრებში."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"კონფიდენციალურობის პარამეტრები"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"გასაგებია"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"თქვენ ბეტას მონაწილე ხართ"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox ჩართულია თქვენს მოწყობილობაზე და აპებს შეუძლია თქვენთვის რეკლამების ჩვენების უფრო მეტი გზების გამოცდა. ბეტას გამორთვა ნებისმიერ დროს შეგიძლიათ კონფიდენციალურობის პარამეტრებში."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"გასაგებია"</string>

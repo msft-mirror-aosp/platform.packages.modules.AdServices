@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Избравте да не учествувате"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Благодариме за одговорот. Privacy Sandbox е исклучена за вашиот уред.\n\nАко се премислите или ако сакате да дознаете повеќе, одете во поставките за приватност."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Поставки за приватност"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Сфатив"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Вие сте дел од бета-верзијата"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox е вклучена за вашиот уред, а апликациите може да ги тестираат овие нови поприватни начини за прикажување реклами. Може да ја исклучите бета-верзијата во секое време во поставките за приватност."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Сфатив"</string>

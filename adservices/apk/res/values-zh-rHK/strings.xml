@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"你已選擇不參與"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"感謝你的回覆。你的裝置已停用私隱沙箱。\n\n如果你改變主意或希望瞭解詳情，請前往私隱權設定。"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"私隱權設定"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"知道了"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"你已加入 Beta 版本測試計劃"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"你的裝置已啟用私隱沙箱，因此應用程式可測試這些更能保護私隱的新方式，向你顯示廣告。你可隨時在私隱權設定中停用 Beta 版本。"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"知道了"</string>

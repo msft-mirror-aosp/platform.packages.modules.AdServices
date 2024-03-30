@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"ଆପଣ ଅଂଶଗ୍ରହଣ ନକରିବା ପାଇଁ ବାଛିଛନ୍ତି"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"ଆପଣଙ୍କ ଉତ୍ତର ପାଇଁ ଧନ୍ୟବାଦ। ଆପଣଙ୍କ ଡିଭାଇସ ପାଇଁ ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ ବନ୍ଦ ଅଛି।\n\nଆପଣ ଯଦି ଆପଣଙ୍କର ମନ ପରିବର୍ତ୍ତନ କରନ୍ତି କିମ୍ବା ଅଧିକ ଜାଣିବାକୁ ଚାହାଁନ୍ତି, ତେବେ ଆପଣଙ୍କ ଗୋପନୀୟତା ସେଟିଂସକୁ ଯାଆନ୍ତୁ।"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"ଗୋପନୀୟତା ସେଟିଂସ"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"ବୁଝିଗଲି"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"ଆପଣ ବିଟା ପ୍ରୋଗ୍ରାମର ଏକ ଅଂଶ ଅଟନ୍ତି"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"ଆପଣଙ୍କର ଡିଭାଇସ ନିମନ୍ତେ ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ ଚାଲୁ ଅଛି ଏବଂ ଆପଣଙ୍କୁ ବିଜ୍ଞାପନଗୁଡ଼ିକ ଦେଖାଇବା ପାଇଁ ଆପ୍ସ ଏହି ନୂଆ, ଅଧିକ ବ୍ୟକ୍ତିଗତ ଉପାୟକୁ ପରୀକ୍ଷା କରିପାରେ। ଆପଣ ଯେ କୌଣସି ସମୟରେ ଆପଣଙ୍କ ଗୋପନୀୟତା ସେଟିଂସରେ ବିଟାକୁ ବନ୍ଦ କରିପାରିବେ।"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"ବୁଝିଗଲି"</string>

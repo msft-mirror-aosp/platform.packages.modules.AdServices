@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Siz dasturda qatnashishni rad etdingiz"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Javobingiz uchun rahmat. Qurilmangiz uchun Privacy Sandbox funksiyasi faolsizlantirildi.\n\nUni qayta yoqish yoki batafsil axborot olish uchun maxfiylik sozlamalari sahifasini oching."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Maxfiylik sozlamalari"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Siz beta sinovdasiz"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Qurilmangiz uchun Privacy Sandbox yoqilgan va ilovalar sizga reklama chiqarishning yanada maxfiy usullarini sinashi mumkin. Beta versiyani istalgan vaqt maxfiylik sozlamalari orqali faolsizlashtirish mumkin."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"OK"</string>

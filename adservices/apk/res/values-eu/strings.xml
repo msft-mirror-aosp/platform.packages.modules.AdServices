@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Ez parte hartzea aukeratu duzu"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Eskerrik asko erantzuteagatik. Privacy Sandbox-a desaktibatuta dago gailuan.\n\nIritziz aldatzen bazara edo informazio gehiago lortu nahi izanez gero, joan pribatutasun-ezarpenetara."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Pribatutasun-ezarpenak"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Ados"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Beta-bertsioa probatzen ari zara"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Aktibatuta dago Privacy Sandbox-a gailuan; beraz, aplikazioek iragarkiak erakusteko modu berriak eta pribatuagoak proba ditzakete. Beta-bertsioa desaktibatzeko, joan pribatutasun-ezarpenetara."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Ados"</string>

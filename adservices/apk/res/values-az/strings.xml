@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"İştirak etməməyi seçmisiniz"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Cavabınız üçün təşəkkür edirik. Məxfilik Sendboksu cihazınız üçün deaktiv edilib.\n\nFikrinizi dəyişsəniz və ya ətraflı məlumat istəyirsinizsə, məxfilik ayarlarına keçin."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Məxfilik ayarları"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Anladım"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Beta versiyasına qoşulmusunuz"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Məxfilik Sendboksu cihazınız üçün aktiv edilib və tətbiqlər sizə reklam göstərmək üçün bu yeni, daha məxfi üsulları sınaqdan keçirə bilər. İstənilən vaxt məxfilik ayarlarınızda beta versiyasını deaktiv edə bilərsiniz."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Anladım"</string>

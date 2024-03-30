@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Ai ales să nu participi"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Mulțumim pentru răspuns. Privacy Sandbox este dezactivat pentru dispozitivul tău.\n\nDacă te răzgândești sau dorești să afli mai multe, accesează setările de confidențialitate."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Setări de confidențialitate"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Te-ai înscris în versiunea beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox este activat pentru dispozitivul tău și aplicațiile pot testa aceste noi modalități mai private de a-ți afișa anunțuri. Poți să dezactivezi oricând versiunea beta în setările de confidențialitate."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"OK"</string>

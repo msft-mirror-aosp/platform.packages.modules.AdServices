@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Ukhethe ukungabambi iqhaza"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Siyabonga ngempendulo yakho. I-Privacy Sandbox ivaliwe kudivayisi yakho.\n\nUma ushintsha umqondo wakho noma ufuna ukufunda kabanzi, iya kumasethingi akho obumfihlo."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Amasethingi obumfihlo"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Ngiyezwa"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Uyingxenye ye-beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"I-Privacy Sandbox ivuliwe kudivayisi yakho, futhi ama-app angahlola lezi zindlela ezintsha, ezigodliwe zokukubonisa izikhangiso. Ungakwazi ukuvala i-beta noma nini kumasethingi akho obumfihlo."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Ngiyezwa"</string>

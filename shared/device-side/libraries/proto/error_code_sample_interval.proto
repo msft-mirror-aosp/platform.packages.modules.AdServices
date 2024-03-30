@@ -23,7 +23,7 @@ message ErrorCodeSampleInterval {
 
   // Default sample interval applied if error code is not present in the map.
   // If not defined, then default sample interval = 1 is used (no sampling).
-  int32 default_sample_interval = 1;
+  optional int32 default_sample_interval = 1;
 
   // A Map of sample interval (represented by the N in 1/N sampling) to list of error codes.
   // Sample interval which is the key in the map represents

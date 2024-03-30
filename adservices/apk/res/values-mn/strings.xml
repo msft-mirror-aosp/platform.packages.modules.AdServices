@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Та оролцохгүй байхаар сонгосон"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Хариу өгсөнд баярлалаа. Таны төхөөрөмжид Privacy Sandbox-г унтраасан.\n\nХэрэв та бодлоо өөрчилбөл эсвэл нэмэлт мэдээлэл авахыг хүсвэл нууцлалын тохиргоо руугаа очно уу."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Нууцлалын тохиргоо"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Ойлголоо"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Та бетагийн нэг хэсэг юм"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Таны төхөөрөмж дээр Privacy Sandbox-г асаасан ба аппууд танд зар харуулахын тулд эдгээр шинэ бөгөөд илүү хувийн аргыг турших боломжтой. Та нууцлалын тохиргоо хэсэгт бета хувилбарыг хүссэн үедээ унтраах болно."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Ойлголоо"</string>

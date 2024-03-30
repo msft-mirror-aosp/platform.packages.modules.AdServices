@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Úgy döntött, hogy nem vesz részt a programban"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Köszönjük válaszát! A Privacy Sandbox ki van kapcsolva eszközén.\n\nHa meggondolja magát, vagy további információra kíváncsi, lépjen az adatvédelmi beállítások oldalára."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Adatvédelmi beállítások"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Értem"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Ön részt vesz a bétaprogramban"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"A Privacy Sandbox be van kapcsolva az eszközén, az alkalmazások pedig tesztelhetik a hirdetések megjelenítésének ezen új, privátabb jellegű módjait. A bétaverziót bármikor kikapcsolhatja az adatvédelmi beállítások között."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Értem"</string>

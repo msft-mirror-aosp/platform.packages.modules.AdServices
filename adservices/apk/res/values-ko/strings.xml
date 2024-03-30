@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"참여하지 않기로 선택했습니다"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"응답해 주셔서 감사합니다. 기기에서 개인 정보 보호 샌드박스가 사용 중지되었습니다\n\n생각이 바뀌었거나 자세히 알아보고 싶다면 개인 정보 보호 설정으로 이동하세요."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"개인 정보 보호 설정"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"확인"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"베타 참여 중"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"기기에 개인 정보 보호 샌드박스가 사용 설정되어 있으며 앱에서 개인 정보 보호를 강화하면서 광고를 표시하는 새로운 방법을 테스트할 수 있습니다. 언제든지 개인 정보 보호 설정에서 베타 참여를 중단할 수 있습니다."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"확인"</string>

@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Odabrali ste da ne učestvujete"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Hvala na odgovoru. Okruženje zaštićene privatnosti je isključeno za vaš uređaj.\n\nAko se predomislite ili želite saznati više, idite u postavke privatnosti."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Postavke privatnosti"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Razumijem"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Koristite beta verziju"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Okruženje zaštićene privatnosti je uključeno za vaš uređaj i aplikacije mogu testirati ove nove, privatnije načine za prikazivanje oglasa. Možete isključiti beta verziju bilo kada u postavkama privatnosti."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Razumijem"</string>

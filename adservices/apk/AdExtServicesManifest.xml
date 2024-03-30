@@ -215,11 +215,13 @@
             </intent-filter>
         </activity>
 
-        <!-- Activity for Adservices to run shell command. This is disabled by default.-->
+        <!-- Activity for Adservices to run shell command. -->
+        <!-- Dump permission limits who can call this activity, Shell has DUMP permission -->
         <activity
             android:name="com.android.adservices.shell.ShellCommandActivity"
             android:exported="true"
-            android:theme="@style/Theme.SubSettingsBase"
+          android:theme="@style/Theme.SubSettingsBase"
+          android:permission="android.permission.DUMP"
             android:process=".adservices">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.BACK_COMPACT_SHELL_COMMAND"/>

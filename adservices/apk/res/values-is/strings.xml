@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Þú valdir að taka ekki þátt"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Takk fyrir svarið. Slökkt er á Privacy Sandbox fyrir tækið þitt.\n\nEf þér snýst hugur eða vilt kynna þér þetta nánar skaltu fara í persónuverndarstillingarnar þínar."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Persónuverndarstillingar"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Ég skil"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Þú tekur þátt í betaútgáfunni"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Kveikt er á Privacy Sandbox fyrir tækið þitt og forrit geta prófað þessar nýju, lokaðri leiðir til að birta þér auglýsingar. Þú getur slökkt á betaútgáfunni hvenær sem er í persónuverndarstillingunum."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Ég skil"</string>

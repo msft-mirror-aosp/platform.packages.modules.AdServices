@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Du har valt att inte delta"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Tack för ditt svar. Privacy Sandbox har inaktiverats för enheten.\n\nOm du ändrar dig eller vill läsa mer kan du öppna integritetsinställningar."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Integritetsinställningar"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Du deltar i betaprogrammet"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox har aktiverats för din enhet, och appar kan testa dessa nya, privatare metoderna för att visa annonser. Du kan inaktivera betaprogammet när du vill i integritetsinställningarna."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"OK"</string>

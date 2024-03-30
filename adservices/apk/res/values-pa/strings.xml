@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"ਤੁਸੀਂ ਭਾਗੀਦਾਰੀ ਨਾ ਕਰਨ ਦੀ ਚੋਣ ਕੀਤੀ ਹੈ"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"ਤੁਹਾਡੇ ਜਵਾਬ ਲਈ ਧੰਨਵਾਦ। ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਨੂੰ ਤੁਹਾਡੇ ਡੀਵਾਈਸ ਲਈ ਬੰਦ ਕੀਤਾ ਗਿਆ ਹੈ।\n\nਜੇ ਤੁਸੀਂ ਆਪਣਾ ਮਨ ਬਦਲ ਲੈਂਦੇ ਹੋ ਜਾਂ ਹੋਰ ਜਾਣਨਾ ਚਾਹੁੰਦੇ ਹੋ, ਤਾਂ ਆਪਣੀਆਂ ਪਰਦੇਦਾਰੀ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਜਾਓ।"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"ਪਰਦੇਦਾਰੀ ਸੈਟਿੰਗਾਂ"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"ਸਮਝ ਲਿਆ"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"ਤੁਸੀਂ ਬੀਟਾ ਦਾ ਹਿੱਸਾ ਹੋ"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਨੂੰ ਤੁਹਾਡੇ ਡੀਵਾਈਸ ਲਈ ਚਾਲੂ ਕੀਤਾ ਗਿਆ ਹੈ, ਅਤੇ ਐਪਾਂ ਤੁਹਾਨੂੰ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਲਈ ਇਨ੍ਹਾਂ ਨਵੇਂ, ਹੋਰ ਜ਼ਿਆਦਾ ਨਿੱਜੀ ਤਰੀਕਿਆਂ ਦੀ ਜਾਂਚ ਕਰ ਸਕਦੀਆਂ ਹਨ। ਤੁਸੀਂ ਆਪਣੀਆਂ ਪਰਦੇਦਾਰੀ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਜਾ ਕੇ ਕਿਸੇ ਵੇਲੇ ਵੀ ਬੀਟਾ ਨੂੰ ਬੰਦ ਕਰ ਸਕਦੇ ਹੋ।"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"ਸਮਝ ਲਿਆ"</string>

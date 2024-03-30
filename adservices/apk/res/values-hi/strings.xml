@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"आपने इस प्रोग्राम में शामिल न होने का विकल्प चुना है"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"जवाब देने के लिए धन्यवाद. आपके डिवाइस के लिए, प्राइवसी सैंडबॉक्स का बीटा प्रोग्राम बंद कर दिया गया है.\n\nअगर आपको इसमें शामिल होना है या इसके बारे में ज़्यादा जानना है, तो निजता सेटिंग में जाएं."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"निजता सेटिंग"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"ठीक है"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"आप बीटा प्रोग्राम का हिस्सा हैं"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"आपके डिवाइस के लिए, प्राइवसी सैंडबॉक्स का बीटा प्रोग्राम चालू कर दिया गया है. आपके डिवाइस में मौजूद ऐप्लिकेशन, विज्ञापन दिखाने के लिए ज़्यादा निजता वाले इन नए तरीकों को आज़मा सकते हैं. निजता सेटिंग में जाकर, बीटा प्रोग्राम को कभी भी बंद किया जा सकता है."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"ठीक है"</string>

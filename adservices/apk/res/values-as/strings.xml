@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"আপুনি অংশগ্ৰহণ নকৰিবলৈ বাছনি কৰিছে"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"আপোনাৰ সঁহাৰিৰ বাবে ধন্যবাদ। আপোনাৰ ডিভাইচটোৰ বাবে প্ৰাইভেচি ছেণ্ডবক্স অফ কৰা হৈছে।\n\nযদি আপুনি নিজৰ সিদ্ধান্ত সলনি কৰে অথবা অধিক জানিবলৈ বিচাৰে, আপোনাৰ গোপনীয়তাৰ ছেটিঙলৈ যাওক।"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"গোপনীয়তাৰ ছেটিং"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"বুজি পালোঁ"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"আপুনি বিটাটোৰ অংশ"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"আপোনাৰ ডিভাইচৰ বাবে প্ৰাইভেচি ছেণ্ডবক্স অন আছে আৰু এপে আপোনাক বিজ্ঞাপন দেখুৱাবলৈ এই নতুন অধিক গোপনীয় উপায়সমূহ পৰীক্ষা কৰি চাব পাৰে। আপুনি যিকোনো সময়তে নিজৰ গোপনীয়তাৰ ছেটিঙত বিটা অফ কৰিব পাৰে।"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"বুজি পালোঁ"</string>

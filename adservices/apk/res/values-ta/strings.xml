@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"பங்கேற்க வேண்டாம் எனத் தேர்வுசெய்துள்ளீர்கள்"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"பதிலளித்தமைக்கு நன்றி. உங்கள் சாதனத்திற்குத் தனியுரிமை சாண்ட்பாக்ஸ் முடக்கப்பட்டுள்ளது.\n\nஉங்கள் மனதை மாற்றிக்கொண்டாலோ மேலும் அறிய விரும்பினாலோ தனியுரிமை அமைப்புகளுக்குச் செல்லவும்."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"தனியுரிமை அமைப்புகள்"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"சரி"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"நீங்கள் பீட்டாவின் அங்கமாக உள்ளீர்கள்"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"உங்கள் சாதனத்தில் தனியுரிமை சாண்ட்பாக்ஸ் இயக்கப்பட்டுள்ளது. உங்களுக்கு விளம்பரங்களைக் காட்டுவதற்காக இந்தப் புதிய மற்றும் கூடுதலான தனிப்பட்ட வழிகளை ஆப்ஸால் பரிசோதனை செய்ய முடியும். தனியுரிமை அமைப்புகளுக்குச் சென்று எப்போது வேண்டுமானாலும் பீட்டாவை முடக்கிக்கொள்ளலாம்."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"சரி"</string>

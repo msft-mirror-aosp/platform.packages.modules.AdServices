@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Избрахте да не участвате"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Благодарим ви за отговора. Технологията Privacy Sandbox е изключена за устройството ви.\n\nАко размислите или искате да научите повече, отворете настройките си за поверителност."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Настройки за поверителност"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Разбрах"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Участвате в бета-версията"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Технологията Privacy Sandbox е включена за устройството ви. Приложенията могат да изпробват тези нови по-поверителни начини за показване на реклами. Имате възможност да изключите бета-версията по всяко време от настройките си за поверителност."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Разбрах"</string>
