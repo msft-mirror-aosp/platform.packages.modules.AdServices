@@ -65,7 +65,7 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     private static final boolean DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS = false;
     private static final String PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED =
             "sdksandbox_customized_sdk_context_enabled";
-    private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
+    private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = true;
 
     private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
             "sdksandbox_broadcastreceiver_allowlist_per_targetSdkVersion";
@@ -285,21 +285,14 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
         }
     }
 
-    public void setKillSwitchAndSetProperty(boolean enabled) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                PROPERTY_DISABLE_SDK_SANDBOX,
-                Boolean.toString(enabled),
-                false);
-    }
-
-    /** Sets the killswitch without setting the property. Used for unit testing. */
-    public void setKillSwitchState(boolean enabled) {
+    void setKillSwitchState(boolean enabled) {
         synchronized (mLock) {
-            onPropertiesChanged(
-                    new DeviceConfig.Properties(
-                            DeviceConfig.NAMESPACE_ADSERVICES,
-                            Map.of(PROPERTY_DISABLE_SDK_SANDBOX, Boolean.toString(enabled))));
+            DeviceConfig.setProperty(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_DISABLE_SDK_SANDBOX,
+                    Boolean.toString(enabled),
+                    false);
+            mKillSwitchEnabled = enabled;
         }
     }
 

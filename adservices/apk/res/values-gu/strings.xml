@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"તમે ભાગ ન લેવાનું પસંદ કર્યું"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"તમારા પ્રતિસાદ બદલ આભાર. તમારા ડિવાઇસ માટે પ્રાઇવસી સૅન્ડબૉક્સ બંધ કરવામાં આવ્યું છે.\n\nજો તમે તમારો વિચાર બદલો અથવા વધુ જાણવા માગતા હો, તો તમારા પ્રાઇવસી સેટિંગમાં જાઓ."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"પ્રાઇવસી સેટિંગ"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"સમજાઈ ગયું"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"તમે બીટા વર્ઝનનો ભાગ છો"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"તમારા ડિવાઇસ માટે પ્રાઇવસી સૅન્ડબૉક્સ ચાલુ છે અને ઍપ તમને જાહેરાતો બતાવવા માટે, આ નવી વધુ ખાનગી રીતોનું પરીક્ષણ કરી શકે છે. તમે તમારા પ્રાઇવસી સેટિંગમાં જઈને કોઈપણ સમયે બીટા વર્ઝન બંધ કરી શકો છો."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"સમજાઈ ગયું"</string>

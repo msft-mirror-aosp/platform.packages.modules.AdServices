@@ -24,6 +24,7 @@ import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusSt
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
 
 /** Interface for Adservices logger. */
 public interface AdServicesLogger {
@@ -195,4 +196,34 @@ public interface AdServicesLogger {
     /** Logs stats for GetAdSelectionDataBuyerInputGenerated */
     void logGetAdSelectionDataBuyerInputGeneratedStats(
             GetAdSelectionDataBuyerInputGeneratedStats stats);
+
+    /** Logs AdFilteringProcessJoinCAReported stats. */
+    void logAdFilteringProcessJoinCAReportedStats(AdFilteringProcessJoinCAReportedStats stats);
+
+    /** Logs AdFilteringProcessAdSelectionReported stats. */
+    void logAdFilteringProcessAdSelectionReportedStats(
+            AdFilteringProcessAdSelectionReportedStats stats);
+
+    /** Logs AdCounterHistogramUpdaterReported stats. */
+    void logAdCounterHistogramUpdaterReportedStats(AdCounterHistogramUpdaterReportedStats stats);
+
+    /** Logs TopicsEncryptionEpochComputationReported stats. */
+    void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats);
+
+    /** Logs TopicsEncryptionGetTopicsReported stats */
+    void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats);
+
+    /** Logs stats for shell command indicating success/failure, latency. */
+    void logShellCommandStats(ShellCommandStats stats);
+
+    /**
+     * Logs stats for signature verification for {@link
+     * android.adservices.adselection.SignedContextualAds} during on-device ad selection auction
+     */
+    void logSignatureVerificationStats(SignatureVerificationStats stats);
+
+    /** Logs stats for EncodingFetchStats */
+    void logEncodingJsFetchStats(EncodingFetchStats stats);
 }

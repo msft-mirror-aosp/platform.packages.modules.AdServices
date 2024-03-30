@@ -48,6 +48,7 @@ import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
 
@@ -71,13 +72,14 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
     private static final ModuleJobPolicy MODULE_JOB_POLICY = ModuleJobPolicy.getDefaultInstance();
 
     private final JobScheduler mJobScheduler = sContext.getSystemService(JobScheduler.class);
-    private TestJobServiceFactory mConfig;
+    private TestJobServiceFactory mFactory;
 
-    @Spy TestJobService mSpyJobService;
-    @Mock JobServiceLogger mMockLogger;
-    @Mock JobWorker mMockJobWorker;
-    @Mock JobParameters mMockParameters;
-    @Mock AdServicesErrorLogger mMockErrorLogger;
+    @Spy private TestJobService mSpyJobService;
+    @Mock private JobServiceLogger mMockLogger;
+    @Mock private JobWorker mMockJobWorker;
+    @Mock private JobParameters mMockParameters;
+    @Mock private AdServicesErrorLogger mMockErrorLogger;
+    @Mock private JobSchedulingLogger mMockJobSchedulingLogger;
 
     @Before
     public void setup() {
@@ -86,10 +88,14 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
         doReturn(mJobScheduler).when(mSpyJobService).getSystemService(JobScheduler.class);
 
         // Set JobServiceConfig for the TestJobService.
-        mConfig =
+        mFactory =
                 new TestJobServiceFactory(
-                        mMockJobWorker, mMockLogger, MODULE_JOB_POLICY, mMockErrorLogger);
-        doReturn(mConfig).when(mSpyJobService).getJobServiceFactory();
+                        mMockJobWorker,
+                        mMockLogger,
+                        MODULE_JOB_POLICY,
+                        mMockErrorLogger,
+                        mMockJobSchedulingLogger);
+        doReturn(mFactory).when(mSpyJobService).getJobServiceFactory();
         mSpyJobService.onCreate();
 
         when(mMockParameters.getJobId()).thenReturn(JOB_ID_1);
@@ -291,7 +297,7 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
                                 countDownLatch.countDown();
                             }
                         },
-                        mConfig.getBackgroundExecutor());
+                        mFactory.getBackgroundExecutor());
         doAnswer(
                         invocation -> {
                             countDownLatch.countDown();
@@ -316,7 +322,7 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
                                         "Set a comparable long waiting time so that the future"
                                             + " won't finish, but it should still stop in case of"
                                             + " any issue."),
-                        mConfig.getBackgroundExecutor());
+                        mFactory.getBackgroundExecutor());
         mSpyJobService.mRunningFuturesMap.put(JOB_ID_1, mockRunningFuture);
         JobServiceLoggingCallback callback = syncRecordOnStopJob(mMockLogger);
 

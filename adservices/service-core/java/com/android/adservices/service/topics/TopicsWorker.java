@@ -53,7 +53,6 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 @WorkerThread

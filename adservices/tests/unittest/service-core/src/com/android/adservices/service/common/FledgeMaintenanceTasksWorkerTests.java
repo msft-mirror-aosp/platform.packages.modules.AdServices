@@ -427,6 +427,11 @@ public class FledgeMaintenanceTasksWorkerTests {
             public boolean getFledgeKAnonSignJoinFeatureEnabled() {
                 return true;
             }
+
+            @Override
+            public boolean getFledgeKAnonSignJoinFeatureAuctionServerEnabled() {
+                return true;
+            }
         }
         FledgeMaintenanceTasksWorker worker =
                 new FledgeMaintenanceTasksWorker(

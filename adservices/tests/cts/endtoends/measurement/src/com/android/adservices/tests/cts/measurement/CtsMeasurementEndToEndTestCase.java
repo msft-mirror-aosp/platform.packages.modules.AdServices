@@ -15,6 +15,8 @@
  */
 package com.android.adservices.tests.cts.measurement;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
@@ -29,6 +31,7 @@ import android.util.Log;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.service.FlagsConstants;
 
 abstract class CtsMeasurementEndToEndTestCase extends AdServicesCtsTestCase {
 
@@ -40,8 +43,8 @@ abstract class CtsMeasurementEndToEndTestCase extends AdServicesCtsTestCase {
                 .setCompatModeFlags()
                 .setMsmtApiAppAllowList(mPackageName)
                 .setMsmtWebContextClientAllowList(mPackageName)
-                .setConsentManagerDebugMode(true)
-                .setConsentNotifiedDebugMode(true)
+                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                .setSystemProperty(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true)
                 .setSystemProperty(KEY_GLOBAL_KILL_SWITCH, false)
                 .setSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
                 .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
@@ -51,6 +54,6 @@ abstract class CtsMeasurementEndToEndTestCase extends AdServicesCtsTestCase {
                 .setSystemProperty(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
                 .setSystemProperty(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
                 .setFlag(KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES, false)
-                .setAdIdKillSwitchForTests(false);
+                .setSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
     }
 }
