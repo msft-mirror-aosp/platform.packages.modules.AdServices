@@ -18,8 +18,12 @@ package com.android.adservices.shared.spe.scheduling;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_INVALID_JOB_POLICY_SYNC;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULER_IS_UNAVAILABLE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_POLICY_JOB_SCHEDULER_INVALID_JOB_INFO;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_FAILED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_KEY;
 import static com.android.adservices.shared.spe.JobUtil.jobInfoToString;
 
@@ -33,10 +37,12 @@ import android.os.PersistableBundle;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
+import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
 import com.android.adservices.shared.spe.JobUtil;
 import com.android.adservices.shared.spe.framework.AbstractJobService;
 import com.android.adservices.shared.spe.framework.JobServiceFactory;
 import com.android.adservices.shared.spe.framework.JobWorker;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -70,12 +76,14 @@ import java.util.concurrent.Executor;
  * @param <T> A class that implements {@link AbstractJobService}. This class will be the {@link
  *     android.app.job.JobService} instance for your module and be registered in the Manifest.xml
  */
+// TODO(b/331610744): Do null check for constructor members.
 public class PolicyJobScheduler<T extends AbstractJobService> {
     private final JobServiceFactory mJobServiceFactory;
     private final Executor mExecutor;
     private final Map<Integer, String> mJobIdToNameMap;
     private final Class<T> mJobServiceClass;
     private final AdServicesErrorLogger mErrorLogger;
+    private final JobSchedulingLogger mJobSchedulingLogger;
 
     public PolicyJobScheduler(JobServiceFactory jobServiceFactory, Class<T> jobServiceClass) {
         mJobServiceFactory = jobServiceFactory;
@@ -83,6 +91,7 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
         mJobIdToNameMap = mJobServiceFactory.getJobIdToNameMap();
         mErrorLogger = mJobServiceFactory.getErrorLogger();
         mJobServiceClass = jobServiceClass;
+        mJobSchedulingLogger = mJobServiceFactory.getJobSchedulingLogger();
     }
 
     /**
@@ -96,14 +105,15 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
      * @param jobSpec the unique job ID of the app to schedule this job.
      */
     public void schedule(Context context, JobSpec jobSpec) {
-        ListenableFuture<Boolean> schedulingFuture =
+        ListenableFuture<Integer> schedulingFuture =
                 Futures.submit(() -> scheduleJob(context, jobSpec), mExecutor);
 
         addCallbackToSchedulingFuture(schedulingFuture, jobSpec.getJobId());
     }
 
     @VisibleForTesting
-    boolean scheduleJob(Context context, JobSpec jobSpec) {
+    @JobSchedulingResultCode
+    int scheduleJob(Context context, JobSpec jobSpec) {
         int jobId = jobSpec.getJobId();
         String jobName = mJobIdToNameMap.get(jobId);
         boolean forceSchedule = jobSpec.getShouldForceSchedule();
@@ -126,7 +136,7 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
             mErrorLogger.logError(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULER_IS_UNAVAILABLE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
-            return false;
+            return SCHEDULING_RESULT_CODE_FAILED;
         }
 
         // Get the existing jobInfo, if existing, scheduled in the JobScheduler.
@@ -134,7 +144,7 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
         if (existingJobInfo == null) {
             jobScheduler.schedule(jobInfoToSchedule);
             logcatJobScheduledInfo(jobInfoToSchedule, existingJobInfo, jobName, forceSchedule);
-            return true;
+            return SCHEDULING_RESULT_CODE_SUCCESSFUL;
         }
         // The "Extras" field in JobInfo isn't unparcelled when queried from the JobScheduler. Do
         // a data fetching to unparcel it in order to call equals() following.
@@ -145,13 +155,13 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
             LogUtil.v(
                     "The job %s has been scheduled with the same info, skip rescheduling it. %s",
                     jobName, JobUtil.jobInfoToString(existingJobInfo));
-            return false;
+            return SCHEDULING_RESULT_CODE_SKIPPED;
         }
 
         jobScheduler.schedule(jobInfoToSchedule);
         logcatJobScheduledInfo(jobInfoToSchedule, existingJobInfo, jobName, forceSchedule);
 
-        return true;
+        return SCHEDULING_RESULT_CODE_SUCCESSFUL;
     }
 
     // Gets a JobInfo to schedule the job. It's computed by merging the default JobPolicy from job
@@ -222,22 +232,29 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
         return new JobInfo.Builder(jobId, new ComponentName(context, mJobServiceClass));
     }
 
-    // Add a simple callback.
-    // TODO(b/324246583): Investigate and Design SPE Scheduling logging.
-    private void addCallbackToSchedulingFuture(
-            ListenableFuture<Boolean> schedulingFuture, int jobId) {
+    // Add a callback for logging.
+    protected void addCallbackToSchedulingFuture(
+            ListenableFuture<Integer> schedulingFuture, int jobId) {
         Futures.addCallback(
                 schedulingFuture,
                 new FutureCallback<>() {
                     @Override
-                    public void onSuccess(Boolean result) {
+                    public void onSuccess(@JobSchedulingResultCode Integer result) {
                         LogUtil.v("Job %d has been scheduled by the configured executor.", jobId);
+
+                        mJobSchedulingLogger.recordOnScheduling(jobId, result);
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
-                        // TODO(b/323029903): Add CEL.
                         LogUtil.e(t, "Job %d scheduling encountered an issue!", jobId);
+                        mErrorLogger.logErrorWithExceptionInfo(
+                                t,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+
+                        mJobSchedulingLogger.recordOnScheduling(
+                                jobId, SCHEDULING_RESULT_CODE_FAILED);
                     }
                 },
                 mExecutor);

@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"参加を取り消しました"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"ありがとうございました。プライバシー サンドボックスはこのデバイスで OFF になっています。\n\n改めて参加される場合や、詳細をご覧になりたい場合は、プライバシー設定に移動してください。"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"プライバシー設定"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"ベータ版にご参加いただきありがとうございます"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"プライバシー サンドボックスはこのデバイスで ON になっているため、プライバシー保護を強化した広告表示の新しい方法をアプリがテストできます。ベータ版はプライバシー設定でいつでも OFF にできます。"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"OK"</string>

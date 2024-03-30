@@ -69,6 +69,7 @@ public final class TriggerFixture {
                 .setAggregationCoordinatorOrigin(ValidTriggerParams.AGGREGATION_COORDINATOR_ORIGIN)
                 .setAggregatableSourceRegistrationTimeConfig(
                         ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG)
+                .setTriggerContextId(ValidTriggerParams.TRIGGER_CONTEXT_ID)
                 .build();
     }
 
@@ -172,6 +173,7 @@ public final class TriggerFixture {
 
         public static final String PLATFORM_AD_ID = "test-platform-ad-id";
         public static final String DEBUG_AD_ID = "test-debug-ad-id";
+        public static final String TRIGGER_CONTEXT_ID = "test-trigger-context-id";
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
             final FilterMap filter =

@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Қатысудан бас тарттыңыз"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Жауабыңызға рақмет! Құрылғыңызда Privacy Sandbox өшірілген.\n\nОйыңызды өзгертсеңіз немесе толық ақпарат алғыңыз келсе, құпиялық параметрлеріне кіріңіз."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Құпиялық параметрлері"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Түсінікті"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Бета нұсқасын пайдаланатын қатысушысыз"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Құрылғыңызда Privacy Sandbox қосулы. Енді қолданбалар жарнама көрсетудің осы жаңа әрі жеке жолдарын сынап көре алады. Бета нұсқасын кез келген уақытта құпиялық параметрлерінен өшіруге болады."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Түсінікті"</string>

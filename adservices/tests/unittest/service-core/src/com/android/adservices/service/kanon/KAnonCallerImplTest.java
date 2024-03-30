@@ -78,6 +78,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -91,6 +92,15 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+
 import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
 import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
@@ -103,22 +113,14 @@ import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-
 @RunWith(MockitoJUnitRunner.class)
 public class KAnonCallerImplTest {
 
     private static final long MAX_AGE_SECONDS = 1200000;
     private static final long MAX_ENTRIES = 20;
 
-    private ExecutorService mLightweightExecutorService;
+    private ListeningExecutorService mLightweightExecutorService;
+    private ListeningExecutorService mBackgroundExecutorService;
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
     private ClientParametersDao mClientParametersDao;
     private ServerParametersDao mServerParametersDao;
@@ -165,6 +167,7 @@ public class KAnonCallerImplTest {
 
         HttpCache cache = new FledgeHttpCache(cacheEntryDao, MAX_AGE_SECONDS, MAX_ENTRIES);
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         KAnonDatabase kAnonDatabase =
                 Room.inMemoryDatabaseBuilder(CONTEXT, KAnonDatabase.class).build();
         mClientParametersDao = kAnonDatabase.clientParametersDao();
@@ -187,6 +190,7 @@ public class KAnonCallerImplTest {
                 Mockito.spy(
                         new KAnonCallerImpl(
                                 mLightweightExecutorService,
+                                mBackgroundExecutorService,
                                 mockAnonymousCountingTokens,
                                 mockAdServicesHttpClient,
                                 mClientParametersDao,
@@ -207,6 +211,7 @@ public class KAnonCallerImplTest {
                 Mockito.spy(
                         new KAnonCallerImpl(
                                 mLightweightExecutorService,
+                                mBackgroundExecutorService,
                                 mockAnonymousCountingTokens,
                                 mockAdServicesHttpClient,
                                 mClientParametersDao,
@@ -247,6 +252,7 @@ public class KAnonCallerImplTest {
                 Mockito.spy(
                         new KAnonCallerImpl(
                                 mLightweightExecutorService,
+                                mBackgroundExecutorService,
                                 mockAnonymousCountingTokens,
                                 mockAdServicesHttpClient,
                                 mClientParametersDao,
@@ -437,6 +443,7 @@ public class KAnonCallerImplTest {
                 Mockito.spy(
                         new KAnonCallerImpl(
                                 mLightweightExecutorService,
+                                mBackgroundExecutorService,
                                 mockAnonymousCountingTokens,
                                 mockAdServicesHttpClient,
                                 mClientParametersDao,
@@ -472,12 +479,61 @@ public class KAnonCallerImplTest {
     }
 
     @Test
+    public void test_signedJoinedSuccessfully_loggingThrowsError_processDoesNotCrash()
+            throws IOException, InterruptedException {
+        KAnonCallerImpl kAnonCaller =
+                Mockito.spy(
+                        new KAnonCallerImpl(
+                                mLightweightExecutorService,
+                                mBackgroundExecutorService,
+                                mockAnonymousCountingTokens,
+                                mockAdServicesHttpClient,
+                                mClientParametersDao,
+                                mServerParametersDao,
+                                mUserProfileIdManager,
+                                mockBinaryHttpMessageDeserializer,
+                                mFlags,
+                                mKAnonMessageManager,
+                                mockAdServicesLogger,
+                                mockKeyAttestationFactory,
+                                mockObliviousHttpEncryptorFactory));
+        CountDownLatch countdownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countdownLatch);
+        when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any()))
+                .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
+        createAndPersistKAnonMessages();
+        List<KAnonMessageEntity> kanonMessageList =
+                mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
+                        2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
+
+        doAnswer(
+                        (unused) -> {
+                            countdownLatch.countDown();
+                            throw new NullPointerException();
+                        })
+                .when(mockAdServicesLogger)
+                .logKAnonImmediateSignJoinStats(any());
+        kAnonCaller.signAndJoinMessages(
+                kanonMessageList, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
+        countdownLatch.await();
+
+        // process does not crash
+        verify(mockAdServicesLogger, times(1))
+                .logKAnonImmediateSignJoinStats(argumentCaptorImmediateSignJoinStats.capture());
+        KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats =
+                argumentCaptorImmediateSignJoinStats.getValue();
+        assertThat(kAnonImmediateSignJoinStatusStats.getTotalMessagesAttempted()).isEqualTo(2);
+    }
+
+    @Test
     public void test_signedJoinedSuccessfully_shouldCaptureBackgroundJobStats()
             throws IOException, InterruptedException {
         KAnonCallerImpl kAnonCaller =
                 Mockito.spy(
                         new KAnonCallerImpl(
                                 mLightweightExecutorService,
+                                mBackgroundExecutorService,
                                 mockAnonymousCountingTokens,
                                 mockAdServicesHttpClient,
                                 mClientParametersDao,

@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Rozhodli jste se nezúčastnit se"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Děkujeme za odpověď. Technologie Privacy Sandbox je ve vašem zařízení vypnutá.\n\nPokud si to rozmyslíte nebo si budete chtít přečíst další informace, přejděte do nastavení ochrany soukromí."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Nastavení ochrany soukromí"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Rozumím"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Jste zapojeni do testování beta verze"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Technologie Privacy Sandbox je ve vašem zařízení zapnutá a aplikace mohou testovat tyto nové způsoby zobrazování reklam zajišťující vyšší ochranu soukromí. V nastavení ochrany soukromí můžete testování beta verze kdykoli vypnout."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Rozumím"</string>

@@ -19,9 +19,16 @@ package com.android.adservices.shared.spe.logging;
 /** An interface contains methods used to log by Statsd. */
 public interface StatsdJobServiceLogger {
     /**
-     * Log the stats to logging server.
+     * Logs the job execution stats to the logging server.
      *
-     * @param stats the stats object to log.
+     * @param stats the stats object {@link ExecutionReportedStats} to log.
      */
     void logExecutionReportedStats(ExecutionReportedStats stats);
+
+    /**
+     * Logs the job scheduling stats to the logging server.
+     *
+     * @param stats the stats object {@link SchedulingReportedStats} to log.
+     */
+    void logSchedulingReportedStats(SchedulingReportedStats stats);
 }

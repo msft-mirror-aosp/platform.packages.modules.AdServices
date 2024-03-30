@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_REFRESH;
+import static com.android.adservices.service.stats.ShellCommandStats.Command;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_GENERIC_ERROR;
+
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -62,6 +66,7 @@ public class CustomAudienceRefreshCommandTest
                     .setIsDebuggable(CUSTOM_AUDIENCE.isDebuggable())
                     .build();
 
+    private static final @Command int EXPECTED_COMMAND = COMMAND_CUSTOM_AUDIENCE_REFRESH;
     @Mock private BackgroundFetchRunner mBackgroundFetchRunnerMock;
     @Mock private CustomAudienceDao mCustomAudienceDao;
 
@@ -90,7 +95,7 @@ public class CustomAudienceRefreshCommandTest
 
         verify(mBackgroundFetchRunnerMock, times(1))
                 .updateCustomAudience(OVERRIDE_CURRENT_TIME, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA);
-        expectSuccess(result);
+        expectSuccess(result, EXPECTED_COMMAND);
     }
 
     @Test
@@ -113,7 +118,11 @@ public class CustomAudienceRefreshCommandTest
 
         verify(mBackgroundFetchRunnerMock, never())
                 .updateCustomAudience(OVERRIDE_CURRENT_TIME, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA);
-        expectFailure(result, CustomAudienceRefreshCommand.OUTPUT_ERROR_NO_CUSTOM_AUDIENCE);
+        expectFailure(
+                result,
+                CustomAudienceRefreshCommand.OUTPUT_ERROR_NO_CUSTOM_AUDIENCE,
+                EXPECTED_COMMAND,
+                RESULT_GENERIC_ERROR);
     }
 
     @Test
@@ -141,7 +150,9 @@ public class CustomAudienceRefreshCommandTest
                 result,
                 String.format(
                         CustomAudienceRefreshCommand.OUTPUT_ERROR_WITH_MESSAGE,
-                        CustomAudienceRefreshCommand.OUTPUT_ERROR_NETWORK));
+                        CustomAudienceRefreshCommand.OUTPUT_ERROR_NETWORK),
+                EXPECTED_COMMAND,
+                RESULT_GENERIC_ERROR);
     }
 
     @Test
@@ -168,7 +179,9 @@ public class CustomAudienceRefreshCommandTest
                 result,
                 String.format(
                         CustomAudienceRefreshCommand.OUTPUT_ERROR_WITH_MESSAGE,
-                        CustomAudienceRefreshCommand.OUTPUT_ERROR_UNKNOWN));
+                        CustomAudienceRefreshCommand.OUTPUT_ERROR_UNKNOWN),
+                EXPECTED_COMMAND,
+                RESULT_GENERIC_ERROR);
     }
 
     @Test
@@ -195,7 +208,9 @@ public class CustomAudienceRefreshCommandTest
                 result,
                 String.format(
                         CustomAudienceRefreshCommand.OUTPUT_ERROR_WITH_MESSAGE,
-                        CustomAudienceRefreshCommand.OUTPUT_ERROR_NETWORK));
+                        CustomAudienceRefreshCommand.OUTPUT_ERROR_NETWORK),
+                EXPECTED_COMMAND,
+                RESULT_GENERIC_ERROR);
     }
 
     private ShellCommandTestCase.Result runRefreshCustomAudienceCommand(int timeoutInSeconds) {

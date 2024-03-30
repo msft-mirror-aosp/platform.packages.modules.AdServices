@@ -20,6 +20,7 @@ import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_3;
 
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -52,6 +53,7 @@ import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncodedPayloadFixture;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
@@ -104,6 +106,7 @@ public class BuyerInputGeneratorTest {
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     private final AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategyDisabled =
             new AuctionServerPayloadMetricsStrategyDisabled();
+    private Flags mFlags = FlagsFactory.getFlagsForTest();
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -147,7 +150,8 @@ public class BuyerInputGeneratorTest {
                         ENABLE_PERIODIC_SIGNALS,
                         mDataCompressor,
                         false,
-                        mAuctionServerPayloadMetricsStrategyDisabled);
+                        mAuctionServerPayloadMetricsStrategyDisabled,
+                        mFlags);
 
         // Required by CustomAudienceDao.
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
@@ -239,7 +243,8 @@ public class BuyerInputGeneratorTest {
                         ENABLE_PERIODIC_SIGNALS,
                         mDataCompressor,
                         /* omitAds = */ false,
-                        new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerMock));
+                        new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerMock),
+                        mFlags);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -343,6 +348,17 @@ public class BuyerInputGeneratorTest {
         GetAdSelectionDataBuyerInputGeneratedStats stats2 = stats.get(1);
         assertThat(stats2.getNumCustomAudiences()).isEqualTo(1);
         assertThat(stats2.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+
+        // No encoded payload involves in this test, the extended PAS metrics should be set as 0.
+        assertThat(stats1.getNumEncodedSignals()).isEqualTo(0);
+        assertThat(stats1.getEncodedSignalsSizeMean()).isEqualTo(0);
+        assertThat(stats1.getEncodedSignalsSizeMin()).isEqualTo(0);
+        assertThat(stats1.getEncodedSignalsSizeMax()).isEqualTo(0);
+
+        assertThat(stats2.getNumEncodedSignals()).isEqualTo(0);
+        assertThat(stats2.getEncodedSignalsSizeMean()).isEqualTo(0);
+        assertThat(stats2.getEncodedSignalsSizeMin()).isEqualTo(0);
+        assertThat(stats2.getEncodedSignalsSizeMax()).isEqualTo(0);
     }
 
     @Test
@@ -380,7 +396,8 @@ public class BuyerInputGeneratorTest {
                         ENABLE_PERIODIC_SIGNALS,
                         mDataCompressor,
                         true,
-                        mAuctionServerPayloadMetricsStrategyDisabled);
+                        mAuctionServerPayloadMetricsStrategyDisabled,
+                        mFlags);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -454,7 +471,8 @@ public class BuyerInputGeneratorTest {
                         ENABLE_PERIODIC_SIGNALS,
                         mDataCompressor,
                         /* omitAds = */ true,
-                        new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerMock));
+                        new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerMock),
+                        mFlags);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -536,7 +554,8 @@ public class BuyerInputGeneratorTest {
                         ENABLE_PERIODIC_SIGNALS,
                         mDataCompressor,
                         false,
-                        mAuctionServerPayloadMetricsStrategyDisabled);
+                        mAuctionServerPayloadMetricsStrategyDisabled,
+                        mFlags);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -568,10 +587,27 @@ public class BuyerInputGeneratorTest {
     public void testBuyerInputGenerator_returnsBuyerInputs_onlySignals_success()
             throws ExecutionException, InterruptedException, TimeoutException,
                     InvalidProtocolBufferException {
+        ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptor =
+                ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
 
         Map<AdTechIdentifier, DBEncodedPayload> encodedPayloads =
                 generateAndPersistEncodedPayload(List.of(BUYER_1, BUYER_2));
         Set<AdTechIdentifier> buyers = new HashSet<>(encodedPayloads.keySet());
+
+        mBuyerInputGenerator =
+                new BuyerInputGenerator(
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mAdFiltererMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
+                        ENABLE_AD_FILTER,
+                        ENABLE_PERIODIC_SIGNALS,
+                        mDataCompressor,
+                        false,
+                        new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerMock),
+                        mFlags);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -592,12 +628,26 @@ public class BuyerInputGeneratorTest {
         }
         verify(mAdFiltererMock).filterCustomAudiences(any());
 
+        verify(mAdServicesLoggerMock, times(1))
+                .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
+        GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getValue();
+
+        assertThat(stats.getNumEncodedSignals()).isEqualTo(2);
+        assertThat(stats.getEncodedSignalsSizeMean()).isEqualTo(4);
+        assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(0);
+        assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(4);
+        assertThat(stats.getNumCustomAudiencesOmitAds()).isEqualTo(FIELD_UNSET);
+        assertThat(stats.getNumCustomAudiences()).isEqualTo(FIELD_UNSET);
+        assertThat(stats.getTrustedBiddingSignalsKeysSizeVarianceB()).isEqualTo(FIELD_UNSET);
     }
 
     @Test
     public void testBuyerInputGenerator_returnsBuyerInputs_CAsAndSignalsCombined_success()
             throws ExecutionException, InterruptedException, TimeoutException,
                     InvalidProtocolBufferException {
+        ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptor =
+                ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
+
         // Set AdFiltering to return all custom audiences in the input argument.
         when(mAdFiltererMock.filterCustomAudiences(any())).thenAnswer(i -> i.getArguments()[0]);
         // Custom Audiences
@@ -612,6 +662,21 @@ public class BuyerInputGeneratorTest {
         Map<AdTechIdentifier, DBEncodedPayload> encodedPayloads =
                 generateAndPersistEncodedPayload(List.of(BUYER_1, BUYER_2));
         Set<AdTechIdentifier> buyersWithSignals = new HashSet<>(encodedPayloads.keySet());
+
+        mBuyerInputGenerator =
+                new BuyerInputGenerator(
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mAdFiltererMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
+                        ENABLE_AD_FILTER,
+                        ENABLE_PERIODIC_SIGNALS,
+                        mDataCompressor,
+                        false,
+                        new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerMock),
+                        mFlags);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -648,6 +713,18 @@ public class BuyerInputGeneratorTest {
 
         verify(mAdFiltererMock).filterCustomAudiences(any());
 
+        verify(mAdServicesLoggerMock, times(1))
+                .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
+        GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getValue();
+
+        assertThat(stats.getNumEncodedSignals()).isEqualTo(2);
+        assertThat(stats.getEncodedSignalsSizeMean()).isEqualTo(4);
+        assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(0);
+        assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(4);
+        assertThat(stats.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+        assertThat(stats.getNumCustomAudiences()).isEqualTo(1);
+        assertThat(stats.getTrustedBiddingSignalsKeysSizeVarianceB()).isEqualTo(0.0f);
+        assertThat(stats.getTrustedBiddingSignalsKeysSizeMeanB()).isEqualTo(22.0f);
     }
 
     @Test
@@ -676,7 +753,8 @@ public class BuyerInputGeneratorTest {
                         false,
                         mDataCompressor,
                         false,
-                        mAuctionServerPayloadMetricsStrategyDisabled);
+                        mAuctionServerPayloadMetricsStrategyDisabled,
+                        mFlags);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 buyerInputGeneratorSignalsDisabled
@@ -729,7 +807,8 @@ public class BuyerInputGeneratorTest {
                         ENABLE_PERIODIC_SIGNALS,
                         mDataCompressor,
                         false,
-                        mAuctionServerPayloadMetricsStrategyDisabled);
+                        mAuctionServerPayloadMetricsStrategyDisabled,
+                        mFlags);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "testCA")
                         .build(),

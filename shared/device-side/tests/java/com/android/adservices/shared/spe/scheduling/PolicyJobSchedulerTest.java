@@ -17,9 +17,13 @@
 package com.android.adservices.shared.spe.scheduling;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_INVALID_JOB_POLICY_SYNC;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_NONE;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_FAILED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_KEY;
 import static com.android.adservices.shared.spe.framework.TestJobServiceFactory.JOB_ID_1;
 import static com.android.adservices.shared.spe.framework.TestJobServiceFactory.JOB_NAME_1;
@@ -28,6 +32,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -40,13 +45,18 @@ import android.content.ComponentName;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
 import com.android.adservices.shared.spe.framework.JobWorker;
 import com.android.adservices.shared.spe.framework.TestJobService;
 import com.android.adservices.shared.spe.framework.TestJobServiceFactory;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
+
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Before;
@@ -78,21 +88,26 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
     private static final JobSpec sJobSpec = new JobSpec.Builder(JOB_ID_1, sJobPolicy).build();
 
     private final JobScheduler mJobScheduler = sContext.getSystemService(JobScheduler.class);
-    private TestJobServiceFactory mConfig;
+    private TestJobServiceFactory mFactory;
     private PolicyJobScheduler<TestJobService> mPolicyJobScheduler;
-    @Mock JobServiceLogger mMockLogger;
-    @Mock JobWorker mMockJobWorker;
-    @Mock ModuleJobPolicy mMockModuleJobPolicy;
-    @Mock AdServicesErrorLogger mMockErrorLogger;
+    @Mock private JobServiceLogger mMockLogger;
+    @Mock private JobWorker mMockJobWorker;
+    @Mock private ModuleJobPolicy mMockModuleJobPolicy;
+    @Mock private AdServicesErrorLogger mMockErrorLogger;
+    @Mock private JobSchedulingLogger mMockJobSchedulingLogger;
 
     @Before
     public void setup() {
         assertWithMessage("The JobScheduler").that(mJobScheduler).isNotNull();
 
-        mConfig =
+        mFactory =
                 new TestJobServiceFactory(
-                        mMockJobWorker, mMockLogger, mMockModuleJobPolicy, mMockErrorLogger);
-        mPolicyJobScheduler = new PolicyJobScheduler<>(mConfig, TestJobService.class);
+                        mMockJobWorker,
+                        mMockLogger,
+                        mMockModuleJobPolicy,
+                        mMockErrorLogger,
+                        mMockJobSchedulingLogger);
+        mPolicyJobScheduler = new PolicyJobScheduler<>(mFactory, TestJobService.class);
     }
 
     @After
@@ -126,7 +141,7 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
 
         expect.withMessage("The scheduling for job with same JobInfo")
                 .that(mPolicyJobScheduler.scheduleJob(sContext, sJobSpec))
-                .isFalse();
+                .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
     }
 
     @Test
@@ -137,7 +152,7 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
                 new JobSpec.Builder(JOB_ID_1, sJobPolicy).setShouldForceSchedule(true).build();
         expect.withMessage("The forced scheduling for job with same JobInfo")
                 .that(mPolicyJobScheduler.scheduleJob(sContext, jobSpec))
-                .isTrue();
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
     }
 
     @Test
@@ -151,7 +166,7 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
         // Call the scheduling method with an updated info.
         expect.withMessage("The scheduling for job with different jobInfo")
                 .that(mPolicyJobScheduler.scheduleJob(sContext, updatedJobSpec))
-                .isTrue();
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
 
         JobInfo scheduledJobInfo = mJobScheduler.getPendingJob(JOB_ID_1);
         JobInfo expectedJobInfo =
@@ -244,9 +259,13 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
 
     @Test
     public void testGetPolicyFromFlagServer_nullModulePolicy() {
-        mConfig =
+        mFactory =
                 new TestJobServiceFactory(
-                        mMockJobWorker, mMockLogger, /* moduleJobPolicy= */ null, mMockErrorLogger);
+                        mMockJobWorker,
+                        mMockLogger,
+                        /* moduleJobPolicy= */ null,
+                        mMockErrorLogger,
+                        mMockJobSchedulingLogger);
         assertWithMessage("The returned jobInfo for null module policy synced from server")
                 .that(mPolicyJobScheduler.getPolicyFromFlagServer(JOB_ID_1, JOB_NAME_1))
                 .isNull();
@@ -271,6 +290,37 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
                 .isEqualTo(getBaseJobInfoBuilder().build());
     }
 
+    @Test
+    public void testAddCallbackToSchedulingFuture_onSuccess() throws Exception {
+        ListenableFuture<Integer> future =
+                Futures.immediateFuture(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+        NoFailureSyncCallback<Void> callback = syncRecordOnScheduling();
+
+        mPolicyJobScheduler.addCallbackToSchedulingFuture(future, JOB_ID_1);
+
+        callback.assertReceived();
+        verify(mMockJobSchedulingLogger)
+                .recordOnScheduling(JOB_ID_1, SCHEDULING_RESULT_CODE_SUCCESSFUL);
+    }
+
+    @Test
+    public void testAddCallbackToSchedulingFuture_onFailure() throws Exception {
+        RuntimeException exception = new RuntimeException("Failed!");
+        ListenableFuture<Integer> future = Futures.immediateFailedFuture(exception);
+        NoFailureSyncCallback<Void> callback = syncRecordOnScheduling();
+
+        mPolicyJobScheduler.addCallbackToSchedulingFuture(future, JOB_ID_1);
+
+        callback.assertReceived();
+        verify(mMockErrorLogger)
+                .logErrorWithExceptionInfo(
+                        exception,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        verify(mMockJobSchedulingLogger)
+                .recordOnScheduling(JOB_ID_1, SCHEDULING_RESULT_CODE_FAILED);
+    }
+
     private JobInfo.Builder getBaseJobInfoBuilder() {
         return mPolicyJobScheduler.createBaseJobInfoBuilder(sContext, JOB_ID_1);
     }
@@ -281,7 +331,7 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
                 .isNull();
         expect.withMessage("Scheduling for  job with id=%s", JOB_ID_1)
                 .that(mPolicyJobScheduler.scheduleJob(sContext, sJobSpec))
-                .isTrue();
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
 
         JobInfo scheduledJobInfo = mJobScheduler.getPendingJob(JOB_ID_1);
         JobInfo expectedJobInfo =
@@ -295,5 +345,19 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
         expect.withMessage("Successful scheduled jobInfo for job with id=%s ", JOB_ID_1)
                 .that(scheduledJobInfo)
                 .isEqualTo(expectedJobInfo);
+    }
+
+    private NoFailureSyncCallback<Void> syncRecordOnScheduling() {
+        NoFailureSyncCallback<Void> callback = new NoFailureSyncCallback<>();
+
+        doAnswer(
+                        invocation -> {
+                            callback.injectResult(null);
+                            return null;
+                        })
+                .when(mMockJobSchedulingLogger)
+                .recordOnScheduling(anyInt(), anyInt());
+
+        return callback;
     }
 }

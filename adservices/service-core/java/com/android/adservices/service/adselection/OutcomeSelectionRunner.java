@@ -81,7 +81,6 @@ import java.util.stream.Collectors;
  *
  * <p>Class takes in an executor on which it runs the OutcomeSelection logic
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class OutcomeSelectionRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
