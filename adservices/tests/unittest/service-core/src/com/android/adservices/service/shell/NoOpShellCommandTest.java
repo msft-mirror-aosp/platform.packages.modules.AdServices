@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.shell;
 
-import static com.google.common.truth.Truth.assertThat;
+import com.android.adservices.service.stats.ShellCommandStats;
 
 import org.junit.Test;
 
@@ -25,10 +25,14 @@ public final class NoOpShellCommandTest extends ShellCommandTestCase<NoOpShellCo
     @Test
     public void test_success() {
         String commandName = "test";
-        NoOpShellCommand command = new NoOpShellCommand(commandName);
+        int expectedCommand = ShellCommandStats.COMMAND_ECHO;
+        int expectedResult = ShellCommandStats.RESULT_NOT_ENABLED;
+        NoOpShellCommand command = new NoOpShellCommand(commandName, expectedCommand);
         Result actualResult = run(command, commandName);
-        expectSuccess(actualResult);
-        assertThat(actualResult.mOut)
-                .isEqualTo(String.format(NoOpShellCommand.RESPONSE_MSG, commandName));
+        expectFailure(
+                actualResult,
+                String.format(NoOpShellCommand.RESPONSE_MSG, commandName),
+                expectedCommand,
+                expectedResult);
     }
 }

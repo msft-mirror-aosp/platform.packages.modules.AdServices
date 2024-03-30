@@ -74,7 +74,7 @@ public class BackgroundKeyFetchJobService extends JobService {
 
         LoggerFactory.getFledgeLogger().d("BackgroundKeyFetchJobService.onStartJob");
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID);
 
         if (FlagsFactory.getFlags().getFledgeAuctionServerKillSwitch()) {
@@ -119,8 +119,7 @@ public class BackgroundKeyFetchJobService extends JobService {
                             @Override
                             public void onSuccess(Void result) {
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                BackgroundKeyFetchJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID,
                                                 /* isSuccessful= */ true,
@@ -155,8 +154,7 @@ public class BackgroundKeyFetchJobService extends JobService {
                                 }
 
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                BackgroundKeyFetchJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID,
                                                 /* isSuccessful= */ false,
@@ -177,7 +175,7 @@ public class BackgroundKeyFetchJobService extends JobService {
 
         boolean shouldRetry = true;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(
                         params, FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -187,7 +185,7 @@ public class BackgroundKeyFetchJobService extends JobService {
         this.getSystemService(JobScheduler.class)
                 .cancel(FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID);
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordJobSkipped(FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID, skipReason);
 
         jobFinished(params, false);

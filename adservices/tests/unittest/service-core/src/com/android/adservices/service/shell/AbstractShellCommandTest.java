@@ -16,9 +16,11 @@
 
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.service.shell.AbstractShellCommand.toShellCommandResult;
 import static com.android.adservices.service.shell.AbstractShellCommand.toBoolean;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.service.stats.ShellCommandStats;
 
 import org.junit.Test;
 
@@ -45,5 +47,18 @@ public final class AbstractShellCommandTest extends AdServicesMockitoTestCase {
         expect.withMessage("toBoolean(arg=\"\")").that(toBoolean("")).isNull();
 
         expect.withMessage("toBoolean(arg=abc)").that(toBoolean("abc")).isNull();
+    }
+
+    @Test
+    public void testReturnWithResult_returnsNull() {
+        ShellCommandResult result =
+                toShellCommandResult(
+                        ShellCommandStats.COMMAND_ECHO, ShellCommandStats.RESULT_SUCCESS);
+        expect.withMessage("toBoolean(arg=\"\")")
+                .that(result.getResultCode())
+                .isEqualTo(ShellCommandStats.RESULT_SUCCESS);
+        expect.withMessage("toBoolean(arg=\"\")")
+                .that(result.getCommand())
+                .isEqualTo(ShellCommandStats.COMMAND_ECHO);
     }
 }

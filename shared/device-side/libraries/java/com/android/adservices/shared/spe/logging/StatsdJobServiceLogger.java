@@ -30,6 +30,5 @@ public interface StatsdJobServiceLogger {
      *
      * @param stats the stats object {@link SchedulingReportedStats} to log.
      */
-    // TODO(b/331191849): Remove default when ODP has implemented it.
-    default void logSchedulingReportedStats(SchedulingReportedStats stats) {}
+    void logSchedulingReportedStats(SchedulingReportedStats stats);
 }

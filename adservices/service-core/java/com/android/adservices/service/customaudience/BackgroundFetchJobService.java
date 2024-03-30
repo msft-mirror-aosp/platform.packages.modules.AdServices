@@ -71,8 +71,7 @@ public class BackgroundFetchJobService extends JobService {
 
         LoggerFactory.getFledgeLogger().d("BackgroundFetchJobService.onStartJob");
 
-        AdServicesJobServiceLogger.getInstance(this)
-                .recordOnStartJob(FLEDGE_BACKGROUND_FETCH_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(FLEDGE_BACKGROUND_FETCH_JOB_ID);
 
         if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()) {
             LoggerFactory.getFledgeLogger()
@@ -119,8 +118,7 @@ public class BackgroundFetchJobService extends JobService {
                             @Override
                             public void onSuccess(Void result) {
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                BackgroundFetchJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
                                                 /* isSuccessful= */ true,
@@ -155,8 +153,7 @@ public class BackgroundFetchJobService extends JobService {
                                 }
 
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                BackgroundFetchJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
                                                 /* isSuccessful= */ false,
@@ -178,7 +175,7 @@ public class BackgroundFetchJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(FLEDGE_BACKGROUND_FETCH_JOB_ID, skipReason);
         }
 
@@ -193,7 +190,7 @@ public class BackgroundFetchJobService extends JobService {
 
         boolean shouldRetry = true;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, FLEDGE_BACKGROUND_FETCH_JOB_ID, shouldRetry);
         return shouldRetry;
     }

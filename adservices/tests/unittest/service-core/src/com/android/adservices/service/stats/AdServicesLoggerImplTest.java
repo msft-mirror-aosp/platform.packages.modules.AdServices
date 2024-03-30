@@ -18,7 +18,9 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
@@ -110,6 +112,7 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -847,11 +850,83 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setTrustedBiddingSignalsKeysSizeVarianceB(26F)
                         .setUserBiddingSignalsSizeMeanB(27F)
                         .setUserBiddingSignalsSizeVarianceB(28F)
+                        .setNumEncodedSignals(29)
+                        .setEncodedSignalsSizeMean(30)
+                        .setEncodedSignalsSizeMax(31)
+                        .setEncodedSignalsSizeMin(32)
                         .build();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         adServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
 
         verify(mStatsdLoggerMock).logGetAdSelectionDataBuyerInputGeneratedStats(eq(stats));
+    }
+
+    @Test
+    public void testLogAdFilteringProcessJoinCAReportedStats() {
+        AdFilteringProcessJoinCAReportedStats stats =
+                AdFilteringProcessJoinCAReportedStats.builder()
+                        .setStatusCode(0)
+                        .setCountOfAdsWithKeysMuchSmallerThanLimitation(1)
+                        .setCountOfAdsWithKeysSmallerThanLimitation(2)
+                        .setCountOfAdsWithKeysEqualToLimitation(3)
+                        .setCountOfAdsWithKeysLargerThanLimitation(4)
+                        .setCountOfAdsWithEmptyKeys(5)
+                        .setCountOfAdsWithFiltersMuchSmallerThanLimitation(6)
+                        .setCountOfAdsWithFiltersSmallerThanLimitation(7)
+                        .setCountOfAdsWithFiltersEqualToLimitation(7)
+                        .setCountOfAdsWithFiltersLargerThanLimitation(9)
+                        .setCountOfAdsWithEmptyFilters(10)
+                        .setTotalNumberOfUsedKeys(11)
+                        .setTotalNumberOfUsedFilters(12)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logAdFilteringProcessJoinCAReportedStats(stats);
+
+        verify(mStatsdLoggerMock).logAdFilteringProcessJoinCAReportedStats(eq(stats));
+    }
+
+    @Test
+    public void testLogAdFilteringProcessAdSelectionReportedStats() {
+        AdFilteringProcessAdSelectionReportedStats stats =
+                AdFilteringProcessAdSelectionReportedStats.builder()
+                        .setLatencyInMillisOfAllAdFiltering(100)
+                        .setLatencyInMillisOfAppInstallFiltering(1)
+                        .setLatencyInMillisOfFcapFilters(200)
+                        .setStatusCode(0)
+                        .setNumOfAdsFilteredOutOfBidding(3)
+                        .setNumOfCustomAudiencesFilteredOutOfBidding(5)
+                        .setTotalNumOfAdsBeforeFiltering(7)
+                        .setTotalNumOfCustomAudiencesBeforeFiltering(2)
+                        .setNumOfPackageInAppInstallFilters(4)
+                        .setNumOfDbOperations(6)
+                        .setFilterProcessType(0)
+                        .setNumOfContextualAdsFiltered(10)
+                        .setNumOfAdCounterKeysInFcapFilters(1)
+                        .setNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures(2)
+                        .setNumOfContextualAdsFilteredOutOfBiddingNoAds(3)
+                        .setTotalNumOfContextualAdsBeforeFiltering(4)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logAdFilteringProcessAdSelectionReportedStats(stats);
+
+        verify(mStatsdLoggerMock).logAdFilteringProcessAdSelectionReportedStats(eq(stats));
+    }
+
+    @Test
+    public void testLogAdCounterHistogramUpdaterReportedStats() {
+        AdCounterHistogramUpdaterReportedStats stats =
+                AdCounterHistogramUpdaterReportedStats.builder()
+                        .setLatencyInMillis(100)
+                        .setStatusCode(0)
+                        .setTotalNumberOfEventsInDatabaseAfterInsert(1)
+                        .setNumberOfInsertedEvent(2)
+                        .setNumberOfEvictedEvent(3)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logAdCounterHistogramUpdaterReportedStats(stats);
+
+        verify(mStatsdLoggerMock).logAdCounterHistogramUpdaterReportedStats(eq(stats));
     }
 
     @Test
@@ -900,6 +975,21 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                 ArgumentCaptor.forClass(ShellCommandStats.class);
         verify(mStatsdLoggerMock).logShellCommandStats(argumentCaptor.capture());
         expect.that(argumentCaptor.getValue()).isEqualTo(stats);
+    }
+
+    @Test
+    public void testLogEncodingJsFetchStats() {
+        EncodingFetchStats stats =
+                EncodingFetchStats.builder()
+                        .setJsDownloadTime(SIZE_MEDIUM)
+                        .setHttpResponseCode(404)
+                        .setFetchStatus(ENCODING_FETCH_STATUS_SUCCESS)
+                        .setAdTechId("com.google.android")
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEncodingJsFetchStats(stats);
+
+        verify(mStatsdLoggerMock).logEncodingJsFetchStats(eq(stats));
     }
 
     private void mockAppNameApiErrorLogger() {

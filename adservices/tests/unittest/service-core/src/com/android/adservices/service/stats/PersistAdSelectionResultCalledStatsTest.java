@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;

@@ -75,7 +75,7 @@ public class DebugReportSenderJobService extends JobService {
         }
         LoggerFactory.getFledgeLogger().d("DebugReportSenderJobService.onStartJob");
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB_ID);
 
         if (FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch()) {
@@ -127,8 +127,7 @@ public class DebugReportSenderJobService extends JobService {
                             @Override
                             public void onSuccess(Void result) {
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                DebugReportSenderJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB_ID,
                                                 /* isSuccessful= */ true,
@@ -141,8 +140,7 @@ public class DebugReportSenderJobService extends JobService {
                             public void onFailure(Throwable t) {
                                 logExceptionMessage(t);
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                DebugReportSenderJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB_ID,
                                                 /* isSuccessful= */ false,
@@ -176,7 +174,7 @@ public class DebugReportSenderJobService extends JobService {
         this.getSystemService(JobScheduler.class)
                 .cancel(FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB_ID);
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB_ID, skipReason);
         }
         jobFinished(params, false);
@@ -190,7 +188,7 @@ public class DebugReportSenderJobService extends JobService {
 
         boolean shouldRetry = true;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(
                         params, FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB_ID, shouldRetry);
         return shouldRetry;

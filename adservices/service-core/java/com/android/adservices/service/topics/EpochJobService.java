@@ -65,7 +65,7 @@ public final class EpochJobService extends JobService {
 
         LoggerFactory.getTopicsLogger().d("EpochJobService.onStartJob");
 
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(TOPICS_EPOCH_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(TOPICS_EPOCH_JOB_ID);
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             ErrorLogUtil.e(
@@ -97,7 +97,7 @@ public final class EpochJobService extends JobService {
                         LoggerFactory.getTopicsLogger().d("Epoch Computation succeeded!");
 
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance(EpochJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         TOPICS_EPOCH_JOB_ID, /* isSuccessful= */ true, shouldRetry);
 
@@ -116,7 +116,7 @@ public final class EpochJobService extends JobService {
                                 .e(t, "Failed to handle JobService: " + params.getJobId());
 
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance(EpochJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         TOPICS_EPOCH_JOB_ID,
                                         /* isSuccessful= */ false,
@@ -141,7 +141,7 @@ public final class EpochJobService extends JobService {
         // execution is completed or not to avoid executing the task twice.
         boolean shouldRetry = false;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, TOPICS_EPOCH_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -222,7 +222,7 @@ public final class EpochJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(TOPICS_EPOCH_JOB_ID, skipReason);
         }
 

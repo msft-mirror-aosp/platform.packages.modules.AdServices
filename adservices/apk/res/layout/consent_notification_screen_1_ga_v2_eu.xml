@@ -32,8 +32,8 @@
 
         <LinearLayout
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginStart="@dimen/adservices_content_horizontal_padding"
+            android:layout_marginEnd="@dimen/adservices_content_horizontal_padding"
             android:animateLayoutChanges="true"
             android:orientation="vertical"
             android:layout_gravity="center_horizontal"
@@ -41,7 +41,7 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="72dp"
+                android:layout_marginTop="@dimen/adservices_content_3x_padding"
                 android:layout_marginStart="0dp"
                 android:src="@drawable/ic_android_icon"
                 tools:ignore="ContentDescription" />
@@ -128,7 +128,7 @@
         app:layout_constraintStart_toStartOf="parent" >
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="@dimen/adservices_divider_height"
             android:background="@color/divider_color"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

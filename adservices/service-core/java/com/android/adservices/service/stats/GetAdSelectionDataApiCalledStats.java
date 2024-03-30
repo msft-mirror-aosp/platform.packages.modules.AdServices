@@ -16,10 +16,9 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
 
 import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.AdsRelevanceStatusUtils;
 
 import com.google.auto.value.AutoValue;
 

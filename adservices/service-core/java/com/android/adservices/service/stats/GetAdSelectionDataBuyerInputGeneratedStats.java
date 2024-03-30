@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+
 import com.google.auto.value.AutoValue;
 
 /** Class for buyer input generated for getAdSelectionData api stats. */
@@ -45,9 +47,25 @@ public abstract class GetAdSelectionDataBuyerInputGeneratedStats {
     /** Returns the variance of the size of the user bidding signals for this buyer input */
     public abstract float getUserBiddingSignalsSizeVarianceB();
 
+    /** Returns number of encoded signals payloads included in the auctions */
+    public abstract int getNumEncodedSignals();
+
+    /** Returns mean size of encoded signals payloads */
+    public abstract int getEncodedSignalsSizeMean();
+
+    /** Returns max size of encoded signals payloads */
+    public abstract int getEncodedSignalsSizeMax();
+
+    /** Returns min size of encoded signals payloads */
+    public abstract int getEncodedSignalsSizeMin();
+
     /** Returns a generic builder. */
     public static Builder builder() {
-        return new AutoValue_GetAdSelectionDataBuyerInputGeneratedStats.Builder();
+        return new AutoValue_GetAdSelectionDataBuyerInputGeneratedStats.Builder()
+                .setNumEncodedSignals(FIELD_UNSET)
+                .setEncodedSignalsSizeMax(FIELD_UNSET)
+                .setEncodedSignalsSizeMin(FIELD_UNSET)
+                .setEncodedSignalsSizeMean(FIELD_UNSET);
     }
 
     /** Builder class for GetAdSelectionDataBuyerInputGeneratedStats. */
@@ -81,6 +99,18 @@ public abstract class GetAdSelectionDataBuyerInputGeneratedStats {
         /** Sets the variance of the size of the user bidding signals for this buyer input */
         public abstract Builder setUserBiddingSignalsSizeVarianceB(
                 float userBiddingSignalsSizeVarianceB);
+
+        /** Sets number of encoded signals payloads included in the auctions */
+        public abstract Builder setNumEncodedSignals(int numEncodedSignals);
+
+        /** Sets mean size of encoded signals payloads */
+        public abstract Builder setEncodedSignalsSizeMean(int encodedSignalsSizeMean);
+
+        /** Sets max size of encoded signals payloads */
+        public abstract Builder setEncodedSignalsSizeMax(int encodedSignalsSizeMax);
+
+        /** Sets min size of encoded signals payloads */
+        public abstract Builder setEncodedSignalsSizeMin(int encodedSignalsSizeMin);
 
         /** Builds the {@link GetAdSelectionDataBuyerInputGeneratedStats} object. */
         public abstract GetAdSelectionDataBuyerInputGeneratedStats build();

@@ -23,10 +23,13 @@ import com.android.adservices.data.adselection.DBEncryptionKey;
 
 import com.google.common.collect.ImmutableList;
 
+import java.time.Instant;
 import java.util.List;
 
 public class DBEncryptionKeyFixture {
 
+    // TODO(b/331913693): Don't use this key to test expiry behaviour without setting explicitly
+    // creation instant
     public static final DBEncryptionKey.Builder ENCRYPTION_KEY_AUCTION_TTL_5SECS =
             DBEncryptionKey.builder()
                     .setKeyIdentifier("key_id_4")
@@ -34,6 +37,8 @@ public class DBEncryptionKeyFixture {
                     .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
                     .setExpiryTtlSeconds(5L);
 
+    // TODO(b/331913693): Don't use this key to test expiry behaviour without setting explicitly
+    // creation instant
     public static final DBEncryptionKey.Builder ENCRYPTION_KEY_JOIN_TTL_5SECS =
             DBEncryptionKey.builder()
                     .setKeyIdentifier("key_id_5")
@@ -41,9 +46,17 @@ public class DBEncryptionKeyFixture {
                     .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_JOIN)
                     .setExpiryTtlSeconds(5L);
 
-    public static List<DBEncryptionKey> getKeysExpiringInTtl(long expiryTtlSeconds) {
+    /** Return test encryption keys with explicit creation instant and TTL */
+    public static List<DBEncryptionKey> getKeysExpiringInTtl(
+            Instant creationInstant, long expiryTtlSeconds) {
         return ImmutableList.of(
-                ENCRYPTION_KEY_JOIN_TTL_5SECS.setExpiryTtlSeconds(expiryTtlSeconds).build(),
-                ENCRYPTION_KEY_AUCTION_TTL_5SECS.setExpiryTtlSeconds(expiryTtlSeconds).build());
+                ENCRYPTION_KEY_JOIN_TTL_5SECS
+                        .setCreationInstant(creationInstant)
+                        .setExpiryTtlSeconds(expiryTtlSeconds)
+                        .build(),
+                ENCRYPTION_KEY_AUCTION_TTL_5SECS
+                        .setCreationInstant(creationInstant)
+                        .setExpiryTtlSeconds(expiryTtlSeconds)
+                        .build());
     }
 }

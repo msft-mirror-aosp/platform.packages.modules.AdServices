@@ -74,13 +74,22 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
         if (!mAllCommandsMap.containsKey(cmd)) {
             Log.d(
                     AdServicesShellCommandHandler.TAG,
-                    String.format("Invalid command for Custom Audience Shell Factory: %s", cmd));
+                    String.format(
+                            "Invalid command for Ad Selection Command Shell Factory: %s", cmd));
             return null;
         }
-        if (!mIsConsentedDebugCliEnabled) {
-            return new NoOpShellCommand(cmd);
+        ShellCommand command = mAllCommandsMap.get(cmd);
+        switch (cmd) {
+            case ConsentedDebugShellCommand.CMD -> {
+                if (!mIsConsentedDebugCliEnabled) {
+                    return new NoOpShellCommand(cmd, command.getMetricsLoggerCommand());
+                }
+                return command;
+            }
+            default -> {
+                return null;
+            }
         }
-        return mAllCommandsMap.getOrDefault(cmd, null);
     }
 
     @Override

@@ -46,6 +46,11 @@ message ProtectedAuctionInput {
 
   // Consented debugging field.
   ConsentedDebugConfiguration consented_debug_config = 5;
+
+  // Optional.
+  // A boolean value which indicates whether temporary unlimited egress should
+  // be enabled.
+  bool enable_unlimited_egress = 6;
 }
 
 // Grouping of data pertaining to protected app signals.

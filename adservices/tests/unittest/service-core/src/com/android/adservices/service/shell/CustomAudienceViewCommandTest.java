@@ -18,6 +18,8 @@ package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson;
 import static com.android.adservices.service.shell.CustomAudienceHelper.getCustomAudienceFromJson;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_VIEW;
+import static com.android.adservices.service.stats.ShellCommandStats.Command;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -55,6 +57,8 @@ public final class CustomAudienceViewCommandTest
                             .setOwner(CUSTOM_AUDIENCE_1.getOwner())
                             .setIsDebuggable(CUSTOM_AUDIENCE_1.isDebuggable())
                             .build();
+    private static final @Command int EXPECTED_COMMAND = COMMAND_CUSTOM_AUDIENCE_VIEW;
+
     @Mock private CustomAudienceDao mCustomAudienceDao;
 
     @Test
@@ -62,6 +66,7 @@ public final class CustomAudienceViewCommandTest
         runAndExpectInvalidArgument(
                 new CustomAudienceViewCommand(mCustomAudienceDao),
                 CustomAudienceViewCommand.HELP,
+                EXPECTED_COMMAND,
                 CustomAudienceShellCommandFactory.COMMAND_PREFIX,
                 CustomAudienceViewCommand.CMD,
                 "--owner",
@@ -83,7 +88,7 @@ public final class CustomAudienceViewCommandTest
 
         Result actualResult = runCommandAndGetResult();
 
-        expectSuccess(actualResult);
+        expectSuccess(actualResult, EXPECTED_COMMAND);
         assertThat(getCustomAudienceFromJson(new JSONObject(actualResult.mOut)))
                 .isEqualTo(CUSTOM_AUDIENCE_1);
         assertThat(getCustomAudienceBackgroundFetchDataFromJson(new JSONObject(actualResult.mOut)))
@@ -103,7 +108,7 @@ public final class CustomAudienceViewCommandTest
 
         Result actualResult = runCommandAndGetResult();
 
-        expectSuccess(actualResult, "{}");
+        expectSuccess(actualResult, "{}", EXPECTED_COMMAND);
     }
 
     @Test
@@ -120,7 +125,7 @@ public final class CustomAudienceViewCommandTest
 
         Result actualResult = runCommandAndGetResult();
 
-        expectSuccess(actualResult, "{}");
+        expectSuccess(actualResult, "{}", EXPECTED_COMMAND);
     }
 
     @Test
@@ -140,7 +145,7 @@ public final class CustomAudienceViewCommandTest
 
         Result actualResult = runCommandAndGetResult();
 
-        expectSuccess(actualResult, "{}");
+        expectSuccess(actualResult, "{}", EXPECTED_COMMAND);
     }
 
     private Result runCommandAndGetResult() {

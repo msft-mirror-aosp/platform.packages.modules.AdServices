@@ -1369,6 +1369,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED;
     }
 
+    boolean FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED = false;
+
+    /** Returns {@code true} if App Install Filtering metrics is enabled. */
+    default boolean getFledgeAppInstallFilteringMetricsEnabled() {
+        return FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED;
+    }
+
+    boolean FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED = false;
+
+    /** Returns {@code true} if Frequency Cap Filtering metrics is enabled. */
+    default boolean getFledgeFrequencyCapFilteringMetricsEnabled() {
+        return FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED;
+    }
+
     // Enable FLEDGE fetchAndJoinCustomAudience API.
     boolean FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED = false;
 
@@ -1748,6 +1762,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default long getFledgeAuctionServerAdIdFetcherTimeoutMs() {
         return DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
+    }
+
+    /** Default value for feature flag for PAS unlimited egress in Server auctions. */
+    boolean DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS = true;
+
+    /**
+     * @return feature flag to enable PAS unlimited egress in Server auctions
+     */
+    default boolean getFledgeAuctionServerEnablePasUnlimitedEgress() {
+        return DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS;
     }
 
     boolean FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED = false;

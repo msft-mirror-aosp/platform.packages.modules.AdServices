@@ -25,6 +25,7 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Factory class to provide implementation for {@link ConsentedDebugConfigurationGenerator} based on
@@ -52,7 +53,7 @@ public class ConsentedDebugConfigurationGeneratorFactory {
      */
     public ConsentedDebugConfigurationGenerator create() {
         if (mConsentedDebugConfigurationEnabled) {
-            return protectedAuctionInputBuilder -> {
+            return () -> {
                 List<DBConsentedDebugConfiguration> dbConsentedDebugConfigurationList =
                         mConsentedDebugConfigurationDao.getAllActiveConsentedDebugConfigurations(
                                 Instant.now(), 1);
@@ -60,20 +61,18 @@ public class ConsentedDebugConfigurationGeneratorFactory {
                         && !dbConsentedDebugConfigurationList.isEmpty()) {
                     DBConsentedDebugConfiguration dbConsentedDebugConfiguration =
                             dbConsentedDebugConfigurationList.get(0);
-                    ConsentedDebugConfiguration consentedDebugConfiguration =
+                    return Optional.of(
                             ConsentedDebugConfiguration.newBuilder()
                                     .setIsConsented(
                                             dbConsentedDebugConfiguration.getIsConsentProvided())
                                     .setToken(dbConsentedDebugConfiguration.getDebugToken())
                                     .setIsDebugInfoInResponse(false)
-                                    .build();
-                    protectedAuctionInputBuilder.setConsentedDebugConfig(
-                            consentedDebugConfiguration);
+                                    .build());
                 }
-                return protectedAuctionInputBuilder;
+                return Optional.empty();
             };
         } else {
-            return protectedAuctionInputBuilder -> protectedAuctionInputBuilder;
+            return () -> Optional.empty();
         }
     }
 }

@@ -28,7 +28,6 @@ import com.android.adservices.download.MddJob;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
@@ -93,8 +92,7 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
                                 flags.getAdServicesModuleJobPolicy());
                 sSingleton =
                         new AdServicesJobServiceFactory(
-                                AdServicesJobServiceLogger.getInstance(
-                                        ApplicationContextSingleton.get()),
+                                AdServicesJobServiceLogger.getInstance(),
                                 new JobSchedulingLogger(
                                         new AdServicesStatsdJobServiceLogger(),
                                         AdServicesExecutors.getBackgroundExecutor(),

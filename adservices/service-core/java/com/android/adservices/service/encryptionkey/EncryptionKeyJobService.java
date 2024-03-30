@@ -61,7 +61,7 @@ public class EncryptionKeyJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(ENCRYPTION_KEY_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(ENCRYPTION_KEY_JOB_ID);
 
         if (FlagsFactory.getFlags().getEncryptionKeyPeriodicFetchKillSwitch()) {
             LogUtil.e(
@@ -75,7 +75,7 @@ public class EncryptionKeyJobService extends JobService {
                 sBlockingExecutor.submit(
                         () -> {
                             fetchAndUpdateEncryptionKeys();
-                            AdServicesJobServiceLogger.getInstance(EncryptionKeyJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             ENCRYPTION_KEY_JOB_ID,
                                             /* isSuccessful */ true,
@@ -93,7 +93,7 @@ public class EncryptionKeyJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, ENCRYPTION_KEY_JOB_ID, shouldRetry);
         return shouldRetry;
     }

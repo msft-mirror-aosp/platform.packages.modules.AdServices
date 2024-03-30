@@ -84,7 +84,7 @@ public abstract class DBEncryptionKey {
     /** Returns an AutoValue builder for a {@link DBEncryptionKey} entity. */
     @NonNull
     public static DBEncryptionKey.Builder builder() {
-        return new AutoValue_DBEncryptionKey.Builder();
+        return new AutoValue_DBEncryptionKey.Builder().setCreationInstant(Instant.now());
     }
 
     /**
@@ -124,19 +124,16 @@ public abstract class DBEncryptionKey {
         /** Public key of an asymmetric key pair represented by this encryptionKey. */
         public abstract Builder setPublicKey(String publicKey);
 
+        /** Creation instant for the key. */
+        public abstract Builder setCreationInstant(Instant creationInstant);
+
         /** Ttl in seconds for the EncryptionKey. */
         public abstract Builder setExpiryTtlSeconds(Long expiryTtlSeconds);
-
-        /** Creation instant for the key. */
-        abstract Builder setCreationInstant(Instant creationInstant);
 
         /** Expiry instant for the key. */
         abstract Builder setExpiryInstant(Instant expiryInstant);
 
         abstract Instant getCreationInstant();
-
-        abstract Instant getExpiryInstant();
-
         abstract Long getExpiryTtlSeconds();
 
         abstract DBEncryptionKey autoBuild();
@@ -145,9 +142,7 @@ public abstract class DBEncryptionKey {
         public final DBEncryptionKey build() {
             // TODO(b/284445328): Set creation Instant as the instant key was fetched.
             // This would allow accurate computation of expiry instant as fetchInstant + maxage.
-            Instant creationInstant = Instant.now();
-            setCreationInstant(creationInstant);
-            setExpiryInstant(creationInstant.plusSeconds(getExpiryTtlSeconds()));
+            setExpiryInstant(getCreationInstant().plusSeconds(getExpiryTtlSeconds()));
             return autoBuild();
         }
     }

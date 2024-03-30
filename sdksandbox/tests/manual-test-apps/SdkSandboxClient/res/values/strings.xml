@@ -42,6 +42,7 @@
     <string name="view">View</string>
     <string name="view_type">View Type</string>
     <string name="video_url">Video URL</string>
+    <string name="video_app_label">This is an app video (NOT FROM SANDBOX)</string>
     <string name="behaviour">Behaviour</string>
     <string name="on_click">On Click</string>
     <string name="on_click_package">Package To Open</string>

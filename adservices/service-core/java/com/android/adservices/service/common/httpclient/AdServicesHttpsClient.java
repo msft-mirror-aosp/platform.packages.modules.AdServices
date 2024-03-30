@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.common.httpclient;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_NETWORK_FAILURE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_TIMEOUT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_UNSET;
 import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
 
 import android.adservices.exceptions.AdServicesNetworkException;
@@ -33,6 +37,8 @@ import com.android.adservices.service.common.cache.DBCacheEntry;
 import com.android.adservices.service.common.cache.HttpCache;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.stats.pas.FetchProcessLogger;
+import com.android.adservices.service.stats.pas.FetchProcessLoggerNoLoggingImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Charsets;
@@ -276,6 +282,21 @@ public class AdServicesHttpsClient {
     @NonNull
     public ListenableFuture<AdServicesHttpClientResponse> fetchPayload(
             @NonNull AdServicesHttpClientRequest request) {
+        return fetchPayloadWithLogging(request, new FetchProcessLoggerNoLoggingImpl());
+    }
+
+    /**
+     * Performs a GET request on the given URI in order to fetch a payload
+     * with EncodingFetchStats logging.
+     *
+     * @param request of type {@link AdServicesHttpClientRequest}
+     * @param fetchProcessLogger of {@link FetchProcessLogger}
+     * @return a string containing the fetched payload
+     */
+    @NonNull
+    public ListenableFuture<AdServicesHttpClientResponse> fetchPayloadWithLogging(
+            @NonNull AdServicesHttpClientRequest request,
+            @NonNull FetchProcessLogger fetchProcessLogger) {
         Objects.requireNonNull(request.getUri());
 
         StringBuilder logBuilder =
@@ -304,7 +325,11 @@ public class AdServicesHttpsClient {
                         (closer, url) ->
                                 ClosingFuture.from(
                                         mExecutorService.submit(
-                                                () -> doFetchPayload(url, closer, request))),
+                                                () -> doFetchPayload(
+                                                        url,
+                                                        closer,
+                                                        request,
+                                                        fetchProcessLogger))),
                         mExecutorService)
                 .finishToFuture();
     }
@@ -312,13 +337,17 @@ public class AdServicesHttpsClient {
     private AdServicesHttpClientResponse doFetchPayload(
             @NonNull URL url,
             @NonNull ClosingFuture.DeferredCloser closer,
-            AdServicesHttpClientRequest request)
+            AdServicesHttpClientRequest request,
+            FetchProcessLogger fetchProcessLogger)
             throws IOException, AdServicesNetworkException {
+        int jsFetchStatusCode = ENCODING_FETCH_STATUS_UNSET;
         int traceCookie = Tracing.beginAsyncSection(Tracing.FETCH_PAYLOAD);
         LogUtil.v("Downloading payload from: \"%s\"", url.toString());
         if (request.getUseCache()) {
             AdServicesHttpClientResponse cachedResponse = getResultsFromCache(url);
             if (cachedResponse != null) {
+                jsFetchStatusCode = ENCODING_FETCH_STATUS_SUCCESS;
+                fetchProcessLogger.logEncodingJsFetchStats(jsFetchStatusCode);
                 return cachedResponse;
             }
             LogUtil.v("Cache miss for url: %s", url.toString());
@@ -329,6 +358,8 @@ public class AdServicesHttpsClient {
             urlConnection = setupConnection(url, request.getDevContext());
         } catch (IOException e) {
             LogUtil.d(e, "Failed to open URL");
+            jsFetchStatusCode = ENCODING_FETCH_STATUS_NETWORK_FAILURE;
+            fetchProcessLogger.logEncodingJsFetchStats(jsFetchStatusCode);
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
@@ -362,14 +393,18 @@ public class AdServicesHttpsClient {
                                                 .putAll(responseHeadersMap.entrySet())
                                                 .build())
                                 .build();
+                jsFetchStatusCode = ENCODING_FETCH_STATUS_SUCCESS;
                 return response;
             } else {
+                jsFetchStatusCode = ENCODING_FETCH_STATUS_NETWORK_FAILURE;
                 throwError(urlConnection, responseCode);
                 return null;
             }
         } catch (SocketTimeoutException e) {
+            jsFetchStatusCode = ENCODING_FETCH_STATUS_TIMEOUT;
             throw new IOException("Connection timed out while reading response!", e);
         } finally {
+            fetchProcessLogger.logEncodingJsFetchStats(jsFetchStatusCode);
             maybeDisconnect(urlConnection);
             maybeClose(inputStream);
             Tracing.endAsyncSection(Tracing.HTTP_REQUEST, httpTraceCookie);

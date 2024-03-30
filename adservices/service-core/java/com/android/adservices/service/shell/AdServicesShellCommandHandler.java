@@ -27,6 +27,7 @@ import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessC
 import android.annotation.Nullable;
 import android.util.Log;
 
+import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -176,7 +177,19 @@ public final class AdServicesShellCommandHandler {
                     mErr.println("Use -h for help.");
                     return RESULT_GENERIC_ERROR;
                 }
-                return shellCommand.run(mOut, mErr, mArgs);
+                ShellCommandResult shellCommandResult = shellCommand.run(mOut, mErr, mArgs);
+                return convertToExternalResultCode(shellCommandResult.getResultCode());
+        }
+    }
+
+    private int convertToExternalResultCode(@ShellCommandStats.CommandResult int commandResult) {
+        switch (commandResult) {
+            case ShellCommandStats.RESULT_SUCCESS -> {
+                return RESULT_OK;
+            }
+            default -> {
+                return RESULT_GENERIC_ERROR;
+            }
         }
     }
 }

@@ -111,7 +111,8 @@ public abstract class DBProtectedServersEncryptionConfig {
     /** Returns an AutoValue builder for a {@link DBProtectedServersEncryptionConfig} entity. */
     @NonNull
     public static DBProtectedServersEncryptionConfig.Builder builder() {
-        return new AutoValue_DBProtectedServersEncryptionConfig.Builder();
+        return new AutoValue_DBProtectedServersEncryptionConfig.Builder()
+                .setCreationInstant(Instant.now());
     }
 
     /**
@@ -172,10 +173,12 @@ public abstract class DBProtectedServersEncryptionConfig {
         public abstract Builder setExpiryTtlSeconds(Long expiryTtlSeconds);
 
         /** Creation instant for the key. */
-        abstract Builder setCreationInstant(Instant creationInstant);
+        public abstract Builder setCreationInstant(Instant creationInstant);
 
         /** Expiry instant for the key. */
         abstract Builder setExpiryInstant(Instant expiryInstant);
+
+        abstract Instant getCreationInstant();
 
         abstract Long getExpiryTtlSeconds();
 
@@ -185,10 +188,7 @@ public abstract class DBProtectedServersEncryptionConfig {
         public final DBProtectedServersEncryptionConfig build() {
             // TODO(b/284445328): Set creation Instant as the instant key was fetched.
             // This would allow accurate computation of expiry instant as fetchInstant + maxage.
-            Instant creationInstant = Instant.now();
-            setCreationInstant(creationInstant);
-            setExpiryInstant(creationInstant.plusSeconds(getExpiryTtlSeconds()));
-
+            setExpiryInstant(getCreationInstant().plusSeconds(getExpiryTtlSeconds()));
             return autoBuild();
         }
     }

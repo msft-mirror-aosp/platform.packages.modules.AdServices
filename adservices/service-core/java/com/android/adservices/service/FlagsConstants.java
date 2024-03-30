@@ -560,8 +560,12 @@ public final class FlagsConstants {
             "fledge_ad_selection_filtering_enabled";
     public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED =
             "fledge_app_install_filtering_enabled";
+    public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED =
+            "fledge_app_install_filtering_metrics_enabled";
     public static final String KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED =
             "fledge_frequency_cap_filtering_enabled";
+    public static final String KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED =
+            "fledge_frequency_cap_filtering_metrics_enabled";
     public static final String KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED =
             "fledge_ad_selection_contextual_ads_enabled";
     public static final String KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED =
@@ -712,6 +716,8 @@ public final class FlagsConstants {
             "fledge_auction_server_enable_debug_reporting";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS =
             "fledge_auction_server_ad_id_fetcher_timeout_ms";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS =
+            "fledge_auction_server_enable_pas_unlimited_egress";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH =
             "fledge_auction_server_ad_render_id_max_length";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED =

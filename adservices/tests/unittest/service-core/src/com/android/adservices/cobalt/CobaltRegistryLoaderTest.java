@@ -16,6 +16,7 @@
 
 package com.android.adservices.cobalt;
 
+import static com.google.cobalt.ReleaseStage.DOGFOOD;
 import static com.google.common.truth.Truth.assertThat;
 
 import static java.util.stream.Collectors.toList;
@@ -49,6 +50,7 @@ import java.util.List;
 @RunWith(AndroidJUnit4.class)
 public class CobaltRegistryLoaderTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+    private static final String REPORT_NAME_DOGFOOD_SUFFIX = "_dogfood";
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -80,6 +82,9 @@ public class CobaltRegistryLoaderTest {
                     .isAnyOf(ReportType.FLEETWIDE_OCCURRENCE_COUNTS, ReportType.STRING_COUNTS);
             if (report.getReportType() == ReportType.STRING_COUNTS) {
                 assertThat(report.getPrivacyLevel()).isEqualTo(PrivacyLevel.NO_ADDED_PRIVACY);
+            }
+            if (report.getReportName().endsWith(REPORT_NAME_DOGFOOD_SUFFIX)) {
+                assertThat(report.getMaxReleaseStage()).isEqualTo(DOGFOOD);
             }
             assertThat(report.getReportingInterval()).isEqualTo(ReportingInterval.DAYS_1);
             assertThat(report.getLocalAggregationProcedure())

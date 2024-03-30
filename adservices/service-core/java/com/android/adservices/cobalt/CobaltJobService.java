@@ -69,7 +69,7 @@ public final class CobaltJobService extends JobService {
 
         // Record the invocation of onStartJob() for logging purpose.
         LogUtil.d("CobaltJobService.onStartJob");
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(COBALT_LOGGING_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(COBALT_LOGGING_JOB_ID);
 
         if (!flags.getCobaltLoggingEnabled()) {
             LogUtil.d(
@@ -104,7 +104,7 @@ public final class CobaltJobService extends JobService {
                         // Tell the JobScheduler that the job has completed and does not
                         // need to be rescheduled.
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance(CobaltJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         COBALT_LOGGING_JOB_ID,
                                         /* isSuccessful= */ true,
@@ -119,7 +119,7 @@ public final class CobaltJobService extends JobService {
                         // When failure, also tell the JobScheduler that the job has completed and
                         // does not need to be rescheduled.
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance(CobaltJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         COBALT_LOGGING_JOB_ID,
                                         /* isSuccessful= */ false,
@@ -138,7 +138,7 @@ public final class CobaltJobService extends JobService {
         // execution is completed or not to avoid executing the task twice.
         boolean shouldRetry = false;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, COBALT_LOGGING_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -203,7 +203,7 @@ public final class CobaltJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this).recordJobSkipped(jobId, skipReason);
+            AdServicesJobServiceLogger.getInstance().recordJobSkipped(jobId, skipReason);
         }
 
         // Tell the JobScheduler that the job has completed and does not need to be

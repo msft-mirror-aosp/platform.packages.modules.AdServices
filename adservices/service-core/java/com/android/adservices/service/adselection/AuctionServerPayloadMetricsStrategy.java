@@ -18,10 +18,10 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.AdsRelevanceStatusUtils;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
@@ -58,4 +58,16 @@ public interface AuctionServerPayloadMetricsStrategy {
             Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats,
             DBCustomAudience dbCustomAudience,
             BiddingAuctionServers.BuyerInput.CustomAudience customAudience);
+
+    /**
+     * Loops thorough each buyer and logs {@link
+     * com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats}
+     * with extended PAS metrics
+     */
+    void logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+            Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> statsMap,
+            int encodedSignalsCount,
+            int encodedSignalsTotalSizeInBytes,
+            int encodedSignalsMaxSizeInBytes,
+            int encodedSignalsMinSizeInBytes);
 }

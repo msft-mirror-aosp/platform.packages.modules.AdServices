@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SUCCESS;
-import static android.adservices.common.AdsRelevanceStatusUtils.SIZE_MEDIUM;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;

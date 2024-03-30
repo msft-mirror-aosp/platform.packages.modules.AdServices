@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.common.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 
 import static org.mockito.Mockito.verifyZeroInteractions;
 
@@ -81,5 +81,18 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
         mAuctionServerPayloadMetricsStrategy.addToBuyerIntermediateStats(
                 mPerBuyerStatsMock, mDBCustomAudienceMock, mCustomAudienceMock);
         verifyZeroInteractions(mPerBuyerStatsMock, mDBCustomAudienceMock, mCustomAudienceMock);
+    }
+
+    @Test
+    public void
+        testLogGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetricsDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy
+                .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+                        mPerBuyerStatsMock,
+                        /* encodedSignalsCount */ 0,
+                        /* encodedSignalsTotalSizeInBytes */ 0,
+                        /* encodedSignalsMaxSizeInBytes */ 0,
+                        /* encodedSignalsMinSizeInBytes */ 0);
+        verifyZeroInteractions(mPerBuyerStatsMock);
     }
 }

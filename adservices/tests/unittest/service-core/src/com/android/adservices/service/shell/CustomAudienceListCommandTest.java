@@ -18,6 +18,7 @@ package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson;
 import static com.android.adservices.service.shell.CustomAudienceHelper.getCustomAudienceFromJson;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_LIST;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -64,6 +65,7 @@ public final class CustomAudienceListCommandTest
                             .setOwner(CUSTOM_AUDIENCE_2.getOwner())
                             .setIsDebuggable(CUSTOM_AUDIENCE_2.isDebuggable())
                             .build();
+    private static final int EXPECTED_COMMAND = COMMAND_CUSTOM_AUDIENCE_LIST;
 
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Test
@@ -77,7 +79,7 @@ public final class CustomAudienceListCommandTest
 
         Result actualResult = runCommandAndGetResult();
 
-        expectSuccess(actualResult);
+        expectSuccess(actualResult, EXPECTED_COMMAND);
         JSONArray jsonArray = new JSONObject(actualResult.mOut).getJSONArray("custom_audiences");
         assertWithMessage("Length of JsonArray (%s)", jsonArray)
                 .that(jsonArray.length())
@@ -99,7 +101,7 @@ public final class CustomAudienceListCommandTest
 
         Result actualResult = runCommandAndGetResult();
 
-        expectSuccess(actualResult);
+        expectSuccess(actualResult, EXPECTED_COMMAND);
         JSONArray jsonArray = new JSONObject(actualResult.mOut).getJSONArray("custom_audiences");
         assertWithMessage("Length of JsonArray (%s)", jsonArray)
                 .that(jsonArray.length())
@@ -115,6 +117,7 @@ public final class CustomAudienceListCommandTest
         runAndExpectInvalidArgument(
                 new CustomAudienceListCommand(mCustomAudienceDao),
                 CustomAudienceListCommand.HELP,
+                EXPECTED_COMMAND,
                 CustomAudienceListCommand.CMD,
                 "--owner",
                 "valid-owner");
@@ -129,7 +132,7 @@ public final class CustomAudienceListCommandTest
 
         Result actualResult = runCommandAndGetResult();
 
-        expectSuccess(actualResult);
+        expectSuccess(actualResult, EXPECTED_COMMAND);
         JSONArray jsonArray = new JSONObject(actualResult.mOut).getJSONArray("custom_audiences");
         assertWithMessage("Length of JsonArray (%s)", jsonArray)
                 .that(jsonArray.length())
@@ -150,7 +153,7 @@ public final class CustomAudienceListCommandTest
 
         Result actualResult = runCommandAndGetResult();
 
-        expectSuccess(actualResult);
+        expectSuccess(actualResult, EXPECTED_COMMAND);
         JSONArray jsonArray = new JSONObject(actualResult.mOut).getJSONArray("custom_audiences");
         assertWithMessage("Length of JsonArray (%s)", jsonArray)
                 .that(jsonArray.length())

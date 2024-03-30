@@ -17,6 +17,10 @@
 package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.AbstractShellCommand.ERROR_TEMPLATE_INVALID_ARGS;
+import static com.android.adservices.service.stats.ShellCommandStats.Command;
+import static com.android.adservices.service.stats.ShellCommandStats.CommandResult;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_INVALID_ARGS;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 
@@ -39,42 +43,50 @@ public abstract class ShellCommandTestCase<T extends ShellCommand>
         StringWriter errStringWriter = new StringWriter();
         PrintWriter errPw = new PrintWriter(errStringWriter);
 
-        int status = cmd.run(outPw, errPw, args);
+        ShellCommandResult result = cmd.run(outPw, errPw, args);
         String out = getResultAndClosePrintWriter(outPw, outStringWriter);
         String err = getResultAndClosePrintWriter(errPw, errStringWriter);
-        return new Result(out, err, status);
+        return new Result(out, err, result.getResultCode(), result.getCommand());
     }
 
     /**
      * Expects success in the result and the expected output from the execution of the Shell
      * Command.
      */
-    public void expectSuccess(Result actual, String expectedOut) {
-        expect.withMessage("result").that(actual.mStatus).isEqualTo(0);
+    public void expectSuccess(Result actual, String expectedOut, @Command int expectedCommand) {
+        expect.withMessage("resultCode").that(actual.mResultCode).isEqualTo(RESULT_SUCCESS);
         expect.withMessage("out").that(actual.mOut).isEqualTo(expectedOut);
         expect.withMessage("err").that(actual.mErr).isEmpty();
+        expect.withMessage("command").that(actual.mCommand).isEqualTo(expectedCommand);
     }
 
     /** Expects success in the result from the execution of the Shell Command. */
-    public void expectSuccess(Result actual) {
-        expect.withMessage("result").that(actual.mStatus).isEqualTo(0);
+    public void expectSuccess(Result actual, @Command int expectedCommand) {
+        expect.withMessage("resultCode").that(actual.mResultCode).isEqualTo(RESULT_SUCCESS);
         expect.withMessage("err").that(actual.mErr).isEmpty();
+        expect.withMessage("command").that(actual.mCommand).isEqualTo(expectedCommand);
     }
 
     /** Expects failure in the result from the execution of the Shell Command. */
-    public void expectFailure(Result actual, String expectedErr) {
-        expect.withMessage("result").that(actual.mStatus).isLessThan(0);
+    public void expectFailure(
+            Result actual,
+            String expectedErr,
+            @Command int expectedCommand,
+            @CommandResult int expectedCommandResult) {
+        expect.withMessage("resultCode").that(actual.mResultCode).isEqualTo(expectedCommandResult);
         expect.withMessage("out").that(actual.mOut).isEmpty();
         expect.withMessage("err").that(actual.mErr).endsWith(expectedErr);
+        expect.withMessage("command").that(actual.mCommand).isEqualTo(expectedCommand);
     }
 
     /** Expects invalid arguments in the result from the execution of the Shell Command. */
-    public void runAndExpectInvalidArgument(T cmd, String syntax, String... args) {
+    public void runAndExpectInvalidArgument(
+            T cmd, String syntax, @Command int expectedCommand, String... args) {
         Result actualResult = run(cmd, args);
         String expectedErr =
                 String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax);
 
-        expectFailure(actualResult, expectedErr);
+        expectFailure(actualResult, expectedErr, expectedCommand, RESULT_INVALID_ARGS);
     }
 
     private String getResultAndClosePrintWriter(PrintWriter pw, StringWriter sw) {
@@ -88,12 +100,14 @@ public abstract class ShellCommandTestCase<T extends ShellCommand>
     public static final class Result {
         public final String mOut;
         public final String mErr;
-        public final int mStatus;
+        public final int mResultCode;
+        public final int mCommand;
 
-        Result(String out, String err, int status) {
+        Result(String out, String err, int resultCode, int command) {
             mOut = out;
             mErr = err;
-            mStatus = status;
+            mResultCode = resultCode;
+            mCommand = command;
         }
     }
 }

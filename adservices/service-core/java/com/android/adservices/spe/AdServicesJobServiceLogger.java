@@ -21,6 +21,7 @@ import android.content.Context;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
@@ -53,12 +54,12 @@ public final class AdServicesJobServiceLogger extends JobServiceLogger {
     }
 
     /** Get a singleton instance of {@link JobServiceLogger} to be used. */
-    public static AdServicesJobServiceLogger getInstance(Context context) {
+    public static AdServicesJobServiceLogger getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
                         new AdServicesJobServiceLogger(
-                                context,
+                                ApplicationContextSingleton.get(),
                                 Clock.getInstance(),
                                 new AdServicesStatsdJobServiceLogger(),
                                 AdServicesErrorLoggerImpl.getInstance(),

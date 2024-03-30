@@ -65,7 +65,7 @@ public final class DebugReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(DEBUG_REPORT_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(DEBUG_REPORT_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
             LoggerFactory.getMeasurementLogger().e("DebugReportingJobService is disabled");
@@ -77,7 +77,7 @@ public final class DebugReportingJobService extends JobService {
                 sBlockingExecutor.submit(
                         () -> {
                             sendReports();
-                            AdServicesJobServiceLogger.getInstance(DebugReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             DEBUG_REPORT_JOB_ID,
                                             /* isSuccessful */ true,
@@ -94,7 +94,7 @@ public final class DebugReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, DEBUG_REPORT_JOB_ID, shouldRetry);
         return shouldRetry;
     }

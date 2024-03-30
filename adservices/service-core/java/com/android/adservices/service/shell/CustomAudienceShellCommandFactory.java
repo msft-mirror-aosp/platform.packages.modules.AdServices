@@ -90,10 +90,11 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
                     String.format("Invalid command for Custom Audience Shell Factory: %s", cmd));
             return null;
         }
+        ShellCommand command = mAllCommandsMap.get(cmd);
         if (!mIsCustomAudienceCliEnabled) {
-            return new NoOpShellCommand(cmd);
+            return new NoOpShellCommand(cmd, command.getMetricsLoggerCommand());
         }
-        return mAllCommandsMap.getOrDefault(cmd, null);
+        return command;
     }
 
     @Override

@@ -22,7 +22,6 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.DBConsentedDebugConfiguration;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ConsentedDebugConfiguration;
-import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 
 import com.google.common.truth.Truth;
 
@@ -34,20 +33,14 @@ import org.mockito.Mockito;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ConsentedDebugConfigurationGeneratorFactoryTest extends AdServicesMockitoTestCase {
     private static final String DEBUG_TOKEN = UUID.randomUUID().toString();
-    private static final String EMPTY_DEBUG_TOKEN = "";
     private static final Instant CREATION_TIMESTAMP = FIXED_NOW;
     private static final Duration EXPIRY_DURATION = Duration.ofDays(1);
     private static final Instant EXPIRY_TIMESTAMP = CREATION_TIMESTAMP.plus(EXPIRY_DURATION);
-    private static final ConsentedDebugConfiguration DISABLED_CONSENTED_DEBUG_CONFIGURATION =
-            ConsentedDebugConfiguration.newBuilder()
-                    .setIsConsented(false)
-                    .setToken(EMPTY_DEBUG_TOKEN)
-                    .setIsDebugInfoInResponse(false)
-                    .build();
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
 
     private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
@@ -75,15 +68,17 @@ public class ConsentedDebugConfigurationGeneratorFactoryTest extends AdServicesM
                         mConsentedDebugConfigurationDao.getAllActiveConsentedDebugConfigurations(
                                 Mockito.any(Instant.class), Mockito.anyInt()))
                 .thenReturn(List.of(dbConsentedDebugConfiguration));
-        ProtectedAuctionInput.Builder builder = ProtectedAuctionInput.newBuilder();
 
         mConsentedDebugConfigurationGenerator =
                 getConsentedDebugConfigurationGenerator(isConsented);
-        builder = mConsentedDebugConfigurationGenerator.setConsentedDebugConfiguration(builder);
+        Optional<ConsentedDebugConfiguration> actual =
+                mConsentedDebugConfigurationGenerator.getConsentedDebugConfiguration();
 
-        ProtectedAuctionInput protectedAuctionInput = builder.build();
-        ConsentedDebugConfiguration actual = protectedAuctionInput.getConsentedDebugConfig();
-        Truth.assertThat(actual).isEqualTo(expected);
+        Truth.assertThat(actual.isPresent()).isTrue();
+        Truth.assertThat(actual.get()).isEqualTo(expected);
+        Mockito.verify(mConsentedDebugConfigurationDao)
+                .getAllActiveConsentedDebugConfigurations(
+                        Mockito.any(Instant.class), Mockito.anyInt());
     }
 
     @Test
@@ -93,15 +88,16 @@ public class ConsentedDebugConfigurationGeneratorFactoryTest extends AdServicesM
                         mConsentedDebugConfigurationDao.getAllActiveConsentedDebugConfigurations(
                                 Mockito.any(Instant.class), Mockito.anyInt()))
                 .thenReturn(List.of());
-        ProtectedAuctionInput.Builder builder = ProtectedAuctionInput.newBuilder();
 
         mConsentedDebugConfigurationGenerator =
                 getConsentedDebugConfigurationGenerator(isConsented);
-        builder = mConsentedDebugConfigurationGenerator.setConsentedDebugConfiguration(builder);
+        Optional<ConsentedDebugConfiguration> actual =
+                mConsentedDebugConfigurationGenerator.getConsentedDebugConfiguration();
 
-        ProtectedAuctionInput protectedAuctionInput = builder.build();
-        ConsentedDebugConfiguration actual = protectedAuctionInput.getConsentedDebugConfig();
-        Truth.assertThat(actual).isEqualTo(DISABLED_CONSENTED_DEBUG_CONFIGURATION);
+        Truth.assertThat(actual.isPresent()).isFalse();
+        Mockito.verify(mConsentedDebugConfigurationDao)
+                .getAllActiveConsentedDebugConfigurations(
+                        Mockito.any(Instant.class), Mockito.anyInt());
     }
 
     @Test
@@ -111,29 +107,29 @@ public class ConsentedDebugConfigurationGeneratorFactoryTest extends AdServicesM
                         mConsentedDebugConfigurationDao.getAllActiveConsentedDebugConfigurations(
                                 Mockito.any(Instant.class), Mockito.anyInt()))
                 .thenReturn(null);
-        ProtectedAuctionInput.Builder builder = ProtectedAuctionInput.newBuilder();
 
         mConsentedDebugConfigurationGenerator =
                 getConsentedDebugConfigurationGenerator(isConsented);
-        builder = mConsentedDebugConfigurationGenerator.setConsentedDebugConfiguration(builder);
+        Optional<ConsentedDebugConfiguration> actual =
+                mConsentedDebugConfigurationGenerator.getConsentedDebugConfiguration();
 
-        ProtectedAuctionInput protectedAuctionInput = builder.build();
-        ConsentedDebugConfiguration actual = protectedAuctionInput.getConsentedDebugConfig();
-        Truth.assertThat(actual).isEqualTo(DISABLED_CONSENTED_DEBUG_CONFIGURATION);
+        Truth.assertThat(actual.isPresent()).isFalse();
+        Mockito.verify(mConsentedDebugConfigurationDao)
+                .getAllActiveConsentedDebugConfigurations(
+                        Mockito.any(Instant.class), Mockito.anyInt());
     }
 
     @Test
     public void testSetConsentedDebugConfiguration_doesNotPopulateWhenDisabled() {
-        boolean isConsented = true;
-        ProtectedAuctionInput.Builder builder = ProtectedAuctionInput.newBuilder();
 
-        mConsentedDebugConfigurationGenerator =
-                getConsentedDebugConfigurationGenerator(isConsented);
-        builder = mConsentedDebugConfigurationGenerator.setConsentedDebugConfiguration(builder);
+        mConsentedDebugConfigurationGenerator = getConsentedDebugConfigurationGenerator(false);
+        Optional<ConsentedDebugConfiguration> actual =
+                mConsentedDebugConfigurationGenerator.getConsentedDebugConfiguration();
 
-        ProtectedAuctionInput protectedAuctionInput = builder.build();
-        ConsentedDebugConfiguration actual = protectedAuctionInput.getConsentedDebugConfig();
-        Truth.assertThat(actual).isEqualTo(DISABLED_CONSENTED_DEBUG_CONFIGURATION);
+        Truth.assertThat(actual.isPresent()).isFalse();
+        Mockito.verify(mConsentedDebugConfigurationDao, Mockito.never())
+                .getAllActiveConsentedDebugConfigurations(
+                        Mockito.any(Instant.class), Mockito.anyInt());
     }
 
     private ConsentedDebugConfigurationGenerator getConsentedDebugConfigurationGenerator(

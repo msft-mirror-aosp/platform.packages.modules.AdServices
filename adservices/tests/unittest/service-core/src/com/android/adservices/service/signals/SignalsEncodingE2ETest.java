@@ -59,6 +59,7 @@ import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdCounterKeyCopierNoOpImpl;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.adselection.DebugReportingScriptDisabledStrategy;
@@ -94,6 +95,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
@@ -167,6 +169,7 @@ public class SignalsEncodingE2ETest {
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
     private AdServicesHttpsClient mAdServicesHttpsClient;
+    private Flags mFlags;
 
     @Before
     public void setup() {
@@ -199,6 +202,7 @@ public class SignalsEncodingE2ETest {
 
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(mBackgroundExecutorService, 2000, 2000, 10000);
+        mFlags = FlagsFactory.getFlagsForTest();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
@@ -206,7 +210,9 @@ public class SignalsEncodingE2ETest {
                         mEncoderLogicMetadataDao,
                         mSignalsDao,
                         mAdServicesHttpsClient,
-                        mBackgroundExecutorService);
+                        mBackgroundExecutorService,
+                        mAdServicesLoggerMock,
+                        mFlags);
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
         mSignalEvictionController = new SignalEvictionController(ImmutableList.of(), 0, 0);

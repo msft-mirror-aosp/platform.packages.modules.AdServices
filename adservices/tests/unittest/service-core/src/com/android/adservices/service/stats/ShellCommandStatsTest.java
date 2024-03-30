@@ -29,8 +29,8 @@ public final class ShellCommandStatsTest extends AdServicesUnitTestCase {
         int latency = 1000;
         ShellCommandStats stats = new ShellCommandStats(command, result, latency);
 
-        expect.withMessage("command").that(stats.command).isEqualTo(command);
-        expect.withMessage("result").that(stats.result).isEqualTo(result);
-        expect.withMessage("latency").that(stats.latencyMillis).isEqualTo(latency);
+        expect.withMessage("command").that(stats.getCommand()).isEqualTo(command);
+        expect.withMessage("result").that(stats.getResult()).isEqualTo(result);
+        expect.withMessage("latency").that(stats.getLatencyMillis()).isEqualTo(latency);
     }
 }

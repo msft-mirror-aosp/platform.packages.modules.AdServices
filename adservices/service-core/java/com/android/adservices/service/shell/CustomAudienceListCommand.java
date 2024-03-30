@@ -17,6 +17,8 @@
 package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_LIST;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
 import android.adservices.common.AdTechIdentifier;
 import android.util.Log;
@@ -24,6 +26,7 @@ import android.util.Log;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
+import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -67,13 +70,18 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
     }
 
     @Override
-    public int run(PrintWriter out, PrintWriter err, String[] args) {
+    public int getMetricsLoggerCommand() {
+        return COMMAND_CUSTOM_AUDIENCE_LIST;
+    }
+
+    @Override
+    public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
         try {
             mCustomAudienceArgParser.parse(args);
         } catch (IllegalArgumentException e) {
             err.printf("Failed to parse arguments: %s\n", e.getMessage());
             Log.e(TAG, "Failed to parse arguments: " + e.getMessage());
-            return invalidArgsError(HELP, err, args);
+            return invalidArgsError(HELP, err, COMMAND_CUSTOM_AUDIENCE_LIST, args);
         }
 
         String owner = mCustomAudienceArgParser.getValue(CustomAudienceArgs.OWNER);
@@ -88,9 +96,10 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
         } catch (JSONException e) {
             err.printf("Failed to generate output: %s\n", e.getMessage());
             Log.e(TAG, "Failed to generate JSON: " + e.getMessage());
-            return RESULT_GENERIC_ERROR;
+            return toShellCommandResult(
+                    ShellCommandStats.RESULT_GENERIC_ERROR, COMMAND_CUSTOM_AUDIENCE_LIST);
         }
-        return RESULT_OK;
+        return toShellCommandResult(RESULT_SUCCESS, COMMAND_CUSTOM_AUDIENCE_LIST);
     }
 
     private List<DBCustomAudience> queryForDebuggableCustomAudiences(

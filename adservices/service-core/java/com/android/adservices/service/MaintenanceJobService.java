@@ -85,7 +85,7 @@ public final class MaintenanceJobService extends JobService {
         Flags flags = FlagsFactory.getFlags();
 
         LogUtil.d("MaintenanceJobService.onStartJob");
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(MAINTENANCE_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(MAINTENANCE_JOB_ID);
 
         if (flags.getTopicsKillSwitch()
                 && flags.getFledgeSelectAdsKillSwitch()
@@ -144,7 +144,7 @@ public final class MaintenanceJobService extends JobService {
                     @Override
                     public void onSuccess(List<Void> result) {
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance(MaintenanceJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         MAINTENANCE_JOB_ID, /* isSuccessful= */ true, shouldRetry);
 
@@ -155,7 +155,7 @@ public final class MaintenanceJobService extends JobService {
                     @Override
                     public void onFailure(Throwable t) {
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance(MaintenanceJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         MAINTENANCE_JOB_ID, /* isSuccessful= */ false, shouldRetry);
 
@@ -176,7 +176,7 @@ public final class MaintenanceJobService extends JobService {
         // execution is completed or not to avoid executing the task twice.
         boolean shouldRetry = false;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, MAINTENANCE_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -254,7 +254,7 @@ public final class MaintenanceJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MAINTENANCE_JOB_ID, skipReason);
         }
 

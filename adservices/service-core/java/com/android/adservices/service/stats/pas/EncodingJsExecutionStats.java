@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.stats.pas;
 
-import android.adservices.common.AdsRelevanceStatusUtils;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 
 import com.google.auto.value.AutoValue;
 

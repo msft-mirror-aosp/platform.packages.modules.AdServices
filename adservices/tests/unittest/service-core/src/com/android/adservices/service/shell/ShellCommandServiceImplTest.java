@@ -43,6 +43,7 @@ import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
+import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.testing.common.BlockingCallableWrapper;
 
 import com.google.common.collect.ImmutableList;
@@ -53,6 +54,7 @@ import org.junit.Test;
 import java.io.PrintWriter;
 
 public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
+
     private final Flags mFlags = new ShellCommandFlags();
     private ShellCommandServiceImpl mShellCommandService;
     private SyncIShellCommandCallback mSyncIShellCommandCallback;
@@ -158,12 +160,19 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
         String commandName = "cmd";
         int commandResponse = 10;
 
-        BlockingCallableWrapper<Integer> waitingCommand =
-                BlockingCallableWrapper.createBlockableInstance(() -> commandResponse);
+        BlockingCallableWrapper<com.android.adservices.service.shell.ShellCommandResult>
+                waitingCommand =
+                        BlockingCallableWrapper.createBlockableInstance(
+                                () ->
+                                        com.android.adservices.service.shell.ShellCommandResult
+                                                .create(
+                                                        ShellCommandStats.RESULT_SUCCESS,
+                                                        ShellCommandStats.COMMAND_ECHO));
         ShellCommand shellCommand =
                 new ShellCommand() {
                     @Override
-                    public int run(PrintWriter out, PrintWriter err, String[] args) {
+                    public com.android.adservices.service.shell.ShellCommandResult run(
+                            PrintWriter out, PrintWriter err, String[] args) {
                         try {
                             return waitingCommand.call();
                         } catch (Exception e) {
@@ -174,6 +183,11 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
                     @Override
                     public String getCommandName() {
                         return commandName;
+                    }
+
+                    @Override
+                    public int getMetricsLoggerCommand() {
+                        return 0;
                     }
                 };
 
@@ -194,19 +208,26 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
         waitingCommand.startWork();
         ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
 
-        expect.that(response.getResultCode()).isEqualTo(commandResponse);
+        expect.that(response.getResultCode()).isEqualTo(AbstractShellCommand.RESULT_OK);
     }
 
     @Test
     public void testRunShellCommand_commandTimesOut() throws InterruptedException {
         String commandPrefix = "prefix";
 
-        BlockingCallableWrapper<Integer> blockedCommand =
-                BlockingCallableWrapper.createBlockableInstance(() -> 10);
+        BlockingCallableWrapper<com.android.adservices.service.shell.ShellCommandResult>
+                blockedCommand =
+                        BlockingCallableWrapper.createBlockableInstance(
+                                () ->
+                                        com.android.adservices.service.shell.ShellCommandResult
+                                                .create(
+                                                        ShellCommandStats.RESULT_SUCCESS,
+                                                        ShellCommandStats.COMMAND_ECHO));
         ShellCommand shellCommand =
                 new ShellCommand() {
                     @Override
-                    public int run(PrintWriter out, PrintWriter err, String[] args) {
+                    public com.android.adservices.service.shell.ShellCommandResult run(
+                            PrintWriter out, PrintWriter err, String[] args) {
                         try {
                             return blockedCommand.call();
                         } catch (Exception e) {
@@ -217,6 +238,11 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
                     @Override
                     public String getCommandName() {
                         return "cmd";
+                    }
+
+                    @Override
+                    public int getMetricsLoggerCommand() {
+                        return 0;
                     }
                 };
 
@@ -248,13 +274,19 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
         ShellCommand shellCommand =
                 new ShellCommand() {
                     @Override
-                    public int run(PrintWriter out, PrintWriter err, String[] args) {
+                    public com.android.adservices.service.shell.ShellCommandResult run(
+                            PrintWriter out, PrintWriter err, String[] args) {
                         throw new RuntimeException("Test exception");
                     }
 
                     @Override
                     public String getCommandName() {
                         return "cmd";
+                    }
+
+                    @Override
+                    public int getMetricsLoggerCommand() {
+                        return 0;
                     }
                 };
 

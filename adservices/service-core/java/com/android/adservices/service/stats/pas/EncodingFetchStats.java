@@ -16,43 +16,47 @@
 
 package com.android.adservices.service.stats.pas;
 
-import android.adservices.common.AdsRelevanceStatusUtils;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 
 import com.google.auto.value.AutoValue;
 
-/** Class for logging per download of the encoding javascript stats. */
+/** Class for logging per download of the encoding stats. */
 @AutoValue
-public abstract class EncodingJsFetchStats {
+public abstract class EncodingFetchStats {
     /** Returns the time to download the js. */
+    @AdsRelevanceStatusUtils.Size
     public abstract int getJsDownloadTime();
 
     /** Returns http response code. */
     public abstract int getHttpResponseCode();
 
-    /** Returns the status of JavaScript fetch. */
-    @AdsRelevanceStatusUtils.JsFetchStatus
+    /** Returns the status of encoding fetch. */
+    @AdsRelevanceStatusUtils.EncodingFetchStatus
     public abstract int getFetchStatus();
 
-    /** Returns AdTech's eTLD+1 when the JsFetchStatus is not success. */
+    /** Returns AdTech's eTLD+1 when the EncodingFetchStatus is not success. */
     public abstract String getAdTechId();
 
     /** Returns generic builder */
     public static Builder builder() {
-        return new AutoValue_EncodingJsFetchStats.Builder();
+        return new AutoValue_EncodingFetchStats.Builder()
+                .setHttpResponseCode(FIELD_UNSET);
     }
 
-    /** Builder class for EncodingJsFetchStats. */
+    /** Builder class for EncodingFetchStats. */
     @AutoValue.Builder
     public abstract static class Builder {
-        public abstract Builder setJsDownloadTime(int value);
+        public abstract Builder setJsDownloadTime(@AdsRelevanceStatusUtils.Size int value);
 
         public abstract Builder setHttpResponseCode(int value);
 
         public abstract Builder setFetchStatus(
-            @AdsRelevanceStatusUtils.JsFetchStatus int value);
+            @AdsRelevanceStatusUtils.EncodingFetchStatus int value);
 
         public abstract Builder setAdTechId(String value);
 
-        public abstract EncodingJsFetchStats build();
+        public abstract EncodingFetchStats build();
     }
 }
