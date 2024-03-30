@@ -81,7 +81,7 @@
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="@dimen/adservices_footer_content_half_padding"
                     android:layout_marginBottom="@dimen/adservices_footer_content_padding"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />

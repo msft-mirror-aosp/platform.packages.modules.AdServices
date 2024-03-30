@@ -130,7 +130,7 @@ public class MddJobService extends JobService {
 
         // Record the invocation of onStartJob() for logging purpose.
         LogUtil.d("MddJobService.onStartJob");
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(jobId);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(jobId);
 
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             LogUtil.e("MDD background task is disabled, skipping and cancelling MddJobService");
@@ -173,7 +173,7 @@ public class MddJobService extends JobService {
                                     // Tell the JobScheduler that the job has completed and does not
                                     // need to be rescheduled.
                                     boolean shouldRetry = false;
-                                    AdServicesJobServiceLogger.getInstance(MddJobService.this)
+                                    AdServicesJobServiceLogger.getInstance()
                                             .recordJobFinished(
                                                     jobId, /* isSuccessful= */ true, shouldRetry);
 
@@ -192,7 +192,7 @@ public class MddJobService extends JobService {
                         // When failure, also tell the JobScheduler that the job has completed and
                         // does not need to be rescheduled.
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance(MddJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(jobId, /* isSuccessful= */ false, shouldRetry);
 
                         jobFinished(params, shouldRetry);
@@ -211,7 +211,7 @@ public class MddJobService extends JobService {
         // execution is completed or not to avoid executing the task twice.
         boolean shouldRetry = false;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, getMddTaskJobId(getMddTag(params)), shouldRetry);
         return shouldRetry;
     }
@@ -346,7 +346,7 @@ public class MddJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this).recordJobSkipped(jobId, skipReason);
+            AdServicesJobServiceLogger.getInstance().recordJobSkipped(jobId, skipReason);
         }
 
         // Tell the JobScheduler that the job has completed and does not need to be

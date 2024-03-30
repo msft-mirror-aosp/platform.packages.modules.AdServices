@@ -65,7 +65,7 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     private static final boolean DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS = false;
     private static final String PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED =
             "sdksandbox_customized_sdk_context_enabled";
-    private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
+    private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = true;
 
     private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
             "sdksandbox_broadcastreceiver_allowlist_per_targetSdkVersion";

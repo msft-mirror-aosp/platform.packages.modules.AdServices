@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_COUNTER_HISTOGRAM_UPDATER_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_AD_SELECTION_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_JOIN_CA_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_SHELL_COMMAND_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
@@ -37,6 +40,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JS_FETCH;
 import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_BUYER_INPUT_GENERATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
@@ -70,6 +74,7 @@ import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusSt
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
@@ -681,11 +686,75 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getTrustedBiddingSignalsKeysSizeVarianceB(),
                 stats.getUserBiddingSignalsSizeMeanB(),
                 stats.getUserBiddingSignalsSizeVarianceB(),
-                // TODO: b/329720016 - implement and flag
-                0,
-                0,
-                0,
-                0);
+                stats.getNumEncodedSignals(),
+                stats.getEncodedSignalsSizeMean(),
+                stats.getEncodedSignalsSizeMax(),
+                stats.getEncodedSignalsSizeMin());
+    }
+
+    @Override
+    public void logEncodingJsFetchStats(EncodingFetchStats stats) {
+        AdServicesStatsLog.write(
+                ENCODING_JS_FETCH,
+                stats.getJsDownloadTime(),
+                stats.getHttpResponseCode(),
+                stats.getFetchStatus(),
+                stats.getAdTechId());
+    }
+
+    @Override
+    public void logAdFilteringProcessJoinCAReportedStats(
+            AdFilteringProcessJoinCAReportedStats stats) {
+        AdServicesStatsLog.write(
+                AD_FILTERING_PROCESS_JOIN_CA_REPORTED,
+                stats.getStatusCode(),
+                stats.getCountOfAdsWithKeysMuchSmallerThanLimitation(),
+                stats.getCountOfAdsWithKeysSmallerThanLimitation(),
+                stats.getCountOfAdsWithKeysEqualToLimitation(),
+                stats.getCountOfAdsWithKeysLargerThanLimitation(),
+                stats.getCountOfAdsWithEmptyKeys(),
+                stats.getCountOfAdsWithFiltersMuchSmallerThanLimitation(),
+                stats.getCountOfAdsWithFiltersSmallerThanLimitation(),
+                stats.getCountOfAdsWithFiltersEqualToLimitation(),
+                stats.getCountOfAdsWithFiltersLargerThanLimitation(),
+                stats.getCountOfAdsWithEmptyFilters(),
+                stats.getTotalNumberOfUsedKeys(),
+                stats.getTotalNumberOfUsedFilters());
+    }
+
+    @Override
+    public void logAdFilteringProcessAdSelectionReportedStats(
+            AdFilteringProcessAdSelectionReportedStats stats) {
+        AdServicesStatsLog.write(
+                AD_FILTERING_PROCESS_AD_SELECTION_REPORTED,
+                stats.getLatencyInMillisOfAllAdFiltering(),
+                stats.getLatencyInMillisOfAppInstallFiltering(),
+                stats.getLatencyInMillisOfFcapFilters(),
+                stats.getStatusCode(),
+                stats.getNumOfAdsFilteredOutOfBidding(),
+                stats.getNumOfCustomAudiencesFilteredOutOfBidding(),
+                stats.getTotalNumOfAdsBeforeFiltering(),
+                stats.getTotalNumOfCustomAudiencesBeforeFiltering(),
+                stats.getNumOfPackageInAppInstallFilters(),
+                stats.getNumOfDbOperations(),
+                stats.getFilterProcessType(),
+                stats.getNumOfContextualAdsFiltered(),
+                stats.getNumOfAdCounterKeysInFcapFilters(),
+                stats.getNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures(),
+                stats.getNumOfContextualAdsFilteredOutOfBiddingNoAds(),
+                stats.getTotalNumOfContextualAdsBeforeFiltering());
+    }
+
+    @Override
+    public void logAdCounterHistogramUpdaterReportedStats(
+            AdCounterHistogramUpdaterReportedStats stats) {
+        AdServicesStatsLog.write(
+                AD_COUNTER_HISTOGRAM_UPDATER_REPORTED,
+                stats.getLatencyInMillis(),
+                stats.getStatusCode(),
+                stats.getTotalNumberOfEventsInDatabaseAfterInsert(),
+                stats.getNumberOfInsertedEvent(),
+                stats.getNumberOfEvictedEvent());
     }
 
     @Override
@@ -713,7 +782,10 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     @Override
     public void logShellCommandStats(ShellCommandStats stats) {
         AdServicesStatsLog.write(
-                ADSERVICES_SHELL_COMMAND_CALLED, stats.command, stats.result, stats.latencyMillis);
+                ADSERVICES_SHELL_COMMAND_CALLED,
+                stats.getCommand(),
+                stats.getResult(),
+                stats.getLatencyMillis());
     }
 
     @Override

@@ -1174,6 +1174,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED,
+                FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeFrequencyCapFilteringMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED,
+                FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED);
+    }
+
+    @Override
     @SuppressWarnings("InlinedApi")
     public boolean getFledgeFetchCustomAudienceEnabled() {
         return getDeviceConfigFlag(
@@ -2301,6 +2315,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
                 DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnablePasUnlimitedEgress() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS);
     }
 
     @Override
@@ -4424,9 +4445,19 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeAppInstallFilteringEnabled());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED
+                        + " = "
+                        + getFledgeAppInstallFilteringMetricsEnabled());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED
                         + " = "
                         + getFledgeFrequencyCapFilteringEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED
+                        + " = "
+                        + getFledgeFrequencyCapFilteringMetricsEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED
@@ -4528,6 +4559,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS
                         + " = "
                         + getFledgeAuctionServerAdIdFetcherTimeoutMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS
+                        + " = "
+                        + getFledgeAuctionServerEnableDebugReporting());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION

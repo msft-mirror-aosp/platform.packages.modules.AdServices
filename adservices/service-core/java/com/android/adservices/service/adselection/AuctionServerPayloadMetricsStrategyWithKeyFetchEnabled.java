@@ -16,9 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.common.AdsRelevanceStatusUtils;
-
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
 public class AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled
