@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"तपाईंले यस कार्यक्रममा सामेल नहुने विकल्प छनौट गर्नुभएको छ"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"प्रतिक्रिया दिनुभएकोमा धन्यवाद। तपाईंको डिभाइसमा प्राइभेसी स्यान्डबक्स अफ गरिएको छ।\n\nतपाईंलाई पछि प्राइभेसी स्यान्डबक्स अन गर्न वा यसका बारेमा थप जान्न मन लाग्यो भने तपाईं गोपनीयतासम्बन्धी सेटिङमा जान सक्नुहुन्छ।"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"गोपनीयतासम्बन्धी सेटिङ"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"बुझेँ"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"तपाईं यस बिटा सुविधाको सदस्य हुनुहुन्छ"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"तपाईंको डिभाइसमा प्राइभेसी स्यान्डबक्स अन गरिएको छ र एपहरू तपाईंलाई विज्ञापन देखाउने यी नयाँ अनि अझ गोप्य तरिकाको परीक्षण गर्न सक्छन्। तपाईं जुनसुकै बेला गोपनीयतासम्बन्धी सेटिङमा गई यो बिटा सुविधा अफ गर्न सक्नुहुन्छ।"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"बुझेँ"</string>

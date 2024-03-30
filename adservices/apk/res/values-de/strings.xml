@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Du möchtest nicht teilnehmen"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Vielen Dank für deine Antwort. Die Privacy Sandbox ist für dein Gerät deaktiviert.\n\nFalls du es dir anders überlegst oder mehr erfahren möchtest, rufe deine Datenschutzeinstellungen auf."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Datenschutzeinstellungen"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Ok"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Du nimmst am Betaprogramm teil"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Die Privacy Sandbox ist für dein Gerät aktiviert und Apps können diese neuen privateren Möglichkeiten zum Anzeigen von Werbung testen. Die Betaversion lässt sich jederzeit in deinen Datenschutzeinstellungen deaktivieren."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Ok"</string>
@@ -581,7 +580,7 @@
     <string name="topic10317" msgid="888696185673599406">"Sportnachrichten"</string>
     <string name="topic10318" msgid="8287583657423629224">"Wetter"</string>
     <string name="topic10319" msgid="8709805241522664825">"Internationale Nachrichten"</string>
-    <string name="topic10320" msgid="2512907250610386132">"Online-Communities"</string>
+    <string name="topic10320" msgid="2512907250610386132">"Online-Communitys"</string>
     <string name="topic10321" msgid="7457693963027299711">"Clipart und animierte GIFs"</string>
     <string name="topic10322" msgid="3527120229469957977">"Kontakte und Persönliches"</string>
     <string name="topic10323" msgid="6172125921314846923">"Feedreader und Social Bookmarks"</string>
