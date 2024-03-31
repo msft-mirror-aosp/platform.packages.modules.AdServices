@@ -243,6 +243,19 @@ public class CustomAudienceServiceEndToEndTest {
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
+    private static final Flags COMMON_FLAGS_WITH_FILTERS_ENABLED =
+            new FlagsFactory.TestFlags() {
+                @Override
+                public boolean getFledgeFrequencyCapFilteringEnabled() {
+                    return true;
+                }
+
+                @Override
+                public boolean getFledgeAppInstallFilteringEnabled() {
+                    return true;
+                }
+            };
+
     @Before
     public void setup() {
         // Test applications don't have the required permissions to read config P/H flags, and
@@ -262,7 +275,7 @@ public class CustomAudienceServiceEndToEndTest {
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
 
@@ -274,12 +287,13 @@ public class CustomAudienceServiceEndToEndTest {
                 Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class).build();
 
         mCustomAudienceQuantityChecker =
-                new CustomAudienceQuantityChecker(mCustomAudienceDao, CommonFixture.FLAGS_FOR_TEST);
+                new CustomAudienceQuantityChecker(
+                        mCustomAudienceDao, COMMON_FLAGS_WITH_FILTERS_ENABLED);
 
         mCustomAudienceValidator =
                 new CustomAudienceValidator(
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        CommonFixture.FLAGS_FOR_TEST,
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED,
                         FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
                         RENDER_ID_VALIDATOR_NO_OP);
 
@@ -300,29 +314,31 @@ public class CustomAudienceServiceEndToEndTest {
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                CommonFixture.FLAGS_FOR_TEST),
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
                         mFledgeAuthorizationFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
-                        CommonFixture.FLAGS_FOR_TEST,
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 CONTEXT,
                                 mConsentManagerMock,
-                                CommonFixture.FLAGS_FOR_TEST,
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
                                         CONTEXT.getPackageManager(),
                                         EnrollmentDao.getInstance(CONTEXT),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
-                                        CommonFixture.FLAGS_FOR_TEST, mAdServicesLoggerMock),
+                                        COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
                                 mMockThrottler),
                         new AdFilteringFeatureFactory(
-                                mAppInstallDao, mFrequencyCapDao, CommonFixture.FLAGS_FOR_TEST));
+                                mAppInstallDao,
+                                mFrequencyCapDao,
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED));
 
         Mockito.lenient()
                 .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
@@ -348,19 +364,20 @@ public class CustomAudienceServiceEndToEndTest {
                         new AdServicesHttpsClient(
                                 AdServicesExecutors.getBlockingExecutor(),
                                 CacheProviderFactory.createNoOpCache()),
-                        CommonFixture.FLAGS_FOR_TEST,
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
                         RENDER_ID_VALIDATOR_NO_OP,
-                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true),
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                                true, true, true),
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                CommonFixture.FLAGS_FOR_TEST));
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED));
     }
 
     @After
@@ -371,12 +388,13 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testJoinCustomAudience_notInBinderThread_fail() {
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
-                new CustomAudienceQuantityChecker(mCustomAudienceDao, CommonFixture.FLAGS_FOR_TEST);
+                new CustomAudienceQuantityChecker(
+                        mCustomAudienceDao, COMMON_FLAGS_WITH_FILTERS_ENABLED);
 
         CustomAudienceValidator customAudienceValidator =
                 new CustomAudienceValidator(
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        CommonFixture.FLAGS_FOR_TEST,
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED,
                         FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
                         RENDER_ID_VALIDATOR_NO_OP);
 
@@ -388,7 +406,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 customAudienceQuantityChecker,
                                 customAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                CommonFixture.FLAGS_FOR_TEST),
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
                         new FledgeAuthorizationFilter(
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
@@ -398,22 +416,24 @@ public class CustomAudienceServiceEndToEndTest {
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
-                        CommonFixture.FLAGS_FOR_TEST,
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 CONTEXT,
                                 mConsentManagerMock,
-                                CommonFixture.FLAGS_FOR_TEST,
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
                                         CONTEXT.getPackageManager(),
                                         EnrollmentDao.getInstance(CONTEXT),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
-                                        CommonFixture.FLAGS_FOR_TEST, mAdServicesLoggerMock),
+                                        COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
                                 mMockThrottler),
                         new AdFilteringFeatureFactory(
-                                mAppInstallDao, mFrequencyCapDao, CommonFixture.FLAGS_FOR_TEST));
+                                mAppInstallDao,
+                                mFrequencyCapDao,
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED));
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         assertThrows(
@@ -468,7 +488,7 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testJoinCustomAudience_joinTwice_secondJoinOverrideValues() {
-        doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
+        doReturn(COMMON_FLAGS_WITH_FILTERS_ENABLED).when(FlagsFactory::getFlags);
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
@@ -933,12 +953,13 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testLeaveCustomAudience_notInBinderThread_fail() {
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
-                new CustomAudienceQuantityChecker(mCustomAudienceDao, CommonFixture.FLAGS_FOR_TEST);
+                new CustomAudienceQuantityChecker(
+                        mCustomAudienceDao, COMMON_FLAGS_WITH_FILTERS_ENABLED);
 
         CustomAudienceValidator customAudienceValidator =
                 new CustomAudienceValidator(
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        CommonFixture.FLAGS_FOR_TEST,
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED,
                         FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
                         RENDER_ID_VALIDATOR_NO_OP);
 
@@ -950,7 +971,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 customAudienceQuantityChecker,
                                 customAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                CommonFixture.FLAGS_FOR_TEST),
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
                         new FledgeAuthorizationFilter(
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
@@ -960,22 +981,24 @@ public class CustomAudienceServiceEndToEndTest {
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
-                        CommonFixture.FLAGS_FOR_TEST,
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 CONTEXT,
                                 mConsentManagerMock,
-                                CommonFixture.FLAGS_FOR_TEST,
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
                                         CONTEXT.getPackageManager(),
                                         EnrollmentDao.getInstance(CONTEXT),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
-                                        CommonFixture.FLAGS_FOR_TEST, mAdServicesLoggerMock),
+                                        COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
                                 mMockThrottler),
                         new AdFilteringFeatureFactory(
-                                mAppInstallDao, mFrequencyCapDao, CommonFixture.FLAGS_FOR_TEST));
+                                mAppInstallDao,
+                                mFrequencyCapDao,
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED));
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         assertThrows(
@@ -1018,7 +1041,7 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testLeaveCustomAudience_leaveJoinedCustomAudience() {
-        doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
+        doReturn(COMMON_FLAGS_WITH_FILTERS_ENABLED).when(FlagsFactory::getFlags);
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
@@ -1105,6 +1128,16 @@ public class CustomAudienceServiceEndToEndTest {
                             public boolean getFledgeAdSelectionFilteringEnabled() {
                                 return false;
                             }
+
+                            @Override
+                            public boolean getFledgeFrequencyCapFilteringEnabled() {
+                                return true;
+                            }
+
+                            @Override
+                            public boolean getFledgeAppInstallFilteringEnabled() {
+                                return true;
+                            }
                         })
                 .when(FlagsFactory::getFlags);
         doNothing()
@@ -1143,7 +1176,7 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testLeaveCustomAudienceWithRevokedUserConsentForAppSuccess() {
-        doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
+        doReturn(COMMON_FLAGS_WITH_FILTERS_ENABLED).when(FlagsFactory::getFlags);
         doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -1350,7 +1383,8 @@ public class CustomAudienceServiceEndToEndTest {
                         AdServicesExecutors.getLightWeightExecutor(),
                         FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
                         RENDER_ID_VALIDATOR_NO_OP,
-                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true),
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                                true, true, true),
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
                                 mCustomAudienceQuantityChecker,
@@ -2546,6 +2580,16 @@ public class CustomAudienceServiceEndToEndTest {
             }
 
             @Override
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeAppInstallFilteringEnabled() {
+                return true;
+            }
+
+            @Override
             public float getSdkRequestPermitsPerSecond() {
                 return 1f;
             }
@@ -2821,6 +2865,16 @@ public class CustomAudienceServiceEndToEndTest {
 
         @Override
         public boolean getFledgeAdSelectionFilteringEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAppInstallFilteringEnabled() {
             return true;
         }
 

@@ -72,7 +72,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     public void setup() {
         CustomAudienceDao customAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         AppInstallDao appInstallDao =
