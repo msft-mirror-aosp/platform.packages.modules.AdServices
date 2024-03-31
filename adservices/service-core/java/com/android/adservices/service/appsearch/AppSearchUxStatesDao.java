@@ -36,7 +36,6 @@ import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
 /** This class represents the data access object for the UX states written to AppSearch. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @Document
 class AppSearchUxStatesDao extends AppSearchDao {

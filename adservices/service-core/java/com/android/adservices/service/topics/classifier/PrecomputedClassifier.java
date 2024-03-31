@@ -50,7 +50,6 @@ import javax.annotation.concurrent.NotThreadSafe;
  *
  * <p>This class is not thread safe.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @NotThreadSafe
 public class PrecomputedClassifier implements Classifier {

@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.service.stats.ShellCommandStats.Command;
+import static com.android.adservices.service.stats.ShellCommandStats.CommandResult;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_INVALID_ARGS;
+
 import android.annotation.Nullable;
 import android.text.TextUtils;
 
@@ -32,9 +36,10 @@ public abstract class AbstractShellCommand implements ShellCommand {
     static final String ERROR_TEMPLATE_INVALID_ARGS = "Invalid cmd (%s).\n\nSyntax: %s\n";
 
     /** Method to return error in case of invalid arguments passed to a shell command. */
-    public static int invalidArgsError(String syntax, PrintWriter err, String[] args) {
+    public static ShellCommandResult invalidArgsError(
+            String syntax, PrintWriter err, int metricIdentifier, String[] args) {
         err.printf(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax);
-        return RESULT_GENERIC_ERROR;
+        return toShellCommandResult(RESULT_INVALID_ARGS, metricIdentifier);
     }
 
     /**
@@ -58,5 +63,10 @@ public abstract class AbstractShellCommand implements ShellCommand {
             default:
                 return null;
         }
+    }
+
+    protected static ShellCommandResult toShellCommandResult(
+            @CommandResult int commandResult, @Command int command) {
+        return ShellCommandResult.create(commandResult, command);
     }
 }

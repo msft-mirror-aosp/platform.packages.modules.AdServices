@@ -172,6 +172,7 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
 
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
+        PhFlagsFixture.overrideFledgeAdSelectionContextualAdsEnabled(false);
 
         // Enable CTS to be run with versions of WebView < M105
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
@@ -209,6 +210,7 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
 
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
+        PhFlagsFixture.overrideFledgeAdSelectionContextualAdsEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 

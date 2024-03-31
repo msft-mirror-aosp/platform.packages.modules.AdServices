@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Je hebt ervoor gekozen om niet mee te doen"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Bedankt voor je reactie. De Privacy Sandbox staat uit voor je apparaat.\n\nGa naar de privacyinstellingen als je van gedachten verandert of meer informatie wilt."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Privacyinstellingen"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Je doet mee aan de bèta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"De Privacy Sandbox staat aan voor je apparaat. Apps kunnen deze nieuwe, meer privacyvriendelijke manieren testen om jou advertenties te laten zien. Je kunt de bèta altijd uitzetten in de privacyinstellingen."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"OK"</string>

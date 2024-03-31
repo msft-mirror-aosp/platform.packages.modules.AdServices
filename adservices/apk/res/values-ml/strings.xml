@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"പങ്കെടുക്കേണ്ടതില്ലെന്ന് നിങ്ങൾ തിരഞ്ഞെടുത്തു"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"നിങ്ങളുടെ പ്രതികരണത്തിന് നന്ദി. നിങ്ങളുടെ ഉപകരണത്തിൽ സ്വകാര്യതാ സാൻഡ്ബോക്‌സ് ഓഫാക്കിയിരിക്കുന്നു.\n\nനിങ്ങൾ തീരുമാനം മാറ്റുകയാണെങ്കിലോ കൂടുതലറിയണമെന്നുണ്ടെങ്കിലോ നിങ്ങളുടെ സ്വകാര്യതാ ക്രമീകരണത്തിലേക്ക് പോകുക."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"സ്വകാര്യതാ ക്രമീകരണം"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"മനസ്സിലായി"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"നിങ്ങൾ ബീറ്റയുടെ ഭാഗമാണ്"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"നിങ്ങളുടെ ഉപകരണത്തിൽ സ്വകാര്യതാ സാൻഡ്‌ബോക്‌സ് ഓണാണ്, നിങ്ങളെ പരസ്യങ്ങൾ കാണിക്കുന്നതിന് പുതിയതും കൂടുതൽ സ്വകാര്യവുമായ ഈ വഴികൾ പരീക്ഷിക്കാൻ ആപ്പുകൾക്ക് കഴിയും. നിങ്ങളുടെ സ്വകാര്യതാ ക്രമീകരണത്തിൽ ഏതുസമയത്തും ബീറ്റ ഓഫാക്കാം."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"മനസ്സിലായി"</string>
