@@ -61,6 +61,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -101,7 +102,8 @@ public class KAnonCallerImplFullIntegrationTests {
     private static final long MAX_AGE_SECONDS = 1200000;
     private static final long MAX_ENTRIES = 20;
 
-    private ExecutorService mLightweightExecutorService;
+    private ListeningExecutorService mLightweightExecutorService;
+    private ListeningExecutorService mBackgroundExecutorService;
     private AnonymousCountingTokens mAnonymousCountingTokens;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
@@ -147,6 +149,7 @@ public class KAnonCallerImplFullIntegrationTests {
         HttpCache cache = new FledgeHttpCache(cacheEntryDao, MAX_AGE_SECONDS, MAX_ENTRIES);
         mAdServicesHttpsClient = new AdServicesHttpsClient(mExecutorService, cache);
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        mLightweightExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mAnonymousCountingTokens = new AnonymousCountingTokensImpl();
         KAnonDatabase kAnonDatabase =
                 Room.inMemoryDatabaseBuilder(CONTEXT, KAnonDatabase.class).build();
@@ -200,6 +203,7 @@ public class KAnonCallerImplFullIntegrationTests {
                 Mockito.spy(
                         new KAnonCallerImpl(
                                 mLightweightExecutorService,
+                                mBackgroundExecutorService,
                                 mAnonymousCountingTokens,
                                 mAdServicesHttpsClient,
                                 mClientParametersDao,
@@ -241,6 +245,7 @@ public class KAnonCallerImplFullIntegrationTests {
         KAnonCallerImpl runner =
                 new KAnonCallerImpl(
                         mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAnonymousCountingTokens,
                         mAdServicesHttpsClient,
                         mClientParametersDao,

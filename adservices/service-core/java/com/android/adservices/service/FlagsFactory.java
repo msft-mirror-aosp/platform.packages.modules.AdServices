@@ -113,5 +113,15 @@ public class FlagsFactory {
         public boolean getFledgeAppPackageNameLoggingEnabled() {
             return true;
         }
+
+        @Override
+        public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getPasExtendedMetricsEnabled() {
+            return true;
+        }
     }
 }

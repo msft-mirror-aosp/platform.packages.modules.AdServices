@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"ላለመሳተፍ መርጠዋል"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"ስለምላሽዎ እናመሰግናለን። የግላዊነት Sandbox ለመሣሪያዎ ጠፍቷል።\n\nሐሳብዎን ከቀየሩ ወይም የበለጠ ለማወቅ ከፈለጉ ወደ የግላዊነት ቅንብሮችዎ ይሂዱ።"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"የግላዊነት ቅንብሮች"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"ገባኝ"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"የቅድመ ይሁንታው አካል ነዎት"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"የግላዊነት Sandbox ለእርስዎ መሣሪያ በርቷል እና መተግበሪያዎች ለእርስዎ ማስታወቂያዎችን ለማሳየት እነዚህን አዲስና ይበልጥ የግል የሆኑ መንገዶች መሞከር ይችላሉ። በማንኛውም ጊዜ በእርስዎ የግላዊነት ቅንብሮች ውስጥ ቅድመ-ይሁንታውን ማጥፋት ይችላሉ።"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"ገባኝ"</string>

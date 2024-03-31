@@ -22,12 +22,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_FAIL_TO_COMMIT_JOB_EXECUTION_START_TIME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_FAIL_TO_COMMIT_JOB_EXECUTION_STOP_TIME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_INVALID_EXECUTION_PERIOD;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+import static com.android.adservices.shared.spe.JobServiceConstants.EXECUTION_LOGGING_UNKNOWN_MODULE_NAME;
 import static com.android.adservices.shared.spe.JobServiceConstants.MAX_PERCENTAGE;
 import static com.android.adservices.shared.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
 import static com.android.adservices.shared.spe.JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS;
@@ -63,9 +63,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /** Class for logging methods used by background jobs. */
-// TODO(b/325292968): make this class final.
-// TODO(b/325292968): Remove Executor, flags, jobIdToNameMap from constructor as it's included in
-// JobServiceConfig, after all jobs migrated to use SPE.
+// TODO(b/325292968): make this class final after all Jobs migrated to using SPE.
 public class JobServiceLogger {
     private static final ReadWriteLock sReadWriteLock = new ReentrantReadWriteLock();
     private static final Random sRandom = new Random();
@@ -73,10 +71,10 @@ public class JobServiceLogger {
     private final Context mContext;
     private final Clock mClock;
     private final StatsdJobServiceLogger mStatsdLogger;
+    private final AdServicesErrorLogger mErrorLogger;
     // JobService runs the execution on the main thread, so the logging part should be offloaded to
     // a separated thread. However, these logging events should be in sequence, respecting to the
     // start and the end of an execution.
-    private final AdServicesErrorLogger mErrorLogger;
     private final Executor mLoggingExecutor;
     private final Map<Integer, String> mJobInfoMap;
     private final ModuleSharedFlags mFlags;
@@ -330,16 +328,21 @@ public class JobServiceLogger {
                         .setExecutionResultCode(resultCode)
                         .setStopReason(stopReason)
                         // TODO(b/324323522): Populate correct module name.
-                        .setModuleName(
-                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME)
+                        .setModuleName(EXECUTION_LOGGING_UNKNOWN_MODULE_NAME)
                         .build();
         mStatsdLogger.logExecutionReportedStats(stats);
 
         if (VERBOSE) {
             LogUtil.v(
-                    "[AdServices background job logging] jobId: %d, executionLatencyInMs: %d, "
-                            + "executionPeriodInMs: %d, resultCode: %d, stopReason: %d",
-                    jobId, executionLatencyMs, executionPeriodMs, resultCode, stopReason);
+                    "[Background job execution logging] jobId: %d, executionLatencyInMs: %d,"
+                        + " executionPeriodInMs: %d, resultCode: %d, stopReason: %d, moduleName:"
+                        + " %d",
+                    jobId,
+                    executionLatencyMs,
+                    executionPeriodMs,
+                    resultCode,
+                    stopReason,
+                    EXECUTION_LOGGING_UNKNOWN_MODULE_NAME);
         }
     }
 

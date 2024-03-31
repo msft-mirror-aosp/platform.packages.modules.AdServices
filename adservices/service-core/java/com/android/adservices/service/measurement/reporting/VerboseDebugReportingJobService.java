@@ -65,7 +65,7 @@ public final class VerboseDebugReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(VERBOSE_DEBUG_REPORT_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(VERBOSE_DEBUG_REPORT_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobVerboseDebugReportingKillSwitch()) {
             LoggerFactory.getMeasurementLogger().e("VerboseDebugReportingJobService is disabled");
@@ -77,8 +77,7 @@ public final class VerboseDebugReportingJobService extends JobService {
                 sBlockingExecutor.submit(
                         () -> {
                             sendReports();
-                            AdServicesJobServiceLogger.getInstance(
-                                            VerboseDebugReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             VERBOSE_DEBUG_REPORT_JOB_ID,
                                             /* isSuccessful */ true,
@@ -95,7 +94,7 @@ public final class VerboseDebugReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, VERBOSE_DEBUG_REPORT_JOB_ID, shouldRetry);
         return shouldRetry;
     }

@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Программага катышуудан баш тарттыңыз"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Жообуңуз үчүн рахмат. Түзмөгүңүздө Privacy Sandbox өчүрүлдү.\n\nЭгер оюңуз өзгөрсө же кеңири маалымат алгыңыз келсе, купуялык параметрлерине өтүңүз."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Купуялык параметрлери"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Түшүндүм"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Бета версияга катышып жатасыз"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Түзмөгүңүздө Privacy Sandbox технологиялары күйгүзүлгөндүктөн, колдонмолор купуялыгы корголгон жарнамаларды көрсөтүүнүн жаңы жолдорун сынай алышат. Бул бета версияны каалаган убакта купуялык параметрлеринен өчүрө аласыз."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Түшүндүм"</string>

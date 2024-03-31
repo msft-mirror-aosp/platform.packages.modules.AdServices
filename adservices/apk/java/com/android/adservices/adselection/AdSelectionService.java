@@ -24,7 +24,7 @@ import android.os.IBinder;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
@@ -38,7 +38,6 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.util.Objects;
 
 /** Ad Selection Service */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionService extends Service {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -71,7 +70,7 @@ public class AdSelectionService extends Service {
 
         if (hasUserConsent()) {
             PackageChangedReceiver.enableReceiver(this, mFlags);
-            MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+            MddJob.scheduleAllMddJobs();
             MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
             BackgroundKeyFetchJobService.scheduleIfNeeded(this, mFlags, /* forceSchedule */ false);
         }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.kanon;
 
+import static com.android.adservices.service.common.httpclient.AdServicesHttpsClient.DEFAULT_MAX_BYTES;
+
 import android.annotation.NonNull;
 import android.annotation.RequiresApi;
 import android.content.Context;
@@ -27,7 +29,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorFactory;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer;
-import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
@@ -54,7 +55,9 @@ public class KAnonSignJoinFactory {
         AdServicesHttpsClient adServicesHttpsClient =
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
-                        CacheProviderFactory.create(mContext, FlagsFactory.getFlags()));
+                        FlagsFactory.getFlags().getFledgeKanonHttpClientTimeoutInMs(),
+                        FlagsFactory.getFlags().getFledgeKanonHttpClientTimeoutInMs(),
+                        DEFAULT_MAX_BYTES);
         KAnonMessageManager kAnonMessageManager =
                 new KAnonMessageManager(
                         KAnonDatabase.getInstance(mContext).kAnonMessageDao(),
@@ -64,6 +67,7 @@ public class KAnonSignJoinFactory {
         KAnonCallerImpl kAnonCaller =
                 new KAnonCallerImpl(
                         AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getBackgroundExecutor(),
                         new AnonymousCountingTokensImpl(),
                         adServicesHttpsClient,
                         KAnonDatabase.getInstance(mContext).clientParametersDao(),

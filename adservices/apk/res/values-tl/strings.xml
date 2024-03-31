@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Pinili mong hindi makilahok"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Salamat sa iyong tugon. Naka-off ang Privacy Sandbox para sa iyong device.\n\nKung magbabago ang isip mo o gusto mong matuto pa, pumunta sa iyong mga setting ng privacy."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Mga setting ng privacy"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Bahagi ka ng beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Naka-on ang Privacy Sandbox para sa device mo, at masusubukan ng mga app ang mga bago at karagdagang pribadong paraang ito para magpakita sa iyo ng mga ad. Puwede mong i-off ang beta anumang oras sa iyong mga setting ng privacy."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"OK"</string>

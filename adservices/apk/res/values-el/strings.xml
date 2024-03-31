@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Επιλέξατε να μην συμμετάσχετε"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Σας ευχαριστούμε για την απάντησή σας. Το Privacy Sandbox είναι απενεργοποιημένο για τη συσκευή σας.\n\nΑν αλλάξετε γνώμη ή θέλετε να μάθετε περισσότερα, μεταβείτε στις ρυθμίσεις απορρήτου."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Ρυθμίσεις απορρήτου"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Το κατάλαβα"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Συμμετέχετε στο πρόγραμμα beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Το Privacy Sandbox είναι ενεργοποιημένο για τη συσκευή σας και οι εφαρμογές μπορούν να δοκιμάσουν αυτούς τους νέους πιο ιδιωτικούς τρόπους για την εμφάνιση διαφημίσεων. Μπορείτε να απενεργοποιήσετε το πρόγραμμα beta οποιαδήποτε στιγμή στις ρυθμίσεις απορρήτου."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Το κατάλαβα"</string>
