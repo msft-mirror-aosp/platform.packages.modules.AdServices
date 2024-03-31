@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Du har valgt å ikke delta"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Takk for svaret. Privacy Sandbox er slått av for enheten din.\n\nHvis du ombestemmer deg eller vil finne ut mer, kan du gå til personverninnstillingene."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Personverninnstillinger"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Greit"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Du er en del av betaversjonen"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox er på for enheten din, og apper kan teste disse nye, mer private måtene å vise deg annonser på. Du kan når som helst slå av betaversjonen i personverninnstillingene."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Greit"</string>

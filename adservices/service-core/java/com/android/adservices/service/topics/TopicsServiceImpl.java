@@ -86,7 +86,6 @@ import java.util.concurrent.Executor;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsServiceImpl extends ITopicsService.Stub {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
@@ -384,7 +383,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
             if (!permitted) {
                 invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
-                EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance(mContext);
+                EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance();
                 Integer buildId = enrollmentUtil.getBuildId();
                 Integer dataFileGroupStatus = enrollmentUtil.getFileGroupStatus();
                 enrollmentUtil.logEnrollmentFailedStats(

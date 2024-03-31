@@ -88,7 +88,7 @@ public class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
                     // Topics feature flags for calling the Topics API
                     .setTopicsKillSwitch(false)
                     .setMddBackgroundTaskKillSwitch(true)
-                    .setDisableTopicsEnrollmentCheckForTests(true)
+                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                     // Measurement feature flags for calling the Measurement API
                     .setMsmtApiAppAllowList(PACKAGE)
                     .setMsmtWebContextClientAllowList(PACKAGE)
@@ -143,7 +143,7 @@ public class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
 
         // Need to re-set these system properties because the reboot in the setup method causes them
         // to be cleared.
-        flags.setSystemProperty(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
+        flags.setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                 .setLogcatTag("adservices", "VERBOSE")
                 .setLogcatTag("AppSearchWriterActivity", "VERBOSE");
 

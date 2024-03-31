@@ -19,14 +19,12 @@ package com.android.adservices.service.stats;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 
 import android.adservices.adselection.ReportEventRequest;
-import android.annotation.NonNull;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 /** Class for destinationRegisteredBeacon reported stats. */

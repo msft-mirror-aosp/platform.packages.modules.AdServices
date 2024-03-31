@@ -403,6 +403,7 @@ public class MeasurementDaoTest {
             assertEquals(
                     validTrigger.getAggregatableSourceRegistrationTimeConfig(),
                     trigger.getAggregatableSourceRegistrationTimeConfig());
+            assertEquals(validTrigger.getTriggerContextId(), trigger.getTriggerContextId());
         }
     }
 

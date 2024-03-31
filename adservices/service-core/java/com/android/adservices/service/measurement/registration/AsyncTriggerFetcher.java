@@ -275,10 +275,37 @@ public class AsyncTriggerFetcher {
                 builder.setDebugJoinKey(json.optString(TriggerHeaderContract.DEBUG_JOIN_KEY));
             }
 
-            builder.setAggregatableSourceRegistrationTimeConfig(
-                    getSourceRegistrationTimeConfig(json));
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
+            Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig =
+                    getSourceRegistrationTimeConfig(json);
 
+            builder.setAggregatableSourceRegistrationTimeConfig(sourceRegistrationTimeConfig);
+
+            if (mFlags.getMeasurementEnableTriggerContextId()
+                    && !json.isNull(TriggerHeaderContract.TRIGGER_CONTEXT_ID)) {
+                if (Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
+                        sourceRegistrationTimeConfig)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "parseTrigger: %s cannot be set when %s has a value of %s",
+                                    TriggerHeaderContract.TRIGGER_CONTEXT_ID,
+                                    TriggerHeaderContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME,
+                                    Trigger.SourceRegistrationTimeConfig.INCLUDE.name());
+                    asyncFetchStatus.setEntityStatus(
+                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+                    return Optional.empty();
+                }
+
+                Optional<String> contextIdOpt = getValidTriggerContextId(json);
+                if (contextIdOpt.isEmpty()) {
+                    asyncFetchStatus.setEntityStatus(
+                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+                    return Optional.empty();
+                }
+
+                builder.setTriggerContextId(contextIdOpt.get());
+            }
+
+            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger().e(e, "Trigger Parsing failed");
@@ -290,6 +317,32 @@ public class AsyncTriggerFetcher {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
             return Optional.empty();
         }
+    }
+
+    private Optional<String> getValidTriggerContextId(JSONObject json) throws JSONException {
+        Object triggerContextIdObj = json.get(TriggerHeaderContract.TRIGGER_CONTEXT_ID);
+        if (!(triggerContextIdObj instanceof String)) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "%s: %s, is not a String",
+                            TriggerHeaderContract.TRIGGER_CONTEXT_ID,
+                            json.get(TriggerHeaderContract.TRIGGER_CONTEXT_ID).toString());
+            return Optional.empty();
+        }
+
+        String contextId = triggerContextIdObj.toString();
+        if (contextId.isEmpty()
+                || contextId.length() > mFlags.getMeasurementMaxLengthOfTriggerContextId()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Length of %s: \"%s\", is 0 or exceeds max length of %d",
+                            TriggerHeaderContract.TRIGGER_CONTEXT_ID,
+                            contextId,
+                            mFlags.getMeasurementMaxLengthOfTriggerContextId());
+            return Optional.empty();
+        }
+
+        return Optional.of(contextId);
     }
 
     private Trigger.SourceRegistrationTimeConfig getSourceRegistrationTimeConfig(JSONObject json) {
@@ -735,5 +788,6 @@ public class AsyncTriggerFetcher {
         String DEBUG_AD_ID = "debug_ad_id";
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
         String AGGREGATABLE_SOURCE_REGISTRATION_TIME = "aggregatable_source_registration_time";
+        String TRIGGER_CONTEXT_ID = "trigger_context_id";
     }
 }

@@ -56,7 +56,7 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * 4b823a4852665b1fba719401c99b56ca8b9b28f1.
+ * 158fc9452690c9eff21ce07cccbc314a39759708.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -65,8 +65,7 @@ public class E2EInteropMockTest extends E2EMockTest {
             new HashSet<>(
                     Arrays.asList(
                             TestFormatJsonMapping.TIMESTAMP_KEY,
-                            TestFormatJsonMapping.REPORT_TIME_KEY,
-                            UnparsableRegistrationKeys.TIME));
+                            TestFormatJsonMapping.REPORT_TIME_KEY));
     // The following keys are to JSON fields that should be interpreted in seconds.
     public static final Set<String> TIMESTAMP_KEYS_IN_SECONDS =
             new HashSet<>(
@@ -118,7 +117,10 @@ public class E2EInteropMockTest extends E2EMockTest {
                     "measurement_max_event_reports_per_destination"),
             entry(
                     "max_aggregatable_reports_per_destination",
-                    "measurement_max_aggregate_reports_per_destination"));
+                    "measurement_max_aggregate_reports_per_destination"),
+            entry(
+                    "max_trigger_state_cardinality",
+                    "measurement_max_report_states_per_source_registration"));
 
     private static String preprocessor(String json) {
         // TODO(b/290098169): Cleanup anchorTime when this bug is addressed. Handling cases where
@@ -135,9 +137,10 @@ public class E2EInteropMockTest extends E2EMockTest {
             Map.of(
                     // TODO (b/295382171): remove this after the flag is removed.
                     "measurement_enable_max_aggregate_reports_per_source", "true",
-                    "measurement_source_registration_time_optional_for_agg_reports_enabled",
-                            "true",
-                    "measurement_flexible_event_reporting_api_enabled", "true");
+                    "measurement_source_registration_time_optional_for_agg_reports_enabled", "true",
+                    "measurement_flexible_event_reporting_api_enabled", "true",
+                    "measurement_enable_trigger_context_id", "true",
+                    "measurement_enable_source_deactivation_after_filtering", "true");
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -191,7 +194,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
             updateEnrollment(uri);
-            insertSourceOrRecordUnparsable(
+            insertSourceOrAssertUnparsable(
                     sourceRegistration.getPublisher(),
                     sourceRegistration.mTimestamp,
                     uri,
@@ -212,7 +215,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
             updateEnrollment(uri);
-            insertTriggerOrRecordUnparsable(
+            insertTriggerOrAssertUnparsable(
                     triggerRegistration.getDestination(),
                     triggerRegistration.mTimestamp,
                     uri,
@@ -250,7 +253,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         }
     }
 
-    private void insertSourceOrRecordUnparsable(
+    private void insertSourceOrAssertUnparsable(
             String publisher,
             long timestamp,
             String uri,
@@ -293,11 +296,10 @@ public class E2EInteropMockTest extends E2EMockTest {
                                             maybeSource.get(), asyncRegistration, measurementDao)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
-            addUnparsableRegistration(timestamp, UnparsableRegistrationTypes.SOURCE);
         }
     }
 
-    private void insertTriggerOrRecordUnparsable(
+    private void insertTriggerOrAssertUnparsable(
             String destination,
             long timestamp,
             String uri,
@@ -337,15 +339,7 @@ public class E2EInteropMockTest extends E2EMockTest {
                                             maybeTrigger.get(), measurementDao)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
-            addUnparsableRegistration(timestamp, UnparsableRegistrationTypes.TRIGGER);
         }
-    }
-
-    private void addUnparsableRegistration(long time, String type) throws JSONException {
-        mActualOutput.mUnparsableRegistrationObjects.add(
-                new JSONObject()
-                        .put(UnparsableRegistrationKeys.TIME, String.valueOf(time))
-                        .put(UnparsableRegistrationKeys.TYPE, type));
     }
 
     private static Source.SourceType getSourceType(RegistrationRequest request) {

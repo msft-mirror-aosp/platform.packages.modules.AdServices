@@ -431,6 +431,7 @@ public class DbState {
                 .setAggregatableSourceRegistrationTimeConfig(
                         Trigger.SourceRegistrationTimeConfig.valueOf(
                                 tJSON.getString("aggregatableSourceRegistrationTimeConfig")))
+                .setTriggerContextId(tJSON.optString("triggerContextId", null))
                 .build();
     }
 
@@ -573,7 +574,8 @@ public class DbState {
                                         rJSON.optString(
                                                 "aggregation_coordinator_origin",
                                                 "https://test.test")))
-                        .setIsFakeReport(rJSON.optBoolean("isFakeReport", false));
+                        .setIsFakeReport(rJSON.optBoolean("isFakeReport", false))
+                        .setTriggerContextId(rJSON.optString("triggerContextId", null));
 
         if (rJSON.opt("dedupKey") != null) {
             builder.setDedupKey(new UnsignedLong(rJSON.getString("dedupKey")));

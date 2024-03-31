@@ -75,8 +75,7 @@ public class AttributionJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance(this)
-                .recordOnStartJob(MEASUREMENT_ATTRIBUTION_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(MEASUREMENT_ATTRIBUTION_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobAttributionKillSwitch()) {
             LoggerFactory.getMeasurementLogger().e("AttributionJobService is disabled");
@@ -97,7 +96,7 @@ public class AttributionJobService extends JobService {
                             final boolean shouldRetry =
                                     !ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED.equals(result);
                             final boolean isSuccessful = !ProcessingResult.FAILURE.equals(result);
-                            AdServicesJobServiceLogger.getInstance(AttributionJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             MEASUREMENT_ATTRIBUTION_JOB_ID,
                                             isSuccessful,
@@ -154,7 +153,7 @@ public class AttributionJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, MEASUREMENT_ATTRIBUTION_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -244,7 +243,7 @@ public class AttributionJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_ATTRIBUTION_JOB_ID, skipReason);
         }
 

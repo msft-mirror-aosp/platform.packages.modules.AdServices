@@ -33,9 +33,9 @@
         app:layout_constraintStart_toStartOf="parent" >
         <LinearLayout
             android:layout_height="wrap_content"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:paddingBottom="24dp"
+            android:paddingStart="@dimen/adservices_content_horizontal_padding"
+            android:paddingEnd="@dimen/adservices_content_horizontal_padding"
+            android:paddingBottom="@dimen/adservices_content_padding"
             android:orientation="vertical"
             android:layout_gravity="center_horizontal"
             style="@style/NotificationContainer">
@@ -48,7 +48,7 @@
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="72dp"
+                    android:layout_marginTop="@dimen/adservices_content_3x_padding"
                     android:layout_marginStart="0dp"
                     android:src="@drawable/ic_android_icon"
                     tools:ignore="ContentDescription" />
@@ -61,40 +61,39 @@
                 android:id="@+id/container1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
                 android:padding="0dp"
-
                 android:orientation="vertical"
                 android:animateLayoutChanges="true">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/adservices_content_half_padding"
                     android:text="@string/notificationUI_container1_body_ga_text_eu"
                     style="@style/MainStyle.Body1" />
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/adservices_content_half_padding"
                     android:text="@string/notificationUI_container2_body_ga_text_eu"
                     style="@style/MainStyle.Body1" />
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
                     android:src="@drawable/ic_consent_notification_ga_image"
                     android:contentDescription="@string/ic_consent_notification_ga_image_description"/>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/adservices_content_half_padding"
                     android:text="@string/notificationUI_container3_body_ga_text_eu"
                     style="@style/MainStyle.Body1" />
 
                 <TextView
                     android:id="@+id/how_it_works_expander"
                     android:drawableEnd="@drawable/ic_expand"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
                     android:text="@string/notificationUI_container1_control_ga_text_eu"
                     style="@style/MainStyle.Body1" />
                 <LinearLayout
@@ -125,14 +124,14 @@
                         android:id="@+id/learn_more_from_privacy_policy"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
                         android:text="@string/notificationUI_learn_more_from_privacy_policy"
                         style="@style/MainStyle.Body1" />
                 </LinearLayout>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
                     android:text="@string/notificationUI_change_any_time_in_privacy_settings_eu"
                     style="@style/MainStyle.Body1" />
             </LinearLayout>
@@ -148,7 +147,7 @@
         app:layout_constraintStart_toStartOf="parent" >
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="@dimen/adservices_divider_height"
             android:background="@color/divider_color"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

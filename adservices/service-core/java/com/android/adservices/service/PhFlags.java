@@ -23,15 +23,22 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETR
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED;
@@ -234,6 +241,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getTopicsEncryptionEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED, TOPICS_ENCRYPTION_ENABLED);
+    }
+
+    @Override
+    public boolean getTopicsEncryptionMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_ENCRYPTION_METRICS_ENABLED,
+                TOPICS_ENCRYPTION_METRICS_ENABLED);
     }
 
     @Override
@@ -1148,8 +1162,29 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @SuppressWarnings("InlinedApi")
     public boolean getFledgeAdSelectionContextualAdsEnabled() {
         return getDeviceConfigFlag(
-                FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
+                FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED,
                 FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAdSelectionContextualAdsMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED,
+                FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED,
+                FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeFrequencyCapFilteringMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED,
+                FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED);
     }
 
     @Override
@@ -2283,6 +2318,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerEnablePasUnlimitedEgress() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerAdRenderIdEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED,
@@ -2547,6 +2589,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 && getDeviceConfigFlag(
                         FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED,
                         FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
+        return getFledgeAuctionServerEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED,
+                        FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED);
     }
 
     @Override
@@ -3554,6 +3604,28 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
         writer.println(
                 "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED
+                        + " = "
+                        + getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME
+                        + " = "
+                        + getMeasurementNullAggReportRateExclSourceRegistrationTime());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID
+                        + " = "
+                        + getMeasurementEnableTriggerContextId());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID
+                        + " = "
+                        + getMeasurementMaxLengthOfTriggerContextId());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS
                         + " = "
                         + getAdIdFetcherTimeoutMs());
@@ -4373,14 +4445,29 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeAppInstallFilteringEnabled());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED
+                        + " = "
+                        + getFledgeAppInstallFilteringMetricsEnabled());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED
                         + " = "
                         + getFledgeFrequencyCapFilteringEnabled());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
+                        + FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED
+                        + " = "
+                        + getFledgeFrequencyCapFilteringMetricsEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED
                         + " = "
                         + getFledgeAdSelectionContextualAdsEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED
+                        + " = "
+                        + getFledgeAdSelectionContextualAdsMetricsEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS
@@ -4472,6 +4559,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS
                         + " = "
                         + getFledgeAuctionServerAdIdFetcherTimeoutMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS
+                        + " = "
+                        + getFledgeAuctionServerEnableDebugReporting());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION
@@ -5026,6 +5118,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeKAnonSignJoinFeatureEnabled());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE
+                        + " = "
+                        + getFledgeKAnonSignJoinFeatureAuctionServerEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE
+                        + " = "
+                        + getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled());
+        writer.println(
+                "\t"
                         + KEY_KANON_FETCH_PARAMETERS_URL
                         + " = "
                         + getFledgeKAnonFetchServerParamsUrl());
@@ -5084,6 +5186,26 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY
                         + " = "
                         + getFledgeKAnonUrlAuthorityToJoin());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW
+                        + " = "
+                        + getFledgeKAnonBackgroundJobRequiresBatteryNotLow());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE
+                        + " = "
+                        + getFledgeKAnonBackgroundJobRequiresDeviceIdle());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION
+                        + " = "
+                        + getFledgeKanonBackgroundJobConnectionType());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT
+                        + " = "
+                        + getFledgeKanonHttpClientTimeoutInMs());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
@@ -5282,6 +5404,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 && getDeviceConfigFlag(
                         FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
                         DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED);
+    }
+
+    @Override
+    public boolean getEnableBackCompatInit() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_BACK_COMPAT_INIT, DEFAULT_ENABLE_BACK_COMPAT_INIT);
     }
 
     @Override
@@ -5855,6 +5983,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableTriggerContextId() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID,
+                MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID);
+    }
+
+    @Override
+    public int getMeasurementMaxLengthOfTriggerContextId() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID,
+                MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID);
+    }
+
+    @Override
     public boolean getMeasurementEnableSessionStableKillSwitches() {
         return getDeviceConfigFlag(
                 KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES,
@@ -5924,6 +6066,22 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
                         /*flagName */ FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE,
                         /*defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE,
+                        FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeKAnonSignJoinFeatureAuctionServerEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE,
+                        FLEDGE_DEFAULT_KANON_FEATURE_AUCTION_SERVER_ENABLED);
     }
 
     @Override
@@ -6038,6 +6196,34 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public int getFledgeKanonHttpClientTimeoutInMs() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT,
+                FLEDGE_DEFAULT_KANON_HTTP_CLIENT_TIMEOUT_IN_MS);
+    }
+
+    @Override
+    public boolean getFledgeKAnonBackgroundJobRequiresBatteryNotLow() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW,
+                FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW);
+    }
+
+    @Override
+    public boolean getFledgeKAnonBackgroundJobRequiresDeviceIdle() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE,
+                FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE);
+    }
+
+    @Override
+    public int getFledgeKanonBackgroundJobConnectionType() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION,
+                FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE);
+    }
+
+    @Override
     public boolean getFledgeCustomAudienceCLIEnabledStatus() {
         return getDeviceConfigFlag(
                 KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
@@ -6110,6 +6296,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE,
                 DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE);
+    }
+
+    @Override
+    public boolean getEnableTabletRegionFix() {
+        return getDeviceConfigFlag(KEY_ENABLE_TABLET_REGION_FIX, DEFAULT_ENABLE_TABLET_REGION_FIX);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers

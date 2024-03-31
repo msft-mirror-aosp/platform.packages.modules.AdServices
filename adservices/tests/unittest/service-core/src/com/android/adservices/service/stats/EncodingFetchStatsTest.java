@@ -16,23 +16,23 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdsRelevanceStatusUtils.JS_FETCH_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.service.stats.pas.EncodingJsFetchStats;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
 
 import org.junit.Test;
 
-public class EncodingJsFetchStatsTest extends AdServicesUnitTestCase {
+public class EncodingFetchStatsTest extends AdServicesUnitTestCase {
     private static final int JS_DOWNLOAD_TIME = 50;
     private static final int HTTP_RESPONSE_CODE = 404;
-    private static final int FETCH_STATUS = JS_FETCH_STATUS_SUCCESS;
+    private static final int FETCH_STATUS = ENCODING_FETCH_STATUS_SUCCESS;
     private static final String AD_TECH_ID = "com.google.android";
 
     @Test
     public void testBuildEncodingJsFetchStats() {
-        EncodingJsFetchStats stats =
-                EncodingJsFetchStats.builder()
+        EncodingFetchStats stats =
+                EncodingFetchStats.builder()
                         .setJsDownloadTime(JS_DOWNLOAD_TIME)
                         .setHttpResponseCode(HTTP_RESPONSE_CODE)
                         .setFetchStatus(FETCH_STATUS)
