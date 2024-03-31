@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"ನೀವು ಭಾಗವಹಿಸದಿರಲು ಆಯ್ಕೆಮಾಡಿದ್ದೀರಿ"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"ನಿಮ್ಮ ಪ್ರತಿಕ್ರಿಯೆಗಾಗಿ ಧನ್ಯವಾದಗಳು. ನಿಮ್ಮ ಸಾಧನಕ್ಕಾಗಿ ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಅನ್ನು ಆಫ್ ಮಾಡಲಾಗಿದೆ.\n\nನೀವು ಮನಸ್ಸು ಬದಲಾಯಿಸಿದರೆ ಅಥವಾ ಇನ್ನಷ್ಟು ತಿಳಿದುಕೊಳ್ಳಲು ಬಯಸಿದರೆ, ನಿಮ್ಮ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಿಗೆ ಹೋಗಿ."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳು"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"ಅರ್ಥವಾಯಿತು"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"ನೀವು ಬೀಟಾದ ಭಾಗವಾಗಿದ್ದೀರಿ"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"ನಿಮ್ಮ ಸಾಧನಕ್ಕಾಗಿ ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಆನ್ ಆಗಿದೆ, ಮತ್ತು ನಿಮಗೆ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸುವ ಈ ಹೊಸತಾದ ಇನ್ನಷ್ಟು ಖಾಸಗಿಯಾದ ವಿಧಾನಗಳನ್ನು ಆ್ಯಪ್‌ಗಳು ಪರೀಕ್ಷಿಸಬಹುದು. ನಿಮ್ಮ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನೀವು ಯಾವಾಗ ಬೇಕಾದರೂ ಬೀಟಾ ಅನ್ನು ಆಫ್ ಮಾಡಬಹುದು."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"ಅರ್ಥವಾಯಿತು"</string>

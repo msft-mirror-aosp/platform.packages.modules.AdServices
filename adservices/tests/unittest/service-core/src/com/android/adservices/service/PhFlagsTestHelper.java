@@ -24,6 +24,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 import static com.android.adservices.service.FlagsTest.getConstantValue;
 
+import static org.junit.Assert.assertThrows;
+
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -35,6 +37,7 @@ import com.android.modules.utils.build.SdkLevel;
 import com.google.common.truth.Expect;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /** Provides utility methods for tests */
 public final class PhFlagsTestHelper {
@@ -137,33 +140,6 @@ public final class PhFlagsTestHelper {
     }
 
     /**
-     * Tests the behavior of a flag that is not guarded by any other flag.
-     *
-     * @param name name of the flag
-     * @param defaultValue Java constant (like {@code TOPICS_EPOCH_JOB_FLEX_MS"} defining the
-     *     default value of the flag
-     * @param flaginator helper object used to get the value of the flag
-     */
-    public void testUnguardedFlag(
-            String name, long defaultValue, Flaginator<Flags, Long> flaginator) {
-        // Without any overriding, the value is the hard coded constant.
-        mExpect.withMessage("getter for %s by default", name)
-                .that(flaginator.getFlagValue(mPhFlags))
-                .isEqualTo(defaultValue);
-
-        // Now overriding with the value in both system properties and device config.
-        long systemPropertyValue = defaultValue + 1;
-        long deviceConfigValue = defaultValue + 2;
-        setSystemProperty(name, systemPropertyValue);
-
-        setAdservicesFlag(name, deviceConfigValue);
-
-        mExpect.withMessage("getter for %s prefers system property value", name)
-                .that(flaginator.getFlagValue(mPhFlags))
-                .isEqualTo(systemPropertyValue);
-    }
-
-    /**
      * Tests the behavior of a boolean flag that is guarded by the global kill switch.
      *
      * @param flagName name of the flag
@@ -171,13 +147,13 @@ public final class PhFlagsTestHelper {
      *     "COBALT_LOGGING_ENABLED"} defining the default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testFeatureFlag(
+    public void testFeatureFlagGuardedByGlobalKs(
             String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlag(flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
+        testGuardedFeatureFlag(flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
     }
 
-    // TODO(b/326254556): remove if not used (other than by testFeatureFlag() above, which passes
-    // mGlobalKillSwitchGuard
+    // TODO(b/326254556): remove if not used (other than by testFeatureFlagGuardedByGlobalKs()
+    //  above, which passes mGlobalKillSwitchGuard.
     /**
      * Tests the behavior of a feature flag that is guarded by a "generic" guard (typically the
      * global kill switch and a per-API kill switch).
@@ -188,13 +164,197 @@ public final class PhFlagsTestHelper {
      * @param guard helper object used enable / disable the guarding flags
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testFeatureFlag(
+    public void testGuardedFeatureFlag(
             String flagName,
             String defaultValueConstant,
             FlagGuard guard,
             Flaginator<Flags, Boolean> flaginator) {
         testFeatureFlagBackedBySystemProperty(
                 flagName, defaultValueConstant, FeatureFlagType.FEATURE_FLAG, guard, flaginator);
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value are
+     * fetched.
+     */
+    public void testFeatureFlagDefaultAndOverriddenValue(
+            String flagName, String defaultConstantValue, Flaginator<Flags, String> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValue(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ "new" + defaultConstantValue,
+                /* illegalValue= */ Optional.empty());
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value are fetched
+     * [Backed by system property].
+     */
+    public void testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+            String flagName, Long defaultConstantValue, Flaginator<Flags, Long> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* deviceConfigOverriddenValue= */ 1L + defaultConstantValue,
+                /* systemPropertyOverriddenValue= */ 2L + defaultConstantValue,
+                /* illegalValue= */ Optional.of(-1L));
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value are fetched
+     * [Backed by system property].
+     */
+    public void testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+            String flagName, Integer defaultConstantValue, Flaginator<Flags, Integer> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* deviceConfigOverriddenValue= */ 1 + defaultConstantValue,
+                /* systemPropertyOverriddenValue= */ 2 + defaultConstantValue,
+                /* illegalValue= */ Optional.of(-1));
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value are
+     * fetched.
+     */
+    public void testFeatureFlagDefaultAndOverriddenValue(
+            String flagName, Integer defaultConstantValue, Flaginator<Flags, Integer> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValue(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ defaultConstantValue + 1,
+                /* illegalValue= */ Optional.empty());
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value are
+     * fetched.
+     */
+    public void testFeatureFlagDefaultAndOverriddenValue(
+            String flagName, Long defaultConstantValue, Flaginator<Flags, Long> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValue(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ defaultConstantValue + 1,
+                /* illegalValue= */ Optional.empty());
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value and
+     * verifies that correct exception is thrown in case an illegal value is overridden and fetched.
+     */
+    public void testFeatureFlagDefaultOverriddenAndIllegalValue(
+            String flagName, Long defaultConstantValue, Flaginator<Flags, Long> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValue(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ defaultConstantValue + 1,
+                /* illegalValue= */ Optional.of(-1L));
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value and
+     * verifies that correct exception is thrown in case an illegal value is overridden and fetched.
+     */
+    public void testFeatureFlagDefaultOverriddenAndIllegalValue(
+            String flagName, Float defaultConstantValue, Flaginator<Flags, Float> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValue(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ defaultConstantValue + 1,
+                /* illegalValue= */ Optional.of(-1f));
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value and
+     * verifies that correct exception is thrown in case an illegal value is overridden and fetched.
+     */
+    public void testFeatureFlagDefaultOverriddenAndIllegalValue(
+            String flagName, Integer defaultConstantValue, Flaginator<Flags, Integer> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValue(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ defaultConstantValue + 1,
+                /* illegalValue= */ Optional.of(-1));
+    }
+
+    /** Tests the behavior of a feature flag and verifies default value, overridden value. */
+    public void testFeatureFlagDefaultAndOverriddenValue(
+            String flagName, Boolean defaultConstantValue, Flaginator<Flags, Boolean> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValue(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ !defaultConstantValue,
+                /* illegalValue= */ Optional.empty());
+    }
+
+    private <T> void testFeatureFlagDefaultOverriddenAndIllegalValue(
+            String flagName,
+            T defaultConstantValue,
+            Flaginator<Flags, T> flaginator,
+            T overriddenValue,
+            Optional<T> illegalValue) {
+        // Without any overriding, the value is the hard coded constant.
+        mExpect.withMessage("getter of %s by default", flagName)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(defaultConstantValue);
+
+        setAdservicesFlag(flagName, "" + overriddenValue);
+        // After overriding, the flag returns the overridden value.
+        mExpect.withMessage("getter of %s after overriding ", flagName)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(overriddenValue);
+
+        if (illegalValue.isPresent()) {
+            testFeatureFlagForIllegalValue(flagName, flaginator, illegalValue.get());
+        }
+    }
+
+    private <T> void testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+            String flagName,
+            T defaultConstantValue,
+            Flaginator<Flags, T> flaginator,
+            T deviceConfigOverriddenValue,
+            T systemPropertyOverriddenValue,
+            Optional<T> illegalValue) {
+        // Without any overriding, the value is the hard coded constant.
+        mExpect.withMessage("getter of %s by default", flagName)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(defaultConstantValue);
+
+        setAdservicesFlag(flagName, "" + deviceConfigOverriddenValue);
+        // After overriding the device config, the flag returns the overridden value.
+        mExpect.withMessage("getter of %s after overriding ", flagName)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(deviceConfigOverriddenValue);
+
+        if (illegalValue.isPresent()) {
+            testFeatureFlagForIllegalValue(flagName, flaginator, illegalValue.get());
+        }
+
+        // After overriding with system property, system property should take precedence.
+        setSystemProperty(flagName, systemPropertyOverriddenValue);
+        mExpect.withMessage("getter of %s after overriding with system property ", flagName)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(systemPropertyOverriddenValue);
+    }
+
+    /** Checks whether setting a feature flag to an illegal value throws exception. */
+    public <T> void testFeatureFlagForIllegalValue(
+            String flagName, Flaginator<Flags, T> flaginator, T illegalValue) {
+        setAdservicesFlag(flagName, "" + illegalValue);
+        // After overriding with illegal value, fetching of flag should throw exception.
+        assertThrows(IllegalArgumentException.class, () -> flaginator.getFlagValue(mPhFlags));
     }
 
     /**
@@ -300,12 +460,8 @@ public final class PhFlagsTestHelper {
                 NAMESPACE_ADSERVICES, name);
     }
 
-    private void setSystemProperty(String name, long value) {
-        setSystemProperty(name, String.valueOf(value));
-    }
-
-    /** Sets the system property for a flag named {@code name} with value {@code value}. */
-    public void setSystemProperty(String name, boolean value) {
+    /** Sets the system property of a key with {@code value}. */
+    public <T> void setSystemProperty(String name, T value) {
         setSystemProperty(name, String.valueOf(value));
     }
 

@@ -17,6 +17,8 @@
 package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_REFRESH;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
 import android.adservices.common.AdTechIdentifier;
 import android.util.Log;
@@ -27,6 +29,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner.UpdateResultType;
+import com.android.adservices.service.stats.ShellCommandStats;
 
 import java.io.PrintWriter;
 import java.time.Clock;
@@ -105,13 +108,13 @@ public final class CustomAudienceRefreshCommand extends AbstractShellCommand {
     }
 
     @Override
-    public int run(PrintWriter out, PrintWriter err, String[] args) {
+    public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
         try {
             mArgParser.parse(args);
         } catch (IllegalArgumentException e) {
             err.printf("Failed to parse arguments: %s\n", e.getMessage());
             Log.e(TAG, "Failed to parse arguments", e);
-            return invalidArgsError(HELP, err, args);
+            return invalidArgsError(HELP, err, COMMAND_CUSTOM_AUDIENCE_REFRESH, args);
         }
 
         Optional<DBCustomAudienceBackgroundFetchData> backgroundFetchData =
@@ -123,22 +126,29 @@ public final class CustomAudienceRefreshCommand extends AbstractShellCommand {
             UpdateResultType updateResult = refreshCustomAudience(backgroundFetchData.get());
             if (updateResult == UpdateResultType.SUCCESS) {
                 out.printf(OUTPUT_SUCCESS);
-                return RESULT_OK;
+                return toShellCommandResult(RESULT_SUCCESS, COMMAND_CUSTOM_AUDIENCE_REFRESH);
             } else {
                 err.printf(
                         OUTPUT_ERROR_WITH_MESSAGE,
                         errorMessageFromCustomAudienceUpdateResult(updateResult));
-                return RESULT_GENERIC_ERROR;
+                return toShellCommandResult(
+                        ShellCommandStats.RESULT_GENERIC_ERROR, COMMAND_CUSTOM_AUDIENCE_REFRESH);
             }
         } else {
             err.printf(OUTPUT_ERROR_NO_CUSTOM_AUDIENCE);
-            return RESULT_GENERIC_ERROR;
+            return toShellCommandResult(
+                    ShellCommandStats.RESULT_GENERIC_ERROR, COMMAND_CUSTOM_AUDIENCE_REFRESH);
         }
     }
 
     @Override
     public String getCommandName() {
         return CMD;
+    }
+
+    @Override
+    public int getMetricsLoggerCommand() {
+        return COMMAND_CUSTOM_AUDIENCE_REFRESH;
     }
 
     private String errorMessageFromCustomAudienceUpdateResult(UpdateResultType updateResultType) {

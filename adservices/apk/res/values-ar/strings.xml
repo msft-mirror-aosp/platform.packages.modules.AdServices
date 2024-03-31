@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"لقد اختَرت عدم المشاركة"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"نشكرك على ردّك. تم إيقاف \"مبادرة حماية الخصوصية\" على جهازك.\n\nإذا غيّرت رأيك أو أردت الاطّلاع على المزيد من المعلومات انتقِل إلى إعدادات الخصوصية لديك."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"إعدادات الخصوصية"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"حسنًا"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"أنت تشارك في تجربة الإصدار التجريبي."</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"يتم تفعيل \"مبادرة حماية الخصوصية\" على جهازك، ويمكن للتطبيقات تجربة هذه الطرق الجديدة التي توفر المزيد من الخصوصية لعرض إعلاناتك. يمكنك إيقاف الإصدار التجريبي في أي وقت من إعدادات الخصوصية لديك."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"حسنًا"</string>

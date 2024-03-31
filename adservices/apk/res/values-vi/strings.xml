@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Bạn đã chọn không tham gia"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Cảm ơn bạn đã phản hồi. Hộp cát về quyền riêng tư đã bị tắt trong thiết bị của bạn.\n\nNếu bạn thay đổi ý định hoặc muốn tìm hiểu thêm, hãy di chuyển tới mục cài đặt quyền riêng tư của mình."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Chế độ cài đặt quyền riêng tư"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Tôi hiểu"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Bạn là một phần của bản beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Hộp cát về quyền riêng tư đã được bật cho thiết bị của bạn, nhờ vậy, các ứng dụng có thể thử nghiệm những cách mới, riêng tư hơn để hiển thị quảng cáo cho bạn. Bạn có thể tắt bản beta bất kỳ lúc nào trong chế độ cài đặt quyền riêng tư."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Đã hiểu"</string>

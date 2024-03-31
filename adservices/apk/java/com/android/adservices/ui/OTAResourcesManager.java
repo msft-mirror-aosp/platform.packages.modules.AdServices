@@ -32,7 +32,6 @@ import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.ArrayMap;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
@@ -85,7 +84,7 @@ public class OTAResourcesManager {
 
     static void refreshOTAResources(Context context) {
         LogUtil.d("createResourceLoaderFromMDDFiles called.");
-        Map<String, ClientFile> downloadedOTAFiles = getDownloadedFiles(context);
+        Map<String, ClientFile> downloadedOTAFiles = getDownloadedFiles();
 
         // check if there are OTA Resources
         if (downloadedOTAFiles == null || downloadedOTAFiles.size() == 0) {
@@ -160,10 +159,10 @@ public class OTAResourcesManager {
      * @return A {@link Map} containing downloaded fileId mapped to ClientFile or null if no
      *     downloaded files found.
      */
-    static @Nullable Map<String, ClientFile> getDownloadedFiles(@NonNull Context context) {
+    static @Nullable Map<String, ClientFile> getDownloadedFiles() {
         LogUtil.d("getDownloadedFiles called.");
         MobileDataDownload mobileDataDownload =
-                MobileDataDownloadFactory.getMdd(context, FlagsFactory.getFlags());
+                MobileDataDownloadFactory.getMdd(FlagsFactory.getFlags());
         GetFileGroupRequest getFileGroupRequest =
                 GetFileGroupRequest.newBuilder().setGroupName(FILE_GROUP_NAME).build();
         ClientFileGroup fileGroup;

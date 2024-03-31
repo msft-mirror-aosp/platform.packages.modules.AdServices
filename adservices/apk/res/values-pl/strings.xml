@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Nie zamierzasz brać udziału w programie"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Dziękujemy za odpowiedź. Piaskownica prywatności na urządzeniu została wyłączona.\n\nJeśli zmienisz zdanie lub zechcesz dowiedzieć się więcej, otwórz ustawienia prywatności."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Ustawienia prywatności"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Bierzesz udział w testach wersji beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Masz na urządzeniu włączoną Piaskownicę prywatności i aplikacje mogą testować nowe sposoby wyświetlania Ci reklam z lepszą ochroną prywatności. W każdej chwili możesz wyłączyć wersję beta w ustawieniach prywatności."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"OK"</string>

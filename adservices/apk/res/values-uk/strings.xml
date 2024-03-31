@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Ви відмовилися від участі"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Дякуємо за відповідь. Privacy Sandbox вимкнено для вашого пристрою.\n\nЯкщо ви передумаєте або захочете дізнатися більше, перейдіть у налаштування конфіденційності."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Налаштування конфіденційності"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Ви берете участь у програмі тестування бета-версії"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox увімкнено для вашого пристрою. Додатки можуть тестувати ці нові, більш захищені способи показу вам реклами. Ви будь-коли можете вимкнути бета-версію в налаштуваннях конфіденційності."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"ОK"</string>
