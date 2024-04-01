@@ -45,7 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AppInstallFiltererNoOpImplTest {
+public class FrequencyCapAdFiltererNoOpImplTest {
     private static final AdData.Builder AD_DATA_BUILDER =
             AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0);
 
@@ -56,14 +56,14 @@ public class AppInstallFiltererNoOpImplTest {
                     .setDecisionLogicUri(
                             CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/decisionPath/"));
 
-    private AppInstallAdFilterer mAdFilterer;
+    private FrequencyCapAdFilterer mFrequencyCapAdFilterer;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
-        mAdFilterer = new AppInstallFiltererNoOpImpl();
+        mFrequencyCapAdFilterer = new FrequencyCapAdFiltererNoOpImpl();
     }
 
     @Test
@@ -74,7 +74,7 @@ public class AppInstallFiltererNoOpImplTest {
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
 
-        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
+        assertEquals(contextualAds, mFrequencyCapAdFilterer.filterContextualAds(contextualAds));
     }
 
     @Test
@@ -91,7 +91,7 @@ public class AppInstallFiltererNoOpImplTest {
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
-        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
+        assertEquals(contextualAds, mFrequencyCapAdFilterer.filterContextualAds(contextualAds));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class AppInstallFiltererNoOpImplTest {
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
-        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
+        assertEquals(contextualAds, mFrequencyCapAdFilterer.filterContextualAds(contextualAds));
     }
 
     @Test
@@ -131,7 +131,7 @@ public class AppInstallFiltererNoOpImplTest {
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
-        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
+        assertEquals(contextualAds, mFrequencyCapAdFilterer.filterContextualAds(contextualAds));
     }
 
     @Test
@@ -162,7 +162,7 @@ public class AppInstallFiltererNoOpImplTest {
                                 ImmutableList.of(
                                         new AdWithBid(adData1, 1.0), new AdWithBid(adData2, 2.0)))
                         .build();
-        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
+        assertEquals(contextualAds, mFrequencyCapAdFilterer.filterContextualAds(contextualAds));
     }
 
     @Test
@@ -170,6 +170,6 @@ public class AppInstallFiltererNoOpImplTest {
         List<DBCustomAudience> caList =
                 DBCustomAudienceFixture.getListOfBuyersCustomAudiences(
                         Arrays.asList(CommonFixture.VALID_BUYER_1, CommonFixture.VALID_BUYER_2));
-        assertEquals(caList, mAdFilterer.filterCustomAudiences(caList));
+        assertEquals(caList, mFrequencyCapAdFilterer.filterCustomAudiences(caList));
     }
 }

@@ -117,7 +117,7 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
                 case MDD_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
-                    return MddJob.getInstance();
+                    return new MddJob();
                 default:
                     throw new RuntimeException(
                             "The job isn't configured for jobWorker creation. Requested Job ID: "

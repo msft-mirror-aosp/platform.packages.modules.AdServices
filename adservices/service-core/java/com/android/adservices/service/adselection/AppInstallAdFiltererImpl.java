@@ -34,13 +34,13 @@ import java.util.List;
 import java.util.Objects;
 
 /** Holds app install filters to remove ads from the selectAds auction. */
-public final class AppInstallFiltererImpl implements AppInstallAdFilterer {
+public final class AppInstallAdFiltererImpl implements AppInstallAdFilterer {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Clock mClock;
     @NonNull private final AppInstallDao mAppInstallDao;
 
-    public AppInstallFiltererImpl(@NonNull AppInstallDao appInstallDao, @NonNull Clock clock) {
+    public AppInstallAdFiltererImpl(@NonNull AppInstallDao appInstallDao, @NonNull Clock clock) {
         Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(clock);
         mAppInstallDao = appInstallDao;
@@ -75,7 +75,7 @@ public final class AppInstallFiltererImpl implements AppInstallAdFilterer {
                 List<DBAdData> filteredAds = new ArrayList<>();
                 totalAds += ca.getAds().size();
                 for (DBAdData ad : ca.getAds()) {
-                    if (doesAdPassFilters(ad, ca.getBuyer())) {
+                    if (doesAdPassAppInstallFilters(ad, ca.getBuyer())) {
                         filteredAds.add(ad);
                     }
                 }
@@ -113,7 +113,7 @@ public final class AppInstallFiltererImpl implements AppInstallAdFilterer {
                     contextualAds.getAdsWithBid().size(), currentTime);
             for (AdWithBid ad : contextualAds.getAdsWithBid()) {
                 DBAdData dbAdData = new DBAdData.Builder(ad.getAdData()).build();
-                if (doesAdPassFilters(dbAdData, contextualAds.getBuyer())) {
+                if (doesAdPassAppInstallFilters(dbAdData, contextualAds.getBuyer())) {
                     adsList.add(ad);
                 }
             }
@@ -127,22 +127,12 @@ public final class AppInstallFiltererImpl implements AppInstallAdFilterer {
         }
     }
 
-    private boolean doesAdPassFilters(DBAdData ad, AdTechIdentifier buyer) {
-        if (ad.getAdFilters() == null) {
-            return true;
-        }
-        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FOR_EACH_AD);
-        boolean passes = doesAdPassAppInstallFilters(ad, buyer);
-        Tracing.endAsyncSection(Tracing.FILTERER_FOR_EACH_AD, traceCookie);
-        return passes;
-    }
-
     private boolean doesAdPassAppInstallFilters(DBAdData ad, AdTechIdentifier buyer) {
         /* This could potentially be optimized by grouping the ads by package name before running
          * the queries, but unless the DB cache is playing poorly with these queries there might
          * not be a major performance improvement.
          */
-        if (ad.getAdFilters().getAppInstallFilters() == null) {
+        if (ad.getAdFilters() == null || ad.getAdFilters().getAppInstallFilters() == null) {
             return true;
         }
         for (String packageName : ad.getAdFilters().getAppInstallFilters().getPackageNames()) {

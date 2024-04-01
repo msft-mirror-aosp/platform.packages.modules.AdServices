@@ -624,7 +624,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mCustomAudienceDao,
                                                 mEncodedPayloadDao,
                                                 mAdSelectionServiceFilter,
-                                                mAdFilteringFeatureFactory.getAdFilterer(),
+                                                mAdFilteringFeatureFactory
+                                                        .getFrequencyCapAdFilterer(),
                                                 mBackgroundExecutor,
                                                 mLightweightExecutor,
                                                 AdServicesExecutors.getBlockingExecutor(),
@@ -638,7 +639,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 getAuctionServerPayloadMetricsStrategy(mFlags),
                                                 mConsentedDebugConfigurationGeneratorFactory
                                                         .create(),
-                                                mEgressConfigurationGenerator);
+                                                mEgressConfigurationGenerator,
+                                                mAdFilteringFeatureFactory
+                                                        .getAppInstallAdFilterer());
                                 runner.run(inputParams, callback);
                             }
 
@@ -656,7 +659,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mCustomAudienceDao,
                                                 mEncodedPayloadDao,
                                                 mAdSelectionServiceFilter,
-                                                mAdFilteringFeatureFactory.getAdFilterer(),
+                                                mAdFilteringFeatureFactory
+                                                        .getFrequencyCapAdFilterer(),
                                                 mBackgroundExecutor,
                                                 mLightweightExecutor,
                                                 AdServicesExecutors.getBlockingExecutor(),
@@ -671,7 +675,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 getAuctionServerPayloadMetricsStrategy(mFlags),
                                                 mConsentedDebugConfigurationGeneratorFactory
                                                         .create(),
-                                                mEgressConfigurationGenerator);
+                                                mEgressConfigurationGenerator,
+                                                mAdFilteringFeatureFactory
+                                                        .getAppInstallAdFilterer());
                                 runner.run(inputParams, callback);
                             }
                         },
@@ -775,7 +781,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         adSelectionExecutionLogger,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory.getAdFilterer(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdFilterer(),
                         mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
                         mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                 mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
@@ -785,7 +791,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mShouldUseUnifiedTables,
                         mRetryStrategyFactory.createRetryStrategy(
                                 mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()),
-                        mKAnonSignJoinFactory);
+                        mKAnonSignJoinFactory,
+                        mAdFilteringFeatureFactory.getAppInstallAdFilterer());
         runner.runAdSelection(inputParams, partialCallback, devContext, fullCallback);
     }
 

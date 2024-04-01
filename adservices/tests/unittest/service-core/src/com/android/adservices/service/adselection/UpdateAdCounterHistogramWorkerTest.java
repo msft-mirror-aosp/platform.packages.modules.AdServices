@@ -458,7 +458,7 @@ public class UpdateAdCounterHistogramWorkerTest {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
             return mShouldEnableAdFilteringFeature;
         }
     }

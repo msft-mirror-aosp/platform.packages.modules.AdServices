@@ -56,6 +56,12 @@
         <option name="teardown-command"
                 value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
 
+        <!-- Temporarily enable the frequency capping feature -->
+        <option name="run-command"
+                value="device_config put adservices fledge_frequency_cap_filtering_enabled true" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_frequency_cap_filtering_enabled false" />
+
         <!-- Increase the allowed API queries per second -->
         <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 1000" />
         <option name="teardown-command" value="setprop debug.adservices.sdk_request_permits_per_second 1" />

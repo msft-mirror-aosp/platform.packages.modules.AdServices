@@ -138,7 +138,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final EncodedPayloadDao encodedPayloadDao,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
-            @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdFilterer frequencyCapAdFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService blockingExecutorService,
@@ -152,12 +152,13 @@ public class GetAdSelectionDataRunner {
             @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
             @NonNull
                     final ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator,
-            @NonNull final EgressConfigurationGenerator egressConfigurationGenerator) {
+            @NonNull final EgressConfigurationGenerator egressConfigurationGenerator,
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
         Objects.requireNonNull(multiCloudSupportStrategy);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(encodedPayloadDao);
-        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
@@ -169,6 +170,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
         Objects.requireNonNull(consentedDebugConfigurationGenerator);
         Objects.requireNonNull(egressConfigurationGenerator);
+        Objects.requireNonNull(appInstallAdFilterer);
 
         mObliviousHttpEncryptor =
                 multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
@@ -193,7 +195,7 @@ public class GetAdSelectionDataRunner {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
-                        adFilterer,
+                        frequencyCapAdFilterer,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
@@ -203,7 +205,8 @@ public class GetAdSelectionDataRunner {
                                 mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()),
                         mFlags.getFledgeAuctionServerOmitAdsEnabled(),
                         auctionServerPayloadMetricsStrategy,
-                        mFlags);
+                        mFlags,
+                        appInstallAdFilterer);
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
@@ -227,7 +230,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final EncodedPayloadDao encodedPayloadDao,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
-            @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdFilterer frequencyCapAdFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService blockingExecutorService,
@@ -241,12 +244,13 @@ public class GetAdSelectionDataRunner {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
             @NonNull ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator,
-            @NonNull EgressConfigurationGenerator egressConfigurationGenerator) {
+            @NonNull EgressConfigurationGenerator egressConfigurationGenerator,
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
         Objects.requireNonNull(multiCloudSupportStrategy);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(encodedPayloadDao);
-        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
@@ -259,6 +263,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
         Objects.requireNonNull(consentedDebugConfigurationGenerator);
         Objects.requireNonNull(egressConfigurationGenerator);
+        Objects.requireNonNull(appInstallAdFilterer);
 
         mObliviousHttpEncryptor =
                 multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
@@ -283,7 +288,7 @@ public class GetAdSelectionDataRunner {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
-                        adFilterer,
+                        frequencyCapAdFilterer,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
@@ -293,7 +298,8 @@ public class GetAdSelectionDataRunner {
                                 mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()),
                         mFlags.getFledgeAuctionServerOmitAdsEnabled(),
                         auctionServerPayloadMetricsStrategy,
-                        mFlags);
+                        mFlags,
+                        appInstallAdFilterer);
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());

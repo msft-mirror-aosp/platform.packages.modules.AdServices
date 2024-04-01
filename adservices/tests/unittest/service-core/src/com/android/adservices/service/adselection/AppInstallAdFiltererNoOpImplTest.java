@@ -45,7 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AdFiltererNoOpImplTest {
+public class AppInstallAdFiltererNoOpImplTest {
     private static final AdData.Builder AD_DATA_BUILDER =
             AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0);
 
@@ -56,14 +56,14 @@ public class AdFiltererNoOpImplTest {
                     .setDecisionLogicUri(
                             CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/decisionPath/"));
 
-    private AdFilterer mAdFilterer;
+    private AppInstallAdFilterer mAdFilterer;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
-        mAdFilterer = new AdFiltererNoOpImpl();
+        mAdFilterer = new AppInstallAdFiltererNoOpImpl();
     }
 
     @Test

@@ -27,7 +27,9 @@ import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessC
 import android.annotation.Nullable;
 import android.util.Log;
 
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ShellCommandStats;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -62,25 +64,43 @@ public final class AdServicesShellCommandHandler {
     private final PrintWriter mOut;
     private final PrintWriter mErr;
     private final ImmutableMap<String, ShellCommandFactory> mShellCommandFactories;
+    private final AdServicesLogger mAdServicesLogger;
+    private final Clock mClock;
     private String[] mArgs;
     private int mArgPos;
     private String mCurArgData;
 
     /** If PrintWriter {@code err} is not provided, we use {@code out} for the {@code err}. */
     public AdServicesShellCommandHandler(
-            PrintWriter out, ShellCommandFactorySupplier shellCommandFactorySupplier) {
-        this(out, /* err= */ out, shellCommandFactorySupplier);
+            PrintWriter out,
+            ShellCommandFactorySupplier shellCommandFactorySupplier,
+            AdServicesLogger adServicesLogger) {
+        this(out, /* err= */ out, shellCommandFactorySupplier, adServicesLogger);
     }
 
     public AdServicesShellCommandHandler(
             PrintWriter out,
             PrintWriter err,
-            ShellCommandFactorySupplier shellCommandFactorySupplier) {
+            ShellCommandFactorySupplier shellCommandFactorySupplier,
+            AdServicesLogger adServicesLogger) {
+        this(out, err, shellCommandFactorySupplier, adServicesLogger, Clock.getInstance());
+    }
+
+    @VisibleForTesting
+    public AdServicesShellCommandHandler(
+            PrintWriter out,
+            PrintWriter err,
+            ShellCommandFactorySupplier shellCommandFactorySupplier,
+            AdServicesLogger adServicesLogger,
+            Clock clock) {
         mOut = Objects.requireNonNull(out, "out cannot be null");
         mErr = Objects.requireNonNull(err, "err cannot be null");
         Objects.requireNonNull(
                 shellCommandFactorySupplier, "shellCommandFactorySupplier cannot be null");
         mShellCommandFactories = shellCommandFactorySupplier.getShellCommandFactories();
+        mAdServicesLogger =
+                Objects.requireNonNull(adServicesLogger, "adServicesLogger cannot be null");
+        mClock = Objects.requireNonNull(clock, "clock cannot be null");
     }
 
     /** Runs the given command ({@code args[0]}) and optional arguments */
@@ -177,19 +197,20 @@ public final class AdServicesShellCommandHandler {
                     mErr.println("Use -h for help.");
                     return RESULT_GENERIC_ERROR;
                 }
+                long startTime = mClock.currentTimeMillis();
                 ShellCommandResult shellCommandResult = shellCommand.run(mOut, mErr, mArgs);
+                int latency = (int) (mClock.currentTimeMillis() - startTime);
+                ShellCommandStats stats =
+                        new ShellCommandStats(
+                                shellCommandResult.getCommand(),
+                                shellCommandResult.getResultCode(),
+                                latency);
+                mAdServicesLogger.logShellCommandStats(stats);
                 return convertToExternalResultCode(shellCommandResult.getResultCode());
         }
     }
 
     private int convertToExternalResultCode(@ShellCommandStats.CommandResult int commandResult) {
-        switch (commandResult) {
-            case ShellCommandStats.RESULT_SUCCESS -> {
-                return RESULT_OK;
-            }
-            default -> {
-                return RESULT_GENERIC_ERROR;
-            }
-        }
+        return commandResult == ShellCommandStats.RESULT_SUCCESS ? RESULT_OK : RESULT_GENERIC_ERROR;
     }
 }

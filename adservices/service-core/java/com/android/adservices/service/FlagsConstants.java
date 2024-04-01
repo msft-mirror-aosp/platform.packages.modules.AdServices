@@ -870,6 +870,9 @@ public final class FlagsConstants {
             "encryption_key_job_required_network_type";
 
     public static final String KEY_ENCRYPTION_KEY_JOB_PERIOD_MS = "encryption_key_job_period_ms";
+    public static final String KEY_ENABLE_MDD_ENCRYPTION_KEYS = "enable_mdd_encryption_keys";
+    public static final String KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
+            "mdd_encryption_keys_manifest_file_url";
 
     // App/SDK AllowList/DenyList keys
     public static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";

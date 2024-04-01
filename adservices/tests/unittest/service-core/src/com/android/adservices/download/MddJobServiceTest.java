@@ -92,6 +92,7 @@ import java.util.concurrent.Executors;
 @SpyStatic(MddFlags.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @SpyStatic(EnrollmentDataDownloadManager.class)
+@SpyStatic(EncryptionDataDownloadManager.class)
 @MockStatic(ServiceCompatUtils.class)
 public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
@@ -124,6 +125,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     @Mock private StatsdAdServicesLogger mMockStatsdLogger;
     @Mock private MobileDataDownload mSpyMobileDataDownload;
     @Mock private EnrollmentDataDownloadManager mSpyEnrollmentDataDownloadManager;
+    @Mock private EncryptionDataDownloadManager mSpyEncryptionDataDownloadManager;
 
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
     private AdServicesJobServiceLogger mLogger;
@@ -141,6 +143,8 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         doReturn(mSpyMobileDataDownload).when(() -> MobileDataDownloadFactory.getMdd(any()));
         doReturn(mSpyEnrollmentDataDownloadManager)
                 .when(() -> EnrollmentDataDownloadManager.getInstance());
+        doReturn(mSpyEncryptionDataDownloadManager)
+                .when(() -> EncryptionDataDownloadManager.getInstance());
 
         doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
 

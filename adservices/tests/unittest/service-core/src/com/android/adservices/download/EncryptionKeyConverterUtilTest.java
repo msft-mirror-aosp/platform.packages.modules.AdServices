@@ -86,6 +86,7 @@ public final class EncryptionKeyConverterUtilTest extends AdServicesUnitTestCase
         expect.that(encryptionKey.getKeyCommitmentId()).isEqualTo(98765);
         expect.that(encryptionKey.getBody()).isEqualTo("MIIBCgKCAQEAwVG1qA==");
         expect.that(encryptionKey.getExpiration()).isEqualTo(1682516522000L);
+        expect.that(encryptionKey.getLastFetchTime()).isGreaterThan(0);
     }
 
     @Test

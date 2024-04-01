@@ -84,6 +84,7 @@ public class MobileDataDownloadFactory {
     private static final String MDD_METADATA_SHARED_PREFERENCES = "mdd_metadata_store";
     private static final String TOPICS_MANIFEST_ID = "TopicsManifestId";
     private static final String MEASUREMENT_MANIFEST_ID = "MeasurementManifestId";
+    private static final String ENCRYPTION_KEYS_MANIFEST_ID = "EncryptionKeysManifestId";
     private static final String UI_OTA_STRINGS_MANIFEST_ID = "UiOtaStringsManifestId";
     private static final String UI_OTA_RESOURCES_MANIFEST_ID = "UiOtaResourcesManifestId";
 
@@ -129,6 +130,9 @@ public class MobileDataDownloadFactory {
                                 .addFileGroupPopulator(
                                         getMeasurementManifestPopulator(
                                                 flags, fileStorage, fileDownloader))
+                                .addFileGroupPopulator(
+                                        getEncryptionKeysManifestPopulator(
+                                                context, flags, fileStorage, fileDownloader))
                                 .addFileGroupPopulator(
                                         getUiOtaResourcesManifestPopulator(
                                                 flags, fileStorage, fileDownloader))
@@ -393,6 +397,57 @@ public class MobileDataDownloadFactory {
                                 return ConsentManager.getInstance().getConsent().isGiven();
                             }
                         })
+                .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
+                .setFileDownloader(() -> fileDownloader)
+                .setFileStorage(fileStorage)
+                .setManifestFileFlagSupplier(() -> manifestFileFlag)
+                .setManifestConfigParser(manifestConfigFileParser)
+                .setMetadataStore(
+                        SharedPreferencesManifestFileMetadata.createFromContext(
+                                context, /*InstanceId*/
+                                Optional.absent(),
+                                AdServicesExecutors.getBackgroundExecutor()))
+                // TODO(b/239265537): Enable dedup using etag.
+                .setDedupDownloadWithEtag(false)
+                // TODO(b/243829623): use proper Logger.
+                .setLogger(
+                        new Logger() {
+                            @Override
+                            public void log(MessageLite event, int eventCode) {
+                                // A no-op logger.
+                            }
+                        })
+                .build();
+    }
+
+    @VisibleForTesting
+    static ManifestFileGroupPopulator getEncryptionKeysManifestPopulator(
+            Context context,
+            Flags flags,
+            SynchronousFileStorage fileStorage,
+            FileDownloader fileDownloader) {
+        ManifestFileFlag manifestFileFlag =
+                ManifestFileFlag.newBuilder()
+                        .setManifestId(ENCRYPTION_KEYS_MANIFEST_ID)
+                        .setManifestFileUrl(flags.getMddEncryptionKeysManifestFileUrl())
+                        .build();
+
+        ManifestConfigFileParser manifestConfigFileParser =
+                new ManifestConfigFileParser(
+                        fileStorage, AdServicesExecutors.getBackgroundExecutor());
+
+        return ManifestFileGroupPopulator.builder()
+                .setContext(context)
+                // encryption key resources should not be downloaded pre-consent
+                .setEnabledSupplier(
+                        () -> {
+                            if (flags.getGaUxFeatureEnabled()) {
+                                return isAnyConsentGiven(flags);
+                            } else {
+                                return ConsentManager.getInstance().getConsent().isGiven();
+                            }
+                        })
+                .setEnabledSupplier(flags::getEnableMddEncryptionKeys)
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)

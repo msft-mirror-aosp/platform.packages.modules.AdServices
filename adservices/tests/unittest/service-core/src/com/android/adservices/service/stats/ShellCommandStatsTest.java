@@ -33,4 +33,25 @@ public final class ShellCommandStatsTest extends AdServicesUnitTestCase {
         expect.withMessage("result").that(stats.getResult()).isEqualTo(result);
         expect.withMessage("latency").that(stats.getLatencyMillis()).isEqualTo(latency);
     }
+
+    @Test
+    public void testEqualsHashCode() {
+        ShellCommandStats stats1 =
+                new ShellCommandStats(
+                        ShellCommandStats.COMMAND_ECHO, ShellCommandStats.RESULT_SUCCESS, 1000);
+        ShellCommandStats stats2 =
+                new ShellCommandStats(
+                        ShellCommandStats.COMMAND_ECHO, ShellCommandStats.RESULT_SUCCESS, 1000);
+
+        expectObjectsAreEqual(stats1, stats2);
+
+        ShellCommandStats stats3 =
+                new ShellCommandStats(
+                        ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_LIST,
+                        ShellCommandStats.RESULT_SUCCESS,
+                        1000);
+
+        expectObjectsAreNotEqual(stats1, stats3);
+        expectObjectsAreNotEqual(stats2, stats3);
+    }
 }

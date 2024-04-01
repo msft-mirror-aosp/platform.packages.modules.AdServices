@@ -103,6 +103,7 @@ public final class EncryptionDataDownloadManager {
         LOGGER.v("Reading encryption MDD data for group name: %s", GROUP_NAME);
         List<ClientConfigProto.ClientFile> jsonKeyFiles = getEncryptionDataFiles();
         if (jsonKeyFiles == null || jsonKeyFiles.isEmpty()) {
+            LOGGER.d("No files available for: %s", GROUP_NAME);
             return Futures.immediateFuture(DownloadStatus.NO_FILE_AVAILABLE);
         }
 

@@ -64,7 +64,6 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
     @Mock private AdServicesErrorLogger mMockErrorLogger;
 
     @Mock private Flags mMockFlags;
-    @Mock private MddJob mMockMddJob;
 
     @Before
     public void setup() {
@@ -94,22 +93,20 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
 
     @Test
     public void testGetJobInstance() {
-        doReturn(mMockMddJob).when(MddJob::getInstance);
-
         expect.withMessage("getJobWorkerInstance()")
                 .that(mFactory.getJobWorkerInstance(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId()))
-                .isSameInstanceAs(mMockMddJob);
+                .isInstanceOf(MddJob.class);
         expect.withMessage("getJobWorkerInstance()")
                 .that(mFactory.getJobWorkerInstance(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId()))
-                .isSameInstanceAs(mMockMddJob);
+                .isInstanceOf(MddJob.class);
         expect.withMessage("getJobWorkerInstance()")
                 .that(
                         mFactory.getJobWorkerInstance(
                                 MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId()))
-                .isSameInstanceAs(mMockMddJob);
+                .isInstanceOf(MddJob.class);
         expect.withMessage("getJobWorkerInstance()")
                 .that(mFactory.getJobWorkerInstance(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()))
-                .isSameInstanceAs(mMockMddJob);
+                .isInstanceOf(MddJob.class);
     }
 
     @Test

@@ -5344,8 +5344,20 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
             return mRegisterAdBeaconEnabled;
         }
 
+        // TODO(b/330840810): Remove this flag once other features are ramped up to using the split
+        // flags
         @Override
         public boolean getFledgeAdSelectionFilteringEnabled() {
+            return mFiltersEnabled;
+        }
+
+        @Override
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
+            return mFiltersEnabled;
+        }
+
+        @Override
+        public boolean getFledgeAppInstallFilteringEnabled() {
             return mFiltersEnabled;
         }
 
