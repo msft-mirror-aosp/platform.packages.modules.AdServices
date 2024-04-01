@@ -100,8 +100,6 @@ public final class MddJob implements JobWorker {
 
     @VisibleForTesting static final String KEY_MDD_TASK_TAG = "mdd_task_tag";
 
-    private static final MddJob sSingleton = new MddJob();
-
     @VisibleForTesting
     // Required network state of the device when to run the task.
     enum NetworkState {
@@ -113,11 +111,6 @@ public final class MddJob implements JobWorker {
 
         // Network not required.
         NETWORK_STATE_ANY,
-    }
-
-    /** Gets a singleton instance of {@link MddJob}. */
-    public static MddJob getInstance() {
-        return sSingleton;
     }
 
     @Override
