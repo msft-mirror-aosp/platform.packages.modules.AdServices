@@ -2717,25 +2717,22 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getConsentNotificationDebugMode() {
-        return getDeviceConfigFlag(
+        return getFlagFromSystemPropertiesOrDeviceConfig(
                 FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
                 CONSENT_NOTIFICATION_DEBUG_MODE);
     }
 
     @Override
     public boolean getConsentNotificationActivityDebugMode() {
-        return getDeviceConfigFlag(
+        return getFlagFromSystemPropertiesOrDeviceConfig(
                 FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
     }
 
     @Override
     public boolean getConsentNotifiedDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE),
-                getDeviceConfigFlag(
-                        FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE,
-                        CONSENT_NOTIFIED_DEBUG_MODE));
+        return getFlagFromSystemPropertiesOrDeviceConfig(
+                FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE, CONSENT_NOTIFIED_DEBUG_MODE);
     }
 
     @Override
@@ -2747,7 +2744,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getConsentManagerOTADebugMode() {
-        return getDeviceConfigFlag(
+        return getFlagFromSystemPropertiesOrDeviceConfig(
                 FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
                 DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
     }
