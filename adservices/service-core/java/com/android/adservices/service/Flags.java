@@ -19,6 +19,7 @@ package com.android.adservices.service;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 import static android.os.Build.VERSION.SDK_INT;
 
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.DEBUG;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
@@ -1925,6 +1926,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
     }
 
+    @FeatureFlag(DEBUG)
     boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
 
     default boolean getConsentNotificationDebugMode() {
@@ -1932,6 +1934,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** The consent notification activity debug mode is off by default. */
+    @FeatureFlag(DEBUG)
     boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
 
     /** Returns the consent notification activity debug mode. */
@@ -1939,6 +1942,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
     }
 
+    @FeatureFlag(DEBUG)
     boolean CONSENT_NOTIFIED_DEBUG_MODE = false;
 
     /** Returns whether to suppress consent notified state. */
@@ -1946,12 +1950,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return CONSENT_NOTIFIED_DEBUG_MODE;
     }
 
+    @FeatureFlag(DEBUG)
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
 
     default boolean getConsentManagerDebugMode() {
         return CONSENT_MANAGER_DEBUG_MODE;
     }
 
+    @FeatureFlag(DEBUG)
     boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
 
     /** When enabled, the device is treated as OTA device. */
@@ -2667,6 +2673,23 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns min time period (in millis) between each event fallback reporting job run. */
     default long getEncryptionKeyJobPeriodMs() {
         return ENCRYPTION_KEY_JOB_PERIOD_MS;
+    }
+
+    /** Feature flag to ramp up mdd based encryption keys. */
+    boolean ENABLE_MDD_ENCRYPTION_KEYS = false;
+
+    /** Returns value of the feature flag used to determine ramp for mdd based encryption keys. */
+    default boolean getEnableMddEncryptionKeys() {
+        return ENABLE_MDD_ENCRYPTION_KEYS;
+    }
+
+    /** Manifest URL for encryption keys file group registered with MDD. */
+    String MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/3210/0c19c2a06422c21070192580a136d433ba3ae7f8";
+
+    /** Returns manifest URL for encryption keys file group registered with MDD. */
+    default String getMddEncryptionKeysManifestFileUrl() {
+        return MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL;
     }
 
     /**
