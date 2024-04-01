@@ -613,7 +613,9 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     }
 
     @Test
-    public void getTopicsFromApp_SdkTagMissing() throws Exception {
+    @Deprecated // flag is always true
+    public void getTopicsFromApp_SdkTagMissing_disabledByDefault() throws Exception {
+        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(false);
         mockAppContextForAppManifestConfigHelperCall();
 
         PackageManager.Property property =
@@ -636,6 +638,47 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                 mRequest,
                 /* checkLoggingStatus */ true,
                 FAILURE_REASON_UNSET);
+    }
+
+    @Test
+    public void getTopicsFromApp_SdkTagMissing() throws Exception {
+        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(true);
+        mockAppContextForAppManifestConfigHelperCall();
+
+        PackageManager.Property property =
+                mSpyContext
+                        .getPackageManager()
+                        .getProperty(
+                                "android.adservices.AD_SERVICES_CONFIG.sdkTagMissing",
+                                TEST_APP_PACKAGE_NAME);
+        when(mPackageManager.getProperty(
+                        AppManifestConfigHelper.AD_SERVICES_CONFIG_PROPERTY, TEST_APP_PACKAGE_NAME))
+                .thenReturn(property);
+
+        Resources resources =
+                mSpyContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
+        when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
+                .thenReturn(resources);
+
+        TopicsServiceImpl topicsServiceImpl = createTestTopicsServiceImplInstance();
+        GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
+
+        // No topics (empty list) were returned.
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(STATUS_SUCCESS)
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
+                        .build();
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
     }
 
     @Test

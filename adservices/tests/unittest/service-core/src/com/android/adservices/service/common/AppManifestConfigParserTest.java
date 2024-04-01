@@ -63,15 +63,18 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
             expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
                     .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("1234"))
                     .isTrue();
-            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(4567)")
                     .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("4567"))
                     .isTrue();
-            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(89)")
                     .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("89"))
                     .isTrue();
-            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234567)")
                     .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("1234567"))
                     .isTrue();
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(4815162342)")
+                    .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("4815162342"))
+                    .isFalse();
         }
 
         // Verify Attribution tags.
