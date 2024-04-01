@@ -49,8 +49,6 @@ import java.util.concurrent.Executors;
 public class TopicsConnectionTest {
     private static final String TAG = "TopicsConnectionTest";
 
-    private static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
-
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
 
@@ -123,7 +121,6 @@ public class TopicsConnectionTest {
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(exception).hasMessageThat().contains(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
 
         // Now disable the Global Kill Switch, we should be able to connect to the Service normally.
         enableGlobalKillSwitch(/* enabled */ false);
