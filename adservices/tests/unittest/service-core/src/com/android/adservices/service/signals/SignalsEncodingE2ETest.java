@@ -95,7 +95,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
@@ -170,6 +169,7 @@ public class SignalsEncodingE2ETest {
     private ListeningExecutorService mBackgroundExecutorService;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private Flags mFlags;
+    private EnrollmentDao mEnrollmentDao;
 
     @Before
     public void setup() {
@@ -195,6 +195,12 @@ public class SignalsEncodingE2ETest {
                 Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncodedPayloadDao();
+        mEnrollmentDao =
+                new EnrollmentDao(
+                        mContextSpy,
+                        DbTestUtil.getSharedDbHelperForTest(),
+                        mFlagsWithProtectedSignalsAndEncodingEnabled);
+
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
@@ -227,10 +233,7 @@ public class SignalsEncodingE2ETest {
                 ExtendedMockito.spy(
                         new FledgeAuthorizationFilter(
                                 mContextSpy.getPackageManager(),
-                                new EnrollmentDao(
-                                        mContextSpy,
-                                        DbTestUtil.getSharedDbHelperForTest(),
-                                        mFlagsWithProtectedSignalsAndEncodingEnabled),
+                                mEnrollmentDao,
                                 mAdServicesLoggerMock));
         mProtectedSignalsServiceFilter =
                 new ProtectedSignalsServiceFilter(
@@ -271,7 +274,8 @@ public class SignalsEncodingE2ETest {
                         AdServicesLoggerImpl.getInstance(),
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mProtectedSignalsServiceFilter);
+                        mProtectedSignalsServiceFilter,
+                        mEnrollmentDao);
 
         mSignalStorageManager = new SignalsProviderImpl(mSignalsDao);
         RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
