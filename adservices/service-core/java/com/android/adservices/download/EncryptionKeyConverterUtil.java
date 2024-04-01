@@ -98,6 +98,7 @@ public final class EncryptionKeyConverterUtil {
             builder.setKeyCommitmentId(jsonObject.getInt(KEY_ID_KEY));
             builder.setBody(getStringFromJson(jsonObject, BODY_KEY));
             builder.setExpiration(jsonObject.getLong(EXPIRATION_KEY));
+            builder.setLastFetchTime(System.currentTimeMillis());
 
             EncryptionKey encryptionKey = builder.build();
             LOGGER.v("Successfully built EncryptionKey %s", encryptionKey.toString());

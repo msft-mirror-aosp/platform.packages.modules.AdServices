@@ -23,6 +23,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETR
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
@@ -54,6 +55,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREME
 import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
@@ -1832,6 +1834,17 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableMddEncryptionKeys() {
+        return getDeviceConfigFlag(KEY_ENABLE_MDD_ENCRYPTION_KEYS, ENABLE_MDD_ENCRYPTION_KEYS);
+    }
+
+    @Override
+    public String getMddEncryptionKeysManifestFileUrl() {
+        return getDeviceConfigFlag(
+                KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL, MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL);
+    }
+
+    @Override
     public String getPpapiAppAllowList() {
         return getDeviceConfigFlag(FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, PPAPI_APP_ALLOW_LIST);
     }
@@ -3319,6 +3332,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL
                         + " = "
                         + getMddTopicsClassifierManifestFileUrl());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL
+                        + " = "
+                        + getMddEncryptionKeysManifestFileUrl());
         writer.println("==== AdServices PH Flags Dump Encryption key related flags ====");
         writer.println(
                 "\t"
@@ -3340,6 +3358,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS
                         + " = "
                         + getEncryptionKeyJobPeriodMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS
+                        + " = "
+                        + getEnableMddEncryptionKeys());
         writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println(
                 "\t"
