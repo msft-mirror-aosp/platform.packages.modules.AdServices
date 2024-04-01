@@ -177,7 +177,12 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
-    @Spy private AdFilterer mAdFiltererSpy = new AdFiltererNoOpImpl();
+
+    @Spy
+    private FrequencyCapAdFilterer mFrequencyCapAdFiltererSpy =
+            new FrequencyCapAdFiltererNoOpImpl();
+
+    @Spy private AppInstallAdFilterer mAppInstallAdFiltererSpy = new AppInstallAdFiltererNoOpImpl();
     @Mock private Clock mClockMock;
 
     @Mock private AuctionServerDebugReporting mAuctionServerDebugReporting;
@@ -312,7 +317,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                                 .setCallerPackageName(CALLER_PACKAGE_NAME)
                                 .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
                                 .build());
-        verify(mAdFiltererSpy).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
 
         verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
         verify(mAuctionServerDebugReporting).isEnabled();
@@ -393,7 +398,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                                 .setCallerPackageName(CALLER_PACKAGE_NAME)
                                 .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
                                 .build());
-        verify(mAdFiltererSpy).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
 
         loggingLatch.await();
         // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics
@@ -496,7 +501,8 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                                 .setCallerPackageName(CALLER_PACKAGE_NAME)
                                 .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
                                 .build());
-        verify(mAdFiltererSpy).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererSpy).filterCustomAudiences(any());
 
         loggingLatch.await();
         // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics
@@ -602,7 +608,8 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                                 .setCallerPackageName(CALLER_PACKAGE_NAME)
                                 .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
                                 .build());
-        verify(mAdFiltererSpy).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererSpy).filterCustomAudiences(any());
 
         loggingLatch.await();
         // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics
@@ -804,7 +811,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                                 .setCallerPackageName(CALLER_PACKAGE_NAME)
                                 .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
                                 .build());
-        verify(mAdFiltererSpy).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
 
         verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
 
@@ -875,8 +882,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 callback.mGetAdSelectionDataResponse.getAdSelectionData().length);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mAdSelectionEntryDaoSpy);
-        verifyZeroInteractions(mAdFiltererSpy);
-
+        verifyZeroInteractions(mFrequencyCapAdFiltererSpy);
     }
 
     @Test
@@ -914,8 +920,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 callback.mGetAdSelectionDataResponse.getAdSelectionData().length);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mAdSelectionEntryDaoSpy);
-        verifyZeroInteractions(mAdFiltererSpy);
-
+        verifyZeroInteractions(mFrequencyCapAdFiltererSpy);
     }
 
     @Test
@@ -1098,7 +1103,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mAdSelectionServiceFilterMock,
-                        mAdFiltererSpy,
+                        mFrequencyCapAdFiltererSpy,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         BLOCKING_EXECUTOR,
@@ -1111,7 +1116,8 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         mAdServicesLoggerSpy,
                         new AuctionServerPayloadMetricsStrategyDisabled(),
                         mConsentedDebugConfigurationGenerator,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        mAppInstallAdFiltererSpy);
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -1162,7 +1168,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 mCustomAudienceDao,
                 mEncodedPayloadDao,
                 mAdSelectionServiceFilterMock,
-                mAdFiltererSpy,
+                mFrequencyCapAdFiltererSpy,
                 mBackgroundExecutorService,
                 mLightweightExecutorService,
                 BLOCKING_EXECUTOR,
@@ -1176,7 +1182,8 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 mAdServicesLoggerSpy,
                 auctionServerPayloadMetricsStrategy,
                 mConsentedDebugConfigurationGenerator,
-                mEgressConfigurationGenerator);
+                mEgressConfigurationGenerator,
+                mAppInstallAdFiltererSpy);
     }
 
     private void createAndPersistDBCustomAudiencesWithAdRenderId() {

@@ -59,7 +59,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AppInstallFiltererImplTest {
+public class AppInstallAdFiltererImplTest {
     private static final String PACKAGE_NAME_TO_FILTER =
             CommonFixture.TEST_PACKAGE_NAME_1 + ".filter";
     private static final AppInstallFilters APP_INSTALL_FILTERS_TO_FILTER =
@@ -101,7 +101,7 @@ public class AppInstallFiltererImplTest {
     @Before
     public void setup() {
         mAdFilterer =
-                new AppInstallFiltererImpl(
+                new AppInstallAdFiltererImpl(
                         mAppInstallDaoMock, CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
     }
 

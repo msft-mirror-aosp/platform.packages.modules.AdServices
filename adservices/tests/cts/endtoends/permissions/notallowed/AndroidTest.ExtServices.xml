@@ -77,6 +77,12 @@
         <option name="teardown-command"
                 value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
 
+        <!-- Temporarily enable the frequency cap filtering feature -->
+        <option name="run-command"
+                value="device_config put adservices fledge_frequency_cap_filtering_enabled true" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_frequency_cap_filtering_enabled false" />
+
         <!-- Temporarily enable the reportEvent API -->
         <option name="run-command"
                 value="device_config put adservices fledge_register_ad_beacon_enabled true" />

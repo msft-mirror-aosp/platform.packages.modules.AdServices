@@ -493,7 +493,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     public void testUpdateHistogramExceedingRateLimitNotifiesError() throws InterruptedException {
         class FlagsWithLowRateLimit implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -763,7 +763,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
             }
 
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -883,7 +883,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
             }
 
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
