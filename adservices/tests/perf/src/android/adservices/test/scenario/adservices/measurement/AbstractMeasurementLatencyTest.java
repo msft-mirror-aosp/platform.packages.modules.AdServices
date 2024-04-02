@@ -170,7 +170,7 @@ public class AbstractMeasurementLatencyTest {
         flags.setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true);
 
         // Override adid kill switch.
-        flags.setSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
+        flags.setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
 
         // Override the flag to allow current package to call APIs.
         flags.setPpapiAppAllowList("*");
