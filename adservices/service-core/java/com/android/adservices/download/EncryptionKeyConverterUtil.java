@@ -101,7 +101,9 @@ public final class EncryptionKeyConverterUtil {
             builder.setLastFetchTime(System.currentTimeMillis());
 
             EncryptionKey encryptionKey = builder.build();
-            LOGGER.v("Successfully built EncryptionKey %s", encryptionKey.toString());
+            LOGGER.v(
+                    "Successfully built EncryptionKey = %s for enrollment id = %s",
+                    encryptionKey.getBody(), encryptionKey.getEnrollmentId());
             return Optional.of(encryptionKey);
         } catch (JSONException | IllegalArgumentException e) {
             LOGGER.e(e, "Failed parsing for %s", jsonObject);
