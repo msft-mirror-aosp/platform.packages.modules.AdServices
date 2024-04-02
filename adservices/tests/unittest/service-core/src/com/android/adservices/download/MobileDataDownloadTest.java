@@ -17,7 +17,6 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus.SUCCESS;
-import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -254,11 +253,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             throws ExecutionException, InterruptedException, TimeoutException {
         // Set the bundled build_id to 1 so the server side build_id will be bigger. This will
         // trigger MDD download.
-        doReturn(1L)
-                .when(
-                        () ->
-                                CommonClassifierHelper.getBundledModelBuildId(
-                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
+        doReturn(1L).when(() -> CommonClassifierHelper.getBundledModelBuildId(any(), any()));
 
         createMddForTopics(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
 
@@ -448,11 +443,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testMddTopicsOnConsentGiven_gaUxEnabled()
             throws ExecutionException, InterruptedException, TimeoutException {
-        doReturn(1L)
-                .when(
-                        () ->
-                                CommonClassifierHelper.getBundledModelBuildId(
-                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
+        doReturn(1L).when(() -> CommonClassifierHelper.getBundledModelBuildId(any(), any()));
 
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))

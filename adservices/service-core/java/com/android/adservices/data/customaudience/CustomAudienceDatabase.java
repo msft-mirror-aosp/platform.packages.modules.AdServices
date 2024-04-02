@@ -97,12 +97,15 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
                                 BinderFlagReader.readFlag(
                                         () ->
                                                 FlagsFactory.getFlags()
-                                                        .getFledgeAdSelectionFilteringEnabled()),
+                                                        .getFledgeFrequencyCapFilteringEnabled()),
                                 BinderFlagReader.readFlag(
                                         () ->
                                                 FlagsFactory.getFlags()
-                                                        .getFledgeAuctionServerAdRenderIdEnabled())
-                        );
+                                                        .getFledgeAppInstallFilteringEnabled()),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeAuctionServerAdRenderIdEnabled()));
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, CustomAudienceDatabase.class, DATABASE_NAME)

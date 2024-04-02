@@ -28,7 +28,7 @@ abstract class CtsAdIdEndToEndTestCase extends AdServicesCtsTestCase {
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
         return AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                .setSystemProperty(KEY_ADID_KILL_SWITCH, false)
+                .setFlag(KEY_ADID_KILL_SWITCH, false)
                 .setFlag(KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT, true)
                 .setFlag(KEY_ADID_REQUEST_PERMITS_PER_SECOND, 25.0)
                 .setFlag(KEY_AD_ID_API_APP_BLOCK_LIST, "")

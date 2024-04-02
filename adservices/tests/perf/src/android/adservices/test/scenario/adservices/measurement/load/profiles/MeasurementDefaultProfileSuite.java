@@ -69,7 +69,7 @@ public class MeasurementDefaultProfileSuite {
                     // Override consent manager behavior to give user consent.
                     .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                     // Override adid kill switch.
-                    .setSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, false)
+                    .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false)
                     // Override the flag to allow current package to call APIs.
                     .setPpapiAppAllowList("*")
                     // Override the flag to allow current package to call delete API.

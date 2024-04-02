@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell;
+package com.android.adservices.service.shell.customaudience;
 
-import static com.android.adservices.service.shell.CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson;
-import static com.android.adservices.service.shell.CustomAudienceHelper.getCustomAudienceFromJson;
+import static com.android.adservices.service.shell.customaudience.CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson;
+import static com.android.adservices.service.shell.customaudience.CustomAudienceHelper.getCustomAudienceFromJson;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_LIST;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -34,6 +34,7 @@ import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
+import com.android.adservices.service.shell.ShellCommandTestCase;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

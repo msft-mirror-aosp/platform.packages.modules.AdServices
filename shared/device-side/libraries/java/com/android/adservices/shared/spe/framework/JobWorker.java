@@ -60,14 +60,21 @@ public interface JobWorker {
      * com.google.common.util.concurrent.FluentFuture} to consolidate them into a single {@link
      * Future} to return.
      *
+     * <p><b>Note: If a {@link JobWorker} class schedules multiple jobs, generally avoid using
+     * Singleton Pattern. With singleton pattern, non-static method like this method can only be
+     * called by one job at the moment, which has more chance to trigger an ANR issue as other jobs
+     * are waiting on the main thread.</b>
+     *
      * @param context the context of the app of a module.
      * @param executionRuntimeParameters the jobParameters passed in from {@link
      *     JobService#onStartJob(JobParameters)} and extract useful info into a {@link
      *     ExecutionRuntimeParameters}.
-     * @return a {@link Future} that will be executed by {@link JobScheduler} in {@link
-     *     JobService#onStartJob(JobParameters)}.
+     * @return a {@link ListenableFuture} that will be executed by {@link JobScheduler} in {@link
+     *     JobService#onStartJob(JobParameters)}. For {@link ExecutionResult}, please use {@link
+     *     ExecutionResult#SUCCESS}. Check {@link ExecutionResult} for more details if you configure
+     *     the job that needs to compute the execution result dynamically.
      */
-    ListenableFuture<Void> getExecutionFuture(
+    ListenableFuture<ExecutionResult> getExecutionFuture(
             Context context, ExecutionRuntimeParameters executionRuntimeParameters);
 
     /**

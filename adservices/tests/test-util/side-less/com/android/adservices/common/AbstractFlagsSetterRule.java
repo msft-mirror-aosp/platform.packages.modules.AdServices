@@ -461,6 +461,10 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>>
         return setOrCacheSystemProperty(mSystemPropertiesPrefix + name, Boolean.toString(value));
     }
 
+    public T setSystemProperty(String name, int value) {
+        return setOrCacheSystemProperty(mSystemPropertiesPrefix + name, Integer.toString(value));
+    }
+
     private T setOrCacheLogtagSystemProperty(String name, String value) {
         return setOrCacheSystemProperty(SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + name, value);
     }

@@ -16,13 +16,12 @@
 
 package com.android.adservices.service.stats.pas;
 
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.getDownloadTimeInBucketSize;
-
-import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
-
-import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_DOWNLOAD_LATENCY_BUCKETS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
 
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.shared.util.Clock;
 
 public class FetchProcessLoggerImpl implements FetchProcessLogger {
@@ -37,9 +36,7 @@ public class FetchProcessLoggerImpl implements FetchProcessLogger {
 
     /** Constructs a {@link FetchProcessLoggerImpl} instance. */
     public FetchProcessLoggerImpl(
-            AdServicesLogger adServicesLogger,
-            Clock clock,
-            EncodingFetchStats.Builder builder) {
+            AdServicesLogger adServicesLogger, Clock clock, EncodingFetchStats.Builder builder) {
         mAdServicesLogger = adServicesLogger;
         mClock = clock;
         mBuilder = builder;
@@ -48,11 +45,16 @@ public class FetchProcessLoggerImpl implements FetchProcessLogger {
     @Override
     public void logEncodingJsFetchStats(
             @AdsRelevanceStatusUtils.EncodingFetchStatus int jsFetchStatus) {
-        int jsDownloadTime =
-                mJsDownloadStartTimestamp == 0
-                        ? FIELD_UNSET
-                        : (int) (mClock.currentTimeMillis() - mJsDownloadStartTimestamp);
-        mBuilder.setJsDownloadTime(getDownloadTimeInBucketSize(jsDownloadTime));
+        @AdsRelevanceStatusUtils.Size int size;
+        if (mJsDownloadStartTimestamp == 0) {
+            size = SIZE_UNSET;
+        } else {
+            size =
+                    computeSize(
+                            mClock.currentTimeMillis() - mJsDownloadStartTimestamp,
+                            JS_DOWNLOAD_LATENCY_BUCKETS);
+        }
+        mBuilder.setJsDownloadTime(size);
         mBuilder.setFetchStatus(jsFetchStatus);
         mAdServicesLogger.logEncodingJsFetchStats(mBuilder.build());
     }

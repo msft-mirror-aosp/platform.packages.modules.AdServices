@@ -18,9 +18,11 @@ package com.android.adservices.service.adselection.encryption;
 
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.DEFAULT_MAX_AGE_SECONDS;
 
-import static com.android.adservices.data.adselection.EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_AD_SELECTION_DATA_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_AD_SELECTION_DATA_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS;
+import static com.android.adservices.data.adselection.EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_NO_OP;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_REFRESH_KEYS_INITIATED;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -56,6 +58,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ServerAuctionBackgroundKeyFetchScheduledStats;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -65,6 +69,8 @@ import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
@@ -95,6 +101,11 @@ public class BackgroundKeyFetchWorkerTest {
     @Mock private Clock mClockMock;
 
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
+
+    @Captor
+    private ArgumentCaptor<ServerAuctionBackgroundKeyFetchScheduledStats>
+            mServerAuctionBackgroundKeyFetchScheduledStatsArgumentCaptor;
 
     private EncryptionKeyDao mEncryptionKeyDao;
     private ProtectedServersEncryptionConfigDao mProtectedServersEncryptionConfigDao;
@@ -129,7 +140,8 @@ public class BackgroundKeyFetchWorkerTest {
                                 mExecutorService));
 
         mBackgroundKeyFetchWorker =
-                new BackgroundKeyFetchWorker(mKeyManagerSpy, mFlags, mClockMock);
+                new BackgroundKeyFetchWorker(
+                        mKeyManagerSpy, mFlags, mClockMock, mAdServicesLoggerMock);
         mEncryptionKeyDao.insertAllKeys(
                 DBEncryptionKeyFixture.getKeysExpiringInTtl(CommonFixture.FIXED_NOW, 1L));
         mProtectedServersEncryptionConfigDao.insertKeys(
@@ -140,18 +152,27 @@ public class BackgroundKeyFetchWorkerTest {
     public void testBackgroundKeyFetchWorker_nullInputs_causeFailure() {
         assertThrows(
                 NullPointerException.class,
-                () -> new BackgroundKeyFetchWorker(
-                        null, FlagsFactory.getFlagsForTest(), mClockMock));
-
-        assertThrows(
-                NullPointerException.class,
-                () -> new BackgroundKeyFetchWorker(mKeyManagerSpy, null, mClockMock));
+                () ->
+                        new BackgroundKeyFetchWorker(
+                                null,
+                                FlagsFactory.getFlagsForTest(),
+                                mClockMock,
+                                mAdServicesLoggerMock));
 
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new BackgroundKeyFetchWorker(
-                                mKeyManagerSpy, FlagsFactory.getFlagsForTest(), null));
+                                mKeyManagerSpy, null, mClockMock, mAdServicesLoggerMock));
+
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new BackgroundKeyFetchWorker(
+                                mKeyManagerSpy,
+                                FlagsFactory.getFlagsForTest(),
+                                null,
+                                mAdServicesLoggerMock));
     }
 
     @Test
@@ -196,7 +217,10 @@ public class BackgroundKeyFetchWorkerTest {
                         mEncryptionKeyDao, flagsWithSmallTimeout);
         BackgroundKeyFetchWorker backgroundKeyFetchWorkerThatTimesOut =
                 new BackgroundKeyFetchWorker(
-                        keyManagerWithSleep, flagsWithSmallTimeout, mClockMock);
+                        keyManagerWithSleep,
+                        flagsWithSmallTimeout,
+                        mClockMock,
+                        mAdServicesLoggerMock);
 
         when(mClockMock.instant()).thenReturn(Instant.now().plusSeconds(100));
 
@@ -217,6 +241,18 @@ public class BackgroundKeyFetchWorkerTest {
         mBackgroundKeyFetchWorker.runBackgroundKeyFetch().get();
 
         verify(mKeyManagerSpy).getExpiredAdSelectionEncryptionKeyTypes(CommonFixture.FIXED_NOW);
+
+        verify(mAdServicesLoggerMock)
+                .logServerAuctionBackgroundKeyFetchScheduledStats(
+                        mServerAuctionBackgroundKeyFetchScheduledStatsArgumentCaptor.capture());
+        ServerAuctionBackgroundKeyFetchScheduledStats
+                serverAuctionBackgroundKeyFetchScheduledStats =
+                        mServerAuctionBackgroundKeyFetchScheduledStatsArgumentCaptor.getValue();
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getStatus())
+                .isEqualTo(BACKGROUND_KEY_FETCH_STATUS_NO_OP);
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountAuctionUrls())
+                .isEqualTo(0);
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountJoinUrls()).isEqualTo(0);
     }
 
     @Test
@@ -247,7 +283,10 @@ public class BackgroundKeyFetchWorkerTest {
         }
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(
-                        mKeyManagerSpy, new FlagsWithKeyFetchDisabled(), mClockMock);
+                        mKeyManagerSpy,
+                        new FlagsWithKeyFetchDisabled(),
+                        mClockMock,
+                        mAdServicesLoggerMock);
 
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(100));
 
@@ -260,6 +299,18 @@ public class BackgroundKeyFetchWorkerTest {
                 .containsExactly(
                         AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                         AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN);
+
+        verify(mAdServicesLoggerMock)
+                .logServerAuctionBackgroundKeyFetchScheduledStats(
+                        mServerAuctionBackgroundKeyFetchScheduledStatsArgumentCaptor.capture());
+        ServerAuctionBackgroundKeyFetchScheduledStats
+                serverAuctionBackgroundKeyFetchScheduledStats =
+                        mServerAuctionBackgroundKeyFetchScheduledStatsArgumentCaptor.getValue();
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getStatus())
+                .isEqualTo(BACKGROUND_KEY_FETCH_STATUS_NO_OP);
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountAuctionUrls())
+                .isEqualTo(0);
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountJoinUrls()).isEqualTo(0);
     }
 
     @Test
@@ -277,7 +328,10 @@ public class BackgroundKeyFetchWorkerTest {
                                 JoinEncryptionKeyTestUtil.mockJoinKeyFetchResponse()));
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(
-                        mKeyManagerSpy, new FlagsWithAuctionKeyFetchDisabled(), mClockMock);
+                        mKeyManagerSpy,
+                        new FlagsWithAuctionKeyFetchDisabled(),
+                        mClockMock,
+                        mAdServicesLoggerMock);
 
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(100));
 
@@ -292,6 +346,18 @@ public class BackgroundKeyFetchWorkerTest {
                 mEncryptionKeyDao.getLatestExpiryNKeysOfType(
                         AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN, 3);
         assertThat(joinKeys).hasSize(1);
+
+        verify(mAdServicesLoggerMock)
+                .logServerAuctionBackgroundKeyFetchScheduledStats(
+                        mServerAuctionBackgroundKeyFetchScheduledStatsArgumentCaptor.capture());
+        ServerAuctionBackgroundKeyFetchScheduledStats
+                serverAuctionBackgroundKeyFetchScheduledStats =
+                        mServerAuctionBackgroundKeyFetchScheduledStatsArgumentCaptor.getValue();
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getStatus())
+                .isEqualTo(BACKGROUND_KEY_FETCH_STATUS_REFRESH_KEYS_INITIATED);
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountAuctionUrls())
+                .isEqualTo(0);
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountJoinUrls()).isEqualTo(1);
     }
 
     @Test
@@ -309,7 +375,10 @@ public class BackgroundKeyFetchWorkerTest {
                                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponse()));
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(
-                        mKeyManagerSpy, new FlagsWithJoinKeyFetchDisabled(), mClockMock);
+                        mKeyManagerSpy,
+                        new FlagsWithJoinKeyFetchDisabled(),
+                        mClockMock,
+                        mAdServicesLoggerMock);
 
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(100));
 
@@ -325,6 +394,18 @@ public class BackgroundKeyFetchWorkerTest {
                 mEncryptionKeyDao.getLatestExpiryNKeysOfType(
                         AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION, 6);
         assertThat(auctionKeys).hasSize(5);
+
+        verify(mAdServicesLoggerMock)
+                .logServerAuctionBackgroundKeyFetchScheduledStats(
+                        mServerAuctionBackgroundKeyFetchScheduledStatsArgumentCaptor.capture());
+        ServerAuctionBackgroundKeyFetchScheduledStats
+                serverAuctionBackgroundKeyFetchScheduledStats =
+                        mServerAuctionBackgroundKeyFetchScheduledStatsArgumentCaptor.getValue();
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getStatus())
+                .isEqualTo(BACKGROUND_KEY_FETCH_STATUS_REFRESH_KEYS_INITIATED);
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountAuctionUrls())
+                .isEqualTo(1);
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountJoinUrls()).isEqualTo(0);
     }
 
     @Test
@@ -367,7 +448,8 @@ public class BackgroundKeyFetchWorkerTest {
                 new BackgroundKeyFetchWorker(
                         mProtectedServersEncryptionConfigManagerMock,
                         new FlagsWithMultiCloudEnabled(),
-                        mClockMock);
+                        mClockMock,
+                        mAdServicesLoggerMock);
 
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(100));
 
@@ -379,6 +461,18 @@ public class BackgroundKeyFetchWorkerTest {
         // called once per url in allowlist
         verify(mProtectedServersEncryptionConfigManagerMock, times(3))
                 .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any());
+
+        verify(mAdServicesLoggerMock)
+                .logServerAuctionBackgroundKeyFetchScheduledStats(
+                        mServerAuctionBackgroundKeyFetchScheduledStatsArgumentCaptor.capture());
+        ServerAuctionBackgroundKeyFetchScheduledStats
+                serverAuctionBackgroundKeyFetchScheduledStats =
+                        mServerAuctionBackgroundKeyFetchScheduledStatsArgumentCaptor.getValue();
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getStatus())
+                .isEqualTo(BACKGROUND_KEY_FETCH_STATUS_REFRESH_KEYS_INITIATED);
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountAuctionUrls())
+                .isEqualTo(3);
+        assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountJoinUrls()).isEqualTo(0);
     }
 
     @Test
@@ -510,6 +604,11 @@ public class BackgroundKeyFetchWorkerTest {
         @Override
         public long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
             return DEFAULT_MAX_AGE_SECONDS;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
+            return true;
         }
     }
 }

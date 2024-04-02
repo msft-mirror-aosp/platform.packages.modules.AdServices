@@ -134,15 +134,15 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
 
         GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getAllValues().get(0);
         assertThat(stats.getNumEncodedSignals()).isEqualTo(encodedSignalsCount);
-        assertThat(stats.getEncodedSignalsSizeMean()).isEqualTo(
-                encodedSignalsTotalSizeInBytes/encodedSignalsCount);
+        assertThat(stats.getEncodedSignalsSizeMean())
+                .isEqualTo(encodedSignalsTotalSizeInBytes / encodedSignalsCount);
         assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(encodedSignalsMaxSizeInBytes);
         assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(encodedSignalsMinSizeInBytes);
     }
 
     @Test
     public void
-        testLogGetAdSelectionDataBuyerInputGeneratedStatsWithPasMetricsDoesLog_emptyBuyerStats() {
+            testLogGetAdSelectionDataBuyerInputGeneratedStatsWithPasMetricsDoesLog_emptyStats() {
         ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptor =
                 ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
         Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> buyerStats = new HashMap<>();
@@ -164,8 +164,8 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
 
         GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getValue();
         assertThat(stats.getNumEncodedSignals()).isEqualTo(encodedSignalsCount);
-        assertThat(stats.getEncodedSignalsSizeMean()).isEqualTo(
-                encodedSignalsTotalSizeInBytes/encodedSignalsCount);
+        assertThat(stats.getEncodedSignalsSizeMean())
+                .isEqualTo(encodedSignalsTotalSizeInBytes / encodedSignalsCount);
         assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(encodedSignalsMaxSizeInBytes);
         assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(encodedSignalsMinSizeInBytes);
     }

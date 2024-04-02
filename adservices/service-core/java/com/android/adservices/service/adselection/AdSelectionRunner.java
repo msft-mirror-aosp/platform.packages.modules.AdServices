@@ -156,6 +156,7 @@ public abstract class AdSelectionRunner {
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     private final boolean mShouldUseUnifiedTables;
     @NonNull private final KAnonSignJoinFactory mKAnonSignJoinFactory;
+    @NonNull private final SignatureVerificationLogger mSignatureVerificationLogger;
 
     /**
      * @param context service context
@@ -230,6 +231,9 @@ public abstract class AdSelectionRunner {
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
         mAppInstallAdFilterer = appInstallAdFilterer;
+        mSignatureVerificationLogger =
+                new SignatureVerificationLogger(
+                        com.android.adservices.shared.util.Clock.getInstance(), mAdServicesLogger);
     }
 
     @VisibleForTesting
@@ -299,6 +303,9 @@ public abstract class AdSelectionRunner {
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
         mAppInstallAdFilterer = appInstallAdFilterer;
+        mSignatureVerificationLogger =
+                new SignatureVerificationLogger(
+                        com.android.adservices.shared.util.Clock.getInstance(), mAdServicesLogger);
     }
 
     /**
@@ -617,16 +624,10 @@ public abstract class AdSelectionRunner {
         AdSelectionConfig adSelectionConfigInput;
         if (!mFlags.getFledgeAdSelectionContextualAdsEnabled()) {
             // Empty all contextual ads if the feature is disabled
-            sLogger.v(
-                    "Contextual flow is disabled. FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = %s",
-                    mFlags.getFledgeAdSelectionContextualAdsEnabled());
+            sLogger.v("Contextual flow is disabled.");
             adSelectionConfigInput = getAdSelectionConfigWithoutContextualAds(adSelectionConfig);
         } else {
-            sLogger.v(
-                    "Contextual flow is enabled, filtering contextual ads."
-                            + " FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = %s",
-                    mFlags.getFledgeAdSelectionContextualAdsEnabled());
-            // mAdSelectionExecutionLogger
+            sLogger.v("Contextual flow is enabled, filtering contextual ads.");
             adSelectionConfigInput =
                     getAdSelectionConfigFilterContextualAds(adSelectionConfig, callerPackageName);
         }
@@ -895,13 +896,10 @@ public abstract class AdSelectionRunner {
         boolean isEnrollmentCheckEnabled = !mFlags.getDisableFledgeEnrollmentCheck();
         boolean isContextualAdsLoggingEnabled =
                 mFlags.getFledgeAdSelectionContextualAdsMetricsEnabled();
-        SignatureVerificationLogger signatureVerificationLogger =
-                new SignatureVerificationLogger(
-                        com.android.adservices.shared.util.Clock.getInstance(), mAdServicesLogger);
         return new ProtectedAudienceSignatureManager(
                 mEnrollmentDao,
                 mEncryptionKeyDao,
-                signatureVerificationLogger,
+                mSignatureVerificationLogger,
                 isEnrollmentCheckEnabled,
                 isContextualAdsLoggingEnabled);
     }

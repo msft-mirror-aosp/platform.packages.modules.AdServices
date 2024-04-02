@@ -43,8 +43,8 @@ public class FetchProcessLoggerNoLoggingImplTest {
                 new FetchProcessLoggerNoLoggingImpl();
 
         encodingJsFetchStatsLoggerNoLogging.setAdTechId(TEST_AD_TECH_ID);
-        encodingJsFetchStatsLoggerNoLogging
-                .setJsDownloadStartTimestamp(TEST_JS_DOWNLOAD_START_TIMESTAMP);
+        encodingJsFetchStatsLoggerNoLogging.setJsDownloadStartTimestamp(
+                TEST_JS_DOWNLOAD_START_TIMESTAMP);
         encodingJsFetchStatsLoggerNoLogging.logEncodingJsFetchStats(ENCODING_FETCH_STATUS_SUCCESS);
         verifyZeroInteractions(mAdServicesLoggerMock);
     }

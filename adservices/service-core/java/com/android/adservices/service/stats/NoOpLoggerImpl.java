@@ -24,6 +24,7 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 
 /** No-op version of {@link AdServicesLogger}. */
 public class NoOpLoggerImpl implements AdServicesLogger {
@@ -146,6 +147,9 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     public void logSignatureVerificationStats(SignatureVerificationStats stats) {}
 
     @Override
+    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {}
+
+    @Override
     public void logAppManifestConfigCall(AppManifestConfigCall call) {}
 
     @Override
@@ -197,4 +201,8 @@ public class NoOpLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logEncodingJsFetchStats(EncodingFetchStats stats) {}
+
+    @Override
+    public void logServerAuctionBackgroundKeyFetchScheduledStats(
+            ServerAuctionBackgroundKeyFetchScheduledStats stats) {}
 }

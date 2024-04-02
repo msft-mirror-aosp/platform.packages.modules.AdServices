@@ -136,7 +136,7 @@ public class BackgroundFetchWorkerTest {
         mCustomAudienceDaoSpy =
                 Mockito.spy(
                         Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
-                                .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                                .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                                 .build()
                                 .customAudienceDao());
         mAppInstallDaoSpy =

@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.adselection.encryption;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_NO_OP;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_REFRESH_KEYS_INITIATED;
+
 import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
@@ -29,6 +32,10 @@ import com.android.adservices.service.adselection.MultiCloudSupportStrategyFacto
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.SingletonRunner;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+import com.android.adservices.service.stats.ServerAuctionBackgroundKeyFetchScheduledStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Strings;
@@ -55,6 +62,7 @@ public class BackgroundKeyFetchWorker {
     private final ProtectedServersEncryptionConfigManagerBase mKeyConfigManager;
     private final Flags mFlags;
     private final Clock mClock;
+    private final AdServicesLogger mAdServicesLogger;
     private final SingletonRunner<Void> mSingletonRunner =
             new SingletonRunner<>(JOB_DESCRIPTION, this::doRun);
 
@@ -62,13 +70,16 @@ public class BackgroundKeyFetchWorker {
     protected BackgroundKeyFetchWorker(
             @NonNull ProtectedServersEncryptionConfigManagerBase keyConfigManager,
             @NonNull Flags flags,
-            @NonNull Clock clock) {
+            @NonNull Clock clock,
+            @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(keyConfigManager);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(clock);
+        Objects.requireNonNull(adServicesLogger);
         mKeyConfigManager = keyConfigManager;
         mClock = clock;
         mFlags = flags;
+        mAdServicesLogger = adServicesLogger;
     }
 
     /**
@@ -98,7 +109,11 @@ public class BackgroundKeyFetchWorker {
                                     .getEncryptionConfigManager(
                                             context, flags, adServicesHttpsClient);
                     sBackgroundKeyFetchWorker =
-                            new BackgroundKeyFetchWorker(configManager, flags, Clock.systemUTC());
+                            new BackgroundKeyFetchWorker(
+                                    configManager,
+                                    flags,
+                                    Clock.systemUTC(),
+                                    AdServicesLoggerImpl.getInstance());
                 }
             }
         }
@@ -121,11 +136,22 @@ public class BackgroundKeyFetchWorker {
     private FluentFuture<Void> fetchNewKeys(
             Set<Integer> expiredKeyTypes, Instant keyExpiryInstant, Supplier<Boolean> shouldStop) {
         if (expiredKeyTypes.isEmpty()) {
+            if (mFlags.getFledgeAuctionServerKeyFetchMetricsEnabled()) {
+                mAdServicesLogger.logServerAuctionBackgroundKeyFetchScheduledStats(
+                        ServerAuctionBackgroundKeyFetchScheduledStats.builder()
+                                .setStatus(BACKGROUND_KEY_FETCH_STATUS_NO_OP)
+                                .setCountAuctionUrls(0)
+                                .setCountJoinUrls(0)
+                                .build());
+            }
+
             return FluentFuture.from(Futures.immediateVoidFuture())
                     .transform(ignored -> null, AdServicesExecutors.getLightWeightExecutor());
         }
 
         List<ListenableFuture<List<DBEncryptionKey>>> keyFetchFutures = new ArrayList<>();
+        int countAuctionUrls = 0;
+        int countJoinUrls = 0;
 
         // Keys are fetched and persisted in sequence to prevent making multiple network
         // calls in parallel.
@@ -141,6 +167,7 @@ public class BackgroundKeyFetchWorker {
 
             if (multicloudEnabled && !Strings.isNullOrEmpty(allowlist)) {
                 List<String> allowedUrls = AllowLists.splitAllowList(allowlist);
+                countAuctionUrls = allowedUrls.size();
 
                 for (String coordinator : allowedUrls) {
                     keyFetchFutures.add(
@@ -150,6 +177,7 @@ public class BackgroundKeyFetchWorker {
             } else {
                 String defaultUrl = mFlags.getFledgeAuctionServerAuctionKeyFetchUri();
                 if (defaultUrl != null) {
+                    countAuctionUrls = 1;
                     keyFetchFutures.add(
                             fetchAndPersistAuctionKeys(
                                     keyExpiryInstant, sequencer, Uri.parse(defaultUrl)));
@@ -161,7 +189,23 @@ public class BackgroundKeyFetchWorker {
                 && expiredKeyTypes.contains(
                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN)
                 && !shouldStop.get()) {
+            countJoinUrls = 1;
             keyFetchFutures.add(fetchAndPersistJoinKey(keyExpiryInstant, sequencer));
+        }
+
+        if (mFlags.getFledgeAuctionServerKeyFetchMetricsEnabled()) {
+            @AdsRelevanceStatusUtils.BackgroundKeyFetchStatus
+            int status =
+                    countAuctionUrls + countJoinUrls > 0
+                            ? BACKGROUND_KEY_FETCH_STATUS_REFRESH_KEYS_INITIATED
+                            : BACKGROUND_KEY_FETCH_STATUS_NO_OP;
+
+            mAdServicesLogger.logServerAuctionBackgroundKeyFetchScheduledStats(
+                    ServerAuctionBackgroundKeyFetchScheduledStats.builder()
+                            .setStatus(status)
+                            .setCountAuctionUrls(countAuctionUrls)
+                            .setCountJoinUrls(countJoinUrls)
+                            .build());
         }
 
         return FluentFuture.from(Futures.allAsList(keyFetchFutures))

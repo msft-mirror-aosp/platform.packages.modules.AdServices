@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell;
+package com.android.adservices.service.shell.customaudience;
 
 import android.content.Context;
 import android.util.Log;
@@ -28,6 +28,10 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.shell.AdServicesShellCommandHandler;
+import com.android.adservices.service.shell.NoOpShellCommand;
+import com.android.adservices.service.shell.ShellCommand;
+import com.android.adservices.service.shell.ShellCommandFactory;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
@@ -45,7 +49,7 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
     private final boolean mIsCustomAudienceCliEnabled;
 
     @VisibleForTesting
-    CustomAudienceShellCommandFactory(
+    public CustomAudienceShellCommandFactory(
             boolean isCustomAudienceCliEnabled,
             BackgroundFetchRunner backgroundFetchRunner,
             CustomAudienceDao customAudienceDao) {
@@ -65,7 +69,10 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
                                         ShellCommand::getCommandName, Function.identity()));
     }
 
-    static ShellCommandFactory getInstance(Flags flags, Context context) {
+    /**
+     * @return an instance of the {@link CustomAudienceShellCommandFactory}.
+     */
+    public static ShellCommandFactory getInstance(Flags flags, Context context) {
         CustomAudienceDao customAudienceDao =
                 CustomAudienceDatabase.getInstance(context).customAudienceDao();
         return new CustomAudienceShellCommandFactory(

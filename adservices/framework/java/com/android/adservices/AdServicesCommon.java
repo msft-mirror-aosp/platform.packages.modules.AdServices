@@ -112,6 +112,13 @@ public class AdServicesCommon {
     public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
             SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
 
+    /** The name of System Property for the binder timeout */
+    public static final String BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME = "binder_timeout";
+
+    /** System property used to allow test to override the binder's timeout. */
+    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_BINDER_TIMEOUT =
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME;
+
     /** Path name for Adservice class names */
     public static final String ADSERVICES_CLASS_PATH_PREFIX = "com.android.adservices.";
 

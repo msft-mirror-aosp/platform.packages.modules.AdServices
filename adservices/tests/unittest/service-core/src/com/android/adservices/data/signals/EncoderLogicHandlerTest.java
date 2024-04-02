@@ -16,12 +16,11 @@
 
 package com.android.adservices.data.signals;
 
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_OTHER_FAILURE;
-
 import static com.android.adservices.data.signals.EncoderLogicHandler.EMPTY_ADTECH_ID;
 import static com.android.adservices.data.signals.EncoderLogicHandler.ENCODER_VERSION_RESPONSE_HEADER;
 import static com.android.adservices.data.signals.EncoderLogicHandler.FALLBACK_VERSION;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_OTHER_FAILURE;
 import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_AD_TECH_ID;
 import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_END_TIMESTAMP;
 import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_START_TIMESTAMP;
@@ -161,7 +160,7 @@ public class EncoderLogicHandlerTest {
         ListenableFuture<AdServicesHttpClientResponse> responseFuture =
                 Futures.immediateFuture(response);
         when(mAdServicesHttpsClient.fetchPayloadWithLogging(
-                any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class)))
+                        any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class)))
                 .thenReturn(responseFuture);
         when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
 
@@ -177,8 +176,7 @@ public class EncoderLogicHandlerTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         ArgumentCaptor<EncodingFetchStats> argumentCaptor =
                 ArgumentCaptor.forClass(EncodingFetchStats.class);
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(TEST_JS_DOWNLOAD_END_TIMESTAMP);
+        when(mMockClock.currentTimeMillis()).thenReturn(TEST_JS_DOWNLOAD_END_TIMESTAMP);
         EncodingFetchStats.Builder encodingJsFetchStatsBuilder = EncodingFetchStats.builder();
         FetchProcessLogger fetchProcessLogger =
                 new FetchProcessLoggerImpl(
@@ -199,7 +197,6 @@ public class EncoderLogicHandlerTest {
 
         verifyZeroInteractions(
                 mAdServicesHttpsClient, mEncoderPersistenceDao, mEncoderLogicMetadataDao);
-
 
         // Verify the logging of EncodingFetchStats
         verify(mAdServicesLoggerSpy).logEncodingJsFetchStats(argumentCaptor.capture());

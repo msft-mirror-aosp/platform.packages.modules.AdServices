@@ -63,7 +63,7 @@ public class CustomAudienceAdsValidatorTest {
             CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxNumAds();
 
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
     private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator =
             new FrequencyCapAdDataValidatorImpl();
 

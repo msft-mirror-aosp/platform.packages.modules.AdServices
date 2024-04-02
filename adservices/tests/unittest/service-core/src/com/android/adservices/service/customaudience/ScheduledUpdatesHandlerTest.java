@@ -112,7 +112,7 @@ public final class ScheduledUpdatesHandlerTest {
                     .setBuyer(BUYER)
                     .build();
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
 
     private final AdRenderIdValidator mAdRenderIdValidator =
             AdRenderIdValidator.createEnabledInstance(100);

@@ -16,11 +16,12 @@
 
 package com.android.adservices.service.common.httpclient;
 
+import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
+
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_NETWORK_FAILURE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_TIMEOUT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_UNSET;
-import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
 
 import android.adservices.exceptions.AdServicesNetworkException;
 import android.adservices.exceptions.RetryableAdServicesNetworkException;
@@ -286,8 +287,8 @@ public class AdServicesHttpsClient {
     }
 
     /**
-     * Performs a GET request on the given URI in order to fetch a payload
-     * with EncodingFetchStats logging.
+     * Performs a GET request on the given URI in order to fetch a payload with EncodingFetchStats
+     * logging.
      *
      * @param request of type {@link AdServicesHttpClientRequest}
      * @param fetchProcessLogger of {@link FetchProcessLogger}
@@ -325,11 +326,12 @@ public class AdServicesHttpsClient {
                         (closer, url) ->
                                 ClosingFuture.from(
                                         mExecutorService.submit(
-                                                () -> doFetchPayload(
-                                                        url,
-                                                        closer,
-                                                        request,
-                                                        fetchProcessLogger))),
+                                                () ->
+                                                        doFetchPayload(
+                                                                url,
+                                                                closer,
+                                                                request,
+                                                                fetchProcessLogger))),
                         mExecutorService)
                 .finishToFuture();
     }

@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.stats.pas;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
+
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 
 import com.google.auto.value.AutoValue;
@@ -37,12 +40,17 @@ public abstract class UpdateSignalsApiCalledStats {
     /** Returns the package uid when the JsonProcessingStatus is not success. */
     public abstract int getPackageUid();
 
-    /** Returns AdTech's eTLD+1 when the JsonProcessingStatus is not success. */
+    /** Returns AdTech's enrollment id when the JsonProcessingStatus is not success. */
     public abstract String getAdTechId();
 
     /** Returns generic builder */
     public static Builder builder() {
-        return new AutoValue_UpdateSignalsApiCalledStats.Builder();
+        return new AutoValue_UpdateSignalsApiCalledStats.Builder()
+                .setJsonProcessingStatus(JSON_PROCESSING_STATUS_UNSET)
+                .setHttpResponseCode(0)
+                .setJsonSize(SIZE_UNSET)
+                .setPackageUid(0)
+                .setAdTechId("");
     }
 
     /** Builder class for UpdateSignalsApiCalledStats. */

@@ -16,11 +16,11 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.getDownloadTimeInBucketSize;
-
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_DOWNLOAD_LATENCY_BUCKETS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -56,8 +56,7 @@ public class FetchProcessLoggerImplTest {
         MockitoAnnotations.initMocks(this);
         mBuilderSpy = Mockito.spy(EncodingFetchStats.builder());
         mFetchProcessLogger =
-                new FetchProcessLoggerImpl(
-                        mAdServicesLoggerMock, mMockClockMock, mBuilderSpy);
+                new FetchProcessLoggerImpl(mAdServicesLoggerMock, mMockClockMock, mBuilderSpy);
     }
 
     @Test
@@ -86,7 +85,7 @@ public class FetchProcessLoggerImplTest {
         assertThat(stats.getAdTechId()).isEqualTo(TEST_AD_TECH_ID);
         assertThat(stats.getHttpResponseCode()).isEqualTo(FIELD_UNSET);
         assertThat(stats.getJsDownloadTime())
-                .isEqualTo(getDownloadTimeInBucketSize(TEST_JS_DOWNLOAD_TIME));
+                .isEqualTo(computeSize(TEST_JS_DOWNLOAD_TIME, JS_DOWNLOAD_LATENCY_BUCKETS));
     }
 
     @Test

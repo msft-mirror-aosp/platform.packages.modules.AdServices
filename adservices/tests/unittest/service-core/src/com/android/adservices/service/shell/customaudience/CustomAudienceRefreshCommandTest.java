@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell;
+package com.android.adservices.service.shell.customaudience;
 
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_REFRESH;
 import static com.android.adservices.service.stats.ShellCommandStats.Command;
@@ -34,6 +34,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.shell.ShellCommandTestCase;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;

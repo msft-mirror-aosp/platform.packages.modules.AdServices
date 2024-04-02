@@ -106,7 +106,7 @@ public class AdSelectionScriptEngineTest {
             new AdDataArgumentUtil(new AdCounterKeyCopierImpl());
 
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
     private static final String BASE_DOMAIN = "https://www.domain.com/adverts/";
     private static final double BID_1 = 1.1;
     private static final double BID_2 = 2.1;

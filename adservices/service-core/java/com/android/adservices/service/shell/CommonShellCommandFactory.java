@@ -36,8 +36,8 @@ import com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand;
  * Factory class which handles common shell commands. API specific shell commands should be part of
  * API specific factory.
  */
-final class CommonShellCommandFactory implements ShellCommandFactory {
-    static ShellCommandFactory getInstance() {
+public final class CommonShellCommandFactory implements ShellCommandFactory {
+    public static ShellCommandFactory getInstance() {
         return new CommonShellCommandFactory();
     }
 

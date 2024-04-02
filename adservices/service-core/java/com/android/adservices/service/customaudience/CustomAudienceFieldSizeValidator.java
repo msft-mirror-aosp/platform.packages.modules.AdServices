@@ -75,14 +75,16 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
 
     @NonNull private final Flags mFlags;
     // Process stable flag value.
-    private final boolean mIsFilteringEnabled;
+    private final boolean mIsFrequencyCapFilteringEnabled;
+    private final boolean mIsAppInstallFilteringEnabled;
     private final boolean mIsAdRenderIdEnabled;
 
     public CustomAudienceFieldSizeValidator(@NonNull Flags flags) {
         Objects.requireNonNull(flags);
 
         mFlags = flags;
-        mIsFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
+        mIsFrequencyCapFilteringEnabled = mFlags.getFledgeFrequencyCapFilteringEnabled();
+        mIsAppInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
         mIsAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
     }
 
@@ -198,7 +200,9 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
     private int getAdsSize(List<AdData> ads) {
         AdDataConversionStrategy adDataConversionStrategy =
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                        mIsFilteringEnabled, mIsAdRenderIdEnabled);
+                        mIsFrequencyCapFilteringEnabled,
+                        mIsAppInstallFilteringEnabled,
+                        mIsAdRenderIdEnabled);
         return ads.stream()
                 .map(ad -> adDataConversionStrategy.fromServiceObject(ad).build())
                 .mapToInt(DBAdData::size)

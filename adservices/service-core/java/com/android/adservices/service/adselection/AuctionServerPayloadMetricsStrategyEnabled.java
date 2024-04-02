@@ -106,9 +106,7 @@ public class AuctionServerPayloadMetricsStrategyEnabled
             int encodedSignalsMaxSizeInBytes,
             int encodedSignalsMinSizeInBytes) {
         int encodedSignalsMeanSizeInBytes =
-                encodedSignalsCount == 0
-                        ? 0
-                        : encodedSignalsTotalSizeInBytes / encodedSignalsCount;
+                encodedSignalsCount == 0 ? 0 : encodedSignalsTotalSizeInBytes / encodedSignalsCount;
 
         if (statsMap.isEmpty()) {
             GetAdSelectionDataBuyerInputGeneratedStats stats =

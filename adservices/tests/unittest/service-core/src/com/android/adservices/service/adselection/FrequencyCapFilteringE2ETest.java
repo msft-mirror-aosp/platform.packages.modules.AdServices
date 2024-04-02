@@ -226,7 +226,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         .adSelectionEntryDao();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
@@ -368,8 +368,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                                         .build()))
                 .when(mAdServicesHttpsClientMock)
                 .fetchPayloadWithLogging(
-                        any(AdServicesHttpClientRequest.class),
-                        any(FetchProcessLogger.class));
+                        any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class));
     }
 
     @Test

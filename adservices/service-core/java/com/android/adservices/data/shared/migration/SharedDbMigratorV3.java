@@ -21,6 +21,7 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
+import com.android.internal.annotations.VisibleForTesting;
 
 /**
  * Migrates Shared DB from user version 2 to 3. This upgrade adds 'last_fetch_time' column to the
@@ -33,7 +34,8 @@ public class SharedDbMigratorV3 extends AbstractSharedDbMigrator {
     }
 
     @Override
-    protected void performMigration(@NonNull SQLiteDatabase db) {
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PROTECTED)
+    public void performMigration(@NonNull SQLiteDatabase db) {
         MigrationHelpers.addIntColumnsIfAbsent(
                 db,
                 EncryptionKeyTables.EncryptionKeyContract.TABLE,

@@ -41,8 +41,7 @@ public abstract class EncodingFetchStats {
 
     /** Returns generic builder */
     public static Builder builder() {
-        return new AutoValue_EncodingFetchStats.Builder()
-                .setHttpResponseCode(FIELD_UNSET);
+        return new AutoValue_EncodingFetchStats.Builder().setHttpResponseCode(FIELD_UNSET);
     }
 
     /** Builder class for EncodingFetchStats. */
@@ -53,7 +52,7 @@ public abstract class EncodingFetchStats {
         public abstract Builder setHttpResponseCode(int value);
 
         public abstract Builder setFetchStatus(
-            @AdsRelevanceStatusUtils.EncodingFetchStatus int value);
+                @AdsRelevanceStatusUtils.EncodingFetchStatus int value);
 
         public abstract Builder setAdTechId(String value);
 

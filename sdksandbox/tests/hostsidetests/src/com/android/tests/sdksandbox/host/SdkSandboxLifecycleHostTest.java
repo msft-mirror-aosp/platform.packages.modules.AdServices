@@ -200,12 +200,10 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         // Update package loaded by app
         installPackage(CODE_APK, "-d");
-        waitForProcessDeath(SANDBOX_1_PROCESS_NAME);
 
-        // Should no longer see app/sdk sandbox running
-        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-        assertThat(processDump).doesNotContain(APP_PACKAGE + '\n');
-        assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
+        // Both processes should be killed.
+        waitForProcessDeath(SANDBOX_1_PROCESS_NAME);
+        waitForProcessDeath(APP_PACKAGE + '\n');
     }
 
     @Test
@@ -220,12 +218,10 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         // Update package consumed by the app, but not loaded into the sandbox.
         installPackage(CODE_APK_2, "-d");
-        waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
 
-        // Should no longer see app/sdk sandbox running
-        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-        assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME + '\n');
-        assertThat(processDump).doesNotContain(SANDBOX_2_PROCESS_NAME);
+        // Both processes should be killed.
+        waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
+        waitForProcessDeath(APP_2_PROCESS_NAME + '\n');
     }
 
     @Test

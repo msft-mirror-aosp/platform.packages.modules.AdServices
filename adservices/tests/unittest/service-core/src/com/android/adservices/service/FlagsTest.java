@@ -271,13 +271,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetTopicsKillSwitch() {
         testNewKillSwitchGuardedByGlobalKillSwitch(
-                "TOPICS_KILL_SWITCH", flags -> flags.getTopicsKillSwitch());
+                "TOPICS_KILL_SWITCH", Flags::getTopicsKillSwitch);
     }
 
     @Test
     public void testGetLegacyMeasurementKillSwitch() {
         testRampedUpKillSwitchGuardedByGlobalKillSwitch(
-                "MEASUREMENT_KILL_SWITCH", flags -> flags.getLegacyMeasurementKillSwitch());
+                "MEASUREMENT_KILL_SWITCH", Flags::getLegacyMeasurementKillSwitch);
         expect.withMessage("getLegacyMeasurementKillSwitch()")
                 .that(mFlags.getLegacyMeasurementKillSwitch())
                 .isEqualTo(!mFlags.getMeasurementEnabled());
@@ -292,17 +292,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetMeasurementEnabled() {
         testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
-                "getMeasurementEnabled()",
-                MEASUREMENT_KILL_SWITCH,
-                flags -> flags.getMeasurementEnabled());
+                "getMeasurementEnabled()", MEASUREMENT_KILL_SWITCH, Flags::getMeasurementEnabled);
     }
 
     @Test
     public void testGetMddLoggerEnabled() {
         testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
-                "getMddLoggerEnabled()",
-                MDD_LOGGER_KILL_SWITCH,
-                flags -> flags.getMddLoggerEnabled());
+                "getMddLoggerEnabled()", MDD_LOGGER_KILL_SWITCH, Flags::getMddLoggerEnabled);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -312,52 +308,50 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetProtectedSignalsEnabled() {
         testFeatureFlagGuardedByGlobalKillSwitch(
-                "PROTECTED_SIGNALS_ENABLED", flags -> flags.getProtectedSignalsEnabled());
+                "PROTECTED_SIGNALS_ENABLED", Flags::getProtectedSignalsEnabled);
     }
 
     @Test
     public void testGetCobaltLoggingEnabled() {
         testFeatureFlagGuardedByGlobalKillSwitch(
-                "COBALT_LOGGING_ENABLED", flags -> flags.getCobaltLoggingEnabled());
+                "COBALT_LOGGING_ENABLED", Flags::getCobaltLoggingEnabled);
     }
 
     @Test
     public void testGetEnableBackCompat() {
-        testFeatureFlag("ENABLE_BACK_COMPAT", flags -> flags.getEnableBackCompat());
+        testFeatureFlag("ENABLE_BACK_COMPAT", Flags::getEnableBackCompat);
     }
 
     @Test
     public void testGetFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
         testFeatureFlag(
                 "FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED",
-                flags -> flags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled());
+                Flags::getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled);
     }
 
     @Test
     public void testGetFledgeAuctionServerKeyFetchMetricsEnabled() {
         testFeatureFlag(
                 "FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED",
-                flags -> flags.getFledgeAuctionServerKeyFetchMetricsEnabled());
+                Flags::getFledgeAuctionServerKeyFetchMetricsEnabled);
     }
 
     @Test
     public void testGetSpeOnPilotJobsEnabled() {
-        testFeatureFlag(
-                "DEFAULT_SPE_ON_PILOT_JOBS_ENABLED", flags -> flags.getSpeOnPilotJobsEnabled());
+        testFeatureFlag("DEFAULT_SPE_ON_PILOT_JOBS_ENABLED", Flags::getSpeOnPilotJobsEnabled);
     }
 
     @Test
     public void testGetEnrollmentApiBasedSchemaEnabled() {
         testFeatureFlag(
-                "ENROLLMENT_API_BASED_SCHEMA_ENABLED",
-                flags -> flags.getEnrollmentApiBasedSchemaEnabled());
+                "ENROLLMENT_API_BASED_SCHEMA_ENABLED", Flags::getEnrollmentApiBasedSchemaEnabled);
     }
 
     @Test
     public void testGetSharedDatabaseSchemaVersion4Enabled() {
         testFeatureFlag(
                 "SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED",
-                flags -> flags.getSharedDatabaseSchemaVersion4Enabled());
+                Flags::getSharedDatabaseSchemaVersion4Enabled);
     }
 
     @Test
@@ -365,7 +359,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFlag(
                 "getJobSchedulingLoggingEnabled()",
                 DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED,
-                flags -> flags.getJobSchedulingLoggingEnabled());
+                Flags::getJobSchedulingLoggingEnabled);
     }
 
     @Test
@@ -384,7 +378,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testLegacyMsmtKillSwitchGuardedByMsmtKillSwitch(
                 "getMeasurementApiDeleteRegistrationsKillSwitch()",
                 "MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH",
-                flags -> flags.getMeasurementApiDeleteRegistrationsKillSwitch());
+                Flags::getMeasurementApiDeleteRegistrationsKillSwitch);
     }
 
     // TODO(b/325074749) - remove once all flags have been converted
@@ -424,9 +418,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetPasExtendedMetricsEnabled() {
-        testFeatureFlag(
-                "PAS_EXTENDED_METRICS_ENABLED",
-                flags -> flags.getPasExtendedMetricsEnabled());
+        testFeatureFlag("PAS_EXTENDED_METRICS_ENABLED", Flags::getPasExtendedMetricsEnabled);
     }
 
     @Test
@@ -445,7 +437,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     public void testGetAppConfigReturnsEnabledByDefault() {
         testRetiredFeatureFlag(
                 "APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT",
-                flags -> flags.getAppConfigReturnsEnabledByDefault());
+                Flags::getAppConfigReturnsEnabledByDefault);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -456,7 +448,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFlag(
                 "getTopicsEpochJobFlexMs()",
                 TOPICS_EPOCH_JOB_FLEX_MS,
-                flags -> flags.getTopicsEpochJobFlexMs());
+                Flags::getTopicsEpochJobFlexMs);
     }
 
     @Test
@@ -464,8 +456,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFlag(
                 "getJobSchedulingLoggingSamplingRate()",
                 DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE,
-                (Flaginator<Flags, Integer>)
-                        flags -> (int) flags.getJobSchedulingLoggingSamplingRate());
+                Flags::getJobSchedulingLoggingSamplingRate);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

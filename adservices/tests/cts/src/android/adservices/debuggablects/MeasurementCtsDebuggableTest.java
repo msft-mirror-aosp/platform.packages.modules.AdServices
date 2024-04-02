@@ -616,8 +616,7 @@ public class MeasurementCtsDebuggableTest {
                 "device_config put adservices global_kill_switch false");
 
         // Override Ad ID kill switch.
-        getUiDevice().executeShellCommand(
-                "setprop debug.adservices.adid_kill_switch false");
+        getUiDevice().executeShellCommand("device_config put adservices adid_kill_switch false");
 
         // Override measurement kill switch.
         getUiDevice().executeShellCommand(
@@ -690,8 +689,7 @@ public class MeasurementCtsDebuggableTest {
                 "device_config put adservices global_kill_switch null");
 
         // Reset Ad ID kill switch.
-        getUiDevice().executeShellCommand(
-                "setprop debug.adservices.adid_kill_switch null");
+        getUiDevice().executeShellCommand("device_config put adservices adid_kill_switch null");
 
         // Reset measurement kill switch.
         getUiDevice().executeShellCommand(

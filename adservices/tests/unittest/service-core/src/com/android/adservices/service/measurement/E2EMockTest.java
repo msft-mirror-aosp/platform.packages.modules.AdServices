@@ -588,14 +588,15 @@ public abstract class E2EMockTest extends E2ETest {
         List<JSONObject> result = new ArrayList<>();
         for (int i = 0; i < destinations.size(); i++) {
             JSONObject sharedInfo = new JSONObject(payloads.get(i).getString("shared_info"));
-            reportDelay = aggregateReports.get(i).getTriggerContextId() == null ? reportDelay : 0;
+            long optionalDelay =
+                    aggregateReports.get(i).getTriggerContextId() == null ? reportDelay : 0;
             result.add(
                     new JSONObject()
                             .put(
                                     TestFormatJsonMapping.REPORT_TIME_KEY,
                                     String.valueOf(
                                             aggregateReports.get(i).getScheduledReportTime()
-                                                    + reportDelay))
+                                                    + optionalDelay))
                             .put(
                                     TestFormatJsonMapping.REPORT_TO_KEY,
                                     destinations.get(i).toString())

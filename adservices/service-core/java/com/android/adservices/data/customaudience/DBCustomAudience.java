@@ -617,10 +617,15 @@ public class DBCustomAudience {
 
         private final AdDataConversionStrategy mAdDataConversionStrategy;
 
-        public Converters(boolean filteringEnabled, boolean adRenderIdEnabled) {
+        public Converters(
+                boolean frequencyCapFilteringEnabled,
+                boolean appInstallFilteringEnabled,
+                boolean adRenderIdEnabled) {
             mAdDataConversionStrategy =
                     AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                            filteringEnabled, adRenderIdEnabled);
+                            frequencyCapFilteringEnabled,
+                            appInstallFilteringEnabled,
+                            adRenderIdEnabled);
         }
 
         /** Serialize {@link List<DBAdData>} to Json. */

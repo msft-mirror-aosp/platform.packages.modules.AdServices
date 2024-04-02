@@ -33,6 +33,7 @@ public class EnrollmentData {
     @VisibleForTesting public static String SEPARATOR = " ";
 
     private String mEnrollmentId;
+    private String mEnrolledSite;
     private String mEnrolledAPIsString;
     // mEnrolled APIs are derived from mEnrolledAPIsString, they represent the same enrolledAPIs
     private List<PrivacySandboxApi> mEnrolledAPIs;
@@ -45,6 +46,7 @@ public class EnrollmentData {
 
     private EnrollmentData() {
         mEnrollmentId = null;
+        mEnrolledSite = null;
         mEnrolledAPIsString = null;
         mEnrolledAPIs = new ArrayList<PrivacySandboxApi>();
         mSdkNames = new ArrayList<>();
@@ -62,6 +64,7 @@ public class EnrollmentData {
         }
         EnrollmentData enrollmentData = (EnrollmentData) obj;
         return Objects.equals(mEnrollmentId, enrollmentData.mEnrollmentId)
+                && Objects.equals(mEnrolledSite, enrollmentData.mEnrolledSite)
                 && Objects.equals(mEnrolledAPIsString, enrollmentData.mEnrolledAPIsString)
                 && Objects.equals(mEnrolledAPIs, enrollmentData.mEnrolledAPIs)
                 && Objects.equals(mSdkNames, enrollmentData.mSdkNames)
@@ -82,6 +85,7 @@ public class EnrollmentData {
     public int hashCode() {
         return Objects.hash(
                 mEnrollmentId,
+                mEnrolledSite,
                 mEnrolledAPIsString,
                 mEnrolledAPIs,
                 mSdkNames,
@@ -95,6 +99,11 @@ public class EnrollmentData {
     /** Returns ID provided to the Adtech at the end of the enrollment process. */
     public String getEnrollmentId() {
         return mEnrollmentId;
+    }
+
+    /** Returns enrolled site provided by Adtech during enrollment process. */
+    public String getEnrolledSite() {
+        return mEnrolledSite;
     }
 
     /** Return Enrolled APIs of given enrollment in string format */
@@ -196,6 +205,7 @@ public class EnrollmentData {
     public EnrollmentData.Builder cloneToBuilder() {
         return new EnrollmentData.Builder()
                 .setEnrollmentId(this.mEnrollmentId)
+                .setEnrolledSite(this.mEnrolledSite)
                 .setEnrolledAPIs(this.mEnrolledAPIsString)
                 .setSdkNames(this.mSdkNames)
                 .setAttributionSourceRegistrationUrl(this.mAttributionSourceRegistrationUrl)
@@ -217,6 +227,12 @@ public class EnrollmentData {
         /** See {@link EnrollmentData#getEnrollmentId()}. */
         public Builder setEnrollmentId(String enrollmentId) {
             mBuilding.mEnrollmentId = enrollmentId;
+            return this;
+        }
+
+        /** See {@link EnrollmentData#getEnrolledSite()}. */
+        public Builder setEnrolledSite(String enrolledSite) {
+            mBuilding.mEnrolledSite = enrolledSite;
             return this;
         }
 
