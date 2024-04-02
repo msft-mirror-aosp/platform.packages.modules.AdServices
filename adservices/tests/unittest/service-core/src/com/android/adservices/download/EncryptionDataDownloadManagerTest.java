@@ -16,12 +16,17 @@
 
 package com.android.adservices.download;
 
+import static com.android.adservices.download.EncryptionDataDownloadManager.DownloadStatus.FAILURE;
 import static com.android.adservices.download.EncryptionDataDownloadManager.DownloadStatus.NO_FILE_AVAILABLE;
 import static com.android.adservices.download.EncryptionDataDownloadManager.DownloadStatus.SUCCESS;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_FAILED_MDD_FILEGROUP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
-
-import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -50,6 +55,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -80,6 +86,7 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
         mDbHelper = DbTestUtil.getSharedDbHelperForTest();
         mEncryptionKeyDao = new EncryptionKeyDao(mDbHelper);
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
+        doNothingOnErrorLogUtilError();
     }
 
     @After
@@ -95,9 +102,9 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
         EncryptionDataDownloadManager firstInstance = EncryptionDataDownloadManager.getInstance();
         EncryptionDataDownloadManager secondInstance = EncryptionDataDownloadManager.getInstance();
 
-        assertThat(firstInstance).isNotNull();
-        assertThat(secondInstance).isNotNull();
-        assertThat(firstInstance).isSameInstanceAs(secondInstance);
+        expect.that(firstInstance).isNotNull();
+        expect.that(secondInstance).isNotNull();
+        expect.that(firstInstance).isSameInstanceAs(secondInstance);
     }
 
     @Test
@@ -113,18 +120,16 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
                                                 + DAY_0_JSON_KEY_FILE_NAME));
         // All keys have greater expiration time than this timestamp. (Sep 2, 1996)
         doReturn(841622400000L).when(mMockClock).currentTimeMillis();
-
-        mEncryptionDataDownloadManager =
-                new EncryptionDataDownloadManager(mMockFlags, mEncryptionKeyDao, mMockClock);
-
         when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
         when(mMockFileGroup.getFileList()).thenReturn(Collections.singletonList(mMockFile));
         when(mMockFile.getFileId()).thenReturn(DAY_0_JSON_KEY_FILE_NAME);
         when(mMockFile.getFileUri()).thenReturn(DAY_0_JSON_KEY_FILE_NAME);
 
-        assertThat(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
-                .isEqualTo(SUCCESS);
+        mEncryptionDataDownloadManager =
+                new EncryptionDataDownloadManager(mMockFlags, mEncryptionKeyDao, mMockClock);
 
+        expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
+                .isEqualTo(SUCCESS);
         // Verify there are 3 valid unexpired key in the database.
         List<EncryptionKey> databaseKeys = mEncryptionKeyDao.getAllEncryptionKeys();
         expect.that(databaseKeys).hasSize(3);
@@ -148,19 +153,17 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
                                                 + DAY_1_JSON_KEY_FILE_NAME));
         // All keys have greater expiration time than this timestamp. (Sep 2, 1996)
         doReturn(841622400000L).when(mMockClock).currentTimeMillis();
-
-        mEncryptionDataDownloadManager =
-                new EncryptionDataDownloadManager(mMockFlags, mEncryptionKeyDao, mMockClock);
-
         when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
         when(mMockFileGroup.getFileList()).thenReturn(Collections.singletonList(mMockFile));
         when(mMockFile.getFileId()).thenReturn(DAY_0_JSON_KEY_FILE_NAME, DAY_1_JSON_KEY_FILE_NAME);
         when(mMockFile.getFileUri()).thenReturn(DAY_0_JSON_KEY_FILE_NAME, DAY_1_JSON_KEY_FILE_NAME);
 
-        // Run for DAY 0.
-        assertThat(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
-                .isEqualTo(SUCCESS);
+        mEncryptionDataDownloadManager =
+                new EncryptionDataDownloadManager(mMockFlags, mEncryptionKeyDao, mMockClock);
 
+        // Run for DAY 0.
+        expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
+                .isEqualTo(SUCCESS);
         // Verify there are 3 valid unexpired key in the database.
         List<EncryptionKey> databaseKeys = mEncryptionKeyDao.getAllEncryptionKeys();
         expect.that(databaseKeys).hasSize(3);
@@ -171,9 +174,8 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
                 .isEqualTo(1682343722000L);
 
         // Run for Day 1.
-        assertThat(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
+        expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
                 .isEqualTo(SUCCESS);
-
         // Verify same key has updated expiration now.
         expect.that(
                         mEncryptionKeyDao
@@ -195,18 +197,16 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
                                                 + DAY_0_JSON_KEY_FILE_NAME));
         // 2 keys have expired at April 25, 2023, at 10 PM.
         doReturn(1682460000000L).when(mMockClock).currentTimeMillis();
-
-        mEncryptionDataDownloadManager =
-                new EncryptionDataDownloadManager(mMockFlags, mEncryptionKeyDao, mMockClock);
-
         when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
         when(mMockFileGroup.getFileList()).thenReturn(Collections.singletonList(mMockFile));
         when(mMockFile.getFileId()).thenReturn(DAY_0_JSON_KEY_FILE_NAME);
         when(mMockFile.getFileUri()).thenReturn(DAY_0_JSON_KEY_FILE_NAME);
 
-        assertThat(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
-                .isEqualTo(SUCCESS);
+        mEncryptionDataDownloadManager =
+                new EncryptionDataDownloadManager(mMockFlags, mEncryptionKeyDao, mMockClock);
 
+        expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
+                .isEqualTo(SUCCESS);
         // Verify there is only 1 valid unexpired key in the database.
         List<EncryptionKey> databaseKeys = mEncryptionKeyDao.getAllEncryptionKeys();
         expect.that(databaseKeys).hasSize(1);
@@ -220,7 +220,7 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
         mEncryptionDataDownloadManager =
                 new EncryptionDataDownloadManager(mMockFlags, mEncryptionKeyDao, mMockClock);
 
-        assertThat(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
+        expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
                 .isEqualTo(NO_FILE_AVAILABLE);
         expect.that(mEncryptionKeyDao.getAllEncryptionKeys()).isEmpty();
     }
@@ -233,8 +233,49 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
         mEncryptionDataDownloadManager =
                 new EncryptionDataDownloadManager(mMockFlags, mEncryptionKeyDao, mMockClock);
 
-        assertThat(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
+        expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
                 .isEqualTo(NO_FILE_AVAILABLE);
         expect.that(mEncryptionKeyDao.getAllEncryptionKeys()).isEmpty();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+    }
+
+    @Test
+    public void testReadFileAndInsertIntoDatabaseFailure_fileStorageIOException() throws Exception {
+        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
+        when(mMockFileGroup.getFileList()).thenReturn(Collections.singletonList(mMockFile));
+        when(mMockFile.getFileId()).thenReturn(DAY_0_JSON_KEY_FILE_NAME);
+        when(mMockFile.getFileUri()).thenReturn(DAY_0_JSON_KEY_FILE_NAME);
+        when(mMockFileStorage.open(any(), any())).thenThrow(IOException.class);
+
+        mEncryptionDataDownloadManager =
+                new EncryptionDataDownloadManager(mMockFlags, mEncryptionKeyDao, mMockClock);
+
+        expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
+                .isEqualTo(FAILURE);
+        expect.that(mEncryptionKeyDao.getAllEncryptionKeys()).isEmpty();
+        verifyErrorLogUtilErrorWithAnyException(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_FAILED_MDD_FILEGROUP,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+    }
+
+    @Test
+    public void testReadFileAndInsertIntoDatabaseFailure_fileGroupFutureInterruptedException()
+            throws Exception {
+        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        when(mMockMdd.getFileGroup(any()))
+                .thenReturn(Futures.immediateFailedFuture(new InterruptedException()));
+
+        mEncryptionDataDownloadManager =
+                new EncryptionDataDownloadManager(mMockFlags, mEncryptionKeyDao, mMockClock);
+
+        expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
+                .isEqualTo(NO_FILE_AVAILABLE);
+        expect.that(mEncryptionKeyDao.getAllEncryptionKeys()).isEmpty();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 }

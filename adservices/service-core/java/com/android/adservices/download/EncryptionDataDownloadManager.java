@@ -17,6 +17,11 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.EncryptionKeyConverterUtil.createEncryptionKeyFromJson;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_FAILED_DELETE_EXPIRED_KEY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_FAILED_MDD_FILEGROUP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import android.net.Uri;
 import android.os.Build;
@@ -25,6 +30,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
@@ -98,6 +104,7 @@ public final class EncryptionDataDownloadManager {
 
     public enum DownloadStatus {
         SUCCESS,
+        FAILURE,
         NO_FILE_AVAILABLE,
     }
 
@@ -109,14 +116,26 @@ public final class EncryptionDataDownloadManager {
         List<ClientConfigProto.ClientFile> jsonKeyFiles = getEncryptionDataFiles();
         if (jsonKeyFiles == null || jsonKeyFiles.isEmpty()) {
             LOGGER.d("No files available for: %s", GROUP_NAME);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             return Futures.immediateFuture(DownloadStatus.NO_FILE_AVAILABLE);
         }
 
-        for (ClientConfigProto.ClientFile clientFile : jsonKeyFiles) {
-            Optional<List<EncryptionKey>> encryptionKeys = processDownloadedFile(clientFile);
-            if (!encryptionKeys.isPresent()) {
-                LOGGER.d("Parsing keys failed for %s ", clientFile.getFileId());
+        try {
+            for (ClientConfigProto.ClientFile clientFile : jsonKeyFiles) {
+                Optional<List<EncryptionKey>> encryptionKeys = processDownloadedFile(clientFile);
+                if (!encryptionKeys.isPresent()) {
+                    LOGGER.d("Parsing keys failed for %s ", clientFile.getFileId());
+                }
             }
+        } catch (IOException e) {
+            LOGGER.e(e, "Failed to open MDD files for encryption keys");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_FAILED_MDD_FILEGROUP,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+            return Futures.immediateFuture(DownloadStatus.FAILURE);
         }
         return Futures.immediateFuture(DownloadStatus.SUCCESS);
     }
@@ -144,13 +163,12 @@ public final class EncryptionDataDownloadManager {
 
         } catch (ExecutionException | InterruptedException e) {
             LOGGER.e(e, "Unable to load MDD file group for encryption.");
-            // TODO(b/329334770): Add CEL log
             return null;
         }
     }
 
     private Optional<List<EncryptionKey>> processDownloadedFile(
-            ClientConfigProto.ClientFile encryptionDataFile) {
+            ClientConfigProto.ClientFile encryptionDataFile) throws IOException {
         LOGGER.d("Inserting Encryption MDD data into DB.");
         try (InputStream inputStream =
                         mFileStorage.open(
@@ -175,11 +193,15 @@ public final class EncryptionDataDownloadManager {
             deleteExpiredKeys();
 
             return Optional.of(encryptionKeys);
-        } catch (IOException | JSONException e) {
+        } catch (JSONException e) {
             LOGGER.e(
                     e,
                     "Parsing of encryption keys failed for %s.",
                     encryptionDataFile.getFileUri());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             return Optional.empty();
         }
     }
@@ -206,7 +228,9 @@ public final class EncryptionDataDownloadManager {
                     expiredKey.getExpiration(),
                     currentTimeMillis);
             if (!mEncryptionKeyDao.delete(expiredKey.getId())) {
-                // TODO(b/329334770): Add CEL log
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_FAILED_DELETE_EXPIRED_KEY,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
                 LOGGER.e(
                         "Failed to delete expired key = %s for enrollment = %s",
                         expiredKey.getBody(), expiredKey.getEnrollmentId());
