@@ -21,6 +21,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
+import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 
 import com.google.common.collect.ImmutableList;
 

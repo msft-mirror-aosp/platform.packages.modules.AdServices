@@ -74,11 +74,11 @@ public final class AdServicesFlagsSetterRule
         return withAllLogcatTags()
                 .setGlobalKillSwitch(false)
                 .setTopicsKillSwitch(false)
-                .setSystemProperty(KEY_ADID_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
-                .setSystemProperty(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false)
-                .setSystemProperty(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, true);
+                .setFlag(KEY_ADID_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, true);
     }
 
     // TODO(b/297085722): pass clearFlags() on forGlobalKillSwitchDisabledTests() by default?
@@ -96,16 +96,16 @@ public final class AdServicesFlagsSetterRule
                 .setMsmtWebContextClientAllowList(packageName)
                 .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                 .setSystemProperty(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true)
-                .setSystemProperty(KEY_GLOBAL_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
+                .setFlag(KEY_GLOBAL_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
                 .setFlag(KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES, false)
-                .setSystemProperty(KEY_ADID_KILL_SWITCH, false);
+                .setFlag(KEY_ADID_KILL_SWITCH, false);
     }
 
     /** Factory method for Topics CB tests */
