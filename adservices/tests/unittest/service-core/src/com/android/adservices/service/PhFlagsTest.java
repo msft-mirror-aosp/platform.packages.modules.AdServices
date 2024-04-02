@@ -1026,7 +1026,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
                 TOPICS_EPOCH_JOB_PERIOD_MS,
-                flags -> flags.getTopicsEpochJobPeriodMs());
+                Flags::getTopicsEpochJobPeriodMs);
     }
 
     @Test
@@ -1034,7 +1034,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
                 TOPICS_NUMBER_OF_RANDOM_TOPICS,
-                flags -> flags.getTopicsNumberOfRandomTopics());
+                Flags::getTopicsNumberOfRandomTopics);
     }
 
     @Test
@@ -1042,7 +1042,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
                 TOPICS_NUMBER_OF_TOP_TOPICS,
-                flags -> flags.getTopicsNumberOfTopTopics());
+                Flags::getTopicsNumberOfTopTopics);
     }
 
     @Test
@@ -1050,7 +1050,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
                 TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
-                flags -> flags.getTopicsNumberOfLookBackEpochs());
+                Flags::getTopicsNumberOfLookBackEpochs);
     }
 
     @Test
@@ -1058,7 +1058,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
                 TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
-                flags -> flags.getTopicsPrivacyBudgetForTopicIdDistribution());
+                Flags::getTopicsPrivacyBudgetForTopicIdDistribution);
     }
 
     @Test
@@ -1066,7 +1066,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_TOPICS_DISABLE_DIRECT_APP_CALLS,
                 TOPICS_DISABLE_DIRECT_APP_CALLS,
-                flags -> flags.getTopicsDisableDirectAppCalls());
+                Flags::getTopicsDisableDirectAppCalls);
     }
 
     @Test
@@ -1074,7 +1074,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_TOPICS_ENCRYPTION_ENABLED,
                 TOPICS_ENCRYPTION_ENABLED,
-                flags -> flags.getTopicsEncryptionEnabled());
+                Flags::getTopicsEncryptionEnabled);
     }
 
     @Test
@@ -1098,7 +1098,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE,
                 TOPICS_DISABLE_PLAINTEXT_RESPONSE,
-                flags -> flags.getTopicsDisablePlaintextResponse());
+                Flags::getTopicsDisablePlaintextResponse);
     }
 
     @Test
@@ -1106,7 +1106,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY,
                 TOPICS_TEST_ENCRYPTION_PUBLIC_KEY,
-                flags -> flags.getTopicsTestEncryptionPublicKey());
+                Flags::getTopicsTestEncryptionPublicKey);
     }
 
     @Test
@@ -1114,15 +1114,13 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS,
                 CLASSIFIER_NUMBER_OF_TOP_LABELS,
-                flags -> flags.getClassifierNumberOfTopLabels());
+                Flags::getClassifierNumberOfTopLabels);
     }
 
     @Test
     public void testGetClassifierThreshold() {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
-                KEY_CLASSIFIER_THRESHOLD,
-                CLASSIFIER_THRESHOLD,
-                flags -> mPhFlags.getClassifierThreshold());
+                KEY_CLASSIFIER_THRESHOLD, CLASSIFIER_THRESHOLD, Flags::getClassifierThreshold);
     }
 
     @Test
@@ -1130,7 +1128,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS,
                 CLASSIFIER_DESCRIPTION_MAX_WORDS,
-                flags -> mPhFlags.getClassifierDescriptionMaxWords());
+                Flags::getClassifierDescriptionMaxWords);
     }
 
     @Test
@@ -1138,7 +1136,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH,
                 CLASSIFIER_DESCRIPTION_MAX_LENGTH,
-                flags -> mPhFlags.getClassifierDescriptionMaxLength());
+                Flags::getClassifierDescriptionMaxLength);
     }
 
     @Test
@@ -1146,7 +1144,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES,
                 CLASSIFIER_FORCE_USE_BUNDLED_FILES,
-                flags -> mPhFlags.getClassifierForceUseBundledFiles());
+                Flags::getClassifierForceUseBundledFiles);
     }
 
     @Test
@@ -1174,7 +1172,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_COBALT_ADSERVICES_API_KEY_HEX,
                 COBALT_ADSERVICES_API_KEY_HEX,
-                flags -> mPhFlags.getCobaltAdservicesApiKeyHex());
+                Flags::getCobaltAdservicesApiKeyHex);
     }
 
     @Test
@@ -1182,7 +1180,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT,
                 ADSERVICES_RELEASE_STAGE_FOR_COBALT,
-                flags -> mPhFlags.getAdservicesReleaseStageForCobalt());
+                Flags::getAdservicesReleaseStageForCobalt);
     }
 
     @Test
@@ -1190,7 +1188,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_COBALT_LOGGING_JOB_PERIOD_MS,
                 COBALT_LOGGING_JOB_PERIOD_MS,
-                flags -> flags.getCobaltLoggingJobPeriodMs());
+                Flags::getCobaltLoggingJobPeriodMs);
     }
 
     @Test
@@ -1198,7 +1196,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS,
                 COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS,
-                flags -> flags.getCobaltUploadServiceUnbindDelayMs());
+                Flags::getCobaltUploadServiceUnbindDelayMs);
     }
 
     @Test
@@ -1269,7 +1267,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE,
                 APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE,
-                flags -> flags.getAppNameApiErrorCobaltLoggingSamplingRate());
+                Flags::getAppNameApiErrorCobaltLoggingSamplingRate);
     }
 
     @Test
@@ -1277,7 +1275,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS,
                 ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS,
-                flags -> flags.getEncryptionKeyNetworkConnectTimeoutMs());
+                Flags::getEncryptionKeyNetworkConnectTimeoutMs);
     }
 
     @Test
@@ -1285,7 +1283,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS,
                 ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS,
-                flags -> flags.getEncryptionKeyNetworkReadTimeoutMs());
+                Flags::getEncryptionKeyNetworkReadTimeoutMs);
     }
 
     @Test
@@ -1293,7 +1291,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL,
                 MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL,
-                flags -> flags.getMddTopicsClassifierManifestFileUrl());
+                Flags::getMddTopicsClassifierManifestFileUrl);
     }
 
     @Test
@@ -1301,7 +1299,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT,
                 FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT,
-                flags -> flags.getAdSelectionMaxConcurrentBiddingCount());
+                Flags::getAdSelectionMaxConcurrentBiddingCount);
     }
 
     @Test
@@ -1309,7 +1307,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
                 FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
-                flags -> flags.getAdSelectionBiddingTimeoutPerCaMs());
+                Flags::getAdSelectionBiddingTimeoutPerCaMs);
     }
 
     @Test
@@ -1317,7 +1315,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS,
                 FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS,
-                flags -> flags.getAdSelectionBiddingTimeoutPerBuyerMs());
+                Flags::getAdSelectionBiddingTimeoutPerBuyerMs);
     }
 
     @Test
@@ -1325,7 +1323,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
                 FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
-                flags -> flags.getAdSelectionScoringTimeoutMs());
+                Flags::getAdSelectionScoringTimeoutMs);
     }
 
     @Test
@@ -1333,7 +1331,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS,
                 FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS,
-                flags -> flags.getAdSelectionSelectingOutcomeTimeoutMs());
+                Flags::getAdSelectionSelectingOutcomeTimeoutMs);
     }
 
     @Test
@@ -1341,7 +1339,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
                 FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
-                flags -> flags.getAdSelectionOverallTimeoutMs());
+                Flags::getAdSelectionOverallTimeoutMs);
     }
 
     @Test
@@ -1349,7 +1347,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
                 FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
-                flags -> flags.getAdSelectionFromOutcomesOverallTimeoutMs());
+                Flags::getAdSelectionFromOutcomesOverallTimeoutMs);
     }
 
     @Test
@@ -1357,7 +1355,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS,
                 FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS,
-                flags -> flags.getAdSelectionOffDeviceOverallTimeoutMs());
+                Flags::getAdSelectionOffDeviceOverallTimeoutMs);
     }
 
     @Test
@@ -1365,7 +1363,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
                 FLEDGE_AD_SELECTION_FILTERING_ENABLED,
-                flags -> flags.getFledgeAdSelectionFilteringEnabled());
+                Flags::getFledgeAdSelectionFilteringEnabled);
     }
 
     @Test
@@ -1389,7 +1387,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED,
                 FLEDGE_APP_INSTALL_FILTERING_ENABLED,
-                flags -> flags.getFledgeAppInstallFilteringEnabled());
+                Flags::getFledgeAppInstallFilteringEnabled);
     }
 
     @Test
@@ -1397,7 +1395,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED,
                 FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED,
-                flags -> flags.getFledgeFrequencyCapFilteringEnabled());
+                Flags::getFledgeFrequencyCapFilteringEnabled);
     }
 
     @Test
@@ -1405,7 +1403,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED,
                 FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED,
-                flags -> flags.getFledgeAdSelectionContextualAdsEnabled());
+                Flags::getFledgeAdSelectionContextualAdsEnabled);
     }
 
     @Test
@@ -1445,7 +1443,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED,
                 FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED,
-                flags -> flags.getFledgeFetchCustomAudienceEnabled());
+                Flags::getFledgeFetchCustomAudienceEnabled);
     }
 
     @Test
@@ -1453,7 +1451,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION,
                 FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION,
-                flags -> flags.getFledgeAdSelectionBiddingLogicJsVersion());
+                Flags::getFledgeAdSelectionBiddingLogicJsVersion);
     }
 
     @Test
@@ -1461,7 +1459,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED,
                 FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED,
-                flags -> flags.getFledgeAuctionServerAdRenderIdEnabled());
+                Flags::getFledgeAuctionServerAdRenderIdEnabled);
     }
 
     @Test
@@ -1469,7 +1467,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
                 DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
-                flags -> flags.getFledgeAuctionServerAdIdFetcherTimeoutMs());
+                Flags::getFledgeAuctionServerAdIdFetcherTimeoutMs);
     }
 
     @Test
@@ -1477,7 +1475,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH,
                 FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH,
-                flags -> flags.getFledgeAuctionServerAdRenderIdMaxLength());
+                Flags::getFledgeAuctionServerAdRenderIdMaxLength);
     }
 
     @Test
@@ -1485,7 +1483,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS,
                 DOWNLOADER_CONNECTION_TIMEOUT_MS,
-                flags -> flags.getDownloaderConnectionTimeoutMs());
+                Flags::getDownloaderConnectionTimeoutMs);
     }
 
     @Test
@@ -1493,7 +1491,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_DOWNLOADER_READ_TIMEOUT_MS,
                 DOWNLOADER_READ_TIMEOUT_MS,
-                flags -> flags.getDownloaderReadTimeoutMs());
+                Flags::getDownloaderReadTimeoutMs);
     }
 
     @Test
@@ -1501,7 +1499,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS,
                 DOWNLOADER_MAX_DOWNLOAD_THREADS,
-                flags -> flags.getDownloaderMaxDownloadThreads());
+                Flags::getDownloaderMaxDownloadThreads);
     }
 
     @Test
@@ -1509,7 +1507,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS,
                 MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS,
-                flags -> flags.getMeasurementEventMainReportingJobPeriodMs());
+                Flags::getMeasurementEventMainReportingJobPeriodMs);
     }
 
     @Test
@@ -1517,7 +1515,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS,
                 MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS,
-                flags -> flags.getMeasurementEventFallbackReportingJobPeriodMs());
+                Flags::getMeasurementEventFallbackReportingJobPeriodMs);
     }
 
     @Test
@@ -1525,7 +1523,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH,
                 MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH,
-                flags -> flags.getEnforceEnrollmentOriginMatch());
+                Flags::getEnforceEnrollmentOriginMatch);
     }
 
     @Test
@@ -1533,7 +1531,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED,
                 MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED,
-                flags -> flags.getMeasurementAggregationCoordinatorOriginEnabled());
+                Flags::getMeasurementAggregationCoordinatorOriginEnabled);
     }
 
     @Test
@@ -1541,7 +1539,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
                 MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
-                flags -> flags.getMeasurementAggregationCoordinatorOriginList());
+                Flags::getMeasurementAggregationCoordinatorOriginList);
     }
 
     @Test
@@ -1549,7 +1547,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
                 MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
-                flags -> flags.getMeasurementDefaultAggregationCoordinatorOrigin());
+                Flags::getMeasurementDefaultAggregationCoordinatorOrigin);
     }
 
     @Test
@@ -1557,7 +1555,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH,
                 MEASUREMENT_AGGREGATION_COORDINATOR_PATH,
-                flags -> flags.getMeasurementAggregationCoordinatorPath());
+                Flags::getMeasurementAggregationCoordinatorPath);
     }
 
     @Test
@@ -1565,7 +1563,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS,
                 MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS,
-                flags -> flags.getMeasurementAggregateMainReportingJobPeriodMs());
+                Flags::getMeasurementAggregateMainReportingJobPeriodMs);
     }
 
     @Test
@@ -1573,7 +1571,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS,
                 MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS,
-                flags -> flags.getMeasurementAggregateFallbackReportingJobPeriodMs());
+                Flags::getMeasurementAggregateFallbackReportingJobPeriodMs);
     }
 
     @Test
@@ -1581,7 +1579,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_DB_SIZE_LIMIT,
                 MEASUREMENT_DB_SIZE_LIMIT,
-                flags -> flags.getMeasurementDbSizeLimit());
+                Flags::getMeasurementDbSizeLimit);
     }
 
     @Test
@@ -1589,7 +1587,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MANIFEST_FILE_URL,
                 MEASUREMENT_MANIFEST_FILE_URL,
-                flags -> flags.getMeasurementManifestFileUrl());
+                Flags::getMeasurementManifestFileUrl);
     }
 
     @Test
@@ -1597,7 +1595,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS,
                 MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS,
-                flags -> flags.getMeasurementNetworkConnectTimeoutMs());
+                Flags::getMeasurementNetworkConnectTimeoutMs);
     }
 
     @Test
@@ -1605,7 +1603,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS,
                 MEASUREMENT_NETWORK_READ_TIMEOUT_MS,
-                flags -> flags.getMeasurementNetworkReadTimeoutMs());
+                Flags::getMeasurementNetworkReadTimeoutMs);
     }
 
     @Test
@@ -1613,7 +1611,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED,
                 MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED,
-                flags -> flags.getMeasurementIsClickVerificationEnabled());
+                Flags::getMeasurementIsClickVerificationEnabled);
     }
 
     @Test
@@ -1621,7 +1619,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT,
                 MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT,
-                flags -> flags.getMeasurementIsClickVerifiedByInputEvent());
+                Flags::getMeasurementIsClickVerifiedByInputEvent);
     }
 
     @Test
@@ -1629,7 +1627,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS,
                 MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS,
-                flags -> flags.getMeasurementRegistrationInputEventValidWindowMs());
+                Flags::getMeasurementRegistrationInputEventValidWindowMs);
     }
 
     @Test
@@ -1637,7 +1635,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED,
                 MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED,
-                flags -> flags.getMeasurementIsClickDeduplicationEnabled());
+                Flags::getMeasurementIsClickDeduplicationEnabled);
     }
 
     @Test
@@ -1645,7 +1643,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED,
                 MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED,
-                flags -> flags.getMeasurementIsClickDeduplicationEnforced());
+                Flags::getMeasurementIsClickDeduplicationEnforced);
     }
 
     @Test
@@ -1653,15 +1651,13 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_SOURCES_PER_CLICK,
                 MEASUREMENT_MAX_SOURCES_PER_CLICK,
-                flags -> flags.getMeasurementMaxSourcesPerClick());
+                Flags::getMeasurementMaxSourcesPerClick);
     }
 
     @Test
     public void testGetMeasurementEnableXNA() {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
-                KEY_MEASUREMENT_ENABLE_XNA,
-                MEASUREMENT_ENABLE_XNA,
-                flags -> flags.getMeasurementEnableXNA());
+                KEY_MEASUREMENT_ENABLE_XNA, MEASUREMENT_ENABLE_XNA, Flags::getMeasurementEnableXNA);
     }
 
     @Test
@@ -1669,7 +1665,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENABLE_DEBUG_REPORT,
                 MEASUREMENT_ENABLE_DEBUG_REPORT,
-                flags -> flags.getMeasurementEnableDebugReport());
+                Flags::getMeasurementEnableDebugReport);
     }
 
     @Test
@@ -1677,7 +1673,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT,
                 MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT,
-                flags -> flags.getMeasurementEnableSourceDebugReport());
+                Flags::getMeasurementEnableSourceDebugReport);
     }
 
     @Test
@@ -1685,7 +1681,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT,
                 MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT,
-                flags -> flags.getMeasurementEnableTriggerDebugReport());
+                Flags::getMeasurementEnableTriggerDebugReport);
     }
 
     @Test
@@ -1693,7 +1689,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT,
                 DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT,
-                flags -> flags.getMeasurementDebugJoinKeyHashLimit());
+                Flags::getMeasurementDebugJoinKeyHashLimit);
     }
 
     @Test
@@ -1701,7 +1697,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST,
                 DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST,
-                flags -> flags.getMeasurementDebugJoinKeyEnrollmentAllowlist());
+                Flags::getMeasurementDebugJoinKeyEnrollmentAllowlist);
     }
 
     @Test
@@ -1709,7 +1705,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_LIMIT,
                 DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT,
-                flags -> flags.getMeasurementPlatformDebugAdIdMatchingLimit());
+                Flags::getMeasurementPlatformDebugAdIdMatchingLimit);
     }
 
     @Test
@@ -1717,7 +1713,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST,
                 DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST,
-                flags -> flags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
+                Flags::getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist);
     }
 
     @Test
@@ -1725,7 +1721,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS,
                 DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED,
-                flags -> flags.getEnableComputeVersionFromMappings());
+                Flags::getEnableComputeVersionFromMappings);
     }
 
     @Test
@@ -1733,7 +1729,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MAINLINE_TRAIN_VERSION,
                 DEFAULT_MAINLINE_TRAIN_VERSION,
-                flags -> flags.getMainlineTrainVersion());
+                Flags::getMainlineTrainVersion);
     }
 
     @Test
@@ -1741,7 +1737,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ADSERVICES_VERSION_MAPPINGS,
                 DEFAULT_ADSERVICES_VERSION_MAPPINGS,
-                flags -> flags.getAdservicesVersionMappings());
+                Flags::getAdservicesVersionMappings);
     }
 
     @Test
@@ -1749,7 +1745,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS,
                 MEASUREMENT_DATA_EXPIRY_WINDOW_MS,
-                flags -> flags.getMeasurementDataExpiryWindowMs());
+                Flags::getMeasurementDataExpiryWindowMs);
     }
 
     @Test
@@ -1757,7 +1753,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS,
                 MEASUREMENT_MAX_REGISTRATION_REDIRECTS,
-                flags -> flags.getMeasurementMaxRegistrationRedirects());
+                Flags::getMeasurementMaxRegistrationRedirects);
     }
 
     @Test
@@ -1765,7 +1761,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION,
                 MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION,
-                flags -> flags.getMeasurementMaxRegistrationsPerJobInvocation());
+                Flags::getMeasurementMaxRegistrationsPerJobInvocation);
     }
 
     @Test
@@ -1773,7 +1769,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST,
                 MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST,
-                flags -> flags.getMeasurementMaxRetriesPerRegistrationRequest());
+                Flags::getMeasurementMaxRetriesPerRegistrationRequest);
     }
 
     @Test
@@ -1781,7 +1777,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS,
                 DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS,
-                flags -> flags.getMeasurementAsyncRegistrationJobTriggerMinDelayMs());
+                Flags::getMeasurementAsyncRegistrationJobTriggerMinDelayMs);
     }
 
     @Test
@@ -1789,7 +1785,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS,
                 DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS,
-                flags -> flags.getMeasurementAsyncRegistrationJobTriggerMaxDelayMs());
+                Flags::getMeasurementAsyncRegistrationJobTriggerMaxDelayMs);
     }
 
     @Test
@@ -1797,7 +1793,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING,
                 DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING,
-                flags -> flags.getMeasurementMaxBytesPerAttributionFilterString());
+                Flags::getMeasurementMaxBytesPerAttributionFilterString);
     }
 
     @Test
@@ -1805,7 +1801,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID,
                 DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID,
-                flags -> flags.getMeasurementMaxBytesPerAttributionAggregateKeyId());
+                Flags::getMeasurementMaxBytesPerAttributionAggregateKeyId);
     }
 
     @Test
@@ -1813,7 +1809,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION,
                 DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION,
-                flags -> flags.getMeasurementMaxAggregateDeduplicationKeysPerRegistration());
+                Flags::getMeasurementMaxAggregateDeduplicationKeysPerRegistration);
     }
 
     @Test
@@ -1821,7 +1817,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET,
                 DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET,
-                flags -> flags.getMeasurementMaxFilterMapsPerFilterSet());
+                Flags::getMeasurementMaxFilterMapsPerFilterSet);
     }
 
     @Test
@@ -1829,7 +1825,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER,
                 DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER,
-                flags -> flags.getMeasurementMaxValuesPerAttributionFilter());
+                Flags::getMeasurementMaxValuesPerAttributionFilter);
     }
 
     @Test
@@ -1837,7 +1833,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_ATTRIBUTION_FILTERS,
                 DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS,
-                flags -> flags.getMeasurementMaxAttributionFilters());
+                Flags::getMeasurementMaxAttributionFilters);
     }
 
     @Test
@@ -1845,7 +1841,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                 DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                flags -> flags.getMeasurementMaxEventReportUploadRetryWindowMs());
+                Flags::getMeasurementMaxEventReportUploadRetryWindowMs);
     }
 
     @Test
@@ -1853,7 +1849,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
                 DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
-                flags -> flags.getMeasurementAttributionJobTriggerDelayMs());
+                Flags::getMeasurementAttributionJobTriggerDelayMs);
     }
 
     @Test
@@ -1861,7 +1857,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION,
                 DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION,
-                flags -> flags.getMeasurementMaxAttributionsPerInvocation());
+                Flags::getMeasurementMaxAttributionsPerInvocation);
     }
 
     @Test
@@ -1869,7 +1865,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
                 DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                flags -> flags.getMeasurementMaxAggregateReportUploadRetryWindowMs());
+                Flags::getMeasurementMaxAggregateReportUploadRetryWindowMs);
     }
 
     @Test
@@ -1877,7 +1873,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW,
                 DEFAULT_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW,
-                flags -> flags.getMeasurementMaxDelayedSourceRegistrationWindow());
+                Flags::getMeasurementMaxDelayedSourceRegistrationWindow);
     }
 
     @Test
@@ -1885,7 +1881,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
                 MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
-                flags -> flags.getMeasurementMaxAttributionPerRateLimitWindow());
+                Flags::getMeasurementMaxAttributionPerRateLimitWindow);
     }
 
     @Test
@@ -1893,7 +1889,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
                 MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
-                flags -> flags.getMeasurementMaxEventAttributionPerRateLimitWindow());
+                Flags::getMeasurementMaxEventAttributionPerRateLimitWindow);
     }
 
     @Test
@@ -1901,7 +1897,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
                 MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
-                flags -> flags.getMeasurementMaxAggregateAttributionPerRateLimitWindow());
+                Flags::getMeasurementMaxAggregateAttributionPerRateLimitWindow);
     }
 
     @Test
@@ -1909,7 +1905,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION,
                 MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION,
-                flags -> flags.getMeasurementMaxDistinctReportingOriginsInAttribution());
+                Flags::getMeasurementMaxDistinctReportingOriginsInAttribution);
     }
 
     @Test
@@ -1917,7 +1913,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE,
                 MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE,
-                flags -> flags.getMeasurementMaxDistinctDestinationsInActiveSource());
+                Flags::getMeasurementMaxDistinctDestinationsInActiveSource);
     }
 
     @Test
@@ -1925,7 +1921,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW,
                 MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW,
-                flags -> flags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow());
+                Flags::getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow);
     }
 
     @Test
@@ -1933,7 +1929,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE,
                 MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE,
-                flags -> flags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource());
+                Flags::getMeasurementMaxDistinctRepOrigPerPublXDestInSource);
     }
 
     @Test
@@ -1941,7 +1937,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING,
                 MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING,
-                flags -> flags.getMeasurementEnableAggregatableReportPayloadPadding());
+                Flags::getMeasurementEnableAggregatableReportPayloadPadding);
     }
 
     @Test
@@ -1949,7 +1945,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT,
                 MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT,
-                flags -> flags.getMeasurementEnableDestinationRateLimit());
+                Flags::getMeasurementEnableDestinationRateLimit);
     }
 
     @Test
@@ -1957,7 +1953,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW,
                 MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW,
-                flags -> flags.getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow());
+                Flags::getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow);
     }
 
     @Test
@@ -1965,7 +1961,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW,
                 MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW,
-                flags -> flags.getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow());
+                Flags::getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow);
     }
 
     @Test
@@ -1973,7 +1969,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW,
                 MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW,
-                flags -> flags.getMeasurementDestinationRateLimitWindow());
+                Flags::getMeasurementDestinationRateLimitWindow);
     }
 
     @Test
@@ -1981,7 +1977,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED,
                 FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED,
-                flags -> flags.getFledgeAppPackageNameLoggingEnabled());
+                Flags::getFledgeAppPackageNameLoggingEnabled);
     }
 
     @Test
@@ -1989,7 +1985,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT,
-                flags -> flags.getFledgeCustomAudienceMaxCount());
+                Flags::getFledgeCustomAudienceMaxCount);
     }
 
     @Test
@@ -1997,7 +1993,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT,
                 FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT,
-                flags -> flags.getFledgeCustomAudiencePerAppMaxCount());
+                Flags::getFledgeCustomAudiencePerAppMaxCount);
     }
 
     @Test
@@ -2005,7 +2001,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
-                flags -> flags.getFledgeCustomAudienceMaxOwnerCount());
+                Flags::getFledgeCustomAudienceMaxOwnerCount);
     }
 
     @Test
@@ -2013,7 +2009,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS,
                 FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS,
-                flags -> flags.getFledgeCustomAudienceDefaultExpireInMs());
+                Flags::getFledgeCustomAudienceDefaultExpireInMs);
     }
 
     @Test
@@ -2021,7 +2017,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS,
-                flags -> flags.getFledgeCustomAudienceMaxActivationDelayInMs());
+                Flags::getFledgeCustomAudienceMaxActivationDelayInMs);
     }
 
     @Test
@@ -2029,7 +2025,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS,
-                flags -> flags.getFledgeCustomAudienceMaxExpireInMs());
+                Flags::getFledgeCustomAudienceMaxExpireInMs);
     }
 
     @Test
@@ -2037,7 +2033,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B,
-                flags -> flags.getFledgeCustomAudienceMaxNameSizeB());
+                Flags::getFledgeCustomAudienceMaxNameSizeB);
     }
 
     @Test
@@ -2045,7 +2041,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B,
-                flags -> flags.getFledgeCustomAudienceMaxDailyUpdateUriSizeB());
+                Flags::getFledgeCustomAudienceMaxDailyUpdateUriSizeB);
     }
 
     @Test
@@ -2053,7 +2049,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B,
-                flags -> flags.getFledgeCustomAudienceMaxBiddingLogicUriSizeB());
+                Flags::getFledgeCustomAudienceMaxBiddingLogicUriSizeB);
     }
 
     @Test
@@ -2061,7 +2057,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B,
-                flags -> flags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB());
+                Flags::getFledgeCustomAudienceMaxUserBiddingSignalsSizeB);
     }
 
     @Test
@@ -2069,7 +2065,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B,
-                flags -> flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB());
+                Flags::getFledgeCustomAudienceMaxTrustedBiddingDataSizeB);
     }
 
     @Test
@@ -2077,7 +2073,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B,
-                flags -> flags.getFledgeCustomAudienceMaxAdsSizeB());
+                Flags::getFledgeCustomAudienceMaxAdsSizeB);
     }
 
     @Test
@@ -2085,7 +2081,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS,
-                flags -> flags.getFledgeCustomAudienceMaxNumAds());
+                Flags::getFledgeCustomAudienceMaxNumAds);
     }
 
     @Test
@@ -5553,7 +5549,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,
                 NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,
-                flags -> flags.getNumberOfEpochsToKeepInHistory());
+                Flags::getNumberOfEpochsToKeepInHistory);
     }
 
     @Test
@@ -8836,7 +8832,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH,
                 MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH,
-                flags -> flags.getMeasurementEnableRedirectToWellKnownPath());
+                Flags::getMeasurementEnableRedirectToWellKnownPath);
     }
 
     @Test
@@ -8844,7 +8840,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
                 MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
-                flags -> flags.getMeasurementEnableMaxAggregateReportsPerSource());
+                Flags::getMeasurementEnableMaxAggregateReportsPerSource);
     }
 
     @Test
@@ -8852,7 +8848,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE,
                 MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE,
-                flags -> flags.getMeasurementMaxAggregateReportsPerSource());
+                Flags::getMeasurementMaxAggregateReportsPerSource);
     }
 
     @Test
@@ -8928,7 +8924,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING,
                 MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING,
-                flags -> flags.getMeasurementEnableAppPackageNameLogging());
+                Flags::getMeasurementEnableAppPackageNameLogging);
     }
 
     @Test
@@ -9040,7 +9036,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST,
                 MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST,
-                flags -> flags.getMeasurementAppPackageNameLoggingAllowlist());
+                Flags::getMeasurementAppPackageNameLoggingAllowlist);
     }
 
     @Test
@@ -9048,15 +9044,13 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
                 IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT,
-                flags -> flags.isU18SupervisedAccountEnabled());
+                Flags::isU18SupervisedAccountEnabled);
     }
 
     @Test
     public void testGetAdIdCacheEnabled() {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
-                KEY_AD_ID_CACHE_ENABLED,
-                DEFAULT_ADID_CACHE_ENABLED,
-                flags -> flags.getAdIdCacheEnabled());
+                KEY_AD_ID_CACHE_ENABLED, DEFAULT_ADID_CACHE_ENABLED, Flags::getAdIdCacheEnabled);
     }
 
     @Test
@@ -9064,7 +9058,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_AD_ID_FETCHER_TIMEOUT_MS,
                 DEFAULT_AD_ID_FETCHER_TIMEOUT_MS,
-                flags -> flags.getAdIdFetcherTimeoutMs());
+                Flags::getAdIdFetcherTimeoutMs);
     }
 
     @Test
@@ -9090,7 +9084,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ENABLE_ADEXT_DATA_SERVICE_APIS,
                 DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS,
-                flags -> flags.getEnableAdExtDataServiceApis());
+                Flags::getEnableAdExtDataServiceApis);
     }
 
     @Test
@@ -9098,7 +9092,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY,
                 DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY,
-                flags -> flags.getEnableAdExtServiceDebugProxy());
+                Flags::getEnableAdExtServiceDebugProxy);
     }
 
     @Test
@@ -9106,7 +9100,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
                 MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
-                flags -> flags.getMeasurementNullAggregateReportEnabled());
+                Flags::getMeasurementNullAggregateReportEnabled);
     }
 
     @Test
@@ -9114,7 +9108,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
                 MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
-                flags -> flags.getMeasurementNullAggReportRateInclSourceRegistrationTime());
+                Flags::getMeasurementNullAggReportRateInclSourceRegistrationTime);
     }
 
     @Test
@@ -9122,7 +9116,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
                 MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
-                flags -> flags.getMeasurementNullAggReportRateExclSourceRegistrationTime());
+                Flags::getMeasurementNullAggReportRateExclSourceRegistrationTime);
     }
 
     @Test
@@ -9130,7 +9124,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
                 MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
-                flags -> flags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled());
+                Flags::getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled);
     }
 
     @Test
@@ -9138,7 +9132,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES,
                 MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES,
-                flags -> flags.getMeasurementEnableSessionStableKillSwitches());
+                Flags::getMeasurementEnableSessionStableKillSwitches);
     }
 
     @Test
@@ -9146,7 +9140,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
                 MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
-                flags -> flags.getMeasurementEnableAttributionScope());
+                Flags::getMeasurementEnableAttributionScope);
     }
 
     @Test
@@ -9154,7 +9148,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID,
                 MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID,
-                flags -> flags.getMeasurementEnableTriggerContextId());
+                Flags::getMeasurementEnableTriggerContextId);
     }
 
     @Test
@@ -9162,7 +9156,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID,
                 MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID,
-                flags -> flags.getMeasurementMaxLengthOfTriggerContextId());
+                Flags::getMeasurementMaxLengthOfTriggerContextId);
     }
 
     @Test
@@ -9170,7 +9164,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ENABLE_ADSERVICES_API_ENABLED,
                 DEFAULT_ENABLE_ADSERVICES_API_ENABLED,
-                flags -> flags.getEnableAdservicesApiEnabled());
+                Flags::getEnableAdservicesApiEnabled);
     }
 
     @Test
@@ -9178,7 +9172,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
                 DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
-                flags -> flags.getAdservicesEnablementCheckEnabled());
+                Flags::getAdservicesEnablementCheckEnabled);
     }
 
     @Test
@@ -9186,12 +9180,12 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValue(
                 KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE,
                 DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE,
-                flags -> flags.getBackgroundJobSamplingLoggingRate());
+                Flags::getBackgroundJobSamplingLoggingRate);
 
         // Need to test for illegal value > 100.
         mFlagsTestHelper.testFeatureFlagForIllegalValue(
                 KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE,
-                flags -> flags.getBackgroundJobSamplingLoggingRate(),
+                Flags::getBackgroundJobSamplingLoggingRate,
                 /* illegalValue= */ 105);
     }
 
@@ -9200,7 +9194,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_APPSEARCH_WRITE_TIMEOUT_MS,
                 DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS,
-                flags -> flags.getAppSearchWriteTimeout());
+                Flags::getAppSearchWriteTimeout);
     }
 
     @Test
@@ -9208,7 +9202,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_APPSEARCH_READ_TIMEOUT_MS,
                 DEFAULT_APPSEARCH_READ_TIMEOUT_MS,
-                flags -> flags.getAppSearchReadTimeout());
+                Flags::getAppSearchReadTimeout);
     }
 
     private void overrideGlobalKillSwitch(boolean phOverridingValue) {
@@ -9233,7 +9227,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED,
                 DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED,
-                flags -> flags.isGetAdServicesCommonStatesApiEnabled());
+                Flags::isGetAdServicesCommonStatesApiEnabled);
     }
 
     @Test
@@ -9317,7 +9311,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_KANON_FETCH_PARAMETERS_URL,
                 FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL,
-                flags -> flags.getFledgeKAnonFetchServerParamsUrl());
+                Flags::getFledgeKAnonFetchServerParamsUrl);
     }
 
     @Test
@@ -9325,7 +9319,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL,
                 FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL,
-                flags -> flags.getFledgeKAnonRegisterClientParametersUrl());
+                Flags::getFledgeKAnonRegisterClientParametersUrl);
     }
 
     @Test
@@ -9333,7 +9327,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_GET_TOKENS_URL,
                 FLEDGE_DEFAULT_KANON_GET_TOKENS_URL,
-                flags -> flags.getFledgeKAnonGetTokensUrl());
+                Flags::getFledgeKAnonGetTokensUrl);
     }
 
     @Test
@@ -9341,7 +9335,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_JOIN_URL,
                 FLEDGE_DEFAULT_KANON_JOIN_URL,
-                flags -> flags.getFledgeKAnonJoinUrl());
+                Flags::getFledgeKAnonJoinUrl);
     }
 
     @Test
@@ -9349,7 +9343,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS,
                 FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS,
-                flags -> flags.getFledgeKAnonBackgroundProcessTimePeriodInMs());
+                Flags::getFledgeKAnonBackgroundProcessTimePeriodInMs);
     }
 
     @Test
@@ -9357,7 +9351,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS,
                 FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS,
-                flags -> flags.getFledgeKAnonMessagesPerBackgroundProcess());
+                Flags::getFledgeKAnonMessagesPerBackgroundProcess);
     }
 
     @Test
@@ -9379,7 +9373,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN,
                 FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN,
-                flags -> flags.getFledgeKAnonSetTypeToSignJoin());
+                Flags::getFledgeKAnonSetTypeToSignJoin);
     }
 
     @Test
@@ -9387,7 +9381,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY,
                 FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN,
-                flags -> flags.getFledgeKAnonUrlAuthorityToJoin());
+                Flags::getFledgeKAnonUrlAuthorityToJoin);
     }
 
     @Test
@@ -9395,7 +9389,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW,
                 FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW,
-                flags -> flags.getFledgeKAnonBackgroundJobRequiresBatteryNotLow());
+                Flags::getFledgeKAnonBackgroundJobRequiresBatteryNotLow);
     }
 
     @Test
@@ -9403,7 +9397,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE,
                 FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE,
-                flags -> flags.getFledgeKAnonBackgroundJobRequiresDeviceIdle());
+                Flags::getFledgeKAnonBackgroundJobRequiresDeviceIdle);
     }
 
     @Test
@@ -9411,7 +9405,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION,
                 FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE,
-                flags -> flags.getFledgeKanonBackgroundJobConnectionType());
+                Flags::getFledgeKanonBackgroundJobConnectionType);
     }
 
     @Test
@@ -9419,7 +9413,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT,
                 FLEDGE_DEFAULT_KANON_HTTP_CLIENT_TIMEOUT_IN_MS,
-                flags -> flags.getFledgeKanonHttpClientTimeoutInMs());
+                Flags::getFledgeKanonHttpClientTimeoutInMs);
     }
 
     @Test
@@ -9475,7 +9469,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_SIGN_BATCH_SIZE,
                 FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE,
-                flags -> flags.getFledgeKAnonSignBatchSize());
+                Flags::getFledgeKAnonSignBatchSize);
     }
 
     @Test
@@ -9483,7 +9477,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS,
                 FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS,
-                flags -> flags.getFledgeKAnonMessageTtlSeconds());
+                Flags::getFledgeKAnonMessageTtlSeconds);
     }
 
     @Test
@@ -9491,7 +9485,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS,
                 FLEDGE_DEFAULT_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS,
-                flags -> flags.getFledgeKAnonPercentageImmediateSignJoinCalls());
+                Flags::getFledgeKAnonPercentageImmediateSignJoinCalls);
     }
 
     @Test
@@ -9499,7 +9493,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
                 FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED,
-                flags -> flags.getFledgeCustomAudienceCLIEnabledStatus());
+                Flags::getFledgeCustomAudienceCLIEnabledStatus);
     }
 
     @Test
@@ -9507,7 +9501,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED,
                 FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED,
-                flags -> flags.getFledgeConsentedDebuggingCliEnabledStatus());
+                Flags::getFledgeConsentedDebuggingCliEnabledStatus);
     }
 
     @Test
@@ -9515,7 +9509,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED,
                 DEFAULT_AD_SERVICES_RETRY_STRATEGY_ENABLED,
-                flags -> flags.getAdServicesRetryStrategyEnabled());
+                Flags::getAdServicesRetryStrategyEnabled);
     }
 
     @Test
@@ -9523,7 +9517,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS,
                 DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS,
-                flags -> flags.getAdServicesJsScriptEngineMaxRetryAttempts());
+                Flags::getAdServicesJsScriptEngineMaxRetryAttempts);
     }
 
     private void overrideKAnonFlags(String phOverridingValue, String property) {
@@ -9555,7 +9549,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST,
                 GET_ADSERVICES_COMMON_STATES_ALLOW_LIST,
-                flags -> flags.getAdServicesCommonStatesAllowList());
+                Flags::getAdServicesCommonStatesAllowList);
     }
 
     @Test
@@ -9588,7 +9582,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_AD_SERVICES_MODULE_JOB_POLICY,
                 AD_SERVICES_MODULE_JOB_POLICY,
-                flags -> flags.getAdServicesModuleJobPolicy());
+                Flags::getAdServicesModuleJobPolicy);
     }
 
     @Test
@@ -9596,7 +9590,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ENABLE_CONSENT_MANAGER_V2,
                 DEFAULT_ENABLE_CONSENT_MANAGER_V2,
-                flags -> flags.getEnableConsentManagerV2());
+                Flags::getEnableConsentManagerV2);
     }
 
     @Test
@@ -9604,7 +9598,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ENABLE_TABLET_REGION_FIX,
                 DEFAULT_ENABLE_TABLET_REGION_FIX,
-                flags -> flags.getEnableTabletRegionFix());
+                Flags::getEnableTabletRegionFix);
     }
 
     @Test
@@ -9612,7 +9606,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_PAS_EXTENDED_METRICS_ENABLED,
                 PAS_EXTENDED_METRICS_ENABLED,
-                flags -> flags.getPasExtendedMetricsEnabled());
+                Flags::getPasExtendedMetricsEnabled);
     }
 
     @Test
@@ -9620,7 +9614,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_SPE_ON_PILOT_JOBS_ENABLED,
                 DEFAULT_SPE_ON_PILOT_JOBS_ENABLED,
-                flags -> flags.getSpeOnPilotJobsEnabled());
+                Flags::getSpeOnPilotJobsEnabled);
     }
 
     @Test
@@ -9628,7 +9622,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED,
                 ENROLLMENT_API_BASED_SCHEMA_ENABLED,
-                flags -> flags.getEnrollmentApiBasedSchemaEnabled());
+                Flags::getEnrollmentApiBasedSchemaEnabled);
     }
 
     @Test
@@ -9636,7 +9630,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED,
                 SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED,
-                flags -> flags.getSharedDatabaseSchemaVersion4Enabled());
+                Flags::getSharedDatabaseSchemaVersion4Enabled);
     }
 
     @Test
@@ -9644,7 +9638,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_JOB_SCHEDULING_LOGGING_ENABLED,
                 DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED,
-                flags -> flags.getJobSchedulingLoggingEnabled());
+                Flags::getJobSchedulingLoggingEnabled);
     }
 
     @Test
@@ -9652,7 +9646,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE,
                 DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE,
-                flags -> flags.getJobSchedulingLoggingSamplingRate());
+                Flags::getJobSchedulingLoggingSamplingRate);
     }
 
     @Test
@@ -9660,7 +9654,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValue(
                 KEY_ENABLE_BACK_COMPAT_INIT,
                 DEFAULT_ENABLE_BACK_COMPAT_INIT,
-                flags -> flags.getEnableBackCompatInit());
+                Flags::getEnableBackCompatInit);
     }
 
     private void setMeasurementKillSwitch(boolean value) {
