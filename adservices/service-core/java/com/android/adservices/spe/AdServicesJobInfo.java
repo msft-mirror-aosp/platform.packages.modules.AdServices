@@ -90,6 +90,7 @@ public enum AdServicesJobInfo {
     private final int mJobId;
 
     // The reverse mapping to get job name by job ID.
+    // Duplicated job ID leads to an IllegalStateException, referring to Collectors.toMap().
     private static final Map<Integer, String> JOB_ID_TO_NAME_MAP =
             Arrays.stream(AdServicesJobInfo.values())
                     .collect(
