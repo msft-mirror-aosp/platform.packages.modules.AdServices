@@ -169,6 +169,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -355,6 +356,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
     private ConsentedDebugConfigurationGeneratorFactory
             mConsentedDebugConfigurationGeneratorFactory;
+    private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
     @Before
     public void setUp() throws Exception {
@@ -402,7 +404,11 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         .getAdSelectionDebugReportDao();
         mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mSpyContext));
         mAdIdFetcher =
-                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                new AdIdFetcher(
+                        mSpyContext,
+                        mMockAdIdWorker,
+                        mLightweightExecutorService,
+                        mScheduledExecutor);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
         mConsentedDebugConfigurationDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
@@ -411,6 +417,12 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         mConsentedDebugConfigurationGeneratorFactory =
                 new ConsentedDebugConfigurationGeneratorFactory(
                         false, mConsentedDebugConfigurationDao);
+        mEgressConfigurationGenerator =
+                EgressConfigurationGenerator.createInstance(
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        mAdIdFetcher,
+                        Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        mLightweightExecutorService);
 
         initClients(false, true, false, false, false, false);
 
@@ -1249,7 +1261,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1413,7 +1426,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -3184,7 +3198,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -4595,7 +4610,11 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags);
         mAdIdFetcher =
-                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                new AdIdFetcher(
+                        mSpyContext,
+                        mMockAdIdWorker,
+                        mLightweightExecutorService,
+                        mScheduledExecutor);
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -4625,7 +4644,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
     }
 
     private AdSelectionTestCallback invokeRunAdSelection(
@@ -5324,8 +5344,20 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
             return mRegisterAdBeaconEnabled;
         }
 
+        // TODO(b/330840810): Remove this flag once other features are ramped up to using the split
+        // flags
         @Override
         public boolean getFledgeAdSelectionFilteringEnabled() {
+            return mFiltersEnabled;
+        }
+
+        @Override
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
+            return mFiltersEnabled;
+        }
+
+        @Override
+        public boolean getFledgeAppInstallFilteringEnabled() {
             return mFiltersEnabled;
         }
 

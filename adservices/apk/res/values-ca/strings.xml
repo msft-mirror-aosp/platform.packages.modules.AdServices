@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Has triat no participar-hi"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Gràcies per la teva resposta. S\'ha desactivat Privacy Sandbox per al teu dispositiu.\n\nSi canvies d\'opinió o vols obtenir més informació, ves a la configuració de privadesa."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Configuració de privadesa"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Entesos"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Participes en la versió beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"S\'ha activat Privacy Sandbox per al teu dispositiu i les aplicacions poden provar aquestes noves maneres més privades de mostrar-te anuncis. Pots desactivar la versió beta en qualsevol moment a la configuració de privadesa."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Entesos"</string>

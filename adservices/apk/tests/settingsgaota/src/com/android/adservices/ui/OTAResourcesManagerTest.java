@@ -93,7 +93,7 @@ public class OTAResourcesManagerTest {
                         .initMocks(this)
                         .startMocking();
         ExtendedMockito.doReturn(mMockMdd)
-                .when(() -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
+                .when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
         ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
         ExtendedMockito.doReturn(mMockParcelFileDescriptor)
                 .when(() -> ParcelFileDescriptor.open(any(File.class), anyInt()));
@@ -115,7 +115,7 @@ public class OTAResourcesManagerTest {
                         new ExecutionException("mockExecutionException", new Throwable()));
         doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
 
-        assertThat(OTAResourcesManager.getDownloadedFiles(mContext)).isNull();
+        assertThat(OTAResourcesManager.getDownloadedFiles()).isNull();
         ExtendedMockito.verify(
                 () ->
                         ErrorLogUtil.e(
@@ -134,7 +134,7 @@ public class OTAResourcesManagerTest {
                 Futures.immediateFailedFuture(new InterruptedException("mockInterruptedException"));
         doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
 
-        assertThat(OTAResourcesManager.getDownloadedFiles(mContext)).isNull();
+        assertThat(OTAResourcesManager.getDownloadedFiles()).isNull();
         ExtendedMockito.verify(
                 () ->
                         ErrorLogUtil.e(
@@ -151,7 +151,7 @@ public class OTAResourcesManagerTest {
         ListenableFuture<ClientFileGroup> testFuture = Futures.immediateFuture(null);
         doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
 
-        assertThat(OTAResourcesManager.getDownloadedFiles(mContext)).isNull();
+        assertThat(OTAResourcesManager.getDownloadedFiles()).isNull();
     }
 
     /**
@@ -166,7 +166,7 @@ public class OTAResourcesManagerTest {
         ListenableFuture<ClientFileGroup> testFuture = Futures.immediateFuture(testCfg);
         doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
 
-        assertThat(OTAResourcesManager.getDownloadedFiles(mContext)).hasSize(0);
+        assertThat(OTAResourcesManager.getDownloadedFiles()).hasSize(0);
     }
 
     /** Verify that when MDD download is pending, getDownloadedFiles returns null. */
@@ -183,7 +183,7 @@ public class OTAResourcesManagerTest {
         ListenableFuture<ClientFileGroup> testFuture = Futures.immediateFuture(testCfg);
         doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
 
-        assertThat(OTAResourcesManager.getDownloadedFiles(mContext)).isNull();
+        assertThat(OTAResourcesManager.getDownloadedFiles()).isNull();
     }
 
     /**
@@ -205,7 +205,7 @@ public class OTAResourcesManagerTest {
         ListenableFuture<ClientFileGroup> testFuture = Futures.immediateFuture(testCfg);
         doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
 
-        assertThat(OTAResourcesManager.getDownloadedFiles(mContext)).hasSize(1);
+        assertThat(OTAResourcesManager.getDownloadedFiles()).hasSize(1);
     }
 
     /** Verify that when an empty file group was downloaded, file descriptor was never used. */

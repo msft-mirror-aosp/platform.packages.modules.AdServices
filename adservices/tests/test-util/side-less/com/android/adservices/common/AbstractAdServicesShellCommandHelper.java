@@ -43,8 +43,8 @@ public abstract class AbstractAdServicesShellCommandHelper {
     @VisibleForTesting
     static final String ADSERVICES_MANAGER_SERVICE_CHECK = "service check adservices_manager";
 
-    private static final long WAIT_SAMPLE_INTERVAL_MILLIS = 500;
-    private static final long TIMEOUT_ACTIVITY_FINISH_MILLIS = 2000;
+    private static final long WAIT_SAMPLE_INTERVAL_MILLIS = 1000;
+    private static final long TIMEOUT_ACTIVITY_FINISH_MILLIS = 3000;
 
     private final Logger mLog;
     private final AbstractDeviceSupportHelper mAdServicesHelper;
@@ -74,15 +74,16 @@ public abstract class AbstractAdServicesShellCommandHelper {
         if (level >= AndroidSdk.TM) {
             // For Android T, Check if the service adservices_manager is published or not. If
             // it's not published, use sdk_sandbox to run the shell command.
-            if (level == AndroidSdk.TM && !isAdServicesManagerServicePublished()) {
-                return runShellCommand(
-                        String.format(
-                                "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs)));
-            }
-            return runShellCommand(
-                    String.format("cmd adservices_manager %s", String.format(cmdFmt, cmdArgs)));
+            String cmd =
+                    (level == AndroidSdk.TM && !isAdServicesManagerServicePublished())
+                            ? String.format(
+                                    "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs))
+                            : String.format(
+                                    "cmd adservices_manager %s", String.format(cmdFmt, cmdArgs));
+            String res = runShellCommand(cmd);
+            mLog.d("Output for command %s: %s", cmd, res);
+            return res;
         }
-
         return runShellCommandRS(String.format(cmdFmt, cmdArgs));
     }
 
@@ -108,13 +109,17 @@ public abstract class AbstractAdServicesShellCommandHelper {
         if (level >= AndroidSdk.TM) {
             // For Android T, Check if the service adservices_manager is published or not. If
             // it's not published, use sdk_sandbox to run the shell command.
-            if (level == AndroidSdk.TM && !isAdServicesManagerServicePublished()) {
-                return runShellCommandRwe(
-                        String.format(
-                                "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs)));
-            }
-            return runShellCommandRwe(
-                    String.format("cmd adservices_manager %s", String.format(cmdFmt, cmdArgs)));
+            // For Android T, Check if the service adservices_manager is published or not. If
+            // it's not published, use sdk_sandbox to run the shell command.
+            String cmd =
+                    (level == AndroidSdk.TM && !isAdServicesManagerServicePublished())
+                            ? String.format(
+                                    "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs))
+                            : String.format(
+                                    "cmd adservices_manager %s", String.format(cmdFmt, cmdArgs));
+            CommandResult res = runShellCommandRwe(cmd);
+            mLog.d("Output for command %s: %s", cmd, res);
+            return res;
         }
 
         String res = runShellCommandRS(String.format(cmdFmt, cmdArgs));
@@ -136,24 +141,19 @@ public abstract class AbstractAdServicesShellCommandHelper {
     protected abstract int getDeviceApiLevel();
 
     private String runShellCommandRS(String cmd) {
+        String[] argsList = cmd.split(" ");
+        String args = String.join(",", argsList);
+        String res = runShellCommand(startShellActivity(args));
+        mLog.d("Output for command %s: %s", startShellActivity(args), res);
+
         String componentName =
                 String.format(
                         "%s/%s", mAdServicesHelper.getAdServicesPackageName(), SHELL_ACTIVITY_NAME);
-        String enableShellCommandActivity = "pm enable " + componentName;
-        String res = runShellCommand(enableShellCommandActivity);
-        mLog.d("Output for command %s: %s", enableShellCommandActivity, res);
-
-        String[] argsList = cmd.split(" ");
-        String args = String.join(",", argsList);
-        res = runShellCommand(startShellActivity(args));
-        mLog.d("Output for command %s: %s", startShellActivity(args), res);
-
         res = runShellCommand(runDumpsysShellCommand(componentName));
         mLog.d("Output for command %s: %s", runDumpsysShellCommand(componentName), res);
         String out = parseResultFromDumpsys(res);
 
         checkShellCommandActivityFinished(componentName);
-        disableShellCommandActivity(componentName);
         return out;
     }
 
@@ -206,20 +206,6 @@ public abstract class AbstractAdServicesShellCommandHelper {
                 },
                 "Failed to finish ShellCommandActivity",
                 TIMEOUT_ACTIVITY_FINISH_MILLIS);
-    }
-
-    private void disableShellCommandActivity(String componentName) {
-        String disableShellCommandActivity = String.format("pm enable %s", componentName);
-        String res = runShellCommand(disableShellCommandActivity);
-        mLog.d("Output for command %s: %s", disableShellCommandActivity, res);
-
-        // Add some sleep to ensure shell command is disabled.
-        try {
-            mLog.d("Sleep for %dms to let activity disable finish", WAIT_SAMPLE_INTERVAL_MILLIS);
-            Thread.sleep(WAIT_SAMPLE_INTERVAL_MILLIS);
-        } catch (InterruptedException e) {
-            mLog.e("Thread interrupted while disabling activity");
-        }
     }
 
     // TODO(b/328107990): Create a generic method and move this to a CTS helper class.

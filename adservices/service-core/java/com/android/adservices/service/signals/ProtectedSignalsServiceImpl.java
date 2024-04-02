@@ -73,7 +73,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of the Protected Signals service. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
 

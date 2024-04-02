@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.shell;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.shell.IShellCommandCallback;
 import android.adservices.shell.ShellCommandParam;
@@ -26,7 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.Room;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
@@ -42,17 +47,23 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
+import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.testing.common.BlockingCallableWrapper;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.PrintWriter;
 
-public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
+public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase {
+
+    @Mock private AdServicesLogger mAdServicesLogger;
+
     private final Flags mFlags = new ShellCommandFlags();
     private ShellCommandServiceImpl mShellCommandService;
     private SyncIShellCommandCallback mSyncIShellCommandCallback;
@@ -91,8 +102,10 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
                         adServicesShellCommandHandlerFactory,
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler(),
+                        mAdServicesLogger,
                         3000L);
         mSyncIShellCommandCallback = new SyncIShellCommandCallback();
+        doNothing().when(mAdServicesLogger).logShellCommandStats(any());
     }
 
     @Test
@@ -104,6 +117,7 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
         expect.withMessage("result").that(response.getResultCode()).isEqualTo(0);
         expect.withMessage("out").that(response.getOut()).contains("xxx");
         expect.withMessage("err").that(response.getErr()).isEmpty();
+        verify(mAdServicesLogger).logShellCommandStats(any());
     }
 
     @Test
@@ -158,12 +172,19 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
         String commandName = "cmd";
         int commandResponse = 10;
 
-        BlockingCallableWrapper<Integer> waitingCommand =
-                BlockingCallableWrapper.createBlockableInstance(() -> commandResponse);
+        BlockingCallableWrapper<com.android.adservices.service.shell.ShellCommandResult>
+                waitingCommand =
+                        BlockingCallableWrapper.createBlockableInstance(
+                                () ->
+                                        com.android.adservices.service.shell.ShellCommandResult
+                                                .create(
+                                                        ShellCommandStats.RESULT_SUCCESS,
+                                                        ShellCommandStats.COMMAND_ECHO));
         ShellCommand shellCommand =
                 new ShellCommand() {
                     @Override
-                    public int run(PrintWriter out, PrintWriter err, String[] args) {
+                    public com.android.adservices.service.shell.ShellCommandResult run(
+                            PrintWriter out, PrintWriter err, String[] args) {
                         try {
                             return waitingCommand.call();
                         } catch (Exception e) {
@@ -175,6 +196,11 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
                     public String getCommandName() {
                         return commandName;
                     }
+
+                    @Override
+                    public int getMetricsLoggerCommand() {
+                        return 0;
+                    }
                 };
 
         ShellCommandServiceImpl shellCommandService =
@@ -182,6 +208,7 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
                         injectCommandToService(shellCommand, commandPrefix),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler(),
+                        mAdServicesLogger,
                         3000L);
         shellCommandService.runShellCommand(
                 new ShellCommandParam(commandPrefix, commandName, "param"),
@@ -194,19 +221,26 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
         waitingCommand.startWork();
         ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
 
-        expect.that(response.getResultCode()).isEqualTo(commandResponse);
+        expect.that(response.getResultCode()).isEqualTo(AbstractShellCommand.RESULT_OK);
     }
 
     @Test
     public void testRunShellCommand_commandTimesOut() throws InterruptedException {
         String commandPrefix = "prefix";
 
-        BlockingCallableWrapper<Integer> blockedCommand =
-                BlockingCallableWrapper.createBlockableInstance(() -> 10);
+        BlockingCallableWrapper<com.android.adservices.service.shell.ShellCommandResult>
+                blockedCommand =
+                        BlockingCallableWrapper.createBlockableInstance(
+                                () ->
+                                        com.android.adservices.service.shell.ShellCommandResult
+                                                .create(
+                                                        ShellCommandStats.RESULT_SUCCESS,
+                                                        ShellCommandStats.COMMAND_ECHO));
         ShellCommand shellCommand =
                 new ShellCommand() {
                     @Override
-                    public int run(PrintWriter out, PrintWriter err, String[] args) {
+                    public com.android.adservices.service.shell.ShellCommandResult run(
+                            PrintWriter out, PrintWriter err, String[] args) {
                         try {
                             return blockedCommand.call();
                         } catch (Exception e) {
@@ -218,6 +252,11 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
                     public String getCommandName() {
                         return "cmd";
                     }
+
+                    @Override
+                    public int getMetricsLoggerCommand() {
+                        return 0;
+                    }
                 };
 
         ShellCommandServiceImpl shellCommandService =
@@ -225,6 +264,7 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
                         injectCommandToService(shellCommand, commandPrefix),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler(),
+                        mAdServicesLogger,
                         500L);
         shellCommandService.runShellCommand(
                 new ShellCommandParam(commandPrefix, "cmd", "param"), mSyncIShellCommandCallback);
@@ -248,13 +288,19 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
         ShellCommand shellCommand =
                 new ShellCommand() {
                     @Override
-                    public int run(PrintWriter out, PrintWriter err, String[] args) {
+                    public com.android.adservices.service.shell.ShellCommandResult run(
+                            PrintWriter out, PrintWriter err, String[] args) {
                         throw new RuntimeException("Test exception");
                     }
 
                     @Override
                     public String getCommandName() {
                         return "cmd";
+                    }
+
+                    @Override
+                    public int getMetricsLoggerCommand() {
+                        return 0;
                     }
                 };
 
@@ -263,6 +309,7 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
                         injectCommandToService(shellCommand, commandPrefix),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler(),
+                        mAdServicesLogger,
                         500L);
         shellCommandService.runShellCommand(
                 new ShellCommandParam(commandPrefix, "cmd", "param"), mSyncIShellCommandCallback);

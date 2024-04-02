@@ -20,6 +20,11 @@
     <!-- android:debuggable="true" is needed. See b/228384531 -->
     <application android:debuggable="true">
         <uses-library android:name="android.ext.adservices" android:required="false"/>
+
+        <!-- The JobService schedules all jobs for AdServices using SPE framework. -->
+        <service android:name="com.android.adservices.spe.AdServicesJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
     </application>
 
     <!-- Entries below are necessary so atest can work without specifying the project. -->

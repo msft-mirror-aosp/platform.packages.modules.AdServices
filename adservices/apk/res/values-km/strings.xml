@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"អ្នកបានជ្រើសរើស​មិន​ចូលរួម"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"សូមអរគុណ​ចំពោះការឆ្លើយតប​របស់អ្នក។ Privacy Sandbox ត្រូវបានបិទសម្រាប់ឧបករណ៍របស់អ្នក។\n\nប្រសិនបើអ្នកប្ដូរចិត្ត ឬចង់ស្វែងយល់បន្ថែម សូមចូលទៅកាន់ការកំណត់ឯកជនភាពរបស់អ្នក។"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"ការកំណត់​ឯកជនភាព"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"យល់ហើយ"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"អ្នកគឺជាផ្នែកនៃកំណែបេតា"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox គឺបើកសម្រាប់ឧបករណ៍របស់អ្នក ហើយកម្មវិធីអាចធ្វើតេស្តលើវិធីដែលកាន់តែមានលក្ខណៈឯកជនទាំងនេះ ដើម្បីបង្ហាញការផ្សាយពាណិជ្ជកម្មដល់អ្នក។ អ្នកអាចបិទកំណែបេតាបានគ្រប់ពេលនៅក្នុងការកំណត់ឯកជនភាពរបស់អ្នក។"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"យល់ហើយ"</string>

@@ -18,13 +18,10 @@ package android.adservices.cts;
 
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 
-import androidx.test.filters.FlakyTest;
-
 import com.android.adservices.common.AbstractAdServicesShellCommandHelper;
 import com.android.adservices.common.AdServicesShellCommandHelper;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class AdServicesShellCommandTest extends CtsAdServicesDeviceTestCase {
@@ -39,20 +36,14 @@ public final class AdServicesShellCommandTest extends CtsAdServicesDeviceTestCas
         flags.setFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true);
     }
 
-    // TODO(b/308009734): Enable the tests once we fix the helper class for R/S
-    @Ignore
     @Test
-    @FlakyTest(bugId = 327321849)
     public void testRunCommand_echoCommand() {
         String out = mShellCommandHelper.runCommand("%s %s", CMD_ECHO, CMD_ECHO_OUT);
 
         expect.withMessage("out").that(out).isEqualTo(CMD_ECHO_OUT);
     }
 
-    // TODO(b/308009734): Enable the tests once we fix the helper class for R/S
-    @Ignore
     @Test
-    @FlakyTest(bugId = 327321849)
     public void testRunCommandRwe_echoCommand() {
         AbstractAdServicesShellCommandHelper.CommandResult out =
                 mShellCommandHelper.runCommandRwe("%s %s", CMD_ECHO, CMD_ECHO_OUT);

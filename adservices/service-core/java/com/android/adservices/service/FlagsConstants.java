@@ -92,6 +92,8 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_DISABLE_DIRECT_APP_CALLS =
             "topics_disable_direct_app_calls";
     public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
+    public static final String KEY_TOPICS_ENCRYPTION_METRICS_ENABLED =
+            "topics_encryption_metrics_enabled";
     public static final String KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE =
             "topics_disable_plaintext_response";
     public static final String KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY =
@@ -159,6 +161,13 @@ public final class FlagsConstants {
     public static final String
             KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED =
                     "measurement_source_registration_time_optional_for_agg_reports_enabled";
+
+    public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID =
+            "measurement_enable_trigger_context_id";
+
+    public static final String KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID =
+            "measurement_max_length_of_trigger_context_id";
+
     public static final String KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS =
             "measurement_network_connect_timeout_ms";
     public static final String KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS =
@@ -551,8 +560,16 @@ public final class FlagsConstants {
             "fledge_ad_selection_filtering_enabled";
     public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED =
             "fledge_app_install_filtering_enabled";
+    public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED =
+            "fledge_app_install_filtering_metrics_enabled";
     public static final String KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED =
             "fledge_frequency_cap_filtering_enabled";
+    public static final String KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED =
+            "fledge_frequency_cap_filtering_metrics_enabled";
+    public static final String KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED =
+            "fledge_ad_selection_contextual_ads_enabled";
+    public static final String KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED =
+            "fledge_ad_selection_contextual_ads_metrics_enabled";
     public static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED =
             "fledge_fetch_custom_audience_enabled";
     public static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
@@ -699,6 +716,8 @@ public final class FlagsConstants {
             "fledge_auction_server_enable_debug_reporting";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS =
             "fledge_auction_server_ad_id_fetcher_timeout_ms";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS =
+            "fledge_auction_server_enable_pas_unlimited_egress";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH =
             "fledge_auction_server_ad_render_id_max_length";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED =
@@ -851,6 +870,9 @@ public final class FlagsConstants {
             "encryption_key_job_required_network_type";
 
     public static final String KEY_ENCRYPTION_KEY_JOB_PERIOD_MS = "encryption_key_job_period_ms";
+    public static final String KEY_ENABLE_MDD_ENCRYPTION_KEYS = "enable_mdd_encryption_keys";
+    public static final String KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
+            "mdd_encryption_keys_manifest_file_url";
 
     // App/SDK AllowList/DenyList keys
     public static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
@@ -1031,6 +1053,8 @@ public final class FlagsConstants {
 
     public static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
 
+    public static final String KEY_ENABLE_BACK_COMPAT_INIT = "enable_back_compat_init";
+
     public static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
 
     public static final String KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA =
@@ -1075,6 +1099,10 @@ public final class FlagsConstants {
     // Fledge auction server API usage metrics flag
     public static final String KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED =
             "fledge_auction_server_api_usage_metrics_enabled";
+
+    // Fledge auction server key fetch metrics flag
+    public static final String KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED =
+            "fledge_auction_server_key_fetch_metrics_enabled";
 
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
@@ -1274,6 +1302,14 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE =
             "fledge_kanon_sign_join_enabled";
 
+    /** Key for kanon sign join on device feature flag */
+    public static final String KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE =
+            "fledge_kanon_sign_join_on_device_auction_enabled";
+
+    /** Key for kanon sign join on device feature flag */
+    public static final String KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE =
+            "fledge_kanon_sign_join_auction_server_enabled";
+
     /** Key for kanon fetch parameters url. */
     public static final String KEY_KANON_FETCH_PARAMETERS_URL = "kanon_fetch_parameters_url";
 
@@ -1325,6 +1361,18 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN =
             "fledge_kanon_set_type_to_sign_join";
 
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE =
+            "fledge_kanon_background_job_requires_device_idle";
+
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW =
+            "fledge_kanon_background_job_requires_battery_not_low";
+
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION =
+            "fledge_kanon_background_job_type_of_meter_connection";
+
+    public static final String KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT =
+            "fledge_kanon_http_client_timeout";
+
     /** Key for kanon join url authoriy. */
     public static final String KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY =
             "fledge_kanon_join_url_authoriy";
@@ -1371,4 +1419,7 @@ public final class FlagsConstants {
     /** Key for the sampling rate of job scheduling logging. */
     public static final String KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE =
             "job_scheduling_logging_sampling_rate";
+
+    /** Key for enabling tablet region fix. */
+    public static final String KEY_ENABLE_TABLET_REGION_FIX = "enable_tablet_region_fix";
 }
