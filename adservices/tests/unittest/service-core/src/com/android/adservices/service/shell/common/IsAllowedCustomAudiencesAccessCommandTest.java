@@ -69,4 +69,16 @@ public final class IsAllowedCustomAudiencesAccessCommandTest
                 "true\n",
                 ShellCommandStats.COMMAND_IS_ALLOWED_CUSTOM_AUDIENCE_ACCESS);
     }
+
+    @Test
+    public void test_getCommandName() {
+        expect.that(new IsAllowedCustomAudiencesAccessCommand().getCommandName())
+                .isEqualTo(CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
+    }
+
+    @Test
+    public void test_getCommandHelp() {
+        expect.that(new IsAllowedCustomAudiencesAccessCommand().getCommandHelp())
+                .isEqualTo(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
+    }
 }

@@ -77,4 +77,9 @@ public final class IsAllowedTopicsAccessCommand extends AbstractShellCommand {
     public int getMetricsLoggerCommand() {
         return COMMAND_IS_ALLOWED_TOPICS_ACCESS;
     }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP_IS_ALLOWED_TOPICS_ACCESS;
+    }
 }
