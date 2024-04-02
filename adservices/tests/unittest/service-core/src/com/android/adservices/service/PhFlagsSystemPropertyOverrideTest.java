@@ -122,7 +122,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetTopicsEpochJobFlexMs() {
-        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
                 KEY_TOPICS_EPOCH_JOB_FLEX_MS,
                 TOPICS_EPOCH_JOB_FLEX_MS,
                 Flags::getTopicsEpochJobFlexMs);
@@ -130,7 +130,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetTopicsPercentageForRandomTopic() {
-        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
                 KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
                 TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
                 Flags::getTopicsPercentageForRandomTopic);
@@ -183,7 +183,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testConsentNotificationDebugMode() {
-        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
                 KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
                 CONSENT_NOTIFICATION_DEBUG_MODE,
                 Flags::getConsentNotificationDebugMode);
@@ -191,7 +191,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testConsentNotificationActivityDebugMode() {
-        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 Flags::getConsentNotificationActivityDebugMode);
@@ -199,7 +199,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testConsentManagerOTADebugMode() {
-        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
                 KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
                 DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE,
                 Flags::getConsentManagerOTADebugMode);
@@ -207,7 +207,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testConsentNotifiedDebugMode() {
-        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
                 KEY_CONSENT_NOTIFIED_DEBUG_MODE,
                 CONSENT_NOTIFIED_DEBUG_MODE,
                 Flags::getConsentNotifiedDebugMode);
@@ -224,13 +224,13 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testClassifierType() {
-        mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValueBackedBySystemProperty(
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
                 KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE, Flags::getClassifierType);
     }
 
     @Test
     public void testGetMaintenanceJobPeriodMs() {
-        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
                 KEY_MAINTENANCE_JOB_PERIOD_MS,
                 MAINTENANCE_JOB_PERIOD_MS,
                 Flags::getMaintenanceJobPeriodMs);
@@ -238,7 +238,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMaintenanceJobFlexMs() {
-        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
                 KEY_MAINTENANCE_JOB_FLEX_MS,
                 MAINTENANCE_JOB_FLEX_MS,
                 Flags::getMaintenanceJobFlexMs);
