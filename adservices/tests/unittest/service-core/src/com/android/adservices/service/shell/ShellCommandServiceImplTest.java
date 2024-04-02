@@ -47,6 +47,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.ShellCommandStats;
@@ -72,7 +74,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     public void setup() {
         CustomAudienceDao customAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         AppInstallDao appInstallDao =

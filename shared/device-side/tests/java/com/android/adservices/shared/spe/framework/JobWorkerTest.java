@@ -37,7 +37,7 @@ public final class JobWorkerTest extends AdServicesUnitTestCase {
     private static final JobWorker sJobWorker =
             new JobWorker() {
                 @Override
-                public ListenableFuture<Void> getExecutionFuture(
+                public ListenableFuture<ExecutionResult> getExecutionFuture(
                         Context context, ExecutionRuntimeParameters executionRuntimeParameters) {
                     return null;
                 }

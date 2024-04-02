@@ -196,7 +196,8 @@ public class ScheduledUpdatesHandler {
                         .getFrequencyCapAdDataValidator(),
                 AdRenderIdValidator.createInstance(FlagsFactory.getFlags()),
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                        FlagsFactory.getFlags().getFledgeAdSelectionFilteringEnabled(),
+                        FlagsFactory.getFlags().getFledgeFrequencyCapFilteringEnabled(),
+                        FlagsFactory.getFlags().getFledgeAppInstallFilteringEnabled(),
                         FlagsFactory.getFlags().getFledgeAuctionServerAdRenderIdEnabled()),
                 CustomAudienceImpl.getInstance(context));
     }

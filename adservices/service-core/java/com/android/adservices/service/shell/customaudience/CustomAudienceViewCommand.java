@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell;
+package com.android.adservices.service.shell.customaudience;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_VIEW;
@@ -26,6 +26,8 @@ import android.util.Log;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
+import com.android.adservices.service.shell.AbstractShellCommand;
+import com.android.adservices.service.shell.ShellCommandResult;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -35,7 +37,7 @@ import java.io.PrintWriter;
 import java.util.Optional;
 
 /** Command to view custom audiences created in Protected Audience. */
-final class CustomAudienceViewCommand extends AbstractShellCommand {
+public final class CustomAudienceViewCommand extends AbstractShellCommand {
 
     @VisibleForTesting public static final String CMD = "view";
     public static final String HELP =

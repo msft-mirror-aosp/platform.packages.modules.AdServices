@@ -355,7 +355,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CacheProviderFactory.createNoOpCache());
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
 
@@ -991,7 +991,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(mAdScoringOutcomeList))));
 
-        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+        setAdSelectionExecutionLoggerMockWithSuccessAdSelection();
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
         assertFalse(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(AD_SELECTION_ID));
@@ -1194,7 +1194,7 @@ public class OnDeviceAdSelectionRunnerTest {
         // Persist existing ad selection entry with existingAdSelectionId
         mAdSelectionEntryDaoSpy.persistAdSelection(existingAdSelection);
 
-        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+        setAdSelectionExecutionLoggerMockWithSuccessAdSelection();
 
         // Mock generator to return a collision on the first generation
         when(mMockAdSelectionIdGenerator.generateId())
@@ -1303,7 +1303,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
-        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByValidateRequest();
+        setAdSelectionExecutionLoggerMockWithFailedAdSelectionByValidateRequest();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -1422,7 +1422,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
-        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+        setAdSelectionExecutionLoggerMockWithSuccessAdSelection();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -1502,7 +1502,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
         // Do not populate CustomAudience DAO
 
-        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByNoCAs();
+        setAdSelectionExecutionLoggerMockWithFailedAdSelectionByNoCAs();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -1574,7 +1574,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                         DevContext.createForDevOptionsDisabled());
-        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByValidateRequest();
+        setAdSelectionExecutionLoggerMockWithFailedAdSelectionByValidateRequest();
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContextSpy,
@@ -1641,7 +1641,7 @@ public class OnDeviceAdSelectionRunnerTest {
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByNoCAs();
+        setAdSelectionExecutionLoggerMockWithFailedAdSelectionByNoCAs();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -1855,7 +1855,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
-        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+        setAdSelectionExecutionLoggerMockWithSuccessAdSelection();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -1979,7 +1979,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
 
-        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByNoBiddingOutcomes();
+        setAdSelectionExecutionLoggerMockWithFailedAdSelectionByNoBiddingOutcomes();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -2081,7 +2081,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(Collections.emptyList()))));
 
-        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionDuringScoring();
+        setAdSelectionExecutionLoggerMockWithFailedAdSelectionDuringScoring();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -2188,7 +2188,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(negativeScoreOutcome))));
 
-        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionDuringScoring();
+        setAdSelectionExecutionLoggerMockWithFailedAdSelectionDuringScoring();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -2298,7 +2298,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
-        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+        setAdSelectionExecutionLoggerMockWithSuccessAdSelection();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -2430,7 +2430,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
                 .thenThrow(new AdServicesException(ERROR_INVALID_JSON));
 
-        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionDuringScoring();
+        setAdSelectionExecutionLoggerMockWithFailedAdSelectionDuringScoring();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -2601,7 +2601,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         new AnswersWithDelay(
                                 2 * mFlags.getAdSelectionOverallTimeoutMs(),
                                 new Returns(AD_SELECTION_ID)));
-        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection();
+        setAdSelectionExecutionLoggerMockWithFailedAdSelectionBeforePersistAdSelection();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -2752,7 +2752,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
-        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+        setAdSelectionExecutionLoggerMockWithSuccessAdSelection();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -2844,7 +2844,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                         DevContext.createForDevOptionsDisabled());
 
-        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByValidateRequest();
+        setAdSelectionExecutionLoggerMockWithFailedAdSelectionByValidateRequest();
 
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -3211,7 +3211,7 @@ public class OnDeviceAdSelectionRunnerTest {
                     }
                 };
 
-        mockAdSelectionExecutionLoggerSpyWithContextualAdsAndNoCAs();
+        setAdSelectionExecutionLoggerMockWithContextualAdsAndNoCAs();
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContextSpy,
@@ -3298,7 +3298,7 @@ public class OnDeviceAdSelectionRunnerTest {
                     }
                 };
 
-        mockAdSelectionExecutionLoggerSpyWithContextualAdsAndNoCAs();
+        setAdSelectionExecutionLoggerMockWithContextualAdsAndNoCAs();
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContextSpy,
@@ -3381,7 +3381,7 @@ public class OnDeviceAdSelectionRunnerTest {
                     }
                 };
 
-        mockAdSelectionExecutionLoggerSpyWithContextualAdsAndNoCAs();
+        setAdSelectionExecutionLoggerMockWithContextualAdsAndNoCAs();
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContextSpy,
@@ -3456,7 +3456,7 @@ public class OnDeviceAdSelectionRunnerTest {
                     }
                 };
 
-        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByNoCAs();
+        setAdSelectionExecutionLoggerMockWithFailedAdSelectionByNoCAs();
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContextSpy,
@@ -3539,7 +3539,7 @@ public class OnDeviceAdSelectionRunnerTest {
                     }
                 };
 
-        mockAdSelectionExecutionLoggerSpyWithContextualAdsAndNoCAs();
+        setAdSelectionExecutionLoggerMockWithContextualAdsAndNoCAs();
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContextSpy,
@@ -4200,10 +4200,11 @@ public class OnDeviceAdSelectionRunnerTest {
         }
     }
 
-    private void mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection() {
+    private void setAdSelectionExecutionLoggerMockWithSuccessAdSelection() {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
-                        START_ELAPSED_TIMESTAMP,
+                        START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
+                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
@@ -4216,7 +4217,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
-    private void mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByValidateRequest() {
+    private void setAdSelectionExecutionLoggerMockWithFailedAdSelectionByValidateRequest() {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(START_ELAPSED_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
         mAdSelectionExecutionLogger =
@@ -4224,10 +4225,11 @@ public class OnDeviceAdSelectionRunnerTest {
                         sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
-    private void mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByNoCAs() {
+    private void setAdSelectionExecutionLoggerMockWithFailedAdSelectionByNoCAs() {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
-                        START_ELAPSED_TIMESTAMP,
+                        START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
+                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         BIDDING_STAGE_END_TIMESTAMP,
                         STOP_ELAPSED_TIMESTAMP);
@@ -4236,10 +4238,11 @@ public class OnDeviceAdSelectionRunnerTest {
                         sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
-    private void mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByNoBiddingOutcomes() {
+    private void setAdSelectionExecutionLoggerMockWithFailedAdSelectionByNoBiddingOutcomes() {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
-                        START_ELAPSED_TIMESTAMP,
+                        START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
+                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
@@ -4250,11 +4253,11 @@ public class OnDeviceAdSelectionRunnerTest {
                         sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
-    private void mockAdSelectionExecutionLoggerSpyWithContextualAdsAndNoCAs() {
+    private void setAdSelectionExecutionLoggerMockWithContextualAdsAndNoCAs() {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
-                        START_ELAPSED_TIMESTAMP,
-                        START_ELAPSED_TIMESTAMP,
+                        START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
+                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         SIGNATURE_VERIFICATION_START_KEY_FETCH,
                         SIGNATURE_VERIFICATION_END_KEY_FETCH,
                         SIGNATURE_VERIFICATION_START_SERIALIZATION,
@@ -4278,10 +4281,11 @@ public class OnDeviceAdSelectionRunnerTest {
     }
 
     // TODO(b/221861861): add SCORING TIMESTAMP.
-    private void mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionDuringScoring() {
+    private void setAdSelectionExecutionLoggerMockWithFailedAdSelectionDuringScoring() {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
-                        START_ELAPSED_TIMESTAMP,
+                        START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
+                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
@@ -4292,10 +4296,11 @@ public class OnDeviceAdSelectionRunnerTest {
                         sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
-    private void mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionBeforePersistAdSelection() {
+    private void setAdSelectionExecutionLoggerMockWithFailedAdSelectionBeforePersistAdSelection() {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
-                        START_ELAPSED_TIMESTAMP,
+                        START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
+                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
@@ -4489,7 +4494,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(mAdScoringOutcomeList))));
 
-        mockAdSelectionExecutionLoggerSpyWithSuccessAdSelection();
+        setAdSelectionExecutionLoggerMockWithSuccessAdSelection();
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
         assertFalse(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(AD_SELECTION_ID));

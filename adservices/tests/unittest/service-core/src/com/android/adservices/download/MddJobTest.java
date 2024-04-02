@@ -55,6 +55,7 @@ import com.android.adservices.common.FutureSyncCallback;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.scheduling.JobSpec;
@@ -140,7 +141,8 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
         FutureSyncCallback<Void> mddHandleTaskCallBack = mockMddHandleTask();
         FutureSyncCallback<Void> enrollmentCallBack = mockEnrollmentReadFromMdd();
 
-        ListenableFuture<Void> unusedFuture = mMddJob.getExecutionFuture(sContext, mMockParams);
+        ListenableFuture<ExecutionResult> unusedFuture =
+                mMddJob.getExecutionFuture(sContext, mMockParams);
         // Call it to suppress the linter.
         unusedFuture.get();
 

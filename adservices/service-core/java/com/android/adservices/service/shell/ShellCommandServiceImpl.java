@@ -59,7 +59,7 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
 
     private final long mMaxCommandDurationMillis;
     private final AdServicesLogger mAdServicesLogger;
-    private ShellCommandFactorySupplier mShellCommandFactorySupplier;
+    private final ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
     @VisibleForTesting
     public ShellCommandServiceImpl(
