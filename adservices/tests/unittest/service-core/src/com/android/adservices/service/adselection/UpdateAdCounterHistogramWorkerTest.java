@@ -444,7 +444,7 @@ public class UpdateAdCounterHistogramWorkerTest {
         }
 
         public FlagsOverridingAdFiltering() {
-            this(FLEDGE_AD_SELECTION_FILTERING_ENABLED);
+            this(FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED);
         }
 
         @Override

@@ -95,7 +95,9 @@ public class CustomAudienceUpdatableDataReader {
      *     bidding data
      * @param maxAdsSizeB the configured maximum size in bytes allocated for ads
      * @param maxNumAds the configured maximum number of ads allowed per update
-     * @param filteringEnabled whether or not ad selection filtering fields should be read
+     * @param frequencyCapFilteringEnabled whether or not frequency cap filtering fields should be
+     *     read
+     * @param appInstallFilteringEnabled whether or not app install filtering fields should be read
      * @param adRenderIdEnabled whether ad render id field should be read
      * @param adRenderIdMaxLength the max length of the ad render id
      */
@@ -107,7 +109,8 @@ public class CustomAudienceUpdatableDataReader {
             int maxTrustedBiddingDataSizeB,
             int maxAdsSizeB,
             int maxNumAds,
-            boolean filteringEnabled,
+            boolean frequencyCapFilteringEnabled,
+            boolean appInstallFilteringEnabled,
             boolean adRenderIdEnabled,
             long adRenderIdMaxLength) {
         Objects.requireNonNull(responseObject);
@@ -122,7 +125,8 @@ public class CustomAudienceUpdatableDataReader {
         mMaxAdsSizeB = maxAdsSizeB;
         mMaxNumAds = maxNumAds;
         mGetFiltersFromJsonObjectStrategy =
-                ReadFiltersFromJsonStrategyFactory.getStrategy(filteringEnabled);
+                ReadFiltersFromJsonStrategyFactory.getStrategy(
+                        frequencyCapFilteringEnabled, appInstallFilteringEnabled);
         mReadAdRenderIdFromJsonStrategy =
                 ReadAdRenderIdFromJsonStrategyFactory.getStrategy(
                         adRenderIdEnabled, adRenderIdMaxLength);

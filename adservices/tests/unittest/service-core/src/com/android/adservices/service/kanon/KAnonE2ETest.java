@@ -2397,11 +2397,6 @@ public class KAnonE2ETest {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return true;
-        }
-
-        @Override
         public boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
             return true;
         }
