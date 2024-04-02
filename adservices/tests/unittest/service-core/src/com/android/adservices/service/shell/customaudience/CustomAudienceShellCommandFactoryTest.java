@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell;
+package com.android.adservices.service.shell.customaudience;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.shell.NoOpShellCommand;
+import com.android.adservices.service.shell.ShellCommand;
+import com.android.adservices.service.shell.ShellCommandFactory;
 
 import com.google.common.truth.Truth;
 

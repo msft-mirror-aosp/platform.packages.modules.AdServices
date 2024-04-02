@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell;
+package com.android.adservices.service.shell.customaudience;
 
 final class CustomAudienceArgs {
     static final String OWNER = "--owner";
