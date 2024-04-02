@@ -125,7 +125,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
                 KEY_TOPICS_EPOCH_JOB_FLEX_MS,
                 TOPICS_EPOCH_JOB_FLEX_MS,
-                flags -> flags.getTopicsEpochJobFlexMs());
+                Flags::getTopicsEpochJobFlexMs);
     }
 
     @Test
@@ -133,13 +133,13 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
                 KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
                 TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
-                flags -> flags.getTopicsPercentageForRandomTopic());
+                Flags::getTopicsPercentageForRandomTopic);
     }
 
     @Test
     public void testGetAdIdKillSwitch() {
         mFlagsTestHelper.testUnguardedLegacyKillSwitch(
-                KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", flags -> flags.getAdIdKillSwitch());
+                KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", Flags::getAdIdKillSwitch);
     }
 
     @Test
@@ -147,7 +147,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testLegacyKillSwitch(
                 KEY_MEASUREMENT_KILL_SWITCH,
                 "MEASUREMENT_KILL_SWITCH",
-                flags -> flags.getLegacyMeasurementKillSwitch());
+                Flags::getLegacyMeasurementKillSwitch);
     }
 
     @Test
@@ -155,7 +155,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testFeatureFlagBackedByLegacyKillSwitch(
                 KEY_MEASUREMENT_KILL_SWITCH,
                 "MEASUREMENT_KILL_SWITCH",
-                flags -> flags.getMeasurementEnabled());
+                Flags::getMeasurementEnabled);
     }
 
     @Test
@@ -164,7 +164,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH,
                 "MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
-                flags -> flags.getMeasurementAttributionFallbackJobEnabled());
+                Flags::getMeasurementAttributionFallbackJobEnabled);
     }
 
     @Test
@@ -172,15 +172,13 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testFeatureFlagGuardedByGlobalKs(
                 KEY_COBALT_LOGGING_ENABLED,
                 "COBALT_LOGGING_ENABLED",
-                flags -> flags.getCobaltLoggingEnabled());
+                Flags::getCobaltLoggingEnabled);
     }
 
     @Test
     public void testGetMddLoggerEnabled() {
         mFlagsTestHelper.testFeatureFlagBackedByLegacyKillSwitch(
-                KEY_MDD_LOGGER_KILL_SWITCH,
-                "MDD_LOGGER_KILL_SWITCH",
-                flags -> flags.getMddLoggerEnabled());
+                KEY_MDD_LOGGER_KILL_SWITCH, "MDD_LOGGER_KILL_SWITCH", Flags::getMddLoggerEnabled);
     }
 
     @Test
@@ -188,7 +186,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
                 KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
                 CONSENT_NOTIFICATION_DEBUG_MODE,
-                flags -> flags.getConsentNotificationDebugMode());
+                Flags::getConsentNotificationDebugMode);
     }
 
     @Test
@@ -196,7 +194,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
-                flags -> flags.getConsentNotificationActivityDebugMode());
+                Flags::getConsentNotificationActivityDebugMode);
     }
 
     @Test
@@ -204,7 +202,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
                 KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
                 DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE,
-                flags -> flags.getConsentManagerOTADebugMode());
+                Flags::getConsentManagerOTADebugMode);
     }
 
     @Test
@@ -212,7 +210,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
                 KEY_CONSENT_NOTIFIED_DEBUG_MODE,
                 CONSENT_NOTIFIED_DEBUG_MODE,
-                flags -> flags.getConsentNotifiedDebugMode());
+                Flags::getConsentNotifiedDebugMode);
     }
 
     @Test
@@ -221,13 +219,13 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 KEY_CONSENT_MANAGER_DEBUG_MODE,
                 "CONSENT_MANAGER_DEBUG_MODE",
                 /* guard= */ null,
-                flags -> flags.getConsentManagerDebugMode());
+                Flags::getConsentManagerDebugMode);
     }
 
     @Test
     public void testClassifierType() {
         mFlagsTestHelper.testFeatureFlagDefaultAndOverriddenValueBackedBySystemProperty(
-                KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE, flags -> flags.getClassifierType());
+                KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE, Flags::getClassifierType);
     }
 
     @Test
@@ -235,7 +233,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
                 KEY_MAINTENANCE_JOB_PERIOD_MS,
                 MAINTENANCE_JOB_PERIOD_MS,
-                flags -> flags.getMaintenanceJobPeriodMs());
+                Flags::getMaintenanceJobPeriodMs);
     }
 
     @Test
@@ -243,6 +241,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
                 KEY_MAINTENANCE_JOB_FLEX_MS,
                 MAINTENANCE_JOB_FLEX_MS,
-                flags -> flags.getMaintenanceJobFlexMs());
+                Flags::getMaintenanceJobFlexMs);
     }
 }
