@@ -27,6 +27,9 @@ import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessC
 import android.annotation.Nullable;
 import android.util.Log;
 
+import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceRefreshCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceViewCommand;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.util.Clock;
