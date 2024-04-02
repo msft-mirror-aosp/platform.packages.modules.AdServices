@@ -17,19 +17,10 @@ package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.AbstractShellCommand.RESULT_GENERIC_ERROR;
 import static com.android.adservices.service.shell.AbstractShellCommand.RESULT_OK;
-import static com.android.adservices.service.shell.common.EchoCommand.HELP_ECHO;
-import static com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand.HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
-import static com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
-import static com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
-import static com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand.HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
-import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
 
 import android.annotation.Nullable;
 import android.util.Log;
 
-import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
-import com.android.adservices.service.shell.customaudience.CustomAudienceRefreshCommand;
-import com.android.adservices.service.shell.customaudience.CustomAudienceViewCommand;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.util.Clock;
@@ -163,16 +154,23 @@ public final class AdServicesShellCommandHandler {
      * Commands - for each new one, add onHelp(), onCommand(), and runCommand() *
      ****************************************************************************/
 
-    private static void onHelp(PrintWriter pw) {
-        pw.printf("%s\n\n", HELP_ECHO);
-        pw.printf("%s\n\n", HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
-        pw.printf("%s\n\n", HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
-        pw.printf("%s\n\n", HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
-        pw.printf("%s\n\n", HELP_IS_ALLOWED_AD_SELECTION_ACCESS);
-        pw.printf("%s\n\n", HELP_IS_ALLOWED_TOPICS_ACCESS);
-        pw.printf("%s\n\n", CustomAudienceListCommand.HELP);
-        pw.printf("%s\n\n", CustomAudienceViewCommand.HELP);
-        pw.printf("%s\n\n", CustomAudienceRefreshCommand.HELP);
+    private void onHelp(PrintWriter pw) {
+        StringBuilder stringBuilder = new StringBuilder();
+        COMMON_SHELL_COMMAND_FACTORY
+                .getAllCommandsHelp()
+                .forEach(
+                        help -> {
+                            stringBuilder.append(help);
+                            stringBuilder.append("\n\n");
+                        });
+        mShellCommandFactories.values().stream()
+                .flatMap(shellCommandFactory -> shellCommandFactory.getAllCommandsHelp().stream())
+                .forEach(
+                        help -> {
+                            stringBuilder.append(help);
+                            stringBuilder.append("\n\n");
+                        });
+        pw.printf(stringBuilder.toString());
     }
 
     private int onCommand(String cmd) {
@@ -185,7 +183,6 @@ public final class AdServicesShellCommandHandler {
                 mErr.println(ERROR_EMPTY_COMMAND);
                 return RESULT_GENERIC_ERROR;
             default:
-                // TODO (b/308009734): Move other shell commands implement ICommand interface.
                 ShellCommand shellCommand;
                 if (mShellCommandFactories.containsKey(cmd)) {
                     ShellCommandFactory shellCommandFactory = mShellCommandFactories.get(cmd);

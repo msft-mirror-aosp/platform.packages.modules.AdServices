@@ -80,6 +80,11 @@ public final class CustomAudienceViewCommand extends AbstractShellCommand {
     }
 
     @Override
+    public String getCommandHelp() {
+        return HELP;
+    }
+
+    @Override
     public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
         try {
             mCustomAudienceArgParser.parse(args);

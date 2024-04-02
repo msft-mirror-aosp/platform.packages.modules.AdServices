@@ -69,4 +69,16 @@ public final class IsAllowedProtectedSignalsAccessCommandTest
                 "true\n",
                 ShellCommandStats.COMMAND_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
     }
+
+    @Test
+    public void test_getCommandName() {
+        expect.that(new IsAllowedProtectedSignalsAccessCommand().getCommandName())
+                .isEqualTo(CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
+    }
+
+    @Test
+    public void test_getCommandHelp() {
+        expect.that(new IsAllowedProtectedSignalsAccessCommand().getCommandHelp())
+                .isEqualTo(HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
+    }
 }
