@@ -116,6 +116,7 @@ public class SignatureVerificationLogger extends ApiServiceLatencyCalculator {
     public void startSignatureVerification() {
         if (mSignatureVerificationStartTimestamp > UNSET) {
             sLogger.w(REPEATED_START_SIGNATURE_VERIFICATION);
+            return;
         }
         mSignatureVerificationStartTimestamp = getServiceElapsedTimestamp();
     }
@@ -124,9 +125,11 @@ public class SignatureVerificationLogger extends ApiServiceLatencyCalculator {
     public void endSignatureVerification() {
         if (mSignatureVerificationStartTimestamp == UNSET) {
             sLogger.w(MISSING_START_SIGNATURE_VERIFICATION);
+            return;
         }
         if (mSignatureVerificationEndTimestamp > UNSET) {
             sLogger.w(REPEATED_END_SIGNATURE_VERIFICATION);
+            return;
         }
         mSignatureVerificationEndTimestamp = getServiceElapsedTimestamp();
     }
@@ -135,6 +138,7 @@ public class SignatureVerificationLogger extends ApiServiceLatencyCalculator {
     public void startKeyFetchForSignatureVerification() {
         if (mKeyFetchForSignatureVerificationStartTimestamp > UNSET) {
             sLogger.w(REPEATED_START_KEY_FETCH_FOR_SIGNATURE_VERIFICATION);
+            return;
         }
         mKeyFetchForSignatureVerificationStartTimestamp = getServiceElapsedTimestamp();
     }
@@ -143,9 +147,11 @@ public class SignatureVerificationLogger extends ApiServiceLatencyCalculator {
     public void endKeyFetchForSignatureVerification() {
         if (mKeyFetchForSignatureVerificationStartTimestamp == UNSET) {
             sLogger.w(MISSING_START_KEY_FETCH_FOR_SIGNATURE_VERIFICATION);
+            return;
         }
         if (mKeyFetchForSignatureVerificationEndTimestamp > UNSET) {
             sLogger.w(REPEATED_END_KEY_FETCH_FOR_SIGNATURE_VERIFICATION);
+            return;
         }
         mKeyFetchForSignatureVerificationEndTimestamp = getServiceElapsedTimestamp();
     }
@@ -154,6 +160,7 @@ public class SignatureVerificationLogger extends ApiServiceLatencyCalculator {
     public void startSerializationForSignatureVerification() {
         if (mSerializationForSignatureVerificationStartTimestamp > UNSET) {
             sLogger.w(REPEATED_START_SERIALIZATION_FOR_SIGNATURE_VERIFICATION);
+            return;
         }
         mSerializationForSignatureVerificationStartTimestamp = getServiceElapsedTimestamp();
     }
@@ -162,9 +169,11 @@ public class SignatureVerificationLogger extends ApiServiceLatencyCalculator {
     public void endSerializationForSignatureVerification() {
         if (mSerializationForSignatureVerificationStartTimestamp == UNSET) {
             sLogger.w(MISSING_START_SERIALIZATION_FOR_SIGNATURE_VERIFICATION);
+            return;
         }
         if (mSerializationForSignatureVerificationEndTimestamp > UNSET) {
             sLogger.w(REPEATED_END_SERIALIZATION_FOR_SIGNATURE_VERIFICATION);
+            return;
         }
         mSerializationForSignatureVerificationEndTimestamp = getServiceElapsedTimestamp();
     }
@@ -247,9 +256,9 @@ public class SignatureVerificationLogger extends ApiServiceLatencyCalculator {
             boolean isStatusVerified =
                     verificationStatus == SignatureVerificationStats.VerificationStatus.VERIFIED;
             boolean anyTimestampMissing =
-                    mKeyFetchForSignatureVerificationEndTimestamp == 0
-                            || mSerializationForSignatureVerificationEndTimestamp == 0
-                            || mSignatureVerificationEndTimestamp == 0;
+                    mKeyFetchForSignatureVerificationEndTimestamp == UNSET
+                            || mSerializationForSignatureVerificationEndTimestamp == UNSET
+                            || mSignatureVerificationEndTimestamp == UNSET;
             if (isStatusVerified && anyTimestampMissing) {
                 sLogger.v(MISSING_TIMESTAMPS_FOR_SIGNING_LOGGING_LATENCY);
                 flush();
