@@ -230,4 +230,8 @@ public interface AdServicesLogger {
 
     /** Logs stats for UpdateSignalsApiCalledStats */
     void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats);
+
+    /** Logs stats for ServerAuctionBackgroundKeyFetchScheduled */
+    void logServerAuctionBackgroundKeyFetchScheduledStats(
+            ServerAuctionBackgroundKeyFetchScheduledStats stats);
 }

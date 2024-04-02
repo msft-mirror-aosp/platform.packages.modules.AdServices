@@ -119,6 +119,13 @@ public class AdsRelevanceStatusUtils {
     // Buckets for JS download latency in ms
     public static final int[] JS_DOWNLOAD_LATENCY_BUCKETS = {50, 200, 1000, 2000};
 
+    /** The key fetch status is UNSET. */
+    public static final int BACKGROUND_KEY_FETCH_STATUS_UNSET = 0;
+    /** The key fetch status is NO_OP. */
+    public static final int BACKGROUND_KEY_FETCH_STATUS_NO_OP = 1;
+    /** The key fetch status is REFRESH_KEYS_INITIATED. */
+    public static final int BACKGROUND_KEY_FETCH_STATUS_REFRESH_KEYS_INITIATED = 2;
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},
@@ -237,4 +244,15 @@ public class AdsRelevanceStatusUtils {
         }
         return SIZE_VERY_LARGE;
     }
+
+    /** The status of the background key fetch. */
+    @IntDef(
+            prefix = {"BACKGROUND_KEY_FETCH_STATUS_"},
+            value = {
+                BACKGROUND_KEY_FETCH_STATUS_UNSET,
+                BACKGROUND_KEY_FETCH_STATUS_NO_OP,
+                BACKGROUND_KEY_FETCH_STATUS_REFRESH_KEYS_INITIATED,
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface BackgroundKeyFetchStatus {}
 }

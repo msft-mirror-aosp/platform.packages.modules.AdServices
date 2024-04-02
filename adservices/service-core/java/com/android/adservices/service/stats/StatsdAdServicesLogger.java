@@ -55,6 +55,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BID
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SIGNATURE_VERIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
@@ -819,6 +820,16 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getJsonProcessingStatus(),
                 stats.getPackageUid(),
                 stats.getAdTechId());
+    }
+
+    @Override
+    public void logServerAuctionBackgroundKeyFetchScheduledStats(
+            ServerAuctionBackgroundKeyFetchScheduledStats stats) {
+        AdServicesStatsLog.write(
+                SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED,
+                stats.getStatus(),
+                stats.getCountAuctionUrls(),
+                stats.getCountJoinUrls());
     }
 
     @NonNull

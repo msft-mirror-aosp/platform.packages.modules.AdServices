@@ -201,4 +201,8 @@ public class NoOpLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logEncodingJsFetchStats(EncodingFetchStats stats) {}
+
+    @Override
+    public void logServerAuctionBackgroundKeyFetchScheduledStats(
+            ServerAuctionBackgroundKeyFetchScheduledStats stats) {}
 }
