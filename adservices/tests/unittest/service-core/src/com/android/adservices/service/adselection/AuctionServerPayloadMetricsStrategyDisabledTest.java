@@ -85,7 +85,7 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
 
     @Test
     public void
-        testLogGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetricsDoesNothing() {
+            testLogGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetricsDoesNothing() {
         mAuctionServerPayloadMetricsStrategy
                 .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
                         mPerBuyerStatsMock,

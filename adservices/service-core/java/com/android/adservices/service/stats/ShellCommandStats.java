@@ -22,6 +22,7 @@ import android.annotation.IntDef;
 
 import java.lang.annotation.Retention;
 import java.util.Locale;
+import java.util.Objects;
 
 /** Class for {@code ADSERVICES_SHELL_COMMAND_CALLED} atom */
 public final class ShellCommandStats {
@@ -160,5 +161,27 @@ public final class ShellCommandStats {
                 mCommand,
                 mResult,
                 mLatencyMillis);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        ShellCommandStats other = (ShellCommandStats) obj;
+        return mCommand == other.getCommand()
+                && mResult == other.mResult
+                && mLatencyMillis == other.getLatencyMillis();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mCommand, mResult, mLatencyMillis);
     }
 }

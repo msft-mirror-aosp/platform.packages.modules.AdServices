@@ -70,8 +70,8 @@ public class EncoderLogicHandler {
 
     @VisibleForTesting
     public static final String ENCODER_VERSION_RESPONSE_HEADER = "X_ENCODER_VERSION";
-    @VisibleForTesting
-    public static final String EMPTY_ADTECH_ID = "";
+
+    @VisibleForTesting public static final String EMPTY_ADTECH_ID = "";
     @VisibleForTesting static final int FALLBACK_VERSION = 0;
     @NonNull private final EncoderPersistenceDao mEncoderPersistenceDao;
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
@@ -185,8 +185,8 @@ public class EncoderLogicHandler {
                 buyer, encoderEndpoint.getDownloadUri());
         FluentFuture<AdServicesHttpClientResponse> response =
                 FluentFuture.from(
-                        mAdServicesHttpsClient
-                                .fetchPayloadWithLogging(downloadRequest, fetchProcessLogger));
+                        mAdServicesHttpsClient.fetchPayloadWithLogging(
+                                downloadRequest, fetchProcessLogger));
 
         return response.transform(
                 r -> extractAndPersistEncoder(buyer, r), mBackgroundExecutorService);

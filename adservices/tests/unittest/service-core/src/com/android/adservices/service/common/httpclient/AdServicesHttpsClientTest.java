@@ -16,15 +16,16 @@
 
 package com.android.adservices.service.common.httpclient;
 
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_NETWORK_FAILURE;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_TIMEOUT;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_UNSET;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.getDownloadTimeInBucketSize;
 import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
 
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.EMPTY_BODY;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_NETWORK_FAILURE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_TIMEOUT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_DOWNLOAD_LATENCY_BUCKETS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
 import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_AD_TECH_ID;
 import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_END_TIMESTAMP;
 import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_START_TIMESTAMP;
@@ -1060,9 +1061,7 @@ public class AdServicesHttpsClientTest {
 
         AdServicesHttpClientResponse result =
                 fetchPayloadWithEncodingJsFetchLogging(
-                        Uri.parse(url.toString()),
-                        DEV_CONTEXT_DISABLED,
-                        mFetchProcessLogger);
+                        Uri.parse(url.toString()), DEV_CONTEXT_DISABLED, mFetchProcessLogger);
         assertEquals(mJsScript, result.getResponseBody());
 
         // Verify the logging of EncodingFetchStats
@@ -1081,10 +1080,11 @@ public class AdServicesHttpsClientTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> fetchPayloadWithEncodingJsFetchLogging(
-                                Uri.parse(url.toString()),
-                                DEV_CONTEXT_DISABLED,
-                                mFetchProcessLogger));
+                        () ->
+                                fetchPayloadWithEncodingJsFetchLogging(
+                                        Uri.parse(url.toString()),
+                                        DEV_CONTEXT_DISABLED,
+                                        mFetchProcessLogger));
         assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
 
         // Verify the logging of EncodingFetchStats
@@ -1100,10 +1100,11 @@ public class AdServicesHttpsClientTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> fetchPayloadWithEncodingJsFetchLogging(
-                                Uri.parse(mFakeUrl),
-                                DEV_CONTEXT_DISABLED,
-                                mFetchProcessLogger));
+                        () ->
+                                fetchPayloadWithEncodingJsFetchLogging(
+                                        Uri.parse(mFakeUrl),
+                                        DEV_CONTEXT_DISABLED,
+                                        mFetchProcessLogger));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
 
         // Verify the logging of EncodingFetchStats
@@ -1131,10 +1132,11 @@ public class AdServicesHttpsClientTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> fetchPayloadWithEncodingJsFetchLogging(
-                                Uri.parse(url.toString()),
-                                DEV_CONTEXT_DISABLED,
-                                mFetchProcessLogger));
+                        () ->
+                                fetchPayloadWithEncodingJsFetchLogging(
+                                        Uri.parse(url.toString()),
+                                        DEV_CONTEXT_DISABLED,
+                                        mFetchProcessLogger));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
 
         // Verify the logging of EncodingFetchStats
@@ -1149,11 +1151,11 @@ public class AdServicesHttpsClientTest {
     private AdServicesHttpClientResponse fetchPayloadWithEncodingJsFetchLogging(
             Uri uri, DevContext devContext, FetchProcessLogger logger) throws Exception {
         return mClient.fetchPayloadWithLogging(
-                AdServicesHttpClientRequest.builder()
-                        .setUri(uri)
-                        .setDevContext(devContext)
-                        .build(),
-                logger)
+                        AdServicesHttpClientRequest.builder()
+                                .setUri(uri)
+                                .setDevContext(devContext)
+                                .build(),
+                        logger)
                 .get();
     }
 
@@ -1188,6 +1190,6 @@ public class AdServicesHttpsClientTest {
         assertThat(stats.getAdTechId()).isEqualTo(TEST_AD_TECH_ID);
         assertThat(stats.getHttpResponseCode()).isEqualTo(FIELD_UNSET);
         assertThat(stats.getJsDownloadTime())
-                .isEqualTo(getDownloadTimeInBucketSize(TEST_JS_DOWNLOAD_TIME));
+                .isEqualTo(computeSize(TEST_JS_DOWNLOAD_TIME, JS_DOWNLOAD_LATENCY_BUCKETS));
     }
 }

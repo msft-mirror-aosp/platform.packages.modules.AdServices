@@ -367,7 +367,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
@@ -2403,7 +2403,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         // Prepare the custom audiences as json responses we expect from the server.
         AdDataConversionStrategy adDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(false, true);
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(false, false, true);
         List<DBAdData> ads1 = new ArrayList<>();
         for (AdData ad : customAudience1.getAds()) {
             ads1.add(
@@ -2565,7 +2565,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         // Prepare the custom audiences as json responses we expect from the server.
         AdDataConversionStrategy adDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
         List<DBAdData> ads1 = new ArrayList<>();
         for (AdData ad : customAudience1.getAds()) {
             ads1.add(
@@ -2729,7 +2729,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         // Prepare the custom audiences as json responses we expect from the server.
         AdDataConversionStrategy adDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
         List<DBAdData> ads1 = new ArrayList<>();
         for (AdData ad : customAudience1.getAds()) {
             ads1.add(
@@ -2903,7 +2903,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         // Prepare the custom audiences as json responses we expect from the server.
         AdDataConversionStrategy adDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
         List<DBAdData> ads1 = new ArrayList<>();
         for (AdData ad : customAudience1.getAds()) {
             ads1.add(
@@ -5344,8 +5344,20 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
             return mRegisterAdBeaconEnabled;
         }
 
+        // TODO(b/330840810): Remove this flag once other features are ramped up to using the split
+        // flags
         @Override
         public boolean getFledgeAdSelectionFilteringEnabled() {
+            return mFiltersEnabled;
+        }
+
+        @Override
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
+            return mFiltersEnabled;
+        }
+
+        @Override
+        public boolean getFledgeAppInstallFilteringEnabled() {
             return mFiltersEnabled;
         }
 

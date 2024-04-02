@@ -207,6 +207,21 @@ public final class PhFlagsTestHelper {
      * [Backed by system property].
      */
     public void testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+            String flagName, Boolean defaultConstantValue, Flaginator<Flags, Boolean> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* deviceConfigOverriddenValue= */ !defaultConstantValue,
+                /* systemPropertyOverriddenValue= */ defaultConstantValue,
+                /* illegalValue= */ Optional.empty());
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value are fetched
+     * [Backed by system property].
+     */
+    public void testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
             String flagName, Integer defaultConstantValue, Flaginator<Flags, Integer> flaginator) {
         testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
                 flagName,
@@ -215,6 +230,21 @@ public final class PhFlagsTestHelper {
                 /* deviceConfigOverriddenValue= */ 1 + defaultConstantValue,
                 /* systemPropertyOverriddenValue= */ 2 + defaultConstantValue,
                 /* illegalValue= */ Optional.of(-1));
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value are fetched
+     * [Backed by system property].
+     */
+    public void testFeatureFlagDefaultAndOverriddenValueBackedBySystemProperty(
+            String flagName, Integer defaultConstantValue, Flaginator<Flags, Integer> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* deviceConfigOverriddenValue= */ 1 + defaultConstantValue,
+                /* systemPropertyOverriddenValue= */ 2 + defaultConstantValue,
+                /* illegalValue= */ Optional.empty());
     }
 
     /**
@@ -228,6 +258,20 @@ public final class PhFlagsTestHelper {
                 defaultConstantValue,
                 flaginator,
                 /* overriddenValue= */ defaultConstantValue + 1,
+                /* illegalValue= */ Optional.empty());
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value, overridden value are
+     * fetched.
+     */
+    public void testFeatureFlagDefaultAndOverriddenValue(
+            String flagName, Float defaultConstantValue, Flaginator<Flags, Float> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValue(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ defaultConstantValue + 1.0f,
                 /* illegalValue= */ Optional.empty());
     }
 

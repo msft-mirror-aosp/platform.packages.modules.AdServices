@@ -53,7 +53,7 @@ public class DBCustomAudienceTest {
             Duration.ofMillis(FLAGS.getFledgeCustomAudienceDefaultExpireInMs());
 
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -116,7 +116,8 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
-                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, false),
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                                true, true, false),
                         false,
                         false));
     }
