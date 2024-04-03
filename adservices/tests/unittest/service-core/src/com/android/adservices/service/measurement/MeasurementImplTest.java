@@ -224,6 +224,7 @@ public final class MeasurementImplTest {
                 spy(
                         new MeasurementImpl(
                                 DEFAULT_CONTEXT,
+                                FlagsFactory.getFlagsForTest(),
                                 mDatastoreManager,
                                 mClickVerifier,
                                 mMeasurementDataDeleter,
@@ -240,6 +241,7 @@ public final class MeasurementImplTest {
         MeasurementImpl measurement =
                 new MeasurementImpl(
                         DEFAULT_CONTEXT,
+                        FlagsFactory.getFlagsForTest(),
                         new SQLDatastoreManager(
                                 DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger),
                         mClickVerifier,
@@ -423,6 +425,7 @@ public final class MeasurementImplTest {
         MeasurementImpl measurementImpl =
                 new MeasurementImpl(
                         DEFAULT_CONTEXT,
+                        FlagsFactory.getFlagsForTest(),
                         mDatastoreManager,
                         mockClickVerifier,
                         mMeasurementDataDeleter,
@@ -966,6 +969,7 @@ public final class MeasurementImplTest {
     private MeasurementImpl createMeasurementImpl() {
         return new MeasurementImpl(
                 DEFAULT_CONTEXT,
+                FlagsFactory.getFlagsForTest(),
                 mDatastoreManager,
                 mClickVerifier,
                 mMeasurementDataDeleter,
