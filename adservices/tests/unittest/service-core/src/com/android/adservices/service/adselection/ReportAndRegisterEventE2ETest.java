@@ -310,6 +310,7 @@ public class ReportAndRegisterEventE2ETest {
                 spy(
                         new MeasurementImpl(
                                 CONTEXT,
+                                FlagsFactory.getFlagsForTest(),
                                 mDatastoreManagerSpy,
                                 mClickVerifierMock,
                                 mMeasurementDataDeleterMock,
