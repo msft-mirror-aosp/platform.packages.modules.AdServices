@@ -39,7 +39,7 @@
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
         <option
             name="run-command"
-            value="device_config put adservices consent_notification_activity_debug_mode false"/>
+            value="setprop debug.adservices.consent_notification_debug_mode false"/>
         <option
             name="run-command"
             value="device_config put adservices ui_ota_strings_feature_enabled false"/>
@@ -74,10 +74,10 @@
             value="device_config put adservices eu_notif_flow_change_enabled false"/>
         <option
             name="run-command"
-            value="device_config put adservices consent_notification_debug_mode false"/>
+            value="setprop debug.adservices.consent_notification_debug_mode false"/>
         <option
             name="run-command"
-            value="device_config put adservices consent_notification_activity_debug_mode false"/>
+            value="setprop debug.adservices.consent_notification_debug_mode false"/>
         <!-- override scheduling params so the test is unaffected by time of the day -->
         <option
             name="run-command"
