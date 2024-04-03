@@ -114,10 +114,13 @@ public class AdsRelevanceStatusUtils {
     public static final int SERVER_AUCTION_COORDINATOR_SOURCE_API = 2;
 
     // We expect most JSONs to be small, at least initially, so we'll bucket more there.
-    public static final int[] JSON_SIZE_BUCKETS = {100, 300, 1000, 5000};
+    public static final long[] JSON_SIZE_BUCKETS = {100, 300, 1000, 5000};
 
     // Buckets for JS download latency in ms
-    public static final int[] JS_DOWNLOAD_LATENCY_BUCKETS = {50, 200, 1000, 2000};
+    public static final long[] JS_DOWNLOAD_LATENCY_BUCKETS = {50, 200, 1000, 2000};
+
+    // Buckets for JS execution latency in ms
+    public static final long[] JS_EXECUTION_LATENCY_BUCKETS = {50, 200, 1000, 2000};
 
     /** The key fetch status is UNSET. */
     public static final int BACKGROUND_KEY_FETCH_STATUS_UNSET = 0;
@@ -232,7 +235,7 @@ public class AdsRelevanceStatusUtils {
 
     /** Returns the size bucket for a raw value. */
     @Size
-    public static int computeSize(long rawSize, int[] buckets) {
+    public static int computeSize(long rawSize, long[] buckets) {
         if (rawSize < buckets[0]) {
             return SIZE_VERY_SMALL;
         } else if (rawSize < buckets[1]) {

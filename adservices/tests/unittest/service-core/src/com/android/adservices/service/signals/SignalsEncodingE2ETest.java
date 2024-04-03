@@ -81,6 +81,7 @@ import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEven
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -170,6 +171,7 @@ public class SignalsEncodingE2ETest {
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private Flags mFlags;
     private EnrollmentDao mEnrollmentDao;
+    private Clock mClock;
 
     @Before
     public void setup() {
@@ -292,7 +294,7 @@ public class SignalsEncodingE2ETest {
                         new DebugReportingScriptDisabledStrategy(),
                         false,
                         retryStrategy);
-
+        mClock = Clock.getInstance();
         mPeriodicEncodingJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
@@ -304,7 +306,10 @@ public class SignalsEncodingE2ETest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mDevContextFilterMock,
-                        mFlagsWithProtectedSignalsAndEncodingEnabled);
+                        mFlagsWithProtectedSignalsAndEncodingEnabled,
+                        mEnrollmentDao,
+                        mClock,
+                        mAdServicesLoggerMock);
 
         doNothing()
                 .when(
@@ -677,7 +682,10 @@ public class SignalsEncodingE2ETest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mDevContextFilterMock,
-                        flagsWithLargeUpdateWindow);
+                        flagsWithLargeUpdateWindow,
+                        mEnrollmentDao,
+                        mClock,
+                        mAdServicesLoggerMock);
 
         // Manually trigger encoding job worker to validate encoding gets done
         jobWorkerWithLargeTimeWindow.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
@@ -713,7 +721,10 @@ public class SignalsEncodingE2ETest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mDevContextFilterMock,
-                        flagsWithTinyUpdateWindow);
+                        flagsWithTinyUpdateWindow,
+                        mEnrollmentDao,
+                        mClock,
+                        mAdServicesLoggerMock);
 
         // Manually trigger encoding job worker to validate encoding gets done
         jobWorkerWithTinyTimeWindow.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
