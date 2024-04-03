@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
@@ -57,7 +56,6 @@ import android.content.pm.PackageManager.Property;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
-import android.util.Log;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
@@ -129,7 +127,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
     @Test
     public void testIsAllowedAttributionAccess_rMinus() throws Exception {
-        mockSdkLevelR();
+        extendedMockito.mockSdkLevelR();
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
         mockIsAllowedAttributionAccess(ENROLLMENT_ID, RESULT_ALLOWED);
@@ -229,7 +227,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
     @Test
     public void testIsAllowedCustomAudiencesAccess_rMinus() throws Exception {
-        mockSdkLevelR();
+        extendedMockito.mockSdkLevelR();
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
         mockIsAllowedCustomAudiencesAccess(ENROLLMENT_ID, RESULT_ALLOWED);
@@ -359,7 +357,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
             boolean expectedAllowed)
             throws Exception {
         if (isRMinus) {
-            mockSdkLevelR();
+            extendedMockito.mockSdkLevelR();
             mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         } else {
             mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
@@ -382,7 +380,9 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
-    public void testIsAllowedApiAccess_parsingExceptionSwallowed_sPlus() throws Exception {
+    @Deprecated // is always enabled by default
+    public void testIsAllowedApiAccess_parsingExceptionSwallowed_disabledByDefault_sPlus()
+            throws Exception {
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
         Exception e = mockAppManifestConfigParserGetConfigThrows();
 
@@ -393,8 +393,10 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testIsAllowedApiAccess_parsingExceptionSwallowed_rMinus() throws Exception {
-        mockSdkLevelR();
+    @Deprecated // is always enabled by default
+    public void testIsAllowedApiAccess_parsingExceptionSwallowed_disabledByDefault_rMinus()
+            throws Exception {
+        extendedMockito.mockSdkLevelR();
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         Exception e = mockAppManifestConfigParserGetConfigThrows();
 
@@ -422,7 +424,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     public void testIsAllowedApiAccess_parsingExceptionSwallowed_enabledByDefault_rMinus()
             throws Exception {
         setEnabledByDefault(true);
-        mockSdkLevelR();
+        extendedMockito.mockSdkLevelR();
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         Exception e = mockAppManifestConfigParserGetConfigThrows();
 
@@ -433,7 +435,8 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testIsAllowedApiAccess_packageNotFound() throws Exception {
+    @Deprecated // is always enabled by default
+    public void testIsAllowedApiAccess_disabledByDefault_packageNotFound() throws Exception {
         mockAppNotFound(PACKAGE_NAME);
 
         assertNoAccessAllowed();
@@ -453,7 +456,9 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
-    public void testIsAllowedApiAccess_noConfigXmlForPackage_sPlus() throws Exception {
+    @Deprecated // is always enabled by default
+    public void testIsAllowedApiAccess_noConfigXmlForPackage_disabledByDefault_sPlus()
+            throws Exception {
         mockAppFound(PACKAGE_NAME);
         mockGetPropertyNotFound(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY);
 
@@ -463,8 +468,10 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testIsAllowedApiAccess_noConfigXmlForPackage_rMinus() throws Exception {
-        mockSdkLevelR();
+    @Deprecated // is always enabled by default
+    public void testIsAllowedApiAccess_noConfigXmlForPackage_disabledByDefault_rMinus()
+            throws Exception {
+        extendedMockito.mockSdkLevelR();
         mockAppFound(PACKAGE_NAME);
         mockGetAssetNotFound(PACKAGE_NAME);
 
@@ -490,21 +497,13 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     public void testIsAllowedApiAccess_noConfigXmlForPackage_enabledByDefault_rMinus()
             throws Exception {
         setEnabledByDefault(true);
-        mockSdkLevelR();
+        extendedMockito.mockSdkLevelR();
         mockAppFound(PACKAGE_NAME);
         mockGetAssetNotFound(PACKAGE_NAME);
 
         assertAllAccessAllowed();
 
         verifyLogUsageForAllApis(RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG);
-    }
-
-    private void mockSdkLevelR() {
-        if (SdkLevel.isAtLeastS()) {
-            mockIsAtLeastS(false);
-        } else {
-            Log.v(mTag, "mockSdkLevelR(): not needed, device is not at least S");
-        }
     }
 
     private void mockGetPropertySucceeds(String pkgName, String propName, int resId)
