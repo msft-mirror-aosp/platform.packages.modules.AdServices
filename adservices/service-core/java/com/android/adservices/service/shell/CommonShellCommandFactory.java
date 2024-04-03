@@ -17,11 +17,17 @@
 package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.common.EchoCommand.CMD_ECHO;
+import static com.android.adservices.service.shell.common.EchoCommand.HELP_ECHO;
 import static com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand.CMD_IS_ALLOWED_AD_SELECTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand.HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
 import static com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand.CMD_IS_ALLOWED_ATTRIBUTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
 import static com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand.CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
 import static com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand.CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand.HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
 import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.CMD_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
 
 import androidx.annotation.Nullable;
 
@@ -32,11 +38,25 @@ import com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAcces
 import com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand;
 import com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
+
 /**
  * Factory class which handles common shell commands. API specific shell commands should be part of
  * API specific factory.
  */
 public final class CommonShellCommandFactory implements ShellCommandFactory {
+
+    private static final ImmutableList<String> ALL_COMMANDS_HELP =
+            ImmutableList.of(
+                    HELP_ECHO,
+                    HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
+                    HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
+                    HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
+                    HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
+                    HELP_IS_ALLOWED_TOPICS_ACCESS);
+
     public static ShellCommandFactory getInstance() {
         return new CommonShellCommandFactory();
     }
@@ -65,5 +85,10 @@ public final class CommonShellCommandFactory implements ShellCommandFactory {
     @Override
     public String getCommandPrefix() {
         return "";
+    }
+
+    @Override
+    public List<String> getAllCommandsHelp() {
+        return ALL_COMMANDS_HELP;
     }
 }

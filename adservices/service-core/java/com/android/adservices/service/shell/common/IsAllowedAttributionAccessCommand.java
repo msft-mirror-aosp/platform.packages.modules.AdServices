@@ -69,4 +69,9 @@ public final class IsAllowedAttributionAccessCommand extends AbstractShellComman
     public int getMetricsLoggerCommand() {
         return COMMAND_IS_ALLOWED_ATTRIBUTION_ACCESS;
     }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
+    }
 }
