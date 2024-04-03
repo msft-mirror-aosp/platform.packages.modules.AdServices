@@ -214,7 +214,8 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 "setDebugUxFlagsForRvcUx()",
                 () -> {
                     if (!isAtLeastS() && isAtLeastR()) {
-                        setFlag(FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
+                        setSystemProperty(
+                                FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
                         setFlag(FlagsConstants.KEY_DEBUG_UX, "RVC_UX");
                         return;
                     }
