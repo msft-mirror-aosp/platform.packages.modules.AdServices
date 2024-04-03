@@ -215,7 +215,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testConsentManagerDebugMode() {
-        mFlagsTestHelper.testGuardedFeatureFlag(
+        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
                 KEY_CONSENT_MANAGER_DEBUG_MODE,
                 "CONSENT_MANAGER_DEBUG_MODE",
                 /* guard= */ null,
