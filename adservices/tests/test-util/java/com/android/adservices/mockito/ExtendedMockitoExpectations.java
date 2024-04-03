@@ -153,7 +153,7 @@ public final class ExtendedMockitoExpectations {
      * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
      * FlagsFactory#getFlagsForTest()}
      *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlagsForTesting(Flags)} instead
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlagsForTesting()} instead
      */
     public static void mockGetFlagsForTest() {
         mockGetFlags(FlagsFactory.getFlagsForTest());
