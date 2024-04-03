@@ -14,17 +14,6 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.stats.pas;
+package com.android.adservices.service.stats;
 
-import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
-
-public interface FetchProcessLogger {
-    /** Invokes the logger to log {@link EncodingFetchStats}. */
-    void logEncodingJsFetchStats(@AdsRelevanceStatusUtils.EncodingFetchStatus int jsFetchStatus);
-
-    /** Sets the AdTech's eTLD+1 ID. */
-    void setAdTechId(String adTechId);
-
-    /** Sets the timestamp to start download the js. */
-    void setJsDownloadStartTimestamp(long jsDownloadStartTimestamp);
-}
+public class FetchProcessLoggerNoLoggingImpl implements FetchProcessLogger {}

@@ -239,4 +239,7 @@ public interface AdServicesLogger {
 
     /** Logs stats for UpdateSignalsApiCalledStats */
     void logEncodingJsExecutionStats(EncodingJsExecutionStats stats);
+
+    /** Logs stats for ServerAuctionKeyFetchCalled */
+    void logServerAuctionKeyFetchCalledStats(ServerAuctionKeyFetchCalledStats stats);
 }

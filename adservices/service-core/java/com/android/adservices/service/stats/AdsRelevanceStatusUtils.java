@@ -129,6 +129,20 @@ public class AdsRelevanceStatusUtils {
     /** The key fetch status is REFRESH_KEYS_INITIATED. */
     public static final int BACKGROUND_KEY_FETCH_STATUS_REFRESH_KEYS_INITIATED = 2;
 
+    /** The server auction key fetch source is UNSET. */
+    public static final int SERVER_AUCTION_KEY_FETCH_SOURCE_UNSET = 0;
+    /** The server auction key fetch source is via a background fetch. */
+    public static final int SERVER_AUCTION_KEY_FETCH_SOURCE_BACKGROUND_FETCH = 1;
+    /** The server auction key fetch source is via an auction. */
+    public static final int SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION = 2;
+
+    /** The server auction encryption key source is UNSET. */
+    public static final int SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_UNSET = 0;
+    /** The server auction encryption key source is the database. */
+    public static final int SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE = 1;
+    /** The server auction encryption key source is the network. */
+    public static final int SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK = 2;
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},
@@ -201,12 +215,12 @@ public class AdsRelevanceStatusUtils {
     @IntDef(
             prefix = {"SIZE_"},
             value = {
-                    SIZE_UNSET,
-                    SIZE_VERY_SMALL,
-                    SIZE_SMALL,
-                    SIZE_MEDIUM,
-                    SIZE_LARGE,
-                    SIZE_VERY_LARGE
+                SIZE_UNSET,
+                SIZE_VERY_SMALL,
+                SIZE_SMALL,
+                SIZE_MEDIUM,
+                SIZE_LARGE,
+                SIZE_VERY_LARGE
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Size {}
@@ -258,4 +272,26 @@ public class AdsRelevanceStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface BackgroundKeyFetchStatus {}
+
+    /** The source of the server auction key fetch. */
+    @IntDef(
+            prefix = {"SERVER_AUCTION_KEY_FETCH_SOURCE_"},
+            value = {
+                SERVER_AUCTION_KEY_FETCH_SOURCE_UNSET,
+                SERVER_AUCTION_KEY_FETCH_SOURCE_BACKGROUND_FETCH,
+                SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ServerAuctionKeyFetchSource {}
+
+    /** The source of the server auction encryption key. */
+    @IntDef(
+            prefix = {"SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_"},
+            value = {
+                SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_UNSET,
+                SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE,
+                SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ServerAuctionEncryptionKeySource {}
 }

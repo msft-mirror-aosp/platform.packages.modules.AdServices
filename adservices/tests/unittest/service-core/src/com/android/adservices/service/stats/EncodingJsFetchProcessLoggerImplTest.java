@@ -28,8 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
-import com.android.adservices.service.stats.pas.FetchProcessLogger;
-import com.android.adservices.service.stats.pas.FetchProcessLoggerImpl;
+import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
 import com.android.adservices.shared.util.Clock;
 
 import org.junit.Before;
@@ -40,7 +39,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class FetchProcessLoggerImplTest {
+public class EncodingJsFetchProcessLoggerImplTest {
     public static final String TEST_AD_TECH_ID = "com.google.android";
     public static final long TEST_JS_DOWNLOAD_START_TIMESTAMP = 100L;
     public static final long TEST_JS_DOWNLOAD_END_TIMESTAMP = 120L;
@@ -56,7 +55,8 @@ public class FetchProcessLoggerImplTest {
         MockitoAnnotations.initMocks(this);
         mBuilderSpy = Mockito.spy(EncodingFetchStats.builder());
         mFetchProcessLogger =
-                new FetchProcessLoggerImpl(mAdServicesLoggerMock, mMockClockMock, mBuilderSpy);
+                new EncodingJsFetchProcessLoggerImpl(
+                        mAdServicesLoggerMock, mMockClockMock, mBuilderSpy);
     }
 
     @Test
