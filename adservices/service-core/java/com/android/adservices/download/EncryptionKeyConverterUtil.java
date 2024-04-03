@@ -17,10 +17,14 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.service.common.JsonUtils.getStringFromJson;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_INCORRECT_JSON_VERSION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 
 import org.json.JSONException;
@@ -58,12 +62,17 @@ public final class EncryptionKeyConverterUtil {
                 if (version == VERSION_3) {
                     return convertVersion3Key(jsonObject);
                 } else {
-                    // TODO(b/329334770): Add CEL log
+                    ErrorLogUtil.e(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_INCORRECT_JSON_VERSION,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
                     LOGGER.d("Unsupported encryption key version %d", version);
                 }
             }
         } catch (JSONException e) {
-            // TODO(b/329334770): Add CEL log
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
         return Optional.empty();
     }
@@ -107,7 +116,10 @@ public final class EncryptionKeyConverterUtil {
             return Optional.of(encryptionKey);
         } catch (JSONException | IllegalArgumentException e) {
             LOGGER.e(e, "Failed parsing for %s", jsonObject);
-            // TODO(b/329334770): Add CEL log
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             return Optional.empty();
         }
     }
