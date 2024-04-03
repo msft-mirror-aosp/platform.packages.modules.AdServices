@@ -26,7 +26,8 @@ public final class TestFailure extends Exception {
     // TODO(b/328682831): rename to extraNnfo or something like that (same on other places)
     private final String mDump;
 
-    TestFailure(Throwable cause, String dumpDescription, StringBuilder dump) {
+    // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
+    public TestFailure(Throwable cause, String dumpDescription, StringBuilder dump) {
         super(
                 "Test failed (see " + dumpDescription + " below the stack trace)",
                 cause,
