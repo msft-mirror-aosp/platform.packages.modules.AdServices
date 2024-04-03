@@ -37,10 +37,10 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.MediumTest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;

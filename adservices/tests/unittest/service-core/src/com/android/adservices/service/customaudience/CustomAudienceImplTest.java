@@ -29,7 +29,6 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
@@ -42,6 +41,7 @@ import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.Validator;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;
