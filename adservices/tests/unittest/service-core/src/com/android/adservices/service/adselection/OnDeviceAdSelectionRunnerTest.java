@@ -960,11 +960,6 @@ public class OnDeviceAdSelectionRunnerTest {
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return true;
                     }
-
-                    @Override
-                    public boolean getFledgeAdSelectionFilteringEnabled() {
-                        return false;
-                    }
                 };
         doReturn(flagsWithFilteringDisabled).when(FlagsFactory::getFlags);
 
@@ -3196,11 +3191,6 @@ public class OnDeviceAdSelectionRunnerTest {
                     }
 
                     @Override
-                    public boolean getFledgeAdSelectionFilteringEnabled() {
-                        return true;
-                    }
-
-                    @Override
                     public boolean getFledgeAdSelectionContextualAdsEnabled() {
                         return true;
                     }
@@ -3283,11 +3273,6 @@ public class OnDeviceAdSelectionRunnerTest {
                     }
 
                     @Override
-                    public boolean getFledgeAdSelectionFilteringEnabled() {
-                        return true;
-                    }
-
-                    @Override
                     public boolean getFledgeAdSelectionContextualAdsEnabled() {
                         return true;
                     }
@@ -3362,11 +3347,6 @@ public class OnDeviceAdSelectionRunnerTest {
 
                     @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionFilteringEnabled() {
                         return true;
                     }
 
@@ -3446,11 +3426,6 @@ public class OnDeviceAdSelectionRunnerTest {
                     }
 
                     @Override
-                    public boolean getFledgeAdSelectionFilteringEnabled() {
-                        return true;
-                    }
-
-                    @Override
                     public boolean getFledgeAdSelectionContextualAdsEnabled() {
                         return false;
                     }
@@ -3515,11 +3490,6 @@ public class OnDeviceAdSelectionRunnerTest {
                 new OnDeviceAdSelectionRunnerTestFlags() {
                     @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionFilteringEnabled() {
                         return true;
                     }
 
@@ -4517,11 +4487,6 @@ public class OnDeviceAdSelectionRunnerTest {
     private static class OnDeviceAdSelectionRunnerTestFlags implements Flags {
         @Override
         public boolean getDisableFledgeEnrollmentCheck() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
             return true;
         }
 

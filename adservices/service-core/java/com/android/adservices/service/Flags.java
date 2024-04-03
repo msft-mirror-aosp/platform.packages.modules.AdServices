@@ -1333,14 +1333,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     // Filtering feature flag disabled by default
-    boolean FLEDGE_AD_SELECTION_FILTERING_ENABLED = false;
-
-    /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
-    default boolean getFledgeAdSelectionFilteringEnabled() {
-        return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
-    }
-
-    // Filtering feature flag disabled by default
     boolean FLEDGE_APP_INSTALL_FILTERING_ENABLED = false;
 
     /** Returns {@code true} if app install filtering of ads during ad selection is enabled. */

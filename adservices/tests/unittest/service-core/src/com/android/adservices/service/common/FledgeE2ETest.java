@@ -4581,7 +4581,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 new CustomAudienceValidator(
                                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                         flags,
-                                        flags.getFledgeAdSelectionFilteringEnabled()
+                                        flags.getFledgeFrequencyCapFilteringEnabled()
                                                 ? new FrequencyCapAdDataValidatorImpl()
                                                 : new FrequencyCapAdDataValidatorNoOpImpl(),
                                         AdRenderIdValidator.createInstance(flags)),
@@ -5342,13 +5342,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         @Override
         public boolean getFledgeRegisterAdBeaconEnabled() {
             return mRegisterAdBeaconEnabled;
-        }
-
-        // TODO(b/330840810): Remove this flag once other features are ramped up to using the split
-        // flags
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return mFiltersEnabled;
         }
 
         @Override
