@@ -52,6 +52,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
@@ -84,7 +85,7 @@ import java.util.concurrent.TimeUnit;
 public class BackgroundFetchRunnerTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final Flags mFlags =
-            new FlagsFactory.TestFlags() {
+            new FakeFlagsFactory.TestFlags() {
                 @Override
                 public boolean getFledgeFrequencyCapFilteringEnabled() {
                     return true;
@@ -395,7 +396,7 @@ public class BackgroundFetchRunnerTest {
     public void
             testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithAuctionServerRequestFlagsEnabled()
                     throws Exception {
-        class FlagsWithAuctionServerRequestEnabled extends FlagsFactory.TestFlags {
+        class FlagsWithAuctionServerRequestEnabled extends FakeFlagsFactory.TestFlags {
             @Override
             public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                 return true;
@@ -457,7 +458,7 @@ public class BackgroundFetchRunnerTest {
     public void
             testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithAuctionServerRequestFlagsDisabled()
                     throws Exception {
-        class FlagsWithAuctionServerRequestDisabled extends FlagsFactory.TestFlags {
+        class FlagsWithAuctionServerRequestDisabled extends FakeFlagsFactory.TestFlags {
             @Override
             public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                 return false;

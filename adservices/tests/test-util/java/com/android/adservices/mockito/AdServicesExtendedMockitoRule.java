@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.common.LogEntry.Level;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.testing.common.TestHelper;
@@ -115,13 +116,13 @@ public class AdServicesExtendedMockitoRule
 
     /**
      * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
-     * FlagsFactory#getFlagsForTest()}
+     * FakeFlagsFactory#getFlagsForTest()}
      *
      * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
      *     equivalent annotations) on {@link FlagsFactory}.
      */
     public final void mockGetFlagsForTesting() {
-        mockGetFlags(FlagsFactory.getFlagsForTest());
+        mockGetFlags(FakeFlagsFactory.getFlagsForTest());
     }
 
     /**

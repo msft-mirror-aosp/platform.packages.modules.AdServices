@@ -57,6 +57,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture;
@@ -185,8 +186,8 @@ public class MeasurementDaoTest {
 
     @Before
     public void before() {
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-        mFlags = FlagsFactory.getFlagsForTest();
+        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        mFlags = FakeFlagsFactory.getFlagsForTest();
         mDatastoreManager =
                 new SQLDatastoreManager(
                         MeasurementDbHelper.getInstance(sContext),
@@ -9192,7 +9193,7 @@ public class MeasurementDaoTest {
                 .populateFromSourceAndTrigger(
                         source,
                         trigger,
-                        trigger.parseEventTriggers(FlagsFactory.getFlagsForTest()).get(0),
+                        trigger.parseEventTriggers(FakeFlagsFactory.getFlagsForTest()).get(0),
                         new Pair<>(null, null),
                         new EventReportWindowCalcDelegate(mFlags),
                         new SourceNoiseHandler(mFlags),

@@ -54,8 +54,8 @@ import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.DBProtectedServersEncryptionConfig;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.ProtectedServersEncryptionConfigDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -157,7 +157,7 @@ public class BackgroundKeyFetchWorkerTest {
                 () ->
                         new BackgroundKeyFetchWorker(
                                 null,
-                                FlagsFactory.getFlagsForTest(),
+                                FakeFlagsFactory.getFlagsForTest(),
                                 mClockMock,
                                 mAdServicesLoggerMock));
 
@@ -172,7 +172,7 @@ public class BackgroundKeyFetchWorkerTest {
                 () ->
                         new BackgroundKeyFetchWorker(
                                 mKeyManagerSpy,
-                                FlagsFactory.getFlagsForTest(),
+                                FakeFlagsFactory.getFlagsForTest(),
                                 null,
                                 mAdServicesLoggerMock));
     }
