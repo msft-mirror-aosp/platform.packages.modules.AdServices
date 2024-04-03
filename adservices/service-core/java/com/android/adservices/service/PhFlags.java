@@ -1140,13 +1140,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getFledgeAdSelectionFilteringEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
-                FLEDGE_AD_SELECTION_FILTERING_ENABLED);
-    }
-
-    @Override
     public boolean getFledgeAppInstallFilteringEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED,
@@ -4453,11 +4446,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS
                         + " = "
                         + getAdSelectionOffDeviceOverallTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
-                        + " = "
-                        + getFledgeAdSelectionFilteringEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED
