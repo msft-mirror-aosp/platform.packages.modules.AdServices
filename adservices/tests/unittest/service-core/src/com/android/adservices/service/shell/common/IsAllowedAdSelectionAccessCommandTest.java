@@ -66,4 +66,16 @@ public final class IsAllowedAdSelectionAccessCommandTest
         expectSuccess(
                 actualResult, "true\n", ShellCommandStats.COMMAND_IS_ALLOWED_AD_SELECTION_ACCESS);
     }
+
+    @Test
+    public void test_getCommandName() {
+        expect.that(new IsAllowedAdSelectionAccessCommand().getCommandName())
+                .isEqualTo(CMD_IS_ALLOWED_AD_SELECTION_ACCESS);
+    }
+
+    @Test
+    public void test_getCommandHelp() {
+        expect.that(new IsAllowedAdSelectionAccessCommand().getCommandHelp())
+                .isEqualTo(HELP_IS_ALLOWED_AD_SELECTION_ACCESS);
+    }
 }

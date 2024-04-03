@@ -61,6 +61,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.List;
 
 public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase {
 
@@ -203,6 +205,11 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                     public int getMetricsLoggerCommand() {
                         return 0;
                     }
+
+                    @Override
+                    public String getCommandHelp() {
+                        return null;
+                    }
                 };
 
         ShellCommandServiceImpl shellCommandService =
@@ -259,6 +266,11 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                     public int getMetricsLoggerCommand() {
                         return 0;
                     }
+
+                    @Override
+                    public String getCommandHelp() {
+                        return null;
+                    }
                 };
 
         ShellCommandServiceImpl shellCommandService =
@@ -304,6 +316,11 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                     public int getMetricsLoggerCommand() {
                         return 0;
                     }
+
+                    @Override
+                    public String getCommandHelp() {
+                        return null;
+                    }
                 };
 
         ShellCommandServiceImpl shellCommandService =
@@ -334,6 +351,11 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                     @Override
                     public String getCommandPrefix() {
                         return commandPrefix;
+                    }
+
+                    @Override
+                    public List<String> getAllCommandsHelp() {
+                        return Collections.emptyList();
                     }
                 };
 

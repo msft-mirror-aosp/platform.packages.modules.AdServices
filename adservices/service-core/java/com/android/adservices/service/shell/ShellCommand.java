@@ -34,4 +34,9 @@ public interface ShellCommand {
      *     com.android.adservices.service.stats.AdServicesStatsLog}.
      */
     int getMetricsLoggerCommand();
+
+    /**
+     * @return the help instruction for the shell command.
+     */
+    String getCommandHelp();
 }
