@@ -5088,11 +5088,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementAggregateFallbackReportingJobPersisted());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT
-                        + " = "
-                        + getAppConfigReturnsEnabledByDefault());
-        writer.println(
-                "\t"
                         + KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING
                         + " = "
                         + getMeasurementEnableAggregatableReportPayloadPadding());

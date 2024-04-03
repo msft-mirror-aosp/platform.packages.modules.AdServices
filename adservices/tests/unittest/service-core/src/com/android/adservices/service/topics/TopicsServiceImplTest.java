@@ -285,7 +285,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // Topics must call AppManifestConfigHelper to check if topics is enabled, whose behavior is
         // currently guarded by a flag
         extendedMockito.mockGetFlags(mMockFlags);
-        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(false);
+
         // Similarly, AppManifestConfigHelper.isAllowedTopicsAccess() is failing to parse the XML
         // (which returns false), but logging the error on ErrorLogUtil, so we need to ignored that.
         doNothingOnErrorLogUtilError();
@@ -613,36 +613,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     }
 
     @Test
-    @Deprecated // flag is always true
-    public void getTopicsFromApp_SdkTagMissing_disabledByDefault() throws Exception {
-        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(false);
-        mockAppContextForAppManifestConfigHelperCall();
-
-        PackageManager.Property property =
-                mSpyContext
-                        .getPackageManager()
-                        .getProperty(
-                                "android.adservices.AD_SERVICES_CONFIG.sdkTagMissing",
-                                TEST_APP_PACKAGE_NAME);
-        when(mPackageManager.getProperty(
-                        AppManifestConfigHelper.AD_SERVICES_CONFIG_PROPERTY, TEST_APP_PACKAGE_NAME))
-                .thenReturn(property);
-
-        Resources resources =
-                mSpyContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
-        when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
-                .thenReturn(resources);
-        invokeGetTopicsAndVerifyError(
-                mMockAppContext,
-                STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
-                mRequest,
-                /* checkLoggingStatus */ true,
-                FAILURE_REASON_UNSET);
-    }
-
-    @Test
     public void getTopicsFromApp_SdkTagMissing() throws Exception {
-        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(true);
         mockAppContextForAppManifestConfigHelperCall();
 
         PackageManager.Property property =
