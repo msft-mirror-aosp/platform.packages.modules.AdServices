@@ -42,7 +42,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
 import android.text.TextUtils;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
@@ -427,13 +427,21 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     private void buildActivityLayout(Activity activity, String textToCheck) {
-        final LinearLayout layout = new LinearLayout(activity);
+        final RelativeLayout layout = new RelativeLayout(activity);
         layout.setLayoutParams(
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT));
-        layout.setOrientation(LinearLayout.HORIZONTAL);
+                new RelativeLayout.LayoutParams(
+                        RelativeLayout.LayoutParams.MATCH_PARENT,
+                        RelativeLayout.LayoutParams.MATCH_PARENT));
+
+        // Place text view in the center to ensure UIAutomator finds the text.
+        RelativeLayout.LayoutParams textViewLayoutParams =
+                new RelativeLayout.LayoutParams(
+                        RelativeLayout.LayoutParams.WRAP_CONTENT,
+                        RelativeLayout.LayoutParams.WRAP_CONTENT);
+        textViewLayoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        textViewLayoutParams.addRule(RelativeLayout.CENTER_VERTICAL);
         final TextView tv1 = new TextView(activity);
+        tv1.setLayoutParams(textViewLayoutParams);
         int orientation = activity.getResources().getConfiguration().orientation;
         tv1.setText(textToCheck + "_orientation: " + orientation);
         layout.addView(tv1);
