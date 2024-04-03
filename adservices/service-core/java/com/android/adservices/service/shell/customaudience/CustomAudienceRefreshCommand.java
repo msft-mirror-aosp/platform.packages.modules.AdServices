@@ -46,7 +46,9 @@ public final class CustomAudienceRefreshCommand extends AbstractShellCommand {
 
     public static final String CMD = "refresh";
     public static final String HELP =
-            CMD
+            CustomAudienceShellCommandFactory.COMMAND_PREFIX
+                    + " "
+                    + CMD
                     + " "
                     + CustomAudienceArgs.OWNER
                     + " <owner>"
@@ -151,6 +153,11 @@ public final class CustomAudienceRefreshCommand extends AbstractShellCommand {
     @Override
     public int getMetricsLoggerCommand() {
         return COMMAND_CUSTOM_AUDIENCE_REFRESH;
+    }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP;
     }
 
     private String errorMessageFromCustomAudienceUpdateResult(UpdateResultType updateResultType) {

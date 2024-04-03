@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.stats.pas;
+package com.android.adservices.service.customaudience;
 
-import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+import android.adservices.common.AdFilters;
 
-public interface FetchProcessLogger {
-    /** Invokes the logger to log {@link EncodingFetchStats}. */
-    void logEncodingJsFetchStats(@AdsRelevanceStatusUtils.EncodingFetchStatus int jsFetchStatus);
+import com.android.adservices.data.common.DBAdData;
 
-    /** Sets the AdTech's eTLD+1 ID. */
-    void setAdTechId(String adTechId);
+import org.json.JSONException;
+import org.json.JSONObject;
 
-    /** Sets the timestamp to start download the js. */
-    void setJsDownloadStartTimestamp(long jsDownloadStartTimestamp);
+/** Interface for reading app install fields from a JSON object into a DBAdData builder. */
+public interface ReadAppInstallFiltersFromJsonStrategy {
+    /** Add{@link AdFilters#getAppInstallFilters()} ()} to the {@link DBAdData} builder. */
+    void readAppInstallFilters(JSONObject json, AdFilters.Builder builder) throws JSONException;
 }

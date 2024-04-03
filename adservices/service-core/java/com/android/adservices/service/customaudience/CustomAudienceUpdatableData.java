@@ -195,7 +195,8 @@ public abstract class CustomAudienceUpdatableData {
                         flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         flags.getFledgeCustomAudienceMaxAdsSizeB(),
                         flags.getFledgeCustomAudienceMaxNumAds(),
-                        flags.getFledgeAdSelectionFilteringEnabled(),
+                        flags.getFledgeFrequencyCapFilteringEnabled(),
+                        flags.getFledgeAppInstallFilteringEnabled(),
                         flags.getFledgeAuctionServerAdRenderIdEnabled(),
                         flags.getFledgeAuctionServerAdRenderIdMaxLength());
 

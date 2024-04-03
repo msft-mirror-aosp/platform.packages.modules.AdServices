@@ -67,12 +67,6 @@
         <option name="teardown-command"
                 value="device_config put adservices enable_enrollment_test_seed false" />
 
-        <!-- Enabled API access without ad_services_config -->
-        <option name="run-command"
-                value="device_config put adservices app_config_returns_enabled_by_detault true" />
-        <option name="teardown-command"
-                value="device_config put adservices app_config_returns_enabled_by_detault false" />
-
         <!-- Disable Register Ad Beacon Feature -->
         <option name="run-command" value="device_config put adservices fledge_register_ad_beacon_enabled false" />
     </target_preparer>

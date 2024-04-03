@@ -20,6 +20,8 @@ import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_CUS
 import static com.android.adservices.service.stats.ShellCommandStats.Command;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_GENERIC_ERROR;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -67,7 +69,7 @@ public class CustomAudienceRefreshCommandTest
                     .setIsDebuggable(CUSTOM_AUDIENCE.isDebuggable())
                     .build();
 
-    private static final @Command int EXPECTED_COMMAND = COMMAND_CUSTOM_AUDIENCE_REFRESH;
+    @Command private static final int EXPECTED_COMMAND = COMMAND_CUSTOM_AUDIENCE_REFRESH;
     @Mock private BackgroundFetchRunner mBackgroundFetchRunnerMock;
     @Mock private CustomAudienceDao mCustomAudienceDao;
 
@@ -212,6 +214,28 @@ public class CustomAudienceRefreshCommandTest
                         CustomAudienceRefreshCommand.OUTPUT_ERROR_NETWORK),
                 EXPECTED_COMMAND,
                 RESULT_GENERIC_ERROR);
+    }
+
+    @Test
+    public void test_getCommandName() {
+        assertThat(
+                        new CustomAudienceRefreshCommand(
+                                        mBackgroundFetchRunnerMock,
+                                        mCustomAudienceDao,
+                                        AdServicesExecutors.getScheduler())
+                                .getCommandName())
+                .isEqualTo(CustomAudienceRefreshCommand.CMD);
+    }
+
+    @Test
+    public void test_getCommandHelp() {
+        assertThat(
+                        new CustomAudienceRefreshCommand(
+                                        mBackgroundFetchRunnerMock,
+                                        mCustomAudienceDao,
+                                        AdServicesExecutors.getScheduler())
+                                .getCommandHelp())
+                .isEqualTo(CustomAudienceRefreshCommand.HELP);
     }
 
     private ShellCommandTestCase.Result runRefreshCustomAudienceCommand(int timeoutInSeconds) {

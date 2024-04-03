@@ -21,7 +21,7 @@ import android.os.SystemProperties;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-import androidx.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.google.common.truth.Expect;
 import com.google.errorprone.annotations.FormatMethod;
@@ -58,7 +58,8 @@ abstract class AdServicesTestCase {
             "debug.adservices.test.postTestThrownFrequency";
 
     /** Reference to the context of package being instrumented (target context). */
-    protected static final Context sContext = InstrumentationRegistry.getTargetContext();
+    protected static final Context sContext =
+            InstrumentationRegistry.getInstrumentation().getTargetContext();
 
     /** Package name of the app being instrumented. */
     protected static final String sPackageName = sContext.getPackageName();

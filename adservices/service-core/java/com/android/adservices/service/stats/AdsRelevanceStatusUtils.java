@@ -114,10 +114,13 @@ public class AdsRelevanceStatusUtils {
     public static final int SERVER_AUCTION_COORDINATOR_SOURCE_API = 2;
 
     // We expect most JSONs to be small, at least initially, so we'll bucket more there.
-    public static final int[] JSON_SIZE_BUCKETS = {100, 300, 1000, 5000};
+    public static final long[] JSON_SIZE_BUCKETS = {100, 300, 1000, 5000};
 
     // Buckets for JS download latency in ms
-    public static final int[] JS_DOWNLOAD_LATENCY_BUCKETS = {50, 200, 1000, 2000};
+    public static final long[] JS_DOWNLOAD_LATENCY_BUCKETS = {50, 200, 1000, 2000};
+
+    // Buckets for JS execution latency in ms
+    public static final long[] JS_EXECUTION_LATENCY_BUCKETS = {50, 200, 1000, 2000};
 
     /** The key fetch status is UNSET. */
     public static final int BACKGROUND_KEY_FETCH_STATUS_UNSET = 0;
@@ -125,6 +128,20 @@ public class AdsRelevanceStatusUtils {
     public static final int BACKGROUND_KEY_FETCH_STATUS_NO_OP = 1;
     /** The key fetch status is REFRESH_KEYS_INITIATED. */
     public static final int BACKGROUND_KEY_FETCH_STATUS_REFRESH_KEYS_INITIATED = 2;
+
+    /** The server auction key fetch source is UNSET. */
+    public static final int SERVER_AUCTION_KEY_FETCH_SOURCE_UNSET = 0;
+    /** The server auction key fetch source is via a background fetch. */
+    public static final int SERVER_AUCTION_KEY_FETCH_SOURCE_BACKGROUND_FETCH = 1;
+    /** The server auction key fetch source is via an auction. */
+    public static final int SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION = 2;
+
+    /** The server auction encryption key source is UNSET. */
+    public static final int SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_UNSET = 0;
+    /** The server auction encryption key source is the database. */
+    public static final int SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE = 1;
+    /** The server auction encryption key source is the network. */
+    public static final int SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK = 2;
 
     /** The kind of winner did the beacon come from. */
     @IntDef(
@@ -198,12 +215,12 @@ public class AdsRelevanceStatusUtils {
     @IntDef(
             prefix = {"SIZE_"},
             value = {
-                    SIZE_UNSET,
-                    SIZE_VERY_SMALL,
-                    SIZE_SMALL,
-                    SIZE_MEDIUM,
-                    SIZE_LARGE,
-                    SIZE_VERY_LARGE
+                SIZE_UNSET,
+                SIZE_VERY_SMALL,
+                SIZE_SMALL,
+                SIZE_MEDIUM,
+                SIZE_LARGE,
+                SIZE_VERY_LARGE
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Size {}
@@ -232,7 +249,7 @@ public class AdsRelevanceStatusUtils {
 
     /** Returns the size bucket for a raw value. */
     @Size
-    public static int computeSize(long rawSize, int[] buckets) {
+    public static int computeSize(long rawSize, long[] buckets) {
         if (rawSize < buckets[0]) {
             return SIZE_VERY_SMALL;
         } else if (rawSize < buckets[1]) {
@@ -255,4 +272,26 @@ public class AdsRelevanceStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface BackgroundKeyFetchStatus {}
+
+    /** The source of the server auction key fetch. */
+    @IntDef(
+            prefix = {"SERVER_AUCTION_KEY_FETCH_SOURCE_"},
+            value = {
+                SERVER_AUCTION_KEY_FETCH_SOURCE_UNSET,
+                SERVER_AUCTION_KEY_FETCH_SOURCE_BACKGROUND_FETCH,
+                SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ServerAuctionKeyFetchSource {}
+
+    /** The source of the server auction encryption key. */
+    @IntDef(
+            prefix = {"SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_"},
+            value = {
+                SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_UNSET,
+                SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE,
+                SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ServerAuctionEncryptionKeySource {}
 }

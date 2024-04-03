@@ -34,8 +34,8 @@ import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
+import com.android.adservices.service.stats.FetchProcessLoggerNoLoggingImpl;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
-import com.android.adservices.service.stats.pas.FetchProcessLoggerNoLoggingImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableMap;

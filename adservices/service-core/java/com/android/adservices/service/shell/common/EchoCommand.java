@@ -63,4 +63,9 @@ public final class EchoCommand extends AbstractShellCommand {
     public int getMetricsLoggerCommand() {
         return COMMAND_ECHO;
     }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP_ECHO;
+    }
 }

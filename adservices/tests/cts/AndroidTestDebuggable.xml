@@ -80,12 +80,6 @@
 
         <!-- Disable CPC billing feature at teardown -->
         <option name="teardown-command" value="device_config put adservices fledge_cpc_billing_enabled false" />
-
-        <!-- Enabled API access without ad_services_config -->
-        <option name="run-command"
-                value="device_config put adservices app_config_returns_enabled_by_detault true" />
-        <option name="teardown-command"
-                value="device_config put adservices app_config_returns_enabled_by_detault false" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

@@ -356,6 +356,22 @@ public class ConsentedDebugShellCommandTest
                 RESULT_GENERIC_ERROR);
     }
 
+    @Test
+    public void test_getCommandName() {
+        expect.that(
+                        new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao)
+                                .getCommandName())
+                .isEqualTo(CMD);
+    }
+
+    @Test
+    public void test_getCommandHelp() {
+        expect.that(
+                        new ConsentedDebugShellCommand(mConsentedDebugConfigurationDao)
+                                .getCommandHelp())
+                .isEqualTo(HELP);
+    }
+
     private void assertConsentedDebugConfigurationJson(
             String jsonString,
             boolean expectedIsConsented,

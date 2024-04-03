@@ -22,9 +22,10 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.compu
 
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.shared.util.Clock;
 
-public class FetchProcessLoggerImpl implements FetchProcessLogger {
+public class EncodingJsFetchProcessLoggerImpl implements FetchProcessLogger {
 
     private final AdServicesLogger mAdServicesLogger;
 
@@ -34,8 +35,8 @@ public class FetchProcessLoggerImpl implements FetchProcessLogger {
 
     private long mJsDownloadStartTimestamp;
 
-    /** Constructs a {@link FetchProcessLoggerImpl} instance. */
-    public FetchProcessLoggerImpl(
+    /** Constructs a {@link EncodingJsFetchProcessLoggerImpl} instance. */
+    public EncodingJsFetchProcessLoggerImpl(
             AdServicesLogger adServicesLogger, Clock clock, EncodingFetchStats.Builder builder) {
         mAdServicesLogger = adServicesLogger;
         mClock = clock;

@@ -1278,8 +1278,10 @@ public final class FlagsConstants {
 
     public static final String KEY_AD_ID_FETCHER_TIMEOUT_MS = "ad_id_fetcher_timeout_ms";
 
-    public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
-            "app_config_returns_enabled_by_detault";
+    // NOTE: retired (it's on by default) - constant is here to keep track (for example, if we move
+    // to a metadata-driven flag management, we could still list this one as "retired").
+    //    public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
+    //            "app_config_returns_enabled_by_detault";
 
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
             "adext_data_service_apis_enabled";

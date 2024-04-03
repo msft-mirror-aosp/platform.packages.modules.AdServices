@@ -23,6 +23,7 @@ import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
 
+import com.google.common.collect.Sets;
 import com.google.common.truth.Truth;
 
 import org.junit.Before;
@@ -94,5 +95,19 @@ public final class CustomAudienceShellCommandFactoryTest extends AdServicesMocki
                         false, mBackgroundFetchRunner, mCustomAudienceDao);
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
         Truth.assertThat(shellCommand).isNull();
+    }
+
+    @Test
+    public void test_getAllCommandsHelp() {
+        mFactory =
+                new CustomAudienceShellCommandFactory(
+                        CUSTOM_AUDIENCE_CLI_ENABLED, mBackgroundFetchRunner, mCustomAudienceDao);
+
+        Truth.assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
+                .containsExactlyElementsIn(
+                        Sets.newHashSet(
+                                CustomAudienceListCommand.HELP,
+                                CustomAudienceRefreshCommand.HELP,
+                                CustomAudienceViewCommand.HELP));
     }
 }

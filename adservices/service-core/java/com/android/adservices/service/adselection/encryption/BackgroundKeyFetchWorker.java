@@ -18,6 +18,9 @@ package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_NO_OP;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_REFRESH_KEYS_INITIATED;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_KEY_FETCH_SOURCE_BACKGROUND_FETCH;
 
 import android.annotation.NonNull;
 import android.content.Context;
@@ -35,7 +38,9 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.ServerAuctionBackgroundKeyFetchScheduledStats;
+import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Strings;
@@ -156,6 +161,14 @@ public class BackgroundKeyFetchWorker {
         // Keys are fetched and persisted in sequence to prevent making multiple network
         // calls in parallel.
         ExecutionSequencer sequencer = ExecutionSequencer.create();
+        ServerAuctionKeyFetchExecutionLoggerFactory serverAuctionKeyFetchExecutionLoggerFactory =
+                new ServerAuctionKeyFetchExecutionLoggerFactory(
+                        com.android.adservices.shared.util.Clock.getInstance(),
+                        mAdServicesLogger,
+                        mFlags);
+        FetchProcessLogger keyFetchLogger =
+                serverAuctionKeyFetchExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
+        keyFetchLogger.setSource(SERVER_AUCTION_KEY_FETCH_SOURCE_BACKGROUND_FETCH);
 
         if (mFlags.getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled()
                 && expiredKeyTypes.contains(
@@ -168,29 +181,38 @@ public class BackgroundKeyFetchWorker {
             if (multicloudEnabled && !Strings.isNullOrEmpty(allowlist)) {
                 List<String> allowedUrls = AllowLists.splitAllowList(allowlist);
                 countAuctionUrls = allowedUrls.size();
-
+                keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_API);
                 for (String coordinator : allowedUrls) {
                     keyFetchFutures.add(
                             fetchAndPersistAuctionKeys(
-                                    keyExpiryInstant, sequencer, Uri.parse(coordinator)));
+                                    keyExpiryInstant,
+                                    sequencer,
+                                    Uri.parse(coordinator),
+                                    keyFetchLogger));
                 }
             } else {
                 String defaultUrl = mFlags.getFledgeAuctionServerAuctionKeyFetchUri();
                 if (defaultUrl != null) {
                     countAuctionUrls = 1;
+                    keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
                     keyFetchFutures.add(
                             fetchAndPersistAuctionKeys(
-                                    keyExpiryInstant, sequencer, Uri.parse(defaultUrl)));
+                                    keyExpiryInstant,
+                                    sequencer,
+                                    Uri.parse(defaultUrl),
+                                    keyFetchLogger));
                 }
             }
         }
 
         if (mFlags.getFledgeAuctionServerBackgroundJoinKeyFetchEnabled()
                 && expiredKeyTypes.contains(
-                AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN)
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN)
                 && !shouldStop.get()) {
             countJoinUrls = 1;
-            keyFetchFutures.add(fetchAndPersistJoinKey(keyExpiryInstant, sequencer));
+            keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+            keyFetchFutures.add(
+                    fetchAndPersistJoinKey(keyExpiryInstant, sequencer, keyFetchLogger));
         }
 
         if (mFlags.getFledgeAuctionServerKeyFetchMetricsEnabled()) {
@@ -247,7 +269,10 @@ public class BackgroundKeyFetchWorker {
     }
 
     private ListenableFuture<List<DBEncryptionKey>> fetchAndPersistAuctionKeys(
-            Instant keyExpiryInstant, ExecutionSequencer sequencer, Uri coordinatorUri) {
+            Instant keyExpiryInstant,
+            ExecutionSequencer sequencer,
+            Uri coordinatorUri,
+            FetchProcessLogger keyFetchLogger) {
 
         return sequencer.submitAsync(
                 () ->
@@ -255,20 +280,23 @@ public class BackgroundKeyFetchWorker {
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 keyExpiryInstant,
                                 mFlags.getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs(),
-                                coordinatorUri),
+                                coordinatorUri,
+                                keyFetchLogger),
                 AdServicesExecutors.getBackgroundExecutor());
     }
 
     private ListenableFuture<List<DBEncryptionKey>> fetchAndPersistJoinKey(
             Instant keyExpiryInstant,
-            ExecutionSequencer sequencer) {
+            ExecutionSequencer sequencer,
+            FetchProcessLogger keyFetchLogger) {
         return sequencer.submitAsync(
                 () ->
                         mKeyConfigManager.fetchAndPersistActiveKeysOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN,
                                 keyExpiryInstant,
                                 mFlags.getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs(),
-                                null),
+                                null,
+                                keyFetchLogger),
                 AdServicesExecutors.getBackgroundExecutor());
     }
 }

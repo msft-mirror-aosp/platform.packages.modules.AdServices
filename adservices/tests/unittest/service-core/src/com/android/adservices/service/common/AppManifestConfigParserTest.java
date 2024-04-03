@@ -18,7 +18,6 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION;
-import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
 import static com.android.adservices.service.common.AppManifestConfigCall.resultToString;
 
@@ -63,15 +62,18 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
             expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
                     .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("1234"))
                     .isTrue();
-            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(4567)")
                     .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("4567"))
                     .isTrue();
-            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(89)")
                     .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("89"))
                     .isTrue();
-            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234567)")
                     .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("1234567"))
                     .isTrue();
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(4815162342)")
+                    .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("4815162342"))
+                    .isFalse();
         }
 
         // Verify Attribution tags.
@@ -234,7 +236,7 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testValidXml_disabledByDefault_missingAllTags() throws Exception {
+    public void testValidXml_missingAllTags() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
                         .getResourcesForApplication(mPackageName)
@@ -244,73 +246,7 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ false);
-
-        AppManifestAttributionConfig attributionConfig = appManifestConfig.getAttributionConfig();
-        expect.withMessage("getAttributionConfig()").that(attributionConfig).isNull();
-        assertResult(
-                "isAllowedAttributionAccess()",
-                appManifestConfig.isAllowedAttributionAccess("not actually there"),
-                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
-
-        AppManifestCustomAudiencesConfig customAudiencesConfig =
-                appManifestConfig.getCustomAudiencesConfig();
-        expect.withMessage("getCustomAudiencesConfig()").that(customAudiencesConfig).isNull();
-        assertResult(
-                "isAllowedCustomAudiencesAccess()",
-                appManifestConfig.isAllowedCustomAudiencesAccess("not actually there"),
-                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
-
-        AppManifestProtectedSignalsConfig protectedSignalsConfig =
-                appManifestConfig.getProtectedSignalsConfig();
-        expect.withMessage("getProtectedSignalsConfig()").that(protectedSignalsConfig).isNull();
-        assertResult(
-                "isAllowedProtectedSignalsAccess()",
-                appManifestConfig.isAllowedProtectedSignalsAccess("not actually there"),
-                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
-
-        AppManifestAdSelectionConfig addSelectionConfig = appManifestConfig.getAdSelectionConfig();
-        expect.withMessage("getAdSelectionConfig()").that(addSelectionConfig).isNull();
-        assertResult(
-                "isAllowedAdSelectionAccess()",
-                appManifestConfig.isAllowedAdSelectionAccess("not actually there"),
-                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
-
-        AppManifestTopicsConfig topicsConfig = appManifestConfig.getTopicsConfig();
-        expect.withMessage("getTopicsConfig()").that(topicsConfig).isNull();
-        assertResult(
-                "isAllowedTopicsAccess()",
-                appManifestConfig.isAllowedTopicsAccess("not actually there"),
-                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
-
-        AppManifestAdIdConfig adIdConfig = appManifestConfig.getAdIdConfig();
-        expect.withMessage("getAdIdConfig()").that(adIdConfig).isNull();
-        assertResult(
-                "isAllowedAdIdAccess()",
-                appManifestConfig.isAllowedTopicsAccess("not actually there"),
-                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
-
-        AppManifestAppSetIdConfig appSetIdConfig = appManifestConfig.getAppSetIdConfig();
-        expect.withMessage("getAppSetIdConfig()").that(appSetIdConfig).isNull();
-        assertResult(
-                "isAllowedAppSetIdAccess()",
-                appManifestConfig.isAllowedAppSetIdAccess("not actually there"),
-                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
-    }
-
-    @Test
-    public void testValidXml_enabledByDefault_missingAllTags() throws Exception {
-        XmlResourceParser parser =
-                mContext.getPackageManager()
-                        .getResourcesForApplication(mPackageName)
-                        .getXml(R.xml.ad_services_config_missing_tags);
-        AppManifestConfig appManifestConfig =
-                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
-        assertWithMessage("manifest for ad_services_config_missing_tags")
-                .that(appManifestConfig)
-                .isNotNull();
-
-        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
         assertAttributionConfigIsAllowed(
                 appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
         assertCustomAudienceConfigIsAllowed(
@@ -328,18 +264,17 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testValidXml_enabledByDefault_missingAttribution() throws Exception {
+    public void testValidXml_missingAttribution() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
                         .getResourcesForApplication(mPackageName)
                         .getXml(R.xml.ad_services_config_all_false_missing_attribution);
-        AppManifestConfig appManifestConfig =
-                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
         assertWithMessage("manifest for ad_services_config_all_false_missing_attribution")
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
         assertAttributionConfigIsAllowed(
                 appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -351,18 +286,17 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testValidXml_enabledByDefault_missingCustomAudiences() throws Exception {
+    public void testValidXml_missingCustomAudiences() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
                         .getResourcesForApplication(mPackageName)
                         .getXml(R.xml.ad_services_config_all_false_missing_custom_audiences);
-        AppManifestConfig appManifestConfig =
-                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
         assertWithMessage("manifest for ad_services_config_all_false_missing_custom_audiences")
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(
                 appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
@@ -374,18 +308,17 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testValidXml_enabledByDefault_missingProtectedSignals() throws Exception {
+    public void testValidXml_missingProtectedSignals() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
                         .getResourcesForApplication(mPackageName)
                         .getXml(R.xml.ad_services_config_all_false_missing_protected_signals);
-        AppManifestConfig appManifestConfig =
-                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
         assertWithMessage("manifest for ad_services_config_all_false_missing_protected_signals")
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertProtectedSignalsConfigIsAllowed(
@@ -397,18 +330,17 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testValidXml_enabledByDefault_missingAdSelection() throws Exception {
+    public void testValidXml_missingAdSelection() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
                         .getResourcesForApplication(mPackageName)
                         .getXml(R.xml.ad_services_config_all_false_missing_ad_selection);
-        AppManifestConfig appManifestConfig =
-                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
         assertWithMessage("manifest for ad_services_config_all_false_missing_ad_selection")
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -420,18 +352,17 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testValidXml_enabledByDefault_missingTopics() throws Exception {
+    public void testValidXml_missingTopics() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
                         .getResourcesForApplication(mPackageName)
                         .getXml(R.xml.ad_services_config_all_false_missing_topics);
-        AppManifestConfig appManifestConfig =
-                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
         assertWithMessage("manifest for ad_services_config_all_false_missing_topics")
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -443,18 +374,17 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testValidXml_enabledByDefault_missingAdId() throws Exception {
+    public void testValidXml_missingAdId() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
                         .getResourcesForApplication(mPackageName)
                         .getXml(R.xml.ad_services_config_all_false_missing_adid);
-        AppManifestConfig appManifestConfig =
-                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
         assertWithMessage("manifest for ad_services_config_all_false_missing_adid")
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -467,18 +397,17 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testValidXml_enabledByDefault_missingAppsetId() throws Exception {
+    public void testValidXml_missingAppsetId() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
                         .getResourcesForApplication(mPackageName)
                         .getXml(R.xml.ad_services_config_all_false_missing_appsetid);
-        AppManifestConfig appManifestConfig =
-                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
         assertWithMessage("manifest for ad_services_config_all_false_missing_appsetid")
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -490,18 +419,17 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testValidXml_enabledByDefault_missingSdkLibraries() throws Exception {
+    public void testValidXml_missingSdkLibraries() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
                         .getResourcesForApplication(mPackageName)
                         .getXml(R.xml.ad_services_config_all_false_missing_sdk_libraries);
-        AppManifestConfig appManifestConfig =
-                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
         assertWithMessage("manifest for ad_services_config_all_false_missing_sdk_libraries")
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -512,14 +440,13 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testValidXml_enabledByDefault_withSdkLibraries() throws Exception {
+    public void testValidXml_withSdkLibraries() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
                         .getResourcesForApplication(mPackageName)
                         // This XML contains only 42 and 108
                         .getXml(R.xml.ad_services_config_all_false_with_sdk_libraries);
-        AppManifestConfig appManifestConfig =
-                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
         assertWithMessage("manifest for ad_services_config_all_false_with_sdk_libraries")
                 .that(appManifestConfig)
                 .isNotNull();
@@ -560,7 +487,7 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ false);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -627,23 +554,16 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 .isEqualTo("Unknown attribute: foobar [Tags and attributes are case sensitive]");
     }
 
-    private void assertSdkLibraryConfigIsEmpty(
-            AppManifestConfig appManifestConfig, boolean containsByDefault) {
+    private void assertSdkLibraryConfigIsEmpty(AppManifestConfig appManifestConfig) {
         AppManifestIncludesSdkLibraryConfig sdkLibrary =
                 appManifestConfig.getIncludesSdkLibraryConfig();
         expect.withMessage("getIncludesSdkLibraryConfig()").that(sdkLibrary).isNotNull();
         expect.withMessage("getIncludesSdkLibraryConfig().isEmpty()")
                 .that(sdkLibrary.isEmpty())
                 .isTrue();
-        if (containsByDefault) {
-            expect.withMessage("getIncludesSdkLibraryConfig().contains(42)")
-                    .that(sdkLibrary.contains("42"))
-                    .isTrue();
-        } else {
-            expect.withMessage("getIncludesSdkLibraryConfig().contains(42)")
-                    .that(sdkLibrary.contains("42"))
-                    .isFalse();
-        }
+        expect.withMessage("getIncludesSdkLibraryConfig().contains(42)")
+                .that(sdkLibrary.contains("42"))
+                .isTrue();
     }
 
     private void assertResult(String method, int actualResult, int expectedResult) {

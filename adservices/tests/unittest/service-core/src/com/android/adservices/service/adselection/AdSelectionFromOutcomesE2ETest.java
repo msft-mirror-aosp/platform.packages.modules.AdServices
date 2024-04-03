@@ -922,10 +922,6 @@ public class AdSelectionFromOutcomesE2ETest {
             return -1;
         }
 
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return false;
-        }
 
         @Override
         public boolean getFledgeAdSelectionPrebuiltUriEnabled() {

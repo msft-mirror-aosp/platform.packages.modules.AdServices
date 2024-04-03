@@ -30,7 +30,6 @@ import android.content.SharedPreferences.Editor;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
 import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.common.compat.FileCompatUtils;
@@ -132,9 +131,7 @@ public final class AppManifestConfigMetricsLogger {
                 new File(context.getDataDir() + "/shared_prefs", PREFS_NAME).getAbsolutePath();
         pw.printf("%sPreferences file: %s.xml\n", prefix, path);
 
-        boolean flagEnabledByDefault =
-                FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
-        pw.printf("%s(Currently) enabled by default: %b\n", prefix, flagEnabledByDefault);
+        pw.printf("%s(Always) enabled by default\n", prefix);
 
         SharedPreferences prefs = getPrefs(context);
         Map<String, ?> appPrefs = prefs.getAll();

@@ -99,16 +99,15 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
                     + " "
                     + CMD
                     + "\n"
-                    + "\toptions: "
-                    + "\n\t\t"
+                    + "  options:"
+                    + "\n    "
                     + ENABLE_SUB_COMMAND_HELP
-                    + "\n\t\t"
+                    + "\n    "
                     + DISABLE_SUB_CMD
-                    + "\n\t\t"
+                    + "\n    "
                     + VIEW_SUB_CMD
-                    + "\n\t\t"
-                    + HELP_SUB_CMD
-                    + "\n";
+                    + "\n    "
+                    + HELP_SUB_CMD;
 
     private static final int SUB_COMMAND_INDEX = 2;
     private static final int SUB_COMMAND_ARG_INDEX = 3;
@@ -133,6 +132,11 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
     @Override
     public int getMetricsLoggerCommand() {
         return CONSENTED_DEBUG_DEFAULT_COMMAND;
+    }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP;
     }
 
     @Override

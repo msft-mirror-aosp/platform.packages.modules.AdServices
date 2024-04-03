@@ -1140,13 +1140,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getFledgeAdSelectionFilteringEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
-                FLEDGE_AD_SELECTION_FILTERING_ENABLED);
-    }
-
-    @Override
     public boolean getFledgeAppInstallFilteringEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED,
@@ -4455,11 +4448,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getAdSelectionOffDeviceOverallTimeoutMs());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
-                        + " = "
-                        + getFledgeAdSelectionFilteringEnabled());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED
                         + " = "
                         + getFledgeAppInstallFilteringEnabled());
@@ -5098,11 +5086,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED
                         + " = "
                         + getMeasurementAggregateFallbackReportingJobPersisted());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT
-                        + " = "
-                        + getAppConfigReturnsEnabledByDefault());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING

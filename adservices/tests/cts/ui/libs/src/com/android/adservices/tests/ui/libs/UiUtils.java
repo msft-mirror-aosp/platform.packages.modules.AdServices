@@ -19,6 +19,7 @@ import static android.Manifest.permission.POST_NOTIFICATIONS;
 
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABLED;
+import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_NAME;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -578,5 +579,10 @@ public class UiUtils {
 
         Boolean response = responseFuture.get();
         assertThat(response).isTrue();
+    }
+
+    /** Returns a [BySelector] of a resource in sysui package. */
+    public static BySelector sysuiResSelector(String resourceId) {
+        return By.pkg(SYSTEM_UI_NAME).res(SYSTEM_UI_NAME, resourceId);
     }
 }

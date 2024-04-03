@@ -264,7 +264,7 @@ public class FledgeMaintenanceTasksWorkerTests {
     public void testClearExpiredFrequencyCapHistogramData_adFilteringEnabled_doesMaintenance() {
         final class FlagsWithAdFilteringFeatureEnabled implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -306,7 +306,7 @@ public class FledgeMaintenanceTasksWorkerTests {
             testClearExpiredFrequencyCapHistogramData_enrollmentDisabled_skipsBuyerMaintenance() {
         final class FlagsWithAdFilteringFeatureEnabled implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -345,7 +345,7 @@ public class FledgeMaintenanceTasksWorkerTests {
     public void testClearExpiredFrequencyCapHistogramData_adFilteringDisabled_skipsMaintenance() {
         final class FlagsWithAdFilteringFeatureDisabled implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return false;
             }
 

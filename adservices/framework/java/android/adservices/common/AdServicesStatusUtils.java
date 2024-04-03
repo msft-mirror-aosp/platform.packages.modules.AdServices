@@ -221,6 +221,13 @@ public final class AdServicesStatusUtils {
     public static final int STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION = 25;
 
     /**
+     * AdServices activity is disabled.
+     *
+     * <p>This error may be considered similar to {@link IllegalStateException}.
+     */
+    public static final int STATUS_ADSERVICES_ACTIVITY_DISABLED = 26;
+
+    /**
      * The failure reason has not been set. Keep unset failure reason the lowest value of the
      * failure reasons.
      */
@@ -253,6 +260,13 @@ public final class AdServicesStatusUtils {
      */
     public static final String ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE =
             "Background thread is not allowed to call this service.";
+
+    /**
+     * The error message to be returned along with {@link IllegalStateException} when call failed
+     * because AdServices activity is disabled.
+     */
+    public static final String ILLEGAL_STATE_ACTIVITY_DISABLED_ERROR_MESSAGE =
+            "AdServices activity is disabled.";
 
     /**
      * The error message to be returned along with {@link SecurityException} when call failed
@@ -317,6 +331,8 @@ public final class AdServicesStatusUtils {
                 return new SecurityException(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
             case STATUS_BACKGROUND_CALLER:
                 return new IllegalStateException(ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
+            case STATUS_ADSERVICES_ACTIVITY_DISABLED:
+                return new IllegalStateException(ILLEGAL_STATE_ACTIVITY_DISABLED_ERROR_MESSAGE);
             case STATUS_UNAUTHORIZED:
                 return new SecurityException(
                         SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
@@ -358,6 +374,7 @@ public final class AdServicesStatusUtils {
                 STATUS_KILLSWITCH_ENABLED,
                 STATUS_USER_CONSENT_REVOKED,
                 STATUS_ADSERVICES_DISABLED,
+                STATUS_ADSERVICES_ACTIVITY_DISABLED,
                 STATUS_PERMISSION_NOT_REQUESTED,
                 STATUS_CALLER_NOT_ALLOWED,
                 STATUS_BACKGROUND_CALLER,

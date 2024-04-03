@@ -72,4 +72,9 @@ public final class IsAllowedProtectedSignalsAccessCommand extends AbstractShellC
     public int getMetricsLoggerCommand() {
         return COMMAND_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
     }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
+    }
 }

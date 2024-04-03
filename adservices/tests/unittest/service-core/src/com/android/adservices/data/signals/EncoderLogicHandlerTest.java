@@ -21,9 +21,9 @@ import static com.android.adservices.data.signals.EncoderLogicHandler.ENCODER_VE
 import static com.android.adservices.data.signals.EncoderLogicHandler.FALLBACK_VERSION;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_OTHER_FAILURE;
-import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_AD_TECH_ID;
-import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_END_TIMESTAMP;
-import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_START_TIMESTAMP;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_AD_TECH_ID;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_END_TIMESTAMP;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_START_TIMESTAMP;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -46,9 +46,9 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
-import com.android.adservices.service.stats.pas.FetchProcessLogger;
-import com.android.adservices.service.stats.pas.FetchProcessLoggerImpl;
+import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -179,7 +179,7 @@ public class EncoderLogicHandlerTest {
         when(mMockClock.currentTimeMillis()).thenReturn(TEST_JS_DOWNLOAD_END_TIMESTAMP);
         EncodingFetchStats.Builder encodingJsFetchStatsBuilder = EncodingFetchStats.builder();
         FetchProcessLogger fetchProcessLogger =
-                new FetchProcessLoggerImpl(
+                new EncodingJsFetchProcessLoggerImpl(
                         mAdServicesLoggerSpy, mMockClock, encodingJsFetchStatsBuilder);
         fetchProcessLogger.setJsDownloadStartTimestamp(TEST_JS_DOWNLOAD_START_TIMESTAMP);
         fetchProcessLogger.setAdTechId(TEST_AD_TECH_ID);

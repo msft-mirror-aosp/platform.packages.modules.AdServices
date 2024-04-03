@@ -20,8 +20,6 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCOD
 
 import static org.mockito.Mockito.verifyZeroInteractions;
 
-import com.android.adservices.service.stats.pas.FetchProcessLoggerNoLoggingImpl;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

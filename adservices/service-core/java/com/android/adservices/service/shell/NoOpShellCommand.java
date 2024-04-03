@@ -57,4 +57,9 @@ public final class NoOpShellCommand extends AbstractShellCommand {
     public int getMetricsLoggerCommand() {
         return mMetricsLoggerCommand;
     }
+
+    @Override
+    public String getCommandHelp() {
+        return "";
+    }
 }

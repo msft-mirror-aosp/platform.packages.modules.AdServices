@@ -169,6 +169,18 @@ public final class CustomAudienceListCommandTest
                 .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_2);
     }
 
+    @Test
+    public void test_getCommandName() {
+        assertThat(new CustomAudienceListCommand(mCustomAudienceDao).getCommandName())
+                .isEqualTo(CustomAudienceListCommand.CMD);
+    }
+
+    @Test
+    public void test_getCommandHelp() {
+        assertThat(new CustomAudienceListCommand(mCustomAudienceDao).getCommandHelp())
+                .isEqualTo(CustomAudienceListCommand.HELP);
+    }
+
     private Result runCommandAndGetResult() {
         return run(
                 new CustomAudienceListCommand(mCustomAudienceDao),

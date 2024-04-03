@@ -35,4 +35,20 @@ public final class NoOpShellCommandTest extends ShellCommandTestCase<NoOpShellCo
                 expectedCommand,
                 expectedResult);
     }
+
+    @Test
+    public void test_getCommandName() {
+        String commandName = "test";
+        int expectedCommand = ShellCommandStats.COMMAND_ECHO;
+        NoOpShellCommand command = new NoOpShellCommand(commandName, expectedCommand);
+        expect.withMessage("getCommandHel").that(command.getCommandName()).isEqualTo(commandName);
+    }
+
+    @Test
+    public void test_getCommandHelp() {
+        String commandName = "test";
+        int expectedCommand = ShellCommandStats.COMMAND_ECHO;
+        NoOpShellCommand command = new NoOpShellCommand(commandName, expectedCommand);
+        expect.withMessage("getCommandHel").that(command.getCommandHelp()).isEqualTo("");
+    }
 }

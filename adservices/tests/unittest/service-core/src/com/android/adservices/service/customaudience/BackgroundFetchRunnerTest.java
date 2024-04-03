@@ -83,7 +83,19 @@ import java.util.concurrent.TimeUnit;
 
 public class BackgroundFetchRunnerTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private final Flags mFlags = FlagsFactory.getFlagsForTest();
+    private final Flags mFlags =
+            new FlagsFactory.TestFlags() {
+                @Override
+                public boolean getFledgeFrequencyCapFilteringEnabled() {
+                    return true;
+                }
+
+                @Override
+                public boolean getFledgeAppInstallFilteringEnabled() {
+                    return true;
+                }
+            };
+
     private final String mFetchPath = "/fetch";
 
     private MockitoSession mStaticMockSession = null;
@@ -388,6 +400,16 @@ public class BackgroundFetchRunnerTest {
             public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                 return true;
             }
+
+            @Override
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeAppInstallFilteringEnabled() {
+                return true;
+            }
         }
 
         BackgroundFetchRunner runner =
@@ -439,6 +461,16 @@ public class BackgroundFetchRunnerTest {
             @Override
             public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                 return false;
+            }
+
+            @Override
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeAppInstallFilteringEnabled() {
+                return true;
             }
         }
 

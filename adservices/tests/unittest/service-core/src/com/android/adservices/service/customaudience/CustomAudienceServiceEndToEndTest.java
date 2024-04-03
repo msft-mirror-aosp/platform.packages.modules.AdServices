@@ -1125,11 +1125,6 @@ public class CustomAudienceServiceEndToEndTest {
                         // CHECKSTYLE:OFF IndentationCheck
                         new Flags() {
                             @Override
-                            public boolean getFledgeAdSelectionFilteringEnabled() {
-                                return false;
-                            }
-
-                            @Override
                             public boolean getFledgeFrequencyCapFilteringEnabled() {
                                 return true;
                             }
@@ -2575,11 +2570,6 @@ public class CustomAudienceServiceEndToEndTest {
             }
 
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
-                return true;
-            }
-
-            @Override
             public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
@@ -2860,11 +2850,6 @@ public class CustomAudienceServiceEndToEndTest {
 
         @Override
         public boolean getFledgeRegisterAdBeaconEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
             return true;
         }
 

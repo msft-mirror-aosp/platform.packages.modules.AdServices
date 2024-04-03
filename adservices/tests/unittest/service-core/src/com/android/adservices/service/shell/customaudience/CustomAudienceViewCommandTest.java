@@ -58,7 +58,7 @@ public final class CustomAudienceViewCommandTest
                             .setOwner(CUSTOM_AUDIENCE_1.getOwner())
                             .setIsDebuggable(CUSTOM_AUDIENCE_1.isDebuggable())
                             .build();
-    private static final @Command int EXPECTED_COMMAND = COMMAND_CUSTOM_AUDIENCE_VIEW;
+    @Command private static final int EXPECTED_COMMAND = COMMAND_CUSTOM_AUDIENCE_VIEW;
 
     @Mock private CustomAudienceDao mCustomAudienceDao;
 
@@ -147,6 +147,18 @@ public final class CustomAudienceViewCommandTest
         Result actualResult = runCommandAndGetResult();
 
         expectSuccess(actualResult, "{}", EXPECTED_COMMAND);
+    }
+
+    @Test
+    public void test_getCommandName() {
+        assertThat(new CustomAudienceViewCommand(mCustomAudienceDao).getCommandName())
+                .isEqualTo(CustomAudienceViewCommand.CMD);
+    }
+
+    @Test
+    public void test_getCommandHelp() {
+        assertThat(new CustomAudienceViewCommand(mCustomAudienceDao).getCommandHelp())
+                .isEqualTo(CustomAudienceViewCommand.HELP);
     }
 
     private Result runCommandAndGetResult() {

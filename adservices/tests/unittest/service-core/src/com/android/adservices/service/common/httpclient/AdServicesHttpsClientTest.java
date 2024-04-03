@@ -25,11 +25,17 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCOD
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_TIMEOUT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_DOWNLOAD_LATENCY_BUCKETS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
-import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_AD_TECH_ID;
-import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_END_TIMESTAMP;
-import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_START_TIMESTAMP;
-import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_TIME;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_AD_TECH_ID;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_END_TIMESTAMP;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_START_TIMESTAMP;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_TIME;
+import static com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImplTest.KEY_FETCH_NETWORK_END_TIMESTAMP;
+import static com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImplTest.KEY_FETCH_NETWORK_LATENCY_MS;
+import static com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImplTest.KEY_FETCH_NETWORK_START_TIMESTAMP;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -67,9 +73,11 @@ import com.android.adservices.service.common.cache.HttpCache;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.service.stats.ServerAuctionKeyFetchCalledStats;
+import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
-import com.android.adservices.service.stats.pas.FetchProcessLogger;
-import com.android.adservices.service.stats.pas.FetchProcessLoggerImpl;
+import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -143,6 +151,8 @@ public class AdServicesHttpsClientTest {
     private String mData;
     private AdServicesLogger mAdServicesLoggerSpy;
     private ArgumentCaptor<EncodingFetchStats> mEncodingJsFetchStatsArgumentCaptor;
+    private ArgumentCaptor<ServerAuctionKeyFetchCalledStats>
+            mServerAuctionKeyFetchCalledStatsArgumentCaptor;
     private FetchProcessLogger mFetchProcessLogger;
 
     @Before
@@ -1129,6 +1139,61 @@ public class AdServicesHttpsClientTest {
         verifyEncodingJsFetchStatsLogging(ENCODING_FETCH_STATUS_TIMEOUT);
     }
 
+    @Test
+    public void testFetchPayloadSuccessfulResponseWithServerAuctionKeyFetchLogging()
+            throws Exception {
+        setupServerAuctionKeyFetchCalledStatsLogging();
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody(mJsScript)));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        AdServicesHttpClientResponse result =
+                mClient.fetchPayloadWithLogging(
+                                Uri.parse(url.toString()),
+                                DEV_CONTEXT_DISABLED,
+                                mFetchProcessLogger)
+                        .get();
+        assertEquals(mJsScript, result.getResponseBody());
+
+        // Verify the logging of EncodingFetchStats
+        verifyServerAuctionKeyFetchCalledStatsLogging(200);
+    }
+
+    @Test
+    public void testperformRequestAndGetResponseInBytesWithServerAuctionKeyFetchLogging()
+            throws Exception {
+        setupServerAuctionKeyFetchCalledStatsLogging();
+
+        byte[] byteResponse = {1, 2, 3, 54};
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody(byteResponse)));
+        URL url = server.getUrl(mReportingPath);
+        byte[] postedBodyInBytes = {1, 2, 3};
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(
+                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBodyInBytes)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.GET)
+                        .build();
+
+        AdServicesHttpClientResponse response =
+                mClient.performRequestGetResponseInBase64StringWithLogging(
+                                request, mFetchProcessLogger)
+                        .get();
+
+        String expectedResponseString = BaseEncoding.base64().encode(byteResponse);
+        assertThat(response.getResponseBody()).isEqualTo(expectedResponseString);
+
+        // Verify the logging of EncodingFetchStats
+        verifyServerAuctionKeyFetchCalledStatsLogging(200);
+    }
+
     private AdServicesHttpClientResponse fetchPayload(Uri uri, DevContext devContext)
             throws Exception {
         return mClient.fetchPayload(uri, devContext).get();
@@ -1161,7 +1226,7 @@ public class AdServicesHttpsClientTest {
                 .thenReturn(TEST_JS_DOWNLOAD_START_TIMESTAMP, TEST_JS_DOWNLOAD_END_TIMESTAMP);
         EncodingFetchStats.Builder encodingJsFetchStatsBuilder = EncodingFetchStats.builder();
         mFetchProcessLogger =
-                new FetchProcessLoggerImpl(
+                new EncodingJsFetchProcessLoggerImpl(
                         mAdServicesLoggerSpy, mMockClock, encodingJsFetchStatsBuilder);
         mFetchProcessLogger.setJsDownloadStartTimestamp(mMockClock.currentTimeMillis());
         mFetchProcessLogger.setAdTechId(TEST_AD_TECH_ID);
@@ -1177,5 +1242,35 @@ public class AdServicesHttpsClientTest {
         assertThat(stats.getHttpResponseCode()).isEqualTo(FIELD_UNSET);
         assertThat(stats.getJsDownloadTime())
                 .isEqualTo(computeSize(TEST_JS_DOWNLOAD_TIME, JS_DOWNLOAD_LATENCY_BUCKETS));
+    }
+
+    private void setupServerAuctionKeyFetchCalledStatsLogging() {
+        mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
+        mServerAuctionKeyFetchCalledStatsArgumentCaptor =
+                ArgumentCaptor.forClass(ServerAuctionKeyFetchCalledStats.class);
+
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(KEY_FETCH_NETWORK_START_TIMESTAMP, KEY_FETCH_NETWORK_END_TIMESTAMP);
+        mFetchProcessLogger =
+                new ServerAuctionKeyFetchExecutionLoggerImpl(mMockClock, mAdServicesLoggerSpy);
+        mFetchProcessLogger.setSource(SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION);
+        mFetchProcessLogger.setEncryptionKeySource(SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK);
+        mFetchProcessLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+    }
+
+    private void verifyServerAuctionKeyFetchCalledStatsLogging(int statusCode) {
+        verify(mAdServicesLoggerSpy)
+                .logServerAuctionKeyFetchCalledStats(
+                        mServerAuctionKeyFetchCalledStatsArgumentCaptor.capture());
+
+        ServerAuctionKeyFetchCalledStats stats =
+                mServerAuctionKeyFetchCalledStatsArgumentCaptor.getValue();
+        assertThat(stats.getSource()).isEqualTo(SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION);
+        assertThat(stats.getEncryptionKeySource())
+                .isEqualTo(SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK);
+        assertThat(stats.getCoordinatorSource())
+                .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+        assertThat(stats.getNetworkStatusCode()).isEqualTo(statusCode);
+        assertThat(stats.getNetworkLatencyMillis()).isEqualTo(KEY_FETCH_NETWORK_LATENCY_MS);
     }
 }

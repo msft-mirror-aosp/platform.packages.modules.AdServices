@@ -45,6 +45,8 @@ import java.util.Map;
 public final class CustomAudienceListCommand extends AbstractShellCommand {
 
     @VisibleForTesting public static final String CMD = "list";
+
+    @VisibleForTesting
     public static final String HELP =
             CustomAudienceShellCommandFactory.COMMAND_PREFIX
                     + " "
@@ -74,6 +76,11 @@ public final class CustomAudienceListCommand extends AbstractShellCommand {
     @Override
     public int getMetricsLoggerCommand() {
         return COMMAND_CUSTOM_AUDIENCE_LIST;
+    }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP;
     }
 
     @Override

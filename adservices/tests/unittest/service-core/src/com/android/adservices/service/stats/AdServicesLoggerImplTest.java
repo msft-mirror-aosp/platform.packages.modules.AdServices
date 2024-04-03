@@ -40,8 +40,11 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_TOO_BIG;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_SMALL;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.NUM_OF_ELIGIBLE_TO_UPDATE_CAS;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.RESULT_CODE;
@@ -114,6 +117,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 
 import org.junit.Test;
@@ -1008,6 +1012,21 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         adServicesLogger.logUpdateSignalsApiCalledStats(stats);
 
         verify(mStatsdLoggerMock).logUpdateSignalsApiCalledStats(eq(stats));
+    }
+
+    @Test
+    public void testLogEncodingJsExecutionStats() {
+        EncodingJsExecutionStats stats =
+                EncodingJsExecutionStats.builder()
+                        .setRunStatus(JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT)
+                        .setJsLatency(SIZE_SMALL)
+                        .setAdTechId("123")
+                        .setJsMemoryUsed(SIZE_LARGE)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEncodingJsExecutionStats(stats);
+
+        verify(mStatsdLoggerMock).logEncodingJsExecutionStats(eq(stats));
     }
 
     private void mockAppNameApiErrorLogger() {

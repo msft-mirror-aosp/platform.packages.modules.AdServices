@@ -26,6 +26,7 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -184,8 +185,7 @@ public final class PackageManagerCompatUtils {
     }
 
     /**
-     * Activities for user consent and control are disabled by default. Check whether the activities
-     * are enabled
+     * Check whether the activities for user consent and control are enabled
      *
      * @param context the context
      * @return true if AdServices activities are enabled, otherwise false
@@ -193,13 +193,20 @@ public final class PackageManagerCompatUtils {
     @NonNull
     public static boolean isAdServicesActivityEnabled(@NonNull Context context) {
         Objects.requireNonNull(context);
+        String packageName = context.getPackageName();
+
+        // Activities are enabled by default in AdServices package
+        if (packageName.endsWith(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+            return true;
+        }
         PackageManager packageManager = context.getPackageManager();
         try {
-            PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
             for (String activity : CONSENT_ACTIVITIES_CLASSES) {
                 int componentEnabledState =
                         packageManager.getComponentEnabledSetting(
                                 new ComponentName(packageInfo.packageName, activity));
+                // Activities are disabled by default in ExtServices package
                 if (componentEnabledState != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
                     return false;
                 }

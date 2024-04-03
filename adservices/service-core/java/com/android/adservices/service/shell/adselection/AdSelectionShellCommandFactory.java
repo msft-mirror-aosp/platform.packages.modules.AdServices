@@ -32,6 +32,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -95,5 +96,12 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
     @Override
     public String getCommandPrefix() {
         return COMMAND_PREFIX;
+    }
+
+    @Override
+    public List<String> getAllCommandsHelp() {
+        return mAllCommandsMap.values().stream()
+                .map(ShellCommand::getCommandHelp)
+                .collect(Collectors.toList());
     }
 }

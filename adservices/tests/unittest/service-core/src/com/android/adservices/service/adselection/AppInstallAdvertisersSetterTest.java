@@ -346,15 +346,15 @@ public class AppInstallAdvertisersSetterTest {
     }
 
     private static class AppInstallAdvertisersSetterTestFlags implements Flags {
-        private final boolean mAdSelectionFilteringEnabled;
+        private final boolean mAppInstallFilteringEnabled;
 
         AppInstallAdvertisersSetterTestFlags(boolean filteringEnabled) {
-            mAdSelectionFilteringEnabled = filteringEnabled;
+            mAppInstallFilteringEnabled = filteringEnabled;
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return mAdSelectionFilteringEnabled;
+        public boolean getFledgeAppInstallFilteringEnabled() {
+            return mAppInstallFilteringEnabled;
         }
     }
 }

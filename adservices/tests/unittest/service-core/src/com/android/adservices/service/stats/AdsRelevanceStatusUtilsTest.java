@@ -27,7 +27,7 @@ import org.junit.Test;
 public class AdsRelevanceStatusUtilsTest {
     @Test
     public void testComputeSize() {
-        int[] buckets = {10, 20, 30, 40};
+        long[] buckets = {10, 20, 30, 40};
         int rawValue = 5;
         for (@AdsRelevanceStatusUtils.Size int i = SIZE_VERY_SMALL; i <= SIZE_VERY_LARGE; i++) {
             assertEquals(i, computeSize(rawValue, buckets));

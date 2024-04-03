@@ -2269,7 +2269,8 @@ public class KAnonE2ETest {
                         mAdSelectionEncryptionKeyDao,
                         mFlags,
                         mAdServicesHttpsClientSpy,
-                        AdServicesExecutors.getLightWeightExecutor());
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdServicesLoggerMock);
         KAnonObliviousHttpEncryptorImpl kAnonObliviousHttpEncryptor =
                 new KAnonObliviousHttpEncryptorImpl(
                         encryptionKeyManager, AdServicesExecutors.getLightWeightExecutor());
@@ -2394,11 +2395,6 @@ public class KAnonE2ETest {
         @Override
         public boolean getFledgeAuctionServerKillSwitch() {
             return mFledgeAuctionServerKillSwitch;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return true;
         }
 
         @Override

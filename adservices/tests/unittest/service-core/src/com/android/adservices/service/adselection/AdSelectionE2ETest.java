@@ -8293,11 +8293,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return false;
-        }
-
-        @Override
         public long getFledgeAdSelectionBiddingLogicJsVersion() {
             return mBiddingLogicVersion;
         }

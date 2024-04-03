@@ -70,4 +70,9 @@ public final class IsAllowedAdSelectionAccessCommand extends AbstractShellComman
     public int getMetricsLoggerCommand() {
         return COMMAND_IS_ALLOWED_AD_SELECTION_ACCESS;
     }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
+    }
 }
