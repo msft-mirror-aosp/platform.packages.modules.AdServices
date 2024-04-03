@@ -89,6 +89,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
@@ -1490,6 +1493,15 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         getDeviceConfigFlag(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
                                 defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementJobImmediateAggregateReportingKillSwitch() {
+        return !getMeasurementEnabled()
+                || getDeviceConfigFlag(
+                        FlagsConstants
+                                .KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH,
+                        MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH);
     }
 
     @Override
@@ -4070,6 +4082,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH
                         + " = "
                         + getMeasurementJobVerboseDebugReportingKillSwitch());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobImmediateAggregateReportingKillSwitch());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t"
@@ -5090,6 +5108,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementAggregateFallbackReportingJobPersisted());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
+                        + " = "
+                        + getMeasurementImmediateAggregateReportingJobRequiredBatteryNotLow());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE
+                        + " = "
+                        + getMeasurementImmediateAggregateReportingJobRequiredNetworkType());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED
+                        + " = "
+                        + getMeasurementImmediateAggregateReportingJobPersisted());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING
                         + " = "
                         + getMeasurementEnableAggregatableReportPayloadPadding());
@@ -5845,6 +5878,27 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED,
                 MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED);
+    }
+
+    @Override
+    public boolean getMeasurementImmediateAggregateReportingJobRequiredBatteryNotLow() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
+                MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW);
+    }
+
+    @Override
+    public int getMeasurementImmediateAggregateReportingJobRequiredNetworkType() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE);
+    }
+
+    @Override
+    public boolean getMeasurementImmediateAggregateReportingJobPersisted() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED,
+                MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED);
     }
 
     @Override
