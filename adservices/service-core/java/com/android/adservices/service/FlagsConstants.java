@@ -556,8 +556,6 @@ public final class FlagsConstants {
             "fledge_ad_selection_from_outcomes_overall_timeout_ms";
     public static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
             "fledge_ad_selection_expiration_window_s";
-    public static final String KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
-            "fledge_ad_selection_filtering_enabled";
     public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED =
             "fledge_app_install_filtering_enabled";
     public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED =
