@@ -4378,7 +4378,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
@@ -4403,7 +4402,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         BIDDING_STAGE_END_TIMESTAMP,
                         STOP_ELAPSED_TIMESTAMP);
@@ -4416,7 +4414,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
@@ -4431,7 +4428,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         SIGNATURE_VERIFICATION_START_KEY_FETCH,
                         SIGNATURE_VERIFICATION_END_KEY_FETCH,
                         SIGNATURE_VERIFICATION_START_SERIALIZATION,
@@ -4459,7 +4455,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
@@ -4474,7 +4469,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
@@ -4489,7 +4483,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         AD_FILTERING_START,

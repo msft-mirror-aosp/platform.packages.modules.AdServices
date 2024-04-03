@@ -237,9 +237,7 @@ public abstract class AdSelectionRunner {
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
         mAppInstallAdFilterer = appInstallAdFilterer;
-        mSignatureVerificationLogger =
-                new SignatureVerificationLogger(
-                        com.android.adservices.shared.util.Clock.getInstance(), mAdServicesLogger);
+        mSignatureVerificationLogger = new SignatureVerificationLogger(mAdServicesLogger);
         AdFilteringLoggerFactory adFilteringLoggerFactory =
                 new AdFilteringLoggerFactory(mAdServicesLogger, mFlags);
         mCustomAudienceFilteringLogger =
@@ -314,9 +312,7 @@ public abstract class AdSelectionRunner {
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
         mAppInstallAdFilterer = appInstallAdFilterer;
-        mSignatureVerificationLogger =
-                new SignatureVerificationLogger(
-                        com.android.adservices.shared.util.Clock.getInstance(), mAdServicesLogger);
+        mSignatureVerificationLogger = new SignatureVerificationLogger(mAdServicesLogger);
         AdFilteringLoggerFactory adFilteringLoggerFactory =
                 new AdFilteringLoggerFactory(mAdServicesLogger, mFlags);
         mCustomAudienceFilteringLogger =

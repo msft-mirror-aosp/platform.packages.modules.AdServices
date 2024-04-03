@@ -17,7 +17,6 @@
 package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.BINDER_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.SignatureVerificationStats.EMPTY_STRING;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -27,7 +26,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.adservices.common.CallerMetadata;
 
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
@@ -41,10 +39,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class SignatureVerificationLoggerTest {
-    public static final CallerMetadata sCallerMetadata =
-            new CallerMetadata.Builder()
-                    .setBinderElapsedTimestamp(BINDER_ELAPSED_TIMESTAMP)
-                    .build();
     public static final int SIGNATURE_VERIFICATION_KEY_FETCH_LATENCY_MS = 3;
     public static final int SIGNATURE_VERIFICATION_SERIALIZATION_LATENCY_MS = 5;
     public static final int SIGNATURE_VERIFICATION_VERIFICATION_LATENCY_MS = 7;
@@ -80,7 +74,6 @@ public class SignatureVerificationLoggerTest {
                 SignatureVerificationStats.VerificationStatus.VERIFIED;
         when(mMockClock.elapsedRealtime())
                 .thenReturn(
-                        BINDER_ELAPSED_TIMESTAMP,
                         SIGNATURE_VERIFICATION_START_KEY_FETCH,
                         SIGNATURE_VERIFICATION_END_KEY_FETCH,
                         SIGNATURE_VERIFICATION_START_SERIALIZATION,
@@ -242,6 +235,6 @@ public class SignatureVerificationLoggerTest {
     }
 
     private SignatureVerificationLogger getSignatureVerificationLogger() {
-        return new SignatureVerificationLogger(mMockClock, mAdServicesLoggerMock);
+        return new SignatureVerificationLogger(mAdServicesLoggerMock, mMockClock);
     }
 }

@@ -32,7 +32,7 @@ import java.util.Objects;
  * android.adservices.adselection.SignedContextualAds} object per buyer. Collects data into {@link
  * SignatureVerificationStats} object.
  */
-public class SignatureVerificationLogger extends ApiServiceLatencyCalculator {
+public class SignatureVerificationLogger {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting
@@ -83,8 +83,6 @@ public class SignatureVerificationLogger extends ApiServiceLatencyCalculator {
     static final String ENROLLMENT_DETAILS_SHOULD_ONLY_LOGGED_IF_SIGNATURE_VERIFICATION_ERROR =
             "Enrollment details should only be logged in case of an signature verification error. "
                     + "Purging enrollment data...";
-
-    private final AdServicesLogger mAdServicesLogger;
     private long mSignatureVerificationStartTimestamp;
     private long mSignatureVerificationEndTimestamp;
     private long mKeyFetchForSignatureVerificationStartTimestamp;
@@ -102,13 +100,21 @@ public class SignatureVerificationLogger extends ApiServiceLatencyCalculator {
     private int mFailureDetailCountOfKeysWithWrongFormat;
     private int mFailureDetailCountOfKeysFailedToVerifySignature;
 
+    @NonNull private final Clock mClock;
+    @NonNull private final AdServicesLogger mAdServicesLogger;
+
+    public SignatureVerificationLogger(@NonNull AdServicesLogger adServicesLogger) {
+        this(adServicesLogger, Clock.getInstance());
+    }
+
+    @VisibleForTesting
     public SignatureVerificationLogger(
-            @NonNull Clock clock, @NonNull AdServicesLogger adServicesLogger) {
-        super(clock);
+            @NonNull AdServicesLogger adServicesLogger, @NonNull Clock clock) {
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
 
-        this.mAdServicesLogger = adServicesLogger;
+        mClock = clock;
+        mAdServicesLogger = adServicesLogger;
         sLogger.v("SignatureVerificationLogger starts.");
     }
 
@@ -353,5 +359,9 @@ public class SignatureVerificationLogger extends ApiServiceLatencyCalculator {
                 .setFailedSignatureSellerEnrollmentId(EMPTY_STRING)
                 .setFailedSignatureCallerPackageName(EMPTY_STRING)
                 .build();
+    }
+
+    private long getServiceElapsedTimestamp() {
+        return mClock.elapsedRealtime();
     }
 }
