@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"আপনি যোগ না দেওয়ার সিদ্ধান্ত নিয়েছেন"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"আপনার উত্তরের জন্য ধন্যবাদ। আপনার ডিভাইসের জন্য প্রাইভেসি স্যান্ডবক্সটি বন্ধ করা আছে।\n\nআপনি সিদ্ধান্ত বদল করলে বা আরও বেশি জানতে চাইলে, নিজের গোপনীয়তা সেটিংসে যান।"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"গোপনীয়তা সেটিংস"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"বুঝেছি"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"আপনি বিটা প্রোগ্রামে অংশগ্রহণ করছেন"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"আপনার ডিভাইসের জন্য প্রাইভেসি স্যান্ডবক্স চালু করা আছে এবং আপনাকে বিজ্ঞাপন দেখাতে এইসব নতুন, আরও ব্যক্তিগত উপায় অ্যাপগুলি পরীক্ষা করতে পারে। আপনার গোপনীয়তা সেটিংসে যেকোনও সময় বিটা বন্ধ করতে পারবেন।"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"বুঝেছি"</string>

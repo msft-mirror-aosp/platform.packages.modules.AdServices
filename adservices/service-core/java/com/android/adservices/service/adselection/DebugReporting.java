@@ -57,7 +57,6 @@ import java.util.concurrent.ExecutorService;
  *
  *     <p>For the business logic processing events, see {@link DebugReportProcessor}.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class DebugReporting {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

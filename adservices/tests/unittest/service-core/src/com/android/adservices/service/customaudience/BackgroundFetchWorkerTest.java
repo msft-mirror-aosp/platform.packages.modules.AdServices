@@ -136,7 +136,7 @@ public class BackgroundFetchWorkerTest {
         mCustomAudienceDaoSpy =
                 Mockito.spy(
                         Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
-                                .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                                .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                                 .build()
                                 .customAudienceDao());
         mAppInstallDaoSpy =
@@ -749,10 +749,10 @@ public class BackgroundFetchWorkerTest {
     }
 
     private static class BackgroundFetchWorkerTestFlags implements Flags {
-        private final boolean mFledgeAdSelectionFilteringEnabled;
+        private final boolean mFledgeAppInstallFilteringEnabled;
 
-        BackgroundFetchWorkerTestFlags(boolean fledgeAdSelectionFilteringEnabled) {
-            mFledgeAdSelectionFilteringEnabled = fledgeAdSelectionFilteringEnabled;
+        BackgroundFetchWorkerTestFlags(boolean fledgeAppInstallFilteringEnabled) {
+            mFledgeAppInstallFilteringEnabled = fledgeAppInstallFilteringEnabled;
         }
 
         @Override
@@ -761,8 +761,8 @@ public class BackgroundFetchWorkerTest {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return mFledgeAdSelectionFilteringEnabled;
+        public boolean getFledgeAppInstallFilteringEnabled() {
+            return mFledgeAppInstallFilteringEnabled;
         }
 
         @Override

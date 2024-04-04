@@ -57,6 +57,9 @@ java_library {
     ],
     static_libs: [
         "adservices-shared-util",
+        "adservices-shared-proto-lite",
+        "adservices-shared-proto-utils",
+        "adservices-shared-common",
     ],
     libs: [
         "androidx.annotation_annotation",
@@ -158,6 +161,19 @@ java_library {
         "com.android.extservices",
         "com.android.ondevicepersonalization"
     ],
+}
+
+filegroup {
+    name: "adservices-shared-flag-annotation-sources",
+    srcs: [
+        "java/com/android/adservices/shared/common/flags/ConfigFlag.java",
+        "java/com/android/adservices/shared/common/flags/FeatureFlag.java",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/adservices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    path: "java",
 }
 
 java_library {

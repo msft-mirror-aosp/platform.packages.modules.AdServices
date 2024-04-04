@@ -33,7 +33,7 @@ import java.io.IOException;
 /** Device-side implementation of {@link AbstractAdServicesShellCommandHelper}. */
 public final class AdServicesShellCommandHelper extends AbstractAdServicesShellCommandHelper {
     public AdServicesShellCommandHelper() {
-        super(AndroidLogger.getInstance());
+        super(AdServicesSupportHelper.getInstance(), AndroidLogger.getInstance());
     }
 
     private static final int OUT_DESCRIPTOR_INDEX = 0;

@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_SHELL_COMMAND_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_COUNTER_HISTOGRAM_UPDATER_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_AD_SELECTION_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_JOIN_CA_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
@@ -36,21 +40,30 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JOB_RUN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JS_EXECUTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JS_FETCH;
 import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_BUYER_INPUT_GENERATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_BACKGROUND_JOB_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INITIALIZE_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_KEY_FETCH_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SIGNATURE_VERIFICATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUSTOM_AUDIENCE_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_API_CALLED;
 
 import android.annotation.NonNull;
 import android.util.proto.ProtoOutputStream;
@@ -66,6 +79,10 @@ import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusSt
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
@@ -552,7 +569,9 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                     stats.getAttemptedRegisteredBeacons(),
                     attemptedKeySizesRangeType,
                     stats.getTableNumRows(),
-                    stats.getAdServicesStatusCode());
+                    stats.getAdServicesStatusCode(),
+                    // TODO: b/329720016 - implement and flag
+                    0);
         }
     }
 
@@ -658,7 +677,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 GET_AD_SELECTION_DATA_API_CALLED,
                 stats.getPayloadSizeKb(),
                 stats.getNumBuyers(),
-                stats.getStatusCode());
+                stats.getStatusCode(),
+                stats.getServerAuctionCoordinatorSource());
     }
 
     @Override
@@ -673,7 +693,179 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getTrustedBiddingSignalsKeysSizeMeanB(),
                 stats.getTrustedBiddingSignalsKeysSizeVarianceB(),
                 stats.getUserBiddingSignalsSizeMeanB(),
-                stats.getUserBiddingSignalsSizeVarianceB());
+                stats.getUserBiddingSignalsSizeVarianceB(),
+                stats.getNumEncodedSignals(),
+                stats.getEncodedSignalsSizeMean(),
+                stats.getEncodedSignalsSizeMax(),
+                stats.getEncodedSignalsSizeMin());
+    }
+
+    @Override
+    public void logEncodingJsFetchStats(EncodingFetchStats stats) {
+        AdServicesStatsLog.write(
+                ENCODING_JS_FETCH,
+                stats.getJsDownloadTime(),
+                stats.getHttpResponseCode(),
+                stats.getFetchStatus(),
+                stats.getAdTechId());
+    }
+
+    @Override
+    public void logAdFilteringProcessJoinCAReportedStats(
+            AdFilteringProcessJoinCAReportedStats stats) {
+        AdServicesStatsLog.write(
+                AD_FILTERING_PROCESS_JOIN_CA_REPORTED,
+                stats.getStatusCode(),
+                stats.getCountOfAdsWithKeysMuchSmallerThanLimitation(),
+                stats.getCountOfAdsWithKeysSmallerThanLimitation(),
+                stats.getCountOfAdsWithKeysEqualToLimitation(),
+                stats.getCountOfAdsWithKeysLargerThanLimitation(),
+                stats.getCountOfAdsWithEmptyKeys(),
+                stats.getCountOfAdsWithFiltersMuchSmallerThanLimitation(),
+                stats.getCountOfAdsWithFiltersSmallerThanLimitation(),
+                stats.getCountOfAdsWithFiltersEqualToLimitation(),
+                stats.getCountOfAdsWithFiltersLargerThanLimitation(),
+                stats.getCountOfAdsWithEmptyFilters(),
+                stats.getTotalNumberOfUsedKeys(),
+                stats.getTotalNumberOfUsedFilters());
+    }
+
+    @Override
+    public void logAdFilteringProcessAdSelectionReportedStats(
+            AdFilteringProcessAdSelectionReportedStats stats) {
+        AdServicesStatsLog.write(
+                AD_FILTERING_PROCESS_AD_SELECTION_REPORTED,
+                stats.getLatencyInMillisOfAllAdFiltering(),
+                stats.getLatencyInMillisOfAppInstallFiltering(),
+                stats.getLatencyInMillisOfFcapFilters(),
+                stats.getStatusCode(),
+                stats.getNumOfAdsFilteredOutOfBidding(),
+                stats.getNumOfCustomAudiencesFilteredOutOfBidding(),
+                stats.getTotalNumOfAdsBeforeFiltering(),
+                stats.getTotalNumOfCustomAudiencesBeforeFiltering(),
+                stats.getNumOfPackageInAppInstallFilters(),
+                stats.getNumOfDbOperations(),
+                stats.getFilterProcessType(),
+                stats.getNumOfContextualAdsFiltered(),
+                stats.getNumOfAdCounterKeysInFcapFilters(),
+                stats.getNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures(),
+                stats.getNumOfContextualAdsFilteredOutOfBiddingNoAds(),
+                stats.getTotalNumOfContextualAdsBeforeFiltering());
+    }
+
+    @Override
+    public void logAdCounterHistogramUpdaterReportedStats(
+            AdCounterHistogramUpdaterReportedStats stats) {
+        AdServicesStatsLog.write(
+                AD_COUNTER_HISTOGRAM_UPDATER_REPORTED,
+                stats.getLatencyInMillis(),
+                stats.getStatusCode(),
+                stats.getTotalNumberOfEventsInDatabaseAfterInsert(),
+                stats.getNumberOfInsertedEvent(),
+                stats.getNumberOfEvictedEvent());
+    }
+
+    @Override
+    public void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats) {
+        AdServicesStatsLog.write(
+                TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED,
+                stats.getCountOfTopicsBeforeEncryption(),
+                stats.getCountOfEmptyEncryptedTopics(),
+                stats.getCountOfEncryptedTopics(),
+                stats.getLatencyOfWholeEncryptionProcessMs(),
+                stats.getLatencyOfEncryptionPerTopicMs(),
+                stats.getLatencyOfPersistingEncryptedTopicsToDbMs());
+    }
+
+    @Override
+    public void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats) {
+        AdServicesStatsLog.write(
+                TOPICS_ENCRYPTION_GET_TOPICS_REPORTED,
+                stats.getCountOfEncryptedTopics(),
+                stats.getLatencyOfReadingEncryptedTopicsFromDbMs());
+    }
+
+    @Override
+    public void logShellCommandStats(ShellCommandStats stats) {
+        AdServicesStatsLog.write(
+                ADSERVICES_SHELL_COMMAND_CALLED,
+                stats.getCommand(),
+                stats.getResult(),
+                stats.getLatencyMillis());
+    }
+
+    @Override
+    public void logSignatureVerificationStats(SignatureVerificationStats stats) {
+        AdServicesStatsLog.write(
+                SIGNATURE_VERIFICATION,
+                stats.getSerializationLatency(),
+                stats.getKeyFetchLatency(),
+                stats.getVerificationLatency(),
+                stats.getNumOfKeysFetched(),
+                stats.getSignatureVerificationStatus().getValue(),
+                stats.getFailedSignatureBuyerEnrollmentId(),
+                stats.getFailedSignatureSellerEnrollmentId(),
+                stats.getFailedSignatureCallerPackageName(),
+                stats.getFailureDetailUnknownError(),
+                stats.getFailureDetailNoEnrollmentDataForBuyer(),
+                stats.getFailureDetailNoKeysFetchedForBuyer(),
+                stats.getFailureDetailWrongSignatureFormat(),
+                stats.getFailureDetailCountOfKeysWithWrongFormat(),
+                stats.getFailureDetailCountOfKeysFailedToVerifySignature());
+    }
+
+    @Override
+    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
+        AdServicesStatsLog.write(
+                UPDATE_SIGNALS_API_CALLED,
+                stats.getHttpResponseCode(),
+                stats.getJsonSize(),
+                stats.getJsonProcessingStatus(),
+                stats.getPackageUid(),
+                stats.getAdTechId());
+    }
+
+    @Override
+    public void logEncodingJsExecutionStats(EncodingJsExecutionStats stats) {
+        AdServicesStatsLog.write(
+                ENCODING_JS_EXECUTION,
+                stats.getJsLatency(),
+                stats.getEncodedSignalsSize(),
+                stats.getRunStatus(),
+                stats.getJsMemoryUsed(),
+                stats.getAdTechId());
+    }
+
+    @Override
+    public void logServerAuctionBackgroundKeyFetchScheduledStats(
+            ServerAuctionBackgroundKeyFetchScheduledStats stats) {
+        AdServicesStatsLog.write(
+                SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED,
+                stats.getStatus(),
+                stats.getCountAuctionUrls(),
+                stats.getCountJoinUrls());
+    }
+
+    @Override
+    public void logServerAuctionKeyFetchCalledStats(ServerAuctionKeyFetchCalledStats stats) {
+        AdServicesStatsLog.write(
+                SERVER_AUCTION_KEY_FETCH_CALLED,
+                stats.getSource(),
+                stats.getEncryptionKeySource(),
+                stats.getCoordinatorSource(),
+                stats.getNetworkStatusCode(),
+                stats.getNetworkLatencyMillis());
+    }
+
+    @Override
+    public void logEncodingJobRunStats(EncodingJobRunStats stats) {
+        AdServicesStatsLog.write(
+                ENCODING_JOB_RUN,
+                stats.getSignalEncodingSuccesses(),
+                stats.getSignalEncodingFailures(),
+                stats.getSignalEncodingSkips());
     }
 
     @NonNull

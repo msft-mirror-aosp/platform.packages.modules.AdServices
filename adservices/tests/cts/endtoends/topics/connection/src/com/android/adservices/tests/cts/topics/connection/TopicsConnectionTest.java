@@ -17,6 +17,7 @@
 package com.android.adservices.tests.cts.topics.connection;
 
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -28,6 +29,7 @@ import android.adservices.topics.Topic;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -85,10 +87,12 @@ public class TopicsConnectionTest {
         flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
-        flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        flags.setFlag(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
     @Test
+    @FlakyTest(bugId = 330741404)
     public void testEnableGlobalKillSwitch() throws Exception {
         // First enable the Global Kill Switch and then connect to the TopicsService.
         // The connection should fail with Exception.
@@ -150,7 +154,7 @@ public class TopicsConnectionTest {
             // TODO (b/307748265): update to use FlagSetterRule
             String overrideString = enabled ? "true" : "false";
             ShellUtils.runShellCommand(
-                    "setprop debug.adservices.global_kill_switch " + overrideString);
+                    "device_config put adservices global_kill_switch " + overrideString);
         } else {
             flags.setEnableBackCompat(!enabled);
         }

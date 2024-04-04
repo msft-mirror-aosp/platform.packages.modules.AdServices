@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Դուք հրաժարվել եք ծրագրին մասնակցելուց"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Շնորհակալություն պատասխանելու համար։ Privacy Sandbox տեխնոլոգիաներն անջատված են ձեր սարքում։\n\nԵթե մտափոխվեք կամ ուզեք ավելին իմանալ, անցեք գաղտնիության կարգավորումներ։"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Գաղտնիության կարգավորումներ"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Եղավ"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Դուք մասնակցում եք բետա փորձարկմանը"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox տեխնոլոգիաները միացված են ձեր սարքի համար։ Հավելվածները կարող են փորձարկել գովազդի ցուցադրման այս նոր, ավելի պաշտպանված եղանակները։ Դուք ցանկացած ժամանակ կարող եք անջատել բետա փորձարկումը գաղտնիության կարգավորումներում։"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"Եղավ"</string>

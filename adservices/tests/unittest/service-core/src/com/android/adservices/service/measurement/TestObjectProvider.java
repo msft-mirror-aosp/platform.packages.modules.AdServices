@@ -88,6 +88,7 @@ class TestObjectProvider {
         return spy(
                 new MeasurementImpl(
                         null,
+                        FlagsFactory.getFlagsForTest(),
                         datastoreManager,
                         clickVerifier,
                         measurementDataDeleter,

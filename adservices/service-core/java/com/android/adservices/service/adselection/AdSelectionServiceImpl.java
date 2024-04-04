@@ -104,6 +104,7 @@ import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -129,7 +130,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @VisibleForTesting
@@ -180,6 +180,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     private final ConsentedDebugConfigurationGeneratorFactory
             mConsentedDebugConfigurationGeneratorFactory;
 
+    @NonNull final EgressConfigurationGenerator mEgressConfigurationGenerator;
+
     @VisibleForTesting
     public AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -210,7 +212,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull RetryStrategyFactory retryStrategyFactory,
             @NonNull
                     ConsentedDebugConfigurationGeneratorFactory
-                            consentedDebugConfigurationGeneratorFactory) {
+                            consentedDebugConfigurationGeneratorFactory,
+            @NonNull EgressConfigurationGenerator egressConfigurationGenerator) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
@@ -234,6 +237,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(kAnonSignJoinFactory);
         Objects.requireNonNull(retryStrategyFactory);
         Objects.requireNonNull(consentedDebugConfigurationGeneratorFactory);
+        Objects.requireNonNull(egressConfigurationGenerator);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAppInstallDao = appInstallDao;
@@ -264,6 +268,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
         mRetryStrategyFactory = retryStrategyFactory;
         mConsentedDebugConfigurationGeneratorFactory = consentedDebugConfigurationGeneratorFactory;
+        mEgressConfigurationGenerator = egressConfigurationGenerator;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -319,6 +324,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 AdSelectionDebugReportingDatabase.getInstance(context)
                         .getAdSelectionDebugReportDao(),
                 new AdIdFetcher(
+                        context,
                         AdIdWorker.getInstance(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler()),
@@ -336,7 +342,22 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getFledgeAuctionServerConsentedDebuggingEnabled()),
-                        AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao()));
+                        AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao()),
+                EgressConfigurationGenerator.createInstance(
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        FlagsFactory.getFlags()
+                                                .getFledgeAuctionServerEnablePasUnlimitedEgress()),
+                        new AdIdFetcher(
+                                context,
+                                AdIdWorker.getInstance(),
+                                AdServicesExecutors.getLightWeightExecutor(),
+                                AdServicesExecutors.getScheduler()),
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        FlagsFactory.getFlags()
+                                                .getFledgeAuctionServerAdIdFetcherTimeoutMs()),
+                        AdServicesExecutors.getLightWeightExecutor()));
     }
 
     @Override
@@ -603,7 +624,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mCustomAudienceDao,
                                                 mEncodedPayloadDao,
                                                 mAdSelectionServiceFilter,
-                                                mAdFilteringFeatureFactory.getAdFilterer(),
+                                                mAdFilteringFeatureFactory
+                                                        .getFrequencyCapAdFilterer(),
                                                 mBackgroundExecutor,
                                                 mLightweightExecutor,
                                                 AdServicesExecutors.getBlockingExecutor(),
@@ -616,7 +638,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mAdServicesLogger,
                                                 getAuctionServerPayloadMetricsStrategy(mFlags),
                                                 mConsentedDebugConfigurationGeneratorFactory
-                                                        .create());
+                                                        .create(),
+                                                mEgressConfigurationGenerator,
+                                                mAdFilteringFeatureFactory
+                                                        .getAppInstallAdFilterer());
                                 runner.run(inputParams, callback);
                             }
 
@@ -634,7 +659,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mCustomAudienceDao,
                                                 mEncodedPayloadDao,
                                                 mAdSelectionServiceFilter,
-                                                mAdFilteringFeatureFactory.getAdFilterer(),
+                                                mAdFilteringFeatureFactory
+                                                        .getFrequencyCapAdFilterer(),
                                                 mBackgroundExecutor,
                                                 mLightweightExecutor,
                                                 AdServicesExecutors.getBlockingExecutor(),
@@ -648,7 +674,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mAdServicesLogger,
                                                 getAuctionServerPayloadMetricsStrategy(mFlags),
                                                 mConsentedDebugConfigurationGeneratorFactory
-                                                        .create());
+                                                        .create(),
+                                                mEgressConfigurationGenerator,
+                                                mAdFilteringFeatureFactory
+                                                        .getAppInstallAdFilterer());
                                 runner.run(inputParams, callback);
                             }
                         },
@@ -658,10 +687,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     private AuctionServerPayloadMetricsStrategy getAuctionServerPayloadMetricsStrategy(
             Flags flags) {
         if (flags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled()) {
+            if (flags.getFledgeAuctionServerKeyFetchMetricsEnabled()) {
+                return new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
+                        mAdServicesLogger);
+            }
             return new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLogger);
-        } else {
-            return new AuctionServerPayloadMetricsStrategyDisabled();
         }
+        return new AuctionServerPayloadMetricsStrategyDisabled();
     }
 
     private void runAdSelection(
@@ -749,7 +781,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         adSelectionExecutionLogger,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory.getAdFilterer(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdFilterer(),
                         mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
                         mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                 mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
@@ -758,7 +790,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         callingUid,
                         mShouldUseUnifiedTables,
                         mRetryStrategyFactory.createRetryStrategy(
-                                mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()));
+                                mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()),
+                        mKAnonSignJoinFactory,
+                        mAdFilteringFeatureFactory.getAppInstallAdFilterer());
         runner.runAdSelection(inputParams, partialCallback, devContext, fullCallback);
     }
 

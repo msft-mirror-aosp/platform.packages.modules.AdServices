@@ -21,6 +21,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
@@ -60,7 +61,7 @@ public final class BlockedTopicsSettingsUxSelectorUiAutomatorTest extends AdServ
                     .setFlag(KEY_CONSENT_SOURCE_OF_TRUTH, 2)
                     .setFlag(KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, 2)
                     .setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true)
-                    .setDisableTopicsEnrollmentCheckForTests(true)
+                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                     .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)
                     .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
                     .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)

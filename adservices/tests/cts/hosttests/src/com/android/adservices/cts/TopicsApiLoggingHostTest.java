@@ -16,6 +16,9 @@
 
 package com.android.adservices.cts;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertNotNull;
@@ -71,8 +74,7 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
             "com.android.ext.adservices.api";
     private static final String LOW_RAM_DEVICE_CONFIG = "ro.config.low_ram";
 
-    // Topics are not going to be implemented on Android R, so this test shouldn't run on R.
-    // If that decision changes, this will need to be enabled. TODO(b/269798827).
+    // Topics are not going to be implemented on Android R.
     @Rule(order = 0)
     public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAtLeastS();
 
@@ -86,8 +88,8 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
                     .setTopicsKillSwitch(false)
                     .setAdServicesEnabled(true)
                     .setMddBackgroundTaskKillSwitch(true)
-                    .setConsentManagerDebugMode(true)
-                    .setDisableTopicsEnrollmentCheckForTests(true);
+                    .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true);
 
     @Rule(order = 3)
     public TestMetrics mMetrics = new TestMetrics();

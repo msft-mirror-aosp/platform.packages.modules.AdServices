@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Hai deciso di non partecipare"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Grazie per la tua risposta. Privacy Sandbox è disattivato per il tuo dispositivo.\n\nSe cambi idea o vuoi saperne di più, vai alle impostazioni della privacy."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Impostazioni privacy"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"Ok"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Fai parte del programma beta"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"Privacy Sandbox è attivato per il tuo dispositivo e le app possono testare queste nuove modalità più private di mostrarti gli annunci. Puoi disattivare la versione beta in qualsiasi momento dalle impostazioni di privacy."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"OK"</string>

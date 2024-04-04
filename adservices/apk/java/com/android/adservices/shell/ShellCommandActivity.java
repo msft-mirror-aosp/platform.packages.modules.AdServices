@@ -28,6 +28,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.AdservicesShellCommandFactorySupplier;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -90,14 +91,15 @@ public final class ShellCommandActivity extends Activity {
             finishSelf();
             return;
         }
+        AdServicesShellCommandHandler handler =
+                new AdServicesShellCommandHandler(
+                        mPrintWriter,
+                        new AdservicesShellCommandFactorySupplier(),
+                        AdServicesLoggerImpl.getInstance());
         var unused =
                 mExecutorService.submit(
                         () -> {
-                            int res =
-                                    new AdServicesShellCommandHandler(
-                                                    mPrintWriter,
-                                                    new AdservicesShellCommandFactorySupplier())
-                                            .run(args);
+                            int res = handler.run(args);
                             Log.d(TAG, "Shell command completed with status: " + res);
                             mLatch.countDown();
                         });

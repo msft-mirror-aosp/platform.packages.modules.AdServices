@@ -18,7 +18,7 @@ package com.android.adservices.shared.spe.logging;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME;
+import static com.android.adservices.shared.spe.JobServiceConstants.EXECUTION_LOGGING_UNKNOWN_MODULE_NAME;
 import static com.android.adservices.shared.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
 import static com.android.adservices.shared.spe.JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_PERIOD;
@@ -26,7 +26,14 @@ import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.CANCELLED_BY_SCHEDULER;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITHOUT_RETRY;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITH_RETRY;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
 
+import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -313,6 +320,57 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    public void testRecordJobFinishedByExecutionResult_success() {
+        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+
+        // Mock the logger to not actually do logging.
+        doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
+        mLogger.recordJobFinished(JOB_ID_1, SUCCESS);
+
+        verify(mLogger)
+                .recordJobFinished(JOB_ID_1, /* isSuccessful */ true, /* shouldRetry */ false);
+    }
+
+    @Test
+    public void testRecordJobFinishedByExecutionResult_failureWithoutRetry() {
+        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+
+        // Mock the logger to not actually do logging.
+        doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
+        mLogger.recordJobFinished(JOB_ID_1, FAILURE_WITHOUT_RETRY);
+
+        verify(mLogger)
+                .recordJobFinished(JOB_ID_1, /* isSuccessful */ false, /* shouldRetry */ false);
+    }
+
+    @Test
+    public void testRecordJobFinishedByExecutionResult_failureWithRetry() {
+        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+
+        // Mock the logger to not actually do logging.
+        doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
+        mLogger.recordJobFinished(JOB_ID_1, FAILURE_WITH_RETRY);
+
+        verify(mLogger)
+                .recordJobFinished(JOB_ID_1, /* isSuccessful */ false, /* shouldRetry */ true);
+    }
+
+    @Test
+    public void testRecordJobFinishedByExecutionResult_invalidResult() {
+        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+
+        // Mock the logger to not actually do logging.
+        doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> mLogger.recordJobFinished(JOB_ID_1, CANCELLED_BY_SCHEDULER));
+    }
+
+    @Test
     public void testLogJobStatsHelper() {
         // Mock to avoid sampling logging
         doReturn(true).when(mLogger).shouldLog();
@@ -338,7 +396,7 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
                                         (int) (executionFrequencyInMs / MILLISECONDS_PER_MINUTE))
                                 .setExecutionResultCode(resultCode)
                                 .setStopReason(stopReason)
-                                .setModuleName(AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME)
+                                .setModuleName(EXECUTION_LOGGING_UNKNOWN_MODULE_NAME)
                                 .build());
     }
 
@@ -367,7 +425,7 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
                                 .setExecutionPeriodMinute(Integer.MAX_VALUE)
                                 .setExecutionResultCode(resultCode)
                                 .setStopReason(stopReason)
-                                .setModuleName(AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME)
+                                .setModuleName(EXECUTION_LOGGING_UNKNOWN_MODULE_NAME)
                                 .build());
     }
 
@@ -396,8 +454,7 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
                                 .setExecutionPeriodMinute((int) executionPeriodMs)
                                 .setExecutionResultCode(resultCode)
                                 .setStopReason(stopReason)
-                                .setModuleName(
-                                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME)
+                                .setModuleName(EXECUTION_LOGGING_UNKNOWN_MODULE_NAME)
                                 .build());
     }
 

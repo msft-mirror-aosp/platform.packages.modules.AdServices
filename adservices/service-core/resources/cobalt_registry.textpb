@@ -1968,7 +1968,7 @@ customers {
         reporting_interval: DAYS_1
         system_profile_field: APP_VERSION
         system_profile_selection: REPORT_ALL
-        max_release_stage: DEBUG
+        max_release_stage: DOGFOOD
         privacy_mechanism: DE_IDENTIFICATION
       }
       metric_dimensions {

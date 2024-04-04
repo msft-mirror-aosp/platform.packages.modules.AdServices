@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"మీరు పాల్గొనకూడదని ఎంచుకున్నారు"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"మీ ప్రతిస్పందనకు థ్యాంక్స్. మీ పరికరం కోసం గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్ ఆఫ్ చేయబడింది.\n\nమీరు మీ మనసు మార్చుకుంటే లేదా మరింత తెలుసుకోవాలనుకుంటే, మీ గోప్యతా సెట్టింగ్‌లకు వెళ్లండి."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"గోప్యతా సెట్టింగ్‌లు"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"అర్థమైంది"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"మీరు బీటా వెర్షన్‌లో భాగంగా ఉన్నారు"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"మీ పరికరం కోసం గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్ ఆన్‌లో ఉంది, మీకు యాడ్‌లను చూపడానికి యాప్‌లు ఈ మరిన్ని, కొత్త ప్రైవేట్ మార్గాలను పరీక్షించగలవు. మీరు మీ గోప్యతా సెట్టింగ్‌లలో ఎప్పుడైనా బీటాను ఆఫ్ చేయవచ్చు."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"అర్థమైంది"</string>

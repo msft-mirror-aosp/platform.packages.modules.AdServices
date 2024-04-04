@@ -16,8 +16,6 @@
 
 package android.adservices.cts;
 
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdDataFixture;
@@ -31,8 +29,6 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.common.annotations.SetFlagEnabled;
-
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -40,7 +36,6 @@ import java.util.HashSet;
 
 /** Unit tests for {@link AdFilters}. */
 @SmallTest
-@SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public class AdFiltersTest {
 
     private static final String DIFFERENT_PACKAGE_NAME =
@@ -258,6 +253,18 @@ public class AdFiltersTest {
                                 + getAppInstallString()
                                 + "}");
         assertThat(originalFilters.toString()).isEqualTo(expectedString);
+    }
+
+    @Test
+    public void testAdFiltersDescribeContents() {
+        final AdFilters adFilters =
+                new AdFilters.Builder()
+                        .setFrequencyCapFilters(
+                                FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
+                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                        .build();
+
+        assertThat(adFilters.describeContents()).isEqualTo(0);
     }
 
     private String getAppInstallString() {

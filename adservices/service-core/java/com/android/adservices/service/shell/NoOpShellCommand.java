@@ -17,6 +17,8 @@
 package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+import static com.android.adservices.service.stats.ShellCommandStats.Command;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_NOT_ENABLED;
 
 import android.util.Log;
 
@@ -28,24 +30,36 @@ import java.util.Objects;
 public final class NoOpShellCommand extends AbstractShellCommand {
     public static final String RESPONSE_MSG = "%s is disabled.";
     private final String mCommandName;
+    private final int mMetricsLoggerCommand;
 
-    public NoOpShellCommand(@NonNull final String commandName) {
+    public NoOpShellCommand(@NonNull final String commandName, @Command int metricsLoggerCommand) {
         Objects.requireNonNull(commandName, "commandName should be provided");
         mCommandName = commandName;
+        mMetricsLoggerCommand = metricsLoggerCommand;
     }
 
     @Override
-    public int run(PrintWriter out, PrintWriter err, String[] args) {
+    public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
         Log.d(
                 TAG,
                 String.format(
                         "CustomAudience CLI is disabled %s cannot be executed.", mCommandName));
-        out.print(String.format(RESPONSE_MSG, mCommandName));
-        return 0;
+        err.print(String.format(RESPONSE_MSG, mCommandName));
+        return toShellCommandResult(RESULT_NOT_ENABLED, mMetricsLoggerCommand);
     }
 
     @Override
     public String getCommandName() {
-        return null;
+        return mCommandName;
+    }
+
+    @Override
+    public int getMetricsLoggerCommand() {
+        return mMetricsLoggerCommand;
+    }
+
+    @Override
+    public String getCommandHelp() {
+        return "";
     }
 }

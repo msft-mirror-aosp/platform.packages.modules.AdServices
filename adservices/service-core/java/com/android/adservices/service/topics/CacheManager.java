@@ -41,6 +41,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
+import com.android.adservices.service.stats.TopicsEncryptionGetTopicsReportedStats;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -66,7 +68,6 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * <p>This class is thread safe.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 public class CacheManager {
@@ -103,6 +104,8 @@ public class CacheManager {
 
     private final AdServicesLogger mLogger;
 
+    private final Clock mClock;
+
     @VisibleForTesting
     CacheManager(
             TopicsDao topicsDao,
@@ -110,13 +113,15 @@ public class CacheManager {
             AdServicesLogger logger,
             BlockedTopicsManager blockedTopicsManager,
             GlobalBlockedTopicsManager globalBlockedTopicsManager,
-            TopicsCobaltLogger topicsCobaltLogger) {
+            TopicsCobaltLogger topicsCobaltLogger,
+            Clock clock) {
         mTopicsDao = topicsDao;
         mFlags = flags;
         mLogger = logger;
         mBlockedTopicsManager = blockedTopicsManager;
         mCachedGlobalBlockedTopicIds = globalBlockedTopicsManager.getGlobalBlockedTopicIds();
         mTopicsCobaltLogger = topicsCobaltLogger;
+        mClock = clock;
     }
 
     /** Returns an instance of the CacheManager given a context. */
@@ -147,7 +152,8 @@ public class CacheManager {
                                 AdServicesLoggerImpl.getInstance(),
                                 BlockedTopicsManager.getInstance(context),
                                 GlobalBlockedTopicsManager.getInstance(),
-                                topicsCobaltLogger);
+                                topicsCobaltLogger,
+                                Clock.getInstance());
             }
             return sSingleton;
         }
@@ -168,12 +174,31 @@ public class CacheManager {
                 mTopicsDao.retrieveReturnedTopics(currentEpochId, lookbackEpochs + 1);
         // Map<EpochId, Map<Pair<App, Sdk>, EncryptedTopic>
         Map<Long, Map<Pair<String, String>, EncryptedTopic>> cachedEncryptedTopicsFromDb = Map.of();
+        int latencyOfReadingEncryptedTopicsFromDbMs = 0;
+        int countOfEncryptedTopics = 0;
         if (mFlags.getTopicsEncryptionEnabled()) {
+            long retrieveReturnedEncryptedTopicsStartTimestamp = mClock.currentTimeMillis();
             cachedEncryptedTopicsFromDb =
                     mTopicsDao.retrieveReturnedEncryptedTopics(currentEpochId, lookbackEpochs + 1);
+            latencyOfReadingEncryptedTopicsFromDbMs =
+                    (int) (mClock.currentTimeMillis()
+                            - retrieveReturnedEncryptedTopicsStartTimestamp);
+            countOfEncryptedTopics =
+                    cachedEncryptedTopicsFromDb.entrySet().stream()
+                            .flatMap(entry -> entry.getValue().entrySet().stream())
+                            .collect(Collectors.toList())
+                            .size();
             sLogger.v(
                     "CacheManager.loadCache() loads cachedEncryptedTopics of size "
                             + cachedEncryptedTopicsFromDb.size());
+        }
+        if (mFlags.getTopicsEncryptionMetricsEnabled()) {
+            mLogger.logTopicsEncryptionGetTopicsReportedStats(
+                    TopicsEncryptionGetTopicsReportedStats.builder()
+                            .setCountOfEncryptedTopics(countOfEncryptedTopics)
+                            .setLatencyOfReadingEncryptedTopicsFromDbMs(
+                                    latencyOfReadingEncryptedTopicsFromDbMs)
+                            .build());
         }
         // HashSet<BlockedTopic>
         HashSet<Topic> blockedTopicsCacheFromDb =
