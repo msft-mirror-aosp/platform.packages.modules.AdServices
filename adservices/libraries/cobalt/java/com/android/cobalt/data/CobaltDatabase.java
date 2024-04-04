@@ -33,11 +33,11 @@ import com.android.internal.annotations.VisibleForTesting;
             SystemProfileEntity.class,
             StringHashEntity.class
         },
-        version = CobaltDatabase.VERSION,
+        version = CobaltDatabase.DATABASE_VERSION,
         autoMigrations = {@AutoMigration(from = 1, to = 2)})
 @TypeConverters({Converters.class})
 public abstract class CobaltDatabase extends RoomDatabase {
-    static final int VERSION = 2;
+    public static final int DATABASE_VERSION = 2;
 
     /** Get the DAO building blocks. */
     abstract DaoBuildingBlocks daoBuildingBlocks();

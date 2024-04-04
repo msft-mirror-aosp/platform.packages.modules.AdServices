@@ -197,4 +197,11 @@ public class SignedContextualAdsTest {
 
         CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
     }
+
+    @Test
+    public void testSignedContextualAdsDescribeContents() {
+        SignedContextualAds obj1 =
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder().build();
+        assertThat(obj1.describeContents()).isEqualTo(0);
+    }
 }

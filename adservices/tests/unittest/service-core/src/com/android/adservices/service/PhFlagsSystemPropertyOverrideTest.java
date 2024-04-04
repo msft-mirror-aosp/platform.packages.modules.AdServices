@@ -16,23 +16,57 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesFlag;
+import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
+import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
+import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
+import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_FLEX_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
-
-import android.os.SystemProperties;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.adservices.service.FlagsTest.getConstantValue;
+import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesSystemPropertiesDumperRule;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+import com.android.adservices.service.fixture.TestableSystemProperties;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import org.junit.Rule;
 import org.junit.Test;
 
-@SpyStatic(SystemProperties.class)
-public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
+public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
 
     private final Flags mPhFlags = PhFlags.getInstance();
+
+    private final PhFlagsTestHelper mFlagsTestHelper = new PhFlagsTestHelper(mPhFlags, expect);
+
+    private final FlagGuard mMsmtKillSwitchGuard =
+            value -> mFlagsTestHelper.setMsmmtKillSwitch(!value);
+
+    @Rule
+    public final AdServicesSystemPropertiesDumperRule sysPropDumper =
+            new AdServicesSystemPropertiesDumperRule();
 
     // Overriding DeviceConfig stub to avoid Read device config permission errors and to also
     // test the behavior of flags, when both device config and system properties are set.
@@ -40,37 +74,173 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
     protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
         return newDefaultAdServicesExtendedMockitoRuleBuilder()
                 .addStaticMockFixtures(TestableDeviceConfig::new)
+                .addStaticMockFixtures(TestableSystemProperties::new)
                 .build();
     }
 
     @Test
+    @SpyStatic(SdkLevel.class)
+    public void testGetGlobalKillSwitch_TPlus() {
+        extendedMockito.mockIsAtLeastT(true);
+
+        // This is the value hardcoded by a constant on Flags.java
+        boolean constantValue = getConstantValue("GLOBAL_KILL_SWITCH");
+        expect.withMessage("GlobalKillSwitch default value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(constantValue);
+
+        // Only set global kill switch system property.
+        mFlagsTestHelper.setSystemProperty(KEY_GLOBAL_KILL_SWITCH, !constantValue);
+        expect.withMessage("GlobalKillSwitch overridden value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(!constantValue);
+
+        // Now set the device config value as well, system property should still take precedence.
+        mockGetAdServicesFlag(KEY_GLOBAL_KILL_SWITCH, constantValue);
+        expect.withMessage("Overridden global_kill_switch system property value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(!constantValue);
+    }
+
+    @Test
+    @SpyStatic(SdkLevel.class)
+    public void testGetGlobalKillSwitch_TMinus() {
+        extendedMockito.mockIsAtLeastT(false);
+
+        // This is the value hardcoded by a constant on Flags.java
+        boolean constantValue = getConstantValue("GLOBAL_KILL_SWITCH");
+        expect.withMessage("GlobalKillSwitch default value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(constantValue);
+
+        // Set back-compat flag..
+        mFlagsTestHelper.setGlobalKillSwitch(!constantValue);
+        expect.withMessage("GlobalKillSwitch overridden value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(!constantValue);
+    }
+
+    @Test
     public void testGetTopicsEpochJobFlexMs() {
-        testSystemPropertyIsPreferred(
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
                 KEY_TOPICS_EPOCH_JOB_FLEX_MS,
                 TOPICS_EPOCH_JOB_FLEX_MS,
-                flags -> flags.getTopicsEpochJobFlexMs());
+                Flags::getTopicsEpochJobFlexMs);
     }
 
-    private void testSystemPropertyIsPreferred(
-            String name, long defaultValue, Flaginator<Long> flaginator) {
-        // Without any overriding, the value is the hard coded constant.
-        expect.withMessage("getter for %s by default", name)
-                .that(flaginator.getFlagValue(mPhFlags))
-                .isEqualTo(defaultValue);
-
-        // Now overriding with the value in both system properties and device config.
-        long systemPropertyValue = defaultValue + 1;
-        long deviceConfigValue = defaultValue + 2;
-        mockGetSystemProperty(name, systemPropertyValue);
-
-        setAdservicesFlag(name, deviceConfigValue);
-
-        expect.withMessage("getter for %s prefers system property value", name)
-                .that(flaginator.getFlagValue(mPhFlags))
-                .isEqualTo(systemPropertyValue);
+    @Test
+    public void testGetTopicsPercentageForRandomTopic() {
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                Flags::getTopicsPercentageForRandomTopic);
     }
 
-    private void mockGetSystemProperty(String name, long value) {
-        extendedMockito.mockGetSystemProperty(PhFlags.getSystemPropertyName(name), value);
+    @Test
+    public void testGetAdIdKillSwitch() {
+        mFlagsTestHelper.testUnguardedLegacyKillSwitch(
+                KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", Flags::getAdIdKillSwitch);
+    }
+
+    @Test
+    public void testGetLegacyMeasurementKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_KILL_SWITCH,
+                "MEASUREMENT_KILL_SWITCH",
+                Flags::getLegacyMeasurementKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementEnabled() {
+        mFlagsTestHelper.testFeatureFlagBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_KILL_SWITCH,
+                "MEASUREMENT_KILL_SWITCH",
+                Flags::getMeasurementEnabled);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionFallbackJobEnabled() {
+        mFlagsTestHelper.testFeatureFlagBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementAttributionFallbackJobEnabled);
+    }
+
+    @Test
+    public void testGetCobaltLoggingEnabled() {
+        mFlagsTestHelper.testFeatureFlagGuardedByGlobalKs(
+                KEY_COBALT_LOGGING_ENABLED,
+                "COBALT_LOGGING_ENABLED",
+                Flags::getCobaltLoggingEnabled);
+    }
+
+    @Test
+    public void testGetMddLoggerEnabled() {
+        mFlagsTestHelper.testFeatureFlagBackedByLegacyKillSwitch(
+                KEY_MDD_LOGGER_KILL_SWITCH, "MDD_LOGGER_KILL_SWITCH", Flags::getMddLoggerEnabled);
+    }
+
+    @Test
+    public void testConsentNotificationDebugMode() {
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+                KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
+                CONSENT_NOTIFICATION_DEBUG_MODE,
+                Flags::getConsentNotificationDebugMode);
+    }
+
+    @Test
+    public void testConsentNotificationActivityDebugMode() {
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+                KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                Flags::getConsentNotificationActivityDebugMode);
+    }
+
+    @Test
+    public void testConsentManagerOTADebugMode() {
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+                KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
+                DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE,
+                Flags::getConsentManagerOTADebugMode);
+    }
+
+    @Test
+    public void testConsentNotifiedDebugMode() {
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+                KEY_CONSENT_NOTIFIED_DEBUG_MODE,
+                CONSENT_NOTIFIED_DEBUG_MODE,
+                Flags::getConsentNotifiedDebugMode);
+    }
+
+    @Test
+    public void testConsentManagerDebugMode() {
+        mFlagsTestHelper.testGuardedFeatureFlag(
+                KEY_CONSENT_MANAGER_DEBUG_MODE,
+                "CONSENT_MANAGER_DEBUG_MODE",
+                /* guard= */ null,
+                Flags::getConsentManagerDebugMode);
+    }
+
+    @Test
+    public void testClassifierType() {
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+                KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE, Flags::getClassifierType);
+    }
+
+    @Test
+    public void testGetMaintenanceJobPeriodMs() {
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
+                KEY_MAINTENANCE_JOB_PERIOD_MS,
+                MAINTENANCE_JOB_PERIOD_MS,
+                Flags::getMaintenanceJobPeriodMs);
+    }
+
+    @Test
+    public void testGetMaintenanceJobFlexMs() {
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
+                KEY_MAINTENANCE_JOB_FLEX_MS,
+                MAINTENANCE_JOB_FLEX_MS,
+                Flags::getMaintenanceJobFlexMs);
     }
 }

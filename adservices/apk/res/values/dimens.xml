@@ -1,4 +1,32 @@
 <resources>
   <dimen name="disabled_button_alpha" format="float">0.3</dimen>
   <dimen name="enabled_button_alpha" format="float">1.0</dimen>
+
+  <!-- Content -->
+  <dimen name="adservices_content_padding">24dp</dimen>
+  <dimen name="adservices_content_half_padding">12dp</dimen>
+  <dimen name="adservices_content_one_thirds_padding">8dp</dimen>
+  <dimen name="adservices_content_one_twelfths_padding">2dp</dimen>
+  <dimen name="adservices_content_two_thirds_padding">16dp</dimen>
+  <dimen name="adservices_content_three_quarter_padding">18dp</dimen>
+  <dimen name="adservices_content_2x_padding">48dp</dimen>
+  <dimen name="adservices_content_3x_padding">72dp</dimen>
+  <dimen name="adservices_footer_content_padding">18dp</dimen>
+  <dimen name="adservices_footer_content_half_padding">10dp</dimen>
+  <dimen name="adservices_content_horizontal_padding">24dp</dimen>
+  <dimen name="adservices_content_horizontal_two_thirds_padding">16dp</dimen>
+  <dimen name="adservices_empty_list_margin_top">48dp</dimen>
+  <dimen name="adservices_empty_list_margin_bottom">16dp</dimen>
+  <dimen name="adservices_ppapi_title_spacing_height">18dp</dimen>
+
+  <!-- Widgets -->
+  <dimen name="measurement_switch_bar_spacing_height">18dp</dimen>
+  <dimen name="adservices_empty_state_btn_margin">20dp</dimen>
+  <dimen name="adservices_divider_height">1dp</dimen>
+
+  <!-- Icons -->
+  <dimen name="main_view_pic_margin">8dp</dimen>
+  <dimen name="adservices_drawable_padding">28dp</dimen>
+  <dimen name="adservices_ic_notification_padding">24dp</dimen>
+  <dimen name="adservices_ic_bullet_point_padding">12dp</dimen>
 </resources>

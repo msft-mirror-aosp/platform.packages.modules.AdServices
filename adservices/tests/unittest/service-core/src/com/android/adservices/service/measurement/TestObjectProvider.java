@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
-
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -90,6 +88,7 @@ class TestObjectProvider {
         return spy(
                 new MeasurementImpl(
                         null,
+                        FlagsFactory.getFlagsForTest(),
                         datastoreManager,
                         clickVerifier,
                         measurementDataDeleter,
@@ -119,8 +118,7 @@ class TestObjectProvider {
                         return Collections.singletonList(
                                 new Source.FakeReport(
                                         new UnsignedLong(0L),
-                                        source.getExpiryTime()
-                                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                                        source.getExpiryTime(),
                                         source.getAppDestinations()));
                     };
             doAnswer(answerSourceEventReports)

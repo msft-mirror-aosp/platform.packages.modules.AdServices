@@ -46,6 +46,7 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -115,7 +116,7 @@ public abstract class FledgeScenarioTest {
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
                     .setPpapiAppAllowList(sContext.getPackageName())
-                    .setAdIdKillSwitchForTests(false);
+                    .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
 
     @Rule(order = 6)
     public MockWebServerRule mMockWebServerRule =
@@ -157,7 +158,7 @@ public abstract class FledgeScenarioTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public final void tearDown() throws IOException {
         if (mMockWebServer != null) {
             mMockWebServer.shutdown();
         }
@@ -236,6 +237,21 @@ public abstract class FledgeScenarioTest {
                 String.format(
                         "device_config put adservices fledge_cpc_billing_enabled %s",
                         enabled ? "true" : "false"));
+    }
+
+    protected void overrideRegisterAdBeaconEnabled(boolean enabled) {
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices fledge_register_ad_beacon_enabled %s",
+                        enabled ? "true" : "false"));
+    }
+
+    protected void overrideShouldUseUnifiedTable(boolean shouldUse) {
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices"
+                                + " fledge_on_device_auction_should_use_unified_tables %s",
+                        shouldUse ? "true" : "false"));
     }
 
     protected void setDebugReportingEnabledForTesting(boolean enabled) {

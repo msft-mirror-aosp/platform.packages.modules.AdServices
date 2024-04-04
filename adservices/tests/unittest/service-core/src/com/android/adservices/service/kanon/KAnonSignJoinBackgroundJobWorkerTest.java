@@ -41,7 +41,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -84,6 +83,7 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
         mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
         mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
+                        mContext,
                         mockKanonCaller,
                         mKAnonMessageManager,
                         mFlags,
@@ -120,7 +120,9 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
                 });
         countDownLatch.await();
 
-        verify(mockKanonCaller).signAndJoinMessages(messageEntityList);
+        verify(mockKanonCaller)
+                .signAndJoinMessages(
+                        messageEntityList, KAnonCaller.KAnonCallerSource.BACKGROUND_JOB);
     }
 
     @Test
@@ -162,6 +164,11 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
         @Override
         public int getFledgeKAnonMessagesPerBackgroundProcess() {
             return mMessagesPerBackgroundRun;
+        }
+
+        @Override
+        public boolean getFledgeKAnonBackgroundProcessEnabled() {
+            return true;
         }
     }
 }

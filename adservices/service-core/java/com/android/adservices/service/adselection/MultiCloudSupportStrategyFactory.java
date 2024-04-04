@@ -30,6 +30,7 @@ import com.android.adservices.service.adselection.encryption.ProtectedServersEnc
 import com.android.adservices.service.common.CoordinatorOriginUriValidator;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 /** Factory for {@link MultiCloudSupportStrategy} */
 public class MultiCloudSupportStrategyFactory {
@@ -56,7 +57,8 @@ public class MultiCloudSupportStrategyFactory {
                             .protectedServersEncryptionConfigDao(),
                     flags,
                     adServicesHttpsClient,
-                    AdServicesExecutors.getLightWeightExecutor());
+                    AdServicesExecutors.getLightWeightExecutor(),
+                    AdServicesLoggerImpl.getInstance());
         }
 
         @Override
@@ -81,7 +83,8 @@ public class MultiCloudSupportStrategyFactory {
                             .protectedServersEncryptionConfigDao(),
                     flags,
                     adServicesHttpsClient,
-                    AdServicesExecutors.getLightWeightExecutor());
+                    AdServicesExecutors.getLightWeightExecutor(),
+                    AdServicesLoggerImpl.getInstance());
         }
     }
 
@@ -111,7 +114,8 @@ public class MultiCloudSupportStrategyFactory {
                     AdSelectionServerDatabase.getInstance(context).encryptionKeyDao(),
                     flags,
                     adServicesHttpsClient,
-                    AdServicesExecutors.getLightWeightExecutor());
+                    AdServicesExecutors.getLightWeightExecutor(),
+                    AdServicesLoggerImpl.getInstance());
         }
 
         private ProtectedServersEncryptionConfigManagerBase
@@ -125,7 +129,8 @@ public class MultiCloudSupportStrategyFactory {
                     AdSelectionServerDatabase.getInstance(context).encryptionKeyDao(),
                     flags,
                     adServicesHttpsClient,
-                    AdServicesExecutors.getLightWeightExecutor());
+                    AdServicesExecutors.getLightWeightExecutor(),
+                    AdServicesLoggerImpl.getInstance());
         }
     }
 

@@ -52,6 +52,7 @@ import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
+import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -170,7 +171,8 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
 
-        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
+
+        PhFlagsFixture.overrideFledgeAdSelectionContextualAdsEnabled(false);
 
         // Enable CTS to be run with versions of WebView < M105
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
@@ -206,8 +208,8 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
 
         leaveJoinedCustomAudiences();
 
-        // Reset the filtering flag
-        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
+
+        PhFlagsFixture.overrideFledgeAdSelectionContextualAdsEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
@@ -385,6 +387,17 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
                         prefix + SELLER_REPORTING_PATH + "?dataVersion=" + DATA_VERSION_2,
                         prefix + BUYER_REPORTING_PATH + "?dataVersion=" + DATA_VERSION_1),
                 mRequestMatcherPrefixMatch);
+    }
+
+    @Test
+    public void testFledgeAuctionSelectionFlowSuccessWithDataVersionHeader_unifiedTable()
+            throws Exception {
+        overrideShouldUseUnifiedTable(true);
+        try {
+            testFledgeAuctionSelectionFlowSuccessWithDataVersionHeader();
+        } finally {
+            overrideShouldUseUnifiedTable(false);
+        }
     }
 
     @Test
@@ -817,5 +830,13 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
                                 AdTechIdentifier.fromString(mLocalhostBuyerDomain.getHost()),
                                 AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
                 .build();
+    }
+
+    void overrideShouldUseUnifiedTable(boolean shouldUse) {
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices"
+                                + " fledge_on_device_auction_should_use_unified_tables %s",
+                        shouldUse ? "true" : "false"));
     }
 }
