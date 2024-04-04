@@ -17,10 +17,14 @@
 package com.android.adservices.shared.spe.framework;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_ON_STOP_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULER_IS_UNAVAILABLE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SKIP_REASON_JOB_NOT_CONFIGURED;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.CANCELLED_BY_SCHEDULER;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITHOUT_RETRY;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITH_RETRY;
 import static com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters.convertJobParameters;
 import static com.android.internal.annotations.VisibleForTesting.Visibility.PROTECTED;
 
@@ -32,15 +36,16 @@ import android.app.job.JobService;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
+import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
 import com.android.adservices.shared.spe.scheduling.PolicyJobScheduler;
 import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
@@ -70,8 +75,8 @@ public abstract class AbstractJobService extends JobService {
     // be destroyed if onStartJob() hasn't finished. And in onStopJob(), the live listenable future
     // will be cancelled. Therefore, the lifetime of the futures stored in this map should be no
     // longer than the lifetime of this Service class.
-    protected final ConcurrentHashMap<Integer, ListenableFuture<Void>> mRunningFuturesMap =
-            new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<Integer, ListenableFuture<ExecutionResult>>
+            mRunningFuturesMap = new ConcurrentHashMap<>();
 
     private JobServiceFactory mJobServiceFactory;
     private JobServiceLogger mJobServiceLogger;
@@ -111,7 +116,7 @@ public abstract class AbstractJobService extends JobService {
         }
 
         LogUtil.v("Begin job execution for %s", jobName);
-        ListenableFuture<Void> executionFuture = mRunningFuturesMap.get(jobId);
+        ListenableFuture<ExecutionResult> executionFuture = mRunningFuturesMap.get(jobId);
         // Cancel the unfinished future for the same job. This should rarely happen due to
         // JobScheduler doesn't call onStartJob() again before the end of previous call on the same
         // job (with the same job ID). Nevertheless, do the defensive programming here.
@@ -122,16 +127,14 @@ public abstract class AbstractJobService extends JobService {
         mRunningFuturesMap.put(jobId, executionFuture);
 
         // Add Logging callback.
-        FluentFuture.from(executionFuture)
-                .addCallback(
-                        getExecutionFutureLoggingCallback(jobId, jobName, params, worker),
-                        mExecutor);
+        // TODO(b/331285831): Standardize the usage of unused future.
+        ListenableFuture<Void> unusedFuture =
+                onJobPostExecution(
+                        executionFuture, jobId, jobName, params, worker.getBackoffPolicy());
 
         return true;
     }
 
-    // TODO(b/324330177): Logs dup events if onStartJob -> onStopJob (future is cancelled) ->
-    // onFailure callback. Though this is handled in server side, it can be enhanced.
     @Override
     public boolean onStopJob(JobParameters params) {
         int jobId = params.getJobId();
@@ -147,13 +150,12 @@ public abstract class AbstractJobService extends JobService {
         }
 
         // Cancel the running execution future.
-        ListenableFuture<Void> executionFuture = mRunningFuturesMap.get(jobId);
+        ListenableFuture<ExecutionResult> executionFuture = mRunningFuturesMap.get(jobId);
         if (executionFuture != null) {
             executionFuture.cancel(/* mayInterruptIfRunning= */ true);
         }
 
         // Execute customized logic if the execution is stopped by the JobScheduler.
-        // TODO(b/323029903): Add a specific CEL error code.
         // TODO(b/326150705): Add a callback for this future and maybe log the result.
         @SuppressWarnings("unused")
         ListenableFuture<Void> executionStopFuture =
@@ -168,7 +170,7 @@ public abstract class AbstractJobService extends JobService {
                                             jobName);
                                     mErrorLogger.logErrorWithExceptionInfo(
                                             e,
-                                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE,
+                                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_ON_STOP_EXECUTION_FAILURE,
                                             AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
                                     return null;
                                 },
@@ -229,35 +231,49 @@ public abstract class AbstractJobService extends JobService {
         return worker;
     }
 
-    protected FutureCallback<Void> getExecutionFutureLoggingCallback(
-            int jobId, String jobName, JobParameters params, JobWorker worker) {
-        return new FutureCallback<>() {
-            @Override
-            public void onSuccess(Void result) {
-                LogUtil.v("Job execution is finished for %s", jobName);
+    // Logs the execution stats and decides whether to retry the job.
+    @VisibleForTesting
+    ListenableFuture<Void> onJobPostExecution(
+            ListenableFuture<ExecutionResult> executionFuture,
+            int jobId,
+            String jobName,
+            JobParameters params,
+            BackoffPolicy backoffPolicy) {
+        return FluentFuture.from(executionFuture)
+                // Handle execution failures. Fall back to RETRY or FAILURE based on BackoffPolicy.
+                .catching(
+                        Exception.class,
+                        e -> {
+                            if (e instanceof CancellationException) {
+                                return CANCELLED_BY_SCHEDULER;
+                            }
 
-                // Tell the JobScheduler that the job has completed and does not need to be
-                // rescheduled.
-                boolean shouldRetry = false;
-                mJobServiceLogger.recordJobFinished(jobId, /* isSuccessful= */ true, shouldRetry);
+                            mErrorLogger.logErrorWithExceptionInfo(
+                                    e,
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE,
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
 
-                jobFinished(params, shouldRetry);
-            }
+                            return backoffPolicy.shouldRetryOnExecutionFailure()
+                                    ? FAILURE_WITH_RETRY
+                                    : FAILURE_WITHOUT_RETRY;
+                        },
+                        mExecutor)
+                .transform(
+                        executionResult -> {
+                            LogUtil.v(
+                                    "Job execution is finished for %s, result is %s",
+                                    jobName, executionResult);
 
-            @Override
-            public void onFailure(Throwable t) {
-                LogUtil.e("Job execution encounters error for %s: %s", jobName, t.toString());
-                mErrorLogger.logErrorWithExceptionInfo(
-                        t,
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+                            // onStopJob() handles both logging and whether to retry. Skip them
+                            // here.
+                            if (!executionResult.equals(CANCELLED_BY_SCHEDULER)) {
+                                mJobServiceLogger.recordJobFinished(jobId, executionResult);
+                            }
 
-                boolean shouldRetry = worker.getBackoffPolicy().shouldRetryOnExecutionFailure();
-                mJobServiceLogger.recordJobFinished(jobId, /* isSuccessful= */ false, shouldRetry);
-
-                jobFinished(params, shouldRetry);
-            }
-        };
+                            jobFinished(params, executionResult.equals(FAILURE_WITH_RETRY));
+                            return null;
+                        },
+                        mExecutor);
     }
 
     @VisibleForTesting

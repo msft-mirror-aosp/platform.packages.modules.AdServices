@@ -64,11 +64,6 @@ public class FlagsFactory {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return true;
-        }
-
-        @Override
         public boolean getFledgeFetchCustomAudienceEnabled() {
             return true;
         }

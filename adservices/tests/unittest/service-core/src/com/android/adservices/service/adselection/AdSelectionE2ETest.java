@@ -697,7 +697,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
@@ -8290,11 +8290,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             // Unlimited rate for unit tests to avoid flake in tests due to rate
             // limiting
             return -1;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return false;
         }
 
         @Override

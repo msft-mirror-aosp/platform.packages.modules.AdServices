@@ -278,7 +278,7 @@ public class ReportAndRegisterEventE2ETest {
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
 
@@ -310,6 +310,7 @@ public class ReportAndRegisterEventE2ETest {
                 spy(
                         new MeasurementImpl(
                                 CONTEXT,
+                                FlagsFactory.getFlagsForTest(),
                                 mDatastoreManagerSpy,
                                 mClickVerifierMock,
                                 mMeasurementDataDeleterMock,

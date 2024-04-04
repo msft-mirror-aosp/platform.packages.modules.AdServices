@@ -120,7 +120,7 @@ public class AdServicesExtendedMockitoRule
      * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
      *     equivalent annotations) on {@link FlagsFactory}.
      */
-    public final void mockGetFlagsForTesting(Flags mockedFlags) {
+    public final void mockGetFlagsForTesting() {
         mockGetFlags(FlagsFactory.getFlagsForTest());
     }
 

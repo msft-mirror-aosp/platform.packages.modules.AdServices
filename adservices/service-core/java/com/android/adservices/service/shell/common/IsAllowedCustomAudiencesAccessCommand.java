@@ -71,4 +71,9 @@ public final class IsAllowedCustomAudiencesAccessCommand extends AbstractShellCo
     public int getMetricsLoggerCommand() {
         return COMMAND_IS_ALLOWED_CUSTOM_AUDIENCE_ACCESS;
     }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+    }
 }
