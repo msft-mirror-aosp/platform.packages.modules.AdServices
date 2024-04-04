@@ -40,6 +40,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JOB_RUN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JS_EXECUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JS_FETCH;
 import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_API_CALLED;
@@ -79,6 +80,7 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.GuardedBy;
@@ -855,6 +857,15 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getCoordinatorSource(),
                 stats.getNetworkStatusCode(),
                 stats.getNetworkLatencyMillis());
+    }
+
+    @Override
+    public void logEncodingJobRunStats(EncodingJobRunStats stats) {
+        AdServicesStatsLog.write(
+                ENCODING_JOB_RUN,
+                stats.getSignalEncodingSuccesses(),
+                stats.getSignalEncodingFailures(),
+                stats.getSignalEncodingSkips());
     }
 
     @NonNull
