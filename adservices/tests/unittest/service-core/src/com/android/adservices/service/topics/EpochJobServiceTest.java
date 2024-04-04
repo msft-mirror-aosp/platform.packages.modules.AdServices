@@ -63,6 +63,7 @@ import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -89,7 +90,7 @@ public class EpochJobServiceTest {
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
-    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
 
     @Spy private EpochJobService mSpyEpochJobService;
 

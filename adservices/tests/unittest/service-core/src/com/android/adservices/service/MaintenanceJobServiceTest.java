@@ -96,7 +96,7 @@ public class MaintenanceJobServiceTest {
     private static final long CURRENT_EPOCH_ID = 1L;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
-    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
 
     @Spy private MaintenanceJobService mSpyMaintenanceJobService;
     private MockitoSession mStaticMockSession;

@@ -41,8 +41,8 @@ public final class SettingsRvcUxSelectorUiAutomatorTest extends AdServicesUiTest
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setSystemProperty(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
-                    .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_RVC_UX_ENABLED, true)
                     .setFlag(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)

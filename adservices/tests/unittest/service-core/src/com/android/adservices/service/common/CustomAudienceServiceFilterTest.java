@@ -42,8 +42,8 @@ import android.os.Process;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -59,7 +59,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
 
-    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
     private static final Flags FLAGS_WITH_ENROLLMENT_CHECK =
             new Flags() {
                 @Override

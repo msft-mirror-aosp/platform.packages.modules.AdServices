@@ -58,8 +58,8 @@ import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdCounterKeyCopierNoOpImpl;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.adselection.DebugReportingScriptDisabledStrategy;
@@ -210,7 +210,7 @@ public class SignalsEncodingE2ETest {
 
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(mBackgroundExecutorService, 2000, 2000, 10000);
-        mFlags = FlagsFactory.getFlagsForTest();
+        mFlags = FakeFlagsFactory.getFlagsForTest();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,

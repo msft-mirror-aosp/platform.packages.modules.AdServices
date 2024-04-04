@@ -25,6 +25,7 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
@@ -242,4 +243,7 @@ public interface AdServicesLogger {
 
     /** Logs stats for ServerAuctionKeyFetchCalled */
     void logServerAuctionKeyFetchCalledStats(ServerAuctionKeyFetchCalledStats stats);
+
+    /** Logs stats for EncodingJobRunStats */
+    void logEncodingJobRunStats(EncodingJobRunStats stats);
 }

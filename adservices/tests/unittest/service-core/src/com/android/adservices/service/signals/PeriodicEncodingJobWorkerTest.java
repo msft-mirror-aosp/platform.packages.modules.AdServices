@@ -19,6 +19,8 @@ package com.android.adservices.service.signals;
 import static com.android.adservices.service.signals.PeriodicEncodingJobWorker.PAYLOAD_PERSISTENCE_ERROR_MSG;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -51,6 +53,9 @@ import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
+import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerNoLoggingImpl;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -130,6 +135,7 @@ public class PeriodicEncodingJobWorkerTest {
     @Mock private Clock mClock;
     @Mock private AdServicesLogger mAdServicesLogger;
     @Mock private EncodingExecutionLogHelper mEncodingExecutionLoggerMock;
+    @Mock private EncodingJobRunStatsLogger mEncodingJobRunStatsLoggerMock;
 
     @Captor private ArgumentCaptor<DBEncodedPayload> mEncodedPayloadCaptor;
 
@@ -139,6 +145,7 @@ public class PeriodicEncodingJobWorkerTest {
             AdServicesExecutors.getLightWeightExecutor();
 
     private PeriodicEncodingJobWorker mJobWorker;
+    private ArgumentCaptor<EncodingJobRunStats> mEncodingJobRunStatsArgumentCaptor;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
@@ -150,6 +157,7 @@ public class PeriodicEncodingJobWorkerTest {
         when(mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes()).thenReturn(MAX_SIZE_BYTES);
         when(mFlags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop())
                 .thenReturn(maxFailedRun);
+        when(mFlags.getPasExtendedMetricsEnabled()).thenReturn(true);
         mJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
@@ -231,7 +239,10 @@ public class PeriodicEncodingJobWorkerTest {
         // Run encoding for the buyer
         mJobWorker
                 .runEncodingPerBuyer(
-                        DB_ENCODER_LOGIC_BUYER_1, TIMEOUT_SECONDS, mEncodingExecutionLoggerMock)
+                        DB_ENCODER_LOGIC_BUYER_1,
+                        TIMEOUT_SECONDS,
+                        mEncodingExecutionLoggerMock,
+                        new EncodingJobRunStatsLoggerNoLoggingImpl())
                 .get(5, TimeUnit.SECONDS);
 
         verify(mScriptEngine)
@@ -267,7 +278,8 @@ public class PeriodicEncodingJobWorkerTest {
                                         .runEncodingPerBuyer(
                                                 DB_ENCODER_LOGIC_BUYER_1,
                                                 TIMEOUT_SECONDS,
-                                                mEncodingExecutionLoggerMock)
+                                                mEncodingExecutionLoggerMock,
+                                                new EncodingJobRunStatsLoggerNoLoggingImpl())
                                         .get(5, TimeUnit.SECONDS));
         assertEquals(IllegalStateException.class, e.getCause().getClass());
         assertEquals(PAYLOAD_PERSISTENCE_ERROR_MSG, e.getCause().getMessage());
@@ -296,7 +308,8 @@ public class PeriodicEncodingJobWorkerTest {
                                     .runEncodingPerBuyer(
                                             DB_ENCODER_LOGIC_BUYER_1,
                                             TIMEOUT_SECONDS,
-                                            mEncodingExecutionLoggerMock)
+                                            mEncodingExecutionLoggerMock,
+                                            new EncodingJobRunStatsLoggerNoLoggingImpl())
                                     .get(5, TimeUnit.SECONDS);
                         });
         assertEquals(IllegalStateException.class, e.getCause().getClass());
@@ -311,7 +324,10 @@ public class PeriodicEncodingJobWorkerTest {
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(ImmutableMap.of());
         mJobWorker
                 .runEncodingPerBuyer(
-                        DB_ENCODER_LOGIC_BUYER_1, TIMEOUT_SECONDS, mEncodingExecutionLoggerMock)
+                        DB_ENCODER_LOGIC_BUYER_1,
+                        TIMEOUT_SECONDS,
+                        mEncodingExecutionLoggerMock,
+                        new EncodingJobRunStatsLoggerNoLoggingImpl())
                 .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         verify(mEncoderLogicHandler).deleteEncoderForBuyer(BUYER);
         verifyNoMoreInteractions(mEncoderLogicHandler);
@@ -354,7 +370,8 @@ public class PeriodicEncodingJobWorkerTest {
                                     .runEncodingPerBuyer(
                                             DB_ENCODER_LOGIC_BUYER_1,
                                             shortTimeoutSecond,
-                                            mEncodingExecutionLoggerMock)
+                                            mEncodingExecutionLoggerMock,
+                                            new EncodingJobRunStatsLoggerNoLoggingImpl())
                                     .get(shortTimeoutSecond + 1, TimeUnit.SECONDS);
                         });
 
@@ -373,6 +390,7 @@ public class PeriodicEncodingJobWorkerTest {
     @Test
     public void testEncodeProtectedSignalsGracefullyHandleFailures()
             throws ExecutionException, InterruptedException, TimeoutException {
+        setupEncodingJobRunStatsLogging();
 
         // Buyer 1 encoding would succeed
         String encoderLogic1 = "function buyer1_EncodeJs() {\" correct result \"}";
@@ -409,6 +427,11 @@ public class PeriodicEncodingJobWorkerTest {
         assertEquals(
                 getSetFromBytes(validResponse),
                 getSetFromBytes(mEncodedPayloadCaptor.getValue().getEncodedPayload()));
+
+        verifyEncodingJobRunStatsLogging(
+                /* countOfSignalEncodingSuccesses */ 1,
+                /* countOfSignalEncodingFailures */ 1,
+                /* countOfSignalEncodingSkips */ 0);
     }
 
     @Test
@@ -426,7 +449,11 @@ public class PeriodicEncodingJobWorkerTest {
                         .build();
 
         mJobWorker
-                .runEncodingPerBuyer(metadata, 5, mEncodingExecutionLoggerMock)
+                .runEncodingPerBuyer(
+                        metadata,
+                        5,
+                        mEncodingExecutionLoggerMock,
+                        new EncodingJobRunStatsLoggerNoLoggingImpl())
                 .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         verify(mSignalStorageManager).getSignals(BUYER);
@@ -454,7 +481,11 @@ public class PeriodicEncodingJobWorkerTest {
                 .thenReturn(successResponse);
 
         mJobWorker
-                .runEncodingPerBuyer(metadata, 5, mEncodingExecutionLoggerMock)
+                .runEncodingPerBuyer(
+                        metadata,
+                        5,
+                        mEncodingExecutionLoggerMock,
+                        new EncodingJobRunStatsLoggerNoLoggingImpl())
                 .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         verify(mEncoderLogicHandler).updateEncoderFailedCount(BUYER, 0);
@@ -484,7 +515,8 @@ public class PeriodicEncodingJobWorkerTest {
                                 .setFailedEncodingCount(1)
                                 .build(),
                         TIMEOUT_SECONDS,
-                        mEncodingExecutionLoggerMock)
+                        mEncodingExecutionLoggerMock,
+                        mEncodingJobRunStatsLoggerMock)
                 .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         verify(mSignalStorageManager).getSignals(BUYER);
@@ -492,6 +524,8 @@ public class PeriodicEncodingJobWorkerTest {
         verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
         verifyNoMoreInteractions(mSignalStorageManager, mProtectedSignalsDao, mEncodedPayloadDao);
         verifyZeroInteractions(mEncoderLogicHandler, mScriptEngine);
+
+        verify(mEncodingJobRunStatsLoggerMock).addOneSignalEncodingSkips();
     }
 
     @Test
@@ -504,6 +538,7 @@ public class PeriodicEncodingJobWorkerTest {
     @Test
     public void testEncodeProtectedSignalsAlsoUpdatesEncoders()
             throws ExecutionException, InterruptedException, TimeoutException {
+        setupEncodingJobRunStatsLogging();
 
         when(mEncoderLogicMetadataDao.getBuyersWithEncodersBeforeTime(any()))
                 .thenReturn(List.of(BUYER, BUYER_2));
@@ -513,11 +548,17 @@ public class PeriodicEncodingJobWorkerTest {
         Void unused = mJobWorker.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
         verify(mEncoderLogicHandler).downloadAndUpdate(eq(BUYER), any());
         verify(mEncoderLogicHandler).downloadAndUpdate(eq(BUYER_2), any());
+
+        verifyEncodingJobRunStatsLogging(
+                /* countOfSignalEncodingSuccesses */ 0,
+                /* countOfSignalEncodingFailures */ 0,
+                /* countOfSignalEncodingSkips */ 0);
     }
 
     @Test
     public void testEncodeProtectedSignalsAlsoUpdatesEncodersIsNotAffectedByEncodingFailures()
             throws ExecutionException, InterruptedException, TimeoutException {
+        setupEncodingJobRunStatsLogging();
 
         when(mEncoderLogicMetadataDao.getAllBuyersWithRegisteredEncoders())
                 .thenReturn(List.of(BUYER, BUYER_2));
@@ -549,6 +590,11 @@ public class PeriodicEncodingJobWorkerTest {
         Void unused = mJobWorker.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
         verify(mEncoderLogicHandler).downloadAndUpdate(eq(BUYER), any());
         verify(mEncoderLogicHandler).downloadAndUpdate(eq(BUYER_2), any());
+
+        verifyEncodingJobRunStatsLogging(
+                /* countOfSignalEncodingSuccesses */ 0,
+                /* countOfSignalEncodingFailures */ 0,
+                /* countOfSignalEncodingSkips */ 0);
     }
 
     private String getBase64String(String str) {
@@ -566,5 +612,22 @@ public class PeriodicEncodingJobWorkerTest {
             byteSet.add(b);
         }
         return byteSet;
+    }
+
+    private void setupEncodingJobRunStatsLogging() {
+        mEncodingJobRunStatsArgumentCaptor = ArgumentCaptor.forClass(EncodingJobRunStats.class);
+    }
+
+    private void verifyEncodingJobRunStatsLogging(
+            int countOfSignalEncodingSuccesses,
+            int countOfSignalEncodingFailures,
+            int countOfSignalEncodingSkips) {
+        verify(mAdServicesLogger)
+                .logEncodingJobRunStats(mEncodingJobRunStatsArgumentCaptor.capture());
+
+        EncodingJobRunStats stats = mEncodingJobRunStatsArgumentCaptor.getValue();
+        assertThat(stats.getSignalEncodingSuccesses()).isEqualTo(countOfSignalEncodingSuccesses);
+        assertThat(stats.getSignalEncodingFailures()).isEqualTo(countOfSignalEncodingFailures);
+        assertThat(stats.getSignalEncodingSkips()).isEqualTo(countOfSignalEncodingSkips);
     }
 }

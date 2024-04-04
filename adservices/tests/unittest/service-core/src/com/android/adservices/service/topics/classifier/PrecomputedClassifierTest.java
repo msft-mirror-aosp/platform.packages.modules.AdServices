@@ -27,6 +27,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
@@ -89,7 +90,7 @@ public class PrecomputedClassifierTest {
                         .strictness(Strictness.WARN)
                         .startMocking();
 
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(null).when(() -> ModelManager.getDownloadedFiles());
 
         mModelManager =

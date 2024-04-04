@@ -71,13 +71,13 @@ public final class IsAllowedCustomAudiencesAccessCommandTest
     }
 
     @Test
-    public void test_getCommandName() {
+    public void testGetCommandName_valid() {
         expect.that(new IsAllowedCustomAudiencesAccessCommand().getCommandName())
                 .isEqualTo(CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
     }
 
     @Test
-    public void test_getCommandHelp() {
+    public void testGetCommandHelp_valid() {
         expect.that(new IsAllowedCustomAudiencesAccessCommand().getCommandHelp())
                 .isEqualTo(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
     }

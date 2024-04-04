@@ -25,7 +25,6 @@ import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW
 
 import static com.google.common.truth.Truth.assertThat;
 
-
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
 import androidx.test.uiautomator.By;
@@ -50,8 +49,8 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest extends AdSe
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
+                    .setSystemProperty(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
-                    .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_U18_UX_ENABLED, true)
                     .setFlag(KEY_DEBUG_UX, "U18_UX");

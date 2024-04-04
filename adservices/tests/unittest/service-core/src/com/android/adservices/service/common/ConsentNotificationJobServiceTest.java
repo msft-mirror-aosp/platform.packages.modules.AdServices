@@ -55,6 +55,7 @@ import android.os.PersistableBundle;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -283,14 +284,16 @@ public class ConsentNotificationJobServiceTest {
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/UTC"));
         calendar.setTimeInMillis(0);
 
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         long initialDelay = ConsentNotificationJobService.calculateInitialDelay(calendar);
         long deadline = ConsentNotificationJobService.calculateDeadline(calendar);
 
         assertThat(initialDelay)
-                .isEqualTo(FlagsFactory.getFlagsForTest().getConsentNotificationIntervalBeginMs());
+                .isEqualTo(
+                        FakeFlagsFactory.getFlagsForTest().getConsentNotificationIntervalBeginMs());
         assertThat(deadline)
-                .isEqualTo(FlagsFactory.getFlagsForTest().getConsentNotificationIntervalEndMs());
+                .isEqualTo(
+                        FakeFlagsFactory.getFlagsForTest().getConsentNotificationIntervalEndMs());
     }
 
     /**
@@ -302,10 +305,10 @@ public class ConsentNotificationJobServiceTest {
         long expectedDelay = /* 100 seconds */ 100000;
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/UTC"));
         calendar.setTimeInMillis(
-                FlagsFactory.getFlagsForTest().getConsentNotificationIntervalBeginMs()
+                FakeFlagsFactory.getFlagsForTest().getConsentNotificationIntervalBeginMs()
                         + expectedDelay);
 
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
         long initialDelay = ConsentNotificationJobService.calculateInitialDelay(calendar);
         long deadline = ConsentNotificationJobService.calculateDeadline(calendar);
@@ -313,8 +316,8 @@ public class ConsentNotificationJobServiceTest {
         assertThat(initialDelay).isEqualTo(0L);
         assertThat(deadline)
                 .isEqualTo(
-                        FlagsFactory.getFlagsForTest().getConsentNotificationIntervalEndMs()
-                                - (FlagsFactory.getFlagsForTest()
+                        FakeFlagsFactory.getFlagsForTest().getConsentNotificationIntervalEndMs()
+                                - (FakeFlagsFactory.getFlagsForTest()
                                                 .getConsentNotificationIntervalBeginMs()
                                         + expectedDelay));
     }
@@ -328,27 +331,27 @@ public class ConsentNotificationJobServiceTest {
         long delay = /* 100 seconds */ 100000;
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/UTC"));
         calendar.setTimeInMillis(
-                FlagsFactory.getFlagsForTest().getConsentNotificationIntervalEndMs() + delay);
+                FakeFlagsFactory.getFlagsForTest().getConsentNotificationIntervalEndMs() + delay);
 
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
         long initialDelay = ConsentNotificationJobService.calculateInitialDelay(calendar);
         long deadline = ConsentNotificationJobService.calculateDeadline(calendar);
 
         long midnight =
                 MILLISECONDS_IN_THE_DAY
-                        - (FlagsFactory.getFlagsForTest().getConsentNotificationIntervalEndMs()
+                        - (FakeFlagsFactory.getFlagsForTest().getConsentNotificationIntervalEndMs()
                                 + delay);
 
         assertThat(initialDelay)
                 .isEqualTo(
                         midnight
-                                + FlagsFactory.getFlagsForTest()
+                                + FakeFlagsFactory.getFlagsForTest()
                                         .getConsentNotificationIntervalBeginMs());
         assertThat(deadline)
                 .isEqualTo(
                         midnight
-                                + FlagsFactory.getFlagsForTest()
+                                + FakeFlagsFactory.getFlagsForTest()
                                         .getConsentNotificationIntervalEndMs());
     }
 
@@ -367,7 +370,7 @@ public class ConsentNotificationJobServiceTest {
     @Test
     public void testSchedule_jobInfoIsPersisted() {
         final ArgumentCaptor<JobInfo> argumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         when(mContext.getSystemService(JobScheduler.class)).thenReturn(mMockJobScheduler);
         when(mContext.getPackageName()).thenReturn("testSchedule_jobInfoIsPersisted");
         when(mContext.getSharedPreferences(anyString(), anyInt())).thenReturn(mSharedPreferences);

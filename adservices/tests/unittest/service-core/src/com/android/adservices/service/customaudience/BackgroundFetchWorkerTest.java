@@ -60,8 +60,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
@@ -171,7 +171,7 @@ public class BackgroundFetchWorkerTest {
                 () ->
                         new BackgroundFetchWorker(
                                 null,
-                                FlagsFactory.getFlagsForTest(),
+                                FakeFlagsFactory.getFlagsForTest(),
                                 mBackgroundFetchRunnerSpy,
                                 mClockMock,
                                 mCustomAudienceLoggerFactoryMock));
@@ -191,7 +191,7 @@ public class BackgroundFetchWorkerTest {
                 () ->
                         new BackgroundFetchWorker(
                                 mCustomAudienceDaoSpy,
-                                FlagsFactory.getFlagsForTest(),
+                                FakeFlagsFactory.getFlagsForTest(),
                                 null,
                                 mClockMock,
                                 mCustomAudienceLoggerFactoryMock));
@@ -201,7 +201,7 @@ public class BackgroundFetchWorkerTest {
                 () ->
                         new BackgroundFetchWorker(
                                 mCustomAudienceDaoSpy,
-                                FlagsFactory.getFlagsForTest(),
+                                FakeFlagsFactory.getFlagsForTest(),
                                 mBackgroundFetchRunnerSpy,
                                 null,
                                 mCustomAudienceLoggerFactoryMock));
@@ -210,7 +210,7 @@ public class BackgroundFetchWorkerTest {
                 () ->
                         new BackgroundFetchWorker(
                                 mCustomAudienceDaoSpy,
-                                FlagsFactory.getFlagsForTest(),
+                                FakeFlagsFactory.getFlagsForTest(),
                                 mBackgroundFetchRunnerSpy,
                                 mClockMock,
                                 null));
