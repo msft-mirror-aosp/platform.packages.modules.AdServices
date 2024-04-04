@@ -17,7 +17,6 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus.SUCCESS;
-import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -37,6 +36,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.shared.SharedDbHelper;
@@ -48,6 +48,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -116,6 +117,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1986/9e98784bcdb26a3eb2ab3f65ee811f43177c761f";
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2998/b35ed340576e8a72385af87b95f1f526abdb7f5f";
+    private static final String PRODUCTION_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/3210/0c19c2a06422c21070192580a136d433ba3ae7f8";
 
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
@@ -124,6 +127,9 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1760/1460e6aea598fe7a153100d6e2749f45313ef905";
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
+
+    private static final String UI_OTA_RESOURCES_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/3150/672c83fa4aad630a360dc3b7ce43d94ab75852cd";
 
     private static final int PRODUCTION_ENROLLMENT_ENTRIES = 64;
     private static final int PTB_ENROLLMENT_ENTRIES = 1;
@@ -134,6 +140,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private static final int OEM_FILEGROUP_VERSION = 0;
 
     public static final String TEST_TOPIC_FILE_GROUP_NAME = "topics-classifier-model";
+    public static final String ENCRYPTION_KEYS_FILE_GROUP_NAME = "encryption-keys";
     public static final String ENROLLMENT_FILE_GROUP_NAME = "adtech_enrollment_data";
     public static final String UI_OTA_STRINGS_FILE_GROUP_NAME = "ui-ota-strings";
     private SynchronousFileStorage mFileStorage;
@@ -144,6 +151,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
     @Mock UxStatesManager mUxStatesManager;
+    @Mock Clock mMockClock;
 
     @Before
     public void setUp() throws Exception {
@@ -157,9 +165,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         mockMddFlags();
 
-        mFileStorage = MobileDataDownloadFactory.getFileStorage(mContext);
-        mFileDownloader =
-                MobileDataDownloadFactory.getFileDownloader(mContext, mMockFlags, mFileStorage);
+        mFileStorage = MobileDataDownloadFactory.getFileStorage();
+        mFileDownloader = MobileDataDownloadFactory.getFileDownloader(mMockFlags, mFileStorage);
 
         mDbHelper = DbTestUtil.getSharedDbHelperForTest();
 
@@ -248,11 +255,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             throws ExecutionException, InterruptedException, TimeoutException {
         // Set the bundled build_id to 1 so the server side build_id will be bigger. This will
         // trigger MDD download.
-        doReturn(1L)
-                .when(
-                        () ->
-                                CommonClassifierHelper.getBundledModelBuildId(
-                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
+        doReturn(1L).when(() -> CommonClassifierHelper.getBundledModelBuildId(any(), any()));
 
         createMddForTopics(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
 
@@ -271,6 +274,44 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         assertThat(clientFileGroup.getFileCount()).isEqualTo(6);
         assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
         assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 1986);
+    }
+
+    /**
+     * This method tests MDD production encryption keys data, verifies files downloaded successfully
+     * and data saved into DB correctly.
+     */
+    @Test
+    public void testEncryptionKeysDataDownload_production_featureEnabled() throws Exception {
+        doReturn(true).when(mMockFlags).getEnableMddEncryptionKeys();
+        // All keys have greater expiration time than this timestamp. (Sep 2, 1996)
+        when(mMockClock.currentTimeMillis()).thenReturn(841622400000L);
+        createMddForEncryptionKeys(PRODUCTION_ENCRYPTION_KEYS_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(ENCRYPTION_KEYS_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNotNull();
+        verifyEncryptionKeysFileGroup(clientFileGroup, /* NumberOfKeysOnTestUrl */ 3);
+    }
+
+    /** Test disabling the feature flag does not create the manifest for download. */
+    @Test
+    public void testEncryptionKeysDataDownload_production_featureDisabled() throws Exception {
+        doReturn(false).when(mMockFlags).getEnableMddEncryptionKeys();
+        createMddForEncryptionKeys(PRODUCTION_ENCRYPTION_KEYS_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(ENCRYPTION_KEYS_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
     }
 
     /**
@@ -406,11 +447,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testMddTopicsOnConsentGiven_gaUxEnabled()
             throws ExecutionException, InterruptedException, TimeoutException {
-        doReturn(1L)
-                .when(
-                        () ->
-                                CommonClassifierHelper.getBundledModelBuildId(
-                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
+        doReturn(1L).when(() -> CommonClassifierHelper.getBundledModelBuildId(any(), any()));
 
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
@@ -439,7 +476,13 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
                 .thenReturn(AdServicesApiConsent.GIVEN);
 
-        createMddForUiOTAString(UI_OTA_STRINGS_MANIFEST_FILE_URL);
+        doReturn(UI_OTA_STRINGS_MANIFEST_FILE_URL)
+                .when(mMockFlags)
+                .getUiOtaStringsManifestFileUrl();
+        doReturn(UI_OTA_RESOURCES_MANIFEST_FILE_URL)
+                .when(mMockFlags)
+                .getUiOtaResourcesManifestFileUrl();
+        createMddForUiOTA();
 
         ClientFileGroup clientFileGroup =
                 mMdd.getFileGroup(
@@ -519,7 +562,11 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testUiOtaStringsManifestFileGroupPopulator()
             throws ExecutionException, InterruptedException, TimeoutException {
-        createMddForUiOTAString(UI_OTA_STRINGS_MANIFEST_FILE_URL);
+        doReturn(false).when(mMockFlags).getUiOtaResourcesFeatureEnabled();
+        doReturn(UI_OTA_STRINGS_MANIFEST_FILE_URL)
+                .when(mMockFlags)
+                .getUiOtaStringsManifestFileUrl();
+        createMddForUiOTA();
 
         ClientFileGroup clientFileGroup =
                 mMdd.getFileGroup(
@@ -534,6 +581,34 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         assertThat(clientFileGroup.getFileCount()).isEqualTo(1);
         assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
         assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 1360);
+    }
+
+    /**
+     * This method tests UI OTA resources manifest files. It downloads test UI apk file and verifies
+     * files downloaded successfully.
+     */
+    @Test
+    public void testUiOtaResourcesManifestFileGroupPopulator()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true).when(mMockFlags).getUiOtaResourcesFeatureEnabled();
+        doReturn(UI_OTA_RESOURCES_MANIFEST_FILE_URL)
+                .when(mMockFlags)
+                .getUiOtaResourcesManifestFileUrl();
+        createMddForUiOTA();
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(UI_OTA_STRINGS_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        // Verify UI file group.
+        assertThat(clientFileGroup.getGroupName()).isEqualTo(UI_OTA_STRINGS_FILE_GROUP_NAME);
+        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        assertThat(clientFileGroup.getFileCount()).isEqualTo(1);
+        assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
+        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 3150);
     }
 
     // A helper function to create a DataFilegroup.
@@ -589,9 +664,9 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             @NonNull Flags flags,
             @NonNull ImmutableList<FileGroupPopulator> fileGroupPopulators) {
         context = context.getApplicationContext();
-        SynchronousFileStorage fileStorage = MobileDataDownloadFactory.getFileStorage(context);
+        SynchronousFileStorage fileStorage = MobileDataDownloadFactory.getFileStorage();
         FileDownloader fileDownloader =
-                MobileDataDownloadFactory.getFileDownloader(context, flags, fileStorage);
+                MobileDataDownloadFactory.getFileDownloader(flags, fileStorage);
         NetworkUsageMonitor networkUsageMonitor =
                 new NetworkUsageMonitor(
                         context,
@@ -622,6 +697,30 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                 .build();
     }
 
+    // Returns MobileDataDownload using passed in encryption keys manifest url.
+    @NonNull
+    private void createMddForEncryptionKeys(String encryptionManifestFileUrl)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(encryptionManifestFileUrl).when(mMockFlags).getMddEncryptionKeysManifestFileUrl();
+
+        FileGroupPopulator fileGroupPopulator =
+                MobileDataDownloadFactory.getEncryptionKeysManifestPopulator(
+                        mContext, mMockFlags, mFileStorage, mFileDownloader);
+
+        mMdd =
+                getMddForTesting(
+                        mContext,
+                        mMockFlags,
+                        // List of FileGroupPopulator that contains Measurement FileGroupPopulator
+                        // only.
+                        ImmutableList.of(fileGroupPopulator));
+
+        // Calling handleTask directly to trigger the MDD's background download on wifi. This should
+        // be done in tests only.
+        mMdd.handleTask(TaskScheduler.WIFI_CHARGING_PERIODIC_TASK)
+                .get(MAX_HANDLE_TASK_WAIT_TIME_SECS, SECONDS);
+    }
+
     // Returns MobileDataDownload using passed in enrollment manifest url.
     @NonNull
     private void createMddForEnrollment(String enrollmentManifestFileUrl)
@@ -630,7 +729,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         FileGroupPopulator fileGroupPopulator =
                 MobileDataDownloadFactory.getMeasurementManifestPopulator(
-                        mContext, mMockFlags, mFileStorage, mFileDownloader);
+                        mMockFlags, mFileStorage, mFileDownloader);
 
         mMdd =
                 getMddForTesting(
@@ -654,7 +753,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         FileGroupPopulator fileGroupPopulator =
                 MobileDataDownloadFactory.getTopicsManifestPopulator(
-                        mContext, mMockFlags, mFileStorage, mFileDownloader);
+                        mMockFlags, mFileStorage, mFileDownloader);
 
         mMdd =
                 getMddForTesting(
@@ -669,15 +768,13 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                 .get(MAX_HANDLE_TASK_WAIT_TIME_SECS, SECONDS);
     }
 
-    // Returns MobileDataDownload using passed in UI OTA String manifest url.
+    // Returns MobileDataDownload using passed in UI OTA manifest url.
     @NonNull
-    private void createMddForUiOTAString(String uiOtaStringManifestFileUrl)
+    private void createMddForUiOTA()
             throws ExecutionException, InterruptedException, TimeoutException {
-        doReturn(uiOtaStringManifestFileUrl).when(mMockFlags).getUiOtaStringsManifestFileUrl();
-
         FileGroupPopulator fileGroupPopulator =
-                MobileDataDownloadFactory.getUiOtaStringsManifestPopulator(
-                        mContext, mMockFlags, mFileStorage, mFileDownloader);
+                MobileDataDownloadFactory.getUiOtaResourcesManifestPopulator(
+                        mMockFlags, mFileStorage, mFileDownloader);
 
         mMdd =
                 getMddForTesting(
@@ -693,11 +790,39 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                 .get(MAX_HANDLE_TASK_WAIT_TIME_SECS, SECONDS);
     }
 
+    private long getNumEntriesInEncryptionKeysTable() {
+        return DatabaseUtils.queryNumEntries(
+                mDbHelper.getReadableDatabase(),
+                EncryptionKeyTables.EncryptionKeyContract.TABLE,
+                null);
+    }
+
     private long getNumEntriesInEnrollmentTable() {
         return DatabaseUtils.queryNumEntries(
                 mDbHelper.getReadableDatabase(),
                 EnrollmentTables.EnrollmentDataContract.TABLE,
                 null);
+    }
+
+    private void verifyEncryptionKeysFileGroup(
+            ClientFileGroup clientFileGroup, int numberOfExpectedKeys)
+            throws InterruptedException, ExecutionException {
+        expect.that(clientFileGroup.getGroupName()).isEqualTo(ENCRYPTION_KEYS_FILE_GROUP_NAME);
+        expect.that(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        expect.that(clientFileGroup.getFileCount()).isEqualTo(1);
+        expect.that(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
+
+        doReturn(mMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
+
+        EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);
+        EncryptionDataDownloadManager encryptionDataDownloadManager =
+                new EncryptionDataDownloadManager(mMockFlags, encryptionKeyDao, mMockClock);
+
+        // Verify encryption keys data file read from MDD and insert the data into the encryption
+        // keys database.
+        expect.that(encryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
+                .isEqualTo(EncryptionDataDownloadManager.DownloadStatus.SUCCESS);
+        expect.that(getNumEntriesInEncryptionKeysTable()).isEqualTo(numberOfExpectedKeys);
     }
 
     private void verifyMeasurementFileGroup(
@@ -709,8 +834,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
         assertThat(clientFileGroup.getVersionNumber()).isEqualTo(fileGroupVersion);
 
-        doReturn(mMdd)
-                .when(() -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
+        doReturn(mMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
 
         EnrollmentDataDownloadManager enrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(mContext, mMockFlags);

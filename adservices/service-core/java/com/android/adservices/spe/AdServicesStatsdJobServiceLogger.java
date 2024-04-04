@@ -18,16 +18,23 @@ package com.android.adservices.spe;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__MODULE_NAME_ADSERVICES;
+import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED;
 
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.shared.spe.logging.ExecutionReportedStats;
+import com.android.adservices.shared.spe.logging.SchedulingReportedStats;
 import com.android.adservices.shared.spe.logging.StatsdJobServiceLogger;
+import com.android.internal.annotations.VisibleForTesting;
 
 /** The AdServices' implementation of {@link StatsdAdServicesLogger}. */
 public final class AdServicesStatsdJobServiceLogger implements StatsdJobServiceLogger {
+    // Shorten the length of a single line.
+    @VisibleForTesting
+    static final int MODULE_NAME_AD_SERVICES =
+            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__MODULE_NAME_ADSERVICES;
 
-    /** Logging method for AdServices background job execution stats. */
+    @Override
     public void logExecutionReportedStats(ExecutionReportedStats stats) {
         AdServicesStatsLog.write(
                 AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED,
@@ -36,6 +43,16 @@ public final class AdServicesStatsdJobServiceLogger implements StatsdJobServiceL
                 stats.getExecutionPeriodMinute(),
                 stats.getExecutionResultCode(),
                 stats.getStopReason(),
-                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__MODULE_NAME_ADSERVICES);
+                MODULE_NAME_AD_SERVICES);
+    }
+
+    @Override
+    public void logSchedulingReportedStats(SchedulingReportedStats stats) {
+        AdServicesStatsLog.write(
+                BACKGROUND_JOB_SCHEDULING_REPORTED,
+                stats.getJobId(),
+                stats.getResultCode(),
+                stats.getSchedulerType(),
+                MODULE_NAME_AD_SERVICES);
     }
 }

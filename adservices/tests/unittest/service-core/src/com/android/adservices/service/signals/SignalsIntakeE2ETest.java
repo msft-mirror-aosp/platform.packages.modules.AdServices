@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.signals;
 
-
+import static com.android.adservices.service.signals.SignalsFixture.ADTECH;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_VALUE_1;
 import static com.android.adservices.service.signals.SignalsFixture.KEY_1;
@@ -64,6 +64,7 @@ import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -77,6 +78,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
@@ -149,6 +151,8 @@ public class SignalsIntakeE2ETest {
     private EncoderPersistenceDao mEncoderPersistenceDao;
     private ExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
+    private Flags mFlags;
+    private EnrollmentDao mEnrollmentDao;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
@@ -167,10 +171,21 @@ public class SignalsIntakeE2ETest {
                 Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncoderLogicMetadataDao();
+        mEnrollmentDao =
+                new EnrollmentDao(
+                        mContextSpy,
+                        DbTestUtil.getSharedDbHelperForTest(),
+                        FlagsFactory.getFlagsForTest());
+        mEnrollmentDao.insert(
+                new EnrollmentData.Builder()
+                        .setEnrollmentId("123")
+                        .setRemarketingResponseBasedRegistrationUrl(ADTECH.toString())
+                        .build());
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
         mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mContextSpy);
+        mFlags = FlagsFactory.getFlagsForTest();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
@@ -178,7 +193,9 @@ public class SignalsIntakeE2ETest {
                         mEncoderLogicMetadataDao,
                         mSignalsDao,
                         mAdServicesHttpsClientMock,
-                        mBackgroundExecutorService);
+                        mBackgroundExecutorService,
+                        mAdServicesLoggerMock,
+                        mFlags);
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
         int oversubscriptionBytesLimit =
@@ -201,10 +218,7 @@ public class SignalsIntakeE2ETest {
                 ExtendedMockito.spy(
                         new FledgeAuthorizationFilter(
                                 mContextSpy.getPackageManager(),
-                                new EnrollmentDao(
-                                        mContextSpy,
-                                        DbTestUtil.getSharedDbHelperForTest(),
-                                        FlagsFactory.getFlagsForTest()),
+                                mEnrollmentDao,
                                 mAdServicesLoggerMock));
         mProtectedSignalsServiceFilter =
                 new ProtectedSignalsServiceFilter(
@@ -254,7 +268,8 @@ public class SignalsIntakeE2ETest {
                         AdServicesLoggerImpl.getInstance(),
                         FlagsFactory.getFlagsForTest(),
                         CallingAppUidSupplierProcessImpl.create(),
-                        mProtectedSignalsServiceFilter);
+                        mProtectedSignalsServiceFilter,
+                        mEnrollmentDao);
     }
 
     @Test

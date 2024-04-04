@@ -82,6 +82,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -90,6 +91,7 @@ import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -102,6 +104,7 @@ import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -127,7 +130,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @VisibleForTesting
@@ -172,6 +174,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
                     + " the app is not debuggable.";
+    @NonNull private final RetryStrategyFactory mRetryStrategyFactory;
+
+    @NonNull
+    private final ConsentedDebugConfigurationGeneratorFactory
+            mConsentedDebugConfigurationGeneratorFactory;
+
+    @NonNull final EgressConfigurationGenerator mEgressConfigurationGenerator;
 
     @VisibleForTesting
     public AdSelectionServiceImpl(
@@ -199,7 +208,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
             @NonNull AdIdFetcher adIdFetcher,
             @NonNull KAnonSignJoinFactory kAnonSignJoinFactory,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            @NonNull RetryStrategyFactory retryStrategyFactory,
+            @NonNull
+                    ConsentedDebugConfigurationGeneratorFactory
+                            consentedDebugConfigurationGeneratorFactory,
+            @NonNull EgressConfigurationGenerator egressConfigurationGenerator) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
@@ -221,6 +235,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(adSelectionDebugReportDao);
         Objects.requireNonNull(adIdFetcher);
         Objects.requireNonNull(kAnonSignJoinFactory);
+        Objects.requireNonNull(retryStrategyFactory);
+        Objects.requireNonNull(consentedDebugConfigurationGeneratorFactory);
+        Objects.requireNonNull(egressConfigurationGenerator);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAppInstallDao = appInstallDao;
@@ -249,6 +266,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mAdIdFetcher = adIdFetcher;
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
+        mRetryStrategyFactory = retryStrategyFactory;
+        mConsentedDebugConfigurationGeneratorFactory = consentedDebugConfigurationGeneratorFactory;
+        mEgressConfigurationGenerator = egressConfigurationGenerator;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -304,6 +324,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 AdSelectionDebugReportingDatabase.getInstance(context)
                         .getAdSelectionDebugReportDao(),
                 new AdIdFetcher(
+                        context,
                         AdIdWorker.getInstance(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler()),
@@ -311,7 +332,32 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 BinderFlagReader.readFlag(
                         () ->
                                 FlagsFactory.getFlags()
-                                        .getFledgeOnDeviceAuctionShouldUseUnifiedTables()));
+                                        .getFledgeOnDeviceAuctionShouldUseUnifiedTables()),
+                RetryStrategyFactory.createInstance(
+                        BinderFlagReader.readFlag(
+                                () -> FlagsFactory.getFlags().getAdServicesRetryStrategyEnabled()),
+                        AdServicesExecutors.getLightWeightExecutor()),
+                new ConsentedDebugConfigurationGeneratorFactory(
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        FlagsFactory.getFlags()
+                                                .getFledgeAuctionServerConsentedDebuggingEnabled()),
+                        AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao()),
+                EgressConfigurationGenerator.createInstance(
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        FlagsFactory.getFlags()
+                                                .getFledgeAuctionServerEnablePasUnlimitedEgress()),
+                        new AdIdFetcher(
+                                context,
+                                AdIdWorker.getInstance(),
+                                AdServicesExecutors.getLightWeightExecutor(),
+                                AdServicesExecutors.getScheduler()),
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        FlagsFactory.getFlags()
+                                                .getFledgeAuctionServerAdIdFetcherTimeoutMs()),
+                        AdServicesExecutors.getLightWeightExecutor()));
     }
 
     @Override
@@ -578,7 +624,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mCustomAudienceDao,
                                                 mEncodedPayloadDao,
                                                 mAdSelectionServiceFilter,
-                                                mAdFilteringFeatureFactory.getAdFilterer(),
+                                                mAdFilteringFeatureFactory
+                                                        .getFrequencyCapAdFilterer(),
                                                 mBackgroundExecutor,
                                                 mLightweightExecutor,
                                                 AdServicesExecutors.getBlockingExecutor(),
@@ -589,7 +636,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 auctionServerDebugReporting,
                                                 adsRelevanceExecutionLogger,
                                                 mAdServicesLogger,
-                                                getAuctionServerPayloadMetricsStrategy(mFlags));
+                                                getAuctionServerPayloadMetricsStrategy(mFlags),
+                                                mConsentedDebugConfigurationGeneratorFactory
+                                                        .create(),
+                                                mEgressConfigurationGenerator,
+                                                mAdFilteringFeatureFactory
+                                                        .getAppInstallAdFilterer());
                                 runner.run(inputParams, callback);
                             }
 
@@ -607,7 +659,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mCustomAudienceDao,
                                                 mEncodedPayloadDao,
                                                 mAdSelectionServiceFilter,
-                                                mAdFilteringFeatureFactory.getAdFilterer(),
+                                                mAdFilteringFeatureFactory
+                                                        .getFrequencyCapAdFilterer(),
                                                 mBackgroundExecutor,
                                                 mLightweightExecutor,
                                                 AdServicesExecutors.getBlockingExecutor(),
@@ -619,7 +672,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                         .createForDebugReportingDisabled(),
                                                 adsRelevanceExecutionLogger,
                                                 mAdServicesLogger,
-                                                getAuctionServerPayloadMetricsStrategy(mFlags));
+                                                getAuctionServerPayloadMetricsStrategy(mFlags),
+                                                mConsentedDebugConfigurationGeneratorFactory
+                                                        .create(),
+                                                mEgressConfigurationGenerator,
+                                                mAdFilteringFeatureFactory
+                                                        .getAppInstallAdFilterer());
                                 runner.run(inputParams, callback);
                             }
                         },
@@ -629,10 +687,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     private AuctionServerPayloadMetricsStrategy getAuctionServerPayloadMetricsStrategy(
             Flags flags) {
         if (flags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled()) {
+            if (flags.getFledgeAuctionServerKeyFetchMetricsEnabled()) {
+                return new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
+                        mAdServicesLogger);
+            }
             return new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLogger);
-        } else {
-            return new AuctionServerPayloadMetricsStrategyDisabled();
         }
+        return new AuctionServerPayloadMetricsStrategyDisabled();
     }
 
     private void runAdSelection(
@@ -704,43 +765,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             boolean auctionServerEnabledForUpdateHistogram,
             @NonNull DebugReporting debugReporting) {
 
-        // TODO(b/249298855): Evolve off device ad selection logic.
-        if (mFlags.getAdSelectionOffDeviceEnabled()) {
-            runOffDeviceAdSelection(
-                    devContext,
-                    inputParams,
-                    partialCallback,
-                    adSelectionExecutionLogger,
-                    mAdSelectionServiceFilter,
-                    callingUid,
-                    auctionServerEnabledForUpdateHistogram,
-                    debugReporting,
-                    fullCallback);
-        } else {
-            runOnDeviceAdSelection(
-                    devContext,
-                    inputParams,
-                    partialCallback,
-                    adSelectionExecutionLogger,
-                    mAdSelectionServiceFilter,
-                    callingUid,
-                    auctionServerEnabledForUpdateHistogram,
-                    debugReporting,
-                    fullCallback);
-        }
-    }
-
-    private void runOnDeviceAdSelection(
-            DevContext devContext,
-            @NonNull AdSelectionInput inputParams,
-            @NonNull AdSelectionCallback callback,
-            @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
-            final int callerUid,
-            final boolean auctionServerEnabledForUpdateHistogram,
-            @NonNull DebugReporting debugReporting,
-            @Nullable AdSelectionCallback fullCallback) {
-
         OnDeviceAdSelectionRunner runner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -756,52 +780,20 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mFlags,
                         adSelectionExecutionLogger,
-                        adSelectionServiceFilter,
-                        mAdFilteringFeatureFactory.getAdFilterer(),
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory.getFrequencyCapAdFilterer(),
                         mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
                         mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                 mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         debugReporting,
-                        callerUid,
-                        mShouldUseUnifiedTables);
-        runner.runAdSelection(inputParams, callback, devContext, fullCallback);
-    }
-
-    private void runOffDeviceAdSelection(
-            DevContext devContext,
-            @NonNull AdSelectionInput inputParams,
-            @NonNull AdSelectionCallback callback,
-            @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
-            int callerUid,
-            boolean auctionServerEnabledForUpdateHistogram,
-            @NonNull DebugReporting debugReporting,
-            @Nullable AdSelectionCallback fullCallback) {
-        TrustedServerAdSelectionRunner runner =
-                new TrustedServerAdSelectionRunner(
-                        mContext,
-                        mCustomAudienceDao,
-                        mAdSelectionEntryDao,
-                        mEncryptionKeyDao,
-                        mEnrollmentDao,
-                        mAdServicesHttpsClient,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mScheduledExecutor,
-                        mAdServicesLogger,
-                        devContext,
-                        mFlags,
-                        adSelectionExecutionLogger,
-                        adSelectionServiceFilter,
-                        mAdFilteringFeatureFactory.getAdFilterer(),
-                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                        mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
-                                mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
-                        mAdRenderIdValidator,
-                        debugReporting,
-                        callerUid);
-        runner.runAdSelection(inputParams, callback, devContext, fullCallback);
+                        callingUid,
+                        mShouldUseUnifiedTables,
+                        mRetryStrategyFactory.createRetryStrategy(
+                                mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()),
+                        mKAnonSignJoinFactory,
+                        mAdFilteringFeatureFactory.getAppInstallAdFilterer());
+        runner.runAdSelection(inputParams, partialCallback, devContext, fullCallback);
     }
 
     /**
@@ -859,7 +851,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mAdSelectionServiceFilter,
                                     mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
                                     callingUid,
-                                    mShouldUseUnifiedTables);
+                                    mShouldUseUnifiedTables,
+                                    mRetryStrategyFactory.createRetryStrategy(
+                                            mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()));
                     runner.runOutcomeSelection(inputParams, callback);
                 });
     }
@@ -907,7 +901,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             mAdSelectionServiceFilter,
                             mFledgeAuthorizationFilter,
                             mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                            callingUid);
+                            callingUid,
+                            mRetryStrategyFactory.createRetryStrategy(
+                                    BinderFlagReader.readFlag(
+                                            mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)),
+                            mShouldUseUnifiedTables);
             reporter.reportImpression(requestParams, callback);
         } else {
             ImpressionReporterLegacy reporter =
@@ -926,7 +924,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             mFledgeAuthorizationFilter,
                             mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                             callingUid,
-                            mShouldUseUnifiedTables);
+                            mShouldUseUnifiedTables,
+                            mRetryStrategyFactory.createRetryStrategy(
+                                    BinderFlagReader.readFlag(
+                                            mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)));
             reporter.reportImpression(requestParams, callback);
         }
     }

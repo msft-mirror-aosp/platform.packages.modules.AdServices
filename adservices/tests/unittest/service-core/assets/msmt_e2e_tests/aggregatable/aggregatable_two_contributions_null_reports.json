@@ -2,7 +2,11 @@
   "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate a real aggregate report with two contributions and 30 null aggregate reports",
   "phflags_override": {
     "measurement_null_aggregate_report_enabled": true,
-    "measurement_null_agg_report_rate_incl_source_registration_time": "1.0"
+    "measurement_null_agg_report_rate_incl_source_registration_time": "1.0",
+    // Though set to 1, the path for null agg reports excluding source registration time should
+    // never be reached. This will detect bugs if agg reports excluding source registration time are
+    // created.
+    "measurement_null_agg_report_rate_excl_source_registration_time": "1.0"
   },
   "input": {
     "sources": [{
@@ -99,11 +103,11 @@
   },
   "output": {
     "event_level_results": [{
-      "report_time": "800176400001",
+      "report_time": "800172800001",
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
         "attribution_destination": "android-app://example.2d1.test",
-        "scheduled_report_time": "800176400",
+        "scheduled_report_time": "800172800",
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",

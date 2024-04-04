@@ -93,6 +93,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.kanon.KAnonMessageEntity;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.kanon.KAnonSignJoinManager;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
@@ -116,6 +117,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -125,8 +127,10 @@ import org.mockito.internal.stubbing.answers.Returns;
 import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -136,6 +140,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     private static final int CALLER_UID = Process.myUid();
+    private static final String SHA256 = "SHA-256";
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String DIFFERENT_CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME_2;
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
@@ -342,7 +347,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                     CUSTOM_AUDIENCE_WITH_WIN_AD_1,
                     CUSTOM_AUDIENCE_WITH_WIN_AD_2);
     private static final byte[] CIPHER_TEXT_BYTES =
-            "encrypted-cipher-for-auction-result".getBytes();
+            "encrypted-cipher-for-auction-result".getBytes(StandardCharsets.UTF_8);
     private static final long AD_SELECTION_ID = 12345L;
     private static final AdSelectionInitialization INITIALIZATION_DATA =
             getAdSelectionInitialization(SELLER, CALLER_PACKAGE_NAME);
@@ -391,8 +396,9 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerDataCompressor mDataCompressor;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
-    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
+    @Mock private KAnonSignJoinFactory mKAnonSignJoinFactoryMock;
     @Mock private KAnonSignJoinManager mKAnonSignJoinManagerMock;
+    @Captor private ArgumentCaptor<List<KAnonMessageEntity>> mKAnonMessageEntitiesCaptor;
 
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     private PersistAdSelectionResultRunner mPersistAdSelectionResultRunner;
@@ -491,7 +497,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
     }
 
     @After
@@ -1075,7 +1081,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1172,7 +1178,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1345,7 +1351,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1571,7 +1577,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
 
@@ -1656,7 +1662,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         flagsWithKAnonDisabled,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(
                         (unused) -> {
@@ -1670,7 +1676,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
         countDownLatch.await();
 
         Assert.assertTrue(callback.mIsSuccess);
-        verifyZeroInteractions(mUnusedKAnonSignJoinFactory);
+        verifyZeroInteractions(mKAnonSignJoinFactoryMock);
     }
 
     @Test
@@ -1680,8 +1686,6 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
         doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
         PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
-        KAnonSignJoinFactory kAnonSignJoinFactory =
-                spy(new KAnonSignJoinFactory(mKAnonSignJoinManagerMock));
         PersistAdSelectionResultRunner persistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
                         mObliviousHttpEncryptorMock,
@@ -1701,7 +1705,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         flagsWithKAnonEnabled,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        kAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(
                         (unused) -> {
@@ -1723,8 +1727,6 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
         doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
         PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
-        KAnonSignJoinFactory kAnonSignJoinFactory =
-                spy(new KAnonSignJoinFactory(mKAnonSignJoinManagerMock));
         PersistAdSelectionResultRunner persistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
                         mObliviousHttpEncryptorMock,
@@ -1744,7 +1746,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         flagsWithKAnonEnabled,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        kAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(
                         (unused) -> {
@@ -1759,6 +1761,62 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
 
         Assert.assertTrue(callback.mIsSuccess);
         verify(mKAnonSignJoinManagerMock, times(1)).processNewMessages(anyList());
+    }
+
+    @Test
+    public void testRunner_withKAnonEnabled_createsKAnonEntityWithCorrectEncoding()
+            throws Exception {
+        Flags flagsWithKAnonEnabled =
+                new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
+        doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
+        PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithKAnonEnabled,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mKAnonSignJoinFactoryMock);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(
+                        (unused) -> {
+                            countDownLatch.countDown();
+                            return null;
+                        })
+                .when(mKAnonSignJoinManagerMock)
+                .processNewMessages(anyList());
+
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+        countDownLatch.await();
+
+        Assert.assertTrue(callback.mIsSuccess);
+        MessageDigest md = MessageDigest.getInstance(SHA256);
+        String winningUrl = callback.mPersistAdSelectionResultResponse.getAdRenderUri().toString();
+        byte[] expectedBytes = md.digest(winningUrl.getBytes(StandardCharsets.UTF_8));
+
+        verify(mKAnonSignJoinManagerMock, times(1))
+                .processNewMessages(mKAnonMessageEntitiesCaptor.capture());
+        List<KAnonMessageEntity> capturedMessageEntity = mKAnonMessageEntitiesCaptor.getValue();
+
+        assertThat(capturedMessageEntity.size()).isEqualTo(1);
+
+        byte[] actualBytes =
+                Base64.getUrlDecoder().decode(capturedMessageEntity.get(0).getHashSet());
+        assertThat(actualBytes).isEqualTo(expectedBytes);
     }
 
     private byte[] prepareDecryptedAuctionResultForRemarketingAd(
@@ -1840,7 +1898,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
-                        mUnusedKAnonSignJoinFactory);
+                        mKAnonSignJoinFactoryMock);
     }
 
     private void verifyPersistAdSelectionResultApiUsageLog(int resultCode)
@@ -1855,6 +1913,9 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     }
 
     private PersistAdSelectionResultInput setupPersistRunnerMocksForKAnonTests() {
+        doReturn(mKAnonSignJoinManagerMock)
+                .when(mKAnonSignJoinFactoryMock)
+                .getKAnonSignJoinManager();
 
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
@@ -1920,6 +1981,11 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
         @Override
         public int getFledgeKAnonPercentageImmediateSignJoinCalls() {
             return mPercentageImmediateJoinValue;
+        }
+
+        @Override
+        public boolean getFledgeKAnonSignJoinFeatureAuctionServerEnabled() {
+            return mKAnonFeatureFlagEnabled;
         }
     }
 

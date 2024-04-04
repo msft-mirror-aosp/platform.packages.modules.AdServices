@@ -25,6 +25,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableCollection;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
@@ -70,7 +71,7 @@ public class AdvertiserSetValidator implements Validator<Set<AdTechIdentifier>> 
         int totalSize = 0;
         for (AdTechIdentifier advertiser : advertisers) {
             String advertiserString = advertiser.toString();
-            totalSize += advertiserString.getBytes().length;
+            totalSize += advertiserString.getBytes(StandardCharsets.UTF_8).length;
             if (totalSize > MAX_TOTAL_SIZE_BYTES) {
                 violations.add(
                         String.format(

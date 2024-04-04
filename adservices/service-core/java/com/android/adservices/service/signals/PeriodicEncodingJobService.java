@@ -70,7 +70,7 @@ public class PeriodicEncodingJobService extends JobService {
 
         LoggerFactory.getFledgeLogger().d("PeriodicEncodingJobService.onStartJob");
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID);
 
         if (!FlagsFactory.getFlags().getProtectedSignalsPeriodicEncodingEnabled()) {
@@ -113,8 +113,7 @@ public class PeriodicEncodingJobService extends JobService {
                                         .d("PeriodicEncodingJobService encoding completed");
 
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                PeriodicEncodingJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
                                                 /* isSuccessful= */ true,
@@ -126,8 +125,7 @@ public class PeriodicEncodingJobService extends JobService {
                             @Override
                             public void onFailure(Throwable t) {
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                PeriodicEncodingJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
                                                 /* isSuccessful= */ false,
@@ -146,7 +144,7 @@ public class PeriodicEncodingJobService extends JobService {
         PeriodicEncodingJobWorker.getInstance(this).stopWork();
 
         boolean shouldRetry = true;
-        AdServicesJobServiceLogger.getInstance(PeriodicEncodingJobService.this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID, shouldRetry);
 
         return shouldRetry;
@@ -221,7 +219,7 @@ public class PeriodicEncodingJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID, skipReason);
         }
 

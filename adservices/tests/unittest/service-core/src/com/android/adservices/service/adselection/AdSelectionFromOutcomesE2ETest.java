@@ -39,6 +39,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.spy;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
@@ -62,7 +63,6 @@ import android.os.SystemClock;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.SdkLevelSupportRule;
@@ -75,6 +75,7 @@ import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -91,9 +92,11 @@ import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -101,6 +104,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -218,7 +222,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private EncodedPayloadDao mEncodedPayloadDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
-    @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
+    private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private EnrollmentDao mEnrollmentDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private AdServicesHttpsClient mAdServicesHttpsClient;
@@ -230,14 +234,14 @@ public class AdSelectionFromOutcomesE2ETest {
     private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
+    private RetryStrategyFactory mRetryStrategyFactory;
+    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    private ConsentedDebugConfigurationGeneratorFactory
+            mConsentedDebugConfigurationGeneratorFactory;
+    private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
     @Before
     public void setUp() throws Exception {
-        mAdSelectionEntryDaoSpy =
-                Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
-                        .build()
-                        .adSelectionEntryDao();
-
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
         mStaticMockSession =
@@ -246,6 +250,13 @@ public class AdSelectionFromOutcomesE2ETest {
                         .initMocks(this)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        mAdSelectionEntryDaoSpy =
+                spy(
+                        Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
+                                .build()
+                                .adSelectionEntryDao());
 
         // Initialize dependencies for the AdSelectionService
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
@@ -253,7 +264,7 @@ public class AdSelectionFromOutcomesE2ETest {
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
@@ -276,6 +287,20 @@ public class AdSelectionFromOutcomesE2ETest {
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache());
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
+        mConsentedDebugConfigurationDao =
+                Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
+                        .build()
+                        .consentedDebugConfigurationDao();
+        mConsentedDebugConfigurationGeneratorFactory =
+                new ConsentedDebugConfigurationGeneratorFactory(
+                        false, mConsentedDebugConfigurationDao);
+        mEgressConfigurationGenerator =
+                EgressConfigurationGenerator.createInstance(
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        mAdIdFetcher,
+                        Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        mLightweightExecutorService);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -308,7 +333,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -354,7 +382,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesPickHighestSuccess() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_HIGHEST_LOGIC_JS_PATH;
 
@@ -383,8 +410,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesPickHighestSuccessDifferentTables() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
-
         Flags auctionServerEnabledFlags =
                 new TestFlags() {
                     @Override
@@ -440,7 +465,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);
@@ -453,9 +481,7 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testSelectAdsFromOutcomesPickHighestSuccessUnifiedTables() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_HIGHEST_LOGIC_JS_PATH;
 
@@ -498,7 +524,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        true);
+                        true,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
@@ -516,7 +545,6 @@ public class AdSelectionFromOutcomesE2ETest {
     @Test
     public void testSelectAdsFromOutcomesWaterfallMediationAdBidHigherThanBidFloorSuccess()
             throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_WATERFALL_LOGIC_JS_PATH;
 
@@ -542,7 +570,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesWaterfallMediationPrebuiltUriSuccess() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
 
         Map<Long, Double> adSelectionIdToBidMap = Map.of(AD_SELECTION_ID_1, 10.0);
@@ -580,7 +607,6 @@ public class AdSelectionFromOutcomesE2ETest {
     @Test
     public void testSelectAdsFromOutcomesWaterfallMediationAdBidLowerThanBidFloorSuccess()
             throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_WATERFALL_LOGIC_JS_PATH;
 
@@ -605,7 +631,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesReturnsNullSuccess() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_NONE_LOGIC_JS_PATH;
 
@@ -633,7 +658,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesInvalidAdSelectionConfigFromOutcomes() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = "/unreachableLogicJS/";
 
@@ -668,7 +692,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesJsReturnsFaultyAdSelectionIdFailure() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_FAULTY_LOGIC_JS_PATH;
 
@@ -699,9 +722,7 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testSelectAdsFromOutcomesWaterfallMalformedPrebuiltUriFailed() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
 
         Map<Long, Double> adSelectionIdToBidMap = Map.of(AD_SELECTION_ID_1, 10.0);
@@ -901,10 +922,6 @@ public class AdSelectionFromOutcomesE2ETest {
             return -1;
         }
 
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return false;
-        }
 
         @Override
         public boolean getFledgeAdSelectionPrebuiltUriEnabled() {

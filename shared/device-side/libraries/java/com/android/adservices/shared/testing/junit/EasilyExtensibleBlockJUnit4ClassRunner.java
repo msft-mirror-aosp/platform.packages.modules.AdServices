@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.adservices.shared.testing.junit;
 
 import org.junit.Rule;
@@ -28,7 +27,10 @@ import org.junit.runners.model.MemberValueConsumer;
 import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -39,17 +41,20 @@ import java.util.List;
 public abstract class EasilyExtensibleBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
 
     private static final ThreadLocal<RuleContainer> sCurrentRuleContainer = new ThreadLocal<>();
+    private static final FieldComparator FIELD_COMPARATOR = new FieldComparator();
 
-    protected EasilyExtensibleBlockJUnit4ClassRunner(Class<?> testClass) throws InitializationError {
+    protected EasilyExtensibleBlockJUnit4ClassRunner(Class<?> testClass)
+            throws InitializationError {
         super(testClass);
     }
 
-    protected EasilyExtensibleBlockJUnit4ClassRunner(TestClass testClass) throws InitializationError {
+    protected EasilyExtensibleBlockJUnit4ClassRunner(TestClass testClass)
+            throws InitializationError {
         super(testClass);
     }
 
     // NOTE: this is not the same as EasilyExtensibleBlockJUnit4ClassRunner's method, as that one
-    // takes an Object as testClass. But the body itself is copied
+    // takes an Object as testClass. But the body itself is copied.
     protected List<TestRule> getTestRules(TestClass testClass, Object target) {
         RuleCollector<TestRule> collector = new RuleCollector<>();
         testClass.collectAnnotatedMethodValues(target, Rule.class, TestRule.class, collector);
@@ -100,6 +105,28 @@ public abstract class EasilyExtensibleBlockJUnit4ClassRunner extends BlockJUnit4
                 }
             }
             mResult.add(value);
+        }
+    }
+
+    protected static Field[] getSortedDeclaredFields(Class<?> clazz) {
+        Field[] declaredFields = clazz.getDeclaredFields();
+        Arrays.sort(declaredFields, FIELD_COMPARATOR);
+        return declaredFields;
+    }
+
+    protected static List<Class<?>> getSuperClasses(Class<?> testClass) {
+        List<Class<?>> results = new ArrayList<Class<?>>();
+        Class<?> current = testClass;
+        while (current != null) {
+            results.add(current);
+            current = current.getSuperclass();
+        }
+        return results;
+    }
+
+    private static class FieldComparator implements Comparator<Field> {
+        public int compare(Field left, Field right) {
+            return left.getName().compareTo(right.getName());
         }
     }
 }

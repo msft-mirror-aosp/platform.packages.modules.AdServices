@@ -1,0 +1,35 @@
+[
+  {
+    "keyType": "Encryption",
+    "enrollmentId": "TEST0",
+    "reportingOrigin": "https://adtech.example.com/",
+    "encryptionKeyUrl": "https://adtech.example.com/.well-knonwn/encryption-keys",
+    "protocolType": "HPKE",
+    "keyId": 12345,
+    "body": "MIIBCgKCAQEAwVACPi9w23nBqQn+BTdRSmYXZGUtIuEhJhTVUZCmYR+BNdKaIbMnzj2nXmG7nXkJaWUYnmRRhk2XnTKSWbMVzpEtqSIrGxuZUXH9DQ+3VJXO0BQvScj9KQVcrKPpTZeJrAjj8aS8FmI2+tQvSwFUJNQvPgOODYtveSZVC5YH+kIWC2LSFJQYrGBqDf+IqhQPjwFUO4T7NUzl7++YigOzMOgAoO5+SxWGOjPNsWt26CkGNzYv+8IfeYZJG3LQs+38dhCSG1qA==",
+    "expiration": 1682343722000,
+    "version": 3
+  },
+  {
+    "keyType": "Signing",
+    "enrollmentId": "TEST0",
+    "reportingOrigin": "https://adtech.example.com/",
+    "encryptionKeyUrl": "https://adtech.example.com/.well-knonwn/encryption-keys",
+    "protocolType": "ECDSA",
+    "keyId": 54321,
+    "body": "MIIBCgKCAQEAwVACPi9w23nBqQn+BTdRSmYXZGUtIuEhJhTVUZCmYR+BNdKaIbMnzj2nXmG7nXkJaWUYnmRRhk2XnTKSWbMVzpEtqSIrGxuZUXH9DQ+3VJXO0BQvScj9KQVcrKPpTZeJrAjj8aS8FmI2+tQvSwFUJNQvPgOODYtveSZVC5YH+kIWC2LSFJQYrGBqDf+IqhQPjwFUO4T7NUzl7++YigOzMOgAoO5+SxWGOjPNsWt26CkGNzYv+8IfeYZJG3LQs+38dhCSG1qA==",
+    "expiration": 1682430122000,
+    "version": 3
+  },
+  {
+    "keyType": "Signing",
+    "enrollmentId": "TEST0",
+    "reportingOrigin": "https://adtech.example.com/",
+    "encryptionKeyUrl": "https://adtech.example.com/.well-knonwn/encryption-keys",
+    "protocolType": "ECDSA",
+    "keyId": 98765,
+    "body": "MIIBCgKCAQEAwVACPi9w23nBqQn+BTdRSmYXZGUtIuEhJhTVUZCmYR+BNdKaIbMnzj2nXmG7nXkJaWUYnmRRhk2XnTKSWbMVzpEtqSIrGxuZUXH9DQ+3VJXO0BQvScj9KQVcrKPpTZeJrAjj8aS8FmI2+tQvSwFUJNQvPgOODYtveSZVC5YH+kIWC2LSFJQYrGBqDf+IqhQPjwFUO4T7NUzl7++YigOzMOgAoO5+SxWGOjPNsWt26CkGNzYv+8IfeYZJG3LQs+38dhCSG1qA==",
+    "expiration": 1682516522000,
+    "version": 3
+  }
+]
