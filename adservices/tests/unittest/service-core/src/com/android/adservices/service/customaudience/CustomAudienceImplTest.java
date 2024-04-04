@@ -36,8 +36,8 @@ import com.android.adservices.data.customaudience.AdDataConversionStrategyFactor
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.Validator;
@@ -85,7 +85,7 @@ public class CustomAudienceImplTest {
     @Mock private Validator<CustomAudience> mCustomAudienceValidatorMock;
     @Mock private Clock mClockMock;
     private static final Flags FLAGS =
-            new FlagsFactory.TestFlags() {
+            new FakeFlagsFactory.TestFlags() {
                 @Override
                 public boolean getFledgeFrequencyCapFilteringEnabled() {
                     return true;
@@ -159,7 +159,7 @@ public class CustomAudienceImplTest {
     @Test
     public void testJoinCustomAudienceWithServerAuctionFlags_runNormallyFlagEnabled() {
         Flags flagsWithAuctionServerRequestFlagsEnabled =
-                new FlagsFactory.TestFlags() {
+                new FakeFlagsFactory.TestFlags() {
                     @Override
                     public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                         return true;
@@ -199,7 +199,7 @@ public class CustomAudienceImplTest {
     @Test
     public void testJoinCustomAudienceWithServerAuctionFlags_runNormallyFlagDisabled() {
         Flags flagsWithAuctionServerRequestFlagsDisabled =
-                new FlagsFactory.TestFlags() {
+                new FakeFlagsFactory.TestFlags() {
                     @Override
                     public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                         return false;

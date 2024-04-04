@@ -54,6 +54,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AttributionConfig;
@@ -200,7 +201,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(FlagsFactory.getFlagsForTest());
+        extendedMockito.mockGetFlags(FakeFlagsFactory.getFlagsForTest());
         mFetcher = spy(new AsyncTriggerFetcher(sContext, mEnrollmentDao, mFlags));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.

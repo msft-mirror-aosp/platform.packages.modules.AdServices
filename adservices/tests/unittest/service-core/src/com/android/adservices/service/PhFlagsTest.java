@@ -1020,7 +1020,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
 
     private final Flags mPhFlags = PhFlags.getInstance();
-    private final Flags mTestFlags = FlagsFactory.getFlagsForTest();
+    private final Flags mTestFlags = FakeFlagsFactory.getFlagsForTest();
 
     private final PhFlagsTestHelper mFlagsTestHelper = new PhFlagsTestHelper(mPhFlags, expect);
 
@@ -5435,7 +5435,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         assertThat(phFlags.getMeasurementRegisterSourcesRequestPermitsPerSecond())
                 .isEqualTo(phOverridingValue);
 
-        final Flags flags = FlagsFactory.getFlagsForTest();
+        final Flags flags = FakeFlagsFactory.getFlagsForTest();
         assertThat(flags.getMeasurementRegisterSourcesRequestPermitsPerSecond())
                 .isEqualTo(MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND);
     }
