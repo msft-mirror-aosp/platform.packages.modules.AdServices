@@ -71,13 +71,13 @@ public final class IsAllowedProtectedSignalsAccessCommandTest
     }
 
     @Test
-    public void test_getCommandName() {
+    public void testGetCommandName_valid() {
         expect.that(new IsAllowedProtectedSignalsAccessCommand().getCommandName())
                 .isEqualTo(CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
     }
 
     @Test
-    public void test_getCommandHelp() {
+    public void testGetCommandHelp_valid() {
         expect.that(new IsAllowedProtectedSignalsAccessCommand().getCommandHelp())
                 .isEqualTo(HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
     }

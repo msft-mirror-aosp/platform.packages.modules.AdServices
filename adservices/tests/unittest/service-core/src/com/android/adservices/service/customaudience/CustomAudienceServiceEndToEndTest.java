@@ -108,6 +108,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -244,7 +245,7 @@ public class CustomAudienceServiceEndToEndTest {
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     private static final Flags COMMON_FLAGS_WITH_FILTERS_ENABLED =
-            new FlagsFactory.TestFlags() {
+            new FakeFlagsFactory.TestFlags() {
                 @Override
                 public boolean getFledgeFrequencyCapFilteringEnabled() {
                     return true;
@@ -269,7 +270,7 @@ public class CustomAudienceServiceEndToEndTest {
                         .initMocks(this)
                         .startMocking();
 
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
         mFetchUri = mMockWebServerRule.uriForPath("/fetch");
 

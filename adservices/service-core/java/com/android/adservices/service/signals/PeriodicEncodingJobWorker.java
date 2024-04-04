@@ -45,6 +45,10 @@ import com.android.adservices.service.common.SingletonRunner;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
+import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerImpl;
+import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerNoLoggingImpl;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperImpl;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperNoOpImpl;
@@ -202,6 +206,12 @@ public class PeriodicEncodingJobWorker {
      * encoders for buyers that have the previous encoders downloaded outside the refresh window
      */
     private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
+        boolean pasExtendedMetricsEnabled = mFlags.getPasExtendedMetricsEnabled();
+        EncodingJobRunStatsLogger encodingJobRunStatsLogger =
+                pasExtendedMetricsEnabled
+                        ? new EncodingJobRunStatsLoggerImpl(
+                        mAdServicesLogger, EncodingJobRunStats.builder())
+                        : new EncodingJobRunStatsLoggerNoLoggingImpl();
 
         FluentFuture<List<DBEncoderLogicMetadata>> buyersWithRegisteredEncoders =
                 FluentFuture.from(
@@ -211,7 +221,9 @@ public class PeriodicEncodingJobWorker {
                 buyersWithRegisteredEncoders.transformAsync(
                         logicMetadata ->
                                 doEncodingForRegisteredBuyers(
-                                        logicMetadata, mFlags.getPasExtendedMetricsEnabled()),
+                                        logicMetadata,
+                                        pasExtendedMetricsEnabled,
+                                        encodingJobRunStatsLogger),
                         mBackgroundExecutor);
 
         // TODO(b/294900119) We should do the update of encoding logic in a separate job
@@ -230,6 +242,7 @@ public class PeriodicEncodingJobWorker {
                                                     mEncoderLogicMetadataDao
                                                             .getBuyersWithEncodersBeforeTime(
                                                                     timeForRefresh)));
+                    encodingJobRunStatsLogger.logEncodingJobRunStats();
 
                     return buyersWithEncodersReadyForRefresh.transformAsync(
                             b -> doUpdateEncodersForBuyers(b), mBackgroundExecutor);
@@ -238,20 +251,28 @@ public class PeriodicEncodingJobWorker {
     }
 
     private FluentFuture<Void> doEncodingForRegisteredBuyers(
-            List<DBEncoderLogicMetadata> encoderLogicMetadataList, boolean extendedLoggingEnabled) {
+            List<DBEncoderLogicMetadata> encoderLogicMetadataList,
+            boolean extendedLoggingEnabled,
+            EncodingJobRunStatsLogger encodingJobRunStatsLogger) {
+
         List<ListenableFuture<Void>> buyerEncodings =
                 encoderLogicMetadataList.stream()
                         .map(
                                 metadata ->
                                         pickLoggerAndRunEncodingPerBuyer(
-                                                metadata, extendedLoggingEnabled))
+                                                metadata,
+                                                extendedLoggingEnabled,
+                                                encodingJobRunStatsLogger))
                         .collect(Collectors.toList());
+        encodingJobRunStatsLogger.setSizeOfFilteredBuyerEncodingList(buyerEncodings.size());
         return FluentFuture.from(Futures.successfulAsList(buyerEncodings))
                 .transform(ignored -> null, mLightWeightExecutor);
     }
 
     private FluentFuture<Void> pickLoggerAndRunEncodingPerBuyer(
-            DBEncoderLogicMetadata metadata, boolean extendedLoggingEnabled) {
+            DBEncoderLogicMetadata metadata,
+            boolean extendedLoggingEnabled,
+            EncodingJobRunStatsLogger encodingJobRunStatsLogger) {
         EncodingExecutionLogHelper logHelper;
         if (extendedLoggingEnabled) {
             logHelper =
@@ -259,11 +280,13 @@ public class PeriodicEncodingJobWorker {
         } else {
             logHelper = new EncodingExecutionLogHelperNoOpImpl();
         }
-        return runEncodingPerBuyer(metadata, PER_BUYER_ENCODING_TIMEOUT_SECONDS, logHelper)
+        return runEncodingPerBuyer(
+                metadata, PER_BUYER_ENCODING_TIMEOUT_SECONDS, logHelper, encodingJobRunStatsLogger)
                 .catching(
                         Exception.class,
                         (e) -> {
                             handleFailedPerBuyerEncoding(metadata);
+                            encodingJobRunStatsLogger.addOneSignalEncodingFailures();
                             return null;
                         },
                         mLightWeightExecutor);
@@ -286,7 +309,8 @@ public class PeriodicEncodingJobWorker {
     FluentFuture<Void> runEncodingPerBuyer(
             DBEncoderLogicMetadata encoderLogicMetadata,
             int timeout,
-            EncodingExecutionLogHelper logHelper) {
+            EncodingExecutionLogHelper logHelper,
+            EncodingJobRunStatsLogger encodingJobRunStatsLogger) {
         AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
         Map<String, List<ProtectedSignal>> signals = mSignalsProvider.getSignals(buyer);
         if (signals.isEmpty()) {
@@ -307,6 +331,7 @@ public class PeriodicEncodingJobWorker {
                             .getCreationTime()
                             .isBefore(existingPayload.getCreationTime());
             if (isNoNewSignalUpdateAfterLastEncoding && isEncoderLogicNotUpdatedAfterLastEncoding) {
+                encodingJobRunStatsLogger.addOneSignalEncodingSkips();
                 return FluentFuture.from(Futures.immediateFuture(null));
             }
         }

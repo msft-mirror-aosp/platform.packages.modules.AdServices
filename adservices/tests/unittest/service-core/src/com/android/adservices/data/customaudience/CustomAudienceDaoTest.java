@@ -54,6 +54,7 @@ import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.JsVersionHelper;
@@ -84,7 +85,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CustomAudienceDaoTest {
-    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
 
     @Mock private EnrollmentDao mEnrollmentDaoMock;
 

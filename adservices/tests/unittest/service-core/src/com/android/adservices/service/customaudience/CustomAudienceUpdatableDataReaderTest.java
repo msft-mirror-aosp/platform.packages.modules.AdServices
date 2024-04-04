@@ -40,8 +40,8 @@ import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -63,7 +63,7 @@ public class CustomAudienceUpdatableDataReaderTest {
             DBAdDataFixture.getInvalidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
 
     private final Flags mFlags =
-            new FlagsFactory.TestFlags() {
+            new FakeFlagsFactory.TestFlags() {
                 @Override
                 public boolean getFledgeFrequencyCapFilteringEnabled() {
                     return true;

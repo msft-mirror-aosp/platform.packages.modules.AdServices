@@ -20,7 +20,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -182,7 +182,7 @@ public final class SourceFixture {
         TriggerSpecs triggerSpecs = new TriggerSpecs(
                 triggerSpecArrayFrom(triggerSpecsString), 3, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -199,7 +199,7 @@ public final class SourceFixture {
         TriggerSpecs triggerSpecs = new TriggerSpecs(
                 triggerSpecArrayFrom(triggerSpecsString), 1, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -219,7 +219,7 @@ public final class SourceFixture {
                 maxReports,
                 source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -235,7 +235,7 @@ public final class SourceFixture {
                 /* maxReports */ 3,
                 source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 

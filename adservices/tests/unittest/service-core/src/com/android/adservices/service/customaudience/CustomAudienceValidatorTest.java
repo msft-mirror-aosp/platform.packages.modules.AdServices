@@ -27,7 +27,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
 
 import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.common.AdDataValidator;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
@@ -52,7 +52,7 @@ public class CustomAudienceValidatorTest {
     private final CustomAudienceValidator mValidator =
             new CustomAudienceValidator(
                     CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                    FlagsFactory.getFlagsForTest(),
+                    FakeFlagsFactory.getFlagsForTest(),
                     new FrequencyCapAdDataValidatorNoOpImpl(),
                     AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP);
 
@@ -346,7 +346,7 @@ public class CustomAudienceValidatorTest {
         CustomAudienceValidator validator =
                 new CustomAudienceValidator(
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        FlagsFactory.getFlagsForTest(),
+                        FakeFlagsFactory.getFlagsForTest(),
                         new FrequencyCapAdDataValidatorImpl(),
                         AdRenderIdValidator.createEnabledInstance(100));
 
@@ -380,7 +380,7 @@ public class CustomAudienceValidatorTest {
         CustomAudienceValidator validator =
                 new CustomAudienceValidator(
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        FlagsFactory.getFlagsForTest(),
+                        FakeFlagsFactory.getFlagsForTest(),
                         new FrequencyCapAdDataValidatorImpl(),
                         AdRenderIdValidator.createEnabledInstance(5));
 

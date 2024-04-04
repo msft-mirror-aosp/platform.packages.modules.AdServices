@@ -40,6 +40,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.shared.SharedDbHelper;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -190,7 +191,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         mMdd =
                 getMddForTesting(
                         mContext,
-                        FlagsFactory.getFlagsForTest(),
+                        FakeFlagsFactory.getFlagsForTest(),
                         // Pass in an empty list of FileGroupPopulator. Add ad hoc DataFileGroup
                         // to MDD manually below.
                         ImmutableList.of());

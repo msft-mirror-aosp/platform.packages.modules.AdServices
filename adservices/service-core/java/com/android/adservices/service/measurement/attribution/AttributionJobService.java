@@ -38,6 +38,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandler.ProcessingResult;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
+import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -118,6 +119,9 @@ public class AttributionJobService extends JobService {
                             }
 
                             DebugReportingJobService.scheduleIfNeeded(
+                                    getApplicationContext(), /* forceSchedule */ false);
+
+                            ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                     getApplicationContext(), /* forceSchedule */ false);
                         });
         return true;

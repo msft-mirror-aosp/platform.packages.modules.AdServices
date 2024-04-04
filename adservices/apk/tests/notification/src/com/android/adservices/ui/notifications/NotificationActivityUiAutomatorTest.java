@@ -51,8 +51,8 @@ import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -79,10 +79,10 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesUiTestC
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setSystemProperty(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true)
                     .setFlag(KEY_UI_FEATURE_TYPE_LOGGING_ENABLED, true)
                     .setFlag(KEY_RECORD_MANUAL_INTERACTION_ENABLED, true)
-                    .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_DEBUG_UX, "GA_UX")
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true);
 

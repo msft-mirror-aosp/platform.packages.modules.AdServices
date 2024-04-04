@@ -117,6 +117,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 
@@ -1027,6 +1028,20 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         adServicesLogger.logEncodingJsExecutionStats(stats);
 
         verify(mStatsdLoggerMock).logEncodingJsExecutionStats(eq(stats));
+    }
+
+    @Test
+    public void testLogEncodingJobRunStats() {
+        EncodingJobRunStats stats =
+                EncodingJobRunStats.builder()
+                        .setSignalEncodingSuccesses(5)
+                        .setSignalEncodingFailures(3)
+                        .setSignalEncodingSkips(2)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEncodingJobRunStats(stats);
+
+        verify(mStatsdLoggerMock).logEncodingJobRunStats(eq(stats));
     }
 
     private void mockAppNameApiErrorLogger() {

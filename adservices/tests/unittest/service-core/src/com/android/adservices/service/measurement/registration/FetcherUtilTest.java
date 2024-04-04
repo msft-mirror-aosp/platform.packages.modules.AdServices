@@ -30,6 +30,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -85,7 +86,7 @@ public final class FetcherUtilTest {
 
     @Before
     public void setup() {
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
     }
 
     @Test

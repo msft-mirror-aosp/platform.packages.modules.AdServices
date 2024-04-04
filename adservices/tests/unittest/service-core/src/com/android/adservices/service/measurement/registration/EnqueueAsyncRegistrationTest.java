@@ -48,6 +48,7 @@ import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.SqliteObjectMapper;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
@@ -146,7 +147,7 @@ public class EnqueueAsyncRegistrationTest {
 
     @Before
     public void before() throws RemoteException {
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         MockitoAnnotations.initMocks(this);
         when(mContentResolver.acquireContentProviderClient(TRIGGER_URI))
                 .thenReturn(mMockContentProviderClient);
