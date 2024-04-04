@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection.encryption;
 
+import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.VALID_AD_SELECTION_ENCRYPTION_KEY_TYPES;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION;
 
@@ -292,6 +293,17 @@ public class ProtectedServersEncryptionConfigManager
                         key ->
                                 EncryptionKeyConstants.toAdSelectionEncryptionKeyType(
                                         key.getEncryptionKeyType()))
+                .collect(Collectors.toSet());
+    }
+
+    /** Returns the AdSelectionEncryptionKeyTypes which are absent. */
+    public Set<Integer> getAbsentAdSelectionEncryptionKeyTypes() {
+        return VALID_AD_SELECTION_ENCRYPTION_KEY_TYPES.stream()
+                .filter(
+                        keyType ->
+                                mProtectedServersEncryptionConfigDao
+                                        .getLatestExpiryNKeysByType(keyType, 1)
+                                        .isEmpty())
                 .collect(Collectors.toSet());
     }
 
