@@ -18,41 +18,16 @@ package com.android.adservices.shared.proto;
 option java_multiple_files = true;
 option java_package = "com.android.adservices.shared.proto";
 
-// The Policy used to schedule a background job in PolicyJobScheduler. The sequence of the fields
-// follows the sequence in JobInfo.
+// The Policy used to schedule a background job in Scheduling Policy Engine (SPE).
+//
+// The SPE supports singular field: Integer, Long, Boolean, String, Enum, and current it doesn't
+// support repeated or composited field. Please file a request if it needs to be supported.
 message JobPolicy {
   // Unique identifier of a job.
   optional int32 job_id = 1; // ** REQUIRED field **
 
-  // Indicate the priority for this job. Use this to inform the system about which jobs it should
-  // try to run before other jobs.
-  optional Priority priority = 2;
-
-  enum Priority {
-    // Unknown priority value.
-    PRIORITY_UNKNOWN = 0;
-
-    // Job has minimal value to the user. The user has absolutely no expectation or knowledge of
-    // this task and it has no bearing on the user's perception of the app whatsoever.
-    PRIORITY_MIN = 1;
-
-    // Low priority. The task provides some benefit to users, but is not critical and is more of a
-    // nice-to-have.
-    PRIORITY_LOW = 2;
-
-    // Default value for all regular jobs.
-    PRIORITY_DEFAULT = 3;
-
-    // This task should be ordered ahead of most other tasks. It may be eferred a little, but if it
-    // doesn't run at some point, the user may think something is wrong.
-    PRIORITY_HIGH = 4;
-
-    // This task should be run ahead of all other tasks. Only Expedited Jobs can have this priority.
-    PRIORITY_MAX = 5;
-  }
-
-  // Set basic description of the kind of network your job requires.
-  optional NetworkType network_type = 3;
+  // Set basic description of the kind of network the job requires.
+  optional NetworkType network_type = 2;
 
   enum NetworkType {
     // Unknown network type.
@@ -61,7 +36,7 @@ message JobPolicy {
     // Default type.
     NETWORK_TYPE_NONE = 1;
 
-    // This job requires network connectivity.
+    // This job requires any network connectivity.
     NETWORK_TYPE_ANY = 2;
 
     // This job requires network connectivity that is unmetered.
@@ -70,12 +45,12 @@ message JobPolicy {
     // This job requires network connectivity that is not roaming.
     NETWORK_TYPE_NOT_ROAMING = 4;
 
-    // This job requires network connectivity that is a cellular network.
+    // This job requires network connectivity that is a cellular network (metered).
     NETWORK_TYPE_CELLULAR = 5;
   }
 
-  // Set the battery constraint for your job.
-  optional BatteryType battery_type = 4;
+  // Set the battery constraint for the job.
+  optional BatteryType battery_type = 3;
 
   enum BatteryType {
     // Unknown battery type.
@@ -91,42 +66,52 @@ message JobPolicy {
     BATTERY_TYPE_REQUIRE_NOT_LOW = 3;
   }
 
-  // Set if your job requires the device in idle.
-  optional bool require_device_idle = 5;
+  // Set if the job requires the device in idle.
+  optional bool require_device_idle = 4;
 
   // Specify that to run this job, the device's available storage must not be low.
-  optional bool require_storage_not_low = 6;
-
-  // The URI string to be parsed to build a URI.
-  optional string trigger_content_uri_string = 7;
-
-  // The flag used in JobInfo to build a TriggerContentUri.
-  optional int32 trigger_content_flag = 8;
-
-  // The maximum delay in millisecond to use before scheduling the job when triggering on content
-  // URI changes.
-  optional int64 trigger_content_max_delay_ms = 9;
-
-  // The delay from when a change is detected until the job is scheduled when triggering on content
-  // URI changes, in millisecond.
-  optional int64 trigger_content_update_delay_ms = 10;
-
-  // The interval of a periodic job in millisecond.
-  optional int64 periodic_interval_ms = 11;
-
-  // The flex interval of a periodic job in millisecond.
-  optional int64 flex_internal_ms = 12;
-
-  // Specify that this job should be delayed by the provided amount of time, in millisecond.
-  optional int64 minimum_latency_ms = 13;
-
-  // Set deadline which is the maximum scheduling latency in millisecond.
-  optional int64 override_deadline_ms = 14;
-
-  // Setting this to true indicates that this job is important and needs to run as soon as possible
-  // with stronger guarantees than regular jobs.
-  optional bool is_expedited = 15;
+  optional bool require_storage_not_low = 5;
 
   // Set whether or not to persist this job across device reboots.
-  optional bool is_persisted = 16;
+  optional bool is_persisted = 6;
+
+  // The job type for the job to schedule. It should be one of the supported types in SPE.
+  oneof job_params {
+    PeriodicJobParams periodic_job_params = 7;
+    OneOffJobParams one_off_job_params = 8;
+    TriggerContentJobParams trigger_content_job_params = 9;
+  }
+
+  // Information about a periodic job. The job will be executed periodically.
+  message PeriodicJobParams {
+    // The interval of a periodic job in millisecond.
+    optional int64 periodic_interval_ms = 1;
+
+    // The flex interval of a periodic job in millisecond.
+    optional int64 flex_internal_ms = 2;
+  }
+
+  // Information about a one-off job. That says, the job will be only executed once.
+  message OneOffJobParams {
+    // Specify that this job should be delayed by the provided amount of time, in millisecond.
+    optional int64 minimum_latency_ms = 1;
+
+    // Set deadline which is the maximum scheduling latency in millisecond. The job will be ran by
+    // this deadline even if other requirements aren't satisfied.
+    optional int64 override_deadline_ms = 2;
+  }
+
+  // Information about a content URI modification that a job would like to trigger on.
+  message TriggerContentJobParams {
+    // The URI string to be parsed to build a URI.
+    optional string trigger_content_uri_string = 1;
+
+    // The maximum delay in millisecond to use before scheduling the job when triggering on content
+    // URI changes.
+    optional int64 trigger_content_max_delay_ms = 2;
+
+    // The delay from when a change is detected until the job is scheduled when triggering on content
+    // URI changes, in millisecond.
+    optional int64 trigger_content_update_delay_ms = 3;
+  }
 }

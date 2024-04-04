@@ -19,9 +19,13 @@ package com.android.adservices.errorlogging;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.errorlogging.AbstractAdServicesErrorLogger;
+import com.android.adservices.shared.errorlogging.ErrorCodeSampler;
 import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLogger;
 import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 import java.util.Objects;
 
@@ -31,6 +35,8 @@ public final class AdServicesErrorLoggerImpl extends AbstractAdServicesErrorLogg
     private static volatile AdServicesErrorLoggerImpl sSingleton;
     private final Flags mFlags;
 
+    private final Supplier<ErrorCodeSampler> mErrorCodeSamplerSupplier;
+
     public static AdServicesErrorLoggerImpl getInstance() {
         if (sSingleton == null) {
             synchronized (SINGLETON_LOCK) {
@@ -38,7 +44,21 @@ public final class AdServicesErrorLoggerImpl extends AbstractAdServicesErrorLogg
                     sSingleton =
                             new AdServicesErrorLoggerImpl(
                                     FlagsFactory.getFlags(),
-                                    StatsdAdServicesErrorLoggerImpl.getInstance());
+                                    StatsdAdServicesErrorLoggerImpl.getInstance(),
+                                    // Using Suppliers.memoize to cache the ErrorCodeSampler
+                                    // object when the first time isEnabled method is called.
+                                    // Initializing ErrorCodeSampler directly without supplier
+                                    // results in flag read error as tests call ErrorLogUtil which
+                                    // initializes this class.
+                                    // TODO(315382750): Remove this memoize part and use lazy load
+                                    // for this.
+                                    Suppliers.memoize(
+                                            () ->
+                                                    FlagsFactory.getFlags()
+                                                                    .getCustomErrorCodeSamplingEnabled()
+                                                            ? new ErrorCodeSampler(
+                                                                    FlagsFactory.getFlags())
+                                                            : null));
                 }
             }
         }
@@ -47,14 +67,31 @@ public final class AdServicesErrorLoggerImpl extends AbstractAdServicesErrorLogg
 
     @VisibleForTesting
     AdServicesErrorLoggerImpl(
-            Flags flags, StatsdAdServicesErrorLogger statsdAdServicesErrorLogger) {
+            Flags flags,
+            StatsdAdServicesErrorLogger statsdAdServicesErrorLogger,
+            Supplier<ErrorCodeSampler> errorCodeSamplerSupplier) {
         super(statsdAdServicesErrorLogger);
         mFlags = Objects.requireNonNull(flags);
+        mErrorCodeSamplerSupplier = errorCodeSamplerSupplier;
     }
 
+    /**
+     * Returns {@code true} if error code is not part of deny list and one of these conditions is
+     * met.
+     *
+     * <ul>
+     *   <li>Error code sampler is disabled and initialized to {@code null}.
+     *   <li>Error code sampler is enabled and {@code ErrorCodeSampler#shouldLog} returns {@code
+     *       true}.
+     * </ul>
+     */
     @Override
     protected boolean isEnabled(int errorCode) {
-        return mFlags.getAdServicesErrorLoggingEnabled()
-                && !mFlags.getErrorCodeLoggingDenyList().contains(errorCode);
+        ErrorCodeSampler errorCodeSampler = mErrorCodeSamplerSupplier.get();
+        boolean logBasedOnCustomSampleInterval =
+                errorCodeSampler == null || errorCodeSampler.shouldLog(errorCode);
+        // TODO(b/332599638): Deprecate error code deny list once custom sampling is launched.
+        return !mFlags.getErrorCodeLoggingDenyList().contains(errorCode)
+                && logBasedOnCustomSampleInterval;
     }
 }

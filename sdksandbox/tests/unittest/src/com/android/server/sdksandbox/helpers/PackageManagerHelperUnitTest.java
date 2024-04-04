@@ -119,17 +119,18 @@ public class PackageManagerHelperUnitTest {
     }
 
     @Test
-    public void testGetPackageNameForUid() throws Exception {
-        assertThat(mPackageManagerHelper.getPackageNameForUid(mClientAppUid))
-                .isEqualTo(TEST_PACKAGE);
+    public void testGetPackageNamesForUid() throws Exception {
+        List<String> packageNames = mPackageManagerHelper.getPackageNamesForUid(mClientAppUid);
+        assertThat(packageNames.size()).isEqualTo(1);
+        assertThat(packageNames.get(0)).isEqualTo(TEST_PACKAGE);
     }
 
     @Test
-    public void testGetPackageNameForUid_invalidUid() throws Exception {
+    public void testGetPackageNamesForUid_invalidUid() throws Exception {
         PackageManager.NameNotFoundException thrown =
                 assertThrows(
                         PackageManager.NameNotFoundException.class,
-                        () -> mPackageManagerHelper.getPackageNameForUid(/* callingUid= */ -1));
+                        () -> mPackageManagerHelper.getPackageNamesForUid(/* callingUid= */ -1));
         assertThat(thrown).hasMessageThat().contains("Could not find package for -1");
     }
 }

@@ -153,7 +153,7 @@ public final class ExtendedMockitoExpectations {
      * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
      * FlagsFactory#getFlagsForTest()}
      *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlagsForTesting(Flags)} instead
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlagsForTesting()} instead
      */
     public static void mockGetFlagsForTest() {
         mockGetFlags(FlagsFactory.getFlagsForTest());
@@ -203,24 +203,9 @@ public final class ExtendedMockitoExpectations {
         return logger;
     }
 
-    /** Mocks {@link AdServicesJobServiceLogger#getInstance(Context)} to return a mocked logger. */
+    /** Mocks {@link AdServicesJobServiceLogger#getInstance()} to return a mocked logger. */
     public static void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
-        doReturn(logger).when(() -> AdServicesJobServiceLogger.getInstance(any(Context.class)));
-    }
-
-    /** Mocks a call to {@link SystemProperties#getLong(String, long)}, returning {@code value}. */
-    public static void mockGetSystemProperty(String key, long value) {
-        logV("mockGetSystemProperty(key=%s, value=%s)", key, value);
-        doReturn(value).when(() -> SystemProperties.getLong(eq(key), anyLong()));
-    }
-
-    /**
-     * Mocks a call to {@link SystemProperties#getBoolean(String, boolean)}, returning {@code
-     * value}.
-     */
-    public static void mockGetSystemProperty(String key, boolean value) {
-        logV("mockGetSystemProperty(key=%s, value=%s)", key, value);
-        doReturn(value).when(() -> SystemProperties.getBoolean(eq(key), anyBoolean()));
+        doReturn(logger).when(() -> AdServicesJobServiceLogger.getInstance());
     }
 
     /**

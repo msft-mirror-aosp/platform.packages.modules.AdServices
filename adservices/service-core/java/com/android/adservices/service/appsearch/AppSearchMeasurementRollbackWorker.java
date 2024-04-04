@@ -46,7 +46,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * read when the measurement API starts up, and is used to determine whether a rollback happened and
  * the measurement db needs to be cleared.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class AppSearchMeasurementRollbackWorker implements MeasurementRollbackWorker<String> {
     private static final String DATABASE_NAME =

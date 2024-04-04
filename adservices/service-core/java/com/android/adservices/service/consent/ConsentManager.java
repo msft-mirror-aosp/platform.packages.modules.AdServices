@@ -53,6 +53,8 @@ import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -85,6 +87,7 @@ import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -105,6 +108,8 @@ import java.util.stream.Stream;
  *   <li>PPAPI_AND_SYSTEM_SERVER: Write consent to both PPAPI and system server. Read consent from
  *       system server only.
  * </ul>
+ *
+ * IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with ConsentManagerV2
  */
 // TODO(b/259791134): Add a CTS/UI test to test the Consent Migration
 // TODO(b/269798827): Enable for R.
@@ -129,6 +134,7 @@ public class ConsentManager {
     private final MeasurementImpl mMeasurementImpl;
     private final CustomAudienceDao mCustomAudienceDao;
     private final AppInstallDao mAppInstallDao;
+    private final ProtectedSignalsDao mProtectedSignalsDao;
     private final FrequencyCapDao mFrequencyCapDao;
     private final AdServicesManager mAdServicesManager;
     private final int mConsentSourceOfTruth;
@@ -147,6 +153,7 @@ public class ConsentManager {
             @NonNull MeasurementImpl measurementImpl,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AppInstallDao appInstallDao,
+            @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull FrequencyCapDao frequencyCapDao,
             @NonNull AdServicesManager adServicesManager,
             @NonNull BooleanFileDatastore booleanFileDatastore,
@@ -163,6 +170,7 @@ public class ConsentManager {
         Objects.requireNonNull(measurementImpl);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(appInstallDao);
+        Objects.requireNonNull(protectedSignalsDao);
         Objects.requireNonNull(frequencyCapDao);
         Objects.requireNonNull(booleanFileDatastore);
         Objects.requireNonNull(userProfileIdManager);
@@ -188,6 +196,7 @@ public class ConsentManager {
         mMeasurementImpl = measurementImpl;
         mCustomAudienceDao = customAudienceDao;
         mAppInstallDao = appInstallDao;
+        mProtectedSignalsDao = protectedSignalsDao;
         mFrequencyCapDao = frequencyCapDao;
         mUxStatesDao = uxStatesDao;
 
@@ -258,7 +267,6 @@ public class ConsentManager {
                             AdExtDataConsentMigrationUtils
                                     .handleConsentMigrationFromAdExtDataIfNeeded(
                                             context,
-                                            datastore,
                                             appSearchConsentManager,
                                             adServicesExtDataManager,
                                             statsdAdServicesLogger,
@@ -282,6 +290,8 @@ public class ConsentManager {
                                     MeasurementImpl.getInstance(context),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                                     SharedStorageDatabase.getInstance(context).appInstallDao(),
+                                    ProtectedSignalsDatabase.getInstance(context)
+                                            .protectedSignalsDao(),
                                     SharedStorageDatabase.getInstance(context).frequencyCapDao(),
                                     adServicesManager,
                                     datastore,
@@ -676,10 +686,18 @@ public class ConsentManager {
 
         asyncExecute(
                 () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(
                     () -> mFrequencyCapDao.deleteHistogramDataBySourceApp(app.getPackageName()));
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
+        }
+        if (mFlags.getProtectedSignalsCleanupEnabled()) {
+            asyncExecute(
+                    () ->
+                            mProtectedSignalsDao.deleteSignalsByPackage(
+                                    Collections.singletonList(app.getPackageName())));
         }
     }
 
@@ -730,9 +748,14 @@ public class ConsentManager {
                 /* errorLogger= */ null);
 
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        }
+        if (mFlags.getProtectedSignalsCleanupEnabled()) {
+            asyncExecute(mProtectedSignalsDao::deleteAllSignals);
         }
     }
 
@@ -757,9 +780,14 @@ public class ConsentManager {
                 /* errorLogger= */ null);
 
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        }
+        if (mFlags.getProtectedSignalsCleanupEnabled()) {
+            asyncExecute(mProtectedSignalsDao::deleteAllSignals);
         }
     }
 
@@ -2200,10 +2228,81 @@ public class ConsentManager {
                 /* errorLogger= */ null);
     }
 
+    /**
+     * get pas conset for fledge, pasUxEnable flag has checked iseea, thus we don't need to check
+     * this again
+     */
     public boolean isPasFledgeConsentGiven() {
+        if (mFlags.getConsentManagerDebugMode()) {
+            return true;
+        }
+
         return mFlags.getPasUxEnabled()
                 && wasPasNotificationDisplayed()
                 && getConsent(AdServicesApiType.FLEDGE).isGiven();
+    }
+
+    /** get pas conset for measurement */
+    public boolean isPasMeasurementConsentGiven() {
+        if (mFlags.getConsentManagerDebugMode()) {
+            return true;
+        }
+
+        return mFlags.getPasUxEnabled()
+                && wasPasNotificationDisplayed()
+                && getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    public Boolean isMeasurementDataReset() {
+        return executeGettersByConsentSourceOfTruth(
+                /* defaultReturn= */ false,
+                () -> mDatastore.get(ConsentConstants.IS_MEASUREMENT_DATA_RESET),
+                () -> mAdServicesManager.isMeasurementDataReset(),
+                () -> mAppSearchConsentManager.isMeasurementDataReset(),
+                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
+                mDatastore.get(ConsentConstants.IS_MEASUREMENT_DATA_RESET),
+                /* errorLogger= */ null);
+    }
+
+    /** Set the isMeasurementDataReset bit to storage based on consent_source_of_truth. */
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        executeSettersByConsentSourceOfTruth(
+                () ->
+                        mDatastore.put(
+                                ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset),
+                () -> mAdServicesManager.setMeasurementDataReset(isMeasurementDataReset),
+                () -> mAppSearchConsentManager.setMeasurementDataReset(isMeasurementDataReset),
+                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
+                mDatastore.put(ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset),
+                /* errorLogger= */ null);
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    public Boolean isPaDataReset() {
+        return executeGettersByConsentSourceOfTruth(
+                /* defaultReturn= */ false,
+                () -> mDatastore.get(ConsentConstants.IS_PA_DATA_RESET),
+                () -> mAdServicesManager.isPaDataReset(),
+                () -> mAppSearchConsentManager.isPaDataReset(),
+                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
+                mDatastore.get(ConsentConstants.IS_PA_DATA_RESET),
+                /* errorLogger= */ null);
+    }
+
+    /** Set the isPaDataReset bit to storage based on consent_source_of_truth. */
+    public void setPaDataReset(boolean isPaDataReset) {
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
+                () -> mAdServicesManager.setPaDataReset(isPaDataReset),
+                () -> mAppSearchConsentManager.setPaDataReset(isPaDataReset),
+                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
+                mDatastore.put(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
+                /* errorLogger= */ null);
     }
 
     @FunctionalInterface

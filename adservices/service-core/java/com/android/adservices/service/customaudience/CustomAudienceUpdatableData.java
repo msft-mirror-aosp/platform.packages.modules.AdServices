@@ -92,7 +92,7 @@ public abstract class CustomAudienceUpdatableData {
     /**
      * @return the result type for the update attempt before {@link
      *     #createFromResponseString(Instant, AdTechIdentifier,
-     *     BackgroundFetchRunner.UpdateResultType, String, Flags)} was called
+     *     BackgroundFetchRunner.UpdateResultType, String, Flags, boolean)} was called
      */
     public abstract BackgroundFetchRunner.UpdateResultType getInitialUpdateResult();
 
@@ -195,7 +195,8 @@ public abstract class CustomAudienceUpdatableData {
                         flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         flags.getFledgeCustomAudienceMaxAdsSizeB(),
                         flags.getFledgeCustomAudienceMaxNumAds(),
-                        flags.getFledgeAdSelectionFilteringEnabled(),
+                        flags.getFledgeFrequencyCapFilteringEnabled(),
+                        flags.getFledgeAppInstallFilteringEnabled(),
                         flags.getFledgeAuctionServerAdRenderIdEnabled(),
                         flags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -352,7 +353,7 @@ public abstract class CustomAudienceUpdatableData {
 
     /**
      * Gets a Builder to make {@link #createFromResponseString(Instant, AdTechIdentifier,
-     * BackgroundFetchRunner.UpdateResultType, String, Flags)} easier.
+     * BackgroundFetchRunner.UpdateResultType, String, Flags, boolean)} easier.
      */
     @VisibleForTesting
     @NonNull
@@ -364,7 +365,7 @@ public abstract class CustomAudienceUpdatableData {
     /**
      * This is a hidden (visible for testing) AutoValue builder to make {@link
      * #createFromResponseString(Instant, AdTechIdentifier, BackgroundFetchRunner.UpdateResultType,
-     * String, Flags)} easier.
+     * String, Flags, boolean)} easier.
      */
     @VisibleForTesting
     @AutoValue.Builder

@@ -435,7 +435,15 @@ public class AsyncRegistrationQueueRunner {
                             publisher, source.getEnrollmentId());
             return false;
         }
-        if (!source.hasValidInformationGain(flags)) {
+        try {
+            if (!source.validateAndSetNumReportStates(flags)
+                    || !source.hasValidInformationGain(flags)) {
+                debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
+                return false;
+            }
+        } catch (ArithmeticException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Calculating the number of report states overflowed.");
             debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
             return false;
         }

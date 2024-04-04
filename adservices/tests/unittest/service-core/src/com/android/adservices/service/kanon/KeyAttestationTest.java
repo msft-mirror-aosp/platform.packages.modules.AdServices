@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.kanon;
 
+import static com.android.adservices.common.DeviceExclusionRule.BARBET;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
@@ -27,10 +28,12 @@ import static org.mockito.Mockito.spy;
 
 import android.security.keystore.KeyProperties;
 
-import androidx.test.filters.FlakyTest;
-
+import com.android.adservices.TlsConnectionAvailableRule;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.DeviceExclusionRule;
 import com.android.adservices.common.SdkLevelSupportRule;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
@@ -68,6 +71,14 @@ public final class KeyAttestationTest {
     public final AdServicesDeviceSupportedRule deviceSupportRule =
             new AdServicesDeviceSupportedRule();
 
+    @Rule(order = 2)
+    public final DeviceExclusionRule deviceExclusionRule =
+            DeviceExclusionRule.forDevices(ImmutableList.of(BARBET));
+
+    @Rule(order = 3)
+    public final TlsConnectionAvailableRule tlsConnectionAvailableRule =
+            new TlsConnectionAvailableRule();
+
     @Before
     public void setUp() throws Exception {
         mSpyKeyStore = spy(KeyStore.getInstance(ANDROID_KEY_STORE));
@@ -91,7 +102,6 @@ public final class KeyAttestationTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324701756)
     public void testGenerateAttestationRecord_success() throws Exception {
         KeyAttestationCertificateChainRecord record =
                 mKeyAttestation.generateAttestationRecord(CHALLENGE);
@@ -109,7 +119,6 @@ public final class KeyAttestationTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324701756)
     public void testGenerateHybridKey_success() {
         KeyPair keyPair = mKeyAttestation.generateHybridKey(CHALLENGE, KEY_ALIAS);
 
@@ -130,7 +139,6 @@ public final class KeyAttestationTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324701756)
     public void testGetAttestationRecordFromKeyAlias_success() throws Exception {
         KeyPair unused = mKeyAttestation.generateHybridKey(CHALLENGE, KEY_ALIAS);
 

@@ -26,14 +26,19 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesCtsTestCase;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -41,30 +46,28 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
-public class SandboxedFledgeManagerTest {
+public class SandboxedFledgeManagerTest extends AdServicesCtsTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.sdkfledge";
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
 
-    private DevContext mDevContext;
-
     private boolean mHasAccessToDevOverrides;
 
     private String mAccessStatus;
 
+    @Rule(order = 10)
+    public AdServicesDeviceSupportedRule mAdServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @Before
     public void setup() throws TimeoutException {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
         DevContextFilter devContextFilter = DevContextFilter.create(sContext);
-        mDevContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
-        boolean isDebuggable =
-                devContextFilter.isDebuggable(mDevContext.getCallingAppPackageName());
+        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
+        boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
         boolean isDeveloperMode = devContextFilter.isDeveloperMode();
-        mHasAccessToDevOverrides = mDevContext.getDevOptionsEnabled();
+        mHasAccessToDevOverrides = devContext.getDevOptionsEnabled();
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
@@ -73,12 +76,7 @@ public class SandboxedFledgeManagerTest {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
 
-        // Enable CTS to be run with versions of WebView < M105
-        PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
-        PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
-
         makeTestProcessForeground();
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
 
         // Kill AdServices process
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -94,10 +92,6 @@ public class SandboxedFledgeManagerTest {
 
     @After
     public void shutDown() {
-        if (!AdservicesTestHelper.isDeviceSupported()) {
-            return;
-        }
-
         SimpleActivity.stopSimpleActivity(sContext);
     }
 
@@ -107,11 +101,21 @@ public class SandboxedFledgeManagerTest {
 
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
-
+        Assert.assertNotNull("SdkSandboxManager should not be null", sdkSandboxManager);
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
         callback.assertLoadSdkIsSuccessful();
+    }
+
+    @Override
+    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
+        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
+                .setAdServicesEnabled(true)
+                .setAllLogcatTags()
+                .setFlag(FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE, false)
+                .setFlag(FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, 0)
+                .setFlag(FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, true);
     }
 }

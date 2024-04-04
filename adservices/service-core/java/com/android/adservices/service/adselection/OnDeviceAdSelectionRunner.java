@@ -41,9 +41,11 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
@@ -67,14 +69,14 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /** Orchestrate on-device ad selection. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull protected final AdsScoreGenerator mAdsScoreGenerator;
     @NonNull protected final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull protected final PerBuyerBiddingRunner mPerBuyerBiddingRunner;
-    @NonNull protected final AdFilterer mAdFilterer;
+    @NonNull protected final FrequencyCapAdFilterer mFrequencyCapAdFilterer;
+    @NonNull private final AppInstallAdFilterer mAppInstallAdFilterer;
     @NonNull protected final AdCounterKeyCopier mAdCounterKeyCopier;
 
     public OnDeviceAdSelectionRunner(
@@ -92,13 +94,16 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Flags flags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
-            @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdFilterer frequencyCapAdFilterer,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final DebugReporting debugReporting,
             final int callerUid,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            @NonNull final RetryStrategy retryStrategy,
+            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory,
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
         super(
                 context,
                 customAudienceDao,
@@ -112,18 +117,21 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 flags,
                 adSelectionExecutionLogger,
                 adSelectionServiceFilter,
-                adFilterer,
+                frequencyCapAdFilterer,
                 frequencyCapAdDataValidator,
                 adCounterHistogramUpdater,
                 debugReporting,
                 callerUid,
-                shouldUseUnifiedTables);
+                shouldUseUnifiedTables,
+                kAnonSignJoinFactory,
+                appInstallAdFilterer);
         Objects.requireNonNull(adServicesHttpsClient);
-        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(adCounterKeyCopier);
+        Objects.requireNonNull(retryStrategy);
 
         mAdServicesHttpsClient = adServicesHttpsClient;
-        mAdFilterer = adFilterer;
+        mFrequencyCapAdFilterer = frequencyCapAdFilterer;
         mAdCounterKeyCopier = adCounterKeyCopier;
         boolean cpcBillingEnabled = BinderFlagReader.readFlag(mFlags::getFledgeCpcBillingEnabled);
         boolean dataVersionHeaderEnabled =
@@ -136,7 +144,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 () -> flags.getIsolateMaxHeapSizeBytes(),
                                 mAdCounterKeyCopier,
                                 mDebugReporting.getScriptStrategy(),
-                                cpcBillingEnabled),
+                                cpcBillingEnabled,
+                                retryStrategy),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -161,7 +170,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 flags,
                                 mDebugReporting,
                                 cpcBillingEnabled,
-                                dataVersionHeaderEnabled),
+                                dataVersionHeaderEnabled,
+                                retryStrategy),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
                                 devContext,
@@ -171,6 +181,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                         mScheduledExecutor,
                         mBackgroundExecutorService,
                         flags);
+        mAppInstallAdFilterer = appInstallAdFilterer;
     }
 
     @VisibleForTesting
@@ -193,12 +204,14 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final PerBuyerBiddingRunner perBuyerBiddingRunner,
-            @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdFilterer frequencyCapAdFilterer,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final DebugReporting debugReporting,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory,
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
         super(
                 context,
                 customAudienceDao,
@@ -214,23 +227,27 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 flags,
                 callerUid,
                 adSelectionServiceFilter,
-                adFilterer,
+                frequencyCapAdFilterer,
                 frequencyCapAdDataValidator,
                 adCounterHistogramUpdater,
                 adSelectionExecutionLogger,
                 debugReporting,
-                shouldUseUnifiedTables);
+                shouldUseUnifiedTables,
+                kAnonSignJoinFactory,
+                appInstallAdFilterer);
 
         Objects.requireNonNull(adsScoreGenerator);
         Objects.requireNonNull(adServicesHttpsClient);
-        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(adCounterKeyCopier);
+        Objects.requireNonNull(appInstallAdFilterer);
 
         mAdsScoreGenerator = adsScoreGenerator;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mPerBuyerBiddingRunner = perBuyerBiddingRunner;
-        mAdFilterer = adFilterer;
+        mFrequencyCapAdFilterer = frequencyCapAdFilterer;
         mAdCounterKeyCopier = adCounterKeyCopier;
+        mAppInstallAdFilterer = appInstallAdFilterer;
     }
 
     /**
@@ -246,7 +263,12 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
 
         ListenableFuture<List<DBCustomAudience>> filteredCas =
                 FluentFuture.from(buyerCustomAudience)
-                        .transform(mAdFilterer::filterCustomAudiences, mLightweightExecutorService);
+                        .transform(
+                                mAppInstallAdFilterer::filterCustomAudiences,
+                                mLightweightExecutorService)
+                        .transform(
+                                mFrequencyCapAdFilterer::filterCustomAudiences,
+                                mLightweightExecutorService);
 
         AsyncFunction<List<DBCustomAudience>, List<AdBiddingOutcome>> bidAds =
                 buyerCAs -> runAdBidding(buyerCAs, adSelectionConfig);
