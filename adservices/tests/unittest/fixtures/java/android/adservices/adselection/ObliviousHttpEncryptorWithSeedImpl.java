@@ -107,7 +107,11 @@ public class ObliviousHttpEncryptorWithSeedImpl implements ObliviousHttpEncrypto
             ObliviousHttpClient client = ObliviousHttpClient.create(config);
 
             Objects.requireNonNull(client);
-            ObliviousHttpRequest request = client.createObliviousHttpRequest(plainText, mSeed);
+            ObliviousHttpRequest request =
+                    client.createObliviousHttpRequest(
+                            plainText,
+                            mSeed,
+                            ObliviousHttpKeyConfig.useFledgeAuctionServerMediaTypeChange(AUCTION));
 
             Objects.requireNonNull(request);
             mObliviousHttpRequestContextMarshaller.insertAuctionEncryptionContext(

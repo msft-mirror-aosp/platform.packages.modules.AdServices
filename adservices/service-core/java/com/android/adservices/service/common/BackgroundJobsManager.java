@@ -34,6 +34,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DELETE_EX
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
@@ -46,6 +47,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.cobalt.CobaltJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -64,6 +66,7 @@ import com.android.adservices.service.measurement.reporting.AggregateReportingJo
 import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.topics.EpochJobService;
 
@@ -84,7 +87,7 @@ public class BackgroundJobsManager {
         scheduleTopicsBackgroundJobs(context);
 
         // TODO(b/296146348): Remove MDD Background Jobs from scheduleAllBackgroundJobs
-        scheduleMddBackgroundJobs(context);
+        scheduleMddBackgroundJobs();
 
         scheduleMeasurementBackgroundJobs(context);
     }
@@ -165,7 +168,7 @@ public class BackgroundJobsManager {
         if (!FlagsFactory.getFlags().getTopicsKillSwitch()) {
             EpochJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             MaintenanceJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
-            scheduleMddBackgroundJobs(context);
+            scheduleMddBackgroundJobs();
             scheduleEncryptionKeyBackgroundJobs(context);
             scheduleCobaltBackgroundJob(context);
         }
@@ -174,12 +177,10 @@ public class BackgroundJobsManager {
     /**
      * Tries to schedule all the Mdd related background jobs if the MddBackgroundTaskKillSwitch is
      * disabled.
-     *
-     * @param context application context.
      */
-    public static void scheduleMddBackgroundJobs(@NonNull Context context) {
+    public static void scheduleMddBackgroundJobs() {
         if (!FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
-            MddJobService.scheduleIfNeeded(context, /* forceSchedule */ false);
+            MddJob.scheduleAllMddJobs();
         }
     }
 
@@ -204,6 +205,7 @@ public class BackgroundJobsManager {
      * <ul>
      *   <li>{@link AggregateReportingJobService}
      *   <li>{@link AggregateFallbackReportingJobService}
+     *   <li>{@link ImmediateAggregateReportingJobService}
      *   <li>{@link AttributionJobService}
      *   <li>{@link EventReportingJobService}
      *   <li>{@link EventFallbackReportingJobService}
@@ -222,6 +224,8 @@ public class BackgroundJobsManager {
             AggregateReportingJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             AggregateFallbackReportingJobService.scheduleIfNeeded(
                     context, /* forceSchedule= */ false);
+            ImmediateAggregateReportingJobService.scheduleIfNeeded(
+                    context, /* forceSchedule= */ false);
             AttributionJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             AttributionFallbackJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             EventReportingJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
@@ -234,7 +238,7 @@ public class BackgroundJobsManager {
             VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
                     context, /* forceSchedule= */ false);
             DebugReportingFallbackJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
-            scheduleMddBackgroundJobs(context);
+            scheduleMddBackgroundJobs();
             scheduleEncryptionKeyBackgroundJobs(context);
             scheduleCobaltBackgroundJob(context);
         }
@@ -269,7 +273,7 @@ public class BackgroundJobsManager {
 
         jobScheduler.cancel(CONSENT_NOTIFICATION_JOB.getJobId());
 
-        MddJobService.unscheduleAllJobs(jobScheduler);
+        MddJob.unscheduleAllJobs(jobScheduler);
 
         jobScheduler.cancel(ENCRYPTION_KEY_PERIODIC_JOB.getJobId());
 
@@ -292,6 +296,7 @@ public class BackgroundJobsManager {
         jobScheduler.cancel(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB.getJobId());
         jobScheduler.cancel(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB.getJobId());
         jobScheduler.cancel(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB.getJobId());
+        jobScheduler.cancel(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB.getJobId());
         jobScheduler.cancel(MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId());
         jobScheduler.cancel(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId());
         jobScheduler.cancel(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId());

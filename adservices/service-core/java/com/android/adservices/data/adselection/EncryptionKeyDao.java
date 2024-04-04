@@ -95,7 +95,7 @@ public abstract class EncryptionKeyDao {
     @Query("DELETE FROM encryption_key")
     public abstract int deleteAllEncryptionKeys();
 
-    /** Insert into the table all the given EnryptionKeys. */
+    /** Insert into the table all the given EncryptionKeys. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void insertAllKeys(List<DBEncryptionKey> keys);
 }

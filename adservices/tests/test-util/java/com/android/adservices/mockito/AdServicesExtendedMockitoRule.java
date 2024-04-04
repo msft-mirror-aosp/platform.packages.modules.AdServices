@@ -120,7 +120,7 @@ public class AdServicesExtendedMockitoRule
      * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
      *     equivalent annotations) on {@link FlagsFactory}.
      */
-    public final void mockGetFlagsForTesting(Flags mockedFlags) {
+    public final void mockGetFlagsForTesting() {
         mockGetFlags(FlagsFactory.getFlagsForTest());
     }
 
@@ -168,6 +168,17 @@ public class AdServicesExtendedMockitoRule
         logV("mockIsAtLeastT(%b)", isIt);
         assertSpiedOrMocked(SdkLevel.class);
         doReturn(isIt).when(SdkLevel::isAtLeastT);
+    }
+
+    /** Mocks a call to SDK level to return R */
+    public final void mockSdkLevelR() {
+        logV("mockSdkLevelR()");
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(true).when(SdkLevel::isAtLeastR);
+        doReturn(false).when(SdkLevel::isAtLeastS);
+        doReturn(false).when(SdkLevel::isAtLeastSv2);
+        doReturn(false).when(SdkLevel::isAtLeastT);
+        doReturn(false).when(SdkLevel::isAtLeastU);
     }
 
     /**

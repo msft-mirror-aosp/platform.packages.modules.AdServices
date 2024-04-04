@@ -25,6 +25,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__FLEDGE_OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__FLEDGE_OPT_OUT_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_CONFIRMATION_PAGE_DISMISSED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_ADDITIONAL_INFO_CLICKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_DISMISSED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_GOT_IT_BUTTON_CLICKED;
@@ -104,6 +105,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__BETA_UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX_WITH_PAS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__RVC_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
@@ -340,6 +342,7 @@ public final class UiStatsLogger {
     public static void logRequestedNotification() {
         UIStats uiStats = getBaseUiStats();
 
+        uiStats.setUx(getUx(true));
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_REQUESTED
@@ -352,6 +355,7 @@ public final class UiStatsLogger {
     public static void logNotificationDisabled() {
         UIStats uiStats = getBaseUiStats();
 
+        uiStats.setUx(getUx(true));
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_DISABLED
@@ -538,6 +542,16 @@ public final class UiStatsLogger {
         LogUtil.d(PRIVACY_SANDBOX_UI_REQUEST_MESSAGE);
     }
 
+    /** Logs that the second additional info button on the landing page was clicked. */
+    public static void logLandingPageSecondAdditionalInfoClicked() {
+        UIStats uiStats = getBaseUiStats();
+
+        uiStats.setAction(
+                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED);
+
+        getAdServicesLogger().logUIStats(uiStats);
+    }
+
     @VisibleForTesting
     public static AdServicesLogger getAdServicesLogger() {
         return sLogger;
@@ -650,13 +664,17 @@ public final class UiStatsLogger {
         }
     }
 
-    private static int getUx() {
+    private static int getUx(boolean beforeNotificationShown) {
         switch (UxStatesManager.getInstance().getUx()) {
             case U18_UX:
                 return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
             case RVC_UX:
                 return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__RVC_UX;
             case GA_UX:
+                if (UxStatesManager.getInstance().pasUxIsActive(beforeNotificationShown)) {
+                    // UI views should be updated only once notification is sent (ROW).
+                    return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX_WITH_PAS;
+                }
                 return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
             case BETA_UX:
                 return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__BETA_UX;
@@ -715,7 +733,7 @@ public final class UiStatsLogger {
                 .setRegion(getRegion())
                 .setDefaultConsent(getDefaultConsent())
                 .setDefaultAdIdState(getDefaultAdIdState())
-                .setUx(getUx())
+                .setUx(getUx(/* beforeNotificationShown */ false))
                 .setEnrollmentChannel(getEnrollmentChannel())
                 .build();
     }
@@ -726,7 +744,7 @@ public final class UiStatsLogger {
                 .setRegion(getRegion())
                 .setDefaultConsent(getDefaultConsent(apiType))
                 .setDefaultAdIdState(getDefaultAdIdState())
-                .setUx(getUx())
+                .setUx(getUx(/* beforeNotificationShown */ false))
                 .setEnrollmentChannel(getEnrollmentChannel())
                 .build();
     }

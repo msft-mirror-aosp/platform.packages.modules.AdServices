@@ -47,13 +47,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.Nullable;
-import com.android.adservices.common.SyncCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.ExtendedMockitoExpectations.ErrorLogUtilCallback;
 import com.android.adservices.service.Flags;
@@ -62,6 +58,7 @@ import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
 import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.shared.testing.common.DumpHelper;
+import com.android.adservices.shared.testing.common.FakeSharedPreferences;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
@@ -69,13 +66,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.io.File;
-import java.lang.ref.WeakReference;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -252,7 +244,6 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     @Test
     public void testDump_empty() throws Exception {
-        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(true);
         when(mMockContext.getDataDir()).thenReturn(new File("/la/la/land"));
 
         String dump = DumpHelper.dump(pw -> AppManifestConfigMetricsLogger.dump(mMockContext, pw));
@@ -264,9 +255,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                                 ".*file:.*/la/la/land/shared_prefs/"
                                         + PREFS_NAME
                                         + "\\.xml.*\n"
-                                        + ".*enabled by default: "
-                                        + true
-                                        + ".*\n"
+                                        + ".*\\(Always\\) enabled by default.*\n"
                                         + ".*0 entries:.*",
                                 Pattern.DOTALL));
     }
@@ -391,267 +380,5 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     private void mockGetStatsdAdServicesLogger() {
         Log.v(mTag, "mockGetStatsdAdServicesLogger(): " + mStatsdLogger);
         doReturn(mStatsdLogger).when(StatsdAdServicesLogger::getInstance);
-    }
-
-    // TODO(b/309857141): move to its own class / common package (it will be done in a later CL so
-    // this class can be easily cherry picked into older releases).
-    // TODO(b/309857141): add unit tests when move
-    /**
-     * Fake implementation of {@link SharedPreferences}.
-     *
-     * <p><b>Note: </b>calls made to the {@link #edit() editor} are persisted right away, unless
-     * disabled by calls to {@link #onCommitReturns(boolean) onCommitReturns(false)} or {@link
-     * #disableApply}.
-     *
-     * <p>This class is not thread safe.
-     */
-    public static final class FakeSharedPreferences implements SharedPreferences {
-
-        private static final String TAG = FakeSharedPreferences.class.getSimpleName();
-
-        private static final IllegalStateException EDIT_DISABLED_EXCEPTION =
-                new IllegalStateException("edit() is not available");
-        private static final IllegalStateException COMMIT_DISABLED_EXCEPTION =
-                new IllegalStateException("commit() is not available");
-        private static final IllegalStateException APPLY_DISABLED_EXCEPTION =
-                new IllegalStateException("apply() is not available");
-
-        private final FakeEditor mEditor = new FakeEditor();
-
-        @Nullable private RuntimeException mEditException;
-
-        /**
-         * Changes behavior of {@link #edit()} so it throws an exception.
-         *
-         * @return the exception that will be thrown by {@link #edit()}.
-         */
-        public RuntimeException onEditThrows() {
-            mEditException = EDIT_DISABLED_EXCEPTION;
-            Log.v(TAG, "onEditThrows(): edit() will return " + mEditException);
-            return mEditException;
-        }
-
-        /**
-         * Sets the result of calls to {@link Editor#commit()}.
-         *
-         * <p><b>Note: </b>when called with {@code false}, calls made to the {@link #edit() editor}
-         * after this call will be ignored (until it's called again with {@code true}).
-         */
-        public void onCommitReturns(boolean result) {
-            mEditor.mCommitResult = result;
-            Log.v(TAG, "onCommitReturns(): commit() will return " + mEditor.mCommitResult);
-        }
-
-        @Override
-        public Map<String, ?> getAll() {
-            return mEditor.mProps;
-        }
-
-        @Override
-        public String getString(String key, String defValue) {
-            return mEditor.get(key, String.class, defValue);
-        }
-
-        @Override
-        public Set<String> getStringSet(String key, Set<String> defValues) {
-            @SuppressWarnings("unchecked")
-            Set<String> value = mEditor.get(key, Set.class, defValues);
-            return value;
-        }
-
-        @Override
-        public int getInt(String key, int defValue) {
-            return mEditor.get(key, Integer.class, defValue);
-        }
-
-        @Override
-        public long getLong(String key, long defValue) {
-            return mEditor.get(key, Long.class, defValue);
-        }
-
-        @Override
-        public float getFloat(String key, float defValue) {
-            return mEditor.get(key, Float.class, defValue);
-        }
-
-        @Override
-        public boolean getBoolean(String key, boolean defValue) {
-            return mEditor.get(key, Boolean.class, defValue);
-        }
-
-        @Override
-        public boolean contains(String key) {
-            return mEditor.mProps.containsKey(key);
-        }
-
-        @Override
-        public FakeEditor edit() {
-            Log.v(TAG, "edit(): mEditException=" + mEditException);
-            if (mEditException != null) {
-                throw mEditException;
-            }
-            return mEditor;
-        }
-
-        @Override
-        public void registerOnSharedPreferenceChangeListener(
-                OnSharedPreferenceChangeListener listener) {
-            String id = getId(listener);
-            Log.d(
-                    TAG,
-                    "registerOnSharedPreferenceChangeListener(): id="
-                            + id
-                            + ", listener="
-                            + listener);
-
-            mEditor.mListeners.put(id, new WeakReference<>(listener));
-        }
-
-        @Override
-        public void unregisterOnSharedPreferenceChangeListener(
-                OnSharedPreferenceChangeListener listener) {
-            String id = getId(listener);
-            Log.d(
-                    TAG,
-                    "unregisterOnSharedPreferenceChangeListener(): id="
-                            + id
-                            + ", listener="
-                            + listener);
-
-            mEditor.mListeners.remove(id);
-        }
-
-        private final class FakeEditor implements Editor {
-
-            private final Map<String, Object> mProps = new LinkedHashMap<>();
-            private final Set<String> mKeysToNotify = new LinkedHashSet<>();
-            private final Map<String, WeakReference<OnSharedPreferenceChangeListener>> mListeners =
-                    new LinkedHashMap<>();
-
-            private boolean mCommitResult = true;
-
-            @Override
-            public Editor putString(String key, String value) {
-                return put(key, value);
-            }
-
-            @Override
-            public Editor putStringSet(String key, Set<String> values) {
-                return put(key, values);
-            }
-
-            @Override
-            public Editor putInt(String key, int value) {
-                return put(key, value);
-            }
-
-            @Override
-            public Editor putLong(String key, long value) {
-                return put(key, value);
-            }
-
-            @Override
-            public Editor putFloat(String key, float value) {
-                return put(key, value);
-            }
-
-            @Override
-            public Editor putBoolean(String key, boolean value) {
-                return put(key, value);
-            }
-
-            @Override
-            public Editor remove(String key) {
-                Log.v(TAG, "remove(" + key + ")");
-                mProps.remove(key);
-                mKeysToNotify.add(key);
-                return this;
-            }
-
-            @Override
-            public Editor clear() {
-                Log.v(TAG, "clear()");
-                mProps.clear();
-                return this;
-            }
-
-            @Override
-            public boolean commit() {
-                Log.v(TAG, "commit(): mCommitResult=" + mCommitResult);
-                try {
-                    return mCommitResult;
-                } finally {
-                    notifyListeners();
-                }
-            }
-
-            @Override
-            public void apply() {
-                Log.v(TAG, "apply(): mCommitResult=" + mCommitResult);
-                notifyListeners();
-            }
-
-            private <T> T get(String key, Class<T> clazz, T defValue) {
-                Object value = mProps.get(key);
-                return value == null ? defValue : clazz.cast(value);
-            }
-
-            private FakeEditor put(String key, Object value) {
-                Log.v(
-                        TAG,
-                        "put(): "
-                                + key
-                                + "="
-                                + value
-                                + " ("
-                                + value.getClass().getSimpleName()
-                                + "): mCommitResult="
-                                + mCommitResult);
-                if (mCommitResult) {
-                    mProps.put(key, value);
-                    mKeysToNotify.add(key);
-                }
-                return mEditor;
-            }
-
-            private void notifyListeners() {
-                Log.d(TAG, "notifyListeners(): " + mListeners.size() + " listeners");
-                for (WeakReference<OnSharedPreferenceChangeListener> ref : mListeners.values()) {
-                    OnSharedPreferenceChangeListener listener = ref.get();
-                    if (listener != null) {
-                        for (String key : mKeysToNotify) {
-                            Log.v(TAG, "Notifying key change (" + key + ") to " + listener);
-                            listener.onSharedPreferenceChanged(FakeSharedPreferences.this, key);
-                        }
-                    }
-                }
-                Log.v(TAG, "Clearing keys to notify (" + mKeysToNotify + ")");
-                mKeysToNotify.clear();
-            }
-
-        }
-    }
-
-    private static String getId(OnSharedPreferenceChangeListener listener) {
-        Objects.requireNonNull(listener, "listener cannot be null");
-
-        // TODO(b/309857141): check for some sort of Identifiable interface instead
-        return listener instanceof SyncOnSharedPreferenceChangeListener
-                ? ((SyncOnSharedPreferenceChangeListener) listener).getId()
-                : String.valueOf(System.identityHashCode(listener));
-    }
-
-    // TODO(b/309857141): move to its own class / common package (it will be done in a later CL so
-    // this class can be easily cherry picked into older releases).
-    /**
-     * OnSharedPreferenceChangeListener implementation that blocks until the first key is received.
-     */
-    public static final class SyncOnSharedPreferenceChangeListener
-            extends SyncCallback<String, RuntimeException>
-            implements OnSharedPreferenceChangeListener {
-        @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            injectResult(key);
-        }
     }
 }

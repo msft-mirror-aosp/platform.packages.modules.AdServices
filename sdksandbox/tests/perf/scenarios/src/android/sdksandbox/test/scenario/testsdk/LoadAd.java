@@ -34,21 +34,24 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Scenario
 @RunWith(JUnit4.class)
 public class LoadAd {
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
     private static final Bundle sArgsBundle = InstrumentationRegistry.getArguments();
+    private static final Map<String, Boolean> sClientArgMap = new HashMap<>();
 
     private static final String CLIENT_APP_PACKAGE_NAME_KEY = "client-app-package-name";
     private static final String CLIENT_APP_ACTIVITY_NAME_KEY = "client-app-activity-name";
-    private static final String MEDIATION_ENABLED_KEY = "mediation_enabled";
+    // Prefix for matching boolean arguments to pass to client app.
+    private static final String CLIENT_APP_ARG_KEY_PREFIX = "client-app-arg-";
     private static final int WAIT_TIME_BEFORE_END_TEST_MS = 3000;
 
     protected static String sPackageName;
     private static String sActivityName;
-    private static boolean sMediationEnabled;
     private ClientAppUtils mClientAppUtils;
 
     /** Set up the arguments used to control the app under test. */
@@ -59,7 +62,14 @@ public class LoadAd {
         assertThat(sPackageName).isNotNull();
         sActivityName = sArgsBundle.getString(CLIENT_APP_ACTIVITY_NAME_KEY);
         assertThat(sActivityName).isNotNull();
-        sMediationEnabled = Boolean.parseBoolean(sArgsBundle.getString(MEDIATION_ENABLED_KEY));
+
+        for (String argKey : sArgsBundle.keySet()) {
+            if (argKey.startsWith(CLIENT_APP_ARG_KEY_PREFIX)) {
+                sClientArgMap.put(
+                        argKey.substring(CLIENT_APP_ARG_KEY_PREFIX.length()),
+                        Boolean.parseBoolean(sArgsBundle.getString(argKey)));
+            }
+        }
     }
 
     @AfterClass
@@ -71,14 +81,14 @@ public class LoadAd {
 
     @Before
     public void setup() throws Exception {
-        mClientAppUtils = new ClientAppUtils(sPackageName, sActivityName);
-        sUiDevice.executeShellCommand(mClientAppUtils.getStartAppCommand(sMediationEnabled));
+        mClientAppUtils = new ClientAppUtils(sUiDevice, sPackageName, sActivityName);
+        sUiDevice.executeShellCommand(mClientAppUtils.getStartAppCommand(sClientArgMap));
+        mClientAppUtils.initializeSdk();
     }
 
     @Test
     public void testLoadAd() throws Exception {
-        mClientAppUtils.loadAd(sUiDevice);
-        mClientAppUtils.assertAdLoaded(sUiDevice);
+        mClientAppUtils.loadAd();
         Thread.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
 }

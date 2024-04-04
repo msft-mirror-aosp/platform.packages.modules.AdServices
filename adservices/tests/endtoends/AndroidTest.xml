@@ -48,9 +48,9 @@
 
         <!-- Increase the allowed API queries per second -->
         <option name="run-command"
-                value="setprop debug.adservices.sdk_request_permits_per_second 1000" />
+                value="device_config put adservices sdk_request_permits_per_second 1000" />
         <option name="teardown-command"
-                value="setprop debug.adservices.sdk_request_permits_per_second 1" />
+                value="device_config put adservices sdk_request_permits_per_second 1" />
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />

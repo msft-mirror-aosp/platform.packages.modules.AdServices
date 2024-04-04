@@ -75,7 +75,7 @@ android_library {
     },
     apex_available: ["com.android.extservices"],
     lint: {
-        extra_check_modules: ["BackCompatLintChecker"],
+        extra_check_modules: ["AdServicesLintChecker"],
     },
 }
 

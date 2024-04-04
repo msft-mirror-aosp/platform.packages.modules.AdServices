@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 
@@ -78,7 +76,6 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.ApiCallStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -86,7 +83,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of the Custom Audience service. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -276,10 +272,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             } catch (Exception exception) {
                 sLogger.d(exception, "Error encountered in joinCustomAudience, notifying caller");
                 resultCode = notifyFailure(callback, exception);
-                failureReason =
-                        resultCode == AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED
-                                ? FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST
-                                : FAILURE_REASON_UNSET;
                 return;
             }
 
@@ -290,9 +282,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } finally {
             if (shouldLog) {
                 mAdServicesLogger.logFledgeApiCallStats(
-                        apiName,
-                        /* latencyMs= */ 0,
-                        ApiCallStats.failureResult(resultCode, failureReason));
+                        apiName, ownerPackageName, resultCode, /*latencyMs=*/ 0);
             }
         }
     }
@@ -348,7 +338,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                     mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                                     AdRenderIdValidator.createInstance(mFlags),
                                     AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                                            mFlags.getFledgeAdSelectionFilteringEnabled(),
+                                            mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                                            mFlags.getFledgeAppInstallFilteringEnabled(),
                                             mFlags.getFledgeAuctionServerAdRenderIdEnabled()));
 
                     impl.doFetchCustomAudience(input, callback, devContext);
@@ -522,10 +513,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 // Catch these specific exceptions, but report them back to the caller
                 sLogger.d(exception, "Error encountered in leaveCustomAudience, notifying caller");
                 resultCode = notifyFailure(callback, exception);
-                failureReason =
-                        resultCode == AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED
-                                ? FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST
-                                : FAILURE_REASON_UNSET;
                 return;
             } catch (Exception exception) {
                 // For all other exceptions, report success
@@ -540,9 +527,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } finally {
             if (shouldLog) {
                 mAdServicesLogger.logFledgeApiCallStats(
-                        apiName,
-                        /* latencyMs= */ 0,
-                        ApiCallStats.failureResult(resultCode, failureReason));
+                        apiName, ownerPackageName, resultCode, /*latencyMs=*/ 0);
             }
         }
     }
@@ -583,7 +568,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -647,7 +635,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -699,7 +690,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 

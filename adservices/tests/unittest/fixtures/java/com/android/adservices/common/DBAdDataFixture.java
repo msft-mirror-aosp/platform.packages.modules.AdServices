@@ -66,6 +66,14 @@ public class DBAdDataFixture {
                 .collect(Collectors.toList());
     }
 
+    /** Returns a list DBAdData with invalid render IDs */
+    public static List<DBAdData> getValidDbAdDataListByBuyerWithInvalidAdRenderId(
+            AdTechIdentifier buyer) {
+        return AdDataFixture.getValidFilterAdsWithInvalidAdRenderIdByBuyer(buyer).stream()
+                .map(DBAdDataFixture::convertAdDataToDBAdData)
+                .collect(Collectors.toList());
+    }
+
     public static List<DBAdData> getValidDbAdDataListByBuyerNoFilters(AdTechIdentifier buyer) {
         return AdDataFixture.getValidAdsByBuyer(buyer).stream()
                 .map(DBAdDataFixture::convertAdDataToDBAdData)

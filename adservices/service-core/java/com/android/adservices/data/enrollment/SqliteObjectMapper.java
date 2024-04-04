@@ -62,6 +62,14 @@ public class SqliteObjectMapper {
                 cursor,
                 EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
                 builder::setEncryptionKeyUrl);
+        setTextColumn(
+                cursor,
+                EnrollmentTables.EnrollmentDataContract.ENROLLED_SITE,
+                builder::setEnrolledSite);
+        setTextColumn(
+                cursor,
+                EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS,
+                builder::setEnrolledAPIs);
         return builder.build();
     }
 

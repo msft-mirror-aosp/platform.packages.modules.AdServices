@@ -16,7 +16,6 @@
 
 package com.android.adservices.ui;
 
-import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 
 import android.annotation.RequiresApi;
 import android.content.Context;
@@ -32,34 +31,69 @@ import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollectio
  */
 @RequiresApi(Build.VERSION_CODES.S)
 public interface UxSelector {
+    enum EndUserUx {
+        UNKNOWN,
+        BETA,
+        GA,
+        U18,
+        RVC,
+        GA_WITH_PAS
+    }
+
     /**
-     * This method will be called in during initialization of class to determine which mode to
-     * choose.
+     * This method will be called in during initialization of class to determine which ux to choose.
      *
-     * @param context Current context
+     * @param fragmentActivity unused.
+     * @param context current context.
+     * @return Ux that end user should see.
      */
-    default void initWithUx(FragmentActivity fragmentActivity, Context context) {
-        switch (UxUtil.getUx(context)) {
-            case U18_UX:
+    default EndUserUx initWithUx(FragmentActivity fragmentActivity, Context context) {
+        EndUserUx endUserUx = getEndUserUx(context);
+        switch (endUserUx) {
+            case U18:
                 initU18();
                 break;
-            case GA_UX:
-                if (UxUtil.getFlag(KEY_PAS_UX_ENABLED) && UxUtil.wasPasNotificationDisplayed()) {
-                    // UI views should be updated only once notification is sent (ROW).
-                    initGaUxWithPas();
-                    break;
-                }
+            case GA:
                 initGA();
                 break;
-            case BETA_UX:
+            case BETA:
                 initBeta();
                 break;
-            case RVC_UX:
+            case RVC:
                 initRvc();
                 break;
+            case GA_WITH_PAS:
+                initGaUxWithPas();
+                break;
+            default:
+                initGA();
+        }
+        return endUserUx;
+    }
+
+    /**
+     * Returns the UX that the end user should be seeing currently.
+     *
+     * @param context current Context.
+     * @return Ux that end user should see.
+     */
+    default EndUserUx getEndUserUx(Context context) {
+        switch (UxUtil.getUx(context)) {
+            case U18_UX:
+                return EndUserUx.U18;
+            case GA_UX:
+                if (UxUtil.pasUxIsActive(/* beforeNotificationShown */ false)) {
+                    // UI views should be updated only once notification is sent (ROW).
+                    return EndUserUx.GA_WITH_PAS;
+                }
+                return EndUserUx.GA;
+            case BETA_UX:
+                return EndUserUx.BETA;
+            case RVC_UX:
+                return EndUserUx.RVC;
             default:
                 // TODO: log some warning or error
-                initGA();
+                return EndUserUx.GA;
         }
     }
 

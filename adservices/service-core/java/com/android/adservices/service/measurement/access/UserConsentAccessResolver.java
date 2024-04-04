@@ -16,9 +16,6 @@
 
 package com.android.adservices.service.measurement.access;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
-
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -49,14 +46,12 @@ public class UserConsentAccessResolver implements IAccessResolver {
     public AccessInfo getAccessInfo(@NonNull Context context) {
         AdServicesApiConsent userConsent =
                 mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS);
-        return new AccessInfo(userConsent.isGiven(), FAILURE_REASON_UNSET);
-    }
-
-    @NonNull
-    @Override
-    @AdServicesStatusUtils.StatusCode
-    public int getErrorStatusCode() {
-        return STATUS_USER_CONSENT_REVOKED;
+        boolean consented = userConsent.isGiven();
+        int statusCode =
+                consented
+                        ? AdServicesStatusUtils.STATUS_SUCCESS
+                        : AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+        return new AccessInfo(consented, statusCode);
     }
 
     @NonNull

@@ -19,8 +19,8 @@ package com.android.adservices.service.customaudience;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -136,7 +136,7 @@ public class BackgroundFetchWorkerTest {
         mCustomAudienceDaoSpy =
                 Mockito.spy(
                         Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
-                                .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                                .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                                 .build()
                                 .customAudienceDao());
         mAppInstallDaoSpy =
@@ -243,7 +243,7 @@ public class BackgroundFetchWorkerTest {
             }
 
             @Override
-            public FluentFuture<?> updateCustomAudience(
+            public FluentFuture<UpdateResultType> updateCustomAudience(
                     @NonNull Instant jobStartTime,
                     @NonNull DBCustomAudienceBackgroundFetchData fetchData) {
 
@@ -749,10 +749,10 @@ public class BackgroundFetchWorkerTest {
     }
 
     private static class BackgroundFetchWorkerTestFlags implements Flags {
-        private final boolean mFledgeAdSelectionFilteringEnabled;
+        private final boolean mFledgeAppInstallFilteringEnabled;
 
-        BackgroundFetchWorkerTestFlags(boolean fledgeAdSelectionFilteringEnabled) {
-            mFledgeAdSelectionFilteringEnabled = fledgeAdSelectionFilteringEnabled;
+        BackgroundFetchWorkerTestFlags(boolean fledgeAppInstallFilteringEnabled) {
+            mFledgeAppInstallFilteringEnabled = fledgeAppInstallFilteringEnabled;
         }
 
         @Override
@@ -761,8 +761,8 @@ public class BackgroundFetchWorkerTest {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return mFledgeAdSelectionFilteringEnabled;
+        public boolean getFledgeAppInstallFilteringEnabled() {
+            return mFledgeAppInstallFilteringEnabled;
         }
 
         @Override

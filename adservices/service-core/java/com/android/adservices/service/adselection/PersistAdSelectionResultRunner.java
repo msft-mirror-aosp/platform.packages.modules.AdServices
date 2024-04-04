@@ -35,7 +35,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
@@ -58,18 +57,18 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonMessageEntity;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.kanon.KAnonSignJoinManager;
+import com.android.adservices.service.kanon.KAnonUtil;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
+import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -80,8 +79,6 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -96,7 +93,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /** Runner class for ProcessAdSelectionResultRunner service */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class PersistAdSelectionResultRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -281,25 +277,26 @@ public class PersistAdSelectionResultRunner {
     }
 
     private void makeKAnonSignJoin(AuctionResult auctionResult, long adSelectionId) {
-        if (mFlags.getFledgeKAnonSignJoinFeatureEnabled()) {
+        if (mFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled()) {
             ListenableFuture<Void> signJoinFuture =
                     Futures.submitAsync(
                             () -> {
                                 try {
+
                                     List<KAnonMessageEntity> messageEntities =
-                                            getKAnonEntitiesFromAuctionResult(
-                                                    auctionResult, adSelectionId);
+                                            KAnonUtil.getKAnonEntitiesFromAuctionResult(
+                                                    auctionResult.getAdRenderUrl(), adSelectionId);
                                     KAnonSignJoinManager kAnonSignJoinManager =
                                             mKAnonSignJoinFactory.getKAnonSignJoinManager();
                                     kAnonSignJoinManager.processNewMessages(messageEntities);
                                 } catch (Throwable t) {
-                                    sLogger.d("Error while processing new messages for KAnon");
+                                    sLogger.e("Error while processing new messages for KAnon");
                                 }
                                 return Futures.immediateVoidFuture();
                             },
                             mBackgroundExecutorService);
         } else {
-            sLogger.d("KAnon Sign Join feature is disabled");
+            sLogger.v("KAnon Sign Join feature is disabled");
             mAdServicesLogger.logKAnonSignJoinStatus();
         }
     }
@@ -378,19 +375,6 @@ public class PersistAdSelectionResultRunner {
         return winningAd;
     }
 
-    private List<KAnonMessageEntity> getKAnonEntitiesFromAuctionResult(
-            AuctionResult auctionResult, long adSelectionId) throws NoSuchAlgorithmException {
-        MessageDigest md = MessageDigest.getInstance(SHA256);
-        String adRenderUrl = auctionResult.getAdRenderUrl();
-        byte[] digestedBytes = md.digest(adRenderUrl.getBytes(StandardCharsets.UTF_8));
-        KAnonMessageEntity kAnonMessageEntity =
-                KAnonMessageEntity.builder()
-                        .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
-                        .setAdSelectionId(adSelectionId)
-                        .setHashSet(BaseEncoding.base16().encode(digestedBytes))
-                        .build();
-        return List.of(kAnonMessageEntity);
-    }
 
     @NonNull
     private DBAdData fetchRemarketingAd(AuctionResult auctionResult) {
@@ -535,7 +519,9 @@ public class PersistAdSelectionResultRunner {
 
         byte metaInfoByte = resultBytes[0];
         int version = AuctionServerPayloadFormattingUtil.extractFormatterVersion(metaInfoByte);
-        mPayloadExtractor = AuctionServerPayloadFormatterFactory.createPayloadExtractor(version);
+        mPayloadExtractor =
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(
+                        version, mAdServicesLogger);
     }
 
     private AuctionResult composeAuctionResult(
