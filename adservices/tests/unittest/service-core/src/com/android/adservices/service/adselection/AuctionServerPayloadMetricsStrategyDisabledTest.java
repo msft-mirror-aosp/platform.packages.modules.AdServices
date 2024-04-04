@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -54,6 +56,13 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
     }
 
     @Test
+    public void testSetServerAuctionCoordinatorSourceDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy.setServerAuctionCoordinatorSource(
+                mBuilder, SERVER_AUCTION_COORDINATOR_SOURCE_API);
+        verifyZeroInteractions(mBuilder);
+    }
+
+    @Test
     public void testLogGetAdSelectionDataApiCalledStatsDoesNothing() {
         mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataApiCalledStats(
                 mBuilder, 2000, AdServicesStatusUtils.STATUS_SUCCESS);
@@ -72,5 +81,18 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
         mAuctionServerPayloadMetricsStrategy.addToBuyerIntermediateStats(
                 mPerBuyerStatsMock, mDBCustomAudienceMock, mCustomAudienceMock);
         verifyZeroInteractions(mPerBuyerStatsMock, mDBCustomAudienceMock, mCustomAudienceMock);
+    }
+
+    @Test
+    public void
+            testLogGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetricsDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy
+                .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+                        mPerBuyerStatsMock,
+                        /* encodedSignalsCount */ 0,
+                        /* encodedSignalsTotalSizeInBytes */ 0,
+                        /* encodedSignalsMaxSizeInBytes */ 0,
+                        /* encodedSignalsMinSizeInBytes */ 0);
+        verifyZeroInteractions(mPerBuyerStatsMock);
     }
 }

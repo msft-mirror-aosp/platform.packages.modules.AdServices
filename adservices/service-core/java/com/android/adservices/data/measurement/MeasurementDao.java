@@ -152,6 +152,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG,
                 trigger.getAggregatableSourceRegistrationTimeConfig().name());
+        values.put(
+                MeasurementTables.TriggerContract.TRIGGER_CONTEXT_ID,
+                trigger.getTriggerContextId());
 
         long rowId =
                 mSQLTransaction
@@ -2149,6 +2152,7 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.SourceContract.ID + " IN source_ids",
                                 MeasurementTables.SourceContract.EVENT_TIME + " <= %1$d",
                                 MeasurementTables.SourceContract.EXPIRY_TIME + " > %1$d",
+                                MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW + " > 0",
                                 MeasurementTables.SourceContract.EVENT_TIME
                                         + " + "
                                         + MeasurementTables.SourceContract
@@ -2322,6 +2326,9 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getAggregationCoordinatorOrigin().toString());
         values.put(
                 MeasurementTables.AggregateReport.IS_FAKE_REPORT, aggregateReport.isFakeReport());
+        values.put(
+                MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
+                aggregateReport.getTriggerContextId());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

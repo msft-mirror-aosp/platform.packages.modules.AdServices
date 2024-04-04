@@ -109,30 +109,36 @@ class SdkSandboxStatsdLogger {
 
     private int convertToStatsLogMethodCode(int method) {
         return switch (method) {
-            case SandboxLatencyInfo.METHOD_LOAD_SDK -> SdkSandboxStatsLog
-                    .SANDBOX_API_CALLED__METHOD__LOAD_SDK;
-            case SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS -> SdkSandboxStatsLog
-                    .SANDBOX_API_CALLED__METHOD__GET_SANDBOXED_SDKS;
-            case SandboxLatencyInfo.METHOD_SYNC_DATA_FROM_CLIENT -> SdkSandboxStatsLog
-                    .SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT;
-            case SandboxLatencyInfo.METHOD_REQUEST_SURFACE_PACKAGE -> SdkSandboxStatsLog
-                    .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
-            case SandboxLatencyInfo
-                    .METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE -> SdkSandboxStatsLog
-                    .SANDBOX_API_CALLED__METHOD__REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE;
-            case SandboxLatencyInfo
-                    .METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE -> SdkSandboxStatsLog
-                    .SANDBOX_API_CALLED__METHOD__UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE;
-            case SandboxLatencyInfo
-                    .METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES -> SdkSandboxStatsLog
-                    .SANDBOX_API_CALLED__METHOD__GET_APP_OWNED_SDK_SANDBOX_INTERFACES;
-            case SandboxLatencyInfo.METHOD_UNLOAD_SDK -> SdkSandboxStatsLog
-                    .SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
-            case SandboxLatencyInfo.METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK -> SdkSandboxStatsLog
-                    .SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK;
-            case SandboxLatencyInfo
-                    .METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK -> SdkSandboxStatsLog
-                    .SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK;
+            case SandboxLatencyInfo.METHOD_LOAD_SDK ->
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
+            case SandboxLatencyInfo.METHOD_LOAD_SDK_VIA_CONTROLLER ->
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK_VIA_CONTROLLER;
+            case SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS ->
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_SANDBOXED_SDKS;
+            case SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS_VIA_CONTROLLER ->
+                    SdkSandboxStatsLog
+                            .SANDBOX_API_CALLED__METHOD__GET_SANDBOXED_SDKS_VIA_CONTROLLER;
+            case SandboxLatencyInfo.METHOD_SYNC_DATA_FROM_CLIENT ->
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT;
+            case SandboxLatencyInfo.METHOD_REQUEST_SURFACE_PACKAGE ->
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
+            case SandboxLatencyInfo.METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE ->
+                    SdkSandboxStatsLog
+                            .SANDBOX_API_CALLED__METHOD__REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE;
+            case SandboxLatencyInfo.METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE ->
+                    SdkSandboxStatsLog
+                            .SANDBOX_API_CALLED__METHOD__UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE;
+            case SandboxLatencyInfo.METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES ->
+                    SdkSandboxStatsLog
+                            .SANDBOX_API_CALLED__METHOD__GET_APP_OWNED_SDK_SANDBOX_INTERFACES;
+            case SandboxLatencyInfo.METHOD_UNLOAD_SDK ->
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
+            case SandboxLatencyInfo.METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK ->
+                    SdkSandboxStatsLog
+                            .SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK;
+            case SandboxLatencyInfo.METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK ->
+                    SdkSandboxStatsLog
+                            .SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK;
             default -> SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED;
         };
     }

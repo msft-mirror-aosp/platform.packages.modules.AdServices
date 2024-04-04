@@ -18,6 +18,7 @@ package com.android.adservices.shared.common.flags;
 
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.BACKGROUND_JOB_LOGGING_ENABLED;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
+import static com.android.adservices.shared.common.flags.ModuleSharedFlags.ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -37,6 +38,12 @@ public final class ModuleSharedFlagsTest {
     public void testGetBackgroundJobSamplingLoggingRate() {
         assertThat(sFlags.getBackgroundJobSamplingLoggingRate())
                 .isEqualTo(BACKGROUND_JOB_SAMPLING_LOGGING_RATE);
+    }
+
+    @Test
+    public void testGetErrorCodeSampleInterval() {
+        assertThat(sFlags.getEncodedErrorCodeListPerSampleInterval())
+                .isEqualTo(ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL);
     }
 
     // TODO(b/325135083): add a test to make sure all constants are annotated with FeatureFlag or

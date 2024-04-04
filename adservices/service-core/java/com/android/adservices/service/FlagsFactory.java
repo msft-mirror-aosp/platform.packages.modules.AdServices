@@ -64,11 +64,6 @@ public class FlagsFactory {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return true;
-        }
-
-        @Override
         public boolean getFledgeFetchCustomAudienceEnabled() {
             return true;
         }
@@ -111,6 +106,16 @@ public class FlagsFactory {
 
         @Override
         public boolean getFledgeAppPackageNameLoggingEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getPasExtendedMetricsEnabled() {
             return true;
         }
     }

@@ -300,7 +300,6 @@ public class AdSelectionTest extends FledgeScenarioTest {
     }
 
     /** Test that buyer and seller receive win and loss debug reports (Remarketing CUJ 164). */
-    @FlakyTest(bugId = 300421625)
     @Test
     public void testAdSelection_withDebugReporting_happyPath() throws Exception {
         assumeTrue(isAdIdSupported());
@@ -312,12 +311,14 @@ public class AdSelectionTest extends FledgeScenarioTest {
 
         try {
             joinCustomAudience(SHOES_CA);
+            joinCustomAudience(SHIRTS_CA);
             setDebugReportingEnabledForTesting(true);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
         } finally {
             setDebugReportingEnabledForTesting(false);
             leaveCustomAudience(SHOES_CA);
+            joinCustomAudience(SHIRTS_CA);
         }
 
         assertThat(dispatcher.getCalledPaths())
@@ -354,7 +355,6 @@ public class AdSelectionTest extends FledgeScenarioTest {
      * Test that buyer and seller receive win and loss debug reports with reject reason (Remarketing
      * CUJ 170).
      */
-    @FlakyTest(bugId = 301334790)
     @Test
     public void testAdSelection_withDebugReportingAndRejectReason_happyPath() throws Exception {
         assumeTrue(isAdIdSupported());
@@ -398,6 +398,39 @@ public class AdSelectionTest extends FledgeScenarioTest {
                                             .selectAds(config)
                                             .get(TIMEOUT, TimeUnit.SECONDS));
             assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
+        } finally {
+            leaveCustomAudience(SHIRTS_CA);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    @Test
+    public void testAdSelection_withInvalidScoringUrl_doesNotWinAuction() throws Exception {
+        // ScenarioDispatcher returns 404 for all paths which are not setup from the json file and
+        // we didn't configure a scoring logic url.
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-invalid-scoring-logic-url.json",
+                        getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig config = makeAdSelectionConfig();
+
+        try {
+            joinCustomAudience(SHIRTS_CA);
+            Exception selectAdsException =
+                    assertThrows(
+                            ExecutionException.class,
+                            () ->
+                                    mAdSelectionClient
+                                            .selectAds(config)
+                                            .get(TIMEOUT, TimeUnit.SECONDS));
+            assertThat(
+                            selectAdsException.getCause() instanceof TimeoutException
+                                    || selectAdsException.getCause()
+                                            instanceof IllegalStateException)
+                    .isTrue();
         } finally {
             leaveCustomAudience(SHIRTS_CA);
         }

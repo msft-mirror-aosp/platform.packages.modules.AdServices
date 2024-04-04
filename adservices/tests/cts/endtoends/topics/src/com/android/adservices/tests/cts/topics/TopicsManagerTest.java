@@ -17,6 +17,7 @@
 package com.android.adservices.tests.cts.topics;
 
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -36,6 +37,7 @@ import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.common.ServiceUnavailableException;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
@@ -104,7 +106,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
         flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
-        flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        flags.setFlag(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
         // TODO(b/263297331): Handle rollback support for R and S.
     }
@@ -132,7 +135,7 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
         Exception e =
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient.getTopics().get());
-        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
+        assertThat(e).hasCauseThat().isInstanceOf(ServiceUnavailableException.class);
     }
 
     @Test

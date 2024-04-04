@@ -15,4 +15,5 @@
 -->
 <resources>
     <bool name="isAdExtBootCompletedReceiverEnabled">false</bool>
+    <bool name="isAtLeastS">false</bool>
 </resources>

@@ -36,6 +36,7 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
@@ -48,6 +49,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+@RequiresSdkLevelAtLeastT(reason = "PAS UX is currently only available on T+ devices")
 @RunWith(AndroidJUnit4.class)
 public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTestCase {
 
@@ -76,6 +78,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
      */
     @BeforeClass
     public static void classSetup() throws Exception {
+
         NotificationActivityTestUtil.setupBeforeTests();
     }
 
@@ -100,7 +103,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
         mDevice.waitForIdle();
 
         // start renotify notice
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ false, mDevice);
+        NotificationActivityTestUtil.startRenotifyPasActivity(/* isEuActivity= */ false, mDevice);
 
         UiObject2 pasNotificationHeader =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_pas_renotify_header_title);

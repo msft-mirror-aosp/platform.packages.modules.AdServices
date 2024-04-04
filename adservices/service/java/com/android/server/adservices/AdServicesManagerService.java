@@ -1334,6 +1334,62 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isMeasurementDataReset() {
+        return executeGetter(
+                /* defaultReturn= */ false,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .isMeasurementDataReset());
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isMeasurementDataReset() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setMeasurementDataReset(isMeasurementDataReset);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isMeasurementDataReset().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isPaDataReset() {
+        return executeGetter(
+                /* defaultReturn= */ false,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .isPaDataReset());
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setPaDataReset(boolean isPaDataReset) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isPaDataReset() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setPaDataReset(isPaDataReset);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isPaDataReset().");
+        }
+    }
+
     @FunctionalInterface
     interface ThrowableGetter<R> {
         R apply(int userId) throws IOException;

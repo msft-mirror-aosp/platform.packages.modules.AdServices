@@ -15,22 +15,20 @@
  */
 package com.android.adservices.service.topics;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_ENROLLMENT_BLOCKLISTED;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_ENROLLMENT_INVALID_ID;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
@@ -88,7 +86,6 @@ import java.util.concurrent.Executor;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsServiceImpl extends ITopicsService.Stub {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
@@ -324,10 +321,10 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             sLogger.v("STATUS_CALLER_NOT_ALLOWED: Caller signature not allowlisted");
             invokeCallbackWithStatus(
                     callback,
-                    STATUS_CALLER_NOT_ALLOWED,
+                    STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
                     "Unauthorized caller. Signatures for calling package not allowed.");
             return ApiCallStats.failureResult(
-                    STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
+                    STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST, FAILURE_REASON_UNSET);
         }
 
         // Check whether calling package belongs to the callingUid
@@ -356,16 +353,17 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             EnrollmentData enrollmentData =
                     mEnrollmentDao.getEnrollmentDataFromSdkName(topicsParam.getSdkName());
             boolean permitted = true;
+            int resultCode = STATUS_UNSET;
             int failureReason = FAILURE_REASON_UNSET;
 
             if (enrollmentData == null) {
                 errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment not found";
                 permitted = false;
-                failureReason = FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND;
+                resultCode = STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND;
             } else if (enrollmentData.getEnrollmentId() == null) {
                 errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment ID invalid";
                 permitted = false;
-                failureReason = FAILURE_REASON_ENROLLMENT_INVALID_ID;
+                resultCode = STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID;
             } else {
                 if (!AppManifestConfigHelper.isAllowedTopicsAccess(
                         ProcessCompatUtils.isSdkSandboxUid(callingUid),
@@ -373,20 +371,19 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                         enrollmentData.getEnrollmentId())) {
                     errorString = "STATUS_CALLER_NOT_ALLOWED: App manifest config failed";
                     permitted = false;
-                    failureReason = FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
+                    resultCode = STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
                 } else if (mFlags.isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
                     errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment blocklisted";
                     permitted = false;
-                    failureReason = FAILURE_REASON_ENROLLMENT_BLOCKLISTED;
+                    resultCode = STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED;
                 }
             }
 
             sLogger.v("Checked Topics enrollment: %s", errorString);
 
             if (!permitted) {
-                invokeCallbackWithStatus(
-                        callback, STATUS_CALLER_NOT_ALLOWED, "Caller is not authorized.");
-                EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance(mContext);
+                invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
+                EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance();
                 Integer buildId = enrollmentUtil.getBuildId();
                 Integer dataFileGroupStatus = enrollmentUtil.getFileGroupStatus();
                 enrollmentUtil.logEnrollmentFailedStats(
@@ -396,7 +393,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                         mEnrollmentDao.getEnrollmentRecordCountForLogging(),
                         topicsParam.getSdkName(),
                         EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue());
-                return ApiCallStats.failureResult(STATUS_CALLER_NOT_ALLOWED, failureReason);
+                return ApiCallStats.failureResult(resultCode, failureReason);
             }
         }
 
@@ -432,14 +429,11 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
-            return ApiCallStats.failureResult(
-                    STATUS_UNAUTHORIZED, FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND);
+            return ApiCallStats.failureResult(STATUS_UNAUTHORIZED, FAILURE_REASON_UNSET);
         }
         if (packageUid != appCallingUid) {
             sLogger.e(callingPackage + " does not belong to uid " + callingUid);
-            return ApiCallStats.failureResult(
-                    STATUS_UNAUTHORIZED,
-                    FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID);
+            return ApiCallStats.failureResult(STATUS_UNAUTHORIZED, FAILURE_REASON_UNSET);
         }
         return ApiCallStats.successResult();
     }
