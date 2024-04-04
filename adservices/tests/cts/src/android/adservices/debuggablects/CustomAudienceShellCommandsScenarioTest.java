@@ -32,6 +32,7 @@ import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
+import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.common.annotations.SetFlagEnabled;
 import com.android.adservices.common.annotations.SetIntegerFlag;
 import com.android.compatibility.common.util.ShellUtils;
@@ -46,6 +47,7 @@ import java.util.List;
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
 @SetFlagEnabled(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
+@RequiresSdkLevelAtLeastT
 public class CustomAudienceShellCommandsScenarioTest extends FledgeScenarioTest {
     private static final String OWNER = "android.adservices.debuggablects";
 

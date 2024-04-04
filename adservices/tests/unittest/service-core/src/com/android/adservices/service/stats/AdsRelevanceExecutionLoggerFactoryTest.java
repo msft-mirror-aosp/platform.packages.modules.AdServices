@@ -27,6 +27,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.util.Clock;
@@ -55,7 +56,7 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
                         .initMocks(this)
                         .startMocking();
 
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
         mAdServicesLoggerMock = Mockito.spy(AdServicesLoggerImpl.getInstance());
     }
@@ -129,7 +130,7 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
                         sCallerMetadata,
                         Clock.getInstance(),
                         mAdServicesLoggerMock,
-                        FlagsFactory.getFlagsForTest(),
+                        FakeFlagsFactory.getFlagsForTest(),
                         AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS);
         assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
                 instanceof AdsRelevanceExecutionLoggerImpl);
@@ -143,7 +144,7 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
                         sCallerMetadata,
                         Clock.getInstance(),
                         mAdServicesLoggerMock,
-                        FlagsFactory.getFlagsForTest(),
+                        FakeFlagsFactory.getFlagsForTest(),
                         AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
         assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
                 instanceof AdsRelevanceExecutionLoggerNoLoggingImpl);

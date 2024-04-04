@@ -16,7 +16,7 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED;
@@ -62,17 +62,25 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     // android.os.OutcomeReceiver) and hence don't need to be checked at runtime.
                     FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
 
-                    // TODO(b/323888604): fix it
+                    // DeviceConfig flags for PA/FLEDGE are named "auction_server" instead of
+                    // "server_auction."  This API has already been released, and the aconfig flag
+                    // cannot be renamed, so this mismatch is intentional.
                     FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED,
 
-                    // TODO(b/323297322): fix it
-                    FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED,
-
-                    // TODO(b/323397060);
+                    // TODO(b/323397060): Remove from this allowlist after implementing feature and
+                    //  adding matching DeviceConfig flag
                     FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED,
 
-                    // TODO(b/320786372): fix it
-                    FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED);
+                    // The DeviceConfig flag guarding this feature is intentionally named
+                    // differently so that it is not scoped to the Custom Audience API.
+                    FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED,
+
+                    // There used to be a matching DeviceConfig flag, but it guarded too many
+                    // features.  Because the feature APIs are unhidden and published already, they
+                    // cannot be changed.  The old DeviceConfig flag has instead been removed and
+                    // split into individual feature flags to allow each feature to launch
+                    // independently.
+                    FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED);
 
     /**
      * Map used by {@link #testAllAconfigFlagsAreMapped()} - key is the {@code aconfig} flag name,

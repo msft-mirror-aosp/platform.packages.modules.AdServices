@@ -448,6 +448,17 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED =
             "measurement_aggregate_fallback_reporting_job_persisted";
 
+    public static final String
+            KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+                    "measurement_immediate_aggregate_reporting_job_required_battery_not_low";
+
+    public static final String
+            KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+                    "measurement_immediate_aggregate_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED =
+            "measurement_immediate_aggregate_reporting_job_persisted";
+
     public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
             "measurement_enable_aggregatable_report_payload_padding";
 
@@ -556,8 +567,6 @@ public final class FlagsConstants {
             "fledge_ad_selection_from_outcomes_overall_timeout_ms";
     public static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
             "fledge_ad_selection_expiration_window_s";
-    public static final String KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
-            "fledge_ad_selection_filtering_enabled";
     public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED =
             "fledge_app_install_filtering_enabled";
     public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED =
@@ -807,6 +816,8 @@ public final class FlagsConstants {
             "measurement_job_aggregate_fallback_reporting_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH =
             "measurement_job_aggregate_reporting_kill_switch";
+    public static final String KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH =
+            "measurement_job_immediate_aggregate_reporting_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH =
             "measurement_job_attribution_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH =
@@ -1424,4 +1435,15 @@ public final class FlagsConstants {
 
     /** Key for enabling tablet region fix. */
     public static final String KEY_ENABLE_TABLET_REGION_FIX = "enable_tablet_region_fix";
+
+    /**
+     * Key for getting base64 encoded String which describes a map of sampling interval to a list of
+     * error codes.
+     */
+    public static final String KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL =
+            "encoded_error_code_list_per_sample_interval";
+
+    /** Key for enabling custom error code sampling. */
+    public static final String KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED =
+            "custom_error_code_sampling_enabled";
 }

@@ -15,6 +15,7 @@
  */
 package com.android.adservices.ui.ganotifications;
 
+import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISMISSED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED;
@@ -81,11 +82,19 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
         ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
         boolean isConsentManagerV2 = FlagsFactory.getFlags().getEnableConsentManagerV2();
         if (isConsentManagerV2) {
-            ConsentManagerV2.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
-            ConsentManagerV2.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+            if (ConsentManagerV2.getInstance().getUserManualInteractionWithConsent()
+                    != MANUAL_INTERACTIONS_RECORDED) {
+                ConsentManagerV2.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
+                ConsentManagerV2.getInstance()
+                        .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+            }
         } else {
-            ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
-            ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+            if (ConsentManager.getInstance().getUserManualInteractionWithConsent()
+                    != MANUAL_INTERACTIONS_RECORDED) {
+                ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
+                ConsentManager.getInstance()
+                        .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+            }
         }
     }
 
