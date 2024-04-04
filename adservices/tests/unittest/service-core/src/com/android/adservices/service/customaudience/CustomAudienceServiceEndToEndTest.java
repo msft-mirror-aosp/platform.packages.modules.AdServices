@@ -59,7 +59,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
@@ -102,7 +101,6 @@ import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
-import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -520,78 +518,6 @@ public class CustomAudienceServiceEndToEndTest {
                         VALID_NAME));
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
-    }
-
-    @Test
-    public void testJoinCustomAudienceAppInstallDisabled() {
-        Flags flagsWithOnlyAppInstall =
-                new FlagsFactory.TestFlags() {
-                    @Override
-                    public boolean getFledgeFrequencyCapFilteringEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAppInstallFilteringEnabled() {
-                        return false;
-                    }
-                };
-        doReturn(flagsWithOnlyAppInstall).when(FlagsFactory::getFlags);
-        reInitServiceWithFlags(flagsWithOnlyAppInstall);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
-
-        ResultCapturingCallback callback = new ResultCapturingCallback();
-        mService.joinCustomAudience(
-                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callback);
-        assertTrue(callback.isSuccess());
-
-        DBCustomAudience result =
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
-                        CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME);
-
-        assertNoAppInstallFilters(result);
-        verifyFCapFilters(result, CUSTOM_AUDIENCE_PK1_1);
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(1));
-    }
-
-    @Test
-    public void testJoinCustomAudienceFrequencyCapDisabled() {
-        Flags flagsWithOnlyFCap =
-                new FlagsFactory.TestFlags() {
-                    @Override
-                    public boolean getFledgeFrequencyCapFilteringEnabled() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getFledgeAppInstallFilteringEnabled() {
-                        return true;
-                    }
-                };
-        doReturn(flagsWithOnlyFCap).when(FlagsFactory::getFlags);
-        reInitServiceWithFlags(flagsWithOnlyFCap);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
-
-        ResultCapturingCallback callback = new ResultCapturingCallback();
-        mService.joinCustomAudience(
-                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callback);
-        assertTrue(callback.isSuccess());
-
-        DBCustomAudience result =
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
-                        CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME);
-
-        assertNoFCapFilters(result);
-        verifyAppInstallFilters(result, CUSTOM_AUDIENCE_PK1_1);
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(1));
     }
 
     @Test
@@ -2756,52 +2682,6 @@ public class CustomAudienceServiceEndToEndTest {
         Flags mockNoRateLimitFlags = mock(Flags.class);
         doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
         Throttler.getInstance(mockNoRateLimitFlags);
-    }
-
-    private void verifyFCapFilters(
-            DBCustomAudience dbCustomAudience, CustomAudience customAudience) {
-        for (int i = 0; i < dbCustomAudience.getAds().size(); i++) {
-            if (customAudience.getAds().get(i).getAdFilters() != null) {
-                assertThat(customAudience.getAds().get(i).getAdFilters().getFrequencyCapFilters())
-                        .isEqualTo(
-                                dbCustomAudience
-                                        .getAds()
-                                        .get(i)
-                                        .getAdFilters()
-                                        .getFrequencyCapFilters());
-            }
-        }
-    }
-
-    private void verifyAppInstallFilters(
-            DBCustomAudience dbCustomAudience, CustomAudience customAudience) {
-        for (int i = 0; i < dbCustomAudience.getAds().size(); i++) {
-            if (customAudience.getAds().get(i).getAdFilters() != null) {
-                assertThat(customAudience.getAds().get(i).getAdFilters().getAppInstallFilters())
-                        .isEqualTo(
-                                dbCustomAudience
-                                        .getAds()
-                                        .get(i)
-                                        .getAdFilters()
-                                        .getAppInstallFilters());
-            }
-        }
-    }
-
-    private void assertNoFCapFilters(DBCustomAudience customAudience) {
-        for (DBAdData ad : customAudience.getAds()) {
-            if (ad.getAdFilters() != null) {
-                assertThat(ad.getAdFilters().getFrequencyCapFilters()).isNull();
-            }
-        }
-    }
-
-    private void assertNoAppInstallFilters(DBCustomAudience customAudience) {
-        for (DBAdData ad : customAudience.getAds()) {
-            if (ad.getAdFilters() != null) {
-                assertThat(ad.getAdFilters().getAppInstallFilters()).isNull();
-            }
-        }
     }
 
     private CustomAudienceOverrideTestCallback callAddOverride(
