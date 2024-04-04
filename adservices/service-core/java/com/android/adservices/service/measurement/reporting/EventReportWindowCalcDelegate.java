@@ -110,7 +110,7 @@ public class EventReportWindowCalcDelegate {
                 getEffectiveReportingWindows(source, isInstallCase(source, destinationType));
         for (Pair<Long, Long> window : reportingWindows) {
             if (isWithinWindow(triggerTime, window)) {
-                return window.second + mFlags.getMeasurementMinEventReportDelayMillis();
+                return window.second;
             }
         }
 
@@ -133,21 +133,47 @@ public class EventReportWindowCalcDelegate {
 
     /**
      * @param source source for which the window is calculated
-     * @param triggerTime time for the trigger
-     * @param destinationType trigger destination type
+     * @param trigger trigger
+     * @param triggerData trigger data
      * @return how trigger time falls in source windows
      */
     public MomentPlacement fallsWithinWindow(
-            @NonNull Source source, long triggerTime, @EventSurfaceType int destinationType) {
-        List<Pair<Long, Long>> reportingWindows =
-                getEffectiveReportingWindows(source, isInstallCase(source, destinationType));
-        if (triggerTime < reportingWindows.get(0).first) {
+            @NonNull Source source,
+            @NonNull Trigger trigger,
+            @NonNull UnsignedLong triggerData) {
+        long triggerTime = trigger.getTriggerTime();
+
+        // Non-flex source
+        if (source.getTriggerSpecs() == null) {
+            List<Pair<Long, Long>> reportingWindows =
+                    getEffectiveReportingWindows(
+                            source, isInstallCase(source, trigger.getDestinationType()));
+            if (triggerTime < reportingWindows.get(0).first) {
+                return MomentPlacement.BEFORE;
+            }
+            if (triggerTime >= reportingWindows.get(reportingWindows.size() - 1).second) {
+                return MomentPlacement.AFTER;
+            }
+            return MomentPlacement.WITHIN;
+        }
+
+        // Flex source
+        TriggerSpecs triggerSpecs = source.getTriggerSpecs();
+        long sourceRegistrationTime = source.getEventTime();
+
+        if (triggerTime
+                < triggerSpecs.findReportingStartTimeForTriggerData(triggerData)
+                        + sourceRegistrationTime) {
             return MomentPlacement.BEFORE;
         }
-        if (triggerTime >= reportingWindows.get(reportingWindows.size() - 1).second) {
-            return MomentPlacement.AFTER;
+
+        List<Long> reportingWindows = triggerSpecs.findReportingEndTimesForTriggerData(triggerData);
+        for (Long window : reportingWindows) {
+            if (triggerTime < window + sourceRegistrationTime) {
+                return MomentPlacement.WITHIN;
+            }
         }
-        return MomentPlacement.WITHIN;
+        return MomentPlacement.AFTER;
     }
 
     /**
@@ -164,8 +190,7 @@ public class EventReportWindowCalcDelegate {
         // TODO: (b/288646239) remove this check, confirming noising indexing accuracy.
         return windowIndex < reportingWindows.size()
                 ? reportingWindows.get(windowIndex).second
-                        + mFlags.getMeasurementMinEventReportDelayMillis()
-                : finalWindow.second + mFlags.getMeasurementMinEventReportDelayMillis();
+                : finalWindow.second;
     }
 
     /**
@@ -190,8 +215,7 @@ public class EventReportWindowCalcDelegate {
         for (TriggerSpec triggerSpec : triggerSpecs.getTriggerSpecs()) {
             triggerDataIndex -= triggerSpec.getTriggerData().size();
             if (triggerDataIndex < 0) {
-                return triggerSpec.getEventReportWindowsEnd().get(windowIndex)
-                        + mFlags.getMeasurementMinEventReportDelayMillis();
+                return triggerSpec.getEventReportWindowsEnd().get(windowIndex);
             }
         }
         return 0;
@@ -222,9 +246,8 @@ public class EventReportWindowCalcDelegate {
 
         List<Long> reportingWindows = triggerSpecs.findReportingEndTimesForTriggerData(triggerData);
         for (Long window : reportingWindows) {
-            if (triggerTime <= window + sourceRegistrationTime) {
-                return sourceRegistrationTime + window
-                        + mFlags.getMeasurementMinEventReportDelayMillis();
+            if (triggerTime < window + sourceRegistrationTime) {
+                return sourceRegistrationTime + window;
             }
         }
         return -1L;

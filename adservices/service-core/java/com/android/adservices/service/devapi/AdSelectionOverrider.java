@@ -54,7 +54,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the AdSelection Override Logic */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionOverrider {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -68,6 +67,7 @@ public class AdSelectionOverrider {
     @NonNull private final Flags mFlags;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     private final int mCallerUid;
+    @NonNull private final String mCallerAppPackageName;
 
     /**
      * Creates an instance of {@link AdSelectionOverrider} with the given {@link DevContext}, {@link
@@ -107,6 +107,7 @@ public class AdSelectionOverrider {
         mFlags = flags;
         mAppImportanceFilter = appImportanceFilter;
         mCallerUid = callerUid;
+        mCallerAppPackageName = devContext.getCallingAppPackageName();
     }
 
     /**
@@ -529,7 +530,8 @@ public class AdSelectionOverrider {
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, mCallerAppPackageName, resultCode, /*latencyMs=*/ 0);
         }
     }
 
@@ -547,7 +549,8 @@ public class AdSelectionOverrider {
             resultCodeInt = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, mCallerAppPackageName, resultCodeInt, /*latencyMs=*/ 0);
         }
     }
 

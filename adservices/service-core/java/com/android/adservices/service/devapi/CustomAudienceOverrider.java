@@ -49,7 +49,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the Custom Audience Override Logic */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceOverrider {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -329,7 +328,11 @@ public class CustomAudienceOverrider {
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowAsRuntimeException();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName,
+                    this.mDevContext.getCallingAppPackageName(),
+                    resultCode,
+                    /*latencyMs=*/ 0);
         }
     }
 
@@ -347,7 +350,11 @@ public class CustomAudienceOverrider {
             resultCodeInt = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowAsRuntimeException();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName,
+                    this.mDevContext.getCallingAppPackageName(),
+                    resultCodeInt,
+                    /*latencyMs=*/ 0);
         }
     }
 

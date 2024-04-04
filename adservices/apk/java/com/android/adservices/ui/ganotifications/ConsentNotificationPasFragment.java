@@ -19,6 +19,7 @@ import static com.android.adservices.ui.notifications.ConsentNotificationActivit
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED;
 import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
 
 import android.content.Intent;
@@ -40,9 +41,11 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
+
 
 /**
  * Fragment for the confirmation view after accepting or rejecting to be part of Privacy Sandbox
@@ -50,6 +53,7 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
  */
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationPasFragment extends Fragment {
+    public static final String IS_RENOTIFY_KEY = "IS_RENOTIFY_KEY";
     public static final String INFO_VIEW_EXPANDED_1 = "info_view_expanded_1";
     public static final String INFO_VIEW_EXPANDED_2 = "info_view_expanded_2";
     private boolean mIsInfoViewExpanded1 = false;
@@ -63,8 +67,8 @@ public class ConsentNotificationPasFragment extends Fragment {
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View inflatedView;
-        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
-        mIsRenotify = isFledgeOrMsmtEnabled();
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity());
+        mIsRenotify = requireActivity().getIntent().getBooleanExtra(IS_RENOTIFY_KEY, false);
         mIsFirstTimeRow = false;
         if (mIsRenotify) {
             // renotify version
@@ -125,10 +129,8 @@ public class ConsentNotificationPasFragment extends Fragment {
             }
             howItWorksExpander2.setOnClickListener(
                     view -> {
-                        // TODO(b/322365218): change to log info section 2 clicked.
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED, getContext());
-
+                                LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED, getContext());
                         setInfoViewState2(!mIsInfoViewExpanded2);
                     });
             ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy2))
@@ -206,6 +208,11 @@ public class ConsentNotificationPasFragment extends Fragment {
                 || consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
     }
 
+    private static boolean isFledgeOrMsmtEnabledV2() {
+        ConsentManagerV2 consentManagerV2 = ConsentManagerV2.getInstance();
+        return consentManagerV2.getConsent(AdServicesApiType.FLEDGE).isGiven()
+                || consentManagerV2.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+    }
     /**
      * Allows the positive, acceptance button to scroll the view.
      *

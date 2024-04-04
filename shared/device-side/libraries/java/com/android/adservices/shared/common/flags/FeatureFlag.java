@@ -23,6 +23,8 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation used to indicate a constant defines the default value of a flag guarding a feature.
+ *
+ * @hide
  */
 @Retention(SOURCE)
 @Target({FIELD})
@@ -61,6 +63,14 @@ public @interface FeatureFlag {
          * <p>The value of the field annotated by it should be {@code false}.
          */
         SHARED,
+
+        /**
+         * Flag that is only used for debugging / development purposes - it's not pushed to the
+         * device and can only be set locally by developers / tests.
+         *
+         * <p>The value of the field annotated by it should be {@code false}.
+         */
+        DEBUG,
 
         /**
          * Used for a legacy flags that followed the "kill-switch convention" (where the feature is

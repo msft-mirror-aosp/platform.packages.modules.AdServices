@@ -15,13 +15,14 @@
  */
 package com.android.adservices.tests.ui.libs.pages;
 
-import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
+import static com.android.adservices.tests.ui.libs.UiConstants.NOTIFICATION_SCROLLER;
 import static com.android.adservices.tests.ui.libs.UiUtils.LAUNCH_TIMEOUT;
 import static com.android.adservices.tests.ui.libs.UiUtils.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT;
 import static com.android.adservices.tests.ui.libs.UiUtils.SCROLL_WAIT_TIME;
 import static com.android.adservices.tests.ui.libs.UiUtils.getElement;
 import static com.android.adservices.tests.ui.libs.UiUtils.getPageElement;
 import static com.android.adservices.tests.ui.libs.UiUtils.getString;
+import static com.android.adservices.tests.ui.libs.UiUtils.sysuiResSelector;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -97,7 +98,10 @@ public class NotificationPages {
         UiSelector notificationCardSelector =
                 new UiSelector().text(getString(context, notificationTitle));
 
-        UiObject2 scroller = device.findObject(By.res(SYSTEM_UI_RESOURCE_ID));
+        UiObject2 scroller =
+                device.wait(
+                        Until.findObject(sysuiResSelector(NOTIFICATION_SCROLLER)), LAUNCH_TIMEOUT);
+
         UiObject2 notificationCard =
                 scroller.findObject(By.textContains(getString(context, notificationTitle)));
         if (!isDisplayed) {

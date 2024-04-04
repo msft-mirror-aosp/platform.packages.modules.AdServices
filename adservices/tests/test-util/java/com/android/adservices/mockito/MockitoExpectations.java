@@ -16,6 +16,7 @@
 
 package com.android.adservices.mockito;
 
+import static com.android.adservices.common.SyncCallback.DEFAULT_TIMEOUT_MS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -72,7 +73,18 @@ public final class MockitoExpectations {
      */
     public static NoFailureSyncCallback<ApiCallStats> mockLogApiCallStats(
             AdServicesLogger adServicesLogger) {
-        NoFailureSyncCallback<ApiCallStats> callback = new NoFailureSyncCallback<>();
+        return mockLogApiCallStats(adServicesLogger, DEFAULT_TIMEOUT_MS);
+    }
+
+    /**
+     * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
+     * object that blocks until that call is made. This method allows to pass in a customized
+     * timeout.
+     */
+    public static NoFailureSyncCallback<ApiCallStats> mockLogApiCallStats(
+            AdServicesLogger adServicesLogger, int timeoutMs) {
+        NoFailureSyncCallback<ApiCallStats> callback = new NoFailureSyncCallback<>(timeoutMs);
+
         doAnswer(
                         inv -> {
                             Log.v(TAG, "mockLogApiCallStats(): inv=" + inv);
@@ -133,6 +145,34 @@ public final class MockitoExpectations {
      */
     public static void mockBackgroundJobsLoggingKillSwitch(Flags flag, boolean overrideValue) {
         when(flag.getBackgroundJobsLoggingKillSwitch()).thenReturn(overrideValue);
+    }
+
+    /** Mocks a call to {@link Flags#getCobaltLoggingEnabled()}, returning overrideValue. */
+    public static void mockCobaltLoggingEnabled(Flags flags, boolean enabled) {
+        when(flags.getCobaltLoggingEnabled()).thenReturn(enabled);
+    }
+
+    /**
+     * Mocks a call to {@link Flags#getAppNameApiErrorCobaltLoggingEnabled()}, returning
+     * overrideValue.
+     */
+    public static void mockAppNameApiErrorCobaltLoggingEnabled(Flags flags, boolean enabled) {
+        when(flags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(enabled);
+    }
+
+    /**
+     * Mocks a call to {@link Flags#getAdservicesReleaseStageForCobalt()}, returning {@code DEBUG}
+     * as the testing release stage.
+     */
+    public static void mockAdservicesReleaseStageForCobalt(Flags flags) {
+        when(flags.getAdservicesReleaseStageForCobalt()).thenReturn("DEBUG");
+    }
+
+    /** Mocks calls to override Cobalt app name api error logging related flags. */
+    public static void mockCobaltLoggingFlags(Flags flags, boolean override) {
+        mockCobaltLoggingEnabled(flags, override);
+        mockAppNameApiErrorCobaltLoggingEnabled(flags, override);
+        mockAdservicesReleaseStageForCobalt(flags);
     }
 
     /**

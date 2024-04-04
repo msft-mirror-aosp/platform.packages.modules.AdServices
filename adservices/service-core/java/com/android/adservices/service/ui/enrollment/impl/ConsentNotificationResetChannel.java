@@ -38,7 +38,7 @@ import java.util.Objects;
 /**
  * Enrollment channel for resetting consent notification info, similar to the consent notification
  * debug channel, this channel is only used for testing. Unlike the debug channel, this channel
- * resets the consent data exacty once per token.
+ * resets the consent data exactly once per token.
  */
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationResetChannel implements PrivacySandboxEnrollmentChannel {
@@ -77,10 +77,15 @@ public class ConsentNotificationResetChannel implements PrivacySandboxEnrollment
     public void enroll(Context context, ConsentManager consentManager) {
         consentManager.recordUserManualInteractionWithConsent(NO_MANUAL_INTERACTIONS_RECORDED);
         if (SdkLevel.isAtLeastS()) {
+            LogUtil.d("Reset adservice notification bit.");
             consentManager.recordNotificationDisplayed(false);
             consentManager.recordGaUxNotificationDisplayed(false);
+        }
+        if (SdkLevel.isAtLeastT()) {
+            LogUtil.d("Reset pas notification bit.");
             consentManager.recordPasNotificationDisplayed(false);
         }
+
         consentManager.setU18NotificationDisplayed(false);
         consentManager.setU18Account(false);
         LogUtil.d("Consent data has been reset.");

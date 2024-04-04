@@ -30,11 +30,11 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
@@ -107,7 +107,6 @@ import android.webkit.WebView;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
@@ -117,6 +116,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionFromOutcomesOverride;
@@ -136,11 +136,13 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
@@ -157,9 +159,11 @@ import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -317,6 +321,12 @@ public class AdSelectionServiceImplTest {
     @Mock private AdIdFetcher mAdIdFetcher;
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
+    private RetryStrategyFactory mRetryStrategyFactory;
+    private ConsentedDebugConfigurationGeneratorFactory
+            mConsentedDebugConfigurationGeneratorFactory;
+    @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    @Mock private EgressConfigurationGenerator mEgressConfigurationGenerator;
+
     public AdSelectionServiceImplTest() {}
 
     @Rule(order = 0)
@@ -340,7 +350,7 @@ public class AdSelectionServiceImplTest {
         doReturn(mFlags).when(FlagsFactory::getFlags);
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
@@ -420,6 +430,10 @@ public class AdSelectionServiceImplTest {
                 .thenReturn(DevContext.createForDevOptionsDisabled());
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
+        mConsentedDebugConfigurationGeneratorFactory =
+                new ConsentedDebugConfigurationGeneratorFactory(
+                        false, mConsentedDebugConfigurationDao);
     }
 
     @After
@@ -522,7 +536,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -645,7 +662,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -680,7 +700,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessfullyReportsDataVersionHeader() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -778,7 +797,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -821,7 +843,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessfullyReportsSellerDataVersionHeader() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -912,7 +933,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -949,7 +973,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -1034,7 +1057,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1065,8 +1091,22 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testReportImpressionSuccessWithUnifiedTablesEnabled() throws Exception {
+    public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerDisabled()
+            throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        Flags auctionServerReportingDisabledFlags =
+                new AdSelectionServicesTestsFlags(false) {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return true;
+                    }
+                };
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1132,7 +1172,7 @@ public class AdSelectionServiceImplTest {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        // Init client with true for shouldUseUnifiedTables
+        // Init client with new flags and true for shouldUseUnifiedTables
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
@@ -1149,7 +1189,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        auctionServerReportingDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1159,7 +1199,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        true);
+                        /* shouldUseUnifiedTables = */ true,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1190,10 +1233,441 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabled()
+    public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerEnabled()
             throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        Flags auctionServerReportingEnabledFlags =
+                new AdSelectionServicesTestsFlags(false) {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return true;
+                    }
+                };
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        BuyerContextualSignals buyerContextualSignals =
+                BuyerContextualSignals.builder().setDataVersion(DATA_VERSION_1).build();
+
+        SellerContextualSignals sellerContextualSignals =
+                SellerContextualSignals.builder().setDataVersion(DATA_VERSION_2).build();
+
+        AdSelectionInitialization adSelectionInitialization =
+                AdSelectionInitialization.builder()
+                        .setSeller(mSeller)
+                        .setCreationInstant(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID, adSelectionInitialization);
+
+        DBReportingComputationInfo dbReportingComputationInfo =
+                DBReportingComputationInfo.builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setBuyerContextualSignals(buyerContextualSignals.toString())
+                        .setSellerContextualSignals(sellerContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .build();
+
+        mAdSelectionEntryDao.insertDBReportingComputationInfo(dbReportingComputationInfo);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        // Init client with new flags and true for shouldUseUnifiedTables
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        auctionServerReportingEnabledFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        /* shouldUseUnifiedTables = */ true,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
+
+        assertTrue(callback.mIsSuccess);
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void
+            testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerEnabled()
+                    throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        Flags auctionServerReportingEnabledFlags =
+                new AdSelectionServicesTestsFlags(false) {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return true;
+                    }
+                };
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        BuyerContextualSignals buyerContextualSignals =
+                BuyerContextualSignals.builder().setDataVersion(DATA_VERSION_1).build();
+
+        SellerContextualSignals sellerContextualSignals =
+                SellerContextualSignals.builder().setDataVersion(DATA_VERSION_2).build();
+
+        AdSelectionInitialization adSelectionInitialization =
+                AdSelectionInitialization.builder()
+                        .setSeller(mSeller)
+                        .setCreationInstant(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID, adSelectionInitialization);
+
+        DBReportingComputationInfo dbReportingComputationInfo =
+                DBReportingComputationInfo.builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setBuyerContextualSignals(buyerContextualSignals.toString())
+                        .setSellerContextualSignals(sellerContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .build();
+
+        mAdSelectionEntryDao.insertDBReportingComputationInfo(dbReportingComputationInfo);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        // Init client with new flags and true for shouldUseUnifiedTables
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        auctionServerReportingEnabledFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        /* shouldUseUnifiedTables = */ true,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
+
+        assertFalse(callback.mIsSuccess);
+        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        anyInt());
+    }
+
+    @Test
+    public void
+            testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerDisabled()
+                    throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        Flags auctionServerReportingDisabledFlags =
+                new AdSelectionServicesTestsFlags(false) {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return true;
+                    }
+                };
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        BuyerContextualSignals buyerContextualSignals =
+                BuyerContextualSignals.builder().setDataVersion(DATA_VERSION_1).build();
+
+        SellerContextualSignals sellerContextualSignals =
+                SellerContextualSignals.builder().setDataVersion(DATA_VERSION_2).build();
+
+        AdSelectionInitialization adSelectionInitialization =
+                AdSelectionInitialization.builder()
+                        .setSeller(mSeller)
+                        .setCreationInstant(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID, adSelectionInitialization);
+
+        DBReportingComputationInfo dbReportingComputationInfo =
+                DBReportingComputationInfo.builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setBuyerContextualSignals(buyerContextualSignals.toString())
+                        .setSellerContextualSignals(sellerContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .build();
+
+        mAdSelectionEntryDao.insertDBReportingComputationInfo(dbReportingComputationInfo);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        // Init client with new flags and true for shouldUseUnifiedTables
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        auctionServerReportingDisabledFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        /* shouldUseUnifiedTables = */ true,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
+
+        assertFalse(callback.mIsSuccess);
+        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        anyInt());
+    }
+
+    @Test
+    public void
+            testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerDisabled()
+                    throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
+
+        Flags auctionServerReportingDisabledFlags =
+                new AdSelectionServicesTestsFlags(false) {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return true;
+                    }
+                };
+
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -1249,7 +1723,7 @@ public class AdSelectionServiceImplTest {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        // Init client with true for shouldUseUnifiedTables
+        // Init client with new flags and true for shouldUseUnifiedTables
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
@@ -1266,7 +1740,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        auctionServerReportingDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1276,7 +1750,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        true);
+                        /* shouldUseUnifiedTables = */ true,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1293,9 +1770,144 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabled()
-            throws Exception {
+    public void
+            testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerEnabled()
+                    throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
+
+        Flags auctionServerReportingEnabledFlags =
+                new AdSelectionServicesTestsFlags(false) {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return true;
+                    }
+                };
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        mMockWebServerRule.startMockWebServer(
+                List.of(
+                        new MockResponse().setBody(sellerDecisionLogicJs),
+                        new MockResponse(),
+                        new MockResponse()));
+
+        AdSelectionInitialization adSelectionInitialization =
+                AdSelectionInitialization.builder()
+                        .setSeller(mSeller)
+                        .setCreationInstant(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID, adSelectionInitialization);
+
+        DBReportingComputationInfo dbReportingComputationInfo =
+                DBReportingComputationInfo.builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setBuyerContextualSignals(mContextualSignals.toString())
+                        .setSellerContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(buyerReportingUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .build();
+
+        mAdSelectionEntryDao.insertDBReportingComputationInfo(dbReportingComputationInfo);
+
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        // Init client with new flags and true for shouldUseUnifiedTables
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        auctionServerReportingEnabledFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        /* shouldUseUnifiedTables = */ true,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(otherPackageName)
+                        .build();
+
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertFalse(callback.mIsSuccess);
+        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(CALLER_PACKAGE_NAME_MISMATCH, callback.mFledgeErrorResponse.getErrorMessage());
+    }
+
+    @Test
+    public void
+            testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerDisabled()
+                    throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        Flags auctionServerReportingDisabledFlags =
+                new AdSelectionServicesTestsFlags(false) {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return true;
+                    }
+                };
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1351,7 +1963,7 @@ public class AdSelectionServiceImplTest {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        // Init client with true for shouldUseUnifiedTables
+        // Init client with new flags and true for shouldUseUnifiedTables
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
@@ -1368,7 +1980,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        auctionServerReportingDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1378,7 +1990,133 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        true);
+                        /* shouldUseUnifiedTables = */ true,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
+
+        assertFalse(callback.mIsSuccess);
+        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(
+                UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID,
+                callback.mFledgeErrorResponse.getErrorMessage());
+    }
+
+    @Test
+    public void
+            testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerEnabled()
+                    throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        Flags auctionServerReportingEnabledFlags =
+                new AdSelectionServicesTestsFlags(false) {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return true;
+                    }
+                };
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        mMockWebServerRule.startMockWebServer(
+                List.of(
+                        new MockResponse().setBody(sellerDecisionLogicJs),
+                        new MockResponse(),
+                        new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setBuyerContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        // Init client with new flags and true for shouldUseUnifiedTables
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        auctionServerReportingEnabledFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        /* shouldUseUnifiedTables = */ true,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1487,7 +2225,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1612,7 +2353,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1640,7 +2384,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessAndDoesNotCrashAfterBuyerReportThrowsAnException()
             throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
@@ -1735,7 +2478,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1863,7 +2609,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2039,7 +2788,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2185,7 +2937,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2349,7 +3104,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2519,7 +3277,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2680,7 +3441,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2830,7 +3594,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2984,7 +3751,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3032,7 +3802,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void
             testReportImpressionSucceedsButDesNotRegisterUrisWithInteractionKeySizeThatExceedsMax()
                     throws Exception {
@@ -3154,7 +3923,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3331,7 +4103,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3477,7 +4252,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3586,7 +4364,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3694,7 +4475,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3808,7 +4592,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3917,7 +4704,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4021,7 +4811,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -4033,7 +4826,7 @@ public class AdSelectionServiceImplTest {
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
 
         assertFalse(callback.mIsSuccess);
-        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INVALID_ARGUMENT);
+        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
@@ -4124,7 +4917,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -4228,7 +5024,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -4352,7 +5151,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -4501,7 +5303,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -4600,7 +5405,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4620,7 +5428,11 @@ public class AdSelectionServiceImplTest {
                         TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -4663,7 +5475,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4684,7 +5499,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_USER_CONSENT_REVOKED), anyInt());
+                        eq(SHORT_API_NAME_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
     }
 
     @Test
@@ -4721,7 +5539,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4743,7 +5564,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
+                        eq(SHORT_API_NAME_OVERRIDE),
+                        eq(null), // Actually logged as ""
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -4784,7 +5608,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4815,7 +5642,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -4858,7 +5688,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4890,6 +5723,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -4928,7 +5762,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4958,7 +5795,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(null), // Actually logged as ""
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -5002,7 +5842,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5033,7 +5876,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(incorrectPackageName),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -5077,241 +5923,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
-
-        AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
-        AdSelectionConfig adSelectionConfig2 =
-                mAdSelectionConfigBuilder
-                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
-                        .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_uri"))
-                        .build();
-        AdSelectionConfig adSelectionConfig3 =
-                mAdSelectionConfigBuilder
-                        .setSeller(AdTechIdentifier.fromString("nike.com"))
-                        .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_uri"))
-                        .build();
-
-        String adSelectionConfigId1 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
-        String adSelectionConfigId2 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig2);
-        String adSelectionConfigId3 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig3);
-
-        DBAdSelectionOverride dbAdSelectionOverride1 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId1)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        DBAdSelectionOverride dbAdSelectionOverride2 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId2)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        DBAdSelectionOverride dbAdSelectionOverride3 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId3)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride2);
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride3);
-
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, TEST_PACKAGE_NAME));
-
-        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
-
-        assertTrue(callback.mIsSuccess);
-
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, TEST_PACKAGE_NAME));
-
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
-    }
-
-    @Test
-    public void testResetAllAdSelectionConfigRemoteOverridesSuccess() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN)
-                .when(mConsentManagerMock)
-                .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
-
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mAppInstallDao,
-                        mCustomAudienceDao,
-                        mEncodedPayloadDao,
-                        mFrequencyCapDao,
-                        mEncryptionKeyDao,
-                        mEnrollmentDao,
-                        mClientSpy,
-                        mDevContextFilterMock,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mScheduledExecutor,
-                        CONTEXT,
-                        mAdServicesLoggerMock,
-                        mFlags,
-                        CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilterMock,
-                        mAdFilteringFeatureFactory,
-                        mConsentManagerMock,
-                        mMultiCloudSupportStrategy,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher,
-                        mUnusedKAnonSignJoinFactory,
-                        false);
-
-        AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
-        AdSelectionConfig adSelectionConfig2 =
-                mAdSelectionConfigBuilder
-                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
-                        .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_uri"))
-                        .build();
-        AdSelectionConfig adSelectionConfig3 =
-                mAdSelectionConfigBuilder
-                        .setSeller(AdTechIdentifier.fromString("nike.com"))
-                        .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_uri"))
-                        .build();
-
-        String adSelectionConfigId1 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
-        String adSelectionConfigId2 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig2);
-        String adSelectionConfigId3 =
-                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig3);
-
-        DBAdSelectionOverride dbAdSelectionOverride1 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId1)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        DBAdSelectionOverride dbAdSelectionOverride2 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId2)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        DBAdSelectionOverride dbAdSelectionOverride3 =
-                DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(adSelectionConfigId3)
-                        .setAppPackageName(TEST_PACKAGE_NAME)
-                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
-                        .build();
-
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride2);
-        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride3);
-
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, TEST_PACKAGE_NAME));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, TEST_PACKAGE_NAME));
-
-        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
-
-        assertTrue(callback.mIsSuccess);
-
-        assertFalse(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, TEST_PACKAGE_NAME));
-        assertFalse(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, TEST_PACKAGE_NAME));
-        assertFalse(
-                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, TEST_PACKAGE_NAME));
-
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
-    }
-
-    @Test
-    public void testResetAllAdSelectionConfigRemoteOverridesWithRevokedUserConsentSuccess()
-            throws Exception {
-        doReturn(AdServicesApiConsent.REVOKED)
-                .when(mConsentManagerMock)
-                .getConsent(AdServicesApiType.FLEDGE);
-
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
-
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mAppInstallDao,
-                        mCustomAudienceDao,
-                        mEncodedPayloadDao,
-                        mFrequencyCapDao,
-                        mEncryptionKeyDao,
-                        mEnrollmentDao,
-                        mClientSpy,
-                        mDevContextFilterMock,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mScheduledExecutor,
-                        CONTEXT,
-                        mAdServicesLoggerMock,
-                        mFlags,
-                        CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilterMock,
-                        mAdFilteringFeatureFactory,
-                        mConsentManagerMock,
-                        mMultiCloudSupportStrategy,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher,
-                        mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -5387,6 +6002,253 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(incorrectPackageName),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testResetAllAdSelectionConfigRemoteOverridesSuccess() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
+                                .build());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
+
+        AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
+        AdSelectionConfig adSelectionConfig2 =
+                mAdSelectionConfigBuilder
+                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
+                        .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_uri"))
+                        .build();
+        AdSelectionConfig adSelectionConfig3 =
+                mAdSelectionConfigBuilder
+                        .setSeller(AdTechIdentifier.fromString("nike.com"))
+                        .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_uri"))
+                        .build();
+
+        String adSelectionConfigId1 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
+        String adSelectionConfigId2 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig2);
+        String adSelectionConfigId3 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig3);
+
+        DBAdSelectionOverride dbAdSelectionOverride1 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId1)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        DBAdSelectionOverride dbAdSelectionOverride2 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId2)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        DBAdSelectionOverride dbAdSelectionOverride3 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId3)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride2);
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride3);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
+
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
+
+        assertTrue(callback.mIsSuccess);
+
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testResetAllAdSelectionConfigRemoteOverridesWithRevokedUserConsentSuccess()
+            throws Exception {
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
+
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
+                                .build());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
+
+        AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
+        AdSelectionConfig adSelectionConfig2 =
+                mAdSelectionConfigBuilder
+                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
+                        .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_uri"))
+                        .build();
+        AdSelectionConfig adSelectionConfig3 =
+                mAdSelectionConfigBuilder
+                        .setSeller(AdTechIdentifier.fromString("nike.com"))
+                        .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_uri"))
+                        .build();
+
+        String adSelectionConfigId1 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
+        String adSelectionConfigId2 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig2);
+        String adSelectionConfigId3 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig3);
+
+        DBAdSelectionOverride dbAdSelectionOverride1 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId1)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        DBAdSelectionOverride dbAdSelectionOverride2 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId2)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        DBAdSelectionOverride dbAdSelectionOverride3 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId3)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride2);
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride3);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
+
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
+
+        assertTrue(callback.mIsSuccess);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -5425,7 +6287,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -5499,6 +6364,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -5534,7 +6400,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
@@ -5572,7 +6441,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock, never()).shutdown();
@@ -5624,7 +6496,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -5692,7 +6567,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5761,7 +6639,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5821,7 +6702,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5883,7 +6767,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5939,7 +6826,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -5999,7 +6889,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -6100,7 +6993,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6217,7 +7113,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6337,7 +7236,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6364,7 +7266,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -6463,7 +7364,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6570,7 +7474,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
@@ -6595,7 +7502,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessThrottledSubsequentCallFailure() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
@@ -6678,7 +7584,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6730,7 +7639,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         // Instantiate a server with different domain from buyer and seller for reporting
@@ -6814,7 +7722,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6930,7 +7841,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7048,7 +7962,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7078,7 +7995,6 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessWithValidImpressionReportingSubdomains()
             throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
@@ -7124,7 +8040,8 @@ public class AdSelectionServiceImplTest {
                                                         .build())
                                         .build()))
                 .when(mClientSpy)
-                .fetchPayload(any(AdServicesHttpClientRequest.class));
+                .fetchPayloadWithLogging(
+                        any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class));
         doReturn(Futures.immediateVoidFuture()).when(mClientSpy).getAndReadNothing(any(), any());
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
@@ -7188,7 +8105,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7205,7 +8125,9 @@ public class AdSelectionServiceImplTest {
                 .that(callback.mIsSuccess)
                 .isTrue();
 
-        verify(mClientSpy).fetchPayload(any(AdServicesHttpClientRequest.class));
+        verify(mClientSpy)
+                .fetchPayloadWithLogging(
+                        any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class));
         verify(mClientSpy).getAndReadNothing(eq(buyerReportingUriWithSubdomain), eq(mDevContext));
         verify(mClientSpy).getAndReadNothing(eq(sellerReportingUriWithSubdomain), eq(mDevContext));
 
@@ -7321,7 +8243,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7439,7 +8364,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7570,7 +8498,10 @@ public class AdSelectionServiceImplTest {
                             mAdSelectionDebugReportDao,
                             mAdIdFetcher,
                             mUnusedKAnonSignJoinFactory,
-                            false);
+                            false,
+                            mRetryStrategyFactory,
+                            mConsentedDebugConfigurationGeneratorFactory,
+                            mEgressConfigurationGenerator);
 
             ReportImpressionInput input =
                     new ReportImpressionInput.Builder()
@@ -7639,7 +8570,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7661,6 +8595,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -7705,7 +8640,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7727,6 +8665,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -7765,7 +8704,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7788,6 +8730,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -7831,7 +8774,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7864,6 +8810,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -7909,7 +8856,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7942,6 +8892,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -7981,7 +8932,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8012,6 +8966,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -8057,7 +9012,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8090,6 +9048,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(incorrectPackageName),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -8132,7 +9091,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8211,6 +9173,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -8256,7 +9219,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8335,6 +9301,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -8374,7 +9341,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8452,6 +9422,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -8497,7 +9468,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8576,6 +9550,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(incorrectPackageName),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -8638,7 +9613,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionOverrideTestCallback overridesCallback =
                 callAddOverrideForSelectAds(
@@ -8656,6 +9634,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -9019,7 +9998,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.setAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -9029,6 +10008,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         eq(0));
     }
@@ -9059,8 +10039,9 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
-                        eq(0));
+                        anyInt());
     }
 
     @Test
@@ -9141,7 +10122,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -9151,6 +10132,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         eq(0));
     }
@@ -9179,8 +10161,9 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
-                        eq(0));
+                        anyInt());
     }
 
     @Test
@@ -9237,7 +10220,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdCounterHistogramOverrides(callback);
         assertTrue(
@@ -9247,6 +10230,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         eq(0));
     }
@@ -9268,8 +10252,9 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
-                        eq(0));
+                        anyInt());
     }
 
     @Test
@@ -9317,7 +10302,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -9380,7 +10368,10 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -9424,7 +10415,10 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionDebugReportDao,
                 mAdIdFetcher,
                 mUnusedKAnonSignJoinFactory,
-                false);
+                false,
+                mRetryStrategyFactory,
+                mConsentedDebugConfigurationGeneratorFactory,
+                mEgressConfigurationGenerator);
     }
 
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {
@@ -9487,7 +10481,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
                 adSelectionConfig,
@@ -9517,7 +10511,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.overrideAdSelectionFromOutcomesConfigRemoteInfo(
                 adSelectionFromOutcomesConfig, selectionLogic, selectionSignals, callback);
@@ -9540,7 +10534,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdSelectionConfigRemoteInfoOverride(adSelectionConfig, callback);
         resultLatch.await();
@@ -9562,7 +10556,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdSelectionFromOutcomesConfigRemoteInfoOverride(config, callback);
         resultLatch.await();
@@ -9583,7 +10577,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdSelectionConfigRemoteOverrides(callback);
         resultLatch.await();
@@ -9604,7 +10598,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdSelectionFromOutcomesConfigRemoteOverrides(callback);
         resultLatch.await();
@@ -9702,7 +10696,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.updateAdCounterHistogram(inputParams, callback);
         assertTrue(
@@ -9727,7 +10721,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.setAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -9752,7 +10746,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -9775,7 +10769,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdCounterHistogramOverrides(callback);
         assertTrue(
@@ -10015,7 +11009,7 @@ public class AdSelectionServiceImplTest {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
+        public boolean getFledgeAppInstallFilteringEnabled() {
             return true;
         }
 
@@ -10042,6 +11036,11 @@ public class AdSelectionServiceImplTest {
         @Override
         public long getReportImpressionOverallTimeoutMs() {
             return EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+            return false;
         }
     }
 }

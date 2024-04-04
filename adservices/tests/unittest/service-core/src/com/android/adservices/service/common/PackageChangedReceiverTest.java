@@ -125,7 +125,8 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                                 mBlockedTopicsManager,
                                 mMockAppUpdateManager,
                                 FlagsFactory.getFlagsForTest()));
-        doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+        doReturn(true).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
+        doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
     }
 
@@ -272,24 +273,47 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-        runPackageFullyRemovedForFledgeKillSwitchOff(intent, true);
+        runPackageFullyRemovedForFledgeKillSwitchOff(
+                intent,
+                /* frequencyCapFilteringEnabled =*/ true,
+                /* appInstallFilteringEnabled =*/ true);
     }
 
     @Test
-    public void testReceivePackageFullyRemoved_fledgeKillSwitchOffFilteringDisabled()
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOffFrequencyCapFilteringDisabled()
             throws Exception {
-        doReturn(false).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+        doReturn(false).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-        runPackageFullyRemovedForFledgeKillSwitchOff(intent, false);
+        runPackageFullyRemovedForFledgeKillSwitchOff(
+                intent,
+                /* frequencyCapFilteringEnabled =*/ false,
+                /* appInstallFilteringEnabled =*/ true);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOffAppInstallFilteringDisabled()
+            throws Exception {
+        doReturn(false).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
+        PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForFledgeKillSwitchOff(
+                intent,
+                /* frequencyCapFilteringEnabled =*/ true,
+                /* appInstallFilteringEnabled =*/ false);
     }
 
     @Test
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOff_backCompat() throws Exception {
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-        runPackageFullyRemovedForFledgeKillSwitchOff(intent, true);
+        runPackageFullyRemovedForFledgeKillSwitchOff(
+                intent,
+                /* frequencyCapFilteringEnabled =*/ true,
+                /* appInstallFilteringEnabled =*/ true);
     }
 
     @Test
@@ -565,7 +589,8 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     private void runPackageFullyRemovedForFledgeKillSwitchOff(
-            Intent intent, boolean filteringEnabled) throws Exception {
+            Intent intent, boolean frequencyCapFilteringEnabled, boolean appInstallFilteringEnabled)
+            throws Exception {
             // Kill switch is off; service is enabled
             doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
             doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -612,13 +637,17 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
             // Verify method inside background thread executes
             assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
-            if (filteringEnabled) {
-                assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-                verify(mAppInstallDaoMock).deleteByPackageName(any());
+        if (frequencyCapFilteringEnabled) {
                 assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
                 verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
             } else {
-                verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
+            verifyZeroInteractions(mFrequencyCapDaoMock);
+        }
+        if (appInstallFilteringEnabled) {
+            assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mAppInstallDaoMock).deleteByPackageName(any());
+        } else {
+            verifyZeroInteractions(mAppInstallDaoMock);
             }
     }
 

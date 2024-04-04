@@ -168,13 +168,30 @@ public class SdkSandboxControllerUnitTest {
         ISdkToServiceCallback serviceCallback = Mockito.mock(ISdkToServiceCallback.class);
         ArrayList<SandboxedSdk> sandboxedSdksMock = new ArrayList<>();
         sandboxedSdksMock.add(new SandboxedSdk(new Binder()));
-        Mockito.when(serviceCallback.getSandboxedSdks(Mockito.anyString()))
+        Mockito.when(
+                        serviceCallback.getSandboxedSdks(
+                                Mockito.anyString(), Mockito.any(SandboxLatencyInfo.class)))
                 .thenReturn(sandboxedSdksMock);
         Mockito.when(mSdkSandboxLocalSingleton.getSdkToServiceCallback())
                 .thenReturn(serviceCallback);
 
         List<SandboxedSdk> sandboxedSdks = controller.getSandboxedSdks();
         assertThat(sandboxedSdks).isEqualTo(sandboxedSdksMock);
+    }
+
+    @Test
+    public void testGetSandboxedSdks_serviceCallbackCalled() throws RemoteException {
+        SdkSandboxController sdkSandboxController = new SdkSandboxController(mSandboxedSdkContext);
+        // Invoke the getSandboxedSdks call
+        sdkSandboxController.getSandboxedSdks();
+        ArgumentCaptor<SandboxLatencyInfo> sandboxLatencyInfoCaptor =
+                ArgumentCaptor.forClass(SandboxLatencyInfo.class);
+
+        Mockito.verify(mServiceCallback)
+                .getSandboxedSdks(
+                        Mockito.eq(CLIENT_PACKAGE_NAME), sandboxLatencyInfoCaptor.capture());
+        assertThat(sandboxLatencyInfoCaptor.getValue().getMethod())
+                .isEqualTo(SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS_VIA_CONTROLLER);
     }
 
     @Test

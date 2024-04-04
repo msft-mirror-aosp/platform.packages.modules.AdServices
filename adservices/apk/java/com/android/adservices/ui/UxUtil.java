@@ -16,8 +16,6 @@
 
 package com.android.adservices.ui;
 
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 
 import android.content.Context;
 import android.os.Build;
@@ -27,6 +25,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
@@ -37,15 +36,20 @@ import java.util.stream.Stream;
 public class UxUtil {
 
     /** Returns whether the device is an EEA device. */
-    public static boolean isEeaDevice(FragmentActivity fragmentActivity, Context context) {
+    public static boolean isEeaDevice(FragmentActivity fragmentActivity) {
+        boolean enableConsentManagerV2 = FlagsFactory.getFlags().getEnableConsentManagerV2();
+
+        boolean isAdIdEnabled;
+        if (enableConsentManagerV2) {
+            isAdIdEnabled = ConsentManagerV2.getInstance().isAdIdEnabled();
+        } else {
+            isAdIdEnabled = ConsentManager.getInstance().isAdIdEnabled();
+        }
         return FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
                 ? fragmentActivity
                         .getIntent()
-                        .getBooleanExtra(
-                                  "isEUDevice",
-                                  UxStatesManager.getInstance().isEeaDevice())
-                : !ConsentManager.getInstance().isAdIdEnabled()
-                        || UxStatesManager.getInstance().isEeaDevice();
+                        .getBooleanExtra("isEUDevice", UxStatesManager.getInstance().isEeaDevice())
+                : !isAdIdEnabled || UxStatesManager.getInstance().isEeaDevice();
     }
 
     /** Returns if UXStates should be used. */
@@ -73,11 +77,17 @@ public class UxUtil {
         return UxStatesManager.getInstance().getFlag(uxFlagKey);
     }
 
-    /** Returns if PAS notification was displayed. */
-    public static boolean wasPasNotificationDisplayed() {
-        if (getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)) {
-            return getFlag(KEY_PAS_UX_ENABLED);
-        }
-        return ConsentManager.getInstance().wasPasNotificationDisplayed();
+    /**
+     * PAS could be enabled but user may not have received notification, so user would see GA UX
+     * instead of PAS UX. Before the notification card is shown the notification has not been
+     * displayed yet, so if the calling context is related to this then we should only look at the
+     * PAS UX flag.
+     *
+     * @param beforeNotificationShown True if the calling context is logic before PAS notification
+     *     shown has been recorded.
+     * @return True if user will see PAS UX for settings/notification, otherwise false.
+     */
+    public static boolean pasUxIsActive(boolean beforeNotificationShown) {
+        return UxStatesManager.getInstance().pasUxIsActive(beforeNotificationShown);
     }
 }

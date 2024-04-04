@@ -19,6 +19,25 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
+    <option name="test-user-token" value="%TEST_USER%"/>
+
+    <!-- IMPORTANT: This needs to come before SuiteApkInstaller
+
+      SuiteApkInstaller is not able to uninstall the Sdk-Provider.apk because the test
+      app that requires it is still installed at that point. This means the apk would
+      stay on the test device after the test ends.
+
+      This preparer, during tear down, runs after SuiteApkInstaller and will finally
+      uninstall the provider, leaving the device in a clean state.
+
+      See b/314294893 for more details.
+     -->
+    <target_preparer
+        class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="teardown-command"
+                value="pm uninstall --user %TEST_USER% com.android.sdksandbox.uiprovider"/>
+    </target_preparer>
+
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name" value="SdkSandboxUiProvider.apk"/>

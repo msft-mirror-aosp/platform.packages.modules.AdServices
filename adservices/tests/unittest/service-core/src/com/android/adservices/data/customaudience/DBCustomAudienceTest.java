@@ -53,7 +53,7 @@ public class DBCustomAudienceTest {
             Duration.ofMillis(FLAGS.getFledgeCustomAudienceDefaultExpireInMs());
 
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -70,7 +70,8 @@ public class DBCustomAudienceTest {
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
-                        false));
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -85,7 +86,8 @@ public class DBCustomAudienceTest {
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
-                        false));
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -114,7 +116,9 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
-                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, false),
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                                true, true, false),
+                        false,
                         false));
     }
 
@@ -145,11 +149,12 @@ public class DBCustomAudienceTest {
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
-                        false));
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
-    public void testFromServiceObject_successWithServerAuctionFlags() {
+    public void testFromServiceObject_successWithServerAuctionFlagsEnabled() {
         assertEquals(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(
                                 CommonFixture.VALID_BUYER_1)
@@ -163,7 +168,26 @@ public class DBCustomAudienceTest {
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
-                        false));
+                        false,
+                        /* auctionServerRequestFlags = */ true));
+    }
+
+    @Test
+    public void testFromServiceObject_withServerAuctionFlags_serverAuctionFlagsDisabled_success() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
+                        .build(),
+                DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderByBuyerWithAuctionServerRequestFlags(
+                                        CommonFixture.VALID_BUYER_1,
+                                        FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -177,7 +201,8 @@ public class DBCustomAudienceTest {
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
-                                false));
+                                false,
+                                /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -193,7 +218,8 @@ public class DBCustomAudienceTest {
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
-                                false));
+                                false,
+                                /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -209,7 +235,8 @@ public class DBCustomAudienceTest {
                                 null,
                                 DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
-                                false));
+                                false,
+                                /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -225,7 +252,8 @@ public class DBCustomAudienceTest {
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 null,
                                 AD_DATA_CONVERSION_STRATEGY,
-                                false));
+                                false,
+                                /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -241,7 +269,8 @@ public class DBCustomAudienceTest {
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 DEFAULT_EXPIRE_IN,
                                 null,
-                                false));
+                                false,
+                                /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -260,7 +289,8 @@ public class DBCustomAudienceTest {
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
-                        false));
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -280,7 +310,8 @@ public class DBCustomAudienceTest {
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
-                        false));
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -298,7 +329,8 @@ public class DBCustomAudienceTest {
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
-                        false));
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -317,7 +349,8 @@ public class DBCustomAudienceTest {
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
-                        false));
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test

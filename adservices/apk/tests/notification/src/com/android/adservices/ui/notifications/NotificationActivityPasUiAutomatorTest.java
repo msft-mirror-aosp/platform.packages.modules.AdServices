@@ -24,6 +24,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -35,6 +36,7 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
@@ -47,6 +49,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+@RequiresSdkLevelAtLeastT(reason = "PAS UX is currently only available on T+ devices")
 @RunWith(AndroidJUnit4.class)
 public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTestCase {
 
@@ -65,7 +68,8 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
                     .setFlag(KEY_DEBUG_UX, "GA_UX")
                     .setFlag(KEY_PAS_UX_ENABLED, true)
                     .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, true)
-                    .setFlag(KEY_IS_EEA_DEVICE, false);
+                    .setFlag(KEY_IS_EEA_DEVICE, false)
+                    .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
     /**
      * Setup before notification tests.
@@ -74,6 +78,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
      */
     @BeforeClass
     public static void classSetup() throws Exception {
+
         NotificationActivityTestUtil.setupBeforeTests();
     }
 
@@ -98,7 +103,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
         mDevice.waitForIdle();
 
         // start renotify notice
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ false, mDevice);
+        NotificationActivityTestUtil.startRenotifyPasActivity(/* isEuActivity= */ false, mDevice);
 
         UiObject2 pasNotificationHeader =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_pas_renotify_header_title);

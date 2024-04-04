@@ -16,9 +16,28 @@
 
 package com.android.adservices.service.shell;
 
-import static com.android.adservices.service.shell.EchoCommand.CMD_ECHO;
+import static com.android.adservices.service.shell.common.EchoCommand.CMD_ECHO;
+import static com.android.adservices.service.shell.common.EchoCommand.HELP_ECHO;
+import static com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand.CMD_IS_ALLOWED_AD_SELECTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand.HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand.CMD_IS_ALLOWED_ATTRIBUTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand.CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand.CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand.HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.CMD_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.service.shell.common.EchoCommand;
+import com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand;
+import com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand;
+import com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand;
+import com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand;
+import com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
@@ -33,9 +52,59 @@ public final class CommonShellCommandFactoryTest extends AdServicesUnitTestCase 
     }
 
     @Test
+    public void testGetShellCommand_isAllowedTopicsAccess() {
+        expect.withMessage(CMD_ECHO)
+                .that(mFactory.getShellCommand(CMD_IS_ALLOWED_TOPICS_ACCESS))
+                .isInstanceOf(IsAllowedTopicsAccessCommand.class);
+    }
+
+    @Test
+    public void testGetShellCommand_isAllowedCustomAudienceAccess() {
+        expect.withMessage(CMD_ECHO)
+                .that(mFactory.getShellCommand(CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS))
+                .isInstanceOf(IsAllowedCustomAudiencesAccessCommand.class);
+    }
+
+    @Test
+    public void testGetShellCommand_isAllowedAdSelectionAccess() {
+        expect.withMessage(CMD_ECHO)
+                .that(mFactory.getShellCommand(CMD_IS_ALLOWED_AD_SELECTION_ACCESS))
+                .isInstanceOf(IsAllowedAdSelectionAccessCommand.class);
+    }
+
+    @Test
+    public void testGetShellCommand_isAllowedAttributionAccess() {
+        expect.withMessage(CMD_ECHO)
+                .that(mFactory.getShellCommand(CMD_IS_ALLOWED_ATTRIBUTION_ACCESS))
+                .isInstanceOf(IsAllowedAttributionAccessCommand.class);
+    }
+
+    @Test
+    public void testGetShellCommand_isProtectedAppSignalsAccess() {
+        expect.withMessage(CMD_ECHO)
+                .that(mFactory.getShellCommand(CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS))
+                .isInstanceOf(IsAllowedProtectedSignalsAccessCommand.class);
+    }
+
+    @Test
     public void testGetShellCommand_invalidCommand() {
         String cmd = "abc";
 
         expect.withMessage(cmd).that(mFactory.getShellCommand(cmd)).isNull();
+    }
+
+    @Test
+    public void test_getAllCommandsHelp() {
+        ImmutableList<String> expectedHelpSet =
+                ImmutableList.of(
+                        HELP_ECHO,
+                        HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
+                        HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
+                        HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
+                        HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
+                        HELP_IS_ALLOWED_TOPICS_ACCESS);
+        expect.withMessage("all command help")
+                .that(mFactory.getAllCommandsHelp())
+                .isEqualTo(expectedHelpSet);
     }
 }

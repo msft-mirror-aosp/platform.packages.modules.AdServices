@@ -129,4 +129,9 @@ public class PartialCustomAudienceTest extends AdServicesUnitTestCase {
                         VALID_ACTIVATION_TIME, VALID_EXPIRATION_TIME);
         expect.that(expected).isEqualTo(ca.toString());
     }
+
+    @Test
+    public void testAPartialCustomAudienceDescribeContents() {
+        expect.that(VALID_PARTIAL_CA.describeContents()).isEqualTo(0);
+    }
 }
