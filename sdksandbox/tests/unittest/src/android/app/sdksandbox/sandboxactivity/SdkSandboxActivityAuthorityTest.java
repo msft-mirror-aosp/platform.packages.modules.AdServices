@@ -143,8 +143,6 @@ public class SdkSandboxActivityAuthorityTest {
         final IBinder token = mRegistry.register(mSdkContext, mHandler);
         Intent intent = buildSandboxActivityIntent(token);
 
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
-
         assertThat(mSdkSandboxActivityAuthority.getActivityContextInfo(intent))
                 .isInstanceOf(ActivityContextInfo.class);
     }
@@ -157,7 +155,6 @@ public class SdkSandboxActivityAuthorityTest {
     @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testGetSdkSandboxActivityAuthorityFailForNonRegisteredHandlers() {
         final Intent intent = buildSandboxActivityIntent(new Binder());
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
 
         IllegalArgumentException exception =
                 assertThrows(
@@ -170,25 +167,6 @@ public class SdkSandboxActivityAuthorityTest {
                                         "There is no registered SdkSandboxActivityHandler for the"
                                                 + " passed intent"))
                 .isTrue();
-    }
-
-    /**
-     * Ensure that the customized SDK flag has to be enabled before retrieving the
-     * ActivityContextInfo instance.
-     */
-    @Test
-    @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public void testGetSdkSandboxActivityAuthorityFailIfCustomizedSdkFlagIsDisabled() {
-        final IBinder token = mRegistry.register(mSdkContext, mHandler);
-        Intent intent = buildSandboxActivityIntent(token);
-
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(false);
-
-        IllegalStateException exception =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> mSdkSandboxActivityAuthority.getActivityContextInfo(intent));
-        assertThat(exception.getMessage()).isEqualTo("Customized SDK flag is disabled.");
     }
 
     private Intent buildSandboxActivityIntent(IBinder token) {
