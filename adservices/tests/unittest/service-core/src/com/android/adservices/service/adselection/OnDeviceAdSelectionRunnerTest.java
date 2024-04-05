@@ -47,6 +47,15 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PUBLIC_TEST_KEY_STRING;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTest.AD_FILTERING_END;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTest.AD_FILTERING_OVERALL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTest.AD_FILTERING_START;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTest.APP_INSTALL_FILTERING_END;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTest.APP_INSTALL_FILTERING_LATENCY_MS;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTest.APP_INSTALL_FILTERING_START;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTest.FREQUENCY_CAP_FILTERING_LATENCY_MS;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTest.FREQ_CAP_FILTERING_END;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTest.FREQ_CAP_FILTERING_START;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.BIDDING_STAGE_END_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.BIDDING_STAGE_START_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
@@ -61,6 +70,7 @@ import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTes
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.RUN_AD_BIDDING_START_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.RUN_AD_SELECTION_OVERALL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.FILTER_PROCESS_TYPE_CUSTOM_AUDIENCES;
 import static com.android.adservices.service.stats.SignatureVerificationLoggerTest.SIGNATURE_VERIFICATION_END_KEY_FETCH;
 import static com.android.adservices.service.stats.SignatureVerificationLoggerTest.SIGNATURE_VERIFICATION_END_SERIALIZATION;
 import static com.android.adservices.service.stats.SignatureVerificationLoggerTest.SIGNATURE_VERIFICATION_END_VERIFICATION;
@@ -94,7 +104,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.mockingDetails;
 
 import android.adservices.adselection.AdBiddingOutcomeFixture;
 import android.adservices.adselection.AdSelectionCallback;
@@ -112,6 +121,9 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.AppInstallFilters;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.common.FrequencyCapFilters;
+import android.adservices.common.KeyedFrequencyCap;
+import android.adservices.common.KeyedFrequencyCapFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
@@ -163,6 +175,7 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonMessageEntity;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.kanon.KAnonSignJoinManager;
+import com.android.adservices.service.stats.AdFilteringProcessAdSelectionReportedStats;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -262,8 +275,8 @@ public class OnDeviceAdSelectionRunnerTest {
     @Captor
     ArgumentCaptor<RunAdSelectionProcessReportedStats>
             mRunAdSelectionProcessReportedStatsArgumentCaptor;
-
     @Captor ArgumentCaptor<SignatureVerificationStats> mSignatureVerificationStatsArgumentCaptor;
+    @Captor ArgumentCaptor<AdFilteringProcessAdSelectionReportedStats> mAdFilteringCaptor;
 
     @Captor
     ArgumentCaptor<RunAdBiddingProcessReportedStats>
@@ -2894,8 +2907,30 @@ public class OnDeviceAdSelectionRunnerTest {
 
     @Test
     public void testFilterOneAd() throws AdServicesException {
+        final Flags flags =
+                new OnDeviceAdSelectionRunnerTestFlags() {
+                    @Override
+                    public boolean getFledgeAppInstallFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeFrequencyCapFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeFrequencyCapFilteringMetricsEnabled() {
+                        return true;
+                    }
+                };
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
-        verifyAndSetupCommonSuccessScenario(adSelectionConfig);
+        verifyAndSetupAdFilteringSuccessScenario(adSelectionConfig);
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContextSpy,
@@ -2911,7 +2946,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        flags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -2967,23 +3002,55 @@ public class OnDeviceAdSelectionRunnerTest {
                 .runBidding(
                         BUYER_1,
                         ImmutableList.of(caWithoutFilterAd),
-                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        flags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         verify(mPerBuyerBiddingRunnerMock)
                 .runBidding(
                         BUYER_2,
                         ImmutableList.of(mDBCustomAudienceForBuyer2),
-                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        flags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
 
         verify(mMockFrequencyCapAdFilterer, times(1))
                 .filterCustomAudiences(Arrays.asList(caWithFilterAd, mDBCustomAudienceForBuyer2));
+        int expectedNumOfAdsBeforeFiltering =
+                caWithFilterAd.getAds().size() + caWithoutFilterAd.getAds().size();
+        int expectedNumOfAdsFiltered = 1;
+        int expectedNumOfCAsBeforeFiltering = 2;
+        int expectedNumOfCAsFiltered = 0;
+        verifyLogForAdFiltering(
+                expectedNumOfAdsBeforeFiltering,
+                expectedNumOfAdsFiltered,
+                expectedNumOfCAsBeforeFiltering,
+                expectedNumOfCAsFiltered);
     }
 
     @Test
-    public void testFilterWholeCa() throws AdServicesException {
+    public void testFilterOneAd_appInstall() throws AdServicesException {
+        final Flags flags =
+                new OnDeviceAdSelectionRunnerTestFlags() {
+                    @Override
+                    public boolean getFledgeAppInstallFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeFrequencyCapFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeFrequencyCapFilteringMetricsEnabled() {
+                        return true;
+                    }
+                };
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
-        verifyAndSetupCommonSuccessScenario(adSelectionConfig);
+        verifyAndSetupAdFilteringSuccessScenario(adSelectionConfig);
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContextSpy,
@@ -2999,7 +3066,135 @@ public class OnDeviceAdSelectionRunnerTest {
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        flags,
+                        CALLER_UID,
+                        mAdSelectionServiceFilterMock,
+                        mAdSelectionExecutionLogger,
+                        mPerBuyerBiddingRunnerMock,
+                        mFrequencyCapAdFilterer,
+                        mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock,
+                        false,
+                        mKAnonSignJoinFactoryMock,
+                        mMockAppInstallAdFilterer);
+        List<DBAdData> adsToNotFilter =
+                DBAdDataFixture.getValidDbAdDataListByBuyer(mDBCustomAudienceForBuyer1.getBuyer());
+        FrequencyCapFilters frequencyCapFilters =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForViewEvents(
+                                Collections.singletonList(
+                                        new KeyedFrequencyCap.Builder(
+                                                        KeyedFrequencyCapFixture.KEY1,
+                                                        KeyedFrequencyCapFixture.VALID_COUNT,
+                                                        KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                                                .build()))
+                        .build();
+        DBAdData adToFilter =
+                DBAdDataFixture.getValidDbAdDataBuilder()
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(frequencyCapFilters)
+                                        .build())
+                        .build();
+
+        List<DBAdData> ads = new ArrayList<>(adsToNotFilter);
+        ads.add(adToFilter);
+
+        DBCustomAudience caWithFilterAd =
+                new DBCustomAudience.Builder(mDBCustomAudienceForBuyer1).setAds(ads).build();
+
+        DBCustomAudience caWithoutFilterAd =
+                new DBCustomAudience.Builder(mDBCustomAudienceForBuyer1)
+                        .setAds(adsToNotFilter)
+                        .build();
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                caWithFilterAd,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                false);
+
+        when(mMockAppInstallAdFilterer.filterCustomAudiences(
+                        Arrays.asList(caWithFilterAd, mDBCustomAudienceForBuyer2)))
+                .thenReturn((Arrays.asList(caWithoutFilterAd, mDBCustomAudienceForBuyer2)));
+
+        invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_1,
+                        ImmutableList.of(caWithoutFilterAd),
+                        flags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_2,
+                        ImmutableList.of(mDBCustomAudienceForBuyer2),
+                        flags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+
+        verify(mMockAppInstallAdFilterer, times(1))
+                .filterCustomAudiences(Arrays.asList(caWithFilterAd, mDBCustomAudienceForBuyer2));
+        int expectedNumOfAdsBeforeFiltering =
+                caWithFilterAd.getAds().size() + caWithoutFilterAd.getAds().size();
+        int expectedNumOfAdsFiltered = 1;
+        int expectedNumOfCAsBeforeFiltering = 2;
+        int expectedNumOfCAsFiltered = 0;
+        verifyLogForAdFiltering(
+                expectedNumOfAdsBeforeFiltering,
+                expectedNumOfAdsFiltered,
+                expectedNumOfCAsBeforeFiltering,
+                expectedNumOfCAsFiltered);
+    }
+
+    @Test
+    public void testFilterWholeCa() throws AdServicesException {
+        final Flags flags =
+                new OnDeviceAdSelectionRunnerTestFlags() {
+                    @Override
+                    public boolean getFledgeAppInstallFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeFrequencyCapFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeFrequencyCapFilteringMetricsEnabled() {
+                        return true;
+                    }
+                };
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+        verifyAndSetupAdFilteringSuccessScenario(adSelectionConfig);
+        mAdSelectionRunner =
+                new OnDeviceAdSelectionRunner(
+                        mContextSpy,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mMockAdsScoreGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClockSpy,
+                        mAdServicesLoggerMock,
+                        flags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3046,13 +3241,23 @@ public class OnDeviceAdSelectionRunnerTest {
                 .runBidding(
                         BUYER_2,
                         ImmutableList.of(mDBCustomAudienceForBuyer2),
-                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        flags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         verify(mPerBuyerBiddingRunnerMock, times(0))
                 .runBidding(eq(BUYER_1), any(), anyLong(), any());
 
         verify(mMockFrequencyCapAdFilterer, times(1))
                 .filterCustomAudiences(Arrays.asList(caWithFilterAd, mDBCustomAudienceForBuyer2));
+        int expectedNumOfAdsBeforeFiltering =
+                caWithFilterAd.getAds().size() + mDBCustomAudienceForBuyer2.getAds().size();
+        int expectedNumOfAdsFiltered = caWithFilterAd.getAds().size();
+        int expectedNumOfCAsBeforeFiltering = 2;
+        int expectedNumOfCAsFiltered = 1;
+        verifyLogForAdFiltering(
+                expectedNumOfAdsBeforeFiltering,
+                expectedNumOfAdsFiltered,
+                expectedNumOfCAsBeforeFiltering,
+                expectedNumOfCAsFiltered);
     }
 
     @Test
@@ -3240,8 +3445,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 "The contextual ads should have reached scoring as is",
                 signedContextualAdsMap,
                 mAdSelectionConfigArgumentCaptor.getValue().getPerBuyerSignedContextualAds());
-        android.util.Log.i(
-                "adservices", "asdf: \n" + mockingDetails(mLoggerClockMock).printInvocations());
+
         int expectedNumOfKeysFetched = 1;
         verifyLogForSuccessfulSignatureVerificationForContextualAds(
                 adSelectionConfig.getPerBuyerSignedContextualAds().size(),
@@ -4174,7 +4378,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
@@ -4199,7 +4402,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         BIDDING_STAGE_END_TIMESTAMP,
                         STOP_ELAPSED_TIMESTAMP);
@@ -4212,7 +4414,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
@@ -4227,7 +4428,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         SIGNATURE_VERIFICATION_START_KEY_FETCH,
                         SIGNATURE_VERIFICATION_END_KEY_FETCH,
                         SIGNATURE_VERIFICATION_START_SERIALIZATION,
@@ -4255,7 +4455,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
@@ -4270,12 +4469,28 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
-                        START_ELAPSED_TIMESTAMP, // For SignatureVerificationLogger
                         BIDDING_STAGE_START_TIMESTAMP,
                         GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
                         RUN_AD_BIDDING_START_TIMESTAMP,
                         RUN_AD_BIDDING_END_TIMESTAMP,
                         STOP_ELAPSED_TIMESTAMP);
+        mAdSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
+    }
+
+    private void setAdSelectionExecutionLoggerMockWithAdFiltering() {
+        when(mLoggerClockMock.elapsedRealtime())
+                .thenReturn(
+                        START_ELAPSED_TIMESTAMP, // For AdSelectionExecutionLogger
+                        BIDDING_STAGE_START_TIMESTAMP,
+                        GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP,
+                        AD_FILTERING_START,
+                        APP_INSTALL_FILTERING_START,
+                        APP_INSTALL_FILTERING_END,
+                        FREQ_CAP_FILTERING_START,
+                        FREQ_CAP_FILTERING_END,
+                        AD_FILTERING_END);
         mAdSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
                         sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
@@ -4439,6 +4654,36 @@ public class OnDeviceAdSelectionRunnerTest {
         }
     }
 
+    private void verifyLogForAdFiltering(
+            int numOfAdsBeforeFiltering,
+            int numOfAdsFiltered,
+            int numOfCAsBeforeFiltering,
+            int numOfCAsFiltered) {
+        verify(mAdServicesLoggerMock, times(1))
+                .logAdFilteringProcessAdSelectionReportedStats(mAdFilteringCaptor.capture());
+        AdFilteringProcessAdSelectionReportedStats stats = mAdFilteringCaptor.getValue();
+
+        assertThat(stats.getLatencyInMillisOfAppInstallFiltering())
+                .isEqualTo(APP_INSTALL_FILTERING_LATENCY_MS);
+        assertThat(stats.getLatencyInMillisOfFcapFilters())
+                .isEqualTo(FREQUENCY_CAP_FILTERING_LATENCY_MS);
+        assertThat(stats.getLatencyInMillisOfAllAdFiltering())
+                .isEqualTo(AD_FILTERING_OVERALL_LATENCY_MS);
+        assertThat(stats.getFilterProcessType()).isEqualTo(FILTER_PROCESS_TYPE_CUSTOM_AUDIENCES);
+        assertThat(stats.getTotalNumOfAdsBeforeFiltering()).isEqualTo(numOfAdsBeforeFiltering);
+        assertThat(stats.getNumOfAdsFilteredOutOfBidding()).isEqualTo(numOfAdsFiltered);
+        assertThat(stats.getNumOfCustomAudiencesFilteredOutOfBidding()).isEqualTo(numOfCAsFiltered);
+        assertThat(stats.getTotalNumOfCustomAudiencesBeforeFiltering())
+                .isEqualTo(numOfCAsBeforeFiltering);
+        assertThat(stats.getNumOfAdCounterKeysInFcapFilters()).isEqualTo(0);
+        assertThat(stats.getNumOfPackageInAppInstallFilters()).isEqualTo(0);
+        assertThat(stats.getNumOfDbOperations()).isEqualTo(0);
+        assertThat(stats.getNumOfContextualAdsFiltered()).isEqualTo(0);
+        assertThat(stats.getNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures()).isEqualTo(0);
+        assertThat(stats.getNumOfContextualAdsFilteredOutOfBiddingNoAds()).isEqualTo(0);
+        assertThat(stats.getTotalNumOfContextualAdsBeforeFiltering()).isEqualTo(0);
+    }
+
     private void verifyAndSetupCommonSuccessScenario(AdSelectionConfig adSelectionConfig)
             throws AdServicesException {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
@@ -4468,6 +4713,36 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
         assertFalse(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(AD_SELECTION_ID));
+    }
+
+    private void verifyAndSetupAdFilteringSuccessScenario(AdSelectionConfig adSelectionConfig)
+            throws AdServicesException {
+        when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
+        doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
+                .when(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_1,
+                        ImmutableList.of(mDBCustomAudienceForBuyer1),
+                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+        doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)))
+                .when(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_2,
+                        ImmutableList.of(mDBCustomAudienceForBuyer2),
+                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+
+        // Getting ScoringOutcome-ForBuyerX corresponding to each BiddingOutcome-forBuyerX
+        when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
+                .thenReturn((FluentFuture.from(Futures.immediateFuture(mAdScoringOutcomeList))));
+
+        when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
+        assertFalse(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(AD_SELECTION_ID));
+        setAdSelectionExecutionLoggerMockWithAdFiltering();
     }
 
     private void verifyDebugReportingWasNotCalled() {

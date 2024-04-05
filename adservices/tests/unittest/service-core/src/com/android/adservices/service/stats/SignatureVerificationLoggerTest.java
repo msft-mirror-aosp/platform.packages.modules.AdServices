@@ -17,15 +17,15 @@
 package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.BINDER_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.SignatureVerificationStats.EMPTY_STRING;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.adservices.common.CallerMetadata;
 
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
@@ -39,10 +39,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class SignatureVerificationLoggerTest {
-    public static final CallerMetadata sCallerMetadata =
-            new CallerMetadata.Builder()
-                    .setBinderElapsedTimestamp(BINDER_ELAPSED_TIMESTAMP)
-                    .build();
     public static final int SIGNATURE_VERIFICATION_KEY_FETCH_LATENCY_MS = 3;
     public static final int SIGNATURE_VERIFICATION_SERIALIZATION_LATENCY_MS = 5;
     public static final int SIGNATURE_VERIFICATION_VERIFICATION_LATENCY_MS = 7;
@@ -76,19 +72,14 @@ public class SignatureVerificationLoggerTest {
     public void testSignatureVerification_successfulVerificationLogging() {
         SignatureVerificationStats.VerificationStatus signingVerificationStatus =
                 SignatureVerificationStats.VerificationStatus.VERIFIED;
-        long startTime = 1L;
-        long keyFetchLatency = 2L;
-        long serializationLatency = 3L;
-        long verificationLatency = 4L;
         when(mMockClock.elapsedRealtime())
                 .thenReturn(
-                        startTime,
-                        startTime,
-                        startTime + keyFetchLatency,
-                        startTime + keyFetchLatency,
-                        startTime + keyFetchLatency + serializationLatency,
-                        startTime + keyFetchLatency + serializationLatency,
-                        startTime + keyFetchLatency + serializationLatency + verificationLatency);
+                        SIGNATURE_VERIFICATION_START_KEY_FETCH,
+                        SIGNATURE_VERIFICATION_END_KEY_FETCH,
+                        SIGNATURE_VERIFICATION_START_SERIALIZATION,
+                        SIGNATURE_VERIFICATION_END_SERIALIZATION,
+                        SIGNATURE_VERIFICATION_START_VERIFICATION,
+                        SIGNATURE_VERIFICATION_END_VERIFICATION);
 
         SignatureVerificationLogger logger = getSignatureVerificationLogger();
         logger.startKeyFetchForSignatureVerification();
@@ -103,9 +94,12 @@ public class SignatureVerificationLoggerTest {
                 .logSignatureVerificationStats(mSignatureVerificationStatsArgumentCaptor.capture());
         SignatureVerificationStats stats = mSignatureVerificationStatsArgumentCaptor.getValue();
 
-        assertThat(stats.getKeyFetchLatency()).isEqualTo(keyFetchLatency);
-        assertThat(stats.getSerializationLatency()).isEqualTo(serializationLatency);
-        assertThat(stats.getVerificationLatency()).isEqualTo(verificationLatency);
+        assertThat(stats.getKeyFetchLatency())
+                .isEqualTo(SIGNATURE_VERIFICATION_KEY_FETCH_LATENCY_MS);
+        assertThat(stats.getSerializationLatency())
+                .isEqualTo(SIGNATURE_VERIFICATION_SERIALIZATION_LATENCY_MS);
+        assertThat(stats.getVerificationLatency())
+                .isEqualTo(SIGNATURE_VERIFICATION_VERIFICATION_LATENCY_MS);
         assertThat(stats.getSignatureVerificationStatus()).isEqualTo(signingVerificationStatus);
     }
 
@@ -186,7 +180,61 @@ public class SignatureVerificationLoggerTest {
         assertThat(stats.getFailedSignatureCallerPackageName()).isEqualTo(EMPTY_STRING);
     }
 
+    @Test
+    public void testSignatureVerification_missingEndKeyFetchTimestamp() {
+        SignatureVerificationStats.VerificationStatus signingVerificationStatus =
+                SignatureVerificationStats.VerificationStatus.VERIFIED;
+        when(mMockClock.elapsedRealtime()).thenReturn(1L);
+
+        SignatureVerificationLogger logger = getSignatureVerificationLogger();
+        logger.startKeyFetchForSignatureVerification();
+        // Skip logging end of key fetch
+        logger.startSerializationForSignatureVerification();
+        logger.endSerializationForSignatureVerification();
+        logger.startSignatureVerification();
+        logger.endSignatureVerification();
+        logger.close(signingVerificationStatus.getValue());
+
+        verify(mAdServicesLoggerMock, times(0)).logSignatureVerificationStats(any());
+    }
+
+    @Test
+    public void testSignatureVerification_missingEndSerializationTimestamp() {
+        SignatureVerificationStats.VerificationStatus signingVerificationStatus =
+                SignatureVerificationStats.VerificationStatus.VERIFIED;
+        when(mMockClock.elapsedRealtime()).thenReturn(1L);
+
+        SignatureVerificationLogger logger = getSignatureVerificationLogger();
+        logger.startKeyFetchForSignatureVerification();
+        logger.endKeyFetchForSignatureVerification();
+        logger.startSerializationForSignatureVerification();
+        // Skip logging end of serialization
+        logger.startSignatureVerification();
+        logger.endSignatureVerification();
+        logger.close(signingVerificationStatus.getValue());
+
+        verify(mAdServicesLoggerMock, times(0)).logSignatureVerificationStats(any());
+    }
+
+    @Test
+    public void testSignatureVerification_missingEndSignatureVerificationTimestamp() {
+        SignatureVerificationStats.VerificationStatus signingVerificationStatus =
+                SignatureVerificationStats.VerificationStatus.VERIFIED;
+        when(mMockClock.elapsedRealtime()).thenReturn(1L);
+
+        SignatureVerificationLogger logger = getSignatureVerificationLogger();
+        logger.startKeyFetchForSignatureVerification();
+        logger.endKeyFetchForSignatureVerification();
+        logger.startSerializationForSignatureVerification();
+        logger.endSerializationForSignatureVerification();
+        // Skip logging end of signature verification
+        logger.endSignatureVerification();
+        logger.close(signingVerificationStatus.getValue());
+
+        verify(mAdServicesLoggerMock, times(0)).logSignatureVerificationStats(any());
+    }
+
     private SignatureVerificationLogger getSignatureVerificationLogger() {
-        return new SignatureVerificationLogger(mMockClock, mAdServicesLoggerMock);
+        return new SignatureVerificationLogger(mAdServicesLoggerMock, mMockClock);
     }
 }
