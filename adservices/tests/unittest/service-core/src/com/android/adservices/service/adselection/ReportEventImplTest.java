@@ -76,8 +76,8 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -155,7 +155,7 @@ public class ReportEventImplTest {
             AdServicesExecutors.getBackgroundExecutor();
 
     @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
-    private Flags mFlags = FlagsFactory.getFlagsForTest();
+    private Flags mFlags = FakeFlagsFactory.getFlagsForTest();
 
     private static final Flags FLAGS_ENROLLMENT_CHECK =
             new Flags() {
