@@ -17,10 +17,6 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesFlag;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
-import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
@@ -183,33 +179,37 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testConsentNotificationDebugMode() {
-        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
                 KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
-                CONSENT_NOTIFICATION_DEBUG_MODE,
+                "CONSENT_NOTIFICATION_DEBUG_MODE",
+                /* guard= */ null,
                 Flags::getConsentNotificationDebugMode);
     }
 
     @Test
     public void testConsentNotificationActivityDebugMode() {
-        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
-                CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                "CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE",
+                /* guard= */ null,
                 Flags::getConsentNotificationActivityDebugMode);
     }
 
     @Test
     public void testConsentManagerOTADebugMode() {
-        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
                 KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
-                DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE,
+                "DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE",
+                /* guard= */ null,
                 Flags::getConsentManagerOTADebugMode);
     }
 
     @Test
     public void testConsentNotifiedDebugMode() {
-        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
                 KEY_CONSENT_NOTIFIED_DEBUG_MODE,
-                CONSENT_NOTIFIED_DEBUG_MODE,
+                "CONSENT_NOTIFIED_DEBUG_MODE",
+                /* guard= */ null,
                 Flags::getConsentNotifiedDebugMode);
     }
 
