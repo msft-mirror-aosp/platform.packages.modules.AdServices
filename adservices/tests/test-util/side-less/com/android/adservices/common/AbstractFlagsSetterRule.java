@@ -53,7 +53,7 @@ import java.util.Set;
  * the end, setting {@link android.provider.DeviceConfig} or {@link android.os.SystemProperties},
  * etc...
  */
-abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>>
+public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>>
         extends AbstractRethrowerRule {
 
     protected static final String SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX = "log.tag.";
@@ -300,7 +300,7 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>>
         values.forEach(value -> mLog.i("\t%s", value));
     }
 
-    /** Clear all flags from the {@code AdServices} namespace */
+    /** Clears all flags from the namespace */
     public final T clearFlags() {
         return runOrCache(
                 "clearFlags()",
@@ -457,10 +457,12 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>>
         mDeviceConfig.reset();
     }
 
+    /** Sets the given system property. */
     public T setSystemProperty(String name, boolean value) {
         return setOrCacheSystemProperty(mSystemPropertiesPrefix + name, Boolean.toString(value));
     }
 
+    /** Sets the given system property. */
     public T setSystemProperty(String name, int value) {
         return setOrCacheSystemProperty(mSystemPropertiesPrefix + name, Integer.toString(value));
     }
