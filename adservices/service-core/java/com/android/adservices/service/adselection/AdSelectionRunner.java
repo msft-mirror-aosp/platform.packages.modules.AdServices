@@ -73,6 +73,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.SignatureVerificationLogger;
+import com.android.adservices.service.stats.SignatureVerificationLoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -237,7 +238,8 @@ public abstract class AdSelectionRunner {
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
         mAppInstallAdFilterer = appInstallAdFilterer;
-        mSignatureVerificationLogger = new SignatureVerificationLogger(mAdServicesLogger);
+        mSignatureVerificationLogger =
+                new SignatureVerificationLoggerFactory(mAdServicesLogger, mFlags).getInstance();
         AdFilteringLoggerFactory adFilteringLoggerFactory =
                 new AdFilteringLoggerFactory(mAdServicesLogger, mFlags);
         mCustomAudienceFilteringLogger =
@@ -312,7 +314,8 @@ public abstract class AdSelectionRunner {
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
         mAppInstallAdFilterer = appInstallAdFilterer;
-        mSignatureVerificationLogger = new SignatureVerificationLogger(mAdServicesLogger);
+        mSignatureVerificationLogger =
+                new SignatureVerificationLoggerFactory(mAdServicesLogger, mFlags).getInstance();
         AdFilteringLoggerFactory adFilteringLoggerFactory =
                 new AdFilteringLoggerFactory(mAdServicesLogger, mFlags);
         mCustomAudienceFilteringLogger =
@@ -959,14 +962,11 @@ public abstract class AdSelectionRunner {
     @NonNull
     private ProtectedAudienceSignatureManager getSignatureManager() {
         boolean isEnrollmentCheckEnabled = !mFlags.getDisableFledgeEnrollmentCheck();
-        boolean isContextualAdsLoggingEnabled =
-                mFlags.getFledgeAdSelectionContextualAdsMetricsEnabled();
         return new ProtectedAudienceSignatureManager(
                 mEnrollmentDao,
                 mEncryptionKeyDao,
                 mSignatureVerificationLogger,
-                isEnrollmentCheckEnabled,
-                isContextualAdsLoggingEnabled);
+                isEnrollmentCheckEnabled);
     }
 
     private AdSelectionConfig getAdSelectionConfigWithoutContextualAds(

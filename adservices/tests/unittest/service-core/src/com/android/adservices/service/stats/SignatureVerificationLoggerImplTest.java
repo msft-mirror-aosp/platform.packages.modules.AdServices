@@ -38,7 +38,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class SignatureVerificationLoggerTest {
+public class SignatureVerificationLoggerImplTest {
     public static final int SIGNATURE_VERIFICATION_KEY_FETCH_LATENCY_MS = 3;
     public static final int SIGNATURE_VERIFICATION_SERIALIZATION_LATENCY_MS = 5;
     public static final int SIGNATURE_VERIFICATION_VERIFICATION_LATENCY_MS = 7;
@@ -235,6 +235,6 @@ public class SignatureVerificationLoggerTest {
     }
 
     private SignatureVerificationLogger getSignatureVerificationLogger() {
-        return new SignatureVerificationLogger(mAdServicesLoggerMock, mMockClock);
+        return new SignatureVerificationLoggerImpl(mAdServicesLoggerMock, mMockClock);
     }
 }

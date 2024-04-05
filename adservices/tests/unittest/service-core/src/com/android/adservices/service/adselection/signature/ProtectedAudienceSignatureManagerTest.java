@@ -78,22 +78,13 @@ public class ProtectedAudienceSignatureManagerTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        SignatureVerifier noOpSignatureVerifier =
-                new SignatureVerifier() {
-                    @Override
-                    public boolean verify(byte[] publicKey, byte[] data, byte[] signature) {
-                        return true;
-                    }
-                };
         boolean enrollmentEnabled = true;
-        boolean loggingEnabled = true;
         mSignatureManager =
                 new ProtectedAudienceSignatureManager(
                         mEnrollmentDaoMock,
                         mEncryptionKeyDaoMock,
                         mSignatureVerificationLoggerMock,
-                        enrollmentEnabled,
-                        loggingEnabled);
+                        enrollmentEnabled);
     }
 
     @Test
