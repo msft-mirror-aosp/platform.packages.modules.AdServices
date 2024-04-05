@@ -18,7 +18,9 @@ package com.android.adservices.common;
 import static com.android.adservices.common.ScreenSize.LARGE_SCREEN;
 
 /** Helper class to check Android Device Properties. */
-final class AndroidDevicePropertiesHelper {
+public final class AndroidDevicePropertiesHelper {
+
+    /** TODO(b/324919960): document / clarify */
     public static boolean matchScreenSize(ScreenSize screenSize, boolean isLargeScreenDevice) {
         if (screenSize.equals(LARGE_SCREEN)) {
             return isLargeScreenDevice;

@@ -23,12 +23,14 @@ import org.junit.AssumptionViolatedException;
 
 import java.util.List;
 
+// TODO(b/324919960): make it package-protected again or make sure it's unit tested.
 /** Utility Exception class to surface device conditions being violated. */
-final class DeviceConditionsViolatedException extends AssumptionViolatedException {
+public final class DeviceConditionsViolatedException extends AssumptionViolatedException {
 
     private final ImmutableList<String> mReasons;
 
-    DeviceConditionsViolatedException(List<String> reasons) {
+    // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
+    public DeviceConditionsViolatedException(List<String> reasons) {
         super(
                 String.format(
                         "Assumptions violated: %d\nReasons: %s",
@@ -37,7 +39,7 @@ final class DeviceConditionsViolatedException extends AssumptionViolatedExceptio
     }
 
     @VisibleForTesting
-    ImmutableList<String> getConditionsViolatedReasons() {
+    public ImmutableList<String> getConditionsViolatedReasons() {
         return mReasons;
     }
 }
