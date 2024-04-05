@@ -1007,7 +1007,8 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
 
     private void enableGlobalKillSwitch(boolean enabled) {
         if (SdkLevel.isAtLeastT()) {
-            ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + enabled);
+            ShellUtils.runShellCommand(
+                    "device_config put adservices global_kill_switch " + enabled);
         } else {
             ShellUtils.runShellCommand(
                     "device_config put adservices enable_back_compat " + !enabled);
@@ -1015,7 +1016,8 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     private void enableMeasurementKillSwitch(boolean enabled) {
-        ShellUtils.runShellCommand("setprop debug.adservices.measurement_kill_switch " + enabled);
+        ShellUtils.runShellCommand(
+                "device_config put adservices measurement_kill_switch " + enabled);
     }
 
     private boolean registerSourceAndVerifyRateLimitReached(

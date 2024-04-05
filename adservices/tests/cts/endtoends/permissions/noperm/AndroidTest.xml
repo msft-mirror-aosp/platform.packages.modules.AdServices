@@ -38,9 +38,9 @@
         <option name="teardown-command"
                 value="device_config put adservices enable_enrollment_test_seed false" />
         <!-- Disable kill switches to ignore the effect of actual PH values. -->
-        <option name="run-command" value="setprop debug.adservices.global_kill_switch false" />
-        <option name="run-command" value="setprop debug.adservices.fledge_select_ads_kill_switch false" />
-        <option name="run-command" value="setprop debug.adservices.fledge_custom_audience_service_kill_switch false" />
+        <option name="run-command" value="device_config put adservices global_kill_switch false" />
+        <option name="run-command" value="device_config put adservices fledge_select_ads_kill_switch false" />
+        <option name="run-command" value="device_config put adservices fledge_custom_audience_service_kill_switch false" />
         <option name="run-command" value="device_config put adservices topics_kill_switch false" />
 
         <!-- Override Consent Manager to debug mode to grant user consent -->
@@ -52,8 +52,8 @@
         <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE" />
 
         <!-- Increase the allowed API queries per second -->
-        <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 1000" />
-        <option name="teardown-command" value="setprop debug.adservices.sdk_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices sdk_request_permits_per_second 1000" />
+        <option name="teardown-command" value="device_config put adservices sdk_request_permits_per_second 1" />
 
         <!-- Temporarily enable fetchAndJoinCustomAudience API -->
         <option name="run-command"

@@ -47,13 +47,13 @@
         <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE"/>
         <option name="run-command" value="setprop log.tag.adservices.measurement VERBOSE"/>
         <!-- Disable kill switches to ignore the effect of actual PH values. -->
-        <option name="run-command" value="setprop debug.adservices.global_kill_switch false"/>
+        <option name="run-command" value="device_config put adservices global_kill_switch false"/>
         <option name="run-command" value="device_config put adservices enable_back_compat true"/>
 
         <option name="run-command"
-                value="setprop debug.adservices.fledge_select_ads_kill_switch false"/>
+                value="device_config put adservices fledge_select_ads_kill_switch false"/>
         <option name="run-command"
-                value="setprop debug.adservices.fledge_custom_audience_service_kill_switch false"/>
+                value="device_config put adservices fledge_custom_audience_service_kill_switch false"/>
 
         <!-- Override Consent notification to debug mode to grant user consent -->
         <option name="run-command"
@@ -69,19 +69,19 @@
 
         <!-- Override MDD background job to avoid race condition. -->
         <option name="run-command"
-                value="setprop debug.adservices.mdd_background_task_kill_switch true"/>
+                value="device_config put adservices mdd_background_task_kill_switch true"/>
         <option name="teardown-command"
-                value="setprop debug.adservices.mdd_background_task_kill_switch false"/>
+                value="device_config put adservices mdd_background_task_kill_switch false"/>
 
         <!-- Force enable enrollment checks for FLEDGE when testing enrollment -->
         <option name="run-command"
-                value="setprop debug.adservices.disable_fledge_enrollment_check false"/>
+                value="device_config put adservices disable_fledge_enrollment_check false"/>
 
         <!-- Increase the allowed API queries per second -->
         <option name="run-command"
-                value="setprop debug.adservices.sdk_request_permits_per_second 100000"/>
+                value="device_config put adservices sdk_request_permits_per_second 100000"/>
         <option name="teardown-command"
-                value="setprop debug.adservices.sdk_request_permits_per_second 1"/>
+                value="device_config put adservices sdk_request_permits_per_second 1"/>
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
@@ -102,7 +102,7 @@
 
         <!-- Disable Register Ad Beacon Feature -->
         <option name="run-command"
-                value="setprop debug.adservices.fledge_register_ad_beacon_enabled false"/>
+                value="device_config put adservices fledge_register_ad_beacon_enabled false"/>
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
