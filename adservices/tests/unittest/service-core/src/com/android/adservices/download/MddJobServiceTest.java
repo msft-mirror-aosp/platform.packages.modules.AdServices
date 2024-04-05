@@ -453,7 +453,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         // Verify nothing throws
         mSpyMddJobService.onStopJob(mMockJobParameters);
 
-        callback.assertJobFinished();
+        callback.assertJobStopped();
     }
 
     private void testOnStartJob_shouldDisableJobTrue() {
