@@ -29,23 +29,28 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
-import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SourceNoiseHandlerTest {
+
+    private static final String EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START =
+            "{'start_time': 86400000, 'end_times': [172800000, 432000000, 604800000, 864000000,"
+                    + " 1728000000]}";
+
     private Flags mFlags;
     private SourceNoiseHandler mSourceNoiseHandler;
+    private EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
 
     @Before
     public void setup() {
@@ -60,6 +65,8 @@ public class SourceNoiseHandlerTest {
                 .when(mFlags).getMeasurementMaxReportStatesPerSourceRegistration();
         mSourceNoiseHandler =
                 spy(new SourceNoiseHandler(mFlags, new EventReportWindowCalcDelegate(mFlags)));
+        mEventReportWindowCalcDelegate = new EventReportWindowCalcDelegate(mFlags);
+        mSourceNoiseHandler = spy(new SourceNoiseHandler(mFlags, mEventReportWindowCalcDelegate));
     }
 
     @Test
@@ -70,12 +77,18 @@ public class SourceNoiseHandlerTest {
         int falseCount = 0;
         int neverCount = 0;
         int truthCount = 0;
+        int triggerTimeNotEqualSourceTimeCount = 0;
         for (int i = 0; i < 500; i++) {
             List<Source.FakeReport> fakeReports =
                     mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(source);
             if (source.getAttributionMode() == Source.AttributionMode.FALSELY) {
                 falseCount++;
                 assertNotEquals(0, fakeReports.size());
+                for (Source.FakeReport fakeReport : fakeReports) {
+                    if (fakeReport.getTriggerTime() != source.getEventTime()) {
+                        triggerTimeNotEqualSourceTimeCount++;
+                    }
+                }
             } else if (source.getAttributionMode() == Source.AttributionMode.NEVER) {
                 neverCount++;
                 assertEquals(0, fakeReports.size());
@@ -86,6 +99,90 @@ public class SourceNoiseHandlerTest {
         assertNotEquals(0, falseCount);
         assertNotEquals(0, neverCount);
         assertNotEquals(0, truthCount);
+        assertEquals(0, triggerTimeNotEqualSourceTimeCount);
+    }
+
+    @Test
+    public void fakeReports_flexEventReport_setsTriggerTime() throws JSONException {
+        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
+        TriggerSpecs triggerSpecs =
+                SourceFixture.getValidTriggerSpecsValueSumWithStartTime(TimeUnit.HOURS.toMillis(5));
+        long baseTime = System.currentTimeMillis();
+        Source source =
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(baseTime)
+                        .setTriggerSpecs(triggerSpecs)
+                        .build();
+        // Force increase the probability of random attribution.
+        doReturn(0.50D).when(mSourceNoiseHandler).getRandomizedSourceResponsePickRate(source);
+        int falseCount = 0;
+        int neverCount = 0;
+        int truthCount = 0;
+        int triggerTimeGreaterThanSourceTimeCount = 0;
+        for (int i = 0; i < 500; i++) {
+            List<Source.FakeReport> fakeReports =
+                    mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(source);
+            if (source.getAttributionMode() == Source.AttributionMode.FALSELY) {
+                falseCount++;
+                assertNotEquals(0, fakeReports.size());
+                for (Source.FakeReport fakeReport : fakeReports) {
+                    if (fakeReport.getTriggerTime() > source.getEventTime()) {
+                        triggerTimeGreaterThanSourceTimeCount++;
+                    }
+                }
+            } else if (source.getAttributionMode() == Source.AttributionMode.NEVER) {
+                neverCount++;
+                assertEquals(0, fakeReports.size());
+            } else {
+                truthCount++;
+            }
+        }
+        assertNotEquals(0, falseCount);
+        assertNotEquals(0, neverCount);
+        assertNotEquals(0, truthCount);
+        assertNotEquals(0, triggerTimeGreaterThanSourceTimeCount);
+    }
+
+    @Test
+    public void fakeReports_flexLiteEventReport_setsTriggerTime() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
+        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
+        long baseTime = System.currentTimeMillis();
+        Source source =
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START)
+                        .setExpiryTime(baseTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(baseTime)
+                        .build();
+        // Force increase the probability of random attribution.
+        doReturn(0.50D).when(mSourceNoiseHandler).getRandomizedSourceResponsePickRate(source);
+        int falseCount = 0;
+        int neverCount = 0;
+        int truthCount = 0;
+        int triggerTimeGreaterThanSourceTimeCount = 0;
+        for (int i = 0; i < 500; i++) {
+            List<Source.FakeReport> fakeReports =
+                    mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(source);
+            if (source.getAttributionMode() == Source.AttributionMode.FALSELY) {
+                falseCount++;
+                assertNotEquals(0, fakeReports.size());
+                for (Source.FakeReport fakeReport : fakeReports) {
+                    if (fakeReport.getTriggerTime() > source.getEventTime()) {
+                        triggerTimeGreaterThanSourceTimeCount++;
+                    }
+                }
+            } else if (source.getAttributionMode() == Source.AttributionMode.NEVER) {
+                neverCount++;
+                assertEquals(0, fakeReports.size());
+            } else {
+                truthCount++;
+            }
+        }
+        assertNotEquals(0, falseCount);
+        assertNotEquals(0, neverCount);
+        assertNotEquals(0, truthCount);
+        assertNotEquals(0, triggerTimeGreaterThanSourceTimeCount);
     }
 
     @Test
@@ -468,21 +565,6 @@ public class SourceNoiseHandlerTest {
                                 SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
                         .build(),
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
-    }
-
-    private List<Source.FakeReport> convertToReportsState(int[][] reportsState, Source source) {
-        return Arrays.stream(reportsState)
-                .map(
-                        reportState ->
-                                new Source.FakeReport(
-                                        new UnsignedLong(Long.valueOf(reportState[0])),
-                                        new EventReportWindowCalcDelegate(mFlags)
-                                                .getReportingTimeForNoising(
-                                                        source, reportState[1]),
-                                        reportState[2] == 0
-                                                ? source.getAppDestinations()
-                                                : source.getWebDestinations()))
-                .collect(Collectors.toList());
     }
 
     private void verifyAlgorithmicFakeReportGeneration(Source source, int expectedCardinality) {
