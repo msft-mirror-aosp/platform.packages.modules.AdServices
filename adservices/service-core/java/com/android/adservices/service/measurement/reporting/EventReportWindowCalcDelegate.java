@@ -181,9 +181,10 @@ public class EventReportWindowCalcDelegate {
      *
      * @param windowIndex index of the reporting window for which
      * @return reporting time in milliseconds
+     * @deprecated use {@link #getReportingAndTriggerTimeForNoising} instead.
      */
-    public long getReportingTimeForNoising(
-            @NonNull Source source, int windowIndex) {
+    @Deprecated
+    public long getReportingTimeForNoising(@NonNull Source source, int windowIndex) {
         List<Pair<Long, Long>> reportingWindows = getEffectiveReportingWindows(
                 source, source.isInstallDetectionEnabled());
         Pair<Long, Long> finalWindow = reportingWindows.get(reportingWindows.size() - 1);
@@ -191,6 +192,29 @@ public class EventReportWindowCalcDelegate {
         return windowIndex < reportingWindows.size()
                 ? reportingWindows.get(windowIndex).second
                 : finalWindow.second;
+    }
+
+    /**
+     * Return a pair of trigger and reporting time by index for noising based on the index
+     *
+     * @param windowIndex index of the reporting window for which
+     * @return a pair of reporting and trigger time in milliseconds
+     */
+    public Pair<Long, Long> getReportingAndTriggerTimeForNoising(
+            @NonNull Source source, int windowIndex) {
+        List<Pair<Long, Long>> reportingWindows =
+                getEffectiveReportingWindows(source, source.isInstallDetectionEnabled());
+        Pair<Long, Long> finalWindow = reportingWindows.get(reportingWindows.size() - 1);
+        // TODO: (b/288646239) remove this check, confirming noising indexing accuracy.
+        long triggerTime =
+                windowIndex < reportingWindows.size()
+                        ? reportingWindows.get(windowIndex).first
+                        : finalWindow.first;
+        long reportingTime =
+                windowIndex < reportingWindows.size()
+                        ? reportingWindows.get(windowIndex).second
+                        : finalWindow.second;
+        return Pair.create(triggerTime, reportingTime);
     }
 
     /**
@@ -206,19 +230,49 @@ public class EventReportWindowCalcDelegate {
     /**
      * Returns reporting time for noising with flex event API.
      *
-     * @param windowIndex window index corresponding to which the reporting time should be returned
-     * @param triggerDataIndex trigger data state index
-     * @param triggerSpecs flex event trigger specs
+     * @param windowIndex Window index corresponding to which the reporting time should be returned.
+     * @param triggerDataIndex Trigger data state index.
+     * @param source The source.
+     * @deprecated use {@link #getReportingAndTriggerTimeForNoisingFlexEventApi} instead.
      */
+    @Deprecated
     public long getReportingTimeForNoisingFlexEventApi(
-            int windowIndex, int triggerDataIndex, TriggerSpecs triggerSpecs) {
-        for (TriggerSpec triggerSpec : triggerSpecs.getTriggerSpecs()) {
+            int windowIndex, int triggerDataIndex, @NonNull Source source) {
+        for (TriggerSpec triggerSpec : source.getTriggerSpecs().getTriggerSpecs()) {
             triggerDataIndex -= triggerSpec.getTriggerData().size();
             if (triggerDataIndex < 0) {
-                return triggerSpec.getEventReportWindowsEnd().get(windowIndex);
+                return source.getEventTime()
+                        + triggerSpec.getEventReportWindowsEnd().get(windowIndex);
             }
         }
         return 0;
+    }
+
+    /**
+     * Returns a pair of trigger and reporting time for noising with flex event API.
+     *
+     * @param windowIndex window index corresponding to which the reporting time should be returned.
+     * @param triggerDataIndex trigger data state index.
+     */
+    public Pair<Long, Long> getReportingAndTriggerTimeForNoisingFlexEventApi(
+            int windowIndex, int triggerDataIndex, @NonNull Source source) {
+        for (TriggerSpec triggerSpec : source.getTriggerSpecs().getTriggerSpecs()) {
+            triggerDataIndex -= triggerSpec.getTriggerData().size();
+            if (triggerDataIndex < 0) {
+                long triggerTime =
+                        source.getEventTime()
+                                + (windowIndex == 0
+                                        ? triggerSpec.getEventReportWindowsStart()
+                                        : triggerSpec
+                                                .getEventReportWindowsEnd()
+                                                .get(windowIndex - 1));
+                long reportingTime =
+                        source.getEventTime()
+                                + triggerSpec.getEventReportWindowsEnd().get(windowIndex);
+                return Pair.create(triggerTime, reportingTime);
+            }
+        }
+        return Pair.create(0L, 0L);
     }
 
     /**
@@ -284,13 +338,13 @@ public class EventReportWindowCalcDelegate {
                         .collect(Collectors.toList());
 
         List<Pair<Long, Long>> windowList = new ArrayList<>();
-        long windowStart = 0L;
+        long windowStart = source.getEventTime();
         Pair<Long, Long> finalWindow =
                 getFinalReportingWindow(source, earlyWindowEnds);
 
         for (long windowEnd : earlyWindowEnds) {
-            // Start time of `finalWindow` is either 0 or one of `earlyWindowEnds` times; stop
-            // iterating if we see it, and add `finalWindow`.
+            // Start time of `finalWindow` is either source event time or one of
+            // `earlyWindowEnds` times; stop iterating if we see it, and add `finalWindow`.
             if (windowStart == finalWindow.first) {
                 break;
             }
@@ -389,7 +443,7 @@ public class EventReportWindowCalcDelegate {
                 return Pair.create(windowEnd, effectiveExpiry);
             }
         }
-        return Pair.create(0L, effectiveExpiry);
+        return Pair.create(source.getEventTime(), effectiveExpiry);
     }
 
     /** Indicates whether VTC report windows and max reports are default configured, which can
