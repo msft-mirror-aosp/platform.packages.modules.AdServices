@@ -54,6 +54,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AttributionConfig;
@@ -200,7 +201,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(FlagsFactory.getFlagsForTest());
+        extendedMockito.mockGetFlags(FakeFlagsFactory.getFlagsForTest());
         mFetcher = spy(new AsyncTriggerFetcher(sContext, mEnrollmentDao, mFlags));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
@@ -3669,39 +3670,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"trigger_context_id\": 42" + "}")));
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
-        // Assertion
-        assertEquals(
-                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
-        assertFalse(fetch.isPresent());
-        verify(mUrlConnection, times(1)).setRequestMethod("POST");
-        verify(mFetcher, times(1)).openUrl(any());
-    }
-
-    @Test
-    public void basicTriggerRequest_triggerContextIdEmpty_fails() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
-        when(mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of(
-                                        "{\"trigger_context_id\": \"\""
-                                                + ", \"aggregatable_source_registration_time\": \""
-                                                + Trigger.SourceRegistrationTimeConfig.EXCLUDE
-                                                        .name()
-                                                + "\""
-                                                + "}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution

@@ -53,6 +53,7 @@ import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncodedPayloadFixture;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -99,14 +100,15 @@ public class BuyerInputGeneratorTest {
     private ExecutorService mBackgroundExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
-    @Mock private AdFilterer mAdFiltererMock;
+    @Mock private FrequencyCapAdFilterer mFrequencyCapAdFiltererMock;
+    @Mock private AppInstallAdFilterer mAppInstallAdFiltererMock;
     private BuyerInputGenerator mBuyerInputGenerator;
     private AuctionServerDataCompressor mDataCompressor;
     private MockitoSession mStaticMockSession = null;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     private final AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategyDisabled =
             new AuctionServerPayloadMetricsStrategyDisabled();
-    private Flags mFlags = FlagsFactory.getFlagsForTest();
+    private Flags mFlags = FakeFlagsFactory.getFlagsForTest();
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -128,7 +130,7 @@ public class BuyerInputGeneratorTest {
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
@@ -142,7 +144,7 @@ public class BuyerInputGeneratorTest {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
-                        mAdFiltererMock,
+                        mFrequencyCapAdFiltererMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
@@ -151,10 +153,11 @@ public class BuyerInputGeneratorTest {
                         mDataCompressor,
                         false,
                         mAuctionServerPayloadMetricsStrategyDisabled,
-                        mFlags);
+                        mFlags,
+                        mAppInstallAdFiltererMock);
 
         // Required by CustomAudienceDao.
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
     }
 
     @After
@@ -169,7 +172,10 @@ public class BuyerInputGeneratorTest {
             throws ExecutionException, InterruptedException, TimeoutException,
                     InvalidProtocolBufferException {
         // Set AdFiltering to return all custom audiences in the input argument.
-        when(mAdFiltererMock.filterCustomAudiences(any())).thenAnswer(i -> i.getArguments()[0]);
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -205,7 +211,8 @@ public class BuyerInputGeneratorTest {
                 assertEqual(buyerInputsCA, deviceCA, true);
             }
         }
-        verify(mAdFiltererMock).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
     }
 
     @Test
@@ -216,7 +223,10 @@ public class BuyerInputGeneratorTest {
         ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptor =
                 ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
         // Set AdFiltering to return all custom audiences in the input argument.
-        when(mAdFiltererMock.filterCustomAudiences(any())).thenAnswer(i -> i.getArguments()[0]);
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -235,7 +245,7 @@ public class BuyerInputGeneratorTest {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
-                        mAdFiltererMock,
+                        mFrequencyCapAdFiltererMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
@@ -244,7 +254,8 @@ public class BuyerInputGeneratorTest {
                         mDataCompressor,
                         /* omitAds = */ false,
                         new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerMock),
-                        mFlags);
+                        mFlags,
+                        mAppInstallAdFiltererMock);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -268,7 +279,8 @@ public class BuyerInputGeneratorTest {
                 assertEqual(buyerInputsCA, deviceCA, true);
             }
         }
-        verify(mAdFiltererMock).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
 
         verify(mAdServicesLoggerMock, times(2))
                 .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
@@ -366,7 +378,10 @@ public class BuyerInputGeneratorTest {
             throws ExecutionException, InterruptedException, TimeoutException,
                     InvalidProtocolBufferException {
         // Set AdFiltering to return all custom audiences in the input argument.
-        when(mAdFiltererMock.filterCustomAudiences(any())).thenAnswer(i -> i.getArguments()[0]);
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -388,7 +403,7 @@ public class BuyerInputGeneratorTest {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
-                        mAdFiltererMock,
+                        mFrequencyCapAdFiltererMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
@@ -397,7 +412,8 @@ public class BuyerInputGeneratorTest {
                         mDataCompressor,
                         true,
                         mAuctionServerPayloadMetricsStrategyDisabled,
-                        mFlags);
+                        mFlags,
+                        mAppInstallAdFiltererMock);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -429,7 +445,8 @@ public class BuyerInputGeneratorTest {
                 }
             }
         }
-        verify(mAdFiltererMock).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
     }
 
     @Test
@@ -441,7 +458,10 @@ public class BuyerInputGeneratorTest {
                 ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
 
         // Set AdFiltering to return all custom audiences in the input argument.
-        when(mAdFiltererMock.filterCustomAudiences(any())).thenAnswer(i -> i.getArguments()[0]);
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -463,7 +483,7 @@ public class BuyerInputGeneratorTest {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
-                        mAdFiltererMock,
+                        mFrequencyCapAdFiltererMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
@@ -472,7 +492,8 @@ public class BuyerInputGeneratorTest {
                         mDataCompressor,
                         /* omitAds = */ true,
                         new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerMock),
-                        mFlags);
+                        mFlags,
+                        mAppInstallAdFiltererMock);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -504,7 +525,8 @@ public class BuyerInputGeneratorTest {
                 }
             }
         }
-        verify(mAdFiltererMock).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
 
         verify(mAdServicesLoggerMock, times(2))
                 .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
@@ -524,7 +546,10 @@ public class BuyerInputGeneratorTest {
             throws ExecutionException, InterruptedException, TimeoutException,
                     InvalidProtocolBufferException {
         // Set AdFiltering to return all custom audiences in the input argument.
-        when(mAdFiltererMock.filterCustomAudiences(any())).thenAnswer(i -> i.getArguments()[0]);
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -546,7 +571,7 @@ public class BuyerInputGeneratorTest {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
-                        mAdFiltererMock,
+                        mFrequencyCapAdFiltererMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
@@ -555,7 +580,8 @@ public class BuyerInputGeneratorTest {
                         mDataCompressor,
                         false,
                         mAuctionServerPayloadMetricsStrategyDisabled,
-                        mFlags);
+                        mFlags,
+                        mAppInstallAdFiltererMock);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -579,8 +605,8 @@ public class BuyerInputGeneratorTest {
                 assertEqual(buyerInputsCA, deviceCA, true);
             }
         }
-        verify(mAdFiltererMock).filterCustomAudiences(any());
-
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
     }
 
     @Test
@@ -598,7 +624,7 @@ public class BuyerInputGeneratorTest {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
-                        mAdFiltererMock,
+                        mFrequencyCapAdFiltererMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
@@ -607,7 +633,8 @@ public class BuyerInputGeneratorTest {
                         mDataCompressor,
                         false,
                         new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerMock),
-                        mFlags);
+                        mFlags,
+                        mAppInstallAdFiltererMock);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -626,7 +653,8 @@ public class BuyerInputGeneratorTest {
                     ByteString.copyFrom(encodedPayloads.get(buyer).getEncodedPayload()),
                     appSignals.getAppInstallSignals());
         }
-        verify(mAdFiltererMock).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
 
         verify(mAdServicesLoggerMock, times(1))
                 .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
@@ -649,7 +677,10 @@ public class BuyerInputGeneratorTest {
                 ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
 
         // Set AdFiltering to return all custom audiences in the input argument.
-        when(mAdFiltererMock.filterCustomAudiences(any())).thenAnswer(i -> i.getArguments()[0]);
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
         // Custom Audiences
         Map<String, AdTechIdentifier> nameAndBuyersMap = Map.of("Shoes CA of Buyer 1", BUYER_1);
         Map<String, DBCustomAudience> namesAndCustomAudiences =
@@ -667,7 +698,7 @@ public class BuyerInputGeneratorTest {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
-                        mAdFiltererMock,
+                        mFrequencyCapAdFiltererMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
@@ -676,7 +707,8 @@ public class BuyerInputGeneratorTest {
                         mDataCompressor,
                         false,
                         new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerMock),
-                        mFlags);
+                        mFlags,
+                        mAppInstallAdFiltererMock);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -711,7 +743,8 @@ public class BuyerInputGeneratorTest {
             assertEqual(buyerInputsCA, deviceCA, true);
         }
 
-        verify(mAdFiltererMock).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
 
         verify(mAdServicesLoggerMock, times(1))
                 .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
@@ -732,7 +765,10 @@ public class BuyerInputGeneratorTest {
             throws ExecutionException, InterruptedException, TimeoutException,
                     InvalidProtocolBufferException {
         // Set AdFiltering to return all custom audiences in the input argument.
-        when(mAdFiltererMock.filterCustomAudiences(any())).thenAnswer(i -> i.getArguments()[0]);
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
         // Custom Audiences
         Map<String, AdTechIdentifier> nameAndBuyersMap = Map.of("Shoes CA of Buyer 1", BUYER_1);
         Map<String, DBCustomAudience> namesAndCustomAudiences =
@@ -745,7 +781,7 @@ public class BuyerInputGeneratorTest {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
-                        mAdFiltererMock,
+                        mFrequencyCapAdFiltererMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
@@ -754,7 +790,8 @@ public class BuyerInputGeneratorTest {
                         mDataCompressor,
                         false,
                         mAuctionServerPayloadMetricsStrategyDisabled,
-                        mFlags);
+                        mFlags,
+                        mAppInstallAdFiltererMock);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 buyerInputGeneratorSignalsDisabled
@@ -786,8 +823,8 @@ public class BuyerInputGeneratorTest {
             assertEqual(buyerInputsCA, deviceCA, true);
         }
 
-        verify(mAdFiltererMock).filterCustomAudiences(any());
-
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
     }
 
     @Test
@@ -799,7 +836,7 @@ public class BuyerInputGeneratorTest {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
-                        mAdFiltererMock,
+                        mFrequencyCapAdFiltererMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
@@ -808,7 +845,8 @@ public class BuyerInputGeneratorTest {
                         mDataCompressor,
                         false,
                         mAuctionServerPayloadMetricsStrategyDisabled,
-                        mFlags);
+                        mFlags,
+                        mAppInstallAdFiltererMock);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "testCA")
                         .build(),
@@ -821,12 +859,11 @@ public class BuyerInputGeneratorTest {
 
         assertThat(buyerAndBuyerInputs).hasSize(1);
         assertTrue(buyerAndBuyerInputs.containsKey(BUYER_1));
-        verify(mAdFiltererMock, never()).filterCustomAudiences(any());
-
+        verify(mFrequencyCapAdFiltererMock, never()).filterCustomAudiences(any());
     }
 
     @Test
-    public void testBuyerInputGenerator_enableAdFilter_successWithAdFilteringCalled()
+    public void testBuyerInputGenerator_enableAdFilter_successWithFrequencyCapAdFilteringCalled()
             throws ExecutionException, InterruptedException, TimeoutException,
                     InvalidProtocolBufferException {
         // Populate Custom Audiences in the DB
@@ -839,8 +876,8 @@ public class BuyerInputGeneratorTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(customAudienceBuyer1, Uri.EMPTY, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(customAudienceBuyer2, Uri.EMPTY, false);
 
-        // Set AdFiltering to return only one custom audience.
-        when(mAdFiltererMock.filterCustomAudiences(any()))
+        // Set Frequency cap AdFiltering to return only one custom audience.
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
                 .thenAnswer(
                         i -> {
                             List<DBCustomAudience> cas = (List) i.getArguments()[0];
@@ -849,6 +886,8 @@ public class BuyerInputGeneratorTest {
                                     .containsExactly(customAudienceBuyer1, customAudienceBuyer2);
                             return ImmutableList.of(customAudienceBuyer2);
                         });
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -857,8 +896,46 @@ public class BuyerInputGeneratorTest {
 
         assertThat(buyerAndBuyerInputs).hasSize(1);
         assertTrue(buyerAndBuyerInputs.containsKey(BUYER_2));
-        verify(mAdFiltererMock).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
+    }
 
+    @Test
+    public void testBuyerInputGenerator_enableAdFilter_successWithAppInstallCapAdFilteringCalled()
+            throws ExecutionException, InterruptedException, TimeoutException,
+                    InvalidProtocolBufferException {
+        // Populate Custom Audiences in the DB
+        DBCustomAudience customAudienceBuyer1 =
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "testCA")
+                        .build();
+        DBCustomAudience customAudienceBuyer2 =
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_2, "testCA2")
+                        .build();
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(customAudienceBuyer1, Uri.EMPTY, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(customAudienceBuyer2, Uri.EMPTY, false);
+
+        // Set App install AdFiltering to return only one custom audience.
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(
+                        i -> {
+                            List<DBCustomAudience> cas = (List) i.getArguments()[0];
+                            assertThat(cas).hasSize(2);
+                            assertThat(cas)
+                                    .containsExactly(customAudienceBuyer1, customAudienceBuyer2);
+                            return ImmutableList.of(customAudienceBuyer2);
+                        });
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
+                mBuyerInputGenerator
+                        .createCompressedBuyerInputs()
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.MILLISECONDS);
+
+        assertThat(buyerAndBuyerInputs).hasSize(1);
+        assertTrue(buyerAndBuyerInputs.containsKey(BUYER_2));
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
     }
 
     /**

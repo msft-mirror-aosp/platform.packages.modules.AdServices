@@ -18,9 +18,6 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
@@ -41,6 +38,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_TOO_BIG;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_SMALL;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.NUM_OF_ELIGIBLE_TO_UPDATE_CAS;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.RESULT_CODE;
@@ -113,6 +117,9 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -990,6 +997,51 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         adServicesLogger.logEncodingJsFetchStats(stats);
 
         verify(mStatsdLoggerMock).logEncodingJsFetchStats(eq(stats));
+    }
+
+    @Test
+    public void testlogUpdateSignalsApiCalledStats() {
+        UpdateSignalsApiCalledStats stats =
+                UpdateSignalsApiCalledStats.builder()
+                        .setJsonProcessingStatus(JSON_PROCESSING_STATUS_TOO_BIG)
+                        .setHttpResponseCode(404)
+                        .setJsonSize(1000)
+                        .setAdTechId("ABC123")
+                        .setPackageUid(42)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logUpdateSignalsApiCalledStats(stats);
+
+        verify(mStatsdLoggerMock).logUpdateSignalsApiCalledStats(eq(stats));
+    }
+
+    @Test
+    public void testLogEncodingJsExecutionStats() {
+        EncodingJsExecutionStats stats =
+                EncodingJsExecutionStats.builder()
+                        .setRunStatus(JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT)
+                        .setJsLatency(SIZE_SMALL)
+                        .setAdTechId("123")
+                        .setJsMemoryUsed(SIZE_LARGE)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEncodingJsExecutionStats(stats);
+
+        verify(mStatsdLoggerMock).logEncodingJsExecutionStats(eq(stats));
+    }
+
+    @Test
+    public void testLogEncodingJobRunStats() {
+        EncodingJobRunStats stats =
+                EncodingJobRunStats.builder()
+                        .setSignalEncodingSuccesses(5)
+                        .setSignalEncodingFailures(3)
+                        .setSignalEncodingSkips(2)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEncodingJobRunStats(stats);
+
+        verify(mStatsdLoggerMock).logEncodingJobRunStats(eq(stats));
     }
 
     private void mockAppNameApiErrorLogger() {

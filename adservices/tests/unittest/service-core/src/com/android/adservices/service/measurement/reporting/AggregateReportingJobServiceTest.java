@@ -539,12 +539,6 @@ public class AggregateReportingJobServiceTest {
                 .getMeasurementJobAggregateReportingKillSwitch();
     }
 
-    private CountDownLatch createCountDownLatch() {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
-        return countDownLatch;
-    }
-
     private Object countDown(CountDownLatch countDownLatch) {
         countDownLatch.countDown();
         return null;

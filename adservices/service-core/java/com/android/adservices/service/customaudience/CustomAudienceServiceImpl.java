@@ -338,7 +338,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                     mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                                     AdRenderIdValidator.createInstance(mFlags),
                                     AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                                            mFlags.getFledgeAdSelectionFilteringEnabled(),
+                                            mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                                            mFlags.getFledgeAppInstallFilteringEnabled(),
                                             mFlags.getFledgeAuctionServerAdRenderIdEnabled()));
 
                     impl.doFetchCustomAudience(input, callback, devContext);

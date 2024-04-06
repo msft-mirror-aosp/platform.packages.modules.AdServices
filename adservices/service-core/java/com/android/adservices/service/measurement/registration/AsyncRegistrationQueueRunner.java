@@ -206,6 +206,17 @@ public class AsyncRegistrationQueueRunner {
         }
     }
 
+    private static boolean isNavigationOriginAlreadyRegisteredForRegistration(
+            @NonNull Source source, IMeasurementDao dao, Flags flags) throws DatastoreException {
+        if (!flags.getMeasurementEnableNavigationReportingOriginCheck()
+                || source.getSourceType() != Source.SourceType.NAVIGATION) {
+            return false;
+        }
+        return dao.countNavigationSourcesPerReportingOrigin(
+                        source.getRegistrationOrigin(), source.getRegistrationId())
+                > 0;
+    }
+
     private void processSourceRegistration(
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -340,6 +351,11 @@ public class AsyncRegistrationQueueRunner {
             DebugReportApi debugReportApi)
             throws DatastoreException {
         Flags flags = FlagsFactory.getFlags();
+        // Do not persist the navigation source if the same reporting origin has been registered
+        // for the registration.
+        if (isNavigationOriginAlreadyRegisteredForRegistration(source, dao, flags)) {
+            return false;
+        }
         long windowStartTime =
                 source.getEventTime() - flags.getMeasurementRateLimitWindowMilliseconds();
         Optional<Uri> publisher = getTopLevelPublisher(topOrigin, publisherType);

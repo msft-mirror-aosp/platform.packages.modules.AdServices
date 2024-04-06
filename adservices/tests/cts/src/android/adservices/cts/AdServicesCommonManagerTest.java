@@ -44,10 +44,14 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    private final AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(sContext);
+    private AdServicesCommonManager mCommonManager;
 
     @Before
-    public void printRelevantFlags() {
+    public void setup() {
+        // Initialize the manager before tests instead of in class member to allow overriding the
+        // binder timeout.
+        mCommonManager = AdServicesCommonManager.get(sContext);
+
         Log.d(
                 mTag,
                 "Relevant flags @Before: "

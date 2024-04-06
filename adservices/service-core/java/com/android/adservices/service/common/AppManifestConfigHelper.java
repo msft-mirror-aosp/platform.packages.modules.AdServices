@@ -25,7 +25,6 @@ import static com.android.adservices.service.common.AppManifestConfigCall.RESULT
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_EXIST;
-import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
 import static com.android.adservices.service.common.AppManifestConfigCall.isAllowed;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
@@ -41,7 +40,6 @@ import android.content.res.XmlResourceParser;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.modules.utils.build.SdkLevel;
@@ -229,22 +227,18 @@ public final class AppManifestConfigHelper {
         Objects.requireNonNull(enrollmentId);
 
         AppManifestConfigCall call = new AppManifestConfigCall(appPackageName, api);
-        boolean enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
 
         try {
             XmlResourceParser in = getXmlParser(appPackageName);
             if (in == null) {
-                call.result =
-                        enabledByDefault
-                                ? RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG
-                                : RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
+                call.result = RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
                 LogUtil.v(
-                        "%s: returning %b for app (%s) that doesn't have the AdServices XML config",
-                        method, enabledByDefault, appPackageName);
-                return enabledByDefault;
+                        "%s: returning true for app (%s) that doesn't have the AdServices XML"
+                                + " config",
+                        method, appPackageName);
+                return true;
             }
-            AppManifestConfig appManifestConfig =
-                    AppManifestConfigParser.getConfig(in, enabledByDefault);
+            AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
             call.result = checker.isAllowedAccess(appManifestConfig);
         } catch (NameNotFoundException e) {
             call.result = RESULT_DISALLOWED_APP_DOES_NOT_EXIST;

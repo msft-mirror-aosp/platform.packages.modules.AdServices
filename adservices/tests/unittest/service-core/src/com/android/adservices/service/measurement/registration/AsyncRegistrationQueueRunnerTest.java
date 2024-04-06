@@ -148,6 +148,21 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                     .setDebugKey(new UnsignedLong(47823478789L))
                     .build();
+    private static final Source NAVIGATION_SOURCE =
+            SourceFixture.getMinimalValidSourceBuilder()
+                    .setEventId(new UnsignedLong(1L))
+                    .setPublisher(APP_TOP_ORIGIN)
+                    .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                    .setWebDestinations(List.of(WebUtil.validUri("https://web-destination1.test")))
+                    .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                    .setRegistrant(Uri.parse("android-app://com.example"))
+                    .setEventTime(new Random().nextLong())
+                    .setExpiryTime(8640000010L)
+                    .setPriority(100L)
+                    .setSourceType(Source.SourceType.NAVIGATION)
+                    .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                    .setDebugKey(new UnsignedLong(47823478789L))
+                    .build();
     private static final Uri DEFAULT_WEB_DESTINATION =
             WebUtil.validUri("https://def-web-destination.test");
     private static final Uri ALT_WEB_DESTINATION =
@@ -250,7 +265,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW);
         when(mFlags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource())
                 .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE);
-        when(mFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(false);
         when(mFlags.getMeasurementEnableDestinationRateLimit())
                 .thenReturn(Flags.MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT);
         when(mFlags.getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow())
@@ -3979,6 +3993,68 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         mDebugReportApi);
         // Assert
         assertTrue(status);
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_existsNavigationWithSameReportingOrigin_returnsFalse()
+            throws DatastoreException {
+        // setup
+        when(mFlags.getMeasurementEnableNavigationReportingOriginCheck()).thenReturn(true);
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                new AsyncRegistrationQueueRunner(
+                        mSpyContext,
+                        mContentResolver,
+                        mAsyncSourceFetcher,
+                        mAsyncTriggerFetcher,
+                        new FakeDatastoreManager(),
+                        mDebugReportApi,
+                        mSourceNoiseHandler,
+                        mFlags,
+                        mLogger);
+
+        // Execution
+        when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
+
+        // Assert
+        assertFalse(
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        NAVIGATION_SOURCE,
+                        NAVIGATION_SOURCE.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi));
+        verify(mMeasurementDao, times(1)).countNavigationSourcesPerReportingOrigin(any(), any());
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_existsEventWithSameReportingOrigin_returnsTrue()
+            throws DatastoreException {
+        // setup
+        when(mFlags.getMeasurementEnableNavigationReportingOriginCheck()).thenReturn(true);
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                new AsyncRegistrationQueueRunner(
+                        mSpyContext,
+                        mContentResolver,
+                        mAsyncSourceFetcher,
+                        mAsyncTriggerFetcher,
+                        new FakeDatastoreManager(),
+                        mDebugReportApi,
+                        mSourceNoiseHandler,
+                        mFlags,
+                        mLogger);
+
+        // Execution
+        when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
+
+        // Assert
+        assertTrue(
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        SOURCE_1,
+                        SOURCE_1.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi));
+        verify(mMeasurementDao, never()).countNavigationSourcesPerReportingOrigin(any(), any());
     }
 
     private static KeyValueData getKeyValueDataRedirectCount() {

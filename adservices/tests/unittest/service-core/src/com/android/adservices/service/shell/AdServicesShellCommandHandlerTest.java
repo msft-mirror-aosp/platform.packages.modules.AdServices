@@ -27,8 +27,12 @@ import static com.android.adservices.service.shell.common.IsAllowedAttributionAc
 import static com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
 import static com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand.HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
 import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
@@ -36,8 +40,16 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceRefreshCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceViewCommand;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ShellCommandStats;
+import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.collect.Sets;
 import com.google.common.truth.Expect;
 
 import org.junit.Before;
@@ -50,13 +62,12 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 @SpyStatic(AppManifestConfigHelper.class)
 public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedMockitoTestCase {
-    private static final String PKG_NAME = "d.h.a.r.m.a";
-    private static final String ENROLLMENT_ID = "42";
     private final Flags mFlags = new ShellCommandFlags();
 
     // mCmd is used on most tests methods, excepted those that runs more than one command
@@ -64,27 +75,34 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private BackgroundFetchRunner mBackgroundFetchRunner;
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    @Mock private AdServicesLogger mAdServicesLogger;
+    @Mock private Clock mClock;
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
     @Before
     public void setup() {
+        doNothing().when(mAdServicesLogger).logShellCommandStats(any());
         mShellCommandFactorySupplier =
                 new TestShellCommandFactorySupplier(
                         mFlags,
                         mBackgroundFetchRunner,
                         mCustomAudienceDao,
                         mConsentedDebugConfigurationDao);
-        mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier);
+        mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
     }
 
     @Test
     public void testInvalidConstructor() {
         assertThrows(
                 NullPointerException.class,
-                () -> new AdServicesShellCommandHandler(null, mShellCommandFactorySupplier));
+                () ->
+                        new AdServicesShellCommandHandler(
+                                null, mShellCommandFactorySupplier, mAdServicesLogger));
         assertThrows(
                 NullPointerException.class,
-                () -> new AdServicesShellCommandHandler(new PrintWriter(new StringWriter()), null));
+                () ->
+                        new AdServicesShellCommandHandler(
+                                new PrintWriter(new StringWriter()), null, mAdServicesLogger));
     }
 
     @Test
@@ -134,9 +152,15 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
 
     @Test
     public void testRunEcho_valid() throws Exception {
+        when(mClock.currentTimeMillis()).thenReturn(0L, 2000L);
+
         String result = mCmd.runValid(CMD_ECHO, "108");
 
         expect.withMessage("result of '%s 108'", CMD_ECHO).that(result).isEqualTo("108\n");
+        ShellCommandStats stats =
+                new ShellCommandStats(
+                        ShellCommandStats.COMMAND_ECHO, ShellCommandStats.RESULT_SUCCESS, 2000);
+        verify(mAdServicesLogger).logShellCommandStats(stats);
     }
 
     @Test
@@ -157,23 +181,26 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         }
     }
     private void assertHelpContents(String help) {
+        HashSet<String> actualHelp = Sets.newHashSet(help.split("\n\n"));
         expect.withMessage("help")
-                .that(help.split("\n\n"))
-                .asList()
-                .containsExactly(
-                        HELP_ECHO,
-                        HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
-                        HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                        HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                        HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
-                        HELP_IS_ALLOWED_TOPICS_ACCESS,
-                        CustomAudienceListCommand.HELP,
-                        CustomAudienceViewCommand.HELP,
-                        CustomAudienceRefreshCommand.HELP);
+                .that(actualHelp)
+                .containsExactlyElementsIn(
+                        Sets.newHashSet(
+                                HELP_ECHO,
+                                HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
+                                HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
+                                HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
+                                HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
+                                HELP_IS_ALLOWED_TOPICS_ACCESS,
+                                CustomAudienceListCommand.HELP,
+                                CustomAudienceViewCommand.HELP,
+                                CustomAudienceRefreshCommand.HELP,
+                                ConsentedDebugShellCommand.HELP));
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {
-        OneTimeCommand cmd = new OneTimeCommand(expect, mShellCommandFactorySupplier);
+        OneTimeCommand cmd =
+                new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
 
         String expectedResult =
                 String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax);
@@ -197,9 +224,14 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         private boolean mOutCalled;
 
         private OneTimeCommand(
-                Expect expect, ShellCommandFactorySupplier shellCommandFactorySupplier) {
+                Expect expect,
+                ShellCommandFactorySupplier shellCommandFactorySupplier,
+                AdServicesLogger adservicesLogger,
+                Clock clock) {
             this.expect = expect;
-            cmd = new AdServicesShellCommandHandler(mOut, mErr, shellCommandFactorySupplier);
+            cmd =
+                    new AdServicesShellCommandHandler(
+                            mOut, mErr, shellCommandFactorySupplier, adservicesLogger, clock);
         }
 
         /**

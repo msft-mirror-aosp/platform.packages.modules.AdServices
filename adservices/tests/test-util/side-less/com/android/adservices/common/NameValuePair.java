@@ -17,8 +17,9 @@ package com.android.adservices.common;
 
 import java.util.Objects;
 
+// TODO(b/324919960): make it package-protected again or make sure it's unit tested.
 /** Simple name-value pair, like a flag or system property. */
-final class NameValuePair {
+public final class NameValuePair {
 
     public final String name;
     public final String value;
@@ -60,7 +61,10 @@ final class NameValuePair {
         return string.toString();
     }
 
-    interface Matcher {
+    // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
+    /** Used to filter {@link NameValuePair} instances. */
+    public interface Matcher {
+        /** Checks whether the given pair matches the filter. */
         boolean matches(NameValuePair pair);
     }
 }

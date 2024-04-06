@@ -15,6 +15,7 @@
  */
 package com.android.adservices.ui.u18notifications;
 
+import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_DISMISSED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_GOT_IT_CLICKED;
@@ -69,12 +70,16 @@ public class ConsentNotificationU18Fragment extends Fragment {
         setupListeners(savedInstanceState);
         ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED, getContext());
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            if (ConsentManagerV2.getInstance().getUx() == RVC_UX) {
+            if (ConsentManagerV2.getInstance().getUx() == RVC_UX
+                    && ConsentManagerV2.getInstance().getUserManualInteractionWithConsent()
+                            != MANUAL_INTERACTIONS_RECORDED) {
                 ConsentManagerV2.getInstance()
                         .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
             }
         } else {
-            if (ConsentManager.getInstance().getUx() == RVC_UX) {
+            if (ConsentManager.getInstance().getUx() == RVC_UX
+                    && ConsentManager.getInstance().getUserManualInteractionWithConsent()
+                            != MANUAL_INTERACTIONS_RECORDED) {
                 ConsentManager.getInstance()
                         .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
             }

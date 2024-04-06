@@ -24,12 +24,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
@@ -146,6 +147,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiresSdkLevelAtLeastS
+@SetFlagDisabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+@SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED) // Enabled due to reset during teardown()
 @SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED)
 @SetFlagDisabled(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE)
@@ -2957,7 +2960,8 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
     public void testFledgeAuctionAppFilteringFlow_overall_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -3087,7 +3091,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
     public void testFledgeAuctionAppFilteringFlow_overall_AppInstallFailure() throws Exception {
         /**
          * In this test, we give bad input to setAppInstallAdvertisers and ensure that it gives an
@@ -3222,7 +3226,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
     public void testFrequencyCapFiltering_NonWinEvent_FiltersAds() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
@@ -3394,7 +3398,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
     public void testFrequencyCapFiltering_DifferentNonWinEvent_IsNotFiltered()
             throws ExecutionException, InterruptedException, TimeoutException {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
@@ -3565,7 +3569,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
     public void testFrequencyCapFiltering_NonWinEventDifferentKey_IsNotFiltered()
             throws ExecutionException, InterruptedException, TimeoutException {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
@@ -3734,7 +3738,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
     public void testFrequencyCapFiltering_NonWinEventDifferentBuyer_IsNotFiltered()
             throws ExecutionException, InterruptedException, TimeoutException {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
@@ -3917,7 +3921,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
     public void testFrequencyCapFiltering_NonWinEventWrongAdSelection_DoesNotFilterAds()
             throws ExecutionException, InterruptedException, TimeoutException {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
@@ -4089,7 +4093,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
     public void testFrequencyCapFiltering_WinEvent_FiltersAds() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -4244,7 +4248,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
     public void testFrequencyCapFiltering_WinEventDifferentKey_IsNotFiltered() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -4401,7 +4405,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
     public void testFrequencyCapFiltering_WinEventDifferentBuyer_IsNotFiltered() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -4567,7 +4571,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
     public void testFrequencyCapFiltering_WinEventSameBuyerDifferentCustomAudience_IsNotFiltered()
             throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);

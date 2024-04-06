@@ -19,10 +19,10 @@ package com.android.adservices.service;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 import static android.os.Build.VERSION.SDK_INT;
 
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.DEBUG;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
-import static com.android.adservices.shared.common.flags.FeatureFlag.Type.RAMPED_UP;
 
 import android.annotation.IntDef;
 import android.app.job.JobInfo;
@@ -1332,14 +1332,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     // Filtering feature flag disabled by default
-    boolean FLEDGE_AD_SELECTION_FILTERING_ENABLED = false;
-
-    /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
-    default boolean getFledgeAdSelectionFilteringEnabled() {
-        return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
-    }
-
-    // Filtering feature flag disabled by default
     boolean FLEDGE_APP_INSTALL_FILTERING_ENABLED = false;
 
     /** Returns {@code true} if app install filtering of ads during ad selection is enabled. */
@@ -1744,6 +1736,29 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED = false;
+
+    /**
+     * Returns whether that the periodic job to fetch encryption keys should force refresh if the
+     * database is empty or if the keys are within
+     * FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS to expire.
+     */
+    default boolean getFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled() {
+        return getFledgeAuctionServerBackgroundKeyFetchJobEnabled()
+                && FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
+    }
+
+    long FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS =
+            TimeUnit.HOURS.toMillis(24);
+
+    /**
+     * Returns the interval at which a key is considered to be almost expired and preventive
+     * refreshed
+     */
+    default long getFledgeAuctionServerBackgroundKeyFetchInAdvanceIntervalMs() {
+        return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS;
+    }
+
     boolean FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING = true;
 
     default boolean getFledgeAuctionServerEnableDebugReporting() {
@@ -1925,6 +1940,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
     }
 
+    @FeatureFlag(DEBUG)
     boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
 
     default boolean getConsentNotificationDebugMode() {
@@ -1932,6 +1948,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** The consent notification activity debug mode is off by default. */
+    @FeatureFlag(DEBUG)
     boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
 
     /** Returns the consent notification activity debug mode. */
@@ -1939,6 +1956,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
     }
 
+    @FeatureFlag(DEBUG)
     boolean CONSENT_NOTIFIED_DEBUG_MODE = false;
 
     /** Returns whether to suppress consent notified state. */
@@ -1946,12 +1964,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return CONSENT_NOTIFIED_DEBUG_MODE;
     }
 
+    @FeatureFlag(DEBUG)
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
 
     default boolean getConsentManagerDebugMode() {
         return CONSENT_MANAGER_DEBUG_MODE;
     }
 
+    @FeatureFlag(DEBUG)
     boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
 
     /** When enabled, the device is treated as OTA device. */
@@ -2236,6 +2256,23 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getMeasurementJobAggregateReportingKillSwitch() {
         return getLegacyMeasurementKillSwitch() || MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Immediate Aggregate Reporting Job Kill Switch. The default value is true which
+     * means Immediate Aggregate Reporting Job is disabled. This flag is used for emergency turning
+     * off of the Immediate Aggregate Reporting Job.
+     */
+    boolean MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH = true;
+
+    /**
+     * Returns the kill switch value for Measurement Immediate Aggregate Reporting Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Immediate Aggregate Reporting Kill Switch value is true.
+     */
+    default boolean getMeasurementJobImmediateAggregateReportingKillSwitch() {
+        return !getMeasurementEnabled()
+                || MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -2667,6 +2704,23 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns min time period (in millis) between each event fallback reporting job run. */
     default long getEncryptionKeyJobPeriodMs() {
         return ENCRYPTION_KEY_JOB_PERIOD_MS;
+    }
+
+    /** Feature flag to ramp up mdd based encryption keys. */
+    boolean ENABLE_MDD_ENCRYPTION_KEYS = false;
+
+    /** Returns value of the feature flag used to determine ramp for mdd based encryption keys. */
+    default boolean getEnableMddEncryptionKeys() {
+        return ENABLE_MDD_ENCRYPTION_KEYS;
+    }
+
+    /** Manifest URL for encryption keys file group registered with MDD. */
+    String MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/3210/0c19c2a06422c21070192580a136d433ba3ae7f8";
+
+    /** Returns manifest URL for encryption keys file group registered with MDD. */
+    default String getMddEncryptionKeysManifestFileUrl() {
+        return MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL;
     }
 
     /**
@@ -4118,6 +4172,28 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
     }
 
+    boolean MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for immediate aggregate reporting job. */
+    default boolean getMeasurementImmediateAggregateReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for immediate aggregate reporting job. */
+    default int getMeasurementImmediateAggregateReportingJobRequiredNetworkType() {
+        return MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED = true;
+
+    /** Returns whether to persist immediate aggregate reporting job across device reboots. */
+    default boolean getMeasurementImmediateAggregateReportingJobPersisted() {
+        return MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED;
+    }
+
     /** Default value for Null Aggregate Report feature flag. */
     boolean MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED = false;
 
@@ -4314,6 +4390,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns true when attribution scope is enabled. */
     default boolean getMeasurementEnableAttributionScope() {
         return MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+    }
+
+    boolean MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK = false;
+
+    /**
+     * Returns true if validation is enabled for one navigation per reporting origin per
+     * registration.
+     */
+    default boolean getMeasurementEnableNavigationReportingOriginCheck() {
+        return MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
     }
 
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
@@ -4602,25 +4688,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default long getAdIdFetcherTimeoutMs() {
         return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
-    }
-
-    /**
-     * @deprecated TODO(b/314962688): remove (will always be true)
-     */
-    @FeatureFlag(RAMPED_UP)
-    @Deprecated
-    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = true;
-
-    /**
-     * Returns whether the API access checked by the AdServices XML config returns {@code true} by
-     * default (i.e., when the app doesn't define the config XML file or if the given API access is
-     * missing from that file).
-     *
-     * @deprecated TODO(b/314962688): remove
-     */
-    @Deprecated
-    default boolean getAppConfigReturnsEnabledByDefault() {
-        return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
     }
 
     /**
@@ -5117,5 +5184,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getEnableTabletRegionFix() {
         return DEFAULT_ENABLE_TABLET_REGION_FIX;
+    }
+
+    /** Default value for custom error code sampling enabled. */
+    @FeatureFlag boolean DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED = false;
+
+    /** Returns {@code boolean} determining whether custom error code sampling is enabled. */
+    default boolean getCustomErrorCodeSamplingEnabled() {
+        return DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
     }
 }

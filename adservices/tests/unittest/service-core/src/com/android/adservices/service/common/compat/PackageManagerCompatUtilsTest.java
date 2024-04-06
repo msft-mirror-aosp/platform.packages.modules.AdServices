@@ -52,6 +52,8 @@ import org.mockito.MockitoSession;
 
 public class PackageManagerCompatUtilsTest {
     private static final String TEST_PACKAGE_NAME = "test";
+    private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
+    private static final String EXTSERVICES_PACKAGE_NAME = "com.android.ext.services";
     private MockitoSession mMockitoSession;
 
     @Mock private PackageManager mPackageManagerMock;
@@ -217,14 +219,36 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
-    public void testIsAdServicesActivityEnabled_enabled()
+    public void testIsAdServicesActivityEnabled_adServicesPackage_defaultToEnabled()
             throws PackageManager.NameNotFoundException {
         Context mockContext = mock(Context.class);
         when(mockContext.getPackageManager()).thenReturn(mPackageManagerMock);
-        when(mockContext.getPackageName()).thenReturn(TEST_PACKAGE_NAME);
+        when(mockContext.getPackageName()).thenReturn(ADSERVICES_PACKAGE_NAME);
+        boolean isActivityEnabled =
+                PackageManagerCompatUtils.isAdServicesActivityEnabled(mockContext);
+        assertThat(isActivityEnabled).isTrue();
+    }
+
+    @Test
+    public void testIsAdServicesActivityEnabled_nullPackageName_defaultToEnabled()
+            throws PackageManager.NameNotFoundException {
+        Context mockContext = mock(Context.class);
+        when(mockContext.getPackageManager()).thenReturn(mPackageManagerMock);
+        when(mockContext.getPackageName()).thenReturn(null);
+        boolean isActivityEnabled =
+                PackageManagerCompatUtils.isAdServicesActivityEnabled(mockContext);
+        assertThat(isActivityEnabled).isFalse();
+    }
+
+    @Test
+    public void testIsAdServicesActivityEnabled_extServicesPackage_enabled()
+            throws PackageManager.NameNotFoundException {
+        Context mockContext = mock(Context.class);
+        when(mockContext.getPackageManager()).thenReturn(mPackageManagerMock);
+        when(mockContext.getPackageName()).thenReturn(EXTSERVICES_PACKAGE_NAME);
 
         PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
-        packageInfo.packageName = TEST_PACKAGE_NAME;
+        packageInfo.packageName = EXTSERVICES_PACKAGE_NAME;
         when(mPackageManagerMock.getPackageInfo(eq(packageInfo.packageName), eq(0)))
                 .thenReturn(packageInfo);
         when(mPackageManagerMock.getComponentEnabledSetting(any(ComponentName.class)))
@@ -238,23 +262,23 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
-    public void testIsAdServicesActivityEnabled_disabled()
+    public void testIsAdServicesActivityEnabled_extServicesPackage_defaultToDisabled()
             throws PackageManager.NameNotFoundException {
         Context mockContext = mock(Context.class);
         when(mockContext.getPackageManager()).thenReturn(mPackageManagerMock);
-        when(mockContext.getPackageName()).thenReturn(TEST_PACKAGE_NAME);
+        when(mockContext.getPackageName()).thenReturn(EXTSERVICES_PACKAGE_NAME);
 
         PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
-        packageInfo.packageName = TEST_PACKAGE_NAME;
+        packageInfo.packageName = EXTSERVICES_PACKAGE_NAME;
         when(mPackageManagerMock.getPackageInfo(eq(packageInfo.packageName), eq(0)))
                 .thenReturn(packageInfo);
         when(mPackageManagerMock.getComponentEnabledSetting(any(ComponentName.class)))
-                .thenReturn(PackageManager.COMPONENT_ENABLED_STATE_DISABLED);
+                .thenReturn(PackageManager.COMPONENT_ENABLED_STATE_DEFAULT);
 
         boolean isActivityEnabled =
                 PackageManagerCompatUtils.isAdServicesActivityEnabled(mockContext);
 
         assertThat(isActivityEnabled).isFalse();
-        verify(mPackageManagerMock, times(1)).getComponentEnabledSetting(any(ComponentName.class));
+        verify(mPackageManagerMock).getComponentEnabledSetting(any(ComponentName.class));
     }
 }

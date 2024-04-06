@@ -57,6 +57,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture;
@@ -185,8 +186,8 @@ public class MeasurementDaoTest {
 
     @Before
     public void before() {
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-        mFlags = FlagsFactory.getFlagsForTest();
+        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        mFlags = FakeFlagsFactory.getFlagsForTest();
         mDatastoreManager =
                 new SQLDatastoreManager(
                         MeasurementDbHelper.getInstance(sContext),
@@ -9072,6 +9073,62 @@ public class MeasurementDaoTest {
         assertEquals(2, (debugCount.get().getReportRetryCount()));
     }
 
+    @Test
+    public void countNavigationSourcesPerReportingOriginQuery() {
+        final String registrationId1 = "registrationId1";
+        final String registrationId2 = "registrationId2";
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setRegistrationId(registrationId1)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .build();
+        Source source2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setRegistrationId(registrationId1)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .build();
+        Source source3 =
+                SourceFixture.getValidSourceBuilder()
+                        .setRegistrationId(registrationId1)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .build();
+        Source source4 =
+                SourceFixture.getValidSourceBuilder()
+                        .setRegistrationId(registrationId2)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN_2)
+                        .build();
+        Source source5 =
+                SourceFixture.getValidSourceBuilder()
+                        .setRegistrationId(registrationId2)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN_2)
+                        .build();
+        Arrays.asList(source1, source2, source3, source4, source5).stream()
+                .forEach(source -> insertSource(source));
+        assertThat(
+                        mDatastoreManager.runInTransactionWithResult(
+                                (dao) ->
+                                        dao.countNavigationSourcesPerReportingOrigin(
+                                                REGISTRATION_ORIGIN, registrationId1)))
+                .isEqualTo(Optional.of(2L));
+        assertThat(
+                        mDatastoreManager.runInTransactionWithResult(
+                                (dao) ->
+                                        dao.countNavigationSourcesPerReportingOrigin(
+                                                REGISTRATION_ORIGIN_2, registrationId2)))
+                .isEqualTo(Optional.of(1L));
+        assertThat(
+                        mDatastoreManager.runInTransactionWithResult(
+                                (dao) ->
+                                        dao.countNavigationSourcesPerReportingOrigin(
+                                                REGISTRATION_ORIGIN, registrationId2)))
+                .isEqualTo(Optional.of(0L));
+    }
+
     private void insertInDb(SQLiteDatabase db, Source source) {
         ContentValues values = new ContentValues();
         values.put(SourceContract.ID, source.getId());
@@ -9192,7 +9249,7 @@ public class MeasurementDaoTest {
                 .populateFromSourceAndTrigger(
                         source,
                         trigger,
-                        trigger.parseEventTriggers(FlagsFactory.getFlagsForTest()).get(0),
+                        trigger.parseEventTriggers(FakeFlagsFactory.getFlagsForTest()).get(0),
                         new Pair<>(null, null),
                         new EventReportWindowCalcDelegate(mFlags),
                         new SourceNoiseHandler(mFlags),
