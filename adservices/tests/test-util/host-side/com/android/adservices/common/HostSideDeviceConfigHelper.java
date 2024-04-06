@@ -21,9 +21,9 @@ import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
 /** Host-side implementation of {@link DeviceConfigHelper.Interface}. */
-final class HostSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
+public final class HostSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
 
-    HostSideDeviceConfigHelper(String namespace) {
+    public HostSideDeviceConfigHelper(String namespace) {
         super(namespace, ConsoleLogger.getInstance());
     }
 
