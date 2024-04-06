@@ -512,27 +512,27 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
 
     private static int hashForEventReportObject(OutputType outputType, JSONObject obj) {
         int n = EventReportPayloadKeys.STRINGS.size();
-        int numValuesExcludingN = 4;
+        int numValuesExcludingN = 5;
         Object[] objArray = new Object[n + numValuesExcludingN];
-        // TODO (b/306863121) add time to hash
+        objArray[0] = obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
         String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
-        objArray[0] =
+        objArray[1] =
                 outputType == OutputType.EXPECTED ? url : getReportUrl(ReportType.EVENT, url);
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        objArray[1] = payload.optDouble(EventReportPayloadKeys.DOUBLE, 0);
+        objArray[2] = payload.optDouble(EventReportPayloadKeys.DOUBLE, 0);
         // Try string then JSONArray in order so as to override the string if the array parsing is
         // successful.
-        objArray[2] = null;
+        objArray[3] = null;
         String maybeString = payload.optString(EventReportPayloadKeys.STRING_OR_ARRAY);
         if (maybeString != null) {
-            objArray[2] = maybeString;
+            objArray[3] = maybeString;
         }
         JSONArray maybeArray1 = payload.optJSONArray(EventReportPayloadKeys.STRING_OR_ARRAY);
         if (maybeArray1 != null) {
-            objArray[2] = maybeArray1;
+            objArray[3] = maybeArray1;
         }
         JSONArray maybeArray2 = payload.optJSONArray(EventReportPayloadKeys.ARRAY);
-        objArray[3] = maybeArray2;
+        objArray[4] = maybeArray2;
         for (int i = 0; i < n; i++) {
             objArray[i + numValuesExcludingN] =
                     payload.optString(EventReportPayloadKeys.STRINGS.get(i), "");
@@ -541,25 +541,25 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     }
 
     private static int hashForAggregateReportObject(OutputType outputType, JSONObject obj) {
-        Object[] objArray = new Object[7];
-        // TODO (b/306863121) add time to hash
+        Object[] objArray = new Object[8];
+        objArray[0] = obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
         String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
-        objArray[0] =
+        objArray[1] =
                 outputType == OutputType.EXPECTED ? url : getReportUrl(ReportType.AGGREGATE, url);
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        objArray[1] = payload.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "");
+        objArray[2] = payload.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "");
         // To compare histograms, we already converted them to an ordered string of value pairs.
-        objArray[2] = getComparableHistograms(
+        objArray[3] = getComparableHistograms(
                 payload.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS));
-        objArray[3] = payload.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "");
-        objArray[4] = payload.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "");
-        objArray[5] = payload.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, "");
-        objArray[6] = payload.optString(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID, "");
+        objArray[4] = payload.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "");
+        objArray[5] = payload.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "");
+        objArray[6] = payload.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, "");
+        objArray[7] = payload.optString(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID, "");
         return Arrays.hashCode(objArray);
     }
 
     private static long reportTimeFrom(JSONObject obj) {
-        return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0);
+        return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
     }
 
     // 'obj1' is the expected result, 'obj2' is the actual result.

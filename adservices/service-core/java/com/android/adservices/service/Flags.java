@@ -4389,7 +4389,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns true when attribution scope is enabled. */
     default boolean getMeasurementEnableAttributionScope() {
-        return MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+        return getMeasurementFlexLiteApiEnabled() && MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
     }
 
     boolean MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK = false;
@@ -4400,6 +4400,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getMeasurementEnableNavigationReportingOriginCheck() {
         return MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
+    }
+
+    int MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE = 20;
+
+    /** Returns max number of attribution scopes per source. */
+    default int getMeasurementMaxAttributionScopesPerSource() {
+        return MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
+    }
+
+    int MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH = 50;
+
+    /** Returns max length of attribution scope. */
+    default int getMeasurementMaxAttributionScopeLength() {
+        return MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
     }
 
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */

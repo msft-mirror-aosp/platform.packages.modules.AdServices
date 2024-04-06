@@ -111,8 +111,9 @@ public final class Logger {
         return "Logger[realLogger=" + mRealLogger + ", tag=" + mTag + "]";
     }
 
+    // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
     /** Level of log messages. */
-    enum LogLevel {
+    public enum LogLevel {
         WTF,
         ERROR,
         WARNING,

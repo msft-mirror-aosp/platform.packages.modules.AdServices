@@ -49,11 +49,13 @@ public final class SystemPropertiesHelper {
         mLog.v("Constructor: interface=%s, logger=%s", helperInterface, logger);
     }
 
+    /** Sets the value of the given property. */
     public void set(String name, String value) {
         savePreviousValue(name);
         setOnly(name, value);
     }
 
+    /** Restores the changed flags to their initiali values. */
     public void reset() {
         int size = mPropsToBeReset.size();
         if (size == 0) {
@@ -107,25 +109,25 @@ public final class SystemPropertiesHelper {
     }
 
     /** Low-level interface for {@link android.os.SystemProperties}. */
-    protected abstract static class Interface extends AbstractDeviceGateway {
+    public abstract static class Interface extends AbstractDeviceGateway {
 
         private static final String PROP_LINE_REGEX = "^\\[(?<name>.*)\\].*\\[(?<value>.*)\\]$";
         private static final Pattern PROP_LINE_PATTERN = Pattern.compile(PROP_LINE_REGEX);
 
         protected final Logger mLog;
 
-        Interface(RealLogger logger) {
+        protected Interface(RealLogger logger) {
             mLog = new Logger(Objects.requireNonNull(logger), DeviceConfigHelper.class);
         }
 
         /** Gets the value of a property. */
-        abstract String get(String name);
+        public abstract String get(String name);
 
         /**
          * Gets the name (including the prefix) and value of all properties that have the given
          * {@code prefixes}.
          */
-        List<NameValuePair> getAll(NameValuePair.Matcher propertyMatcher) {
+        public List<NameValuePair> getAll(NameValuePair.Matcher propertyMatcher) {
             List<NameValuePair> allProperties = new ArrayList<>();
             String properties = runShellCommand("getprop");
             // NOTE: prefix most likely have . (like debug.adservices), but that's fine
@@ -146,7 +148,7 @@ public final class SystemPropertiesHelper {
         }
 
         /** Sets the value of a property. */
-        void set(String name, String value) {
+        public void set(String name, String value) {
             mLog.v("set(%s, %s)", name, value);
 
             if (value != null && !value.isEmpty()) {

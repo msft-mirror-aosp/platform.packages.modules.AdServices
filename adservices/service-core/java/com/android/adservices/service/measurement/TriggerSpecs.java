@@ -157,6 +157,16 @@ public class TriggerSpecs {
         return mPrivacyParams.hasValidReportStateCount();
     }
 
+    /**
+     * @return The number of report state counts for the trigger specifications, or 0 if invalid.
+     */
+    public long getNumStates(Source source, Flags flags) {
+        if (mPrivacyParams == null) {
+            buildPrivacyParameters(source, flags);
+        }
+        return mPrivacyParams.getNumStates();
+    }
+
     /** @return the probability to use fake report */
     public double getFlipProbability(Source source, Flags flags) {
         if (mPrivacyParams == null) {
@@ -499,7 +509,7 @@ public class TriggerSpecs {
 
             mNumStates = numStates;
             mFlipProbability = Combinatorics.getFlipProbability(mNumStates);
-            mInformationGain = Combinatorics.getInformationGain(mNumStates, mFlipProbability);
+            mInformationGain = source.getInformationGain(flags, mNumStates, mFlipProbability);
         }
 
         PrivacyComputationParams(String inputLine) throws JSONException {
@@ -514,6 +524,10 @@ public class TriggerSpecs {
 
         private boolean hasValidReportStateCount() {
             return mNumStates != 0;
+        }
+
+        private long getNumStates() {
+            return mNumStates;
         }
 
         private double getFlipProbability() {

@@ -16,13 +16,16 @@
 
 package com.android.adservices.common;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.Mockito.doAnswer;
 
 import android.app.job.JobService;
-import android.util.Log;
 
+// TODO(b/296945680): Remove this class. Use JobServiceCallback directly.
+/**
+ * @deprecated Helper methods in this class are deprecated. Use {@code new
+ *     JobServiceCallback().expectJobFinished(JobService)} or {@code new
+ *     JobServiceCallback().expectJobStopped(JobService)} to create a new JobServiceCallback.
+ */
+@Deprecated
 public final class JobServiceTestHelper {
 
     private static final String TAG = JobServiceTestHelper.class.getSimpleName();
@@ -33,36 +36,11 @@ public final class JobServiceTestHelper {
 
     /** Creates callback for tests where jobFinished is invoked. */
     public static JobServiceCallback createJobFinishedCallback(JobService jobService) {
-        JobServiceCallback callback = new JobServiceCallback();
-
-        doAnswer(
-                        unusedInvocation -> {
-                            Log.d(TAG, "Calling callback.onJobFinished() on " + unusedInvocation);
-                            callback.onJobFinished();
-                            return null;
-                        })
-                .when(jobService)
-                .jobFinished(any(), anyBoolean());
-        return callback;
+        return new JobServiceCallback().expectJobFinished(jobService);
     }
 
     /** Creates a callback for tests where onStopJob is invoked. */
     public static JobServiceCallback createOnStopJobCallback(JobService jobService) {
-        JobServiceCallback callback = new JobServiceCallback();
-
-        doAnswer(
-                        invocation -> {
-                            Log.d(TAG, "Calling callback.onJobStopped() on " + invocation);
-                            try {
-                                invocation.callRealMethod();
-                            } finally {
-                                callback.onJobStopped();
-                            }
-                            return null;
-                        })
-                .when(jobService)
-                .onStopJob(any());
-
-        return callback;
+        return new JobServiceCallback().expectJobStopped(jobService);
     }
 }

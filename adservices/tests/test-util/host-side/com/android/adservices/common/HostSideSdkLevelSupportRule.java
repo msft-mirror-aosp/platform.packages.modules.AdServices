@@ -26,6 +26,7 @@ public final class HostSideSdkLevelSupportRule extends AbstractSdkLevelSupported
         super(ConsoleLogger.getInstance(), Range.forAtLeast(atLeast.getLevel()));
     }
 
+    /** Sets the test device singleton. */
     public void setDevice(ITestDevice device) {
         TestDeviceHelper.setTestDevice(device);
     }

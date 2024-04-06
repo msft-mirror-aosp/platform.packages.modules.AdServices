@@ -171,16 +171,19 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
         private String mLogCatCommand;
         private Predicate<String[]> mEarlyStopCondition;
 
+        /** Sets the name. */
         public Builder setName(String name) {
             mName = Objects.requireNonNull(name);
             return this;
         }
 
+        /** Sets the device. */
         public Builder setDevice(ITestDevice device) {
             mDevice = Objects.requireNonNull(device);
             return this;
         }
 
+        /** Sets the logcat command. */
         public Builder setLogCatCommand(String command) {
             mLogCatCommand = Objects.requireNonNull(command);
             return this;
@@ -198,6 +201,7 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
             return this;
         }
 
+        /** Build Bob, build! */
         public BackgroundLogReceiver build() {
             Objects.requireNonNull(mDevice);
             Objects.requireNonNull(mLogCatCommand);

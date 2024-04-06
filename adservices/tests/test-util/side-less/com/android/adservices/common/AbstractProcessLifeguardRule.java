@@ -28,8 +28,8 @@ import java.util.Objects;
 
 // TODO(b/302757068): add unit tests
 
-/** See documentation on {#link {@link ProcessLifeguardRule}. */
-abstract class AbstractProcessLifeguardRule implements TestRule {
+/** See documentation on {#link com.android.adservices.common.ProcessLifeguardRule}. */
+public abstract class AbstractProcessLifeguardRule implements TestRule {
 
     // TODO(b/302757068): protected these static variables (either using @GuardedBy or
     // AtomitReference)
@@ -46,7 +46,7 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
     @Nullable private String mTestName;
 
     /** Default constructor. */
-    AbstractProcessLifeguardRule(RealLogger logger, Mode mode) {
+    protected AbstractProcessLifeguardRule(RealLogger logger, Mode mode) {
         mLog = new Logger(Objects.requireNonNull(logger), getClass());
         mMode = Objects.requireNonNull(mode);
     }

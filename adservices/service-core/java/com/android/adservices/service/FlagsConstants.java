@@ -1269,6 +1269,12 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK =
             "measurement_enable_navigation_reporting_origin_check";
 
+    public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE =
+            "measurement_max_attribution_scopes_per_source";
+
+    public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH =
+            "measurement_max_attribution_scope_length";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";

@@ -228,6 +228,14 @@ public class SqliteObjectMapper {
         setTextColumn(cursor, MeasurementTables.SourceContract.TRIGGER_DATA_MATCHING,
                 (enumValue) -> builder.setTriggerDataMatching(
                         Source.TriggerDataMatching.valueOf(enumValue)));
+        setLongColumn(
+                cursor,
+                MeasurementTables.SourceContract.ATTRIBUTION_SCOPE_LIMIT,
+                builder::setAttributionScopeLimit);
+        setLongColumn(
+                cursor,
+                MeasurementTables.SourceContract.MAX_EVENT_STATES,
+                builder::setMaxEventStates);
         return builder.build();
     }
 
@@ -309,7 +317,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.TRIGGER_CONTEXT_ID,
                 builder::setTriggerContextId);
-
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPE,
+                builder::setAttributionScope);
         return builder.build();
     }
 

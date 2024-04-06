@@ -35,19 +35,12 @@ public final class MockitoExpectations {
     /**
      * Mock {@link JobService}'s execution to wait until {@link
      * JobService#jobFinished(JobParameters, boolean)} is called.
+     *
+     * @deprecated Use {@code new JobServiceCallback().expectJobFinished(JobService)}
      */
+    @Deprecated
     public static JobServiceCallback syncJobServiceOnJobFinished(JobService jobService) {
-        JobServiceCallback callback = new JobServiceCallback();
-
-        doAnswer(
-                        unusedInvocation -> {
-                            callback.onJobFinished();
-                            return null;
-                        })
-                .when(jobService)
-                .jobFinished(any(), anyBoolean());
-
-        return callback;
+        return new JobServiceCallback().expectJobFinished(jobService);
     }
 
     /**

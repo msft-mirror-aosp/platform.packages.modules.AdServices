@@ -140,6 +140,7 @@ public class TriggerTest {
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(
                                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAttributionScope("1")
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -169,6 +170,7 @@ public class TriggerTest {
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(
                                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAttributionScope("1")
                         .build());
     }
 
@@ -313,6 +315,9 @@ public class TriggerTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
                         .build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder().setAttributionScope("1").build(),
+                TriggerFixture.getValidTriggerBuilder().setAttributionScope("2").build());
     }
 
     @Test
@@ -335,6 +340,8 @@ public class TriggerTest {
         assertNotEquals(trigger1.hashCode(), trigger2.hashCode());
         assertNotEquals(trigger1, trigger2);
         assertNotEquals(triggerSet1, triggerSet2);
+        assertNotEquals(
+                trigger1, TriggerFixture.getValidTriggerBuilder().setAttributionScope("5").build());
     }
 
     @Test

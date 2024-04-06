@@ -272,4 +272,34 @@ public class CombinatoricsTest {
                             assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
     }
+
+    @Test
+    public void testGetMaxInformationGainWithAttributionScope() {
+        double[][] testCases = {
+            {2925.0, 1.0, 1.0, 11.461727965384876d},
+            {3.0, 1.0, 1.0, 1.5849265115082312d},
+            {455.0, 1.0, 1.0, 8.821556150827456d},
+            {2.0, 1.0, 1.0, 0.9999820053790732d},
+            {1.0, 1.0, 1.0, 0.0d},
+            {2925.0, 1.0, 3.0, 11.4617279653849d},
+            {2925.0, 5.0, 3.0, 11.4674862153563d},
+            {2925.0, 100.0, 3.0, 11.5975771979061d},
+            {300000.0, 1.0, 1.0, 13.8407667231044d},
+            {300000.0, 2.0, 2.0, 13.8407705719511d},
+            {300000.0, 3.0, 3.0, 13.8407744207849d},
+            {300000.0, 4.0, 4.0, 13.8407782696060d},
+            {300000.0, 5.0, 5.0, 13.8407821184142d},
+        };
+
+        Arrays.stream(testCases)
+                .forEach(
+                        (testCase) -> {
+                            double result =
+                                    Combinatorics.getMaxInformationGainWithAttributionScope(
+                                            (long) testCase[0],
+                                            (long) testCase[1],
+                                            (long) testCase[2]);
+                            assertEquals(testCase[3], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
+                        });
+    }
 }

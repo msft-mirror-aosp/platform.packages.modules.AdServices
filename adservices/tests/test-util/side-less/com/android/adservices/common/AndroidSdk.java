@@ -42,8 +42,9 @@ public final class AndroidSdk {
     public static final int TM = 33;
     public static final int UDC = 34;
 
+    // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
     /** Represents a specific SDK level. */
-    protected enum Level {
+    public enum Level {
         ANY(Integer.MIN_VALUE),
         R(RVC),
         S(SC),
@@ -57,14 +58,19 @@ public final class AndroidSdk {
             mLevel = level;
         }
 
-        boolean isAtLeast(Level level) {
+        // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
+        /** Checks if SDK is at least the given level. */
+        public boolean isAtLeast(Level level) {
             return mLevel >= level.mLevel;
         }
 
-        int getLevel() {
+        // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
+        /** Gets the numeric representation of the SDK level (like {@code 33}). */
+        public int getLevel() {
             return mLevel;
         }
 
+        /** Gets the level abstraction for the given level). */
         public static Level forLevel(int level) {
             switch (level) {
                 case 30:
@@ -82,10 +88,12 @@ public final class AndroidSdk {
         }
     }
 
+    // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
     /** Represents a range of Android API levels. */
-    static final class Range {
-        static final int NO_MIN = Integer.MIN_VALUE;
-        static final int NO_MAX = Integer.MAX_VALUE;
+    public static final class Range {
+        // TODO(b/324919960): make them package-protected again or make sure it's unit tested.
+        public static final int NO_MIN = Integer.MIN_VALUE;
+        public static final int NO_MAX = Integer.MAX_VALUE;
 
         private final int mMinLevel;
         private final int mMaxLevel;
@@ -103,26 +111,32 @@ public final class AndroidSdk {
             mMaxLevel = maxLevel;
         }
 
+        /** Gets a range without an upper boundary. */
         public static Range forAtLeast(int level) {
             return new Range(/* minLevel= */ level, NO_MAX);
         }
 
+        /** Gets a range without a lower boundary. */
         public static Range forAtMost(int level) {
             return new Range(NO_MIN, /* maxLevel= */ level);
         }
 
+        /** Gets a range for the specific levels. */
         public static Range forRange(int minLevel, int maxLevel) {
             return new Range(minLevel, maxLevel);
         }
 
+        /** Gets a range for a specific level. */
         public static Range forExactly(int level) {
             return new Range(/* minLevel= */ level, /* maxLevel= */ level);
         }
 
+        /** Gets a range that includes any level. */
         public static Range forAnyLevel() {
             return new Range(NO_MIN, NO_MAX);
         }
 
+        /** Checks if the given level fits this range (inclusive). */
         public boolean isInRange(int level) {
             return level >= mMinLevel && level <= mMaxLevel;
         }

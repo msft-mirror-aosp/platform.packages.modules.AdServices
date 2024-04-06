@@ -37,7 +37,8 @@ import java.util.Objects;
 // test call setFlags(flagName) (statically import FlagsConstant.flagName), which will make it    //
 // easier to transition the test to an annotated-base approach.                                   //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFlagsSetterRule<T>>
+public abstract class AbstractAdServicesFlagsSetterRule<
+                T extends AbstractAdServicesFlagsSetterRule<T>>
         extends AbstractFlagsSetterRule<T> {
 
     private static final String ALLOWLIST_SEPARATOR = ARRAY_SPLITTER_COMMA;

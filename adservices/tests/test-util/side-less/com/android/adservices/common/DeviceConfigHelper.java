@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
  *
  * <p><b>NOTE: </b>this class is not thread safe.
  */
-final class DeviceConfigHelper {
+public final class DeviceConfigHelper {
 
     private static final Pattern FLAG_LINE_PATTERN = Pattern.compile("^(?<name>.*)=(?<value>.*)$");
 
@@ -60,17 +60,20 @@ final class DeviceConfigHelper {
         mLog.v("Constructor: interface=%s, logger=%s, namespace=%s", mInterface, logger, namespace);
     }
 
+    /** Sets the given flag. */
     public void set(String name, String value) {
         savePreviousValue(name);
         setOnly(name, value);
     }
 
+    /** Sets the given flag as a list (using the given separator). */
     public void setWithSeparator(String name, String value, String separator) {
         String oldValue = savePreviousValue(name);
         String newValue = oldValue == null ? value : oldValue + separator + value;
         setOnly(name, newValue);
     }
 
+    /** Restores the changed flags to their initial values. */
     public void reset() {
         int size = mFlagsToBeReset.size();
         if (size == 0) {
@@ -93,10 +96,12 @@ final class DeviceConfigHelper {
         }
     }
 
+    /** Sets the synchronization mode. */
     public void setSyncDisabledMode(SyncDisabledModeForTest mode) {
         mInterface.setSyncDisabledModeForTest(mode);
     }
 
+    /** Clears the value of all flags in the namespace. */
     public void clearFlags() {
         mInterface.clear();
     }
@@ -156,7 +161,7 @@ final class DeviceConfigHelper {
      * could override them (for example, device-side implementation could use {@code DeviceConfig}
      * instead.
      */
-    protected abstract static class Interface extends AbstractDeviceGateway {
+    public abstract static class Interface extends AbstractDeviceGateway {
 
         private static final int CHANGE_CHECK_TIMEOUT_MS = 5_000;
         private static final int CHANGE_CHECK_SLEEP_TIME_MS = 500;
@@ -169,6 +174,7 @@ final class DeviceConfigHelper {
             mLog = new Logger(Objects.requireNonNull(logger), DeviceConfigHelper.class);
         }
 
+        /** Sets the synchronization mode. */
         public void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
             String value = mode.name().toLowerCase();
             mLog.v("SyncDisabledModeForTest(%s)", value);
@@ -326,6 +332,7 @@ final class DeviceConfigHelper {
             // TODO(b/300136201): should wait until they're all cleared
         }
 
+        /** Get all properties. */
         public List<NameValuePair> getAll() {
             String dump = runShellCommand("device_config list %s", mNamespace).trim();
             String[] lines = dump.split("\n");
@@ -352,7 +359,7 @@ final class DeviceConfigHelper {
     }
 
     /** Factory for {@link Interface} objects. */
-    interface InterfaceFactory {
+    public interface InterfaceFactory {
 
         /**
          * Gets an {@link Interface} for the given {@link android.provider.DeviceConfig} namespace.

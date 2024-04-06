@@ -21,12 +21,12 @@ import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
 /** Host-side implementation of {@link SystemPropertiesHelper.Interface}. */
-final class HostSideSystemPropertiesHelper extends SystemPropertiesHelper.Interface {
+public final class HostSideSystemPropertiesHelper extends SystemPropertiesHelper.Interface {
 
     private static final HostSideSystemPropertiesHelper sInstance =
             new HostSideSystemPropertiesHelper();
 
-    static HostSideSystemPropertiesHelper getInstance() {
+    public static HostSideSystemPropertiesHelper getInstance() {
         return sInstance;
     }
 

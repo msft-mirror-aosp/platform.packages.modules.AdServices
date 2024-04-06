@@ -29,7 +29,7 @@ import java.util.List;
  * Base class for rule that capture test failures and re-throw them with more info (like state of
  * flags before and after the test).
  */
-abstract class AbstractRethrowerRule extends AbstractRule {
+public abstract class AbstractRethrowerRule extends AbstractRule {
 
     protected AbstractRethrowerRule(RealLogger logger) {
         super(logger);
