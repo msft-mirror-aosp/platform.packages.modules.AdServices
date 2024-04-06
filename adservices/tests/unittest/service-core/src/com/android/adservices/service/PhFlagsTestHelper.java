@@ -53,6 +53,47 @@ public final class PhFlagsTestHelper {
         this.mExpect = Objects.requireNonNull(expect);
     }
 
+    /** Tests a featureFlag (DeviceConfig FeatureFlag) guarded by a {@code guard}. */
+    public void testGuardedFeatureFlag(
+            String flagName,
+            Boolean defaultValue,
+            FeatureFlagType type,
+            @Nullable FlagGuard guard,
+            Flaginator<Flags, Boolean> flaginator) {
+        // This is the value of the getter when it's "disabled"
+        boolean disabledValue = type.equals(FeatureFlagType.LEGACY_KILL_SWITCH);
+
+        if (guard != null) {
+            // First check the behavior when the guarding flags are in place(like kill switches on)
+            guard.setEnabled(false);
+            mExpect.withMessage(
+                            "getter of %s by default when guarding flags are off / kill switch on",
+                            flagName)
+                    .that(flaginator.getFlagValue(mPhFlags))
+                    .isEqualTo(disabledValue);
+
+            // Make sure DeviceConfig was not called
+            verifyGetBooleanDeviceConfigFlagNotCalled(flagName);
+
+            // Then enable the guarding flags [Disables the guard / turn kill switches off.]
+            guard.setEnabled(true);
+        }
+
+        // Without any overriding, the value is the hard coded constant.
+        mExpect.withMessage("getter of %s by default when guarding kill switches are off", flagName)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(defaultValue);
+
+        // Now overriding the device config flag and system properties, so the expected value
+        // is driven by the system properties one (and the feature flag type)
+        boolean deviceConfigValue = !defaultValue;
+        setAdservicesFlag(flagName, deviceConfigValue);
+
+        mExpect.withMessage("getter of %s when overridden by device config value", flagName)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(deviceConfigValue);
+    }
+
     private void testFeatureFlagBackedBySystemProperty(
             String flagName,
             String defaultValueConstant,
@@ -149,7 +190,8 @@ public final class PhFlagsTestHelper {
      */
     public void testFeatureFlagGuardedByGlobalKs(
             String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
-        testGuardedFeatureFlag(flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
+        testGuardedFeatureFlagBackedBySystemProperty(
+                flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
     }
 
     // TODO(b/326254556): remove if not used (other than by testFeatureFlagGuardedByGlobalKs()
@@ -167,7 +209,7 @@ public final class PhFlagsTestHelper {
      * @param guard helper object used enable / disable the guarding flags
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testGuardedFeatureFlag(
+    public void testGuardedFeatureFlagBackedBySystemProperty(
             String flagName,
             String defaultValueConstant,
             FlagGuard guard,
@@ -443,6 +485,19 @@ public final class PhFlagsTestHelper {
                 flagName,
                 defaultValueConstant,
                 FeatureFlagType.FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH,
+                guard,
+                flaginator);
+    }
+
+    public void testLegacyKillSwitchBackedByLegacyKillSwitch(
+            String flagName,
+            String defaultValueConstant,
+            FlagGuard guard,
+            Flaginator<Flags, Boolean> flaginator) {
+        testFeatureFlagBackedBySystemProperty(
+                flagName,
+                defaultValueConstant,
+                FeatureFlagType.LEGACY_KILL_SWITCH,
                 guard,
                 flaginator);
     }

@@ -212,6 +212,42 @@ public class ProtectedServersEncryptionConfigManagerTest {
     }
 
     @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes() {
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes())
+                .containsExactly(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN);
+    }
+
+    @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes_onlyJoinInDb_AuctionKeyIsMissing() {
+        mProtectedServersEncryptionConfigDao.insertKeys(
+                ImmutableList.of(ENCRYPTION_KEY_JOIN_WITH_COORDINATOR));
+
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes())
+                .containsExactly(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION);
+    }
+
+    @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes_onlyAuctionInDb_JoinKeyIsMissing() {
+        mProtectedServersEncryptionConfigDao.insertKeys(
+                ImmutableList.of(ENCRYPTION_KEY_AUCTION_WITH_COORDINATOR));
+
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes())
+                .containsExactly(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN);
+    }
+
+    @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes_bothKeysInDB_nothingIsMissing() {
+        mProtectedServersEncryptionConfigDao.insertKeys(
+                ImmutableList.of(
+                        ENCRYPTION_KEY_AUCTION_WITH_COORDINATOR,
+                        ENCRYPTION_KEY_JOIN_WITH_COORDINATOR));
+
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes()).isEmpty();
+    }
+
+    @Test
     public void test_fetchAndPersistAuctionKey_fetchSuccess_returnsLatestActiveAuctionKey()
             throws Exception {
         when(mMockHttpClient.fetchPayloadWithLogging(

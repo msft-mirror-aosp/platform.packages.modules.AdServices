@@ -79,6 +79,8 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
 
     abstract Set<Integer> getExpiredAdSelectionEncryptionKeyTypes(Instant keyExpiryInstant);
 
+    abstract Set<Integer> getAbsentAdSelectionEncryptionKeyTypes();
+
     protected ProtectedServersEncryptionConfigManagerBase(
             @NonNull Flags flags,
             @NonNull Clock clock,
