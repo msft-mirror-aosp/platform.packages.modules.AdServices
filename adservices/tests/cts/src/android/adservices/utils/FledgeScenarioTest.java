@@ -60,7 +60,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
@@ -158,9 +157,17 @@ public abstract class FledgeScenarioTest {
     }
 
     @After
-    public final void tearDown() throws IOException {
+    public final void tearDown() throws Exception {
         if (mMockWebServer != null) {
             mMockWebServer.shutdown();
+        }
+
+        try {
+            leaveCustomAudience(SHOES_CA);
+            leaveCustomAudience(SHIRTS_CA);
+        } catch (Exception e) {
+            // No-op catch here, these are only for cleaning up
+            Log.w(TAG, "Failed while cleaning up custom audiences", e);
         }
     }
 

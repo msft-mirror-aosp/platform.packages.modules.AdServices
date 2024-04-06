@@ -717,6 +717,13 @@ public final class FlagsConstants {
 
     public static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS =
             "fledge_auction_server_background_key_fetch_job_flex_ms";
+
+    public static final String
+            KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED =
+                    "fledge_auction_server_background_key_fetch_on_empty_db_and_in_advance_enabled";
+    public static final String
+            KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS =
+                    "fledge_auction_server_background_key_fetch_in_advance_interval_ms";
     public static final String KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION =
             "fledge_auction_server_compression_algorithm_version";
     public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION =
@@ -1258,6 +1265,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE =
             "measurement_enable_attribution_scope";
+
+    public static final String KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK =
+            "measurement_enable_navigation_reporting_origin_check";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =

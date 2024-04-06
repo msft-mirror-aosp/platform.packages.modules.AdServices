@@ -148,7 +148,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiresSdkLevelAtLeastS
 @SetFlagDisabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
-@SetFlagDisabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
+@SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED) // Enabled due to reset during teardown()
 @SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED)
 @SetFlagDisabled(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE)

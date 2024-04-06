@@ -67,7 +67,8 @@ public class GaUxAlreadyEnrolledChannelTest {
     @Before
     public void setUp() throws Exception {
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
+        UiUtils.setBinderTimeout();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.resetAdServicesConsentData(sContext);
 
         UiUtils.enableNotificationPermission();

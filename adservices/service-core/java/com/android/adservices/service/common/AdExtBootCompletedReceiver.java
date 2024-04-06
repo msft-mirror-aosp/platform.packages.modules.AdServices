@@ -28,7 +28,11 @@ import com.android.adservices.LogUtil;
 public class AdExtBootCompletedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        LogUtil.i("AdExtBootCompletedReceiver onReceive invoked");
-        AdServicesBackCompatInit.getInstance().initializeComponents();
+        try {
+            LogUtil.i("AdExtBootCompletedReceiver onReceive invoked");
+            AdServicesBackCompatInit.getInstance().initializeComponents();
+        } catch (Exception e) {
+            LogUtil.e(e, "AdExtBootCompletedReceiver onReceive failed");
+        }
     }
 }

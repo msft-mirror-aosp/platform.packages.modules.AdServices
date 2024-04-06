@@ -730,4 +730,15 @@ public interface IMeasurementDao {
      */
     long countDistinctDebugAdIdsUsedByEnrollment(@NonNull String enrollmentId)
             throws DatastoreException;
+
+    /**
+     * Returns the number of unique navigation sources by reporting origin and registration id.
+     *
+     * @param reportingOrigin the reporting origin to match.
+     * @param registrationId the registration id to match.
+     * @return the number of matched navigation sources.
+     * @throws DatastoreException
+     */
+    long countNavigationSourcesPerReportingOrigin(
+            @NonNull Uri reportingOrigin, @NonNull String registrationId) throws DatastoreException;
 }

@@ -205,15 +205,11 @@ public class SandboxedActivityTest {
                         1000);
     }
 
-    /**
-     * If customized SDK context flag is enabled, the activity base context should be wrapped in a
-     * new instance of `SandboxedSdkContext`.
-     */
+    /** The activity base context should be wrapped in a new instance of `SandboxedSdkContext`. */
     @Test
     public void testAttachBaseContextWrapsTheBaseContextIfCustomizedSdkContextFlagIsEnabled() {
         SdkSandboxActivityHandler sdkSandboxActivityHandler = Mockito.spy(activity -> {});
         IBinder token = mRegistry.register(mSdkContext, sdkSandboxActivityHandler);
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
 
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
@@ -235,37 +231,6 @@ public class SandboxedActivityTest {
                             assertThat(newBaseContext).isNotNull();
                             assertThat(newBaseContext.getBaseContext())
                                     .isEqualTo(activityBaseContext);
-                        },
-                        1000);
-    }
-
-    /**
-     * If customized SDK context flag is disabled, the base context should be used directly without
-     * wrapping.
-     */
-    @Test
-    public void testAttachBaseContextUseTheBaseContextIfCustomizedSdkContextFlagIsDisabled() {
-        SdkSandboxActivityHandler sdkSandboxActivityHandler = Mockito.spy(activity -> {});
-        IBinder token = mRegistry.register(mSdkContext, sdkSandboxActivityHandler);
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(false);
-
-        new Handler(Looper.getMainLooper())
-                .runWithScissors(
-                        () -> {
-                            SandboxedActivity sandboxedActivity = new SandboxedActivity(mInjector);
-                            Intent intent = buildIntent(sandboxedActivity, token);
-                            sandboxedActivity.setIntent(intent);
-
-                            Context activityBaseContext = Mockito.mock(Context.class);
-
-                            Mockito.when(mSdkContext.createContextWithNewBase(activityBaseContext))
-                                    .thenCallRealMethod();
-                            Mockito.when(mSdkContext.getBaseContext()).thenCallRealMethod();
-
-                            sandboxedActivity.attachBaseContext(activityBaseContext);
-
-                            Context newBaseContext = sandboxedActivity.getBaseContext();
-                            assertThat(newBaseContext).isNotInstanceOf(SandboxedSdkContext.class);
                         },
                         1000);
     }

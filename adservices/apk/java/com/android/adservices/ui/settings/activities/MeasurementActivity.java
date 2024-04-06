@@ -65,7 +65,9 @@ public class MeasurementActivity extends AdServicesBaseActivity {
 
     @Override
     public void initRvc() {
-        initU18();
+        setContentView(R.layout.measurement_activity_v30);
+        new MeasurementActivityActionDelegate(
+                this, new ViewModelProvider(this).get(MeasurementViewModel.class));
     }
 
     private void initFragment() {

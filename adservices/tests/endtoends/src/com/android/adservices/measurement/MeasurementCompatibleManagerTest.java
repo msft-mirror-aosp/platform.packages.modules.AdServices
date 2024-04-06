@@ -95,9 +95,8 @@ public class MeasurementCompatibleManagerTest {
                     CLIENT_PACKAGE_NAME,
                     sContext.getApplicationInfo(),
                     "sdkName",
-                    /* sdkCeDataDir = */ null,
-                    /* sdkDeDataDir = */ null,
-                    /* isCustomizedSdkContext = */ false);
+                    /* sdkCeDataDir= */ null,
+                    /* sdkDeDataDir= */ null);
 
     private String getPackageName() {
         return SdkLevel.isAtLeastT()

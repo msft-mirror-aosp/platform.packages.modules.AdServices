@@ -57,8 +57,7 @@ public class SandboxedActivity extends Activity {
 
     /**
      * Wraps the base context in an internal {@link android.content.ContextWrapper} instance before
-     * attaching it, that would only happen in case that customized SDK context flag is enabled,
-     * otherwise the passed {@link Context} will be attached.
+     * attaching it.
      */
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Override
@@ -67,11 +66,6 @@ public class SandboxedActivity extends Activity {
         final SandboxedSdkContext sdkContext = registry.getSdkContext(this.getIntent());
         if (sdkContext == null) {
             Log.w(TAG, "Failed to get SDK Context for the passed intent");
-            super.attachBaseContext(newBase);
-            return;
-        }
-        if (!sdkContext.isCustomizedSdkContextEnabled()) {
-            Log.w(TAG, "CustomizedSdkContext flag is disabled");
             super.attachBaseContext(newBase);
             return;
         }

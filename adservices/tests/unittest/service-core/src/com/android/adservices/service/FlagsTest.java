@@ -368,6 +368,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
     }
 
+    @Test
+    public void testGetCustomErrorCodeSamplingEnabled() {
+        testFeatureFlag(
+                "DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED",
+                Flags::getCustomErrorCodeSamplingEnabled);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //

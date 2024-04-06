@@ -47,7 +47,7 @@ public class SelectAdsFlagRule implements TestRule {
 
     @Rule
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+            AdServicesFlagsSetterRule.forAllApisEnabledTests().setCompatModeFlags();
 
     @Override
     public Statement apply(Statement base, Description description) {

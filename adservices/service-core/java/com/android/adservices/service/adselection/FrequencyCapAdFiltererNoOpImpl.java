@@ -53,6 +53,6 @@ public final class FrequencyCapAdFiltererNoOpImpl implements FrequencyCapAdFilte
     }
 
     private static void logSkip() {
-        sLogger.v("Ad filtering is disabled, skipping");
+        sLogger.v("Frequency Cap filtering is disabled, skipping");
     }
 }

@@ -131,7 +131,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
 
     private final AdServicesLogger mAdServicesLogger =
             Mockito.spy(AdServicesLoggerImpl.getInstance());
-    private AdServicesBackCompatInit mMockBackCompatInit;
+    private AdServicesBackCompatInit mSpyBackCompatInit;
 
     @Before
     public void setup() {
@@ -152,9 +152,6 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
 
         ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
-        mMockBackCompatInit = Mockito.spy(new AdServicesBackCompatInit(mContext));
-        ExtendedMockito.doReturn(mMockBackCompatInit)
-                .when(() -> AdServicesBackCompatInit.getInstance());
 
         doNothing()
                 .when(
@@ -650,6 +647,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         doReturn(false).when(mFlags).getGlobalKillSwitch();
 
         doReturn(EXT_SERVICES_APK_PKG_SUFFIX).when(mContext).getPackageName();
+        spyBackCompatInit();
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
 
@@ -660,7 +658,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableBackCompatInit();
-        verify(mMockBackCompatInit).initializeComponents();
+        verify(mSpyBackCompatInit).initializeComponents();
         verify(mPackageManager, times(16))
                 .setComponentEnabledSetting(
                         any(ComponentName.class),
@@ -683,6 +681,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         doReturn(false).when(mFlags).getGlobalKillSwitch();
 
         doReturn(EXT_SERVICES_APK_PKG_SUFFIX).when(mContext).getPackageName();
+        spyBackCompatInit();
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
 
@@ -693,7 +692,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableBackCompatInit();
-        verify(mMockBackCompatInit).initializeComponents();
+        verify(mSpyBackCompatInit).initializeComponents();
         verify(mPackageManager, times(11))
                 .setComponentEnabledSetting(
                         any(ComponentName.class),
@@ -715,6 +714,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         doReturn(true).when(mFlags).getAdServicesEnabled();
         doReturn(false).when(mFlags).getGlobalKillSwitch();
         doReturn(EXT_SERVICES_APK_PKG_SUFFIX).when(mContext).getPackageName();
+        spyBackCompatInit();
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
 
@@ -725,7 +725,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableBackCompatInit();
-        verify(mMockBackCompatInit).initializeComponents();
+        verify(mSpyBackCompatInit).initializeComponents();
         verify(mPackageManager, times(16))
                 .setComponentEnabledSetting(
                         any(ComponentName.class),
@@ -744,6 +744,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mFlags).getEnableBackCompatInit();
         doReturn(AD_SERVICES_APK_PKG_SUFFIX).when(mContext).getPackageName();
+        spyBackCompatInit();
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
 
@@ -754,7 +755,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableBackCompatInit();
-        verify(mMockBackCompatInit).initializeComponents();
+        verify(mSpyBackCompatInit).initializeComponents();
         verify(mPackageManager, never())
                 .setComponentEnabledSetting(
                         any(ComponentName.class),
@@ -770,6 +771,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mFlags).getEnableBackCompatInit();
+        spyBackCompatInit();
         ExtendedMockito.doReturn(false)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
 
@@ -778,7 +780,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableBackCompatInit();
-        verify(mMockBackCompatInit).initializeComponents();
+        verify(mSpyBackCompatInit).initializeComponents();
         verify(mUxEngine, never()).start(any());
     }
 
@@ -792,6 +794,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mFlags).getEnableBackCompatInit();
+        spyBackCompatInit();
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
 
@@ -802,7 +805,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableBackCompatInit();
-        verify(mMockBackCompatInit).initializeComponents();
+        verify(mSpyBackCompatInit).initializeComponents();
         verify(mUxEngine).start(any());
     }
 
@@ -1084,5 +1087,11 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         private SyncIAdServicesCommonStatesCallback(int timeoutMs) {
             super(timeoutMs);
         }
+    }
+
+    private void spyBackCompatInit() {
+        mSpyBackCompatInit = Mockito.spy(new AdServicesBackCompatInit(mContext));
+        ExtendedMockito.doReturn(mSpyBackCompatInit)
+                .when(() -> AdServicesBackCompatInit.getInstance());
     }
 }

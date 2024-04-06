@@ -28,7 +28,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 
 import android.provider.DeviceConfig;
@@ -268,15 +267,6 @@ public final class PhFlagsFixture {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_CPC_BILLING_ENABLED,
-                Boolean.toString(value),
-                false);
-    }
-
-    /** Overrides whether the protected signals cleanup runs. */
-    public static void overrideProtectedSignalsCleanupEnabled(boolean value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED,
                 Boolean.toString(value),
                 false);
     }

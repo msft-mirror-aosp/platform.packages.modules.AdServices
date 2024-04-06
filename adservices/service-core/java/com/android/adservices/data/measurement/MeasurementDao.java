@@ -2955,6 +2955,33 @@ class MeasurementDao implements IMeasurementDao {
                 });
     }
 
+    @Override
+    public long countNavigationSourcesPerReportingOrigin(
+            @NonNull Uri reportingOrigin, @NonNull String registrationId)
+            throws DatastoreException {
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT(*) "
+                                + "FROM "
+                                + MeasurementTables.SourceContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.SourceContract.REGISTRATION_ORIGIN
+                                + " = ? AND "
+                                + MeasurementTables.SourceContract.REGISTRATION_ID
+                                + " = ? AND "
+                                + MeasurementTables.SourceContract.SOURCE_TYPE
+                                + " = ?");
+        return DatabaseUtils.longForQuery(
+                mSQLTransaction.getDatabase(),
+                query,
+                new String[] {
+                    reportingOrigin.toString(),
+                    registrationId,
+                    String.valueOf(Source.SourceType.NAVIGATION)
+                });
+    }
+
     private int getNumReportsPerDestination(
             String tableName,
             String columnName,

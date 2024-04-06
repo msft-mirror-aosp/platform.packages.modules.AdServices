@@ -194,6 +194,9 @@ public final class PackageManagerCompatUtils {
     public static boolean isAdServicesActivityEnabled(@NonNull Context context) {
         Objects.requireNonNull(context);
         String packageName = context.getPackageName();
+        if (packageName == null) {
+            return false;
+        }
 
         // Activities are enabled by default in AdServices package
         if (packageName.endsWith(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {

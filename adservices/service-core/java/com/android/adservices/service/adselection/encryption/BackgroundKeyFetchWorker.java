@@ -57,6 +57,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Worker instance for fetching encryption keys and persisting to DB. */
 public class BackgroundKeyFetchWorker {
@@ -129,7 +131,22 @@ public class BackgroundKeyFetchWorker {
         return mFlags;
     }
 
-    private FluentFuture<Set<Integer>> fetchExpiredKeyTypes(Instant keyExpiryInstant) {
+    private Set<Integer> concatAbsentAndExpiredKeyTypes(Instant keyExpiryInstant) {
+        return Stream.concat(
+                        mKeyConfigManager
+                                .getExpiredAdSelectionEncryptionKeyTypes(keyExpiryInstant)
+                                .stream(),
+                        mKeyConfigManager.getAbsentAdSelectionEncryptionKeyTypes().stream())
+                .collect(Collectors.toSet());
+    }
+
+    private FluentFuture<Set<Integer>> getAbsentAndExpiredKeyTypes(Instant keyExpiryInstant) {
+        return FluentFuture.from(
+                AdServicesExecutors.getBackgroundExecutor()
+                        .submit(() -> concatAbsentAndExpiredKeyTypes(keyExpiryInstant)));
+    }
+
+    private FluentFuture<Set<Integer>> getExpiredKeyTypes(Instant keyExpiryInstant) {
         return FluentFuture.from(
                 AdServicesExecutors.getBackgroundExecutor()
                         .submit(
@@ -244,17 +261,28 @@ public class BackgroundKeyFetchWorker {
             return FluentFuture.from(Futures.immediateVoidFuture())
                     .transform(ignored -> null, AdServicesExecutors.getLightWeightExecutor());
         }
-        Instant keyExpiryInstant = mClock.instant();
-        return fetchExpiredKeyTypes(keyExpiryInstant)
+
+        Instant currentInstant = mClock.instant();
+        if (mFlags.getFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled()) {
+            long inAdvanceIntervalMs =
+                    mFlags.getFledgeAuctionServerBackgroundKeyFetchInAdvanceIntervalMs();
+            return getAbsentAndExpiredKeyTypes(currentInstant.plusMillis(inAdvanceIntervalMs))
+                    .transformAsync(
+                            keyTypesToFetch ->
+                                    fetchNewKeys(keyTypesToFetch, currentInstant, shouldStop),
+                            AdServicesExecutors.getBackgroundExecutor());
+        }
+
+        return getExpiredKeyTypes(currentInstant)
                 .transformAsync(
                         expiredKeyTypes ->
-                                fetchNewKeys(expiredKeyTypes, keyExpiryInstant, shouldStop),
+                                fetchNewKeys(expiredKeyTypes, currentInstant, shouldStop),
                         AdServicesExecutors.getBackgroundExecutor());
     }
 
     /**
-     * Runs the background key fetch job for Ad Selection Data, including persisting fetched key
-     * and removing expired keys.
+     * Runs the background key fetch job for Ad Selection Data, including persisting fetched key and
+     * removing expired keys.
      *
      * @return A future to be used to check when the task has completed.
      */

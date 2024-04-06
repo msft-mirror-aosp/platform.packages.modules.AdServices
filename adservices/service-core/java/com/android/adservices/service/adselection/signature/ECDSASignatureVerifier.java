@@ -54,15 +54,12 @@ public class ECDSASignatureVerifier implements SignatureVerifier {
     protected static final String ECDSA_WITH_SHA256_SIGNING_ALGORITHM = "SHA256withECDSA";
 
     @NonNull private final SignatureVerificationLogger mSignatureVerificationLogger;
-    private final boolean mIsContextualAdsLoggingEnabled;
 
     public ECDSASignatureVerifier(
-            @NonNull SignatureVerificationLogger signatureVerificationLogger,
-            boolean isContextualAdsLoggingEnabled) {
+            @NonNull SignatureVerificationLogger signatureVerificationLogger) {
         Objects.requireNonNull(signatureVerificationLogger);
 
         mSignatureVerificationLogger = signatureVerificationLogger;
-        mIsContextualAdsLoggingEnabled = isContextualAdsLoggingEnabled;
     }
 
     /**
@@ -101,20 +98,14 @@ public class ECDSASignatureVerifier implements SignatureVerifier {
     }
 
     private void logWrongKeyFormatError() {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.addFailureDetailCountOfKeysWithWrongFormat();
     }
 
     private void logSignatureFormatError() {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.setFailureDetailWrongSignatureFormat();
     }
 
     private void logUnknownError() {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.setFailureDetailUnknownError();
     }
 }

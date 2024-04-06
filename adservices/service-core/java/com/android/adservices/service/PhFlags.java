@@ -30,6 +30,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENCODED_ERROR_CO
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
@@ -82,6 +83,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
@@ -2310,6 +2312,22 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled() {
+        String key =
+                KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
+        return getDeviceConfigFlag(
+                key, FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED);
+    }
+
+    @Override
+    public long getFledgeAuctionServerBackgroundKeyFetchInAdvanceIntervalMs() {
+        return getDeviceConfigFlag(
+                FlagsConstants
+                        .KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS,
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS);
+    }
+
+    @Override
     public int getFledgeAuctionServerCompressionAlgorithmVersion() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION,
@@ -3107,6 +3125,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
                 MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE);
+    }
+
+    @Override
+    public boolean getMeasurementEnableNavigationReportingOriginCheck() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK,
+                MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK);
     }
 
     @Override
@@ -5141,6 +5166,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES
                         + " = "
                         + getMeasurementEnableSessionStableKillSwitches());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK
+                        + " = "
+                        + getMeasurementEnableNavigationReportingOriginCheck());
         writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
         writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
         writer.println(

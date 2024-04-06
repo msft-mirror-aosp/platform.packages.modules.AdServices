@@ -561,11 +561,12 @@ public class AttributionJobHandlerTest {
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(
-                Attribution.Scope.AGGREGATE, source, trigger)).thenReturn(
+                        Attribution.Scope.AGGREGATE, source, trigger))
+                .thenReturn(
                         (long) Flags.MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(
-                Attribution.Scope.EVENT, source, trigger)).thenReturn(
-                        5L);
+                        Attribution.Scope.EVENT, source, trigger))
+                .thenReturn(5L);
         mHandler.performPendingAttributions();
         verify(mMeasurementDao, times(1)).getAttributionsPerRateLimitWindow(
                 Attribution.Scope.EVENT, source, trigger);
@@ -592,11 +593,11 @@ public class AttributionJobHandlerTest {
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(
-                Attribution.Scope.AGGREGATE, source, trigger)).thenReturn(
-                        5L);
+                        Attribution.Scope.AGGREGATE, source, trigger))
+                .thenReturn(5L);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(
-                Attribution.Scope.EVENT, source, trigger)).thenReturn(
-                        (long) Flags.MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+                        Attribution.Scope.EVENT, source, trigger))
+                .thenReturn((long) Flags.MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
         mHandler.performPendingAttributions();
         verify(mMeasurementDao, times(1)).getAttributionsPerRateLimitWindow(
                 Attribution.Scope.EVENT, source, trigger);
@@ -622,11 +623,12 @@ public class AttributionJobHandlerTest {
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(
-                Attribution.Scope.AGGREGATE, source, trigger)).thenReturn(
+                        Attribution.Scope.AGGREGATE, source, trigger))
+                .thenReturn(
                         (long) Flags.MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(
-                Attribution.Scope.EVENT, source, trigger)).thenReturn(
-                        5L);
+                        Attribution.Scope.EVENT, source, trigger))
+                .thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(
                         source.getAppDestinations(),
@@ -916,7 +918,10 @@ public class AttributionJobHandlerTest {
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
 
-        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+        MeasurementAttributionStats measurementAttributionStats = getMeasurementAttributionStats();
+        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                trigger, measurementAttributionStats);
+        assertEquals(1, measurementAttributionStats.getNullAggregateReportCount());
     }
 
     @Test
@@ -1154,6 +1159,9 @@ public class AttributionJobHandlerTest {
         AggregateReport trueReport =
                 reports.stream().filter(r -> !r.isFakeReport()).findFirst().get();
         assertAggregateReportsEqual(expectedAggregateReport, trueReport);
+
+        MeasurementAttributionStats measurementAttributionStats = getMeasurementAttributionStats();
+        assertEquals(30, measurementAttributionStats.getNullAggregateReportCount());
     }
 
     @Test
@@ -1300,6 +1308,8 @@ public class AttributionJobHandlerTest {
         AggregateReport trueReport =
                 reports.stream().filter(r -> !r.isFakeReport()).findFirst().get();
         assertAggregateReportsEqual(expectedAggregateReport, trueReport);
+        MeasurementAttributionStats measurementAttributionStats = getMeasurementAttributionStats();
+        assertEquals(30, measurementAttributionStats.getNullAggregateReportCount());
     }
 
     @Test
@@ -1407,6 +1417,8 @@ public class AttributionJobHandlerTest {
         AggregateReport trueReport =
                 reports.stream().filter(r -> !r.isFakeReport()).findFirst().get();
         assertAggregateReportsEqual(expectedAggregateReport, trueReport);
+        MeasurementAttributionStats measurementAttributionStats = getMeasurementAttributionStats();
+        assertEquals(30, measurementAttributionStats.getNullAggregateReportCount());
     }
 
     @Test
@@ -6747,7 +6759,7 @@ public class AttributionJobHandlerTest {
                 (trigger) -> {
                     try {
                         captureAndAssertNullAggregateReportsIncludingSourceRegistrationTime(
-                                trigger);
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6764,7 +6776,8 @@ public class AttributionJobHandlerTest {
                 1.0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6781,7 +6794,8 @@ public class AttributionJobHandlerTest {
                 0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6799,7 +6813,7 @@ public class AttributionJobHandlerTest {
                 (trigger) -> {
                     try {
                         captureAndAssertNullAggregateReportsIncludingSourceRegistrationTime(
-                                trigger);
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6816,7 +6830,8 @@ public class AttributionJobHandlerTest {
                 1.0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6834,7 +6849,8 @@ public class AttributionJobHandlerTest {
                 0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6853,7 +6869,7 @@ public class AttributionJobHandlerTest {
                 (trigger) -> {
                     try {
                         captureAndAssertNullAggregateReportsIncludingSourceRegistrationTime(
-                                trigger);
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6871,7 +6887,8 @@ public class AttributionJobHandlerTest {
                 1.0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6889,7 +6906,8 @@ public class AttributionJobHandlerTest {
                 0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6907,7 +6925,7 @@ public class AttributionJobHandlerTest {
                 (trigger) -> {
                     try {
                         captureAndAssertNullAggregateReportsIncludingSourceRegistrationTime(
-                                trigger);
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6924,7 +6942,8 @@ public class AttributionJobHandlerTest {
                 1.0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6942,7 +6961,8 @@ public class AttributionJobHandlerTest {
                 0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6960,7 +6980,7 @@ public class AttributionJobHandlerTest {
                 (trigger) -> {
                     try {
                         captureAndAssertNullAggregateReportsIncludingSourceRegistrationTime(
-                                trigger);
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6977,7 +6997,8 @@ public class AttributionJobHandlerTest {
                 1.0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -6995,7 +7016,8 @@ public class AttributionJobHandlerTest {
                 0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -7013,7 +7035,7 @@ public class AttributionJobHandlerTest {
                 (trigger) -> {
                     try {
                         captureAndAssertNullAggregateReportsIncludingSourceRegistrationTime(
-                                trigger);
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -7030,7 +7052,8 @@ public class AttributionJobHandlerTest {
                 1.0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -7047,7 +7070,8 @@ public class AttributionJobHandlerTest {
                 0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -7065,7 +7089,7 @@ public class AttributionJobHandlerTest {
                 (trigger) -> {
                     try {
                         captureAndAssertNullAggregateReportsIncludingSourceRegistrationTime(
-                                trigger);
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -7082,7 +7106,8 @@ public class AttributionJobHandlerTest {
                 1.0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -7100,7 +7125,8 @@ public class AttributionJobHandlerTest {
                 0f,
                 (trigger) -> {
                     try {
-                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(trigger);
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
                     } catch (DatastoreException e) {
                         throw new RuntimeException(e);
                     }
@@ -7518,7 +7544,8 @@ public class AttributionJobHandlerTest {
     }
 
     private void captureAndAssertNullAggregateReportsIncludingSourceRegistrationTime(
-            Trigger trigger) throws DatastoreException {
+            Trigger trigger, MeasurementAttributionStats measurementAttributionStats)
+            throws DatastoreException {
         ArgumentCaptor<AggregateReport> aggregateReportCaptor =
                 ArgumentCaptor.forClass(AggregateReport.class);
         // +1 to account for day of trigger
@@ -7535,15 +7562,18 @@ public class AttributionJobHandlerTest {
             assertNullAggregateReport(
                     reports.get(i), trigger, trigger.getTriggerTime() - TimeUnit.DAYS.toMillis(i));
         }
+        assertEquals(31, measurementAttributionStats.getNullAggregateReportCount());
     }
 
-    private void captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(Trigger trigger)
+    private void captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+            Trigger trigger, MeasurementAttributionStats measurementAttributionStats)
             throws DatastoreException {
         ArgumentCaptor<AggregateReport> aggregateReportCaptor =
                 ArgumentCaptor.forClass(AggregateReport.class);
         verify(mMeasurementDao, times(1)).insertAggregateReport(aggregateReportCaptor.capture());
         AggregateReport report = aggregateReportCaptor.getValue();
         assertNullAggregateReport(report, trigger, null);
+        assertEquals(1, measurementAttributionStats.getNullAggregateReportCount());
     }
 
     private MeasurementAttributionStats getMeasurementAttributionStats() {

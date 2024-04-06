@@ -35,7 +35,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.Activity;
@@ -62,7 +61,6 @@ import android.platform.test.annotations.RequiresFlagsDisabled;
 import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
-import android.provider.DeviceConfig;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
@@ -73,7 +71,6 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.Until;
 
 import com.android.compatibility.common.util.DeviceConfigStateHelper;
-import com.android.compatibility.common.util.SystemUtil;
 import com.android.ctssdkprovider.IActivityActionExecutor;
 import com.android.ctssdkprovider.IActivityStarter;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
@@ -110,8 +107,6 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     private static final String NAMESPACE_WINDOW_MANAGER = "window_manager";
     private static final String ASM_RESTRICTIONS_ENABLED =
             "ActivitySecurity__asm_restrictions_enabled";
-    private static final String CUSTOMIZED_SDK_CONTEXT_ENABLED =
-            "sdksandbox_customized_sdk_context_enabled";
     private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
     private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
     private static final String TEXT_KEY = "TEXT_KEY";
@@ -138,7 +133,6 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     private ActivityScenario<TestActivity> mScenario;
 
     private SdkSandboxManager mSdkSandboxManager;
-    private boolean mCustomizedSdkContextEnabled;
 
     private final DeviceConfigStateHelper mDeviceConfig =
             new DeviceConfigStateHelper(NAMESPACE_WINDOW_MANAGER);
@@ -148,14 +142,6 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     @Before
     public void setup() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        SystemUtil.runWithShellPermissionIdentity(
-                () -> {
-                    mCustomizedSdkContextEnabled =
-                            DeviceConfig.getBoolean(
-                                    DeviceConfig.NAMESPACE_ADSERVICES,
-                                    CUSTOMIZED_SDK_CONTEXT_ENABLED,
-                                    false);
-                });
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
         mScenario = activityScenarioRule.getScenario();
         mDeviceConfig.set(ASM_RESTRICTIONS_ENABLED, "1");
@@ -773,9 +759,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     }
 
     /**
-     * Test that in case {@link FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT} is enabled and the {@link
-     * CUSTOMIZED_SDK_CONTEXT_ENABLED} flag is enabled, the sandbox activity context is created
-     * using the SDK ApplicationInfo.
+     * Test that the sandbox activity context is created using the SDK ApplicationInfo.
      *
      * @throws RemoteException
      */
@@ -784,7 +768,6 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     public void testSandboxActivityUseSdkBasedContextIfRequiredFlagAreEnabled()
             throws RemoteException {
         assumeTrue(SdkLevel.isAtLeastV());
-        assumeTrue(mCustomizedSdkContextEnabled);
 
         ICtsSdkProviderApi sdk = loadSdk();
 
@@ -799,34 +782,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     }
 
     /**
-     * Test that in case {@link FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT} is enabled but the {@link
-     * CUSTOMIZED_SDK_CONTEXT_ENABLED} flag is disabled, the sandbox activity context is created
-     * using the sandbox App ApplicationInfo.
-     *
-     * @throws RemoteException
-     */
-    @Test
-    @RequiresFlagsEnabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public void testSandboxActivityUseAppBasedContextIfCustomizedSdkFlagIsDisabled()
-            throws RemoteException {
-        assumeTrue(SdkLevel.isAtLeastV());
-        assumeFalse(mCustomizedSdkContextEnabled);
-        ICtsSdkProviderApi sdk = loadSdk();
-
-        ActivityStarter sandboxActivityStarter = new ActivityStarter();
-        IActivityActionExecutor actionExecutor = startSandboxActivity(sdk, sandboxActivityStarter);
-        assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
-        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
-
-        String dataDir = actionExecutor.getDataDir();
-        assertThat(dataDir).doesNotContain(SDK_NAME_1);
-        assertThat(dataDir).contains(getSdkSandboxPackageName());
-    }
-
-    /**
-     * Test that in case {@link FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT} is disabled but the {@link
-     * CUSTOMIZED_SDK_CONTEXT_ENABLED} flag is enabled, the sandbox activity context is created
-     * using the sandbox App ApplicationInfo.
+     * Test that the sandbox activity context is created using the sandbox App ApplicationInfo.
      *
      * @throws RemoteException
      */
@@ -835,7 +791,6 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     public void testSandboxActivityUseAppBasedContextIfSdkBasedFlagIDisabled()
             throws RemoteException {
         assumeTrue(SdkLevel.isAtLeastV());
-        assumeTrue(mCustomizedSdkContextEnabled);
 
         ICtsSdkProviderApi sdk = loadSdk();
 

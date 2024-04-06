@@ -57,7 +57,8 @@ public class U18UxDetentionChannelTest {
     public void setUp() throws Exception {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
+        UiUtils.setBinderTimeout();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.resetAdServicesConsentData(sContext);
         UiUtils.enableNotificationPermission();
         UiUtils.enableGa();

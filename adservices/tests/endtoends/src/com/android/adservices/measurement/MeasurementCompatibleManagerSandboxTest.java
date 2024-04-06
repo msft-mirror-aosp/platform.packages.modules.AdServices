@@ -68,14 +68,13 @@ public final class MeasurementCompatibleManagerSandboxTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     protected static final Context sSandboxedSdkContext =
             new SandboxedSdkContext(
-                    /* baseContext = */ sContext,
-                    /* classLoader = */ sContext.getClassLoader(),
-                    /* clientPackageName = */ sContext.getPackageName(),
-                    /* info = */ sContext.getApplicationInfo(),
-                    /* sdkName = */ "sdkName",
-                    /* sdkCeDataDir = */ null,
-                    /* sdkDeDataDir = */ null,
-                    /* isCustomizedSdkContext = */ false);
+                    /* baseContext= */ sContext,
+                    /* classLoader= */ sContext.getClassLoader(),
+                    /* clientPackageName= */ sContext.getPackageName(),
+                    /* info= */ sContext.getApplicationInfo(),
+                    /* sdkName= */ "sdkName",
+                    /* sdkCeDataDir= */ null,
+                    /* sdkDeDataDir= */ null);
 
     private Executor mMockCallbackExecutor;
     private AdServicesOutcomeReceiver mMockOutcomeReceiver;

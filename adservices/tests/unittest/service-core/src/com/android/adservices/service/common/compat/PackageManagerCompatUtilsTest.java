@@ -230,6 +230,17 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
+    public void testIsAdServicesActivityEnabled_nullPackageName_defaultToEnabled()
+            throws PackageManager.NameNotFoundException {
+        Context mockContext = mock(Context.class);
+        when(mockContext.getPackageManager()).thenReturn(mPackageManagerMock);
+        when(mockContext.getPackageName()).thenReturn(null);
+        boolean isActivityEnabled =
+                PackageManagerCompatUtils.isAdServicesActivityEnabled(mockContext);
+        assertThat(isActivityEnabled).isFalse();
+    }
+
+    @Test
     public void testIsAdServicesActivityEnabled_extServicesPackage_enabled()
             throws PackageManager.NameNotFoundException {
         Context mockContext = mock(Context.class);

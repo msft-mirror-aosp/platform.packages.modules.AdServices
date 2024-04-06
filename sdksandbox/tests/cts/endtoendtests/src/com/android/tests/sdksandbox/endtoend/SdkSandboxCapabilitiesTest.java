@@ -32,12 +32,10 @@ import android.os.Bundle;
 import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
-import android.provider.DeviceConfig;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.compatibility.common.util.DeviceConfigStateChangerRule;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -58,14 +56,6 @@ public class SdkSandboxCapabilitiesTest extends SandboxKillerBeforeTest {
     @Rule(order = 1)
     public final ActivityScenarioRule<TestActivity> activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
-
-    @Rule(order = 2)
-    public final DeviceConfigStateChangerRule customizedSdkContextEnabledRule =
-            new DeviceConfigStateChangerRule(
-                    InstrumentationRegistry.getInstrumentation().getTargetContext(),
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    "sdksandbox_customized_sdk_context_enabled",
-                    "true");
 
     @Rule(order = 3)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();

@@ -29,7 +29,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 
 import android.app.job.JobInfo;
@@ -38,7 +37,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
@@ -98,6 +96,7 @@ public class AdServicesBackCompatInitTest {
     @Test
     public void testOnReceive_tPlus_flagOff() {
         Assume.assumeTrue(SdkLevel.isAtLeastT());
+        setCommonMocks(TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
         doReturn(true).when(mMockFlags).getGlobalKillSwitch();
@@ -116,6 +115,7 @@ public class AdServicesBackCompatInitTest {
     @Test
     public void testOnReceive_tPlus_flagOn() {
         Assume.assumeTrue(SdkLevel.isAtLeastT());
+        setCommonMocks(TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
         doReturn(true).when(mMockFlags).getEnableBackCompat();
@@ -135,6 +135,7 @@ public class AdServicesBackCompatInitTest {
     @Test
     public void testOnReceive_sminus_flagsOff() {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
+        setCommonMocks(TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
         doReturn(false).when(mMockFlags).getEnableBackCompat();
@@ -166,6 +167,7 @@ public class AdServicesBackCompatInitTest {
     @Test
     public void testOnReceive_sminus_flagsOn() {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
+        setCommonMocks(TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
         doReturn(true).when(mMockFlags).getEnableBackCompat();
@@ -182,58 +184,52 @@ public class AdServicesBackCompatInitTest {
     @Test
     public void testRegisterReceivers_extServicesPackage_succeed() {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
+        setCommonMocks(EXT_SERVICES_APK_PKG_SUFFIX);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 (new AdServicesBackCompatInit(mContext));
-        setCommonMocks(EXT_SERVICES_APK_PKG_SUFFIX);
         adServicesBackCompatInit.registerPackagedChangedBroadcastReceivers();
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any(Flags.class)));
     }
 
     @Test
-    public void testRegisterReceivers_adServicesPackage_skipped() {
+    public void testInitComponents_adServicesPackage_skipped() {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
+        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 (new AdServicesBackCompatInit(mContext));
-        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
-        adServicesBackCompatInit.registerPackagedChangedBroadcastReceivers();
+        adServicesBackCompatInit.initializeComponents();
         verify(
                 () -> PackageChangedReceiver.enableReceiver(any(Context.class), any(Flags.class)),
                 never());
+        verify(
+                () -> PackageChangedReceiver.disableReceiver(any(Context.class), any(Flags.class)),
+                never());
+        verify(mContext, never()).getSystemService(eq(JobScheduler.class));
+        verify(mPackageManager, never())
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
+                        eq(PackageManager.DONT_KILL_APP));
     }
 
     @Test
     public void testUnregisterReceivers_extServicesPackage_succeed() {
         doReturn(true).when(() -> PackageChangedReceiver.disableReceiver(any(), any()));
 
+        setCommonMocks(EXT_SERVICES_APK_PKG_SUFFIX);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 (new AdServicesBackCompatInit(mContext));
-        setCommonMocks(EXT_SERVICES_APK_PKG_SUFFIX);
         adServicesBackCompatInit.unregisterPackageChangedBroadcastReceivers();
 
         verify(() -> PackageChangedReceiver.disableReceiver(any(Context.class), any(Flags.class)));
     }
 
     @Test
-    public void testUnregisterReceivers_adServicesPackage_skipped() {
-        doReturn(true).when(() -> PackageChangedReceiver.disableReceiver(any(), any()));
-
-        AdServicesBackCompatInit adServicesBackCompatInit =
-                (new AdServicesBackCompatInit(mContext));
-        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
-        adServicesBackCompatInit.unregisterPackageChangedBroadcastReceivers();
-
-        verify(
-                () -> PackageChangedReceiver.disableReceiver(any(Context.class), any(Flags.class)),
-                never());
-    }
-
-    @Test
     public void testEnableActivities_sminus() {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
+        setCommonMocks(TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
-
-        setCommonMocks(TEST_PACKAGE_NAME);
 
         // Call the method we're testing.
         adServicesBackCompatInit.updateAdExtServicesActivities(true);
@@ -248,9 +244,9 @@ public class AdServicesBackCompatInitTest {
     @Test
     public void testDisableActivities_tPlus() {
         Assume.assumeTrue(SdkLevel.isAtLeastT());
+        setCommonMocks(TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
-        setCommonMocks(TEST_PACKAGE_NAME);
 
         // Call the method we're testing.
         adServicesBackCompatInit.updateAdExtServicesActivities(false);
@@ -265,9 +261,9 @@ public class AdServicesBackCompatInitTest {
     @Test
     public void testDisableAdExtServicesServices_tPlus() {
         Assume.assumeTrue(SdkLevel.isAtLeastT());
+        setCommonMocks(TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
-        setCommonMocks(TEST_PACKAGE_NAME);
 
         // Call the method we're testing.
         adServicesBackCompatInit.updateAdExtServicesServices(/* shouldEnable= */ false);
@@ -282,9 +278,9 @@ public class AdServicesBackCompatInitTest {
     @Test
     public void testEnableAdExtServicesServices_onS() {
         Assume.assumeTrue(SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT());
+        setCommonMocks(TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
-        setCommonMocks(TEST_PACKAGE_NAME);
 
         // Call the method we're testing
         adServicesBackCompatInit.updateAdExtServicesServices(/* shouldEnable= */ true);
@@ -299,9 +295,9 @@ public class AdServicesBackCompatInitTest {
     @Test
     public void testEnableAdExtServicesServices_onR() {
         Assume.assumeFalse(SdkLevel.isAtLeastS());
+        setCommonMocks(TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
-        setCommonMocks(TEST_PACKAGE_NAME);
 
         // Call the method we're testing
         adServicesBackCompatInit.updateAdExtServicesServices(/* shouldEnable= */ true);
@@ -316,9 +312,9 @@ public class AdServicesBackCompatInitTest {
     @Test
     public void testDisableAdExtServicesServices_onSMinus() {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
+        setCommonMocks(TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
-        setCommonMocks(TEST_PACKAGE_NAME);
 
         // Call the method we're testing
         adServicesBackCompatInit.updateAdExtServicesServices(/* shouldEnable= */ false);
@@ -331,59 +327,30 @@ public class AdServicesBackCompatInitTest {
     }
 
     @Test
-    public void testUpdateAdExtServicesActivities_withAdServicesPackageSuffix_doesNotUpdate() {
-        AdServicesBackCompatInit adServicesBackCompatInit =
-                Mockito.spy(new AdServicesBackCompatInit(mContext));
-        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
-
-        // Call the method we're testing.
-        adServicesBackCompatInit.updateAdExtServicesActivities(false);
-
-        verify(mPackageManager, never())
-                .setComponentEnabledSetting(
-                        any(ComponentName.class),
-                        eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
-                        eq(PackageManager.DONT_KILL_APP));
-    }
-
-    @Test
-    public void testDisableAdExtServicesServices_withAdServicesPackageSuffix_doesNotUpdate() {
-        AdServicesBackCompatInit adServicesBackCompatInit =
-                Mockito.spy(new AdServicesBackCompatInit(mContext));
-        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
-
-        // Call the method we're testing.
-        adServicesBackCompatInit.updateAdExtServicesServices(/* shouldEnable= */ false);
-
-        verify(mPackageManager, never())
-                .setComponentEnabledSetting(
-                        any(ComponentName.class),
-                        eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
-                        eq(PackageManager.DONT_KILL_APP));
-    }
-
-    @Test
-    public void testUpdateComponents_withAdServicesPackageSuffix_throwsException() {
-        assertThrows(
-                IllegalStateException.class,
-                () ->
-                        AdServicesBackCompatInit.updateComponents(
-                                mContext, ImmutableList.of(), AD_SERVICES_APK_PKG_SUFFIX, false));
-    }
-
-    @Test
     public void testUpdateComponents_adServicesPackageNamePresentButNotSuffix_disablesComponent() {
-        when(mContext.getPackageManager()).thenReturn(mPackageManager);
-        AdServicesBackCompatInit.updateComponents(
-                mContext,
-                ImmutableList.of("test"),
-                AD_SERVICES_APK_PKG_SUFFIX + TEST_PACKAGE_NAME,
-                false);
+        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX + TEST_PACKAGE_NAME);
+        AdServicesBackCompatInit adServicesBackCompatInit =
+                Mockito.spy(new AdServicesBackCompatInit(mContext));
+        adServicesBackCompatInit.updateComponents(ImmutableList.of("test"), false);
 
         verify(mPackageManager)
                 .setComponentEnabledSetting(
                         any(ComponentName.class),
                         eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
+                        eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    public void testUpdateComponents_adServicesPackageNamePresentButNotSuffix_enablesComponent() {
+        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX + TEST_PACKAGE_NAME);
+        AdServicesBackCompatInit adServicesBackCompatInit =
+                Mockito.spy(new AdServicesBackCompatInit(mContext));
+        adServicesBackCompatInit.updateComponents(ImmutableList.of("test"), true);
+
+        verify(mPackageManager)
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_ENABLED),
                         eq(PackageManager.DONT_KILL_APP));
     }
 
@@ -395,18 +362,9 @@ public class AdServicesBackCompatInitTest {
     }
 
     @Test
-    public void testDisableScheduledBackgroundJobs_withAdServicesPackageSuffix_doesNotUpdate() {
-        AdServicesBackCompatInit adServicesBackCompatInit =
-                Mockito.spy(new AdServicesBackCompatInit(mContext));
-        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
-
-        adServicesBackCompatInit.disableScheduledBackgroundJobs();
-        verify(mContext, never()).getSystemService(eq(JobScheduler.class));
-    }
-
-    @Test
     public void
             testDisableScheduledBackgroundJobs_adServicesPackagePresentButNotSuffix_cancelsAllJobs() {
+        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX + TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
 
@@ -414,7 +372,6 @@ public class AdServicesBackCompatInitTest {
         when(mContext.getSystemService(JobScheduler.class)).thenReturn(mockScheduler);
         when(mockScheduler.getAllPendingJobs()).thenReturn(getJobInfos());
         doNothing().when(mockScheduler).cancel(anyInt());
-        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX + TEST_PACKAGE_NAME);
 
         adServicesBackCompatInit.disableScheduledBackgroundJobs();
         verify(mockScheduler).cancel(1);
@@ -450,6 +407,7 @@ public class AdServicesBackCompatInitTest {
 
     @Test
     public void testDisableScheduledBackgroundJobs_cancelsAllJobs() {
+        setCommonMocks(TEST_PACKAGE_NAME);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
 
@@ -457,8 +415,6 @@ public class AdServicesBackCompatInitTest {
         when(mContext.getSystemService(JobScheduler.class)).thenReturn(mockScheduler);
         when(mockScheduler.getAllPendingJobs()).thenReturn(getJobInfos());
         doNothing().when(mockScheduler).cancel(anyInt());
-
-        setCommonMocks(TEST_PACKAGE_NAME);
 
         adServicesBackCompatInit.disableScheduledBackgroundJobs();
         verify(mockScheduler).cancel(1);
@@ -469,14 +425,13 @@ public class AdServicesBackCompatInitTest {
 
     @Test
     public void testDisableScheduledBackgroundJobs_handlesException() throws Exception {
-        when(mContext.getPackageManager()).thenReturn(mPackageManager);
-        when(mPackageManager.getPackageInfo(anyString(), anyInt()))
-                .thenThrow(PackageManager.NameNotFoundException.class);
-
+        // NullPointerException when getSystemService is called before the system is ready
+        when(mContext.getSystemService(JobScheduler.class)).thenThrow(NullPointerException.class);
         AdServicesBackCompatInit adServicesBackCompatInit =
                 Mockito.spy(new AdServicesBackCompatInit(mContext));
+
+        // No exception expected, so no need to explicitly handle any exceptions here
         adServicesBackCompatInit.disableScheduledBackgroundJobs();
-        verify(mContext, never()).getSystemService(eq(JobScheduler.class));
     }
 
     @Test

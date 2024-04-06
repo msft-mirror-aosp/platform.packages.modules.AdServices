@@ -98,4 +98,28 @@ public class AdFilteringProcessAdSelectionReportedStatsTest extends AdServicesUn
         expect.that(stats.getTotalNumOfContextualAdsBeforeFiltering())
                 .isEqualTo(TOTAL_NUM_OF_CONTEXTUAL_ADS_BEFORE_FILTERING);
     }
+
+    @Test
+    public void testBuildAdFilteringProcessAdSelectionReportedStatsWithEmptyValues() {
+        AdFilteringProcessAdSelectionReportedStats stats =
+                AdFilteringProcessAdSelectionReportedStats.builder().build();
+
+        expect.that(stats.getLatencyInMillisOfAllAdFiltering()).isEqualTo(0);
+        expect.that(stats.getLatencyInMillisOfAppInstallFiltering()).isEqualTo(0);
+        expect.that(stats.getLatencyInMillisOfFcapFilters()).isEqualTo(0);
+        expect.that(stats.getStatusCode()).isEqualTo(0);
+        expect.that(stats.getNumOfAdsFilteredOutOfBidding()).isEqualTo(0);
+        expect.that(stats.getNumOfCustomAudiencesFilteredOutOfBidding()).isEqualTo(0);
+        expect.that(stats.getTotalNumOfAdsBeforeFiltering()).isEqualTo(0);
+        expect.that(stats.getTotalNumOfCustomAudiencesBeforeFiltering()).isEqualTo(0);
+        expect.that(stats.getNumOfPackageInAppInstallFilters()).isEqualTo(0);
+        expect.that(stats.getNumOfDbOperations()).isEqualTo(0);
+        expect.that(stats.getFilterProcessType()).isEqualTo(0);
+        expect.that(stats.getNumOfContextualAdsFiltered()).isEqualTo(0);
+        expect.that(stats.getNumOfAdCounterKeysInFcapFilters()).isEqualTo(0);
+        expect.that(stats.getNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures())
+                .isEqualTo(0);
+        expect.that(stats.getNumOfContextualAdsFilteredOutOfBiddingNoAds()).isEqualTo(0);
+        expect.that(stats.getTotalNumOfContextualAdsBeforeFiltering()).isEqualTo(0);
+    }
 }

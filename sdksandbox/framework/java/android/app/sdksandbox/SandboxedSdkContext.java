@@ -27,6 +27,7 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.io.File;
 
@@ -55,7 +56,12 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Nullable private final File mDeDataDir;
     private final SdkSandboxSystemServiceRegistry mSdkSandboxSystemServiceRegistry;
     private final ClassLoader mClassLoader;
-    private final boolean mCustomizedSdkContextEnabled;
+
+    /**
+     * Starting from Android U, we customize the base context directly instead of adding information
+     * to the ContextWrapper.
+     */
+    private final boolean mIsCustomizedSdkContextEnabled = SdkLevel.isAtLeastU();
 
     public SandboxedSdkContext(
             @NonNull Context baseContext,
@@ -64,8 +70,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
             @NonNull ApplicationInfo info,
             @NonNull String sdkName,
             @Nullable String sdkCeDataDir,
-            @Nullable String sdkDeDataDir,
-            boolean isCustomizedSdkContextEnabled) {
+            @Nullable String sdkDeDataDir) {
         this(
                 baseContext,
                 classLoader,
@@ -74,7 +79,6 @@ public final class SandboxedSdkContext extends ContextWrapper {
                 sdkName,
                 sdkCeDataDir,
                 sdkDeDataDir,
-                isCustomizedSdkContextEnabled,
                 SdkSandboxSystemServiceRegistry.getInstance());
     }
 
@@ -87,7 +91,6 @@ public final class SandboxedSdkContext extends ContextWrapper {
             @NonNull String sdkName,
             @Nullable String sdkCeDataDir,
             @Nullable String sdkDeDataDir,
-            boolean isCustomizedSdkContextEnabled,
             SdkSandboxSystemServiceRegistry sdkSandboxSystemServiceRegistry) {
         super(baseContext);
         mClientPackageName = clientPackageName;
@@ -112,7 +115,6 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
         mSdkSandboxSystemServiceRegistry = sdkSandboxSystemServiceRegistry;
         mClassLoader = classLoader;
-        mCustomizedSdkContextEnabled = isCustomizedSdkContextEnabled;
     }
 
     /**
@@ -156,8 +158,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
                 mSdkProviderInfo,
                 mSdkName,
                 (mCeDataDir != null) ? mCeDataDir.toString() : null,
-                (mDeDataDir != null) ? mDeDataDir.toString() : null,
-                mCustomizedSdkContextEnabled);
+                (mDeDataDir != null) ? mDeDataDir.toString() : null);
     }
 
     /**
@@ -191,7 +192,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Override
     @Nullable
     public Resources getResources() {
-        if (mCustomizedSdkContextEnabled) {
+        if (mIsCustomizedSdkContextEnabled) {
             return getBaseContext().getResources();
         }
         return mResources;
@@ -201,7 +202,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Override
     @Nullable
     public AssetManager getAssets() {
-        if (mCustomizedSdkContextEnabled) {
+        if (mIsCustomizedSdkContextEnabled) {
             return getBaseContext().getAssets();
         }
         return mAssets;
@@ -211,7 +212,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Override
     @Nullable
     public File getDataDir() {
-        if (mCustomizedSdkContextEnabled) {
+        if (mIsCustomizedSdkContextEnabled) {
             return getBaseContext().getDataDir();
         }
 
@@ -243,14 +244,9 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
     @Override
     public ClassLoader getClassLoader() {
-        if (mCustomizedSdkContextEnabled) {
+        if (mIsCustomizedSdkContextEnabled) {
             return getBaseContext().getClassLoader();
         }
         return mClassLoader;
-    }
-
-    /** Returns true if the Customized SDK Context flag is enabled, otherwise return false. */
-    public boolean isCustomizedSdkContextEnabled() {
-        return mCustomizedSdkContextEnabled;
     }
 }

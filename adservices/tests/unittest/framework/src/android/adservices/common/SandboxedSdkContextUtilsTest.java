@@ -47,14 +47,13 @@ public final class SandboxedSdkContextUtilsTest {
         Context context = ApplicationProvider.getApplicationContext();
         Context sandboxedSdkContext =
                 new SandboxedSdkContext(
-                        /* baseContext = */ context,
-                        /* classLoader = */ context.getClassLoader(),
-                        /* clientPackageName = */ context.getPackageName(),
-                        /* info = */ context.getApplicationInfo(),
-                        /* sdkName = */ "sdkName",
-                        /* sdkCeDataDir = */ null,
-                        /* sdkDeDataDir = */ null,
-                        /* isCustomizedSdkContextEnabled = */ false);
+                        /* baseContext= */ context,
+                        /* classLoader= */ context.getClassLoader(),
+                        /* clientPackageName= */ context.getPackageName(),
+                        /* info= */ context.getApplicationInfo(),
+                        /* sdkName= */ "sdkName",
+                        /* sdkCeDataDir= */ null,
+                        /* sdkDeDataDir= */ null);
         assertThat(SandboxedSdkContextUtils.getAsSandboxedSdkContext(sandboxedSdkContext))
                 .isSameInstanceAs(sandboxedSdkContext);
     }

@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import android.content.Intent;
@@ -45,5 +46,16 @@ public class AdExtBootCompletedReceiverTest extends AdServicesExtendedMockitoTes
         bootCompletedReceiver.onReceive(mContext, new Intent());
 
         verify(mMockBackCompatInit).initializeComponents();
+    }
+
+    @Test
+    public void testExecuteBackCompatInit_exception_shouldNotThrow() {
+        AdExtBootCompletedReceiver bootCompletedReceiver =
+                Mockito.spy(new AdExtBootCompletedReceiver());
+        doReturn(mMockBackCompatInit).when(() -> AdServicesBackCompatInit.getInstance());
+        doThrow(IllegalArgumentException.class).when(mMockBackCompatInit).initializeComponents();
+
+        // No exception expected, so no need to explicitly handle any exceptions here.
+        bootCompletedReceiver.onReceive(mContext, new Intent());
     }
 }

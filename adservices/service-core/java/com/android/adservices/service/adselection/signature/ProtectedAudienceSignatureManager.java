@@ -74,16 +74,13 @@ public class ProtectedAudienceSignatureManager {
     @NonNull private final EncryptionKeyDao mEncryptionKeyDao;
     @NonNull private final SignatureVerificationLogger mSignatureVerificationLogger;
     private final boolean mIsEnrollmentCheckEnabled;
-    private final boolean mIsContextualAdsLoggingEnabled;
-
     private final SignatureVerifier mSignatureVerifier;
 
     public ProtectedAudienceSignatureManager(
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull EncryptionKeyDao encryptionKeyDao,
             @NonNull SignatureVerificationLogger signatureVerificationLogger,
-            boolean isEnrollmentCheckEnabled,
-            boolean isContextualAdsLoggingEnabled) {
+            boolean isEnrollmentCheckEnabled) {
         Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(encryptionKeyDao);
         Objects.requireNonNull(signatureVerificationLogger);
@@ -92,11 +89,8 @@ public class ProtectedAudienceSignatureManager {
         mEncryptionKeyDao = encryptionKeyDao;
         mSignatureVerificationLogger = signatureVerificationLogger;
         mIsEnrollmentCheckEnabled = isEnrollmentCheckEnabled;
-        mIsContextualAdsLoggingEnabled = isContextualAdsLoggingEnabled;
 
-        mSignatureVerifier =
-                new ECDSASignatureVerifier(
-                        mSignatureVerificationLogger, mIsContextualAdsLoggingEnabled);
+        mSignatureVerifier = new ECDSASignatureVerifier(mSignatureVerificationLogger);
     }
 
     /**
@@ -202,33 +196,23 @@ public class ProtectedAudienceSignatureManager {
     }
 
     private void logStartKeyFetch() {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.startKeyFetchForSignatureVerification();
     }
 
     private void logFailedKeyFetch() {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.endKeyFetchForSignatureVerification();
         mSignatureVerificationLogger.setNumOfKeysFetched(0);
     }
 
     private void logStartSerialization() {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.startSerializationForSignatureVerification();
     }
 
     private void logEndSerialization() {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.endSerializationForSignatureVerification();
     }
 
     private void logSuccessfulKeyFetch(int numOfKeysFetched) {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.endKeyFetchForSignatureVerification();
         mSignatureVerificationLogger.setNumOfKeysFetched(numOfKeysFetched);
         if (numOfKeysFetched == 0) {
@@ -237,27 +221,19 @@ public class ProtectedAudienceSignatureManager {
     }
 
     private void logStartSignatureVerification() {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.startSignatureVerification();
     }
 
     private void logKeyFailedSignatureVerification() {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.addFailureDetailCountOfKeysFailedToVerifySignature();
     }
 
     private void logNoEnrollmentDataForBuyer() {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.setFailureDetailNoEnrollmentDataForBuyer();
     }
 
     private void endFailedSigningProcess(
             AdTechIdentifier buyer, AdTechIdentifier seller, String callerPackageName) {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         boolean isKnownError = false;
         endFailedSigningProcess(buyer, seller, callerPackageName, isKnownError);
     }
@@ -267,8 +243,6 @@ public class ProtectedAudienceSignatureManager {
             AdTechIdentifier seller,
             String callerPackageName,
             boolean isUnknownError) {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.endSignatureVerification();
         mSignatureVerificationLogger.setFailedSignatureBuyerEnrollmentId(
                 resolveEnrollmentIdFromAdTechIdentifier(buyer));
@@ -283,8 +257,6 @@ public class ProtectedAudienceSignatureManager {
     }
 
     private void endSuccessfulSigningProcess() {
-        if (!mIsContextualAdsLoggingEnabled) return;
-
         mSignatureVerificationLogger.endSignatureVerification();
         mSignatureVerificationLogger.close(
                 SignatureVerificationStats.VerificationStatus.VERIFIED.getValue());
