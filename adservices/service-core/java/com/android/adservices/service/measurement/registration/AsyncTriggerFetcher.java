@@ -331,11 +331,10 @@ public class AsyncTriggerFetcher {
         }
 
         String contextId = triggerContextIdObj.toString();
-        if (contextId.isEmpty()
-                || contextId.length() > mFlags.getMeasurementMaxLengthOfTriggerContextId()) {
+        if (contextId.length() > mFlags.getMeasurementMaxLengthOfTriggerContextId()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
-                            "Length of %s: \"%s\", is 0 or exceeds max length of %d",
+                            "Length of %s: \"%s\", exceeds max length of %d",
                             TriggerHeaderContract.TRIGGER_CONTEXT_ID,
                             contextId,
                             mFlags.getMeasurementMaxLengthOfTriggerContextId());
