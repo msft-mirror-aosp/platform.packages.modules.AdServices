@@ -37,7 +37,8 @@ import java.util.Objects;
 // test call setFlags(flagName) (statically import FlagsConstant.flagName), which will make it    //
 // easier to transition the test to an annotated-base approach.                                   //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFlagsSetterRule<T>>
+public abstract class AbstractAdServicesFlagsSetterRule<
+                T extends AbstractAdServicesFlagsSetterRule<T>>
         extends AbstractFlagsSetterRule<T> {
 
     private static final String ALLOWLIST_SEPARATOR = ARRAY_SPLITTER_COMMA;
@@ -214,7 +215,8 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 "setDebugUxFlagsForRvcUx()",
                 () -> {
                     if (!isAtLeastS() && isAtLeastR()) {
-                        setFlag(FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
+                        setSystemProperty(
+                                FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
                         setFlag(FlagsConstants.KEY_DEBUG_UX, "RVC_UX");
                         return;
                     }

@@ -66,4 +66,16 @@ public final class IsAllowedAttributionAccessCommandTest
         expectSuccess(
                 actualResult, "true\n", ShellCommandStats.COMMAND_IS_ALLOWED_ATTRIBUTION_ACCESS);
     }
+
+    @Test
+    public void testGetCommandName_valid() {
+        expect.that(new IsAllowedAttributionAccessCommand().getCommandName())
+                .isEqualTo(CMD_IS_ALLOWED_ATTRIBUTION_ACCESS);
+    }
+
+    @Test
+    public void testGetCommandHelp_valid() {
+        expect.that(new IsAllowedAttributionAccessCommand().getCommandHelp())
+                .isEqualTo(HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
+    }
 }

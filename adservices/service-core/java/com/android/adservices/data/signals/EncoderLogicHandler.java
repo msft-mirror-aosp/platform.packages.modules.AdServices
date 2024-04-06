@@ -35,10 +35,10 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.service.stats.FetchProcessLoggerNoLoggingImpl;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
-import com.android.adservices.service.stats.pas.FetchProcessLogger;
-import com.android.adservices.service.stats.pas.FetchProcessLoggerImpl;
-import com.android.adservices.service.stats.pas.FetchProcessLoggerNoLoggingImpl;
+import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableSet;
@@ -70,8 +70,8 @@ public class EncoderLogicHandler {
 
     @VisibleForTesting
     public static final String ENCODER_VERSION_RESPONSE_HEADER = "X_ENCODER_VERSION";
-    @VisibleForTesting
-    public static final String EMPTY_ADTECH_ID = "";
+
+    @VisibleForTesting public static final String EMPTY_ADTECH_ID = "";
     @VisibleForTesting static final int FALLBACK_VERSION = 0;
     @NonNull private final EncoderPersistenceDao mEncoderPersistenceDao;
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
@@ -185,8 +185,8 @@ public class EncoderLogicHandler {
                 buyer, encoderEndpoint.getDownloadUri());
         FluentFuture<AdServicesHttpClientResponse> response =
                 FluentFuture.from(
-                        mAdServicesHttpsClient
-                                .fetchPayloadWithLogging(downloadRequest, fetchProcessLogger));
+                        mAdServicesHttpsClient.fetchPayloadWithLogging(
+                                downloadRequest, fetchProcessLogger));
 
         return response.transform(
                 r -> extractAndPersistEncoder(buyer, r), mBackgroundExecutorService);
@@ -314,7 +314,7 @@ public class EncoderLogicHandler {
     private FetchProcessLogger getEncodingJsFetchStatsLogger(
             Flags flags, EncodingFetchStats.Builder builder) {
         if (flags.getPasExtendedMetricsEnabled()) {
-            return new FetchProcessLoggerImpl(mAdServicesLogger, mClock, builder);
+            return new EncodingJsFetchProcessLoggerImpl(mAdServicesLogger, mClock, builder);
         } else {
             return new FetchProcessLoggerNoLoggingImpl();
         }

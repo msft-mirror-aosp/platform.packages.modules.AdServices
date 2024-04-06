@@ -56,4 +56,14 @@ public final class EchoCommandTest extends ShellCommandTestCase<EchoCommand> {
 
         expectSuccess(actualResult, "108\n", ShellCommandStats.COMMAND_ECHO);
     }
+
+    @Test
+    public void testGetCommandName_valid() {
+        expect.that(new EchoCommand().getCommandName()).isEqualTo(CMD_ECHO);
+    }
+
+    @Test
+    public void testGetCommandHelp_valid() {
+        expect.that(new EchoCommand().getCommandHelp()).isEqualTo(HELP_ECHO);
+    }
 }

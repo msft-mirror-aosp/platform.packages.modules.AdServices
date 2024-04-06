@@ -35,9 +35,10 @@ import java.util.Objects;
  */
 public final class TestDeviceHelper {
 
-    // Copied from android.content.Intent
+    /** Same as android.content.Intent */
     public static final String ACTION_BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
 
+    /** Intent used to launch AdServices settings */
     public static final String ADSERVICES_SETTINGS_INTENT = "android.adservices.ui.SETTINGS";
 
     private static final Logger sLogger =
@@ -45,10 +46,12 @@ public final class TestDeviceHelper {
 
     private static final ThreadLocal<ITestDevice> sDevice = new ThreadLocal<>();
 
+    /** Sets the singleton. */
     public static void setTestDevice(ITestDevice device) {
         sDevice.set(Objects.requireNonNull(device));
     }
 
+    /** Gets the singleton. */
     public static ITestDevice getTestDevice() {
         ITestDevice device = sDevice.get();
         if (device == null) {
@@ -60,13 +63,19 @@ public final class TestDeviceHelper {
     }
 
     // cmdFmt must be final because it's being passed to a method taking @FormatString
-    /** Executes AdServices shell command and returns the standard output. */
+    /**
+     * Executes AdServices shell command and returns the standard output, using the singleton
+     * device.
+     */
     @FormatMethod
     public static String runShellCommand(
             @FormatString final String cmdFmt, @Nullable Object... cmdArgs) {
         return runShellCommand(getTestDevice(), cmdFmt, cmdArgs);
     }
 
+    /**
+     * Executes AdServices shell command and returns the standard output, using the given device.
+     */
     @FormatMethod
     public static String runShellCommand(
             ITestDevice device, @FormatString String cmdFmt, @Nullable Object... cmdArgs) {
@@ -110,6 +119,7 @@ public final class TestDeviceHelper {
         return asCommandResult(result);
     }
 
+    /** Gets the device API level. */
     public static int getApiLevel() {
         int apiLevel = call(INativeDevice::getApiLevel);
 
@@ -120,14 +130,17 @@ public final class TestDeviceHelper {
         return apiLevel;
     }
 
+    /** Gets the given system property. */
     public static String getProperty(String name) {
         return call(device -> device.getProperty(name));
     }
 
+    /** Sets the given system property. */
     public static void setProperty(String name, String value) {
         run(device -> device.setProperty(name, value));
     }
 
+    /** Starts an activity (without specifying the user). */
     public static void startActivity(String intent) {
         String startActivityMsg = runShellCommand("am start -a %s", intent);
         assertWithMessage("result of starting %s", intent)
@@ -206,11 +219,15 @@ public final class TestDeviceHelper {
         }
     }
 
-    interface Command<T> {
+    /** Abstraction for a command that returns a result. */
+    public interface Command<T> {
+        /** Run Forrest, run! */
         T run(ITestDevice device) throws DeviceNotAvailableException;
     }
 
-    interface VoidCommand {
+    /** Abstraction for a command that does not return a result. */
+    public interface VoidCommand {
+        /** Run Forrest, run! */
         void run(ITestDevice device) throws DeviceNotAvailableException;
     }
 

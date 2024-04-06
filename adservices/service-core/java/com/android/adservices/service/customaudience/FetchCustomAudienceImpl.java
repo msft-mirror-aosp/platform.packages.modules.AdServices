@@ -127,7 +127,6 @@ public class FetchCustomAudienceImpl {
     @NonNull private final int mFledgeCustomAudienceMaxCustomHeaderSizeB;
     @NonNull private final int mFledgeCustomAudienceMaxCustomAudienceSizeB;
     @NonNull private final long mFledgeCustomAuienceMaxTotal;
-    private final boolean mFledgeAdSelectionFilteringEnabled;
     private final boolean mFledgeAuctionServerAdRenderIdEnabled;
     private final boolean mAuctionServerRequestFlagsEnabled;
     private final long mFledgeAuctionServerAdRenderIdMaxLength;
@@ -189,7 +188,8 @@ public class FetchCustomAudienceImpl {
         mMaxTrustedBiddingDataSizeB = flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB();
         mFledgeCustomAudienceMaxAdsSizeB = flags.getFledgeCustomAudienceMaxAdsSizeB();
         mFledgeCustomAudienceMaxNumAds = flags.getFledgeCustomAudienceMaxNumAds();
-        mFledgeAdSelectionFilteringEnabled = flags.getFledgeAdSelectionFilteringEnabled();
+        boolean frequencyCapFilteringEnabled = flags.getFledgeFrequencyCapFilteringEnabled();
+        boolean appInstallFilteringEnabled = flags.getFledgeAppInstallFilteringEnabled();
         mFledgeAuctionServerAdRenderIdEnabled = flags.getFledgeAuctionServerAdRenderIdEnabled();
         mAuctionServerRequestFlagsEnabled = flags.getFledgeAuctionServerRequestFlagsEnabled();
         mFledgeAuctionServerAdRenderIdMaxLength = flags.getFledgeAuctionServerAdRenderIdMaxLength();
@@ -203,19 +203,22 @@ public class FetchCustomAudienceImpl {
         // Instantiate request, response and result CustomAudienceBlobs
         mRequestCustomAudience =
                 new CustomAudienceBlob(
-                        mFledgeAdSelectionFilteringEnabled,
+                        frequencyCapFilteringEnabled,
+                        appInstallFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
                         mAuctionServerRequestFlagsEnabled);
         mResponseCustomAudience =
                 new CustomAudienceBlob(
-                        mFledgeAdSelectionFilteringEnabled,
+                        frequencyCapFilteringEnabled,
+                        appInstallFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
                         mAuctionServerRequestFlagsEnabled);
         mFusedCustomAudience =
                 new CustomAudienceBlob(
-                        mFledgeAdSelectionFilteringEnabled,
+                        frequencyCapFilteringEnabled,
+                        appInstallFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
                         mAuctionServerRequestFlagsEnabled);

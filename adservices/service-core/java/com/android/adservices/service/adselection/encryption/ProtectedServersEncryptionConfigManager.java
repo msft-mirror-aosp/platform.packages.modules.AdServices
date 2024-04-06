@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.adselection.encryption;
 
+import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.VALID_AD_SELECTION_ENCRYPTION_KEY_TYPES;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION;
+
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 import android.net.Uri;
@@ -32,6 +36,9 @@ import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -55,14 +62,16 @@ public class ProtectedServersEncryptionConfigManager
             @NonNull ProtectedServersEncryptionConfigDao protectedServersEncryptionConfigDao,
             @NonNull Flags flags,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
-            @NonNull ExecutorService lightweightExecutor) {
+            @NonNull ExecutorService lightweightExecutor,
+            @NonNull AdServicesLogger adServicesLogger) {
         super(
                 flags,
                 Clock.systemUTC(),
                 new AuctionEncryptionKeyParser(flags),
                 new JoinEncryptionKeyParser(flags),
                 adServicesHttpsClient,
-                lightweightExecutor);
+                lightweightExecutor,
+                adServicesLogger);
 
         Objects.requireNonNull(protectedServersEncryptionConfigDao);
         mProtectedServersEncryptionConfigDao = protectedServersEncryptionConfigDao;
@@ -76,14 +85,16 @@ public class ProtectedServersEncryptionConfigManager
             @NonNull AuctionEncryptionKeyParser auctionEncryptionKeyParser,
             @NonNull JoinEncryptionKeyParser joinEncryptionKeyParser,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
-            @NonNull ExecutorService lightweightExecutor) {
+            @NonNull ExecutorService lightweightExecutor,
+            @NonNull AdServicesLogger adServicesLogger) {
         super(
                 flags,
                 clock,
                 auctionEncryptionKeyParser,
                 joinEncryptionKeyParser,
                 adServicesHttpsClient,
-                lightweightExecutor);
+                lightweightExecutor,
+                adServicesLogger);
         mProtectedServersEncryptionConfigDao = protectedServersEncryptionConfigDao;
     }
 
@@ -98,11 +109,20 @@ public class ProtectedServersEncryptionConfigManager
             @Nullable Uri coordinatorUrl) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_LATEST_OHTTP_KEY_CONFIG);
 
+        ServerAuctionKeyFetchExecutionLoggerFactory serverAuctionKeyFetchExecutionLoggerFactory =
+                new ServerAuctionKeyFetchExecutionLoggerFactory(
+                        com.android.adservices.shared.util.Clock.getInstance(),
+                        mAdServicesLogger,
+                        mFlags);
+        FetchProcessLogger keyFetchLogger =
+                serverAuctionKeyFetchExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
+        keyFetchLogger.setSource(SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION);
         Uri fetchUri =
                 getKeyFetchUriOfType(
                         adSelectionEncryptionKeyType,
                         coordinatorUrl,
-                        mFlags.getFledgeAuctionServerCoordinatorUrlAllowlist());
+                        mFlags.getFledgeAuctionServerCoordinatorUrlAllowlist(),
+                        keyFetchLogger);
         if (fetchUri == null) {
             sLogger.e(
                     "Fetch URI shouldn't have been null."
@@ -118,16 +138,18 @@ public class ProtectedServersEncryptionConfigManager
 
         return FluentFuture.from(
                         immediateFuture(
-                                mFlags.getFledgeAuctionServerRefreshExpiredKeysDuringAuction()
-                                        ? getLatestActiveKeyFromDatabase(
-                                                adSelectionEncryptionKeyType, fetchUri.toString())
-                                        : getLatestKeyFromDatabase(
-                                                adSelectionEncryptionKeyType, fetchUri.toString())))
+                                maybeRefreshAndGetLatestKeyFromDatabase(
+                                        adSelectionEncryptionKeyType,
+                                        fetchUri.toString(),
+                                        keyFetchLogger)))
                 .transformAsync(
                         encryptionKey ->
                                 encryptionKey == null
                                         ? fetchPersistAndGetActiveKey(
-                                                adSelectionEncryptionKeyType, fetchUri, timeoutMs)
+                                                adSelectionEncryptionKeyType,
+                                                fetchUri,
+                                                timeoutMs,
+                                                keyFetchLogger)
                                         : immediateFuture(encryptionKey),
                         mLightweightExecutor)
                 .transform(
@@ -178,6 +200,25 @@ public class ProtectedServersEncryptionConfigManager
     }
 
     @Nullable
+    private AdSelectionEncryptionKey maybeRefreshAndGetLatestKeyFromDatabase(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
+            @NonNull String coordinatorUrl,
+            @NonNull FetchProcessLogger fetchProcessLogger) {
+        AdSelectionEncryptionKey key =
+                mFlags.getFledgeAuctionServerRefreshExpiredKeysDuringAuction()
+                        ? getLatestActiveKeyFromDatabase(
+                                adSelectionEncryptionKeyType, coordinatorUrl)
+                        : getLatestKeyFromDatabase(adSelectionEncryptionKeyType, coordinatorUrl);
+
+        if (key != null) {
+            fetchProcessLogger.setEncryptionKeySource(
+                    SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE);
+            fetchProcessLogger.logServerAuctionKeyFetchCalledStatsFromDatabase();
+        }
+        return key;
+    }
+
+    @Nullable
     private AdSelectionEncryptionKey getLatestActiveKeyFromDatabase(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             @NonNull String coordinatorUrl) {
@@ -200,11 +241,12 @@ public class ProtectedServersEncryptionConfigManager
     FluentFuture<AdSelectionEncryptionKey> fetchPersistAndGetActiveKey(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             Uri coordinatorUrl,
-            long timeoutMs) {
+            long timeoutMs,
+            FetchProcessLogger keyFetchLogger) {
         sLogger.d("Fetching keys");
         Instant fetchInstant = mClock.instant();
         return fetchAndPersistActiveKeysOfType(
-                        adSelectionKeyType, fetchInstant, timeoutMs, coordinatorUrl)
+                        adSelectionKeyType, fetchInstant, timeoutMs, coordinatorUrl, keyFetchLogger)
                 .transform(keys -> selectRandomDbKeyAndParse(keys), mLightweightExecutor);
     }
 
@@ -218,9 +260,9 @@ public class ProtectedServersEncryptionConfigManager
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             Instant keyExpiryInstant,
             long timeoutMs,
-            Uri fetchUri) {
-
-        return FluentFuture.from(fetchKeyPayload(adSelectionKeyType, fetchUri))
+            Uri fetchUri,
+            FetchProcessLogger keyFetchLogger) {
+        return FluentFuture.from(fetchKeyPayload(adSelectionKeyType, fetchUri, keyFetchLogger))
                 .transform(
                         response -> parseKeyResponse(response, adSelectionKeyType),
                         mLightweightExecutor)
@@ -251,6 +293,17 @@ public class ProtectedServersEncryptionConfigManager
                         key ->
                                 EncryptionKeyConstants.toAdSelectionEncryptionKeyType(
                                         key.getEncryptionKeyType()))
+                .collect(Collectors.toSet());
+    }
+
+    /** Returns the AdSelectionEncryptionKeyTypes which are absent. */
+    public Set<Integer> getAbsentAdSelectionEncryptionKeyTypes() {
+        return VALID_AD_SELECTION_ENCRYPTION_KEY_TYPES.stream()
+                .filter(
+                        keyType ->
+                                mProtectedServersEncryptionConfigDao
+                                        .getLatestExpiryNKeysByType(keyType, 1)
+                                        .isEmpty())
                 .collect(Collectors.toSet());
     }
 

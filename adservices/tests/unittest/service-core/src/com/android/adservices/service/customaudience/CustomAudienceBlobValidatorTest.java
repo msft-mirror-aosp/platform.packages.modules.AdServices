@@ -113,7 +113,7 @@ import java.util.Locale;
 
 public class CustomAudienceBlobValidatorTest {
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
     private final AdTechIdentifierValidator mValidBuyerValidator =
             new AdTechIdentifierValidator(CLASS_NAME, AD_TECH_ROLE_BUYER);
     private final CustomAudienceNameValidator mValidNameValidator =

@@ -27,14 +27,11 @@ import android.os.Parcel;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.common.annotations.SetFlagEnabled;
-import com.android.adservices.service.FlagsConstants;
 
 import org.junit.Rule;
 import org.junit.Test;
 
 @SmallTest
-@SetFlagEnabled(FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public class DecisionLogicTest {
     private static final String DECISION_LOGIC = "reportWin()";
 

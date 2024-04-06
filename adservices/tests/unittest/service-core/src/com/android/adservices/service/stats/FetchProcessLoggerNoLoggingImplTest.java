@@ -20,8 +20,6 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCOD
 
 import static org.mockito.Mockito.verifyZeroInteractions;
 
-import com.android.adservices.service.stats.pas.FetchProcessLoggerNoLoggingImpl;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -43,8 +41,8 @@ public class FetchProcessLoggerNoLoggingImplTest {
                 new FetchProcessLoggerNoLoggingImpl();
 
         encodingJsFetchStatsLoggerNoLogging.setAdTechId(TEST_AD_TECH_ID);
-        encodingJsFetchStatsLoggerNoLogging
-                .setJsDownloadStartTimestamp(TEST_JS_DOWNLOAD_START_TIMESTAMP);
+        encodingJsFetchStatsLoggerNoLogging.setJsDownloadStartTimestamp(
+                TEST_JS_DOWNLOAD_START_TIMESTAMP);
         encodingJsFetchStatsLoggerNoLogging.logEncodingJsFetchStats(ENCODING_FETCH_STATUS_SUCCESS);
         verifyZeroInteractions(mAdServicesLoggerMock);
     }

@@ -25,9 +25,9 @@ import android.adservices.shell.ShellCommandResult;
 import android.os.RemoteException;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -58,13 +58,15 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
     private final ListeningExecutorService mExecutorService;
 
     private final long mMaxCommandDurationMillis;
-    private ShellCommandFactorySupplier mShellCommandFactorySupplier;
+    private final AdServicesLogger mAdServicesLogger;
+    private final ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
     @VisibleForTesting
     public ShellCommandServiceImpl(
-            @NonNull ShellCommandFactorySupplier shellCommandFactorySupplier,
-            @NonNull ListeningExecutorService executorService,
-            @NonNull ScheduledThreadPoolExecutor schedulingExecutorService,
+            ShellCommandFactorySupplier shellCommandFactorySupplier,
+            ListeningExecutorService executorService,
+            ScheduledThreadPoolExecutor schedulingExecutorService,
+            AdServicesLogger adServicesLogger,
             long maxCommandDurationMillis) {
         mShellCommandFactorySupplier =
                 Objects.requireNonNull(
@@ -72,6 +74,7 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
 
         mExecutorService = executorService;
         mSchedulingExecutorService = schedulingExecutorService;
+        mAdServicesLogger = adServicesLogger;
         mMaxCommandDurationMillis = maxCommandDurationMillis;
     }
 
@@ -80,6 +83,7 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
                 new AdservicesShellCommandFactorySupplier(),
                 AdServicesExecutors.getLightWeightExecutor(),
                 AdServicesExecutors.getScheduler(),
+                AdServicesLoggerImpl.getInstance(),
                 MAX_COMMAND_DURATION_MILLIS);
     }
 
@@ -92,7 +96,8 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
         PrintWriter errPw = new PrintWriter(errStringWriter);
 
         AdServicesShellCommandHandler handler =
-                new AdServicesShellCommandHandler(outPw, errPw, mShellCommandFactorySupplier);
+                new AdServicesShellCommandHandler(
+                        outPw, errPw, mShellCommandFactorySupplier, mAdServicesLogger);
         FluentFuture.from(mExecutorService.submit(() -> handler.run(param.getCommandArgs())))
                 .withTimeout(
                         mMaxCommandDurationMillis,

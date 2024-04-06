@@ -58,6 +58,32 @@ public class SharedDbSchemaTrail {
                     + " TEXT "
                     + ")";
 
+    public static final String CREATE_TABLE_ENROLLMENT_V2 =
+            "CREATE TABLE "
+                    + EnrollmentDataContract.TABLE
+                    + " ("
+                    + EnrollmentDataContract.ENROLLMENT_ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + EnrollmentDataContract.COMPANY_ID
+                    + " TEXT, "
+                    + EnrollmentDataContract.SDK_NAMES
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_REPORTING_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ENCRYPTION_KEY_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ENROLLED_SITE
+                    + " TEXT, "
+                    + EnrollmentDataContract.ENROLLED_APIS
+                    + " TEXT "
+                    + ")";
+
     private static final String CREATE_TABLE_ENCRYPTION_KEY_V2 =
             "CREATE TABLE "
                     + EncryptionKeyTables.EncryptionKeyContract.TABLE
@@ -124,11 +150,18 @@ public class SharedDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV4() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV3());
+        createStatements.put(EnrollmentDataContract.TABLE, CREATE_TABLE_ENROLLMENT_V2);
+        return createStatements;
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(1, getCreateStatementByTableV1().values())
                     .put(2, getCreateStatementByTableV2().values())
                     .put(3, getCreateStatementByTableV3().values())
+                    .put(4, getCreateStatementByTableV4().values())
                     .build();
 
     /**
