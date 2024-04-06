@@ -66,11 +66,14 @@ import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.kanon.KAnonSignJoinManager;
 import com.android.adservices.service.kanon.KAnonUtil;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.stats.AdFilteringLogger;
+import com.android.adservices.service.stats.AdFilteringLoggerFactory;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.SignatureVerificationLogger;
+import com.android.adservices.service.stats.SignatureVerificationLoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -148,13 +151,19 @@ public abstract class AdSelectionRunner {
     @NonNull protected final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
     @NonNull protected final DebugReporting mDebugReporting;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
-    @NonNull private final AdFilterer mAdFilterer;
+    @NonNull private final FrequencyCapAdFilterer mFrequencyCapAdFilterer;
+    @NonNull private final AppInstallAdFilterer mAppInstallAdFilterer;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     @NonNull private final AdCounterHistogramUpdater mAdCounterHistogramUpdater;
     private final int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     private final boolean mShouldUseUnifiedTables;
     @NonNull private final KAnonSignJoinFactory mKAnonSignJoinFactory;
+    @NonNull private final SignatureVerificationLogger mSignatureVerificationLogger;
+
+    @NonNull protected final AdFilteringLogger mCustomAudienceFilteringLogger;
+
+    @NonNull protected final AdFilteringLogger mContextualAdsFilteringLogger;
 
     /**
      * @param context service context
@@ -180,13 +189,14 @@ public abstract class AdSelectionRunner {
             @NonNull final Flags flags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
-            @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdFilterer frequencyCapAdFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final DebugReporting debugReporting,
             final int callerUid,
             boolean shouldUseUnifiedTables,
-            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory) {
+            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory,
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -197,12 +207,13 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
-        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
         Objects.requireNonNull(adSelectionExecutionLogger);
         Objects.requireNonNull(kAnonSignJoinFactory);
+        Objects.requireNonNull(appInstallAdFilterer);
 
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
@@ -218,7 +229,7 @@ public abstract class AdSelectionRunner {
         mFlags = flags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
-        mAdFilterer = adFilterer;
+        mFrequencyCapAdFilterer = frequencyCapAdFilterer;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mCallerUid = callerUid;
@@ -226,6 +237,14 @@ public abstract class AdSelectionRunner {
         mDebugReporting = debugReporting;
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
+        mAppInstallAdFilterer = appInstallAdFilterer;
+        mSignatureVerificationLogger =
+                new SignatureVerificationLoggerFactory(mAdServicesLogger, mFlags).getInstance();
+        AdFilteringLoggerFactory adFilteringLoggerFactory =
+                new AdFilteringLoggerFactory(mAdServicesLogger, mFlags);
+        mCustomAudienceFilteringLogger =
+                adFilteringLoggerFactory.getCustomAudienceFilteringLogger();
+        mContextualAdsFilteringLogger = adFilteringLoggerFactory.getContextualAdFilteringLogger();
     }
 
     @VisibleForTesting
@@ -244,13 +263,14 @@ public abstract class AdSelectionRunner {
             @NonNull final Flags flags,
             int callerUid,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
-            @NonNull AdFilterer adFilterer,
+            @NonNull FrequencyCapAdFilterer frequencyCapAdFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final DebugReporting debugReporting,
             boolean shouldUseUnifiedTables,
-            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory) {
+            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory,
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -264,11 +284,12 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionExecutionLogger);
-        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
         Objects.requireNonNull(kAnonSignJoinFactory);
+        Objects.requireNonNull(appInstallAdFilterer);
 
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
@@ -284,7 +305,7 @@ public abstract class AdSelectionRunner {
         mFlags = flags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
-        mAdFilterer = adFilterer;
+        mFrequencyCapAdFilterer = frequencyCapAdFilterer;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mCallerUid = callerUid;
@@ -292,6 +313,14 @@ public abstract class AdSelectionRunner {
         mDebugReporting = debugReporting;
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
+        mAppInstallAdFilterer = appInstallAdFilterer;
+        mSignatureVerificationLogger =
+                new SignatureVerificationLoggerFactory(mAdServicesLogger, mFlags).getInstance();
+        AdFilteringLoggerFactory adFilteringLoggerFactory =
+                new AdFilteringLoggerFactory(mAdServicesLogger, mFlags);
+        mCustomAudienceFilteringLogger =
+                adFilteringLoggerFactory.getCustomAudienceFilteringLogger();
+        mContextualAdsFilteringLogger = adFilteringLoggerFactory.getContextualAdFilteringLogger();
     }
 
     /**
@@ -610,16 +639,10 @@ public abstract class AdSelectionRunner {
         AdSelectionConfig adSelectionConfigInput;
         if (!mFlags.getFledgeAdSelectionContextualAdsEnabled()) {
             // Empty all contextual ads if the feature is disabled
-            sLogger.v(
-                    "Contextual flow is disabled. FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = %s",
-                    mFlags.getFledgeAdSelectionContextualAdsEnabled());
+            sLogger.v("Contextual flow is disabled.");
             adSelectionConfigInput = getAdSelectionConfigWithoutContextualAds(adSelectionConfig);
         } else {
-            sLogger.v(
-                    "Contextual flow is enabled, filtering contextual ads."
-                            + " FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = %s",
-                    mFlags.getFledgeAdSelectionContextualAdsEnabled());
-            // mAdSelectionExecutionLogger
+            sLogger.v("Contextual flow is enabled, filtering contextual ads.");
             adSelectionConfigInput =
                     getAdSelectionConfigFilterContextualAds(adSelectionConfig, callerPackageName);
         }
@@ -839,10 +862,13 @@ public abstract class AdSelectionRunner {
 
     private AdSelectionConfig getAdSelectionConfigFilterContextualAds(
             AdSelectionConfig adSelectionConfig, String callerPackageName) {
+        logStartContextualAdsFiltering();
         Map<AdTechIdentifier, SignedContextualAds> filteredContextualAdsMap = new HashMap<>();
         sLogger.v("Filtering contextual ads in Ad Selection Config");
         ProtectedAudienceSignatureManager signatureManager = getSignatureManager();
         SignedContextualAds filtered;
+        int numOfContextualAdsRemovedWithZeroAds = 0;
+        int numOfContextualAdsRemovedWithUnverifiedSignatures = 0;
         for (Map.Entry<AdTechIdentifier, SignedContextualAds> entry :
                 adSelectionConfig.getPerBuyerSignedContextualAds().entrySet()) {
             if (!signatureManager.isVerified(
@@ -854,17 +880,26 @@ public abstract class AdSelectionRunner {
                         "Contextual ads for buyer: '%s' have an invalid signature and will be"
                                 + " removed from the auction",
                         entry.getKey());
+                numOfContextualAdsRemovedWithUnverifiedSignatures++;
                 continue;
             } else {
                 sLogger.v("Contextual ads for buyer '%s' is verified", entry.getKey());
             }
 
-            filtered = mAdFilterer.filterContextualAds(entry.getValue());
+            logStartContextualAdsAppInstallFiltering();
+            filtered = mAppInstallAdFilterer.filterContextualAds(entry.getValue());
+            logEndContextualAdsAppInstallFiltering();
+
+            logStartContextualAdsFcapFiltering();
+            filtered = mFrequencyCapAdFilterer.filterContextualAds(filtered);
+            logEndContextualAdsFcapFiltering();
+
             if (filtered.getAdsWithBid().isEmpty()) {
                 sLogger.v(
                         "All the ads are filtered for a contextual ads for buyer: %s. Contextual"
                                 + " ads object will be removed.",
                         entry.getKey());
+                numOfContextualAdsRemovedWithZeroAds++;
                 continue;
             }
 
@@ -876,26 +911,62 @@ public abstract class AdSelectionRunner {
                     entry.getValue().getAdsWithBid().size(),
                     filteredContextualAdsMap.get(entry.getKey()).getAdsWithBid().size());
         }
+        logEndContextualAdsFiltering(
+                adSelectionConfig.getPerBuyerSignedContextualAds(),
+                filteredContextualAdsMap,
+                numOfContextualAdsRemovedWithUnverifiedSignatures,
+                numOfContextualAdsRemovedWithZeroAds);
         return adSelectionConfig
                 .cloneToBuilder()
                 .setPerBuyerSignedContextualAds(filteredContextualAdsMap)
                 .build();
     }
 
+    private void logStartContextualAdsFiltering() {
+        mContextualAdsFilteringLogger.setAdFilteringStartTimestamp();
+    }
+
+    private void logStartContextualAdsAppInstallFiltering() {
+        mContextualAdsFilteringLogger.setAppInstallStartTimestamp();
+    }
+
+    private void logEndContextualAdsAppInstallFiltering() {
+        mContextualAdsFilteringLogger.setAppInstallEndTimestamp();
+    }
+
+    private void logStartContextualAdsFcapFiltering() {
+        mContextualAdsFilteringLogger.setFrequencyCapStartTimestamp();
+    }
+
+    private void logEndContextualAdsFcapFiltering() {
+        mContextualAdsFilteringLogger.setFrequencyCapEndTimestamp();
+    }
+
+    private void logEndContextualAdsFiltering(
+            Map<AdTechIdentifier, SignedContextualAds> beforeFiltering,
+            Map<AdTechIdentifier, SignedContextualAds> afterFiltering,
+            int numOfContextualAdsRemovedWithUnverifiedSignatures,
+            int numOfContextualAdsRemovedWithZeroAds) {
+        mContextualAdsFilteringLogger.setAdFilteringEndTimestamp();
+        mContextualAdsFilteringLogger.setTotalNumOfContextualAdsBeforeFiltering(
+                beforeFiltering.size());
+        mContextualAdsFilteringLogger.setNumOfContextualAdsFiltered(
+                beforeFiltering.size() - afterFiltering.size());
+        mContextualAdsFilteringLogger.setNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures(
+                numOfContextualAdsRemovedWithUnverifiedSignatures);
+        mContextualAdsFilteringLogger.setNumOfContextualAdsFilteredOutOfBiddingNoAds(
+                numOfContextualAdsRemovedWithZeroAds);
+        mContextualAdsFilteringLogger.close();
+    }
+
     @NonNull
     private ProtectedAudienceSignatureManager getSignatureManager() {
         boolean isEnrollmentCheckEnabled = !mFlags.getDisableFledgeEnrollmentCheck();
-        boolean isContextualAdsLoggingEnabled =
-                mFlags.getFledgeAdSelectionContextualAdsMetricsEnabled();
-        SignatureVerificationLogger signatureVerificationLogger =
-                new SignatureVerificationLogger(
-                        com.android.adservices.shared.util.Clock.getInstance(), mAdServicesLogger);
         return new ProtectedAudienceSignatureManager(
                 mEnrollmentDao,
                 mEncryptionKeyDao,
-                signatureVerificationLogger,
-                isEnrollmentCheckEnabled,
-                isContextualAdsLoggingEnabled);
+                mSignatureVerificationLogger,
+                isEnrollmentCheckEnabled);
     }
 
     private AdSelectionConfig getAdSelectionConfigWithoutContextualAds(

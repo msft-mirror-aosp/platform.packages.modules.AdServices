@@ -17,11 +17,15 @@
 package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
+import static com.android.adservices.common.AndroidSdk.RVC;
+import static com.android.adservices.common.AndroidSdk.SC;
+import static com.android.adservices.common.AndroidSdk.PRE_T;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.KEY_ADSERVICES_ENTRY_POINT_STATUS;
@@ -54,6 +58,7 @@ import android.adservices.common.IEnableAdServicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
 import android.adservices.common.UpdateAdIdRequest;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -64,6 +69,8 @@ import androidx.test.filters.FlakyTest;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
 import com.android.adservices.common.NoFailureSyncCallback;
+import com.android.adservices.common.RequiresSdkLevelAtLeastT;
+import com.android.adservices.common.RequiresSdkRange;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
@@ -88,6 +95,7 @@ import org.mockito.Mockito;
 
 import java.util.concurrent.CountDownLatch;
 
+@SpyStatic(AdServicesBackCompatInit.class)
 @SpyStatic(ConsentNotificationJobService.class)
 @SpyStatic(ConsentManager.class)
 @SpyStatic(FlagsFactory.class)
@@ -118,9 +126,12 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private NoFailureSyncCallback<ApiCallStats> mLogApiCallStatsCallback;
+    private static final String AD_SERVICES_APK_PKG_SUFFIX = "android.adservices.api";
+    private static final String EXT_SERVICES_APK_PKG_SUFFIX = "android.ext.services";
 
     private final AdServicesLogger mAdServicesLogger =
             Mockito.spy(AdServicesLoggerImpl.getInstance());
+    private AdServicesBackCompatInit mSpyBackCompatInit;
 
     @Before
     public void setup() {
@@ -140,8 +151,8 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
 
-
         ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
+
         doNothing()
                 .when(
                         () ->
@@ -156,7 +167,6 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         doReturn(mEditor).when(mEditor).putInt(anyString(), anyInt());
         doReturn(true).when(mEditor).commit();
         doReturn(true).when(mSharedPreferences).contains(anyString());
-
 
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
@@ -623,6 +633,183 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     }
 
     @Test
+    @RequiresSdkRange(atLeast = SC, atMost = PRE_T, reason = "It's for S only")
+    public void enableAdServicesTest_s_extServicesPackage_turnOnExtServicesComponents()
+            throws Exception {
+        SyncIEnableAdServicesCallback callback =
+                new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        ExtendedMockito.doReturn(true)
+                .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mFlags).getEnableBackCompatInit();
+        doReturn(true).when(mFlags).getEnableBackCompat();
+        doReturn(true).when(mFlags).getAdServicesEnabled();
+        doReturn(false).when(mFlags).getGlobalKillSwitch();
+
+        doReturn(EXT_SERVICES_APK_PKG_SUFFIX).when(mContext).getPackageName();
+        spyBackCompatInit();
+        ExtendedMockito.doReturn(true)
+                .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
+
+        mCommonService.enableAdServices(new AdServicesStates.Builder().build(), callback);
+        EnableAdServicesResponse response = callback.assertSuccess();
+        assertThat(response.isApiEnabled()).isTrue();
+        assertThat(response.isSuccess()).isTrue();
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        verify(mFlags).getEnableBackCompatInit();
+        verify(mSpyBackCompatInit).initializeComponents();
+        verify(mPackageManager, times(16))
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_ENABLED),
+                        eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    @RequiresSdkRange(atLeast = RVC, atMost = RVC, reason = "It's for R only")
+    public void enableAdServicesTest_r_extServicesPackage_turnOnExtServicesComponents()
+            throws InterruptedException {
+        SyncIEnableAdServicesCallback callback =
+                new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        ExtendedMockito.doReturn(true)
+                .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mFlags).getEnableBackCompatInit();
+        doReturn(true).when(mFlags).getEnableBackCompat();
+        doReturn(true).when(mFlags).getAdServicesEnabled();
+        doReturn(false).when(mFlags).getGlobalKillSwitch();
+
+        doReturn(EXT_SERVICES_APK_PKG_SUFFIX).when(mContext).getPackageName();
+        spyBackCompatInit();
+        ExtendedMockito.doReturn(true)
+                .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
+
+        mCommonService.enableAdServices(new AdServicesStates.Builder().build(), callback);
+        EnableAdServicesResponse response = callback.assertSuccess();
+        assertThat(response.isApiEnabled()).isTrue();
+        assertThat(response.isSuccess()).isTrue();
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        verify(mFlags).getEnableBackCompatInit();
+        verify(mSpyBackCompatInit).initializeComponents();
+        verify(mPackageManager, times(11))
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_ENABLED),
+                        eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    @RequiresSdkLevelAtLeastT
+    public void enableAdServicesTest_tPlus_extServicesPackage_turnOffExtServicesComponents()
+            throws InterruptedException {
+        SyncIEnableAdServicesCallback callback =
+                new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        ExtendedMockito.doReturn(true)
+                .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mFlags).getEnableBackCompatInit();
+        doReturn(true).when(mFlags).getEnableBackCompat();
+        doReturn(true).when(mFlags).getAdServicesEnabled();
+        doReturn(false).when(mFlags).getGlobalKillSwitch();
+        doReturn(EXT_SERVICES_APK_PKG_SUFFIX).when(mContext).getPackageName();
+        spyBackCompatInit();
+        ExtendedMockito.doReturn(true)
+                .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
+
+        mCommonService.enableAdServices(new AdServicesStates.Builder().build(), callback);
+        EnableAdServicesResponse response = callback.assertSuccess();
+        assertThat(response.isApiEnabled()).isTrue();
+        assertThat(response.isSuccess()).isTrue();
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        verify(mFlags).getEnableBackCompatInit();
+        verify(mSpyBackCompatInit).initializeComponents();
+        verify(mPackageManager, times(16))
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
+                        eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    @RequiresSdkLevelAtLeastT
+    public void enableAdServicesTest_tPlus_adServicesPackage_skipBackCompatInit()
+            throws InterruptedException {
+        SyncIEnableAdServicesCallback callback =
+                new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        ExtendedMockito.doReturn(true)
+                .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mFlags).getEnableBackCompatInit();
+        doReturn(AD_SERVICES_APK_PKG_SUFFIX).when(mContext).getPackageName();
+        spyBackCompatInit();
+        ExtendedMockito.doReturn(true)
+                .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
+
+        mCommonService.enableAdServices(new AdServicesStates.Builder().build(), callback);
+        EnableAdServicesResponse response = callback.assertSuccess();
+        assertThat(response.isApiEnabled()).isTrue();
+        assertThat(response.isSuccess()).isTrue();
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        verify(mFlags).getEnableBackCompatInit();
+        verify(mSpyBackCompatInit).initializeComponents();
+        verify(mPackageManager, never())
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
+                        eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    public void enableAdServicesTest_activitiesDisabled_skipUxEngine() throws InterruptedException {
+        SyncIEnableAdServicesCallback callback =
+                new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        ExtendedMockito.doReturn(true)
+                .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mFlags).getEnableBackCompatInit();
+        spyBackCompatInit();
+        ExtendedMockito.doReturn(false)
+                .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
+
+        mCommonService.enableAdServices(new AdServicesStates.Builder().build(), callback);
+        callback.assertFailed(STATUS_ADSERVICES_ACTIVITY_DISABLED);
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        verify(mFlags).getEnableBackCompatInit();
+        verify(mSpyBackCompatInit).initializeComponents();
+        verify(mUxEngine, never()).start(any());
+    }
+
+    @Test
+    @RequiresSdkLevelAtLeastT
+    public void enableAdServicesTest_activitiesEnabled_startUxEngine() throws InterruptedException {
+
+        SyncIEnableAdServicesCallback callback =
+                new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        ExtendedMockito.doReturn(true)
+                .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mFlags).getEnableBackCompatInit();
+        spyBackCompatInit();
+        ExtendedMockito.doReturn(true)
+                .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
+
+        mCommonService.enableAdServices(new AdServicesStates.Builder().build(), callback);
+        EnableAdServicesResponse response = callback.assertSuccess();
+        assertThat(response.isApiEnabled()).isTrue();
+        assertThat(response.isSuccess()).isTrue();
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        verify(mFlags).getEnableBackCompatInit();
+        verify(mSpyBackCompatInit).initializeComponents();
+        verify(mUxEngine).start(any());
+    }
+
+    @Test
     public void testUpdateAdIdChange() throws InterruptedException {
         mGetCommonCallbackLatch = new CountDownLatch(1);
         ExtendedMockito.doReturn(true)
@@ -900,5 +1087,11 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         private SyncIAdServicesCommonStatesCallback(int timeoutMs) {
             super(timeoutMs);
         }
+    }
+
+    private void spyBackCompatInit() {
+        mSpyBackCompatInit = Mockito.spy(new AdServicesBackCompatInit(mContext));
+        ExtendedMockito.doReturn(mSpyBackCompatInit)
+                .when(() -> AdServicesBackCompatInit.getInstance());
     }
 }

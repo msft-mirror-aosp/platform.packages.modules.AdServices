@@ -154,7 +154,7 @@ public class TopicsConnectionTest {
             // TODO (b/307748265): update to use FlagSetterRule
             String overrideString = enabled ? "true" : "false";
             ShellUtils.runShellCommand(
-                    "setprop debug.adservices.global_kill_switch " + overrideString);
+                    "device_config put adservices global_kill_switch " + overrideString);
         } else {
             flags.setEnableBackCompat(!enabled);
         }

@@ -27,8 +27,6 @@ import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 
-import androidx.test.filters.FlakyTest;
-
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -74,7 +72,6 @@ public final class PreviewApiTest extends CtsTopicsEndToEndTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 298870400)
     public void testRecordObservation() throws Exception {
         // The Test app has 2 SDKs: sdk1 calls the Topics API. This will record the usage for Sdk1
         // by default, recordObservation is true.

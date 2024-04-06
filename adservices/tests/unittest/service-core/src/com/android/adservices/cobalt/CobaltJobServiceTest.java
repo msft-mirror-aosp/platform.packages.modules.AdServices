@@ -18,8 +18,6 @@ package com.android.adservices.cobalt;
 
 import static com.android.adservices.cobalt.CobaltConstants.DEFAULT_API_KEY;
 import static com.android.adservices.cobalt.CobaltConstants.DEFAULT_RELEASE_STAGE;
-import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
-import static com.android.adservices.common.JobServiceTestHelper.createOnStopJobCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -297,6 +295,7 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
     }
 
     // TODO(b/296945680): remove Thread.sleep().
+
     /**
      * Waits for current running job to finish before mocked {@code Flags} finished mocking.
      *
@@ -315,7 +314,8 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
         doReturn(mMockCobaltPeriodicJob)
                 .when(() -> CobaltFactory.getCobaltPeriodicJob(any(), any()));
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyCobaltJobService);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyCobaltJobService);
 
         mSpyCobaltJobService.onStartJob(mMockJobParameters);
 
@@ -344,7 +344,8 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
         sJobScheduler.schedule(existingJobInfo);
         assertThat(sJobScheduler.getPendingJob(COBALT_LOGGING_JOB_ID)).isNotNull();
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyCobaltJobService);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyCobaltJobService);
 
         // Now verify that when the Job starts, it will be unscheduled.
         assertThat(mSpyCobaltJobService.onStartJob(mMockJobParameters)).isFalse();
@@ -360,11 +361,12 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
         // Feature is enabled.
         mockCobaltLoggingEnabled(/* overrideValue= */ true);
 
-        JobServiceCallback callback = createOnStopJobCallback(mSpyCobaltJobService);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobStopped(mSpyCobaltJobService);
         // Verify nothing throws.
         mSpyCobaltJobService.onStopJob(mMockJobParameters);
 
-        callback.assertJobFinished();
+        callback.assertJobStopped();
     }
 
     private void onStartJob_shouldDisableJobTrue() {

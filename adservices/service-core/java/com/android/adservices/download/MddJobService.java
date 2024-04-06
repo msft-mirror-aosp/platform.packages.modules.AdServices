@@ -165,6 +165,10 @@ public class MddJobService extends JobService {
                                 () -> {
                                     EnrollmentDataDownloadManager.getInstance()
                                             .readAndInsertEnrollmentDataFromMdd();
+                                    ListenableFuture<EncryptionDataDownloadManager.DownloadStatus>
+                                            unused =
+                                                    EncryptionDataDownloadManager.getInstance()
+                                                            .readAndInsertEncryptionDataFromMdd();
 
                                     // Logging has to happen before jobFinished() is called. Due to
                                     // JobScheduler infra, the JobService instance will end its

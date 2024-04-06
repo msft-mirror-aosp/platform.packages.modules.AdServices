@@ -17,12 +17,31 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesFlag;
+import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
+import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
+import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_FLEX_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
@@ -107,24 +126,24 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetTopicsEpochJobFlexMs() {
-        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
                 KEY_TOPICS_EPOCH_JOB_FLEX_MS,
                 TOPICS_EPOCH_JOB_FLEX_MS,
-                flags -> flags.getTopicsEpochJobFlexMs());
+                Flags::getTopicsEpochJobFlexMs);
     }
 
     @Test
     public void testGetTopicsPercentageForRandomTopic() {
-        mFlagsTestHelper.testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
                 KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
                 TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
-                flags -> flags.getTopicsPercentageForRandomTopic());
+                Flags::getTopicsPercentageForRandomTopic);
     }
 
     @Test
     public void testGetAdIdKillSwitch() {
         mFlagsTestHelper.testUnguardedLegacyKillSwitch(
-                KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", flags -> flags.getAdIdKillSwitch());
+                KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", Flags::getAdIdKillSwitch);
     }
 
     @Test
@@ -132,15 +151,58 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testLegacyKillSwitch(
                 KEY_MEASUREMENT_KILL_SWITCH,
                 "MEASUREMENT_KILL_SWITCH",
-                flags -> flags.getLegacyMeasurementKillSwitch());
+                Flags::getLegacyMeasurementKillSwitch);
     }
 
     @Test
-    public void testGetMeasurementEnabled() {
-        mFlagsTestHelper.testFeatureFlagBackedByLegacyKillSwitch(
-                KEY_MEASUREMENT_KILL_SWITCH,
+    public void testGetMeasurementApiDeleteRegistrationsKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
                 "MEASUREMENT_KILL_SWITCH",
-                flags -> flags.getMeasurementEnabled());
+                Flags::getMeasurementApiDeleteRegistrationsKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiDeleteRegistrationsKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
+                "MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH",
+                value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
+                Flags::getMeasurementApiDeleteRegistrationsKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatusKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
+                "MEASUREMENT_API_STATUS_KILL_SWITCH",
+                Flags::getMeasurementApiStatusKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatusKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
+                "MEASUREMENT_API_STATUS_KILL_SWITCH",
+                value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
+                Flags::getMeasurementApiStatusKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterSourceKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH",
+                Flags::getMeasurementApiRegisterSourceKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterSourceKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH",
+                value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
+                Flags::getMeasurementApiRegisterSourceKillSwitch);
     }
 
     @Test
@@ -149,7 +211,24 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH,
                 "MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
-                flags -> flags.getMeasurementAttributionFallbackJobEnabled());
+                Flags::getMeasurementAttributionFallbackJobEnabled);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterTriggerKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH",
+                Flags::getMeasurementApiRegisterTriggerKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterTriggerKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementApiRegisterTriggerKillSwitch);
     }
 
     @Test
@@ -157,14 +236,75 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testFeatureFlagGuardedByGlobalKs(
                 KEY_COBALT_LOGGING_ENABLED,
                 "COBALT_LOGGING_ENABLED",
-                flags -> flags.getCobaltLoggingEnabled());
+                Flags::getCobaltLoggingEnabled);
     }
 
     @Test
     public void testGetMddLoggerEnabled() {
         mFlagsTestHelper.testFeatureFlagBackedByLegacyKillSwitch(
-                KEY_MDD_LOGGER_KILL_SWITCH,
-                "MDD_LOGGER_KILL_SWITCH",
-                flags -> flags.getMddLoggerEnabled());
+                KEY_MDD_LOGGER_KILL_SWITCH, "MDD_LOGGER_KILL_SWITCH", Flags::getMddLoggerEnabled);
+    }
+
+    @Test
+    public void testConsentNotificationDebugMode() {
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+                KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
+                CONSENT_NOTIFICATION_DEBUG_MODE,
+                Flags::getConsentNotificationDebugMode);
+    }
+
+    @Test
+    public void testConsentNotificationActivityDebugMode() {
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+                KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                Flags::getConsentNotificationActivityDebugMode);
+    }
+
+    @Test
+    public void testConsentManagerOTADebugMode() {
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+                KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
+                DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE,
+                Flags::getConsentManagerOTADebugMode);
+    }
+
+    @Test
+    public void testConsentNotifiedDebugMode() {
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+                KEY_CONSENT_NOTIFIED_DEBUG_MODE,
+                CONSENT_NOTIFIED_DEBUG_MODE,
+                Flags::getConsentNotifiedDebugMode);
+    }
+
+    @Test
+    public void testConsentManagerDebugMode() {
+        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
+                KEY_CONSENT_MANAGER_DEBUG_MODE,
+                "CONSENT_MANAGER_DEBUG_MODE",
+                /* guard= */ null,
+                Flags::getConsentManagerDebugMode);
+    }
+
+    @Test
+    public void testClassifierType() {
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+                KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE, Flags::getClassifierType);
+    }
+
+    @Test
+    public void testGetMaintenanceJobPeriodMs() {
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
+                KEY_MAINTENANCE_JOB_PERIOD_MS,
+                MAINTENANCE_JOB_PERIOD_MS,
+                Flags::getMaintenanceJobPeriodMs);
+    }
+
+    @Test
+    public void testGetMaintenanceJobFlexMs() {
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
+                KEY_MAINTENANCE_JOB_FLEX_MS,
+                MAINTENANCE_JOB_FLEX_MS,
+                Flags::getMaintenanceJobFlexMs);
     }
 }

@@ -147,7 +147,7 @@ public class CustomAudienceFieldSizeValidatorTest {
     @Test
     public void testAdsTooBig() {
         AdDataConversionStrategy adDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
         List<AdData> tooBigAds =
                 List.of(
                         new AdData.Builder()

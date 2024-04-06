@@ -71,6 +71,31 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}'s attribution scopes.
+     *
+     * @param sourceId ID of the requested Source.
+     * @return a list of attribution scopes.
+     */
+    List<String> getSourceAttributionScopes(@NonNull String sourceId) throws DatastoreException;
+
+    /**
+     * Updates existing sources based on the following criteria for attribution scope:
+     *
+     * <ol>
+     *   <li>Deactivates sources with {@link Source#getMaxEventStates()} different from {@code
+     *       pendingSource}.
+     *   <li>Deactivates sources with {@link Source#getAttributionScopeLimit()} smaller than {@code
+     *       pendingSource}.
+     *   <li>Removes attribution scopes for existing sources not selected as the latest k
+     *       attribution scopes, where k = {@code pendingSource#getAttributionScopeLimit()}.
+     * </ol>
+     *
+     * @param pendingSource The pending source to compare against existing sources.
+     * @throws DatastoreException If an error occurs while processing the data in the datastore.
+     */
+    void updateSourcesForAttributionScope(@NonNull Source pendingSource) throws DatastoreException;
+
+    /**
      * Queries and returns the {@link Source}.
      *
      * @param sourceId ID of the requested Source
@@ -730,4 +755,15 @@ public interface IMeasurementDao {
      */
     long countDistinctDebugAdIdsUsedByEnrollment(@NonNull String enrollmentId)
             throws DatastoreException;
+
+    /**
+     * Returns the number of unique navigation sources by reporting origin and registration id.
+     *
+     * @param reportingOrigin the reporting origin to match.
+     * @param registrationId the registration id to match.
+     * @return the number of matched navigation sources.
+     * @throws DatastoreException
+     */
+    long countNavigationSourcesPerReportingOrigin(
+            @NonNull Uri reportingOrigin, @NonNull String registrationId) throws DatastoreException;
 }

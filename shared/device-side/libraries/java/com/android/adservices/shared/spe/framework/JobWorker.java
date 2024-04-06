@@ -64,10 +64,12 @@ public interface JobWorker {
      * @param executionRuntimeParameters the jobParameters passed in from {@link
      *     JobService#onStartJob(JobParameters)} and extract useful info into a {@link
      *     ExecutionRuntimeParameters}.
-     * @return a {@link Future} that will be executed by {@link JobScheduler} in {@link
-     *     JobService#onStartJob(JobParameters)}.
+     * @return a {@link ListenableFuture} that will be executed by {@link JobScheduler} in {@link
+     *     JobService#onStartJob(JobParameters)}. For {@link ExecutionResult}, please use {@link
+     *     ExecutionResult#SUCCESS}. Check {@link ExecutionResult} for more details if you configure
+     *     the job that needs to compute the execution result dynamically.
      */
-    ListenableFuture<Void> getExecutionFuture(
+    ListenableFuture<ExecutionResult> getExecutionFuture(
             Context context, ExecutionRuntimeParameters executionRuntimeParameters);
 
     /**

@@ -94,7 +94,7 @@ import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.pas.FetchProcessLogger;
+import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -226,7 +226,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         .adSelectionEntryDao();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
@@ -368,8 +368,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                                         .build()))
                 .when(mAdServicesHttpsClientMock)
                 .fetchPayloadWithLogging(
-                        any(AdServicesHttpClientRequest.class),
-                        any(FetchProcessLogger.class));
+                        any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class));
     }
 
     @Test
@@ -493,7 +492,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     public void testUpdateHistogramExceedingRateLimitNotifiesError() throws InterruptedException {
         class FlagsWithLowRateLimit implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -763,7 +762,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
             }
 
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -883,7 +882,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
             }
 
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 

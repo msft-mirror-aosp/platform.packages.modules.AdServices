@@ -61,8 +61,8 @@ public interface AuctionServerPayloadMetricsStrategy {
 
     /**
      * Loops thorough each buyer and logs {@link
-     * com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats}
-     * with extended PAS metrics
+     * com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats} with
+     * extended PAS metrics
      */
     void logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
             Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> statsMap,

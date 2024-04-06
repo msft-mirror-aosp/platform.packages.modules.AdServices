@@ -59,7 +59,8 @@ public class BuyerInputGenerator {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final EncodedPayloadDao mEncodedSignalsDao;
-    @NonNull private final AdFilterer mAdFilterer;
+    @NonNull private final FrequencyCapAdFilterer mFrequencyCapAdFilterer;
+    @NonNull private final AppInstallAdFilterer mAppInstallAdFilterer;
     @NonNull private final Clock mClock;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
@@ -76,7 +77,7 @@ public class BuyerInputGenerator {
     public BuyerInputGenerator(
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final EncodedPayloadDao encodedSignalsDaoDao,
-            @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdFilterer frequencyCapAdFilterer,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             long customAudienceActiveTimeWindowInMs,
@@ -85,19 +86,21 @@ public class BuyerInputGenerator {
             @NonNull AuctionServerDataCompressor dataCompressor,
             boolean enableOmitAds,
             @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(encodedSignalsDaoDao);
-        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(dataCompressor);
         Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(appInstallAdFilterer);
 
         mCustomAudienceDao = customAudienceDao;
         mEncodedSignalsDao = encodedSignalsDaoDao;
-        mAdFilterer = adFilterer;
+        mFrequencyCapAdFilterer = frequencyCapAdFilterer;
         mClock = Clock.systemUTC();
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
@@ -110,6 +113,7 @@ public class BuyerInputGenerator {
         mAuctionServerPayloadMetricsStrategy = auctionServerPayloadMetricsStrategy;
         mFlags = flags;
         mPasExtendedMetricsEnabled = mFlags.getPasExtendedMetricsEnabled();
+        mAppInstallAdFilterer = appInstallAdFilterer;
     }
 
     /**
@@ -268,7 +272,10 @@ public class BuyerInputGenerator {
                         "After auction server filtering : %s active CAs from device",
                         filteredCustomAudiences.size()));
         if (mEnableAdFilter) {
-            filteredCustomAudiences = mAdFilterer.filterCustomAudiences(filteredCustomAudiences);
+            filteredCustomAudiences =
+                    mAppInstallAdFilterer.filterCustomAudiences(filteredCustomAudiences);
+            filteredCustomAudiences =
+                    mFrequencyCapAdFilterer.filterCustomAudiences(filteredCustomAudiences);
             sLogger.v(
                     String.format(
                             "After ad filtering : %s active CAs from device",
