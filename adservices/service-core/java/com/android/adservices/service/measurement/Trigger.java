@@ -78,6 +78,7 @@ public class Trigger {
     @Nullable private Uri mAggregationCoordinatorOrigin;
     private SourceRegistrationTimeConfig mAggregatableSourceRegistrationTimeConfig;
     @Nullable private String mTriggerContextId;
+    @Nullable private String mAttributionScope;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -133,7 +134,8 @@ public class Trigger {
                 && Objects.equals(mPlatformAdId, trigger.mPlatformAdId)
                 && Objects.equals(mDebugAdId, trigger.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, trigger.mRegistrationOrigin)
-                && Objects.equals(mTriggerContextId, trigger.mTriggerContextId);
+                && Objects.equals(mTriggerContextId, trigger.mTriggerContextId)
+                && Objects.equals(mAttributionScope, trigger.mAttributionScope);
     }
 
     @Override
@@ -162,7 +164,8 @@ public class Trigger {
                 mDebugAdId,
                 mRegistrationOrigin,
                 mAggregatableSourceRegistrationTimeConfig,
-                mTriggerContextId);
+                mTriggerContextId,
+                mAttributionScope);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -570,6 +573,12 @@ public class Trigger {
         }
     }
 
+    /** Returns attribution scope for the trigger. */
+    @Nullable
+    public String getAttributionScope() {
+        return mAttributionScope;
+    }
+
     /** Builder for {@link Trigger}. */
     public static final class Builder {
 
@@ -759,10 +768,16 @@ public class Trigger {
             mBuilding.mAggregatableSourceRegistrationTimeConfig = config;
             return this;
         }
-
         /** See {@link Trigger#getTriggerContextId()}. */
         public Builder setTriggerContextId(@Nullable String triggerContextId) {
             mBuilding.mTriggerContextId = triggerContextId;
+            return this;
+        }
+
+        /** See {@link Trigger#getAttributionScope()}. */
+        @NonNull
+        public Builder setAttributionScope(@Nullable String attributionScope) {
+            mBuilding.mAttributionScope = attributionScope;
             return this;
         }
 
