@@ -305,6 +305,20 @@ public class AsyncTriggerFetcher {
                 builder.setTriggerContextId(contextIdOpt.get());
             }
 
+            if (mFlags.getMeasurementEnableAttributionScope()
+                    && !json.isNull(TriggerHeaderContract.ATTRIBUTION_SCOPE)) {
+                Optional<String> attributionScope =
+                        FetcherUtil.extractString(
+                                json.get(TriggerHeaderContract.ATTRIBUTION_SCOPE),
+                                mFlags.getMeasurementMaxAttributionScopeLength());
+                if (attributionScope.isEmpty()) {
+                    asyncFetchStatus.setEntityStatus(
+                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+                    return Optional.empty();
+                }
+                builder.setAttributionScope(attributionScope.get());
+            }
+
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
@@ -788,5 +802,6 @@ public class AsyncTriggerFetcher {
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
         String AGGREGATABLE_SOURCE_REGISTRATION_TIME = "aggregatable_source_registration_time";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
+        String ATTRIBUTION_SCOPE = "attribution_scope";
     }
 }
