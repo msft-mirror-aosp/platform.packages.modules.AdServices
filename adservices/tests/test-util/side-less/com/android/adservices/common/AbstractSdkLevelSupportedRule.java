@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
  * <p><b>NOTE: </b>this class should NOT be used as {@code ClassRule}, as it would result in a "no
  * tests run" scenario if it throws a {@link AssumptionViolatedException}.
  */
-abstract class AbstractSdkLevelSupportedRule implements TestRule {
+public abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
     private static final String TAG = "SdkLevelSupportRule";
 
@@ -60,13 +60,13 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
     private final Range mDefaultRequiredRange;
     protected final Logger mLog;
 
-    AbstractSdkLevelSupportedRule(RealLogger logger, Range defaultRange) {
+    protected AbstractSdkLevelSupportedRule(RealLogger logger, Range defaultRange) {
         mLog = new Logger(Objects.requireNonNull(logger), TAG);
         mDefaultRequiredRange = Objects.requireNonNull(defaultRange);
         mLog.d("Constructor: logger=%s, defaultRange=%s", logger, defaultRange);
     }
 
-    AbstractSdkLevelSupportedRule(RealLogger logger) {
+    protected AbstractSdkLevelSupportedRule(RealLogger logger) {
         this(logger, /* defaultRange= */ Range.forAnyLevel());
     }
 

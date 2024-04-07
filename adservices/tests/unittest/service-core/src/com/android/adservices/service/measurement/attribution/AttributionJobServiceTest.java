@@ -64,6 +64,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
+import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -105,6 +106,7 @@ public class AttributionJobServiceTest {
                     .spyStatic(AttributionJobService.class)
                     .spyStatic(DatastoreManagerFactory.class)
                     .spyStatic(DebugReportingJobService.class)
+                    .spyStatic(ImmediateAggregateReportingJobService.class)
                     .spyStatic(FlagsFactory.class)
                     .mockStatic(ServiceCompatUtils.class)
                     .spyStatic(AdServicesJobServiceLogger.class)
@@ -327,6 +329,14 @@ public class AttributionJobServiceTest {
                     ExtendedMockito.verify(
                             () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)),
                             timeout(WAIT_IN_MILLIS).times(1));
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)),
+                            timeout(WAIT_IN_MILLIS).times(1));
+                    ExtendedMockito.verify(
+                            () ->
+                                    ImmediateAggregateReportingJobService.scheduleIfNeeded(
+                                            any(), eq(false)),
+                            timeout(WAIT_IN_MILLIS).times(1));
                     verify(mSpyService, never()).scheduleImmediately(any());
                 });
     }
@@ -337,11 +347,8 @@ public class AttributionJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    ExtendedMockito.doNothing()
-                            .when(
-                                    () ->
-                                            AttributionJobService.scheduleIfNeeded(
-                                                    any(), anyBoolean()));
+
+                    doNothing().when(mSpyService).scheduleImmediately(any());
 
                     // Pending records
                     ExtendedMockito.doReturn(
@@ -366,6 +373,15 @@ public class AttributionJobServiceTest {
                             never());
                     verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
                             .scheduleImmediately(any());
+
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)),
+                            timeout(WAIT_IN_MILLIS).times(1));
+                    ExtendedMockito.verify(
+                            () ->
+                                    ImmediateAggregateReportingJobService.scheduleIfNeeded(
+                                            any(), eq(false)),
+                            timeout(WAIT_IN_MILLIS).times(1));
                 });
     }
 
@@ -696,6 +712,11 @@ public class AttributionJobServiceTest {
         ExtendedMockito.doNothing().when(() -> AttributionJobService.schedule(any(), any()));
         ExtendedMockito.doNothing()
                 .when(() -> DebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                ImmediateAggregateReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean()));
         mockGetAdServicesJobServiceLogger(mSpyLogger);
 
         // Execute

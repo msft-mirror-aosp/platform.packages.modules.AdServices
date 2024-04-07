@@ -45,6 +45,21 @@ public abstract class ProtectedServersEncryptionConfigDao {
             int count);
 
     /**
+     * Returns the EncryptionKey of given key type and fetched from the given coordinator url with
+     * the latest expiry instant.
+     *
+     * @param encryptionKeyType Type of Key to query
+     * @return Returns EncryptionKey with latest expiry instant.
+     */
+    @Query(
+            "SELECT * FROM protected_servers_encryption_config "
+                    + "WHERE encryption_key_type = :encryptionKeyType "
+                    + "ORDER BY expiry_instant DESC "
+                    + "LIMIT :count ")
+    public abstract List<DBProtectedServersEncryptionConfig> getLatestExpiryNKeysByType(
+            @EncryptionKeyConstants.EncryptionKeyType int encryptionKeyType, int count);
+
+    /**
      * Fetches N number of non-expired EncryptionKey of given key type and given coordinator url.
      *
      * @param encryptionKeyType Type of EncryptionKey to Query

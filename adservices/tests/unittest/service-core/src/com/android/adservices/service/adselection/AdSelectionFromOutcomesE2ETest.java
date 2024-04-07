@@ -264,7 +264,7 @@ public class AdSelectionFromOutcomesE2ETest {
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
@@ -922,10 +922,6 @@ public class AdSelectionFromOutcomesE2ETest {
             return -1;
         }
 
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return false;
-        }
 
         @Override
         public boolean getFledgeAdSelectionPrebuiltUriEnabled() {

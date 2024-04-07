@@ -121,6 +121,29 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateEnrollmentDefaultExampleContentValuesV2() {
+        ContentValues values = new ContentValues();
+        values.put(EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID, ENROLLMENT_ID);
+        values.put(EnrollmentTables.EnrollmentDataContract.COMPANY_ID, ENROLLED_APIS);
+        values.put(EnrollmentTables.EnrollmentDataContract.SDK_NAMES, SDK_NAMES);
+        values.put(
+                EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL,
+                ATTRIBUTION_SOURCE_REGISTRATION_URL);
+        values.put(
+                EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL,
+                ATTRIBUTION_TRIGGER_REGISTRATION_URL);
+        values.put(
+                EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_REPORTING_URL,
+                ATTRIBUTION_REPORTING_URL);
+        values.put(
+                EnrollmentTables.EnrollmentDataContract.REMARKETING_RESPONSE_BASED_REGISTRATION_URL,
+                REMARKETING_RESPONSE_BASED_REGISTRATION_URL);
+        values.put(EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL, ENCRYPTION_KEY_URL);
+        values.put(EnrollmentTables.EnrollmentDataContract.ENROLLED_SITE, ENCRYPTION_KEY_URL);
+        values.put(EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS, ENROLLED_APIS);
+        return values;
+    }
+
     public static ContentValues generateEnrollmentUniqueExampleContentValuesV1() {
         ContentValues values = new ContentValues();
         values.put(EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID, ENROLLMENT_ID_U);

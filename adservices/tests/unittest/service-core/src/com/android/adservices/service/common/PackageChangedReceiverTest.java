@@ -53,6 +53,7 @@ import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -124,7 +125,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                                 mMockCacheManager,
                                 mBlockedTopicsManager,
                                 mMockAppUpdateManager,
-                                FlagsFactory.getFlagsForTest()));
+                                FakeFlagsFactory.getFlagsForTest()));
         doReturn(true).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         PackageChangedReceiver.enableReceiver(sContext, mMockFlags);

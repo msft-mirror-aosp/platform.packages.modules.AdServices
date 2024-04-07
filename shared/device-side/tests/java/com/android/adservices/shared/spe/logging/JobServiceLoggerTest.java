@@ -26,7 +26,14 @@ import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.CANCELLED_BY_SCHEDULER;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITHOUT_RETRY;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITH_RETRY;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
 
+import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -310,6 +317,57 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
                         sharedPreferences.getLong(
                                 keyJobStopTime, UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP))
                 .isEqualTo(UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP);
+    }
+
+    @Test
+    public void testRecordJobFinishedByExecutionResult_success() {
+        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+
+        // Mock the logger to not actually do logging.
+        doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
+        mLogger.recordJobFinished(JOB_ID_1, SUCCESS);
+
+        verify(mLogger)
+                .recordJobFinished(JOB_ID_1, /* isSuccessful */ true, /* shouldRetry */ false);
+    }
+
+    @Test
+    public void testRecordJobFinishedByExecutionResult_failureWithoutRetry() {
+        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+
+        // Mock the logger to not actually do logging.
+        doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
+        mLogger.recordJobFinished(JOB_ID_1, FAILURE_WITHOUT_RETRY);
+
+        verify(mLogger)
+                .recordJobFinished(JOB_ID_1, /* isSuccessful */ false, /* shouldRetry */ false);
+    }
+
+    @Test
+    public void testRecordJobFinishedByExecutionResult_failureWithRetry() {
+        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+
+        // Mock the logger to not actually do logging.
+        doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
+        mLogger.recordJobFinished(JOB_ID_1, FAILURE_WITH_RETRY);
+
+        verify(mLogger)
+                .recordJobFinished(JOB_ID_1, /* isSuccessful */ false, /* shouldRetry */ true);
+    }
+
+    @Test
+    public void testRecordJobFinishedByExecutionResult_invalidResult() {
+        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+
+        // Mock the logger to not actually do logging.
+        doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> mLogger.recordJobFinished(JOB_ID_1, CANCELLED_BY_SCHEDULER));
     }
 
     @Test

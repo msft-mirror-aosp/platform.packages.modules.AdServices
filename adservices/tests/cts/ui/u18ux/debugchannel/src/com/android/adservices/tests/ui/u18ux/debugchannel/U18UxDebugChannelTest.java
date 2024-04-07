@@ -64,6 +64,8 @@ public class U18UxDebugChannelTest {
     public void setUp() throws Exception {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+        UiUtils.setBinderTimeout();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         UiUtils.resetAdServicesConsentData(sContext);
 

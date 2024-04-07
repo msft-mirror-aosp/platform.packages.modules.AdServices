@@ -36,6 +36,9 @@ import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITHOUT_RETRY;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITH_RETRY;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
 import static com.android.adservices.shared.util.LogUtil.VERBOSE;
 
 import android.annotation.NonNull;
@@ -49,6 +52,8 @@ import android.os.Build;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.spe.JobServiceConstants;
+import com.android.adservices.shared.spe.framework.AbstractJobService;
+import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.util.Clock;
 import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
@@ -114,13 +119,14 @@ public class JobServiceLogger {
     }
 
     /**
-     * Record that the {@link JobService#jobFinished(JobParameters, boolean)} is called or is about
+     * Records that the {@link JobService#jobFinished(JobParameters, boolean)} is called or is about
      * to be called.
      *
      * @param jobId the unique id of the job to log for.
      * @param isSuccessful indicates if the execution is successful.
      * @param shouldRetry indicates whether to retry the execution.
      */
+    // TODO(b/325292968): make this method private once all jobs migrated to using SPE.
     public void recordJobFinished(int jobId, boolean isSuccessful, boolean shouldRetry) {
         if (!mFlags.getBackgroundJobsLoggingEnabled()) {
             return;
@@ -140,6 +146,38 @@ public class JobServiceLogger {
                                 mClock.currentTimeMillis(),
                                 resultCode,
                                 UNAVAILABLE_STOP_REASON));
+    }
+
+    /**
+     * Records that the {@link JobService#jobFinished(JobParameters, boolean)} is called or is about
+     * to be called.
+     *
+     * <p>This is used by {@link AbstractJobService}, a part of SPE (Scheduling Policy Engine)
+     * framework.
+     *
+     * @param jobId the unique id of the job to log for.
+     * @param executionResult the {@link ExecutionResult} for current execution.
+     */
+    public void recordJobFinished(int jobId, ExecutionResult executionResult) {
+        if (!mFlags.getBackgroundJobsLoggingEnabled()) {
+            return;
+        }
+
+        boolean isSuccessful = false;
+        boolean shouldRetry = false;
+
+        if (executionResult.equals(SUCCESS)) {
+            isSuccessful = true;
+        } else if (executionResult.equals(FAILURE_WITH_RETRY)) {
+            shouldRetry = true;
+        } else if (!executionResult.equals(FAILURE_WITHOUT_RETRY)) {
+            // Throws if the execution result to log is not one of SUCCESS, FAILURE_WITH_RETRY, or
+            // FAILURE_WITHOUT_RETRY.
+            throw new IllegalStateException(
+                    "Invalid ExecutionResult: " + executionResult + ", jobId: " + jobId);
+        }
+
+        recordJobFinished(jobId, isSuccessful, shouldRetry);
     }
 
     /**
