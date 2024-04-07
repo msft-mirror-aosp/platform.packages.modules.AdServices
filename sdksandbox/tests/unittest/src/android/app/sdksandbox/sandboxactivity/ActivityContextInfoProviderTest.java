@@ -17,6 +17,7 @@
 package android.app.sdksandbox.sandboxactivity;
 
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeTrue;
 
@@ -103,8 +104,6 @@ public class ActivityContextInfoProviderTest {
         final IBinder token = mRegistry.register(mSdkContext, mHandler);
         Intent intent = buildSandboxActivityIntent(token);
 
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
-
         assertThat(mContextInfoProvider.getActivityContextInfo(intent))
                 .isInstanceOf(ActivityContextInfo.class);
     }
@@ -116,7 +115,6 @@ public class ActivityContextInfoProviderTest {
     @Test
     public void testGetActivityContextInfoProviderFailForNonRegisteredHandlers() {
         final Intent intent = buildSandboxActivityIntent(new Binder());
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
 
         IllegalArgumentException exception =
                 assertThrows(
@@ -129,24 +127,6 @@ public class ActivityContextInfoProviderTest {
                                         "There is no registered SdkSandboxActivityHandler for the"
                                                 + " passed intent"))
                 .isTrue();
-    }
-
-    /**
-     * Ensure that the customized SDK flag has to be enabled before retrieving the
-     * ActivityContextInfo instance.
-     */
-    @Test
-    public void testGetActivityContextInfoProviderFailIfCustomizedSdkFlagIsDisabled() {
-        final IBinder token = mRegistry.register(mSdkContext, mHandler);
-        Intent intent = buildSandboxActivityIntent(token);
-
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(false);
-
-        IllegalStateException exception =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> mContextInfoProvider.getActivityContextInfo(intent));
-        assertThat(exception.getMessage()).isEqualTo("Customized SDK flag is disabled.");
     }
 
     private Intent buildSandboxActivityIntent(IBinder token) {

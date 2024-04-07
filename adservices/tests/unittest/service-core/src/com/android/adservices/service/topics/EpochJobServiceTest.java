@@ -28,7 +28,6 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJob
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 
@@ -37,7 +36,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
@@ -50,7 +48,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
-import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.os.SystemClock;
@@ -357,7 +354,8 @@ public class EpochJobServiceTest {
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyEpochJobService);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyEpochJobService);
 
         // Now verify that when the Job starts, it will schedule itself.
         assertThat(mSpyEpochJobService.onStartJob(mMockJobParameters)).isTrue();
@@ -435,19 +433,5 @@ public class EpochJobServiceTest {
     private void testOnStopJob() {
         // Verify nothing throws
         mSpyEpochJobService.onStopJob(mMockJobParameters);
-    }
-
-    private JobServiceCallback createJobFinishedCallback(JobService jobService) {
-        JobServiceCallback callback = new JobServiceCallback();
-
-        doAnswer(
-                        unusedInvocation -> {
-                            callback.onJobFinished();
-                            return null;
-                        })
-                .when(jobService)
-                .jobFinished(any(), anyBoolean());
-
-        return callback;
     }
 }

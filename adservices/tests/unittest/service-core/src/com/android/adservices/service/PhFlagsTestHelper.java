@@ -489,6 +489,19 @@ public final class PhFlagsTestHelper {
                 flaginator);
     }
 
+    public void testLegacyKillSwitchBackedByLegacyKillSwitch(
+            String flagName,
+            String defaultValueConstant,
+            FlagGuard guard,
+            Flaginator<Flags, Boolean> flaginator) {
+        testFeatureFlagBackedBySystemProperty(
+                flagName,
+                defaultValueConstant,
+                FeatureFlagType.LEGACY_KILL_SWITCH,
+                guard,
+                flaginator);
+    }
+
     /**
      * Tests the behavior of a feature flag that is not guarded by any other flag but whose {@code
      * DeviceConfig} flag is a legacy kill switch flag (i.e., when the kill switch is enabled, the

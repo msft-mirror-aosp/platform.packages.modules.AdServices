@@ -198,7 +198,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
-    private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
 
     /**
      * Property to enforce restrictions for SDK sandbox processes. If the value of this property is
@@ -1135,9 +1134,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         synchronized (mLock) {
             writer.println(
                     "Killswitch enabled: " + mSdkSandboxSettingsListener.isKillSwitchEnabled());
-            writer.println(
-                    "Customized Sdk Context enabled: "
-                            + mSdkSandboxSettingsListener.isCustomizedSdkContextEnabled());
             writer.println("mLoadSdkSessions size: " + mLoadSdkSessions.size());
             for (CallingInfo callingInfo : mLoadSdkSessions.keySet()) {
                 writer.printf("Caller: %s has following SDKs", callingInfo);
@@ -1404,9 +1400,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
 
             try {
-                service.initialize(
-                        new SdkToServiceLink(),
-                        mSdkSandboxSettingsListener.isCustomizedSdkContextEnabled());
+                service.initialize(new SdkToServiceLink());
             } catch (Throwable e) {
                 handleFailedSandboxInitialization(mCallingInfo);
                 return false;
