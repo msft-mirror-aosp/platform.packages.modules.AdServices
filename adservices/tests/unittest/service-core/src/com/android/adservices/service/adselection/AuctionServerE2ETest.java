@@ -72,11 +72,15 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
+import android.adservices.adselection.SetAppInstallAdvertisersCallback;
+import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.adselection.UpdateAdCounterHistogramCallback;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.AppInstallFilters;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
@@ -85,6 +89,7 @@ import android.adservices.common.KeyedFrequencyCap;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
+import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
 
@@ -157,6 +162,7 @@ import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -225,6 +231,11 @@ public class AuctionServerE2ETest {
     private static final String SELLER_INTERACTION_KEY = "seller-interaction-key";
     private static final String SELLER_INTERACTION_URI =
             CommonFixture.getUri(SELLER, "/interaction").toString();
+
+    public static final AppInstallFilters CURRENT_APP_FILTER =
+            new AppInstallFilters.Builder()
+                    .setPackageNames(new HashSet<>(Arrays.asList(CommonFixture.TEST_PACKAGE_NAME)))
+                    .build();
 
     private static final String COORDINATOR_URL = "https://example.com/keys";
     private static final String COORDINATOR_HOST = "https://example.com";
@@ -596,6 +607,437 @@ public class AuctionServerE2ETest {
                 assertCasEquals(buyerInputsCA, deviceCA);
             }
         }
+    }
+
+    @Test
+    public void testAuctionServerFlow_withoutEncrypt_validRequest_BothFiltersEnabled()
+            throws RemoteException, InterruptedException {
+        Flags flags =
+                new AuctionServerE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeFrequencyCapFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringEnabled() {
+                        return true;
+                    }
+                };
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, flags);
+        doReturn(flags).when(FlagsFactory::getFlags);
+        AdSelectionService adSelectionService =
+                createAdSelectionService(
+                        flags,
+                        adFilteringFeatureFactory); // create the service again with new flags and
+        // new feature factory
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any()))
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
+        when(mObliviousHttpEncryptorMock.decryptBytes(any(byte[].class), anyLong()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        int sequenceNumber1 = 1;
+        int sequenceNumber2 = 2;
+        int sequenceNumber3 = 3;
+        int filterMaxCount = 1;
+        List<DBAdData> ads =
+                List.of(
+                        getFilterableAndServerEligibleFCapAd(sequenceNumber1, filterMaxCount),
+                        getFilterableAndServerEligibleAppInstallAd(sequenceNumber2),
+                        DBAdDataFixture.getValidDbAdDataNoFiltersBuilder(
+                                        WINNER_BUYER, sequenceNumber3)
+                                .setAdRenderId(Integer.toString(sequenceNumber3))
+                                .build());
+
+        DBCustomAudience winningCustomAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                                WINNER_BUYER,
+                                WINNING_CUSTOM_AUDIENCE_NAME,
+                                WINNING_CUSTOM_AUDIENCE_OWNER)
+                        .setAds(ads)
+                        .build();
+        Assert.assertNotNull(winningCustomAudience.getAds());
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                winningCustomAudience, Uri.EMPTY, false);
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback getAdSelectionDataTestCallback =
+                invokeGetAdSelectionData(adSelectionService, input);
+        long adSelectionId =
+                getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
+        assertTrue(getAdSelectionDataTestCallback.mIsSuccess);
+
+        // Since encryption is mocked to do nothing then just passing encrypted byte[]
+        List<String> adRenderIdsFromBuyerInput =
+                extractCAAdRenderIdListFromBuyerInput(
+                        getAdSelectionDataTestCallback,
+                        winningCustomAudience.getBuyer(),
+                        winningCustomAudience.getName(),
+                        winningCustomAudience.getOwner());
+
+        // Expect no ads are filtered
+        assertThat(adRenderIdsFromBuyerInput.size()).isEqualTo(ads.size());
+
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setSeller(SELLER)
+                        .setAdSelectionResult(prepareAuctionResultBytes())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
+                invokePersistAdSelectionResult(adSelectionService, persistAdSelectionResultInput);
+
+        assertTrue(persistAdSelectionResultTestCallback.mIsSuccess);
+
+        // FCap non-win histogram update
+        UpdateAdCounterHistogramInput updateHistogramInput =
+                new UpdateAdCounterHistogramInput.Builder(
+                                adSelectionId,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                SELLER,
+                                CALLER_PACKAGE_NAME)
+                        .build();
+        UpdateAdCounterHistogramTestCallback updateHistogramCallback =
+                invokeUpdateAdCounterHistogram(adSelectionService, updateHistogramInput);
+        assertTrue(updateHistogramCallback.mIsSuccess);
+
+        // Call set app install advertisers
+        setAppInstallAdvertisers(ImmutableSet.of(WINNER_BUYER), adSelectionService);
+
+        // Collect device data again and expect to see both filter ads out
+        GetAdSelectionDataInput input2 =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback getAdSelectionDataTestCallback2 =
+                invokeGetAdSelectionData(adSelectionService, input2);
+
+        // Since encryption is mocked to do nothing then just passing encrypted byte[]
+        List<String> adRenderIdsFromBuyerInput2 =
+                extractCAAdRenderIdListFromBuyerInput(
+                        getAdSelectionDataTestCallback2,
+                        winningCustomAudience.getBuyer(),
+                        winningCustomAudience.getName(),
+                        winningCustomAudience.getOwner());
+        // Both ads with filters are filtered out
+        assertThat(ads.size() - 2).isEqualTo(adRenderIdsFromBuyerInput2.size());
+
+        // Assert that only ad remaining is the non filter one
+        assertThat(adRenderIdsFromBuyerInput2.get(0)).isEqualTo(Integer.toString(sequenceNumber3));
+    }
+
+    @Test
+    public void testAuctionServerFlow_withoutEncrypt_validRequest_AppInstallDisabled()
+            throws RemoteException, InterruptedException {
+        // Enabling both filters to start so setAppInstallAdvertisers and updateAdCounterHistogram
+        // can be called as part of test setup
+        Flags flagsWithBothFiltersEnabled =
+                new AuctionServerE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeFrequencyCapFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringEnabled() {
+                        return true;
+                    }
+                };
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao, mFrequencyCapDaoSpy, flagsWithBothFiltersEnabled);
+        doReturn(flagsWithBothFiltersEnabled).when(FlagsFactory::getFlags);
+        AdSelectionService adSelectionService =
+                createAdSelectionService(
+                        flagsWithBothFiltersEnabled,
+                        adFilteringFeatureFactory); // create the service again with new flags and
+        // new feature factory
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any()))
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
+        when(mObliviousHttpEncryptorMock.decryptBytes(any(byte[].class), anyLong()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        int sequenceNumber1 = 1;
+        int sequenceNumber2 = 2;
+        int filterMaxCount = 1;
+        List<DBAdData> ads =
+                List.of(
+                        getFilterableAndServerEligibleFCapAd(sequenceNumber1, filterMaxCount),
+                        getFilterableAndServerEligibleAppInstallAd(sequenceNumber2));
+
+        DBCustomAudience winningCustomAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                                WINNER_BUYER,
+                                WINNING_CUSTOM_AUDIENCE_NAME,
+                                WINNING_CUSTOM_AUDIENCE_OWNER)
+                        .setAds(ads)
+                        .build();
+        Assert.assertNotNull(winningCustomAudience.getAds());
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                winningCustomAudience, Uri.EMPTY, false);
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback getAdSelectionDataTestCallback =
+                invokeGetAdSelectionData(adSelectionService, input);
+        long adSelectionId =
+                getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
+        assertTrue(getAdSelectionDataTestCallback.mIsSuccess);
+
+        // Since encryption is mocked to do nothing then just passing encrypted byte[]
+        List<String> adRenderIdsFromBuyerInput =
+                extractCAAdRenderIdListFromBuyerInput(
+                        getAdSelectionDataTestCallback,
+                        winningCustomAudience.getBuyer(),
+                        winningCustomAudience.getName(),
+                        winningCustomAudience.getOwner());
+        // Expect no ads are filtered
+        assertThat(adRenderIdsFromBuyerInput.size()).isEqualTo(ads.size());
+
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setSeller(SELLER)
+                        .setAdSelectionResult(prepareAuctionResultBytes())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
+                invokePersistAdSelectionResult(adSelectionService, persistAdSelectionResultInput);
+
+        assertTrue(persistAdSelectionResultTestCallback.mIsSuccess);
+
+        // FCap non-win histogram update
+        UpdateAdCounterHistogramInput updateHistogramInput =
+                new UpdateAdCounterHistogramInput.Builder(
+                                adSelectionId,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                SELLER,
+                                CALLER_PACKAGE_NAME)
+                        .build();
+        UpdateAdCounterHistogramTestCallback updateHistogramCallback =
+                invokeUpdateAdCounterHistogram(adSelectionService, updateHistogramInput);
+        assertTrue(updateHistogramCallback.mIsSuccess);
+
+        // Call set app install advertisers
+        setAppInstallAdvertisers(ImmutableSet.of(WINNER_BUYER), adSelectionService);
+
+        Flags flagsWithAppInstallDisabled =
+                new AuctionServerE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeFrequencyCapFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringEnabled() {
+                        return false;
+                    }
+                };
+        adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao, mFrequencyCapDaoSpy, flagsWithAppInstallDisabled);
+        doReturn(flagsWithAppInstallDisabled).when(FlagsFactory::getFlags);
+        adSelectionService =
+                createAdSelectionService(
+                        flagsWithAppInstallDisabled,
+                        adFilteringFeatureFactory); // create the service again with new flags and
+        // new feature factory
+
+        // Collect device data again and expect one less ads due to FCap filter
+        GetAdSelectionDataInput input2 =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback getAdSelectionDataTestCallback2 =
+                invokeGetAdSelectionData(adSelectionService, input2);
+
+        // Since encryption is mocked to do nothing then just passing encrypted byte[]
+        List<String> adRenderIdsFromBuyerInput2 =
+                extractCAAdRenderIdListFromBuyerInput(
+                        getAdSelectionDataTestCallback2,
+                        winningCustomAudience.getBuyer(),
+                        winningCustomAudience.getName(),
+                        winningCustomAudience.getOwner());
+        // Only fcap ad is filtered out since app install is disabled
+        Assert.assertEquals(1, adRenderIdsFromBuyerInput2.size());
+
+        // Assert that only ad remaining is the app install ad
+        assertThat(adRenderIdsFromBuyerInput2.get(0)).isEqualTo(Integer.toString(sequenceNumber2));
+    }
+
+    @Test
+    public void testAuctionServerFlow_withoutEncrypt_validRequest_FrequencyCapDisabled()
+            throws RemoteException, InterruptedException {
+        // Enabling both filters to start so setAppInstallAdvertisers and updateAdCounterHistogram
+        // can be called as part of test setup
+        Flags flagsWithBothFiltersEnabled =
+                new AuctionServerE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeFrequencyCapFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringEnabled() {
+                        return true;
+                    }
+                };
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao, mFrequencyCapDaoSpy, flagsWithBothFiltersEnabled);
+        doReturn(flagsWithBothFiltersEnabled).when(FlagsFactory::getFlags);
+        AdSelectionService adSelectionService =
+                createAdSelectionService(
+                        flagsWithBothFiltersEnabled,
+                        adFilteringFeatureFactory); // create the service again with new flags and
+        // new feature factory
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any()))
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
+        when(mObliviousHttpEncryptorMock.decryptBytes(any(byte[].class), anyLong()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        int sequenceNumber1 = 1;
+        int sequenceNumber2 = 2;
+        int filterMaxCount = 1;
+        List<DBAdData> ads =
+                List.of(
+                        getFilterableAndServerEligibleFCapAd(sequenceNumber1, filterMaxCount),
+                        getFilterableAndServerEligibleAppInstallAd(sequenceNumber2));
+
+        DBCustomAudience winningCustomAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                                WINNER_BUYER,
+                                WINNING_CUSTOM_AUDIENCE_NAME,
+                                WINNING_CUSTOM_AUDIENCE_OWNER)
+                        .setAds(ads)
+                        .build();
+        Assert.assertNotNull(winningCustomAudience.getAds());
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                winningCustomAudience, Uri.EMPTY, false);
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback getAdSelectionDataTestCallback =
+                invokeGetAdSelectionData(adSelectionService, input);
+        long adSelectionId =
+                getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
+        assertTrue(getAdSelectionDataTestCallback.mIsSuccess);
+
+        // Since encryption is mocked to do nothing then just passing encrypted byte[]
+        List<String> adRenderIdsFromBuyerInput =
+                extractCAAdRenderIdListFromBuyerInput(
+                        getAdSelectionDataTestCallback,
+                        winningCustomAudience.getBuyer(),
+                        winningCustomAudience.getName(),
+                        winningCustomAudience.getOwner());
+        // Expect no ads are filtered
+        assertThat(adRenderIdsFromBuyerInput.size()).isEqualTo(ads.size());
+
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setSeller(SELLER)
+                        .setAdSelectionResult(prepareAuctionResultBytes())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
+                invokePersistAdSelectionResult(adSelectionService, persistAdSelectionResultInput);
+
+        assertTrue(persistAdSelectionResultTestCallback.mIsSuccess);
+
+        // FCap FCap non-win histogram updat
+        UpdateAdCounterHistogramInput updateHistogramInput =
+                new UpdateAdCounterHistogramInput.Builder(
+                                adSelectionId,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                SELLER,
+                                CALLER_PACKAGE_NAME)
+                        .build();
+        UpdateAdCounterHistogramTestCallback updateHistogramCallback =
+                invokeUpdateAdCounterHistogram(adSelectionService, updateHistogramInput);
+        assertTrue(updateHistogramCallback.mIsSuccess);
+
+        // Call set app install advertisers
+        setAppInstallAdvertisers(ImmutableSet.of(WINNER_BUYER), adSelectionService);
+
+        Flags flagsWithFCapDisabled =
+                new AuctionServerE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeFrequencyCapFilteringEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringEnabled() {
+                        return true;
+                    }
+                };
+        adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao, mFrequencyCapDaoSpy, flagsWithFCapDisabled);
+        doReturn(flagsWithFCapDisabled).when(FlagsFactory::getFlags);
+        adSelectionService =
+                createAdSelectionService(
+                        flagsWithFCapDisabled,
+                        adFilteringFeatureFactory); // create the service again with new flags and
+        // new feature factory
+
+        // Collect device data again and expect one less ads due to app install filter
+        GetAdSelectionDataInput input2 =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback getAdSelectionDataTestCallback2 =
+                invokeGetAdSelectionData(adSelectionService, input2);
+
+        // Since encryption is mocked to do nothing then just passing encrypted byte[]
+        List<String> adRenderIdsFromBuyerInput2 =
+                extractCAAdRenderIdListFromBuyerInput(
+                        getAdSelectionDataTestCallback2,
+                        winningCustomAudience.getBuyer(),
+                        winningCustomAudience.getName(),
+                        winningCustomAudience.getOwner());
+        // Only app install ad is filtered out since f cap is disabled
+        Assert.assertEquals(1, adRenderIdsFromBuyerInput2.size());
+
+        // Assert that only ad remaining is the fcap ad
+        assertThat(adRenderIdsFromBuyerInput2.get(0)).isEqualTo(Integer.toString(sequenceNumber1));
     }
 
     @Test
@@ -971,8 +1413,8 @@ public class AuctionServerE2ETest {
         int filterMaxCount = 1;
         List<DBAdData> filterableAds =
                 List.of(
-                        getFilterableAndServerEligibleAd(sequenceNumber1, filterMaxCount),
-                        getFilterableAndServerEligibleAd(sequenceNumber2, filterMaxCount));
+                        getFilterableAndServerEligibleFCapAd(sequenceNumber1, filterMaxCount),
+                        getFilterableAndServerEligibleFCapAd(sequenceNumber2, filterMaxCount));
 
         DBCustomAudience winningCustomAudience =
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
@@ -1420,7 +1862,8 @@ public class AuctionServerE2ETest {
                                                 mAuctionServerEncryptionKeyDao,
                                                 mFlags,
                                                 mAdServicesHttpsClientSpy,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         seedBytes,
                                         mLightweightExecutorService)),
@@ -2302,7 +2745,8 @@ public class AuctionServerE2ETest {
                                                 mAuctionServerEncryptionKeyDao,
                                                 mFlags,
                                                 mAdServicesHttpsClientSpy,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         seedBytes,
                                         mLightweightExecutorService)),
@@ -2411,7 +2855,8 @@ public class AuctionServerE2ETest {
                                                 mAuctionServerEncryptionKeyDao,
                                                 mFlags,
                                                 mAdServicesHttpsClientSpy,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         mLightweightExecutorService)),
                         mAdSelectionDebugReportDaoSpy,
@@ -2480,8 +2925,10 @@ public class AuctionServerE2ETest {
 
         AdServicesHttpClientResponse httpClientResponse =
                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(auctionKey);
-        when(mMockHttpClient.fetchPayload(
-                        Uri.parse(COORDINATOR_URL), DevContext.createForDevOptionsDisabled()))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(COORDINATOR_URL)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -2506,7 +2953,8 @@ public class AuctionServerE2ETest {
                                                 mProtectedServersEncryptionConfigDao,
                                                 mFlags,
                                                 mMockHttpClient,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         mLightweightExecutorService),
                                 COORDINATOR_ALLOWLIST));
@@ -2596,8 +3044,10 @@ public class AuctionServerE2ETest {
 
         AdServicesHttpClientResponse httpClientResponse =
                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(auctionKey);
-        when(mMockHttpClient.fetchPayload(
-                        Uri.parse(COORDINATOR_URL), DevContext.createForDevOptionsDisabled()))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(COORDINATOR_URL)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
         String expiredKeyId = "000bed24-c62f-46e0-a1ad-211361ad771a";
@@ -2642,7 +3092,8 @@ public class AuctionServerE2ETest {
                                                 mProtectedServersEncryptionConfigDao,
                                                 mFlags,
                                                 mMockHttpClient,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         mLightweightExecutorService),
                                 COORDINATOR_ALLOWLIST));
@@ -2668,7 +3119,10 @@ public class AuctionServerE2ETest {
         Assert.assertEquals(1, protectedServersEncryptionConfigs.size());
         Assert.assertEquals(liveKeyId, protectedServersEncryptionConfigs.get(0).getKeyIdentifier());
         verify(mMockHttpClient)
-                .fetchPayload(Uri.parse(COORDINATOR_URL), DevContext.createForDevOptionsDisabled());
+                .fetchPayloadWithLogging(
+                        eq(Uri.parse(COORDINATOR_URL)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class));
 
         long adSelectionId = callback.mGetAdSelectionDataResponse.getAdSelectionId();
 
@@ -2728,8 +3182,10 @@ public class AuctionServerE2ETest {
 
         AdServicesHttpClientResponse httpClientResponse =
                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(auctionKey);
-        when(mMockHttpClient.fetchPayload(
-                        Uri.parse(COORDINATOR_URL), DevContext.createForDevOptionsDisabled()))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(COORDINATOR_URL)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
         String expiredKeyId = "000bed24-c62f-46e0-a1ad-211361ad771a";
@@ -2752,7 +3208,10 @@ public class AuctionServerE2ETest {
         Assert.assertEquals(
                 expiredKeyId, protectedServersEncryptionConfigs.get(0).getKeyIdentifier());
         verify(mMockHttpClient, never())
-                .fetchPayload(Uri.parse(COORDINATOR_URL), DevContext.createForDevOptionsDisabled());
+                .fetchPayloadWithLogging(
+                        eq(Uri.parse(COORDINATOR_URL)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class));
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
@@ -2776,7 +3235,8 @@ public class AuctionServerE2ETest {
                                                 mProtectedServersEncryptionConfigDao,
                                                 mFlags,
                                                 mMockHttpClient,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         mLightweightExecutorService),
                                 COORDINATOR_ALLOWLIST));
@@ -2856,8 +3316,10 @@ public class AuctionServerE2ETest {
 
         AdServicesHttpClientResponse httpClientResponse =
                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(auctionKey);
-        when(mMockHttpClient.fetchPayload(
-                        Uri.parse(DEFAULT_FETCH_URI), DevContext.createForDevOptionsDisabled()))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(DEFAULT_FETCH_URI)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
         String expiredKeyId = "400bed24-c62f-46e0-a1ad-211361ad771a";
@@ -2898,7 +3360,8 @@ public class AuctionServerE2ETest {
                                                 mAuctionServerEncryptionKeyDao,
                                                 mFlags,
                                                 mMockHttpClient,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         mLightweightExecutorService)));
 
@@ -2921,8 +3384,10 @@ public class AuctionServerE2ETest {
         Assert.assertEquals(1, encryptionConfigs.size());
         Assert.assertEquals(liveKeyId, encryptionConfigs.get(0).getKeyIdentifier());
         verify(mMockHttpClient)
-                .fetchPayload(
-                        Uri.parse(DEFAULT_FETCH_URI), DevContext.createForDevOptionsDisabled());
+                .fetchPayloadWithLogging(
+                        eq(Uri.parse(DEFAULT_FETCH_URI)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class));
 
         long adSelectionId = callback.mGetAdSelectionDataResponse.getAdSelectionId();
 
@@ -2977,8 +3442,10 @@ public class AuctionServerE2ETest {
 
         AdServicesHttpClientResponse httpClientResponse =
                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(auctionKey);
-        when(mMockHttpClient.fetchPayload(
-                        Uri.parse(COORDINATOR_URL), DevContext.createForDevOptionsDisabled()))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(COORDINATOR_URL)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
         String expiredKeyId = "000bed24-c62f-46e0-a1ad-211361ad771a";
@@ -3019,7 +3486,8 @@ public class AuctionServerE2ETest {
                                                 mAuctionServerEncryptionKeyDao,
                                                 mFlags,
                                                 mMockHttpClient,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         mLightweightExecutorService)));
 
@@ -3042,8 +3510,10 @@ public class AuctionServerE2ETest {
         Assert.assertEquals(1, encryptionConfigs.size());
         Assert.assertEquals(expiredKeyId, encryptionConfigs.get(0).getKeyIdentifier());
         verify(mMockHttpClient, never())
-                .fetchPayload(
-                        Uri.parse(DEFAULT_FETCH_URI), DevContext.createForDevOptionsDisabled());
+                .fetchPayloadWithLogging(
+                        eq(Uri.parse(DEFAULT_FETCH_URI)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class));
 
         long adSelectionId = callback.mGetAdSelectionDataResponse.getAdSelectionId();
 
@@ -3092,8 +3562,10 @@ public class AuctionServerE2ETest {
 
         AdServicesHttpClientResponse httpClientResponse =
                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(auctionKey);
-        when(mMockHttpClient.fetchPayload(
-                        Uri.parse(DEFAULT_FETCH_URI), DevContext.createForDevOptionsDisabled()))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(DEFAULT_FETCH_URI)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -3113,7 +3585,8 @@ public class AuctionServerE2ETest {
                                                 mProtectedServersEncryptionConfigDao,
                                                 mFlags,
                                                 mMockHttpClient,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         mLightweightExecutorService),
                                 COORDINATOR_ALLOWLIST));
@@ -3159,8 +3632,10 @@ public class AuctionServerE2ETest {
 
         AdServicesHttpClientResponse httpClientResponse =
                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(auctionKey);
-        when(mMockHttpClient.fetchPayload(
-                        Uri.parse(COORDINATOR_URL), DevContext.createForDevOptionsDisabled()))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(COORDINATOR_URL)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -3180,7 +3655,8 @@ public class AuctionServerE2ETest {
                                                 mProtectedServersEncryptionConfigDao,
                                                 mFlags,
                                                 mMockHttpClient,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         mLightweightExecutorService),
                                 COORDINATOR_ALLOWLIST));
@@ -3220,8 +3696,10 @@ public class AuctionServerE2ETest {
 
         AdServicesHttpClientResponse httpClientResponse =
                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(auctionKey);
-        when(mMockHttpClient.fetchPayload(
-                        Uri.parse(DEFAULT_FETCH_URI), DevContext.createForDevOptionsDisabled()))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(DEFAULT_FETCH_URI)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -3241,7 +3719,8 @@ public class AuctionServerE2ETest {
                                                 mAuctionServerEncryptionKeyDao,
                                                 mFlags,
                                                 mMockHttpClient,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         mLightweightExecutorService))));
 
@@ -3423,6 +3902,32 @@ public class AuctionServerE2ETest {
         return decompressedBuyerInputs;
     }
 
+    private void setAppInstallAdvertisers(
+            Set<AdTechIdentifier> advertisers, AdSelectionService adSelectionService)
+            throws RemoteException, InterruptedException {
+        SetAppInstallAdvertisersInput setAppInstallAdvertisersInput =
+                new SetAppInstallAdvertisersInput.Builder()
+                        .setAdvertisers(advertisers)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+        AppInstallResultCapturingCallback appInstallCallback =
+                invokeSetAppInstallAdvertisers(setAppInstallAdvertisersInput, adSelectionService);
+        assertTrue(
+                "App Install call failed with: " + appInstallCallback.getException(),
+                appInstallCallback.isSuccess());
+    }
+
+    private AppInstallResultCapturingCallback invokeSetAppInstallAdvertisers(
+            SetAppInstallAdvertisersInput input, AdSelectionService adSelectionService)
+            throws RemoteException, InterruptedException {
+        CountDownLatch appInstallDone = new CountDownLatch(1);
+        AppInstallResultCapturingCallback appInstallCallback =
+                new AppInstallResultCapturingCallback(appInstallDone);
+        adSelectionService.setAppInstallAdvertisers(input, appInstallCallback);
+        assertTrue(appInstallDone.await(5, TimeUnit.SECONDS));
+        return appInstallCallback;
+    }
+
     private void testGetAdSelectionData_withEncryptHelper(Flags flags) throws Exception {
         doReturn(flags).when(FlagsFactory::getFlags);
 
@@ -3472,7 +3977,8 @@ public class AuctionServerE2ETest {
                                                 mAuctionServerEncryptionKeyDao,
                                                 mFlags,
                                                 mAdServicesHttpsClientSpy,
-                                                mLightweightExecutorService),
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
                                         mEncryptionContextDao,
                                         seedBytes,
                                         mLightweightExecutorService)),
@@ -3541,6 +4047,39 @@ public class AuctionServerE2ETest {
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,
                 mAdFilteringFeatureFactory,
+                mConsentManagerMock,
+                mMultiCloudSupportStrategy,
+                mAdSelectionDebugReportDaoSpy,
+                mAdIdFetcher,
+                mUnusedKAnonSignJoinFactory,
+                false,
+                mRetryStrategyFactory,
+                mConsentedDebugConfigurationGeneratorFactory,
+                mEgressConfigurationGenerator);
+    }
+
+    private AdSelectionService createAdSelectionService(
+            Flags flags, AdFilteringFeatureFactory filteringFeatureFactory) {
+        return new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mAppInstallDao,
+                mCustomAudienceDaoSpy,
+                mEncodedPayloadDaoSpy,
+                mFrequencyCapDaoSpy,
+                mEncryptionKeyDao,
+                mEnrollmentDao,
+                mAdServicesHttpsClientSpy,
+                mDevContextFilterMock,
+                mLightweightExecutorService,
+                mBackgroundExecutorService,
+                mScheduledExecutor,
+                mContext,
+                mAdServicesLoggerMock,
+                flags,
+                CallingAppUidSupplierProcessImpl.create(),
+                mFledgeAuthorizationFilterMock,
+                mAdSelectionServiceFilterMock,
+                filteringFeatureFactory,
                 mConsentManagerMock,
                 mMultiCloudSupportStrategy,
                 mAdSelectionDebugReportDaoSpy,
@@ -3666,7 +4205,7 @@ public class AuctionServerE2ETest {
         return winningCustomAudienceFromBuyerInputOption.get().getAdRenderIdsList();
     }
 
-    private DBAdData getFilterableAndServerEligibleAd(int sequenceNumber, int filterMaxCount) {
+    private DBAdData getFilterableAndServerEligibleFCapAd(int sequenceNumber, int filterMaxCount) {
         KeyedFrequencyCap fCap =
                 new KeyedFrequencyCap.Builder(sequenceNumber, filterMaxCount, ONE_DAY_DURATION)
                         .build();
@@ -3678,6 +4217,15 @@ public class AuctionServerE2ETest {
                 .setAdCounterKeys(ImmutableSet.<Integer>builder().add(sequenceNumber).build())
                 .setAdFilters(
                         new AdFilters.Builder().setFrequencyCapFilters(clickEventFilter).build())
+                .setAdRenderId(String.valueOf(sequenceNumber))
+                .build();
+    }
+
+    private DBAdData getFilterableAndServerEligibleAppInstallAd(int sequenceNumber) {
+        return getValidDbAdDataNoFiltersBuilder(WINNER_BUYER, sequenceNumber)
+                .setAdCounterKeys(ImmutableSet.<Integer>builder().add(sequenceNumber).build())
+                .setAdFilters(
+                        new AdFilters.Builder().setAppInstallFilters(CURRENT_APP_FILTER).build())
                 .setAdRenderId(String.valueOf(sequenceNumber))
                 .build();
     }
@@ -3801,6 +4349,43 @@ public class AuctionServerE2ETest {
             mIsSuccess = false;
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
+        }
+    }
+
+    private static class AppInstallResultCapturingCallback
+            implements SetAppInstallAdvertisersCallback {
+        private boolean mIsSuccess;
+        private Exception mException;
+        private final CountDownLatch mCountDownLatch;
+
+        public boolean isSuccess() {
+            return mIsSuccess;
+        }
+
+        public Exception getException() {
+            return mException;
+        }
+
+        AppInstallResultCapturingCallback(CountDownLatch countDownLatch) {
+            mCountDownLatch = countDownLatch;
+        }
+
+        @Override
+        public void onSuccess() throws RemoteException {
+            mIsSuccess = true;
+            mCountDownLatch.countDown();
+        }
+
+        @Override
+        public void onFailure(FledgeErrorResponse responseParcel) throws RemoteException {
+            mIsSuccess = false;
+            mException = AdServicesStatusUtils.asException(responseParcel);
+            mCountDownLatch.countDown();
+        }
+
+        @Override
+        public IBinder asBinder() {
+            throw new RuntimeException("Should not be called.");
         }
     }
 

@@ -20,7 +20,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -50,6 +50,16 @@ public final class SourceFixture {
                 .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
                 .setRegistrant(ValidSourceParams.REGISTRANT)
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN);
+    }
+
+    /**
+     * @return The minimum valid source with attribiton scopes.
+     */
+    public static Source.Builder getMinimalValidSourceWithAttributionScope() {
+        return getMinimalValidSourceBuilder()
+                .setAttributionScopes(ValidSourceParams.ATTRIBUTION_SCOPES)
+                .setAttributionScopeLimit(ValidSourceParams.ATTRIBUTION_SCOPE_LIMIT)
+                .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES);
     }
 
     // Assume the field values in this Source have no relation to the field values in
@@ -88,6 +98,9 @@ public final class SourceFixture {
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
                 .setCoarseEventReportDestinations(true)
                 .setSharedDebugKey(ValidSourceParams.SHARED_DEBUG_KEY)
+                .setAttributionScopes(ValidSourceParams.ATTRIBUTION_SCOPES)
+                .setAttributionScopeLimit(ValidSourceParams.ATTRIBUTION_SCOPE_LIMIT)
+                .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES)
                 .setAttributedTriggers(new ArrayList<>());
     }
 
@@ -120,6 +133,9 @@ public final class SourceFixture {
         public static final Uri REGISTRATION_ORIGIN =
                 WebUtil.validUri("https://subdomain.example.test");
         public static final UnsignedLong SHARED_DEBUG_KEY = new UnsignedLong(834690L);
+        public static final List<String> ATTRIBUTION_SCOPES = List.of("1", "2", "3");
+        public static final Long ATTRIBUTION_SCOPE_LIMIT = 10L;
+        public static final Long MAX_NUM_VIEW_STATES = 1000L;
 
         public static final String buildAggregateSource() {
             try {
@@ -182,7 +198,7 @@ public final class SourceFixture {
         TriggerSpecs triggerSpecs = new TriggerSpecs(
                 triggerSpecArrayFrom(triggerSpecsString), 3, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -199,7 +215,7 @@ public final class SourceFixture {
         TriggerSpecs triggerSpecs = new TriggerSpecs(
                 triggerSpecArrayFrom(triggerSpecsString), 1, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -219,7 +235,7 @@ public final class SourceFixture {
                 maxReports,
                 source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -235,7 +251,7 @@ public final class SourceFixture {
                 /* maxReports */ 3,
                 source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 

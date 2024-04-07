@@ -36,6 +36,9 @@ import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITHOUT_RETRY;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITH_RETRY;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
 import static com.android.adservices.shared.util.LogUtil.VERBOSE;
 
 import android.annotation.NonNull;
@@ -163,18 +166,15 @@ public class JobServiceLogger {
         boolean isSuccessful = false;
         boolean shouldRetry = false;
 
-        switch (executionResult) {
-            case SUCCESS:
-                isSuccessful = true;
-                break;
-            case FAILURE_WITHOUT_RETRY:
-                break;
-            case FAILURE_WITH_RETRY:
-                shouldRetry = true;
-                break;
-            default:
-                throw new IllegalStateException(
-                        "Invalid ExecutionResult: " + executionResult + ", jobId: " + jobId);
+        if (executionResult.equals(SUCCESS)) {
+            isSuccessful = true;
+        } else if (executionResult.equals(FAILURE_WITH_RETRY)) {
+            shouldRetry = true;
+        } else if (!executionResult.equals(FAILURE_WITHOUT_RETRY)) {
+            // Throws if the execution result to log is not one of SUCCESS, FAILURE_WITH_RETRY, or
+            // FAILURE_WITHOUT_RETRY.
+            throw new IllegalStateException(
+                    "Invalid ExecutionResult: " + executionResult + ", jobId: " + jobId);
         }
 
         recordJobFinished(jobId, isSuccessful, shouldRetry);

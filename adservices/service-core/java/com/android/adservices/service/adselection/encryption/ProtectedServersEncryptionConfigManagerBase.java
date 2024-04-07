@@ -18,6 +18,9 @@ package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.RESPONSE_PROPERTIES_CONTENT_TYPE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK;
 
 import android.net.Uri;
 
@@ -34,6 +37,8 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequ
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.FetchProcessLogger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -53,6 +58,8 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
     protected final ExecutorService mLightweightExecutor;
 
     protected final Flags mFlags;
+    protected final AdServicesLogger mAdServicesLogger;
+
     protected final AuctionEncryptionKeyParser mAuctionEncryptionKeyParser;
     protected final JoinEncryptionKeyParser mJoinEncryptionKeyParser;
     protected final AdServicesHttpsClient mAdServicesHttpsClient;
@@ -67,9 +74,12 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             Instant keyExpiryInstant,
             long timeoutMs,
-            @Nullable Uri coordinatorUrl);
+            @Nullable Uri coordinatorUrl,
+            FetchProcessLogger keyFetchLogger);
 
     abstract Set<Integer> getExpiredAdSelectionEncryptionKeyTypes(Instant keyExpiryInstant);
+
+    abstract Set<Integer> getAbsentAdSelectionEncryptionKeyTypes();
 
     protected ProtectedServersEncryptionConfigManagerBase(
             @NonNull Flags flags,
@@ -77,13 +87,15 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
             @NonNull AuctionEncryptionKeyParser auctionEncryptionKeyParser,
             @NonNull JoinEncryptionKeyParser joinEncryptionKeyParser,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
-            @NonNull ExecutorService lightweightExecutor) {
+            @NonNull ExecutorService lightweightExecutor,
+            @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(auctionEncryptionKeyParser);
         Objects.requireNonNull(joinEncryptionKeyParser);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutor);
+        Objects.requireNonNull(adServicesLogger);
 
         this.mFlags = flags;
         this.mClock = clock;
@@ -91,6 +103,7 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
         this.mJoinEncryptionKeyParser = joinEncryptionKeyParser;
         this.mAdServicesHttpsClient = adServicesHttpsClient;
         this.mLightweightExecutor = lightweightExecutor;
+        this.mAdServicesLogger = adServicesLogger;
     }
 
     protected List<DBEncryptionKey> parseKeyResponse(
@@ -151,11 +164,13 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
 
     protected ListenableFuture<AdServicesHttpClientResponse> fetchKeyPayload(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
-            Uri fetchUri) {
+            Uri fetchUri,
+            FetchProcessLogger keyFetchLogger) {
+        keyFetchLogger.setEncryptionKeySource(SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK);
         switch (adSelectionKeyType) {
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
-                return mAdServicesHttpsClient.fetchPayload(
-                        fetchUri, DevContext.createForDevOptionsDisabled());
+                return mAdServicesHttpsClient.fetchPayloadWithLogging(
+                        fetchUri, DevContext.createForDevOptionsDisabled(), keyFetchLogger);
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
                 AdServicesHttpClientRequest fetchKeyRequest =
                         AdServicesHttpClientRequest.builder()
@@ -164,8 +179,8 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
                                 .setResponseHeaderKeys(RESPONSE_PROPERTIES_CONTENT_TYPE)
                                 .setDevContext(DevContext.createForDevOptionsDisabled())
                                 .build();
-                return mAdServicesHttpsClient.performRequestGetResponseInBase64String(
-                        fetchKeyRequest);
+                return mAdServicesHttpsClient.performRequestGetResponseInBase64StringWithLogging(
+                        fetchKeyRequest, keyFetchLogger);
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
             default:
                 throw new IllegalStateException(
@@ -178,16 +193,19 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
     protected Uri getKeyFetchUriOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             @Nullable Uri coordinatorUrl,
-            @Nullable String allowList) {
+            @Nullable String allowList,
+            FetchProcessLogger keyFetchLogger) {
 
         if (coordinatorUrl != null
                 && allowList != null
                 && adSelectionEncryptionKeyType
                         == AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION) {
+            keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_API);
             return getUriFromAllowlist(coordinatorUrl, allowList);
         }
 
         sLogger.v("The passed coordinatorUrl was null. Fetching default coordinator");
+        keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
 
         switch (adSelectionEncryptionKeyType) {
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:

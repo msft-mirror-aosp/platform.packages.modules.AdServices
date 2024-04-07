@@ -138,6 +138,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
@@ -7462,7 +7463,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionThrottledSubsequentCallFailure() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
         class FlagsWithThrottling extends AdSelectionE2ETestFlags implements Flags {
             @Override
@@ -8290,11 +8291,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             // Unlimited rate for unit tests to avoid flake in tests due to rate
             // limiting
             return -1;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return false;
         }
 
         @Override

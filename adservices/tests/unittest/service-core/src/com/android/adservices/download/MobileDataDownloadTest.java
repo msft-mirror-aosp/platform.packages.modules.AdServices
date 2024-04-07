@@ -40,6 +40,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.shared.SharedDbHelper;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -48,6 +49,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -150,6 +152,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
     @Mock UxStatesManager mUxStatesManager;
+    @Mock Clock mMockClock;
 
     @Before
     public void setUp() throws Exception {
@@ -188,7 +191,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         mMdd =
                 getMddForTesting(
                         mContext,
-                        FlagsFactory.getFlagsForTest(),
+                        FakeFlagsFactory.getFlagsForTest(),
                         // Pass in an empty list of FileGroupPopulator. Add ad hoc DataFileGroup
                         // to MDD manually below.
                         ImmutableList.of());
@@ -281,6 +284,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testEncryptionKeysDataDownload_production_featureEnabled() throws Exception {
         doReturn(true).when(mMockFlags).getEnableMddEncryptionKeys();
+        // All keys have greater expiration time than this timestamp. (Sep 2, 1996)
+        when(mMockClock.currentTimeMillis()).thenReturn(841622400000L);
         createMddForEncryptionKeys(PRODUCTION_ENCRYPTION_KEYS_MANIFEST_FILE_URL);
 
         ClientFileGroup clientFileGroup =
@@ -810,10 +815,9 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         doReturn(mMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
 
-        EncryptionDataDownloadManager encryptionDataDownloadManager =
-                new EncryptionDataDownloadManager(mContext, mMockFlags);
         EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);
-        doReturn(encryptionKeyDao).when(() -> EncryptionKeyDao.getInstance(any(Context.class)));
+        EncryptionDataDownloadManager encryptionDataDownloadManager =
+                new EncryptionDataDownloadManager(mMockFlags, encryptionKeyDao, mMockClock);
 
         // Verify encryption keys data file read from MDD and insert the data into the encryption
         // keys database.

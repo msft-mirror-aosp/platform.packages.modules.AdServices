@@ -23,7 +23,6 @@ import static com.android.adservices.shared.common.flags.FeatureFlag.Type.DEBUG;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
-import static com.android.adservices.shared.common.flags.FeatureFlag.Type.RAMPED_UP;
 
 import android.annotation.IntDef;
 import android.app.job.JobInfo;
@@ -1333,14 +1332,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     // Filtering feature flag disabled by default
-    boolean FLEDGE_AD_SELECTION_FILTERING_ENABLED = false;
-
-    /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
-    default boolean getFledgeAdSelectionFilteringEnabled() {
-        return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
-    }
-
-    // Filtering feature flag disabled by default
     boolean FLEDGE_APP_INSTALL_FILTERING_ENABLED = false;
 
     /** Returns {@code true} if app install filtering of ads during ad selection is enabled. */
@@ -1743,6 +1734,29 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default long getFledgeAuctionServerBackgroundKeyFetchJobFlexMs() {
         return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED = false;
+
+    /**
+     * Returns whether that the periodic job to fetch encryption keys should force refresh if the
+     * database is empty or if the keys are within
+     * FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS to expire.
+     */
+    default boolean getFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled() {
+        return getFledgeAuctionServerBackgroundKeyFetchJobEnabled()
+                && FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
+    }
+
+    long FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS =
+            TimeUnit.HOURS.toMillis(24);
+
+    /**
+     * Returns the interval at which a key is considered to be almost expired and preventive
+     * refreshed
+     */
+    default long getFledgeAuctionServerBackgroundKeyFetchInAdvanceIntervalMs() {
+        return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS;
     }
 
     boolean FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING = true;
@@ -2242,6 +2256,23 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getMeasurementJobAggregateReportingKillSwitch() {
         return getLegacyMeasurementKillSwitch() || MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Immediate Aggregate Reporting Job Kill Switch. The default value is true which
+     * means Immediate Aggregate Reporting Job is disabled. This flag is used for emergency turning
+     * off of the Immediate Aggregate Reporting Job.
+     */
+    boolean MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH = true;
+
+    /**
+     * Returns the kill switch value for Measurement Immediate Aggregate Reporting Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Immediate Aggregate Reporting Kill Switch value is true.
+     */
+    default boolean getMeasurementJobImmediateAggregateReportingKillSwitch() {
+        return !getMeasurementEnabled()
+                || MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -4141,6 +4172,28 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
     }
 
+    boolean MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for immediate aggregate reporting job. */
+    default boolean getMeasurementImmediateAggregateReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for immediate aggregate reporting job. */
+    default int getMeasurementImmediateAggregateReportingJobRequiredNetworkType() {
+        return MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED = true;
+
+    /** Returns whether to persist immediate aggregate reporting job across device reboots. */
+    default boolean getMeasurementImmediateAggregateReportingJobPersisted() {
+        return MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED;
+    }
+
     /** Default value for Null Aggregate Report feature flag. */
     boolean MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED = false;
 
@@ -4336,7 +4389,31 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns true when attribution scope is enabled. */
     default boolean getMeasurementEnableAttributionScope() {
-        return MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+        return getMeasurementFlexLiteApiEnabled() && MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+    }
+
+    boolean MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK = false;
+
+    /**
+     * Returns true if validation is enabled for one navigation per reporting origin per
+     * registration.
+     */
+    default boolean getMeasurementEnableNavigationReportingOriginCheck() {
+        return MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
+    }
+
+    int MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE = 20;
+
+    /** Returns max number of attribution scopes per source. */
+    default int getMeasurementMaxAttributionScopesPerSource() {
+        return MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
+    }
+
+    int MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH = 50;
+
+    /** Returns max length of attribution scope. */
+    default int getMeasurementMaxAttributionScopeLength() {
+        return MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
     }
 
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
@@ -4625,25 +4702,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default long getAdIdFetcherTimeoutMs() {
         return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
-    }
-
-    /**
-     * @deprecated TODO(b/314962688): remove (will always be true)
-     */
-    @FeatureFlag(RAMPED_UP)
-    @Deprecated
-    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = true;
-
-    /**
-     * Returns whether the API access checked by the AdServices XML config returns {@code true} by
-     * default (i.e., when the app doesn't define the config XML file or if the given API access is
-     * missing from that file).
-     *
-     * @deprecated TODO(b/314962688): remove
-     */
-    @Deprecated
-    default boolean getAppConfigReturnsEnabledByDefault() {
-        return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
     }
 
     /**
@@ -5140,5 +5198,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getEnableTabletRegionFix() {
         return DEFAULT_ENABLE_TABLET_REGION_FIX;
+    }
+
+    /** Default value for custom error code sampling enabled. */
+    @FeatureFlag boolean DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED = false;
+
+    /** Returns {@code boolean} determining whether custom error code sampling is enabled. */
+    default boolean getCustomErrorCodeSamplingEnabled() {
+        return DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
     }
 }

@@ -67,7 +67,9 @@ public class FetchCustomAudienceReader {
      *     bidding data
      * @param maxAdsSizeB the configured maximum size in bytes allocated for ads
      * @param maxNumAds the configured maximum number of ads allowed per update
-     * @param filteringEnabled whether or not ad selection filtering fields should be read
+     * @param frequencyCapFilteringEnabled whether or not frequency cap filtering fields should be
+     *     read
+     * @param appInstallFilteringEnabled whether or not app install filtering fields should be read
      */
     protected FetchCustomAudienceReader(
             @NonNull JSONObject responseObject,
@@ -77,7 +79,8 @@ public class FetchCustomAudienceReader {
             int maxTrustedBiddingDataSizeB,
             int maxAdsSizeB,
             int maxNumAds,
-            boolean filteringEnabled,
+            boolean frequencyCapFilteringEnabled,
+            boolean appInstallFilteringEnabled,
             boolean adRenderIdEnabled,
             long adRenderIdMaxLength) {
         Objects.requireNonNull(responseObject);
@@ -96,7 +99,8 @@ public class FetchCustomAudienceReader {
                         maxTrustedBiddingDataSizeB,
                         maxAdsSizeB,
                         maxNumAds,
-                        filteringEnabled,
+                        frequencyCapFilteringEnabled,
+                        appInstallFilteringEnabled,
                         adRenderIdEnabled,
                         adRenderIdMaxLength);
     }

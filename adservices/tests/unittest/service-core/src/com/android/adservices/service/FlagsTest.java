@@ -368,6 +368,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
     }
 
+    @Test
+    public void testGetCustomErrorCodeSamplingEnabled() {
+        testFeatureFlag(
+                "DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED",
+                Flags::getCustomErrorCodeSamplingEnabled);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //
@@ -433,12 +440,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     // Tests for feature flags that already launched - they will eventually be removed (once the  //
     // underlying getter is removed).                                                             //
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    @Test
-    public void testGetAppConfigReturnsEnabledByDefault() {
-        testRetiredFeatureFlag(
-                "APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT",
-                Flags::getAppConfigReturnsEnabledByDefault);
-    }
+
+    // NOTE: there isn't any such flag currently, so commented code below is shown as an example
+    // @Test
+    // public void testGetAppConfigReturnsEnabledByDefault() {
+    //     testRetiredFeatureFlag(
+    //             "APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT",
+    //             Flags::getAppConfigReturnsEnabledByDefault);
+    // }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for "config" flags (not feature flag / kill switch).                                 //
@@ -574,6 +583,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", killSwitchName).that(defaultKillSwitchValue).isFalse();
     }
 
+    @SuppressWarnings({"unused"}) // Might become unused if no flag currently needs it
     private void testRetiredFeatureFlag(String name, Flaginator<Flags, Boolean> flaginator) {
         boolean defaultValue = getConstantValue(name);
 

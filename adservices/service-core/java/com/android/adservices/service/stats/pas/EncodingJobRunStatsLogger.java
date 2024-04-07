@@ -16,15 +16,16 @@
 
 package com.android.adservices.service.stats.pas;
 
-import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+public interface EncodingJobRunStatsLogger {
+    /** Invokes the logger to log {@link EncodingJobRunStats}. */
+    void logEncodingJobRunStats();
 
-public interface FetchProcessLogger {
-    /** Invokes the logger to log {@link EncodingFetchStats}. */
-    void logEncodingJsFetchStats(@AdsRelevanceStatusUtils.EncodingFetchStatus int jsFetchStatus);
+    /** Adds one to count of signal encoding failures.  */
+    void addOneSignalEncodingFailures();
 
-    /** Sets the AdTech's eTLD+1 ID. */
-    void setAdTechId(String adTechId);
+    /** Adds one to count of signal encoding skips. */
+    void addOneSignalEncodingSkips();
 
-    /** Sets the timestamp to start download the js. */
-    void setJsDownloadStartTimestamp(long jsDownloadStartTimestamp);
+    /** Sets the size of filtered buyer encoding list. */
+    void setSizeOfFilteredBuyerEncodingList(int sizeOfFilteredBuyerEncodingList);
 }
