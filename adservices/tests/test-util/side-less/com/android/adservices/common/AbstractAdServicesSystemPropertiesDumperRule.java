@@ -15,7 +15,8 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
 // TODO(b/328064701): add unit tests
 /** Rule used to dump some system properties when a test fails. */

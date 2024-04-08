@@ -38,7 +38,7 @@ import android.content.IntentFilter;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;

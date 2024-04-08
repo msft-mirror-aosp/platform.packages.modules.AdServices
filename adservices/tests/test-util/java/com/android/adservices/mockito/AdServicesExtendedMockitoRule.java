@@ -27,11 +27,11 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.common.LogEntry.Level;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.LogEntry.Level;
 import com.android.adservices.shared.testing.common.TestHelper;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
