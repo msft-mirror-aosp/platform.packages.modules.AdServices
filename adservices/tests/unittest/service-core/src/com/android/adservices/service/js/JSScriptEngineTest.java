@@ -30,6 +30,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
@@ -46,6 +47,7 @@ import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.javascriptengine.IsolateStartupParameters;
+import androidx.javascriptengine.JavaScriptConsoleCallback;
 import androidx.javascriptengine.JavaScriptIsolate;
 import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.javascriptengine.MemoryLimitExceededException;
@@ -124,8 +126,9 @@ public class JSScriptEngineTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static JSScriptEngine sJSScriptEngine;
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
+    private final boolean mDefaultIsolateConsoleMessageInLogs = false;
     private final IsolateSettings mDefaultIsolateSettings =
-            IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+            IsolateSettings.forMaxHeapSizeEnforcementDisabled(mDefaultIsolateConsoleMessageInLogs);
     private final RetryStrategy mNoOpRetryStrategy = new NoOpRetryStrategyImpl();
     @Mock JSScriptEngine.JavaScriptSandboxProvider mMockSandboxProvider;
     @Mock private StopWatch mIsolateCreateWatch;
@@ -591,7 +594,11 @@ public class JSScriptEngineTest {
                                 "simulating a failure caused by JavaScriptSandbox not"
                                         + " supporting max heap size"));
         IsolateSettings enforcedHeapIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementEnabled(1000);
+                IsolateSettings.builder()
+                        .setEnforceMaxHeapSizeFeature(true)
+                        .setMaxHeapSizeBytes(1000)
+                        .setIsolateConsoleMessageInLogsEnabled(mDefaultIsolateConsoleMessageInLogs)
+                        .build();
 
         ExecutionException executionException =
                 callJSEngineAndAssertExecutionException(
@@ -617,8 +624,11 @@ public class JSScriptEngineTest {
         when(mMockedSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE))
                 .thenReturn(false);
         IsolateSettings enforcedHeapIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementEnabled(1000);
-
+                IsolateSettings.builder()
+                        .setEnforceMaxHeapSizeFeature(true)
+                        .setMaxHeapSizeBytes(1000)
+                        .setIsolateConsoleMessageInLogsEnabled(mDefaultIsolateConsoleMessageInLogs)
+                        .build();
         ExecutionException executionException =
                 callJSEngineAndAssertExecutionException(
                         JSScriptEngine.createNewInstanceForTesting(
@@ -645,7 +655,8 @@ public class JSScriptEngineTest {
                                 "simulating a failure caused by JavaScriptSandbox not"
                                         + " supporting max heap size"));
         IsolateSettings lenientHeapIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+                IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+                        mDefaultIsolateConsoleMessageInLogs);
 
         assertThat(
                         callJSEngine(
@@ -662,7 +673,11 @@ public class JSScriptEngineTest {
         when(mMockedSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE))
                 .thenReturn(true);
         IsolateSettings enforcedHeapIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementEnabled(0);
+                IsolateSettings.builder()
+                        .setEnforceMaxHeapSizeFeature(true)
+                        .setMaxHeapSizeBytes(0)
+                        .setIsolateConsoleMessageInLogsEnabled(mDefaultIsolateConsoleMessageInLogs)
+                        .build();
         when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
 
         when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
@@ -692,7 +707,11 @@ public class JSScriptEngineTest {
         when(mMockedSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE))
                 .thenReturn(true);
         IsolateSettings enforcedHeapIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementEnabled(1000);
+                IsolateSettings.builder()
+                        .setEnforceMaxHeapSizeFeature(true)
+                        .setMaxHeapSizeBytes(1000)
+                        .setIsolateConsoleMessageInLogsEnabled(mDefaultIsolateConsoleMessageInLogs)
+                        .build();
         when(mMockedSandbox.createIsolate(Mockito.any(IsolateStartupParameters.class)))
                 .thenReturn(mMockedIsolate);
 
@@ -716,6 +735,86 @@ public class JSScriptEngineTest {
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         verify(mMockedSandbox)
                 .isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE);
+    }
+
+    @Test
+    public void testConsoleMessageCallbackSuccess() throws Exception {
+        IsolateSettings isolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled(true);
+        when(mMockedSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_CONSOLE_MESSAGING))
+                .thenReturn(true);
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
+                .thenReturn(Futures.immediateFuture("\"hello world\""));
+
+        callJSEngine(
+                JSScriptEngine.createNewInstanceForTesting(
+                        ApplicationProvider.getApplicationContext(),
+                        mMockSandboxProvider,
+                        sMockProfiler,
+                        sLogger),
+                "function test() { return \"hello world\"; }",
+                ImmutableList.of(),
+                "test",
+                isolateSettings,
+                mNoOpRetryStrategy);
+
+        verify(mMockedSandbox).isFeatureSupported(JavaScriptSandbox.JS_FEATURE_CONSOLE_MESSAGING);
+        verify(mMockedIsolate)
+                .setConsoleCallback(
+                        any(ExecutorService.class), any(JavaScriptConsoleCallback.class));
+    }
+
+    @Test
+    public void testConsoleMessageCallbackIsNotAddedWhenDisabled() throws Exception {
+        IsolateSettings isolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled(false);
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
+                .thenReturn(Futures.immediateFuture("\"hello world\""));
+
+        callJSEngine(
+                JSScriptEngine.createNewInstanceForTesting(
+                        ApplicationProvider.getApplicationContext(),
+                        mMockSandboxProvider,
+                        sMockProfiler,
+                        sLogger),
+                "function test() { return \"hello world\"; }",
+                ImmutableList.of(),
+                "test",
+                isolateSettings,
+                mNoOpRetryStrategy);
+
+        verify(mMockedSandbox, never())
+                .isFeatureSupported(JavaScriptSandbox.JS_FEATURE_CONSOLE_MESSAGING);
+        verify(mMockedIsolate, never())
+                .setConsoleCallback(
+                        any(ExecutorService.class), any(JavaScriptConsoleCallback.class));
+    }
+
+    @Test
+    public void testConsoleMessageCallbackIsNotSetIfFeatureNotAvailable() throws Exception {
+        IsolateSettings isolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled(true);
+        when(mMockedSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_CONSOLE_MESSAGING))
+                .thenReturn(false);
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
+                .thenReturn(Futures.immediateFuture("\"hello world\""));
+
+        callJSEngine(
+                JSScriptEngine.createNewInstanceForTesting(
+                        ApplicationProvider.getApplicationContext(),
+                        mMockSandboxProvider,
+                        sMockProfiler,
+                        sLogger),
+                "function test() { return \"hello world\"; }",
+                ImmutableList.of(),
+                "test",
+                isolateSettings,
+                mNoOpRetryStrategy);
+
+        verify(mMockedSandbox).isFeatureSupported(JavaScriptSandbox.JS_FEATURE_CONSOLE_MESSAGING);
+        verify(mMockedIsolate, never())
+                .setConsoleCallback(
+                        any(ExecutorService.class), any(JavaScriptConsoleCallback.class));
     }
 
     // Troubles between google-java-format and checkstyle

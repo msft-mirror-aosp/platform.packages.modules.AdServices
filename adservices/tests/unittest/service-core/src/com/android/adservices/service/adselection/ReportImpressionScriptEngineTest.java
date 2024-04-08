@@ -42,6 +42,7 @@ import com.android.adservices.service.adselection.ReportImpressionScriptEngine.B
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.ReportingScriptResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.SellerReportingResult;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -67,8 +68,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ReportImpressionScriptEngineTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String TAG = "ReportImpressionScriptEngineTest";
+    private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED =
+            true; // Enabling console messages for tests.
+    private final IsolateSettings mIsolateSettings =
+            IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+                    ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
-    IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
     private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
     private static final Flags FLAGS_WITH_SMALLER_MAX_ARRAY_SIZE =
             new Flags() {
@@ -1194,9 +1199,10 @@ public class ReportImpressionScriptEngineTest {
         }
         return new ReportImpressionScriptEngine(
                 sContext,
-                () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                mIsolateSettings::getEnforceMaxHeapSizeFeature,
+                mIsolateSettings::getMaxHeapSizeBytes,
                 registerAdBeaconScriptEngineHelper,
-                new NoOpRetryStrategyImpl());
+                new NoOpRetryStrategyImpl(),
+                DevContext.builder().setDevOptionsEnabled(true).build());
     }
 }
