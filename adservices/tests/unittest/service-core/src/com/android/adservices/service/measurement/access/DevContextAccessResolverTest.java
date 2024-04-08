@@ -16,12 +16,13 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.SourceRegistrationRequest;
 import android.adservices.measurement.WebSourceParams;
@@ -111,9 +112,7 @@ public class DevContextAccessResolverTest {
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
         assertFalse(accessInfo.isAllowedAccess());
-        assertEquals(
-                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
-                accessInfo.getDeniedAccessReason());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
     }
 
     @Test
@@ -177,9 +176,7 @@ public class DevContextAccessResolverTest {
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
         assertFalse(accessInfo.isAllowedAccess());
-        assertEquals(
-                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
-                accessInfo.getDeniedAccessReason());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
     }
 
     @Test
@@ -195,9 +192,7 @@ public class DevContextAccessResolverTest {
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
         assertFalse(accessInfo.isAllowedAccess());
-        assertEquals(
-                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
-                accessInfo.getDeniedAccessReason());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
     }
 
     @Test
@@ -265,9 +260,7 @@ public class DevContextAccessResolverTest {
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
         assertFalse(accessInfo.isAllowedAccess());
-        assertEquals(
-                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
-                accessInfo.getDeniedAccessReason());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
     }
 
     @Test
@@ -283,9 +276,7 @@ public class DevContextAccessResolverTest {
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
         assertFalse(accessInfo.isAllowedAccess());
-        assertEquals(
-                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
-                accessInfo.getDeniedAccessReason());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
     }
 
     @Test
@@ -345,9 +336,7 @@ public class DevContextAccessResolverTest {
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
         assertFalse(accessInfo.isAllowedAccess());
-        assertEquals(
-                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
-                accessInfo.getDeniedAccessReason());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
     }
 
     @Test
@@ -361,9 +350,7 @@ public class DevContextAccessResolverTest {
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
         assertFalse(accessInfo.isAllowedAccess());
-        assertEquals(
-                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
-                accessInfo.getDeniedAccessReason());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
     }
 
     @Test

@@ -33,7 +33,7 @@
             value="device_config put adservices enable_ad_services_system_api true"/>
         <option
             name="run-command"
-            value="device_config put adservices consent_notification_debug_mode false"/>
+            value="setprop debug.adservices.consent_notification_debug_mode false"/>
         <!-- override scheduling params so the test is unaffected by time of the day -->
         <option
             name="run-command"

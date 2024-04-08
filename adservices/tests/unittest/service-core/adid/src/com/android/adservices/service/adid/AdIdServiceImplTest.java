@@ -17,17 +17,15 @@
 package com.android.adservices.service.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
 import static com.android.adservices.service.Flags.AD_ID_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
@@ -62,8 +60,6 @@ import android.os.Process;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.IntFailureSyncCallback;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -73,6 +69,8 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.shared.testing.IntFailureSyncCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -144,6 +142,8 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
 
         extendedMockito.mockGetFlags(mMockFlags);
         extendedMockito.mockGetCallingUidOrThrow(); // expected calling by its test uid by default
+
+        mockCobaltLoggingFlags(mMockFlags, false);
     }
 
     @Test
@@ -151,9 +151,9 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         when(mMockFlags.getAdIdApiAppBlockList()).thenReturn("*");
         invokeGetAdIdAndVerifyError(
                 mSpyContext,
-                STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
+                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
+                /* checkLoggingStatus */ true,
+                FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -287,7 +287,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         mockLoggerEvent(logOperationCalledLatch);
 
         adidService.getAdId(mRequest, mCallerMetadata, callback);
-        callback.assertFailed(STATUS_CALLER_NOT_ALLOWED);
+        callback.assertFailed(STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST);
 
         // Verify the logger event has occurred.
         assertWithMessage("Logger event:")
@@ -314,7 +314,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                 STATUS_UNAUTHORIZED,
                 mRequest, /* checkLoggingStatus */
                 true,
-                FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND);
+                FAILURE_REASON_UNSET);
         verifyErrorLogUtilErrorWithAnyException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
@@ -336,7 +336,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                 STATUS_UNAUTHORIZED,
                 mRequest, /* checkLoggingStatus */
                 true,
-                FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID);
+                FAILURE_REASON_UNSET);
     }
 
     private void invokeGetAdIdAndVerifyError(

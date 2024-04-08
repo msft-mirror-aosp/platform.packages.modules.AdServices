@@ -114,7 +114,7 @@ public class AbstractSelectAdsLatencyTest {
 
     @Rule
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+            AdServicesFlagsSetterRule.forAllApisEnabledTests().setCompatModeFlags();
 
     @BeforeClass
     public static void setupBeforeClass() {
@@ -224,7 +224,7 @@ public class AbstractSelectAdsLatencyTest {
         return customAudienceBuilder.build();
     }
 
-    private AdSelectionConfig readAdSelectionConfig(String fileName) throws Exception {
+    protected AdSelectionConfig readAdSelectionConfig(String fileName) throws Exception {
         InputStream is = ApplicationProvider.getApplicationContext().getAssets().open(fileName);
         JSONObject adSelectionConfigJson = new JSONObject(readString(is));
         JSONArray buyersJson = adSelectionConfigJson.getJSONArray("custom_audience_buyers");

@@ -19,7 +19,6 @@ package com.android.adservices.service.common;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION;
-import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_ADID;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_AD_SELECTION;
@@ -47,9 +46,6 @@ public final class AppManifestConfig {
     @Nullable private final AppManifestTopicsConfig mTopicsConfig;
     @Nullable private final AppManifestAdIdConfig mAdIdConfig;
     @Nullable private final AppManifestAppSetIdConfig mAppSetIdConfig;
-    // TODO(b/297585683): remove this attribute (and update test cases) once it's always enabled by
-    // default (it will be initially determined by a flag).
-    private final boolean mEnabledByDefault;
 
     /**
      * AdServices manifest config must contain configs for Attribution, Custom Audiences, AdId,
@@ -66,7 +62,6 @@ public final class AppManifestConfig {
      * @param topicsConfig the config for Topics.
      * @param adIdConfig the config for adId.
      * @param appSetIdConfig the config for appSetId.
-     * @param enabledByDefault whether APIs should be enabled by default when missing from the
      */
     public AppManifestConfig(
             @NonNull AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig,
@@ -76,8 +71,7 @@ public final class AppManifestConfig {
             @Nullable AppManifestAdSelectionConfig adSelectionConfig,
             @Nullable AppManifestTopicsConfig topicsConfig,
             @Nullable AppManifestAdIdConfig adIdConfig,
-            @Nullable AppManifestAppSetIdConfig appSetIdConfig,
-            boolean enabledByDefault) {
+            @Nullable AppManifestAppSetIdConfig appSetIdConfig) {
         mIncludesSdkLibraryConfig = includesSdkLibraryConfig;
         mAttributionConfig = attributionConfig;
         mCustomAudiencesConfig = customAudiencesConfig;
@@ -86,7 +80,6 @@ public final class AppManifestConfig {
         mTopicsConfig = topicsConfig;
         mAdIdConfig = adIdConfig;
         mAppSetIdConfig = appSetIdConfig;
-        mEnabledByDefault = enabledByDefault;
     }
 
     /** Getter for IncludesSdkLibraryConfig. */
@@ -255,22 +248,19 @@ public final class AppManifestConfig {
         if (config != null) {
             return config;
         }
-        if (mEnabledByDefault) {
-            LogUtil.v("app manifest config tag '%s' not found, returning default", tag);
-            return supplier.get();
-        }
-        LogUtil.v("app manifest config tag '%s' not found, returning null", tag);
-        return null;
+
+        LogUtil.v("app manifest config tag '%s' not found, returning default", tag);
+        return supplier.get();
     }
 
     private @Result int isAllowedAccess(
             String tag, @Nullable AppManifestApiConfig config, String partnerId) {
         if (config == null) {
             LogUtil.v(
-                    "app manifest config tag '%s' not found, returning %b", tag, mEnabledByDefault);
-            return mEnabledByDefault
-                    ? RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION
-                    : RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION;
+                    "app manifest config tag '%s' not found, returning"
+                            + " RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION (%d)",
+                    tag, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+            return RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION;
         }
         if (config.getAllowAllToAccess()) {
             return RESULT_ALLOWED_APP_ALLOWS_ALL;

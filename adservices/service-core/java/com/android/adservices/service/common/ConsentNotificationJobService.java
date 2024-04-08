@@ -37,7 +37,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
@@ -89,7 +89,7 @@ public class ConsentNotificationJobService extends JobService {
                 sharedPref.getLong(FIRST_ENTRY_REQUEST_TIMESTAMP, currentTimestamp);
         if (firstEntryRequestTimestamp == currentTimestamp) {
             // schedule the background download tasks for OTA resources at the first PPAPI request.
-            MddJobService.scheduleIfNeeded(context, /* forceSchedule */ false);
+            MddJob.scheduleAllMddJobs();
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putLong(FIRST_ENTRY_REQUEST_TIMESTAMP, currentTimestamp);
             if (!editor.commit()) {
@@ -207,11 +207,11 @@ public class ConsentNotificationJobService extends JobService {
             LogUtil.d(
                     "Disabling ConsentNotificationJobService job because it's running in"
                             + " ExtServices on T+");
-            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
+            return skipAndCancelBackgroundJob(params, /* skipReason= */ 0, /* doRecord= */ false);
         }
 
         LogUtil.d("ConsentNotificationJobService.onStartJob");
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
 
         if (mConsentManager == null) {
             setConsentManager(ConsentManager.getInstance());
@@ -247,8 +247,10 @@ public class ConsentNotificationJobService extends JobService {
                                     return;
                                 }
 
-                                if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
-                                    handleOtaStrings(
+                                if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()
+                                        || FlagsFactory.getFlags()
+                                                .getUiOtaResourcesFeatureEnabled()) {
+                                    handleOtaResources(
                                             params.getExtras()
                                                     .getLong(
                                                             FIRST_ENTRY_REQUEST_TIMESTAMP,
@@ -263,8 +265,7 @@ public class ConsentNotificationJobService extends JobService {
                                 }
                             } finally {
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                ConsentNotificationJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 CONSENT_NOTIFICATION_JOB_ID,
                                                 /* isSuccessful= */ true,
@@ -282,7 +283,7 @@ public class ConsentNotificationJobService extends JobService {
 
         boolean shouldRetry = true;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, CONSENT_NOTIFICATION_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -296,7 +297,7 @@ public class ConsentNotificationJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(CONSENT_NOTIFICATION_JOB_ID, skipReason);
         }
 
@@ -308,20 +309,20 @@ public class ConsentNotificationJobService extends JobService {
         return false;
     }
 
-    private void handleOtaStrings(long firstEntryRequestTimestamp, boolean isEeaNotification) {
+    private void handleOtaResources(long firstEntryRequestTimestamp, boolean isEeaNotification) {
         if (System.currentTimeMillis() - firstEntryRequestTimestamp
                 >= FlagsFactory.getFlags().getUiOtaStringsDownloadDeadline()) {
-            LogUtil.d("Passed OTA strings download deadline, sending" + " notification now.");
+            LogUtil.d("Passed OTA resources download deadline, sending" + " notification now.");
             AdServicesSyncUtil.getInstance().execute(this, isEeaNotification);
         } else {
-            sendNotificationIfOtaStringsDownloadCompleted(isEeaNotification);
+            sendNotificationIfOtaResourcesDownloadCompleted(isEeaNotification);
         }
     }
 
-    private void sendNotificationIfOtaStringsDownloadCompleted(boolean isEeaNotification) {
+    private void sendNotificationIfOtaResourcesDownloadCompleted(boolean isEeaNotification) {
         try {
             ClientFileGroup cfg =
-                    MobileDataDownloadFactory.getMdd(this, FlagsFactory.getFlags())
+                    MobileDataDownloadFactory.getMdd(FlagsFactory.getFlags())
                             .getFileGroup(
                                     GetFileGroupRequest.newBuilder()
                                             .setGroupName(
@@ -330,7 +331,7 @@ public class ConsentNotificationJobService extends JobService {
                                             .build())
                             .get();
             if (cfg != null && cfg.getStatus() == ClientFileGroup.Status.DOWNLOADED) {
-                LogUtil.d("finished downloading OTA strings." + " Sending notification now.");
+                LogUtil.d("finished downloading OTA resources." + " Sending notification now.");
                 AdServicesSyncUtil.getInstance().execute(this, isEeaNotification);
                 return;
             }
@@ -341,7 +342,7 @@ public class ConsentNotificationJobService extends JobService {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
-        LogUtil.d("OTA strings are not yet downloaded.");
+        LogUtil.d("OTA resources are not yet downloaded.");
         return;
     }
 }

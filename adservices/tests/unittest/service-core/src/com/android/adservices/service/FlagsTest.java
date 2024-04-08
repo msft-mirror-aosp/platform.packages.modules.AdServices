@@ -16,13 +16,11 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.common.AndroidSdk.RVC;
-import static com.android.adservices.common.AndroidSdk.SC;
-import static com.android.adservices.common.AndroidSdk.SC_V2;
 import static com.android.adservices.service.Flags.AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
@@ -34,13 +32,17 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION
 import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
+import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
+import static com.android.adservices.shared.testing.AndroidSdk.RVC;
+import static com.android.adservices.shared.testing.AndroidSdk.SC;
+import static com.android.adservices.shared.testing.AndroidSdk.SC_V2;
 
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.adservices.common.RequiresSdkRange;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.internal.util.Preconditions;
 
 import org.junit.Test;
@@ -269,13 +271,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetTopicsKillSwitch() {
         testNewKillSwitchGuardedByGlobalKillSwitch(
-                "TOPICS_KILL_SWITCH", flags -> flags.getTopicsKillSwitch());
+                "TOPICS_KILL_SWITCH", Flags::getTopicsKillSwitch);
     }
 
     @Test
     public void testGetLegacyMeasurementKillSwitch() {
         testRampedUpKillSwitchGuardedByGlobalKillSwitch(
-                "MEASUREMENT_KILL_SWITCH", flags -> flags.getLegacyMeasurementKillSwitch());
+                "MEASUREMENT_KILL_SWITCH", Flags::getLegacyMeasurementKillSwitch);
         expect.withMessage("getLegacyMeasurementKillSwitch()")
                 .that(mFlags.getLegacyMeasurementKillSwitch())
                 .isEqualTo(!mFlags.getMeasurementEnabled());
@@ -290,17 +292,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetMeasurementEnabled() {
         testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
-                "getMeasurementEnabled()",
-                MEASUREMENT_KILL_SWITCH,
-                flags -> flags.getMeasurementEnabled());
+                "getMeasurementEnabled()", MEASUREMENT_KILL_SWITCH, Flags::getMeasurementEnabled);
     }
 
     @Test
     public void testGetMddLoggerEnabled() {
         testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
-                "getMddLoggerEnabled()",
-                MDD_LOGGER_KILL_SWITCH,
-                flags -> flags.getMddLoggerEnabled());
+                "getMddLoggerEnabled()", MDD_LOGGER_KILL_SWITCH, Flags::getMddLoggerEnabled);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -310,25 +308,71 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetProtectedSignalsEnabled() {
         testFeatureFlagGuardedByGlobalKillSwitch(
-                "PROTECTED_SIGNALS_ENABLED", flags -> flags.getProtectedSignalsEnabled());
+                "PROTECTED_SIGNALS_ENABLED", Flags::getProtectedSignalsEnabled);
     }
 
     @Test
     public void testGetCobaltLoggingEnabled() {
         testFeatureFlagGuardedByGlobalKillSwitch(
-                "COBALT_LOGGING_ENABLED", flags -> flags.getCobaltLoggingEnabled());
+                "COBALT_LOGGING_ENABLED", Flags::getCobaltLoggingEnabled);
     }
 
     @Test
     public void testGetEnableBackCompat() {
-        testFeatureFlag("ENABLE_BACK_COMPAT", flags -> flags.getEnableBackCompat());
+        testFeatureFlag("ENABLE_BACK_COMPAT", Flags::getEnableBackCompat);
     }
 
     @Test
     public void testGetFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
         testFeatureFlag(
                 "FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED",
-                flags -> flags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled());
+                Flags::getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled);
+    }
+
+    @Test
+    public void testGetFledgeAuctionServerKeyFetchMetricsEnabled() {
+        testFeatureFlag(
+                "FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED",
+                Flags::getFledgeAuctionServerKeyFetchMetricsEnabled);
+    }
+
+    @Test
+    public void testGetSpeOnPilotJobsEnabled() {
+        testFeatureFlag("DEFAULT_SPE_ON_PILOT_JOBS_ENABLED", Flags::getSpeOnPilotJobsEnabled);
+    }
+
+    @Test
+    public void testGetEnrollmentApiBasedSchemaEnabled() {
+        testFeatureFlag(
+                "ENROLLMENT_API_BASED_SCHEMA_ENABLED", Flags::getEnrollmentApiBasedSchemaEnabled);
+    }
+
+    @Test
+    public void testGetSharedDatabaseSchemaVersion4Enabled() {
+        testFeatureFlag(
+                "SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED",
+                Flags::getSharedDatabaseSchemaVersion4Enabled);
+    }
+
+    @Test
+    public void testGetJobSchedulingLoggingEnabled() {
+        testFlag(
+                "getJobSchedulingLoggingEnabled()",
+                DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED,
+                Flags::getJobSchedulingLoggingEnabled);
+    }
+
+    @Test
+    public void testGetEnableBackCompatInit() {
+        testFeatureFlag(
+                "DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
+    }
+
+    @Test
+    public void testGetCustomErrorCodeSamplingEnabled() {
+        testFeatureFlag(
+                "DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED",
+                Flags::getCustomErrorCodeSamplingEnabled);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -341,7 +385,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testLegacyMsmtKillSwitchGuardedByMsmtKillSwitch(
                 "getMeasurementApiDeleteRegistrationsKillSwitch()",
                 "MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH",
-                flags -> flags.getMeasurementApiDeleteRegistrationsKillSwitch());
+                Flags::getMeasurementApiDeleteRegistrationsKillSwitch);
     }
 
     // TODO(b/325074749) - remove once all flags have been converted
@@ -352,7 +396,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Deprecated
     @SuppressWarnings("UnusedMethod") // will be used as more kill switches are refactored
     private void testLegacyMsmtKillSwitchGuardedByMsmtKillSwitch(
-            String getterName, String killSwitchName, Flaginator<Boolean> flaginator) {
+            String getterName, String killSwitchName, Flaginator<Flags, Boolean> flaginator) {
         boolean defaultKillSwitchValue = getConstantValue(killSwitchName);
 
         // Getter
@@ -380,6 +424,11 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetPasExtendedMetricsEnabled() {
+        testFeatureFlag("PAS_EXTENDED_METRICS_ENABLED", Flags::getPasExtendedMetricsEnabled);
+    }
+
+    @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
         testMsmtFeatureFlagBackedByLegacyKillSwitchAndGuardedByMsmtEnabled(
                 "getMeasurementAttributionFallbackJobEnabled()",
@@ -391,12 +440,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     // Tests for feature flags that already launched - they will eventually be removed (once the  //
     // underlying getter is removed).                                                             //
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    @Test
-    public void testGetAppConfigReturnsEnabledByDefault() {
-        testRetiredFeatureFlag(
-                "APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT",
-                flags -> flags.getAppConfigReturnsEnabledByDefault());
-    }
+
+    // NOTE: there isn't any such flag currently, so commented code below is shown as an example
+    // @Test
+    // public void testGetAppConfigReturnsEnabledByDefault() {
+    //     testRetiredFeatureFlag(
+    //             "APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT",
+    //             Flags::getAppConfigReturnsEnabledByDefault);
+    // }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for "config" flags (not feature flag / kill switch).                                 //
@@ -406,7 +457,15 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFlag(
                 "getTopicsEpochJobFlexMs()",
                 TOPICS_EPOCH_JOB_FLEX_MS,
-                flags -> flags.getTopicsEpochJobFlexMs());
+                Flags::getTopicsEpochJobFlexMs);
+    }
+
+    @Test
+    public void testGetJobSchedulingLoggingSamplingRate() {
+        testFlag(
+                "getJobSchedulingLoggingSamplingRate()",
+                DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE,
+                Flags::getJobSchedulingLoggingSamplingRate);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -414,19 +473,19 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void testRampedUpKillSwitchGuardedByGlobalKillSwitch(
-            String name, Flaginator<Boolean> flaginator) {
+            String name, Flaginator<Flags, Boolean> flaginator) {
         internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
                 name, flaginator, /* expectedValue= */ false);
     }
 
     private void testNewKillSwitchGuardedByGlobalKillSwitch(
-            String name, Flaginator<Boolean> flaginator) {
+            String name, Flaginator<Flags, Boolean> flaginator) {
         internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
                 name, flaginator, /* expectedValue= */ true);
     }
 
     private void testFeatureFlagGuardedByGlobalKillSwitch(
-            String name, Flaginator<Boolean> flaginator) {
+            String name, Flaginator<Flags, Boolean> flaginator) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -442,7 +501,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", name).that(defaultValue).isFalse();
     }
 
-    private void testFeatureFlag(String name, Flaginator<Boolean> flaginator) {
+    private void testFeatureFlag(String name, Flaginator<Flags, Boolean> flaginator) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -464,7 +523,22 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", name).that(defaultValue).isFalse();
     }
 
-    private void testFlag(String getterName, long defaultValue, Flaginator<Long> flaginator) {
+    private void testFlag(
+            String getterName, long defaultValue, Flaginator<Flags, Long> flaginator) {
+        expect.withMessage("%s", getterName)
+                .that(flaginator.getFlagValue(mFlags))
+                .isEqualTo(defaultValue);
+    }
+
+    private void testFlag(
+            String getterName, int defaultValue, Flaginator<Flags, Integer> flaginator) {
+        expect.withMessage("%s", getterName)
+                .that(flaginator.getFlagValue(mFlags))
+                .isEqualTo(defaultValue);
+    }
+
+    private void testFlag(
+            String getterName, boolean defaultValue, Flaginator<Flags, Boolean> flaginator) {
         expect.withMessage("%s", getterName)
                 .that(flaginator.getFlagValue(mFlags))
                 .isEqualTo(defaultValue);
@@ -475,13 +549,15 @@ public final class FlagsTest extends AdServicesUnitTestCase {
      */
     @Deprecated
     private void testKillSwitchBeingConvertedAndGuardedByGlobalKillSwitch(
-            String name, Flaginator<Boolean> flaginator) {
+            String name, Flaginator<Flags, Boolean> flaginator) {
         internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
                 name, flaginator, /* expectedValue= */ false);
     }
 
     private void testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
-            String getterName, boolean defaultKillSwitchValue, Flaginator<Boolean> flaginator) {
+            String getterName,
+            boolean defaultKillSwitchValue,
+            Flaginator<Flags, Boolean> flaginator) {
         expect.withMessage("%s when global kill_switch is on", getterName)
                 .that(flaginator.getFlagValue(mGlobalKsOnFlags))
                 .isFalse();
@@ -491,7 +567,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     private void testMsmtFeatureFlagBackedByLegacyKillSwitchAndGuardedByMsmtEnabled(
-            String getterName, String killSwitchName, Flaginator<Boolean> flaginator) {
+            String getterName, String killSwitchName, Flaginator<Flags, Boolean> flaginator) {
         boolean defaultKillSwitchValue = getConstantValue(killSwitchName);
         boolean defaultValue = !defaultKillSwitchValue;
 
@@ -507,7 +583,8 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", killSwitchName).that(defaultKillSwitchValue).isFalse();
     }
 
-    private void testRetiredFeatureFlag(String name, Flaginator<Boolean> flaginator) {
+    @SuppressWarnings({"unused"}) // Might become unused if no flag currently needs it
+    private void testRetiredFeatureFlag(String name, Flaginator<Flags, Boolean> flaginator) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -519,13 +596,17 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", name).that(defaultValue).isTrue();
     }
 
+    static <T> T getConstantValue(String name) {
+        return getConstantValue(Flags.class, name);
+    }
+
     // Not passing type (and using type.cast(value)) because most of the flags are primitive types
     // (like boolean) and T would be their object equivalent (like Boolean)
     @SuppressWarnings("TypeParameterUnusedInFormals")
-    static <T> T getConstantValue(String name) {
+    static <T> T getConstantValue(Class<?> clazz, String name) {
         Field field;
         try {
-            field = Flags.class.getDeclaredField(name);
+            field = clazz.getDeclaredField(name);
         } catch (NoSuchFieldException | SecurityException e) {
             throw new IllegalArgumentException("Could not get field " + name + ": " + e);
         }
@@ -553,7 +634,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     // Should not be called directly
     private void internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
-            String name, Flaginator<Boolean> flaginator, boolean expectedValue) {
+            String name, Flaginator<Flags, Boolean> flaginator, boolean expectedValue) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -569,7 +650,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", name).that(defaultValue).isEqualTo(expectedValue);
     }
 
-    private static class GlobalKillSwitchAwareFlags implements Flags {
+    static class GlobalKillSwitchAwareFlags implements Flags {
         private final boolean mGlobalKsOnFlags;
 
         GlobalKillSwitchAwareFlags(boolean globalKsEnabled) {

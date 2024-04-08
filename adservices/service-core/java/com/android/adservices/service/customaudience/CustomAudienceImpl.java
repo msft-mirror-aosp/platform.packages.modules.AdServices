@@ -99,7 +99,7 @@ public class CustomAudienceImpl {
                         new CustomAudienceImpl(
                                 customAudienceDao,
                                 new CustomAudienceQuantityChecker(customAudienceDao, flags),
-                                CustomAudienceValidator.getInstance(context),
+                                CustomAudienceValidator.getInstance(context, flags),
                                 Clock.systemUTC(),
                                 flags);
             }
@@ -127,13 +127,17 @@ public class CustomAudienceImpl {
         sLogger.v("Validating CA");
         mCustomAudienceValidator.validate(customAudience);
 
-        boolean adSelectionFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
-        sLogger.v("Ad Selection filtering enabled flag is %s", adSelectionFilteringEnabled);
+        boolean frequencyCapFilteringEnabled = mFlags.getFledgeFrequencyCapFilteringEnabled();
+        sLogger.v("Frequency cap filtering enabled flag is %s", frequencyCapFilteringEnabled);
+        boolean appInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
+        sLogger.v("App install filtering enabled flag is %s", appInstallFilteringEnabled);
         boolean adRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
         sLogger.v("Ad render id enabled flag is %s", adRenderIdEnabled);
         AdDataConversionStrategy dataConversionStrategy =
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                        adSelectionFilteringEnabled, adRenderIdEnabled);
+                        frequencyCapFilteringEnabled,
+                        appInstallFilteringEnabled,
+                        adRenderIdEnabled);
 
         boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
         sLogger.v("Is debuggable custom audience: %b", isDebuggableCustomAudience);

@@ -115,33 +115,33 @@
   },
   "output": {
     "event_level_results": [{
-      "report_time": "800176400001",
+      "report_time": "800172800001",
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
         "attribution_destination": "https://1d1.test",
-        "scheduled_report_time": "800176400",
+        "scheduled_report_time": "800172800",
         "source_event_id": "1",
         "trigger_data": "1",
         "source_type": "navigation",
         "randomized_trigger_rate": 0.0008051
       }
     }, {
-      "report_time": "800176400001",
+      "report_time": "800172800001",
       "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
         "attribution_destination": "https://1d1.test",
-        "scheduled_report_time": "800176400",
+        "scheduled_report_time": "800172800",
         "source_event_id": "2",
         "trigger_data": "2",
         "source_type": "navigation",
         "randomized_trigger_rate": 0.0008051
       }
     }, {
-      "report_time": "800176400001",
+      "report_time": "800172800001",
       "report_url": "https://www.ad-tech3.test/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
         "attribution_destination": "https://1d1.test",
-        "scheduled_report_time": "800176400",
+        "scheduled_report_time": "800172800",
         "source_event_id": "3",
         "trigger_data": "3",
         "source_type": "navigation",

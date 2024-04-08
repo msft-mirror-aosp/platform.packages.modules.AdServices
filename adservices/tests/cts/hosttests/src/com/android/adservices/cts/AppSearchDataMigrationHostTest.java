@@ -16,11 +16,11 @@
 
 package com.android.adservices.cts;
 
-import static com.android.adservices.common.TestDeviceHelper.runShellCommand;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.shared.testing.TestDeviceHelper.runShellCommand;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -29,9 +29,9 @@ import android.cts.statsdatom.lib.DeviceUtils;
 import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
-import com.android.adservices.common.BackgroundLogReceiver;
-import com.android.adservices.common.HostSideSdkLevelSupportRule;
-import com.android.adservices.common.TestDeviceHelper;
+import com.android.adservices.shared.testing.BackgroundLogReceiver;
+import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
+import com.android.adservices.shared.testing.TestDeviceHelper;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -88,7 +88,7 @@ public class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
                     // Topics feature flags for calling the Topics API
                     .setTopicsKillSwitch(false)
                     .setMddBackgroundTaskKillSwitch(true)
-                    .setDisableTopicsEnrollmentCheckForTests(true)
+                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                     // Measurement feature flags for calling the Measurement API
                     .setMsmtApiAppAllowList(PACKAGE)
                     .setMsmtWebContextClientAllowList(PACKAGE)
@@ -143,7 +143,7 @@ public class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
 
         // Need to re-set these system properties because the reboot in the setup method causes them
         // to be cleared.
-        flags.setSystemProperty(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
+        flags.setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                 .setLogcatTag("adservices", "VERBOSE")
                 .setLogcatTag("AppSearchWriterActivity", "VERBOSE");
 

@@ -81,7 +81,6 @@ android_test {
         "cts_root",
         "mts-adservices",
         "general-tests",
-        "mcts-adservices",
     ],
     plugins: [
         "auto_value_plugin",

@@ -278,4 +278,51 @@ public class KAnonMessageDaoTest {
         assertThat(fetchedDBKAnonMessagesList.size()).isEqualTo(1);
         assertThat(fetchedDBKAnonMessagesList.get(0).getMessageId()).isEqualTo(messageIds[0]);
     }
+
+    @Test
+    public void testGetNumberOfMessagesWithStatus_returnsCorrectNumberOfMessagesInDB() {
+        DBKAnonMessage message1 =
+                mDefaultDBKAnonMessageBuilder
+                        .setStatus(KAnonMessageConstants.MessageStatus.NOT_PROCESSED)
+                        .build();
+        DBKAnonMessage message2 =
+                mDefaultDBKAnonMessageBuilder
+                        .setStatus(KAnonMessageConstants.MessageStatus.NOT_PROCESSED)
+                        .build();
+        DBKAnonMessage message3 =
+                mDefaultDBKAnonMessageBuilder
+                        .setStatus(KAnonMessageConstants.MessageStatus.SIGNED)
+                        .build();
+        DBKAnonMessage message4 =
+                mDefaultDBKAnonMessageBuilder
+                        .setStatus(KAnonMessageConstants.MessageStatus.SIGNED)
+                        .build();
+        DBKAnonMessage message5 =
+                mDefaultDBKAnonMessageBuilder
+                        .setStatus(KAnonMessageConstants.MessageStatus.JOINED)
+                        .build();
+        DBKAnonMessage message6 =
+                mDefaultDBKAnonMessageBuilder
+                        .setStatus(KAnonMessageConstants.MessageStatus.FAILED)
+                        .build();
+        mKAnonMessageDao.insertAllKAnonMessages(
+                List.of(message1, message2, message3, message4, message5, message6));
+
+        assertThat(
+                        mKAnonMessageDao.getNumberOfMessagesWithStatus(
+                                KAnonMessageConstants.MessageStatus.NOT_PROCESSED))
+                .isEqualTo(2);
+        assertThat(
+                        mKAnonMessageDao.getNumberOfMessagesWithStatus(
+                                KAnonMessageConstants.MessageStatus.SIGNED))
+                .isEqualTo(2);
+        assertThat(
+                        mKAnonMessageDao.getNumberOfMessagesWithStatus(
+                                KAnonMessageConstants.MessageStatus.JOINED))
+                .isEqualTo(1);
+        assertThat(
+                        mKAnonMessageDao.getNumberOfMessagesWithStatus(
+                                KAnonMessageConstants.MessageStatus.FAILED))
+                .isEqualTo(1);
+    }
 }

@@ -20,6 +20,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_KANON_SIGN_JOI
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -30,11 +31,9 @@ import static org.mockito.Mockito.when;
 import android.app.job.JobScheduler;
 import android.content.Context;
 
-
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.kanon.DBKAnonMessage;
 import com.android.adservices.data.kanon.KAnonDatabase;
 import com.android.adservices.data.kanon.KAnonMessageConstants;
@@ -42,6 +41,7 @@ import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -72,7 +72,11 @@ public class KAnonSignJoinManagerTest {
     @Mock private Flags mockFlags;
     @Mock private KAnonCaller mockKanonCaller;
     @Mock private Context mockContext;
-    @Captor private ArgumentCaptor<List<KAnonMessageEntity>> argumentCaptor;
+    @Captor private ArgumentCaptor<List<KAnonMessageEntity>> kanonMessageEntityArgumentCaptor;
+
+    @Captor
+    private ArgumentCaptor<KAnonCallerImpl.KAnonCallerSource> kanonCallerSourceArgumentCaptor;
+
     @Mock private AdServicesLogger mockAdServicesLogger;
     private KAnonSignJoinBackgroundJobService mKAnonSignJoinBackgroundJobServiceSpy;
     private JobScheduler mJobScheduler;
@@ -163,9 +167,12 @@ public class KAnonSignJoinManagerTest {
 
         mKAnonSignJoinManager.processNewMessages(newMessages);
 
-        verify(mockKanonCaller, times(1)).signAndJoinMessages(argumentCaptor.capture());
-        assertThat(argumentCaptor.getValue().size()).isEqualTo(1);
-        assertThat(argumentCaptor.getValue().get(0).getAdSelectionId())
+        verify(mockKanonCaller, times(1))
+                .signAndJoinMessages(
+                        kanonMessageEntityArgumentCaptor.capture(),
+                        kanonCallerSourceArgumentCaptor.capture());
+        assertThat(kanonMessageEntityArgumentCaptor.getValue().size()).isEqualTo(1);
+        assertThat(kanonMessageEntityArgumentCaptor.getValue().get(0).getAdSelectionId())
                 .isEqualTo(kAnonMessageEntity.getAdSelectionId());
     }
 
@@ -200,7 +207,9 @@ public class KAnonSignJoinManagerTest {
 
         List<KAnonMessageEntity> messagesInDB =
                 mKAnonMessageManager.fetchKAnonMessageEntityWithMessage(HASH_SET_1);
-        verify(mockKanonCaller, times(0)).signAndJoinMessages(newMessages);
+        verify(mockKanonCaller, times(0))
+                .signAndJoinMessages(
+                        newMessages, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         assertThat(messagesInDB.size()).isEqualTo(1); // new messages was not inserted.
     }
 
@@ -233,9 +242,12 @@ public class KAnonSignJoinManagerTest {
 
         mKAnonSignJoinManager.processNewMessages(newMessages);
 
-        verify(mockKanonCaller, times(1)).signAndJoinMessages(argumentCaptor.capture());
-        assertThat(argumentCaptor.getValue().size()).isEqualTo(1);
-        assertThat(argumentCaptor.getValue().get(0).getAdSelectionId())
+        verify(mockKanonCaller, times(1))
+                .signAndJoinMessages(
+                        kanonMessageEntityArgumentCaptor.capture(),
+                        kanonCallerSourceArgumentCaptor.capture());
+        assertThat(kanonMessageEntityArgumentCaptor.getValue().size()).isEqualTo(1);
+        assertThat(kanonMessageEntityArgumentCaptor.getValue().get(0).getAdSelectionId())
                 .isEqualTo(kAnonMessageEntity.getAdSelectionId());
     }
 
@@ -257,7 +269,7 @@ public class KAnonSignJoinManagerTest {
 
         mKAnonSignJoinManager.processMessagesFromDatabase(10);
 
-        verify(mockKanonCaller, times(1)).signAndJoinMessages(anyList());
+        verify(mockKanonCaller, times(1)).signAndJoinMessages(anyList(), any());
     }
 
     @Test
@@ -278,11 +290,11 @@ public class KAnonSignJoinManagerTest {
 
         mKAnonSignJoinManager.processNewMessages(List.of(kAnonMessageEntity));
 
-        verify(mockKanonCaller, times(0)).signAndJoinMessages(anyList());
+        verify(mockKanonCaller, times(0)).signAndJoinMessages(anyList(), any());
 
         mKAnonSignJoinManager.processMessagesFromDatabase(100);
 
-        verify(mockKanonCaller, times(1)).signAndJoinMessages(anyList());
+        verify(mockKanonCaller, times(1)).signAndJoinMessages(anyList(), any());
     }
 
     @Test

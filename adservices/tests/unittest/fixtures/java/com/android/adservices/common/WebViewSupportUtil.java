@@ -20,6 +20,7 @@ import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
