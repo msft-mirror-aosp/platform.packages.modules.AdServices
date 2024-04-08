@@ -21,7 +21,10 @@ import static com.android.compatibility.common.util.ShellIdentityUtils.invokeSta
 
 import android.provider.DeviceConfig;
 
-import com.android.adservices.common.AndroidSdk.Level;
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.AndroidSdk.Level;
+import com.android.adservices.shared.testing.DeviceConfigHelper;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 

@@ -28,12 +28,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.io.BaseEncoding;
 

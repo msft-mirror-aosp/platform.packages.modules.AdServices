@@ -38,7 +38,6 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDaoTest;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -51,6 +50,7 @@ import com.android.adservices.service.encryptionkey.EncryptionKeyFetcher;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;

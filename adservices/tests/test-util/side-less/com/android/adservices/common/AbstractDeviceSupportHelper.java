@@ -15,7 +15,10 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.Nullable;
+import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
 import java.util.Objects;
 

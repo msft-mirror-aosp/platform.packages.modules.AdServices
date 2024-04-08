@@ -24,8 +24,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import android.util.ArrayMap;
 import android.util.Log;
 
-import com.android.adservices.common.LogEntry;
-import com.android.adservices.common.LogEntry.Level;
+import com.android.adservices.shared.testing.LogEntry;
+import com.android.adservices.shared.testing.LogEntry.Level;
 import com.android.internal.util.Preconditions;
 
 import java.util.ArrayList;

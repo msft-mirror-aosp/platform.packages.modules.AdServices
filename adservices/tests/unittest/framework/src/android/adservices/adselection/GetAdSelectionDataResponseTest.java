@@ -26,8 +26,8 @@ import android.adservices.common.CommonFixture;
 import android.content.res.AssetFileDescriptor;
 import android.os.Parcel;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;

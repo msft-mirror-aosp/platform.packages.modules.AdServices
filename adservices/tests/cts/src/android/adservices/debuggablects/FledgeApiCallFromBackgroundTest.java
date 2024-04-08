@@ -24,7 +24,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FOREGROUND_STATU
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 
-import com.android.adservices.common.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import com.google.common.truth.Truth;
 

@@ -30,10 +30,10 @@ import android.os.Process;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Before;

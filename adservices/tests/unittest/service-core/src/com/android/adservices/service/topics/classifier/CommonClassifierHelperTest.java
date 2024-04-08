@@ -31,13 +31,13 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockRandom;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;

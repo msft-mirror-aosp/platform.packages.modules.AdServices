@@ -25,10 +25,10 @@ import android.util.Log;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.common.ExceptionFailureSyncCallback;
-import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresLowRamDevice;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.ExceptionFailureSyncCallback;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Assume;

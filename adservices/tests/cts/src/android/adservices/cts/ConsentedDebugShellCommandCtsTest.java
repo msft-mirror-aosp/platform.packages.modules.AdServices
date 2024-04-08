@@ -25,8 +25,8 @@ import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import com.google.common.truth.Truth;
 

@@ -19,8 +19,8 @@ package com.android.adservices.service.adselection;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.COMPRESSION_ALGORITHM_VERSION_LENGTH_BITS;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.PAYLOAD_FORMAT_VERSION_LENGTH_BITS;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Assert;
 import org.junit.Rule;

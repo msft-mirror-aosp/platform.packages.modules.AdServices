@@ -22,6 +22,8 @@ import static android.os.Build.VERSION_CODES.TIRAMISU;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.StandardStreamsLogger;
 
 import com.google.common.truth.Expect;
 

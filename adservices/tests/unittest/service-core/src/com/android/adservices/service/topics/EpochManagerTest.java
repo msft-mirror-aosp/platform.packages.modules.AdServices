@@ -36,7 +36,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockRandom;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.EncryptedTopic;
@@ -51,6 +50,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.TopicsEncryptionEpochComputationReportedStats;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 

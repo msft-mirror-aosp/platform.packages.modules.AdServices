@@ -16,15 +16,15 @@
 
 package com.android.adservices.cts;
 
-import static com.android.adservices.common.TestDeviceHelper.ADSERVICES_SETTINGS_INTENT;
-import static com.android.adservices.common.TestDeviceHelper.startActivity;
-import static com.android.adservices.common.AndroidSdk.PRE_T;
+import static com.android.adservices.shared.testing.AndroidSdk.PRE_T;
+import static com.android.adservices.shared.testing.TestDeviceHelper.ADSERVICES_SETTINGS_INTENT;
+import static com.android.adservices.shared.testing.TestDeviceHelper.startActivity;
 
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
-import com.android.adservices.common.BackgroundLogReceiver;
-import com.android.adservices.common.HostSideSdkLevelSupportRule;
-import com.android.adservices.common.RequiresSdkRange;
+import com.android.adservices.shared.testing.BackgroundLogReceiver;
+import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 
 import org.junit.Rule;

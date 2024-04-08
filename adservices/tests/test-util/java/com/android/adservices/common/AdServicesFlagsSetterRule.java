@@ -42,6 +42,7 @@ import com.android.adservices.experimental.AbstractFlagsRouletteRunner.FlagsRoul
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
+import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.modules.utils.build.SdkLevel;
 
 public final class AdServicesFlagsSetterRule

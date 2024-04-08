@@ -99,17 +99,17 @@ import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.SupportedByConditionRule;
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
-import com.android.adservices.common.annotations.SetIntegerFlag;
-import com.android.adservices.common.annotations.SetLongFlag;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.adselection.AdCost;
 import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

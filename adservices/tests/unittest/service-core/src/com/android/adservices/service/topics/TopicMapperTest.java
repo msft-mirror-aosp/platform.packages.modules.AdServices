@@ -23,8 +23,8 @@ import static org.mockito.Mockito.any;
 import android.content.Context;
 import android.content.res.Resources;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 

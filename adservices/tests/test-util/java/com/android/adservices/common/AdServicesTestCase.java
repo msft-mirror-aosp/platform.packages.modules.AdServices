@@ -23,6 +23,9 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.shared.testing.ProcessLifeguardRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
 import com.google.common.truth.Expect;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;

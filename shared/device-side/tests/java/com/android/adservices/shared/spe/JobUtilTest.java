@@ -28,8 +28,8 @@ import android.net.Uri;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.junit.Test;
 

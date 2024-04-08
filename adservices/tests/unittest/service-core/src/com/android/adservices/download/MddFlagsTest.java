@@ -35,7 +35,7 @@ import android.provider.DeviceConfig;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.android.libraries.mobiledatadownload.Flags;

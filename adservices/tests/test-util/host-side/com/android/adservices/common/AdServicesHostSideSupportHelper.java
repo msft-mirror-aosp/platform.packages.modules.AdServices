@@ -15,8 +15,11 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.common.TestDeviceHelper.call;
+import static com.android.adservices.shared.testing.TestDeviceHelper.call;
 
+import com.android.adservices.shared.testing.ConsoleLogger;
+import com.android.adservices.shared.testing.HostSideSystemPropertiesHelper;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.compatibility.common.util.PackageUtil;
 
 import com.google.common.collect.ImmutableSet;

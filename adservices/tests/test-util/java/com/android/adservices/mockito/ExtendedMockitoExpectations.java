@@ -37,11 +37,11 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.common.SyncCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.SyncCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.build.SdkLevel;
 

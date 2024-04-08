@@ -30,8 +30,8 @@ import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
-import com.android.adservices.common.annotations.SetFlagDisabled;
 import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 
 import org.junit.Assert;
 import org.junit.Test;

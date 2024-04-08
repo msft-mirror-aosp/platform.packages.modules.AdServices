@@ -15,6 +15,9 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.shared.testing.ConsoleLogger;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.TestDeviceHelper;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.IDeviceTest;
 

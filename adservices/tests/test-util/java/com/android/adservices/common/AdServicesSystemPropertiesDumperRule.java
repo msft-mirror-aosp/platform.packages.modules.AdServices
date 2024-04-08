@@ -15,6 +15,8 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.shared.testing.AndroidLogger;
+
 /** See {@link AbstractSystemPropertiesDumperRule}. */
 public final class AdServicesSystemPropertiesDumperRule
         extends AbstractAdServicesSystemPropertiesDumperRule {

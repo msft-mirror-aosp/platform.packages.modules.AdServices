@@ -30,7 +30,7 @@ import android.adservices.common.CommonFixture;
 import android.net.Uri;
 import android.os.Parcel;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;

@@ -18,8 +18,8 @@ package com.android.adservices.experimental;
 
 import android.os.SystemProperties;
 
-import com.android.adservices.common.AndroidLogger;
-import com.android.adservices.common.Logger;
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Logger;
 
 import org.junit.runners.model.InitializationError;
 

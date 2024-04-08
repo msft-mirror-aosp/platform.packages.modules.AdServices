@@ -59,15 +59,15 @@ import android.content.Context;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.JobServiceCallback;
-import com.android.adservices.common.NoFailureSyncCallback;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
+import com.android.adservices.shared.testing.JobServiceCallback;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;

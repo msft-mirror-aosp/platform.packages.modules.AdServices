@@ -27,9 +27,9 @@ import android.adservices.common.AdFilters;
 import android.adservices.common.AppInstallFilters;
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 

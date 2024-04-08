@@ -30,13 +30,13 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionFixture;
 import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;

@@ -41,9 +41,9 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresLowRamDevice;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;

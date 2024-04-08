@@ -36,9 +36,9 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.cobalt.CobaltPipelineType;
 
 import com.google.cobalt.EncryptedMessage;

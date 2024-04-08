@@ -44,10 +44,10 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.collect.ImmutableList;

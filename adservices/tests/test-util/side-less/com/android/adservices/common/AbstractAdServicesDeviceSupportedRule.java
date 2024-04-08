@@ -15,7 +15,15 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.shared.testing.AndroidDevicePropertiesHelper;
+import com.android.adservices.shared.testing.DeviceConditionsViolatedException;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.Nullable;
+import com.android.adservices.shared.testing.ScreenSize;
+import com.android.adservices.shared.testing.annotations.RequiresGoDevice;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
+import com.android.adservices.shared.testing.annotations.RequiresScreenSizeDevice;
 
 import com.google.common.annotations.VisibleForTesting;
 

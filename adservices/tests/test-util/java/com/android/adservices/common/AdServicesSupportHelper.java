@@ -26,6 +26,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.compatibility.common.util.PackageUtil;
 import com.android.compatibility.common.util.PropertyUtil;
 

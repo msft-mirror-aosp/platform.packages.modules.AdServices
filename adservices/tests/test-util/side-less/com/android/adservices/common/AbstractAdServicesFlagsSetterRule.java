@@ -19,9 +19,12 @@ import static com.android.adservices.common.AbstractAdServicesSystemPropertiesDu
 import static com.android.adservices.service.FlagsConstants.ARRAY_SPLITTER_COMMA;
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 
-import com.android.adservices.common.Logger.RealLogger;
-import com.android.adservices.common.NameValuePair.Matcher;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
+import com.android.adservices.shared.testing.DeviceConfigHelper;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.NameValuePair.Matcher;
+import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
 import java.util.Objects;
 

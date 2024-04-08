@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import android.adservices.common.AdServicesStatusUtils;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;

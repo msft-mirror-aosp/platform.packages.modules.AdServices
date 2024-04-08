@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
  * <p>Notice that the it doesn't prevent crashes if such classes are exposed outside methods (like
  * as instance variables) - it's responsibility of the test author to "hide" those references. The
  * test authors should also make sure that test methods that use unsupported classes are skipped
- * (for example, using {@link com.android.adservices.common.SdkLevelSupportRule})
+ * (for example, using {@link com.android.adservices.shared.testing.SdkLevelSupportRule})
  */
 public class SafeAndroidJUnitRunner extends EasilyExtensibleBlockJUnit4ClassRunner {
 

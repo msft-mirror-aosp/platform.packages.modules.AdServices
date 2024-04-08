@@ -22,8 +22,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.io.BaseEncoding;
 

@@ -29,9 +29,9 @@ import android.os.Bundle;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.annotations.SetIntegerFlag;
-import com.android.adservices.common.annotations.SetLongFlag;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;

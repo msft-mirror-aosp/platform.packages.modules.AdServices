@@ -18,7 +18,7 @@ package com.android.adservices.data.topics.migration;
 
 import android.database.sqlite.SQLiteDatabase;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;

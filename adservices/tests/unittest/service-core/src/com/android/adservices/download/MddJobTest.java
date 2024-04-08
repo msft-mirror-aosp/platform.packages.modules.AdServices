@@ -51,14 +51,14 @@ import android.app.job.JobScheduler;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.FutureSyncCallback;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.scheduling.JobSpec;
+import com.android.adservices.shared.testing.FutureSyncCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;

@@ -32,10 +32,10 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.HpkeJni;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.json.JSONException;
 import org.json.JSONObject;

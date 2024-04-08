@@ -15,6 +15,9 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.StandardStreamsLogger;
+
 import org.junit.runners.model.Statement;
 
 /** A simple JUnit statement that provides methods to assert if was evaluated or not. */

@@ -28,11 +28,11 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.signals.DBEncoderEndpoint;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;

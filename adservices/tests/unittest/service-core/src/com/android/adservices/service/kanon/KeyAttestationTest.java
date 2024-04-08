@@ -31,7 +31,7 @@ import android.security.keystore.KeyProperties;
 import com.android.adservices.TlsConnectionAvailableRule;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.DeviceExclusionRule;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 

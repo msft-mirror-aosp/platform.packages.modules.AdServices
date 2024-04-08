@@ -22,7 +22,7 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.RemoveAdSelectionFromOutcomesOverrideRequest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;

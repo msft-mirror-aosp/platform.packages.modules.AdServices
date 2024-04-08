@@ -28,7 +28,6 @@ import android.adservices.common.FledgeErrorResponse;
 import android.os.Process;
 import android.os.RemoteException;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.FakeFlagsFactory;
@@ -38,6 +37,7 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 

@@ -29,10 +29,10 @@ import android.adservices.common.UpdateAdIdRequest;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -19,6 +19,8 @@ package com.android.adservices.common;
 
 import android.app.job.JobService;
 
+import com.android.adservices.shared.testing.JobServiceCallback;
+
 // TODO(b/296945680): Remove this class. Use JobServiceCallback directly.
 /**
  * @deprecated Helper methods in this class are deprecated. Use {@code new
