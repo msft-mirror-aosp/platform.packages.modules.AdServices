@@ -18,7 +18,9 @@ package android.adservices.adselection;
 
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -30,10 +32,10 @@ import java.util.Set;
 public class SetAppInstallAdvertisersRequest {
     @NonNull private final Set<AdTechIdentifier> mAdvertisers;
 
-    public SetAppInstallAdvertisersRequest(@NonNull Set<AdTechIdentifier> advertisers) {
+    private SetAppInstallAdvertisersRequest(@NonNull Set<AdTechIdentifier> advertisers) {
         Objects.requireNonNull(advertisers);
 
-        mAdvertisers = advertisers;
+        mAdvertisers = new HashSet<>(advertisers);
     }
 
     /**
@@ -44,5 +46,30 @@ public class SetAppInstallAdvertisersRequest {
     @NonNull
     public Set<AdTechIdentifier> getAdvertisers() {
         return mAdvertisers;
+    }
+
+    public static final class Builder {
+        @Nullable private Set<AdTechIdentifier> mAdvertisers;
+
+        public Builder() {}
+
+        /**
+         * Sets list of allowed advertisers. See {@link SetAppInstallAdvertisersRequest
+         * #getAdvertisers()}
+         */
+        @NonNull
+        public SetAppInstallAdvertisersRequest.Builder setAdvertisers(
+                @NonNull Set<AdTechIdentifier> advertisers) {
+            Objects.requireNonNull(advertisers);
+
+            mAdvertisers = new HashSet<>(advertisers);
+            return this;
+        }
+
+        /** Builds a {@link SetAppInstallAdvertisersRequest} instance. */
+        @NonNull
+        public SetAppInstallAdvertisersRequest build() {
+            return new SetAppInstallAdvertisersRequest(mAdvertisers);
+        }
     }
 }
