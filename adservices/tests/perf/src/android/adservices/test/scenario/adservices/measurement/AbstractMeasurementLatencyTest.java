@@ -167,10 +167,10 @@ public class AbstractMeasurementLatencyTest {
         }
 
         // Override consent manager behavior to give user consent.
-        flags.setConsentManagerDebugMode(true);
+        flags.setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true);
 
         // Override adid kill switch.
-        flags.setAdIdKillSwitchForTests(false);
+        flags.setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
 
         // Override the flag to allow current package to call APIs.
         flags.setPpapiAppAllowList("*");

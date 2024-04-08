@@ -21,6 +21,7 @@ import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.tests.cts.topics.appupdate.CtsAdServicesTopicsAppUpdateTestCase.TEST_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.tests.cts.topics.appupdate.CtsAdServicesTopicsAppUpdateTestCase.TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
@@ -37,7 +38,7 @@ import android.content.IntentFilter;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
@@ -139,7 +140,8 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
 
         flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
-        flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        flags.setFlag(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
         flags.setFlag(KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, true);
         flags.setFlag(KEY_ENFORCE_FOREGROUND_STATUS_TOPICS, false);
         registerTopicResponseReceiver();

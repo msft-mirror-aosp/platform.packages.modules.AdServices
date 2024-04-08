@@ -598,6 +598,9 @@ public class SdkSandboxManagerUnitTest {
                 .isNotNull();
         assertThat(params.getBinder(SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER))
                 .isEqualTo(token);
+        // TODO(b/326966352): test sandbox activity start param is set correctly.
+        assertThat(params.getLong(SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME))
+                .isNotEqualTo(0L);
     }
 
     @Test

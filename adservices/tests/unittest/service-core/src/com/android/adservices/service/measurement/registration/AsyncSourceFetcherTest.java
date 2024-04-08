@@ -29,6 +29,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -59,6 +61,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
@@ -77,18 +80,14 @@ import com.google.common.collect.ImmutableMultiset;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -104,7 +103,6 @@ import javax.net.ssl.HttpsURLConnection;
 /** Unit tests for {@link AsyncSourceFetcher} */
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(Enrollment.class)
-@RunWith(Parameterized.class)
 public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String ANDROID_APP_SCHEME = "android-app";
@@ -175,24 +173,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     @Mock private Flags mFlags;
     @Mock private AdServicesLogger mLogger;
 
-    // Parameterised setup to run all the tests once with ARA parsing V1 flag on, and once with the
-    // flag off.
-    private final Boolean mAraParsingAlignmentV1Enabled;
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> getConfig() throws IOException, JSONException {
-        return List.of(
-                new Object[]{ "ara_parsing_alignment_v1_enabled", Boolean.TRUE },
-                new Object[]{ "ara_parsing_alignment_v1_disabled", Boolean.FALSE });
-    }
-
-    public AsyncSourceFetcherTest(String name, Boolean araParsingAlignmentV1Enabled) {
-        mAraParsingAlignmentV1Enabled = araParsingAlignmentV1Enabled;
-    }
-
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(FlagsFactory.getFlagsForTest());
+        extendedMockito.mockGetFlags(FakeFlagsFactory.getFlagsForTest());
 
         mFetcher = spy(new AsyncSourceFetcher(sContext, mEnrollmentDao, mFlags));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
@@ -206,12 +189,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn(SourceFixture.ValidSourceParams.ENROLLMENT_ID);
         when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
-        when(mFlags.getMeasurementEnableAraParsingAlignmentV1())
-                .thenReturn(mAraParsingAlignmentV1Enabled);
-        if (mAraParsingAlignmentV1Enabled) {
-            when(mFlags.getMeasurementMinimumAggregatableReportWindowInSeconds())
-                    .thenReturn(Flags.MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS);
-        }
+        when(mFlags.getMeasurementMinimumAggregatableReportWindowInSeconds())
+                .thenReturn(Flags.MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS);
         doReturn(Flags.MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS)
                 .when(mFlags).getMeasurementMinimumEventReportWindowInSeconds();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS)
@@ -242,6 +221,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
         when(mFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
+        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
     }
 
     @Test
@@ -873,7 +854,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void sourceRequest_expiryNegative_fails() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1244,7 +1224,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void sourceRequest_reportWindowsTooEarlyAraParsingV1_setToMin() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1281,50 +1260,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(Long.valueOf(TimeUnit.HOURS.toMillis(1)), result.getEventReportWindow());
         assertEquals(
                 result.getEventTime() + TimeUnit.HOURS.toMillis(1),
-                result.getAggregatableReportWindow());
-        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
-    public void sourceRequest_reportWindowsTooEarly_setToMin() throws Exception {
-        Assume.assumeFalse(mAraParsingAlignmentV1Enabled);
-        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{\"destination\":\""
-                                                + DEFAULT_DESTINATION
-                                                + "\","
-                                                + "\"source_event_id\":\""
-                                                + DEFAULT_EVENT_ID
-                                                + "\","
-                                                + "\"expiry\":\"172800\","
-                                                + "\"event_report_window\":\"2000\","
-                                                + "\"aggregatable_report_window\":\"1728\""
-                                                + "}")));
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
-        assertTrue(fetch.isPresent());
-        Source result = fetch.get();
-        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
-        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
-        assertEquals(0, result.getPriority());
-        assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
-        assertEquals(Long.valueOf(TimeUnit.HOURS.toMillis(1)), result.getEventReportWindow());
-        assertEquals(
-                result.getEventTime() + TimeUnit.DAYS.toMillis(1),
                 result.getAggregatableReportWindow());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -1453,7 +1388,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void sourceRequest_eventReportWindowNegative_fails() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1484,7 +1418,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void sourceRequest_aggregateReportWindowNegative_fails() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1515,7 +1448,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void sourceRequest_priorityNotAString_fails() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1544,7 +1476,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void fetchSource_sourceEventIdNotAString_fails() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1574,37 +1505,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void fetchSource_sourceEventIdNegative_fetchSuccess() throws Exception {
-        Assume.assumeFalse(mAraParsingAlignmentV1Enabled);
-        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{\"destination\":\""
-                                                + DEFAULT_DESTINATION
-                                                + "\","
-                                                + "\"source_event_id\":\"-35\"}")));
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-
-        // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
-
-        // Assertion
-        assertTrue(fetch.isPresent());
-        verify(mUrlConnection, times(1)).setRequestMethod("POST");
-        verify(mFetcher, times(1)).openUrl(any());
-    }
-
-    @Test
     public void fetchSource_sourceEventIdNegative_fails() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1631,40 +1532,10 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
-    public void fetchSource_sourceEventIdTooLarge_fetchSuccess() throws Exception {
-        Assume.assumeFalse(mAraParsingAlignmentV1Enabled);
-        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{\"destination\":\""
-                                                + DEFAULT_DESTINATION
-                                                + "\",\"source_event_id\":\""
-                                                + "18446744073709551616\"}")));
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-
-        // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
-
-        // Assertion
-        assertTrue(fetch.isPresent());
-        verify(mUrlConnection, times(1)).setRequestMethod("POST");
-        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
     public void fetchSource_sourceEventIdTooLarge_fails() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1694,37 +1565,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void fetchSource_sourceEventIdNotAnInt_fetchSuccess() throws Exception {
-        Assume.assumeFalse(mAraParsingAlignmentV1Enabled);
-        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{\"destination\":\""
-                                                + DEFAULT_DESTINATION
-                                                + "\","
-                                                + "\"source_event_id\":\"8l2\"}")));
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-
-        // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
-
-        // Assertion
-        assertTrue(fetch.isPresent());
-        verify(mUrlConnection, times(1)).setRequestMethod("POST");
-        verify(mFetcher, times(1)).openUrl(any());
-    }
-
-    @Test
     public void fetchSource_sourceEventIdNotAnInt_fails() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1848,7 +1689,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void testBasicSourceRequest_debugKeyNotAString_setAsNull() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -3013,7 +2853,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void sourceRequest_filterDataIncludesSourceType_fails() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         String filterData =
                 "\"filter_data\":{\"product\":[\"1234\",\"2345\"],\"source_type\":[\"event\"]}";
@@ -3047,7 +2886,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void sourceRequest_filterDataIncludesReservedPrefix_fails() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         String filterData =
                 "\"filter_data\":{\"product\":[\"1234\",\"2345\"],\"_abc_reserved\":[\"event\"]}";
@@ -3380,7 +3218,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void sourceRequest_aggregationKeysIncludeNonHexChar_fails() throws Exception {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -3408,44 +3245,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
-    public void sourceRequest_aggregationKeysIncludeNonHexChar_succeeds() throws Exception {
-        Assume.assumeFalse(mAraParsingAlignmentV1Enabled);
-        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{\n"
-                                            + "  \"destination\": \"android-app://com.myapps\",\n"
-                                            + "  \"priority\": \"123\",\n"
-                                            + "  \"expiry\": \"456789\",\n"
-                                            + "  \"source_event_id\": \"987654321\",\n"
-                                            + "\"aggregation_keys\": {\"campaignCounts\" :"
-                                            + " \"0x159G\", \"geoValue\" : \"0x5\"}\n"
-                                            + "}\n")));
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
-        assertTrue(fetch.isPresent());
-        Source result = fetch.get();
-        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(
-                new JSONObject("{\"campaignCounts\" : \"0x159G\", \"geoValue\" : \"0x5\"}")
-                        .toString(),
-                result.getAggregateSource());
-        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -4182,7 +3981,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void fetchWebSource_reportWindowsTooEarlyAraParsingV1_setToMin() throws IOException {
-        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
         // Setup
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
@@ -4220,50 +4018,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(Long.valueOf(TimeUnit.HOURS.toMillis(1)), result.getEventReportWindow());
         assertEquals(
                 result.getEventTime() + TimeUnit.HOURS.toMillis(1),
-                result.getAggregatableReportWindow());
-        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
-    }
-
-    @Test
-    public void fetchWebSource_reportWindowsTooEarly_setToMin() throws IOException {
-        Assume.assumeFalse(mAraParsingAlignmentV1Enabled);
-        // Setup
-        WebSourceRegistrationRequest request =
-                buildWebSourceRegistrationRequest(
-                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{\"destination\":\""
-                                                + DEFAULT_DESTINATION
-                                                + "\","
-                                                + "\"source_event_id\":\""
-                                                + EVENT_ID_1
-                                                + "\","
-                                                + "\"expiry\":\"172800\","
-                                                + "\"event_report_window\":\"2000\","
-                                                + "\"aggregatable_report_window\":\"1728\""
-                                                + "}")));
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true),
-                        asyncFetchStatus,
-                        asyncRedirects);
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
-        assertTrue(fetch.isPresent());
-        Source result = fetch.get();
-        assertEquals(result.getEventTime() + TimeUnit.DAYS.toMillis(2), result.getExpiryTime());
-        assertEquals(Long.valueOf(TimeUnit.HOURS.toMillis(1)), result.getEventReportWindow());
-        assertEquals(
-                result.getEventTime() + TimeUnit.DAYS.toMillis(1),
                 result.getAggregatableReportWindow());
         assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
     }
@@ -7029,71 +6783,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void fetchSource_flexibleEventReportApiArithmeticException_noSourceGenerated()
-            throws Exception {
-        String triggerSpecsString =
-                "[{\"trigger_data\": ["
-                        + IntStream.range(1, 33)
-                                .boxed()
-                                .map(String::valueOf)
-                                .collect(Collectors.joining(","))
-                        + "],"
-                        + "\"event_report_windows\": { "
-                                + "\"start_time\": 0,"
-                                + "\"end_times\": ["
-                                        + IntStream.range(1, 6)
-                                                .mapToLong(TimeUnit.DAYS::toSeconds)
-                                                .boxed()
-                                                .map(String::valueOf)
-                                                .collect(Collectors.joining(","))
-                                + "]"
-                        + "},"
-                        + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": ["
-                                + IntStream.range(1, 21)
-                                        .boxed()
-                                        .map(String::valueOf)
-                                        .collect(Collectors.joining(","))
-                        + "]}]";
-        RegistrationRequest request =
-                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
-        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
-        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
-        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{"
-                                                + "  \"destination\": \"android-app://com"
-                                                + ".myapps\","
-                                                + "  \"priority\": \"123\","
-                                                + "  \"source_event_id\": \"987654321\","
-                                                + "  \"install_attribution_window\": \"272800\","
-                                                + "  \"trigger_specs\": "
-                                                + triggerSpecsString + ","
-                                                + "  \"max_event_level_reports\": 20,"
-                                                + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\""
-                                                + "}")));
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
-        assertEquals(
-                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
-        assertTrue(fetch.isEmpty());
-    }
-
-    @Test
     public void fetchSource_flexibleEventReportApiTriggerDataTooHigh_noSourceGenerated()
             throws Exception {
         String triggerSpecsString =
@@ -9543,11 +9232,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     @Test
     public void fetchSource_dropSourceIfInstalled_success() throws Exception {
         when(mFlags.getMeasurementEnablePreinstallCheck()).thenReturn(true);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getOutputStream()).thenReturn(outputStream);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -9570,6 +9257,520 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertTrue(fetch.isPresent());
         verify(mFetcher, times(1)).openUrl(any());
         assertTrue(fetch.get().shouldDropSourceIfInstalled());
+    }
+
+    @Test
+    public void fetchSource_attributionScopeEnabled_parsesAttributionScopeFields()
+            throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
+                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"max_event_states\":3"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        verify(mFetcher, times(1)).openUrl(any());
+        assertThat(fetch.get().getAttributionScopes()).isEqualTo(List.of("1", "2", "3"));
+        assertThat(fetch.get().getAttributionScopeLimit()).isEqualTo(4L);
+        assertThat(fetch.get().getMaxEventStates()).isEqualTo(3L);
+    }
+
+    @Test
+    public void fetchSource_attributionScopeDisabled_skipsAttributionScopeFields()
+            throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(false);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
+                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"max_event_states\":3"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        verify(mFetcher, times(1)).openUrl(any());
+        assertThat(fetch.get().getAttributionScopes()).isNull();
+        assertThat(fetch.get().getAttributionScopeLimit()).isNull();
+        assertThat(fetch.get().getMaxEventStates()).isNull();
+    }
+
+    @Test
+    public void fetchSource_missingAttributionScopeLimitAndScopesSet_fails() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"]"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_attributionScopeNotAString_fails() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[1, 2, 3],"
+                                                + "\"attribution_scope_limit\":4"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_attributionScopeEmpty_pass() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"\", \"1\"],"
+                                                + "\"attribution_scope_limit\":4"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        verify(mFetcher, times(1)).openUrl(any());
+        assertThat(fetch.get().getAttributionScopes()).isEqualTo(List.of("", "1"));
+        assertThat(fetch.get().getAttributionScopeLimit()).isEqualTo(4L);
+    }
+
+    @Test
+    public void fetchSource_missingAttributionScopeLimitAndMaxEventStatesSet_fails()
+            throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"max_event_states\":3"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_attributionScopeTooLong_fails() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\""
+                                                + "source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", "
+                                                + "\"long_attribution_scope\"],"
+                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"max_event_states\":3}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_emptyAttributionScopesAndLimitSet_success() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\""
+                                                + "source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[],"
+                                                + "\"attribution_scope_limit\":4}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAttributionScopes()).isEqualTo(List.of());
+        assertThat(fetch.get().getAttributionScopeLimit()).isEqualTo(4L);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_maxEventStatesNegative_fails() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
+                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"max_event_states\":-1"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_maxEventStatesTooHigh_fails() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration()).thenReturn(5L);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
+                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"max_event_states\":100"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_maxEventStatesNotAnInteger_fails() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
+                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"max_event_states\":\"abc\""
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_attributionScopeLimitTooSmall_fails() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
+                                                + "\"attribution_scope_limit\":2,"
+                                                + "\"max_event_states\":3"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_attributionScopeLimitNotAnInteger_fails() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
+                                                + "\"attribution_scope_limit\":\"abc\","
+                                                + "\"max_event_states\":3"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_tooManyAttributionScopes_fails() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(2);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
+                                                + "\"attribution_scope_limit\":10,"
+                                                + "\"max_event_states\":3"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {

@@ -27,6 +27,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAppSignals;
@@ -58,7 +59,8 @@ public class BuyerInputGenerator {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final EncodedPayloadDao mEncodedSignalsDao;
-    @NonNull private final AdFilterer mAdFilterer;
+    @NonNull private final FrequencyCapAdFilterer mFrequencyCapAdFilterer;
+    @NonNull private final AppInstallAdFilterer mAppInstallAdFilterer;
     @NonNull private final Clock mClock;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
@@ -66,14 +68,16 @@ public class BuyerInputGenerator {
     private final boolean mEnableAdFilter;
     private final boolean mEnableProtectedSignals;
     private final boolean mEnableOmitAds;
+    private final boolean mPasExtendedMetricsEnabled;
 
     @NonNull private final AuctionServerDataCompressor mDataCompressor;
     @NonNull private final AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategy;
+    @NonNull private final Flags mFlags;
 
     public BuyerInputGenerator(
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final EncodedPayloadDao encodedSignalsDaoDao,
-            @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdFilterer frequencyCapAdFilterer,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             long customAudienceActiveTimeWindowInMs,
@@ -81,18 +85,22 @@ public class BuyerInputGenerator {
             boolean enableProtectedSignals,
             @NonNull AuctionServerDataCompressor dataCompressor,
             boolean enableOmitAds,
-            @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy) {
+            @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
+            @NonNull Flags flags,
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(encodedSignalsDaoDao);
-        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(dataCompressor);
         Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
+        Objects.requireNonNull(flags);
+        Objects.requireNonNull(appInstallAdFilterer);
 
         mCustomAudienceDao = customAudienceDao;
         mEncodedSignalsDao = encodedSignalsDaoDao;
-        mAdFilterer = adFilterer;
+        mFrequencyCapAdFilterer = frequencyCapAdFilterer;
         mClock = Clock.systemUTC();
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
@@ -103,6 +111,9 @@ public class BuyerInputGenerator {
         mEnableProtectedSignals = enableProtectedSignals;
         mEnableOmitAds = enableOmitAds;
         mAuctionServerPayloadMetricsStrategy = auctionServerPayloadMetricsStrategy;
+        mFlags = flags;
+        mPasExtendedMetricsEnabled = mFlags.getPasExtendedMetricsEnabled();
+        mAppInstallAdFilterer = appInstallAdFilterer;
     }
 
     /**
@@ -168,9 +179,10 @@ public class BuyerInputGenerator {
                     perBuyerStats, dBcustomAudience, customAudience);
         }
 
-        // Log per buyer stats if feature is enabled
-        mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataBuyerInputGeneratedStats(
-                perBuyerStats);
+        int encodedSignalsCount = 0;
+        int encodedSignalsTotalSizeInBytes = 0;
+        int encodedSignalsMaxSizeInBytes = 0;
+        int encodedSignalsMinSizeInBytes = 0;
 
         // Creating a distinct loop over signals as buyers with CAs and Signals could be mutually
         // exclusive
@@ -184,7 +196,32 @@ public class BuyerInputGenerator {
             builderWithSignals.setProtectedAppSignals(
                     buildProtectedSignalsProtoFrom(entry.getValue()));
 
+            if (mPasExtendedMetricsEnabled) {
+                int encodedSignalsInBytes =
+                        calculateEncodedSignalsInBytes(entry.getValue().getEncodedPayload());
+                encodedSignalsCount += 1;
+                encodedSignalsTotalSizeInBytes += encodedSignalsInBytes;
+                encodedSignalsMaxSizeInBytes =
+                        Math.max(encodedSignalsMaxSizeInBytes, encodedSignalsInBytes);
+                encodedSignalsMinSizeInBytes =
+                        Math.min(encodedSignalsMinSizeInBytes, encodedSignalsInBytes);
+            }
+
             buyerInputs.put(buyerName, builderWithSignals);
+        }
+
+        // Log per buyer stats if feature is enabled
+        if (mPasExtendedMetricsEnabled) {
+            mAuctionServerPayloadMetricsStrategy
+                    .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+                            perBuyerStats,
+                            encodedSignalsCount,
+                            encodedSignalsTotalSizeInBytes,
+                            encodedSignalsMaxSizeInBytes,
+                            encodedSignalsMinSizeInBytes);
+        } else {
+            mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataBuyerInputGeneratedStats(
+                    perBuyerStats);
         }
 
         sLogger.v(String.format("Created BuyerInput proto for %s buyers", buyerInputs.size()));
@@ -235,7 +272,10 @@ public class BuyerInputGenerator {
                         "After auction server filtering : %s active CAs from device",
                         filteredCustomAudiences.size()));
         if (mEnableAdFilter) {
-            filteredCustomAudiences = mAdFilterer.filterCustomAudiences(filteredCustomAudiences);
+            filteredCustomAudiences =
+                    mAppInstallAdFilterer.filterCustomAudiences(filteredCustomAudiences);
+            filteredCustomAudiences =
+                    mFrequencyCapAdFilterer.filterCustomAudiences(filteredCustomAudiences);
             sLogger.v(
                     String.format(
                             "After ad filtering : %s active CAs from device",
@@ -328,5 +368,9 @@ public class BuyerInputGenerator {
                 .filter(ad -> !Strings.isNullOrEmpty(ad.getAdRenderId()))
                 .map(ad -> ad.getAdRenderId())
                 .collect(Collectors.toList());
+    }
+
+    private int calculateEncodedSignalsInBytes(byte[] encodedPayload) {
+        return encodedPayload.length;
     }
 }

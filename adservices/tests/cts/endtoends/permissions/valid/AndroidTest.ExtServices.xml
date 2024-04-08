@@ -44,13 +44,13 @@
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <!-- Disable kill switches to ignore the effect of actual PH values. -->
-        <option name="run-command" value="setprop debug.adservices.global_kill_switch false"/>
+        <option name="run-command" value="device_config put adservices global_kill_switch false"/>
         <option name="run-command" value="device_config put adservices enable_back_compat true"/>
 
         <option name="run-command"
-                value="setprop debug.adservices.fledge_select_ads_kill_switch false"/>
+                value="device_config put adservices fledge_select_ads_kill_switch false"/>
         <option name="run-command"
-                value="setprop debug.adservices.fledge_custom_audience_service_kill_switch false"/>
+                value="device_config put adservices fledge_custom_audience_service_kill_switch false"/>
         <option name="run-command" value="device_config put adservices topics_kill_switch false"/>
 
         <!-- Override Consent Manager to debug mode to grant user consent -->
@@ -61,28 +61,33 @@
 
         <!-- Force enable enrollment checks when testing enrollment -->
         <option name="run-command"
-                value="setprop debug.adservices.disable_fledge_enrollment_check false"/>
+                value="device_config put adservices disable_fledge_enrollment_check false"/>
         <option name="run-command"
-                value="setprop debug.adservices.disable_topics_enrollment_check true"/>
+                value="device_config put adservices disable_topics_enrollment_check true"/>
         <option name="teardown-command"
-                value="setprop debug.adservices.disable_topics_enrollment_check false"/>
+                value="device_config put adservices disable_topics_enrollment_check false"/>
 
         <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
         <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE"/>
         <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE"/>
         <option name="run-command" value="setprop log.tag.adservices.measurement VERBOSE"/>
 
-        <!-- Ensure the ad filtering feature is disabled -->
+        <!-- Ensure the ad filtering features are disabled -->
         <option name="run-command"
-                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+                value="device_config put adservices fledge_frequency_cap_filtering_enabled false" />
         <option name="teardown-command"
-                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+                value="device_config put adservices fledge_frequency_cap_filtering_enabled false" />
+
+        <option name="run-command"
+                value="device_config put adservices fledge_frequency_app_install_enabled false" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_frequency_app_install_enabled false" />
 
         <!-- Increase the allowed API queries per second -->
         <option name="run-command"
-                value="setprop debug.adservices.sdk_request_permits_per_second 1000"/>
+                value="device_config put adservices sdk_request_permits_per_second 1000"/>
         <option name="teardown-command"
-                value="setprop debug.adservices.sdk_request_permits_per_second 1"/>
+                value="device_config put adservices sdk_request_permits_per_second 1"/>
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>

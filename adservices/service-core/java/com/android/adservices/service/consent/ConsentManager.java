@@ -686,10 +686,12 @@ public class ConsentManager {
 
         asyncExecute(
                 () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(
                     () -> mFrequencyCapDao.deleteHistogramDataBySourceApp(app.getPackageName()));
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(
@@ -746,9 +748,11 @@ public class ConsentManager {
                 /* errorLogger= */ null);
 
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(mProtectedSignalsDao::deleteAllSignals);
@@ -776,9 +780,11 @@ public class ConsentManager {
                 /* errorLogger= */ null);
 
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(mProtectedSignalsDao::deleteAllSignals);
@@ -2245,6 +2251,58 @@ public class ConsentManager {
         return mFlags.getPasUxEnabled()
                 && wasPasNotificationDisplayed()
                 && getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    public Boolean isMeasurementDataReset() {
+        return executeGettersByConsentSourceOfTruth(
+                /* defaultReturn= */ false,
+                () -> mDatastore.get(ConsentConstants.IS_MEASUREMENT_DATA_RESET),
+                () -> mAdServicesManager.isMeasurementDataReset(),
+                () -> mAppSearchConsentManager.isMeasurementDataReset(),
+                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
+                mDatastore.get(ConsentConstants.IS_MEASUREMENT_DATA_RESET),
+                /* errorLogger= */ null);
+    }
+
+    /** Set the isMeasurementDataReset bit to storage based on consent_source_of_truth. */
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        executeSettersByConsentSourceOfTruth(
+                () ->
+                        mDatastore.put(
+                                ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset),
+                () -> mAdServicesManager.setMeasurementDataReset(isMeasurementDataReset),
+                () -> mAppSearchConsentManager.setMeasurementDataReset(isMeasurementDataReset),
+                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
+                mDatastore.put(ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset),
+                /* errorLogger= */ null);
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    public Boolean isPaDataReset() {
+        return executeGettersByConsentSourceOfTruth(
+                /* defaultReturn= */ false,
+                () -> mDatastore.get(ConsentConstants.IS_PA_DATA_RESET),
+                () -> mAdServicesManager.isPaDataReset(),
+                () -> mAppSearchConsentManager.isPaDataReset(),
+                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
+                mDatastore.get(ConsentConstants.IS_PA_DATA_RESET),
+                /* errorLogger= */ null);
+    }
+
+    /** Set the isPaDataReset bit to storage based on consent_source_of_truth. */
+    public void setPaDataReset(boolean isPaDataReset) {
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
+                () -> mAdServicesManager.setPaDataReset(isPaDataReset),
+                () -> mAppSearchConsentManager.setPaDataReset(isPaDataReset),
+                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
+                mDatastore.put(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
+                /* errorLogger= */ null);
     }
 
     @FunctionalInterface

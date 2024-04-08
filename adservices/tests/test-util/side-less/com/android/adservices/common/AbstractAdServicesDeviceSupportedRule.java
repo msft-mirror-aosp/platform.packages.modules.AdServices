@@ -15,7 +15,15 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.shared.testing.AndroidDevicePropertiesHelper;
+import com.android.adservices.shared.testing.DeviceConditionsViolatedException;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.Nullable;
+import com.android.adservices.shared.testing.ScreenSize;
+import com.android.adservices.shared.testing.annotations.RequiresGoDevice;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
+import com.android.adservices.shared.testing.annotations.RequiresScreenSizeDevice;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -49,6 +57,9 @@ import java.util.Objects;
  * android.content.pm.PackageManager#FEATURE_RAM_LOW low memory}, by annotating them with {@link
  * RequiresLowRamDevice}.
  *
+ * <p>This rule can also be used to run tests only on devices that have certain screen size, by
+ * annotating them with {@link RequiresScreenSizeDevice}.
+ *
  * <p>When used with another similar rules, you should organize them using the order of feature
  * dependency. For example, if the test also requires a given SDK level, you should check use that
  * rule first, as the device's SDK level is immutable (while whether or not {@code AdServices}
@@ -76,6 +87,10 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
             "Test annotated with @RequiresLowRamDevice and device is not.";
 
     @VisibleForTesting
+    static final String REQUIRES_SCREEN_SIZE_ASSUMPTION_FAILED_ERROR_MESSAGE =
+            "Test annotated with @RequiresScreenSizeDevice(size=%s) and device is not.";
+
+    @VisibleForTesting
     static final String REQUIRES_GO_DEVICE_ASSUMPTION_FAILED_ERROR_MESSAGE =
             "Test annotated with @RequiresGoDevice and device is not a Go device.";
 
@@ -101,6 +116,13 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
         return isLowRamDevice;
     }
 
+    /** Checks whether the device has large screen. */
+    public final boolean isLargeScreenDevice() {
+        boolean isLargeScreenDevice = mDeviceSupportHelper.isLargeScreenDevice();
+        mLog.v("isLargeScreenDevice(): %b", isLargeScreenDevice);
+        return isLargeScreenDevice;
+    }
+
     /** Checks whether the device is a go device. */
     public final boolean isGoDevice() {
         boolean isGoDevice = mDeviceSupportHelper.isGoDevice();
@@ -121,9 +143,11 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                 String testName = description.getDisplayName();
                 boolean isDeviceSupported = isAdServicesSupportedOnDevice();
                 boolean isLowRamDevice = isLowRamDevice();
+                boolean isLargeScreenDevice = isLargeScreenDevice();
                 boolean isGoDevice = isGoDevice();
                 RequiresLowRamDevice requiresLowRamDevice =
                         description.getAnnotation(RequiresLowRamDevice.class);
+                ScreenSize requiresScreenDevice = getRequiresScreenDevice(description);
                 RequiresGoDevice requiresGoDevice =
                         description.getAnnotation(RequiresGoDevice.class);
                 mLog.d(
@@ -134,7 +158,8 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
 
                 if (!isDeviceSupported
                         && requiresLowRamDevice == null
-                        && requiresGoDevice == null) {
+                        && requiresGoDevice == null
+                        && requiresScreenDevice == null) {
                     // Low-ram devices is a sub-set of unsupported, hence we cannot skip it right
                     // away as the test might be annotated with @RequiresLowRamDevice (which is
                     // checked below)
@@ -148,6 +173,14 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                         assumptionViolatedReasons.add(
                                 REQUIRES_GO_DEVICE_ASSUMPTION_FAILED_ERROR_MESSAGE);
                     }
+                    if (requiresScreenDevice != null
+                            && !AndroidDevicePropertiesHelper.matchScreenSize(
+                                    requiresScreenDevice, isLargeScreenDevice)) {
+                        assumptionViolatedReasons.add(
+                                String.format(
+                                        REQUIRES_SCREEN_SIZE_ASSUMPTION_FAILED_ERROR_MESSAGE,
+                                        requiresScreenDevice));
+                    }
                 }
 
                 // Throw exception in case any of the assumption was violated.
@@ -158,5 +191,15 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                 base.evaluate();
             }
         };
+    }
+
+    @Nullable
+    private ScreenSize getRequiresScreenDevice(Description description) {
+        RequiresScreenSizeDevice requiresLargeScreenDevice =
+                description.getAnnotation(RequiresScreenSizeDevice.class);
+        if (requiresLargeScreenDevice != null) {
+            return requiresLargeScreenDevice.value();
+        }
+        return null;
     }
 }

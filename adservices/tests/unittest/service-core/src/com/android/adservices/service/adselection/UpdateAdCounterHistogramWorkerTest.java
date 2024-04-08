@@ -46,7 +46,6 @@ import android.adservices.common.FrequencyCapFilters;
 import android.os.Parcel;
 import android.os.RemoteException;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -55,6 +54,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -444,7 +444,7 @@ public class UpdateAdCounterHistogramWorkerTest {
         }
 
         public FlagsOverridingAdFiltering() {
-            this(FLEDGE_AD_SELECTION_FILTERING_ENABLED);
+            this(FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED);
         }
 
         @Override
@@ -458,7 +458,7 @@ public class UpdateAdCounterHistogramWorkerTest {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
             return mShouldEnableAdFilteringFeature;
         }
     }

@@ -77,6 +77,8 @@ public class Trigger {
     private Uri mRegistrationOrigin;
     @Nullable private Uri mAggregationCoordinatorOrigin;
     private SourceRegistrationTimeConfig mAggregatableSourceRegistrationTimeConfig;
+    @Nullable private String mTriggerContextId;
+    @Nullable private String mAttributionScope;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -131,7 +133,9 @@ public class Trigger {
                 && Objects.equals(mDebugJoinKey, trigger.mDebugJoinKey)
                 && Objects.equals(mPlatformAdId, trigger.mPlatformAdId)
                 && Objects.equals(mDebugAdId, trigger.mDebugAdId)
-                && Objects.equals(mRegistrationOrigin, trigger.mRegistrationOrigin);
+                && Objects.equals(mRegistrationOrigin, trigger.mRegistrationOrigin)
+                && Objects.equals(mTriggerContextId, trigger.mTriggerContextId)
+                && Objects.equals(mAttributionScope, trigger.mAttributionScope);
     }
 
     @Override
@@ -159,7 +163,9 @@ public class Trigger {
                 mPlatformAdId,
                 mDebugAdId,
                 mRegistrationOrigin,
-                mAggregatableSourceRegistrationTimeConfig);
+                mAggregatableSourceRegistrationTimeConfig,
+                mTriggerContextId,
+                mAttributionScope);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -377,6 +383,13 @@ public class Trigger {
     public SourceRegistrationTimeConfig getAggregatableSourceRegistrationTimeConfig() {
         return mAggregatableSourceRegistrationTimeConfig;
     }
+
+    /** Returns the context id */
+    @Nullable
+    public String getTriggerContextId() {
+        return mTriggerContextId;
+    }
+
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
@@ -560,6 +573,12 @@ public class Trigger {
         }
     }
 
+    /** Returns attribution scope for the trigger. */
+    @Nullable
+    public String getAttributionScope() {
+        return mAttributionScope;
+    }
+
     /** Builder for {@link Trigger}. */
     public static final class Builder {
 
@@ -687,13 +706,13 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAttributionConfig()} ()} */
+        /** See {@link Trigger#getAttributionConfig()} */
         public Builder setAttributionConfig(@Nullable String attributionConfig) {
             mBuilding.mAttributionConfig = attributionConfig;
             return this;
         }
 
-        /** See {@link Trigger#getAdtechKeyMapping()} ()} */
+        /** See {@link Trigger#getAdtechKeyMapping()} */
         public Builder setAdtechBitMapping(@Nullable String adtechBitMapping) {
             mBuilding.mAdtechKeyMapping = adtechBitMapping;
             return this;
@@ -729,14 +748,14 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getRegistrationOrigin()} ()} */
+        /** See {@link Trigger#getRegistrationOrigin()} */
         @NonNull
         public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mBuilding.mRegistrationOrigin = registrationOrigin;
             return this;
         }
 
-        /** See {@link Trigger#getAggregationCoordinatorOrigin()} ()} */
+        /** See {@link Trigger#getAggregationCoordinatorOrigin()} */
         public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
             mBuilding.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
             return this;
@@ -747,6 +766,18 @@ public class Trigger {
         public Builder setAggregatableSourceRegistrationTimeConfig(
                 SourceRegistrationTimeConfig config) {
             mBuilding.mAggregatableSourceRegistrationTimeConfig = config;
+            return this;
+        }
+        /** See {@link Trigger#getTriggerContextId()}. */
+        public Builder setTriggerContextId(@Nullable String triggerContextId) {
+            mBuilding.mTriggerContextId = triggerContextId;
+            return this;
+        }
+
+        /** See {@link Trigger#getAttributionScope()}. */
+        @NonNull
+        public Builder setAttributionScope(@Nullable String attributionScope) {
+            mBuilding.mAttributionScope = attributionScope;
             return this;
         }
 

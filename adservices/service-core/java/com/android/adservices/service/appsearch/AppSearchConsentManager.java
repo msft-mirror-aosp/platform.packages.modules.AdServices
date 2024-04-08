@@ -62,7 +62,6 @@ import java.util.stream.Collectors;
  * <p>IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with
  * AppSearchConsentStorageManager.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppSearchConsentManager {
     private final Context mContext;
@@ -622,5 +621,25 @@ public class AppSearchConsentManager {
             PrivacySandboxUxCollection ux,
             PrivacySandboxEnrollmentChannelCollection enrollmentChannel) {
         mAppSearchConsentWorker.setEnrollmentChannel(ux, enrollmentChannel);
+    }
+
+    /** Save the isMeasurementDataReset bit. */
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        mAppSearchConsentWorker.setMeasurementDataReset(isMeasurementDataReset);
+    }
+
+    /** Returns whether the isMeasurementDataReset bit is true. */
+    public Boolean isMeasurementDataReset() {
+        return mAppSearchConsentWorker.isMeasurementDataReset();
+    }
+
+    /** Save the isPaDataReset bit. */
+    public void setPaDataReset(boolean isPaDataReset) {
+        mAppSearchConsentWorker.setPaDataReset(isPaDataReset);
+    }
+
+    /** Returns whether the isPaDataReset bit is true. */
+    public Boolean isPaDataReset() {
+        return mAppSearchConsentWorker.isPaDataReset();
     }
 }

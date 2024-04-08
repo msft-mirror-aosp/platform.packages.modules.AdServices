@@ -22,6 +22,7 @@ import com.google.auto.value.AutoValue;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Set;
 
 /** Represents the encryption key returned by the key fetch server and used during ad selection. */
 @AutoValue
@@ -36,8 +37,12 @@ public abstract class AdSelectionEncryptionKey {
     public @interface AdSelectionEncryptionKeyType {
         int UNASSIGNED = 0;
         int AUCTION = 1;
-        int JOIN = 2;
+        int JOIN = 3;
     }
+
+    public static final Set<Integer> VALID_AD_SELECTION_ENCRYPTION_KEY_TYPES =
+            Set.of(AdSelectionEncryptionKeyType.AUCTION, AdSelectionEncryptionKeyType.JOIN);
+
     /** Encryption key type of this key. */
     @AdSelectionEncryptionKeyType
     public abstract int keyType();

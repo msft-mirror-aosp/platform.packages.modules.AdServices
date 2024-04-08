@@ -46,12 +46,12 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.adselection.datahandlers.ReportingComputationData;
 import com.android.adservices.data.adselection.datahandlers.ReportingData;
 import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
@@ -1909,7 +1909,7 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
-    public void test_getReportingDataForId_idSupportsUris_success() {
+    public void test_getReportingDataForId_idSupportsUris_successUnifiedTablesDisabled() {
         // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
                 DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
@@ -1917,17 +1917,38 @@ public class AdSelectionEntryDaoTest {
         mAdSelectionEntryDao.persistReportingData(
                 AD_SELECTION_ID_1, DataHandlersFixture.REPORTING_DATA_WITH_URIS);
 
-        ReportingData actualResult = mAdSelectionEntryDao.getReportingDataForId(AD_SELECTION_ID_1);
+        ReportingData actualResult =
+                mAdSelectionEntryDao.getReportingDataForId(
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ false);
 
         assertEquals(DataHandlersFixture.REPORTING_DATA_WITH_URIS, actualResult);
     }
 
     @Test
-    public void test_getReportingDataForId_idSupportsComputationData_success() {
+    public void test_getReportingDataForId_idSupportsUris_successUnifiedTablesEnabled() {
+        // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
+
+        mAdSelectionEntryDao.persistReportingData(
+                AD_SELECTION_ID_1, DataHandlersFixture.REPORTING_DATA_WITH_URIS);
+
+        ReportingData actualResult =
+                mAdSelectionEntryDao.getReportingDataForId(
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ true);
+
+        assertEquals(DataHandlersFixture.REPORTING_DATA_WITH_URIS, actualResult);
+    }
+
+    @Test
+    public void
+            test_getReportingDataForId_idSupportsComputationData_successShouldUseUnifiedTablesDisabled() {
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1_WITH_SELLER_CONTEXTUAL_SIGNALS);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_1);
 
-        ReportingData actualResult = mAdSelectionEntryDao.getReportingDataForId(AD_SELECTION_ID_1);
+        ReportingData actualResult =
+                mAdSelectionEntryDao.getReportingDataForId(
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ false);
 
         assertNull(actualResult.getBuyerWinReportingUri());
         assertNull(actualResult.getSellerWinReportingUri());
@@ -1952,8 +1973,52 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
-    public void test_getReportingDataForId_idNotPresent_returnsNull() {
-        assertNull(mAdSelectionEntryDao.getReportingDataForId(AD_SELECTION_ID_1));
+    public void
+            test_getReportingDataForId_idSupportsComputationData_successShouldUseUnifiedTablesEnabled() {
+        // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
+        mAdSelectionEntryDao.insertDBReportingComputationInfo(DB_REPORTING_COMPUTATION_INFO_1);
+
+        ReportingData actualResult =
+                mAdSelectionEntryDao.getReportingDataForId(
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ true);
+
+        assertNull(actualResult.getBuyerWinReportingUri());
+        assertNull(actualResult.getSellerWinReportingUri());
+
+        ReportingComputationData actualComputationData = actualResult.getReportingComputationData();
+
+        assertEquals(
+                DB_REPORTING_COMPUTATION_INFO_1.getBuyerDecisionLogicJs(),
+                actualComputationData.getBuyerDecisionLogicJs());
+        assertEquals(
+                DB_REPORTING_COMPUTATION_INFO_1.getBiddingLogicUri(),
+                actualComputationData.getBuyerDecisionLogicUri());
+        assertEquals(
+                DB_REPORTING_COMPUTATION_INFO_1.getBuyerContextualSignals(),
+                actualComputationData.getBuyerContextualSignals().toString());
+        assertEquals(
+                DB_REPORTING_COMPUTATION_INFO_1.getSellerContextualSignals(),
+                actualComputationData.getSellerContextualSignals().toString());
+        assertEquals(
+                DB_REPORTING_COMPUTATION_INFO_1.getCustomAudienceSignals(),
+                actualComputationData.getWinningCustomAudienceSignals());
+    }
+
+    @Test
+    public void
+            test_getReportingDataForId_idNotPresent_returnsNullShouldUseUnifiedTablesDisabled() {
+        assertNull(
+                mAdSelectionEntryDao.getReportingDataForId(
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ false));
+    }
+
+    @Test
+    public void test_getReportingDataForId_idNotPresent_returnsNullShouldUseUnifiedTablesEnabled() {
+        assertNull(
+                mAdSelectionEntryDao.getReportingDataForId(
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ true));
     }
 
     @Test
@@ -2188,7 +2253,8 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
-    public void test_removeExpiredAdSelectionInitializations_removesEntriesFromOtherTables() {
+    public void
+            test_removeExpiredAdSelectionInitializations_removesEntriesFromOtherTablesUnifiedTablesEnabled() {
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
                 DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
         long adSelectionId =
@@ -2203,7 +2269,33 @@ public class AdSelectionEntryDaoTest {
                 DataHandlersFixture.CREATION_INSTANT_1.plusSeconds(10));
 
         assertNull(mAdSelectionEntryDao.getDBAdSelectionResultForId(adSelectionId));
-        assertNull(mAdSelectionEntryDao.getReportingDataForId(adSelectionId));
+        assertNull(
+                mAdSelectionEntryDao.getReportingDataForId(
+                        adSelectionId, /* shouldUseUnifiedTables = */ true));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(adSelectionId));
+    }
+
+    @Test
+    public void
+            test_removeExpiredAdSelectionInitializations_removesEntriesFromOtherTablesUnifiedTablesDisabled() {
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
+        long adSelectionId =
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1.getAdSelectionId();
+        DBAdSelectionResult result =
+                DataHandlersFixture.getDBAdSelectionResultForCaAllFieldsWithId(adSelectionId);
+        mAdSelectionEntryDao.insertDBAdSelectionResult(result);
+        mAdSelectionEntryDao.insertDBReportingData(
+                DataHandlersFixture.getDBReportingDataWithId(adSelectionId));
+
+        mAdSelectionEntryDao.removeExpiredAdSelectionInitializations(
+                DataHandlersFixture.CREATION_INSTANT_1.plusSeconds(10));
+
+        assertNull(mAdSelectionEntryDao.getDBAdSelectionResultForId(adSelectionId));
+        assertNull(
+                mAdSelectionEntryDao.getReportingDataForId(
+                        adSelectionId, /* shouldUseUnifiedTables = */ false));
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(adSelectionId));
     }

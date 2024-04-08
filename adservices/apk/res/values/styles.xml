@@ -185,4 +185,7 @@
     <style name="TextAppearance.Body2.Bold">
         <item name="android:textStyle">bold</item>
     </style>
+    <style name="NotificationContainer">
+        <item name="android:layout_width">match_parent</item>
+    </style>
 </resources>

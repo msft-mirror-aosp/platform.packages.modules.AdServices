@@ -26,7 +26,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -196,5 +196,12 @@ public class SignedContextualAdsTest {
                         .build();
 
         CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
+    }
+
+    @Test
+    public void testSignedContextualAdsDescribeContents() {
+        SignedContextualAds obj1 =
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder().build();
+        assertThat(obj1.describeContents()).isEqualTo(0);
     }
 }

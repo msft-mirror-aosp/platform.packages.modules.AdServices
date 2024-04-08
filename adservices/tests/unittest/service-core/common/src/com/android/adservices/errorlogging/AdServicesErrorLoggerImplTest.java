@@ -30,6 +30,7 @@ import android.database.sqlite.SQLiteException;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorStats;
+import com.android.adservices.shared.errorlogging.ErrorCodeSampler;
 import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLogger;
 
 import com.google.common.collect.ImmutableList;
@@ -49,28 +50,19 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
 
     @Mock private Flags mFlags;
     @Mock private StatsdAdServicesErrorLogger mStatsdLoggerMock;
+    @Mock private ErrorCodeSampler mErrorCodeSampler;
 
     private AdServicesErrorLoggerImpl mErrorLogger;
 
     @Before
     public void setUp() {
+        enableCustomErrorCodeSampling(/*enable=*/ false);
         mErrorLogger = new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock);
         mockErrorCodeLoggingDenyList(ImmutableList.of());
     }
 
     @Test
-    public void testLogError_errorLoggingFlagDisabled() {
-        mockAdServicesErrorLogging(/* enabled= */ false);
-
-        mErrorLogger.logError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
-
-        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
-    }
-
-    @Test
     public void testLogError_errorLoggingFlagEnabled_errorCodeLoggingDenied() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
         mockErrorCodeLoggingDenyList(
                 ImmutableList.of(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR));
 
@@ -82,7 +74,6 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
 
     @Test
     public void testLogError_errorLoggingFlagEnabled() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
         ArgumentCaptor<AdServicesErrorStats> adServicesErrorStatsArgumentCaptor =
                 ArgumentCaptor.forClass(AdServicesErrorStats.class);
 
@@ -97,20 +88,7 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_errorLoggingFlagDisabled() {
-        mockAdServicesErrorLogging(/* enabled= */ false);
-
-        mErrorLogger.logErrorWithExceptionInfo(
-                new Exception(),
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
-                PPAPI_NAME);
-
-        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
-    }
-
-    @Test
     public void testLogErrorWithExceptionInfo_errorLoggingFlagEnabled_errorCodeLoggingDenied() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
         mockErrorCodeLoggingDenyList(
                 ImmutableList.of(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION));
 
@@ -124,7 +102,6 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
 
     @Test
     public void testLogErrorWithExceptionInfo_errorLoggingFlagEnabled() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
         Exception exception = createSQLiteException(CLASS_NAME, METHOD_NAME, LINE_NUMBER);
 
         mErrorLogger.logErrorWithExceptionInfo(
@@ -147,7 +124,6 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
 
     @Test
     public void testLogErrorWithExceptionInfo_fullyQualifiedClassName_errorLoggingFlagEnabled() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
         String fullClassName = "com.android.adservices.topics.TopicsService";
         Exception exception = createSQLiteException(fullClassName, METHOD_NAME, LINE_NUMBER);
 
@@ -171,8 +147,6 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
 
     @Test
     public void testLogErrorWithExceptionInfo_emptyClassName_errorLoggingFlagEnabled() {
-        mockAdServicesErrorLogging(/* enabled= */ true);
-
         Exception exception = createSQLiteException(/* className = */ "", METHOD_NAME, LINE_NUMBER);
 
         mErrorLogger.logErrorWithExceptionInfo(
@@ -192,6 +166,32 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
         verify(mStatsdLoggerMock).logAdServicesError(stats);
     }
 
+    @Test
+    public void testIsEnabled_customSamplerEnabled_returnsTrue() {
+        enableCustomErrorCodeSampling(true);
+        int errorCode = 1;
+        when(mErrorCodeSampler.shouldLog(errorCode)).thenReturn(true);
+        AdServicesErrorLoggerImpl errorLogger =
+                new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock, mErrorCodeSampler);
+
+        expect.withMessage("shouldLog(%s)", errorCode)
+                .that(errorLogger.isEnabled(errorCode))
+                .isTrue();
+    }
+
+    @Test
+    public void testIsEnabled_customSamplerEnabled_returnsFalse() {
+        enableCustomErrorCodeSampling(true);
+        int errorCode = 1;
+        when(mErrorCodeSampler.shouldLog(errorCode)).thenReturn(false);
+        AdServicesErrorLoggerImpl errorLogger =
+                new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock, mErrorCodeSampler);
+
+        expect.withMessage("shouldLog(%s)", errorCode)
+                .that(errorLogger.isEnabled(errorCode))
+                .isFalse();
+    }
+
     Exception createSQLiteException(String className, String methodName, int lineNumber) {
         StackTraceElement[] stackTraceElements =
                 new StackTraceElement[] {
@@ -203,11 +203,11 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
         return exception;
     }
 
-    private void mockAdServicesErrorLogging(boolean enabled) {
-        when(mFlags.getAdServicesErrorLoggingEnabled()).thenReturn(enabled);
-    }
-
     private void mockErrorCodeLoggingDenyList(ImmutableList<Integer> errorCodeLoggingDenyList) {
         when(mFlags.getErrorCodeLoggingDenyList()).thenReturn(errorCodeLoggingDenyList);
+    }
+
+    private void enableCustomErrorCodeSampling(boolean enable) {
+        when(mFlags.getCustomErrorCodeSamplingEnabled()).thenReturn(enable);
     }
 }

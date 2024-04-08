@@ -31,17 +31,17 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.KeyedFrequencyCap;
 import android.content.pm.PackageManager;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.kanon.KAnonMessageDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.InteractionReportingTableClearedStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -55,7 +55,7 @@ import org.mockito.MockitoSession;
 import java.time.Instant;
 
 public class FledgeMaintenanceTasksWorkerTests {
-    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
     @Mock private AdSelectionEntryDao mAdSelectionEntryDaoMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
@@ -264,7 +264,7 @@ public class FledgeMaintenanceTasksWorkerTests {
     public void testClearExpiredFrequencyCapHistogramData_adFilteringEnabled_doesMaintenance() {
         final class FlagsWithAdFilteringFeatureEnabled implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -306,7 +306,7 @@ public class FledgeMaintenanceTasksWorkerTests {
             testClearExpiredFrequencyCapHistogramData_enrollmentDisabled_skipsBuyerMaintenance() {
         final class FlagsWithAdFilteringFeatureEnabled implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -345,7 +345,7 @@ public class FledgeMaintenanceTasksWorkerTests {
     public void testClearExpiredFrequencyCapHistogramData_adFilteringDisabled_skipsMaintenance() {
         final class FlagsWithAdFilteringFeatureDisabled implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return false;
             }
 
@@ -425,6 +425,11 @@ public class FledgeMaintenanceTasksWorkerTests {
         final class FlagWithKAnonEnabled implements Flags {
             @Override
             public boolean getFledgeKAnonSignJoinFeatureEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeKAnonSignJoinFeatureAuctionServerEnabled() {
                 return true;
             }
         }
