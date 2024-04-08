@@ -32,7 +32,7 @@ import android.platform.test.annotations.FlakyTest;
 import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
-import com.android.adservices.common.HostSideSdkLevelSupportRule;
+import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
 import com.android.os.AtomsProto.AdServicesApiCalled;
 import com.android.os.AtomsProto.Atom;

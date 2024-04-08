@@ -15,6 +15,9 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.shared.testing.ConsoleLogger;
+import com.android.adservices.shared.testing.HostSideSystemPropertiesHelper;
+
 /** See {@link AbstractSystemPropertiesDumperRule}. */
 public final class HostSideAdServicesSystemPropertiesDumperRule
         extends AbstractAdServicesSystemPropertiesDumperRule {

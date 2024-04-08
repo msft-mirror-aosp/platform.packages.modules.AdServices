@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;

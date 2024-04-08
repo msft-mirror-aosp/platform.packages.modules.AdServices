@@ -100,7 +100,6 @@ import androidx.test.filters.FlakyTest;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.DBAdDataFixture;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
@@ -165,6 +164,7 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;

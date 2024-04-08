@@ -49,9 +49,9 @@ import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
 import com.android.adservices.common.DBAdDataFixture;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 

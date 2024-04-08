@@ -33,8 +33,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
 
 import org.junit.Before;
 import org.junit.Test;

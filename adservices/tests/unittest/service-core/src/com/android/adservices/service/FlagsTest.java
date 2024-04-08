@@ -16,9 +16,6 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.common.AndroidSdk.RVC;
-import static com.android.adservices.common.AndroidSdk.SC;
-import static com.android.adservices.common.AndroidSdk.SC_V2;
 import static com.android.adservices.service.Flags.AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
@@ -36,13 +33,16 @@ import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
+import static com.android.adservices.shared.testing.AndroidSdk.RVC;
+import static com.android.adservices.shared.testing.AndroidSdk.SC;
+import static com.android.adservices.shared.testing.AndroidSdk.SC_V2;
 
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.adservices.common.RequiresSdkRange;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.internal.util.Preconditions;
 
 import org.junit.Test;

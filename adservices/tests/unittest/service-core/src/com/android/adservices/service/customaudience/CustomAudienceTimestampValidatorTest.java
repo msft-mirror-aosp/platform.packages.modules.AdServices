@@ -21,10 +21,10 @@ import static org.junit.Assert.assertTrue;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.ValidatorTestUtil;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;

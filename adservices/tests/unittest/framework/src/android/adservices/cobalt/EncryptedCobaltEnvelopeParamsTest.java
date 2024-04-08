@@ -24,7 +24,7 @@ import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;

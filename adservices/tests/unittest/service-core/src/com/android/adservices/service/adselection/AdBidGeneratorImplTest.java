@@ -77,7 +77,6 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -97,6 +96,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
