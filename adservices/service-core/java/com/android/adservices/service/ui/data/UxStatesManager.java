@@ -145,7 +145,8 @@ public class UxStatesManager {
                 mConsentManager.wasGaUxNotificationDisplayed()
                         || mConsentManager.wasU18NotificationDisplayed()
                         || mConsentManager.wasNotificationDisplayed()
-                        || mConsentManager.wasPasNotificationDisplayed();
+                        || (getFlag(KEY_PAS_UX_ENABLED)
+                                && mConsentManager.wasPasNotificationDisplayed());
         // We follow the Chrome's capabilities practice here, when user is not in adult account and
         // u18 account, (the u18 account is for teen and un-supervised account), we are consider
         // them as supervised accounts for now, it actually also contains robot account, but we

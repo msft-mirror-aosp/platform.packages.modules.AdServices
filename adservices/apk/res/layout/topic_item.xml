@@ -28,7 +28,7 @@
             android:layout_alignParentTop="true"
             android:layout_toStartOf="@+id/option_button"
             android:paddingTop="24dp"
-            android:paddingBottom="24dp"
+            android:paddingBottom="@dimen/adservices_content_padding"
             android:textAppearance="@style/TextAppearance.H5" />
     <Button
             android:id="@+id/option_button"

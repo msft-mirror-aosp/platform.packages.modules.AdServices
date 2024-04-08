@@ -83,7 +83,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of the Custom Audience service. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -339,7 +338,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                     mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                                     AdRenderIdValidator.createInstance(mFlags),
                                     AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                                            mFlags.getFledgeAdSelectionFilteringEnabled(),
+                                            mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                                            mFlags.getFledgeAppInstallFilteringEnabled(),
                                             mFlags.getFledgeAuctionServerAdRenderIdEnabled()));
 
                     impl.doFetchCustomAudience(input, callback, devContext);

@@ -46,7 +46,6 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /** CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -481,8 +480,6 @@ public class CustomAudienceManager {
      *
      * <p>This call fails with {@link LimitExceededException} if the calling package exceeds the
      * allowed rate limits and is throttled.
-     *
-     * @hide
      */
     @FlaggedApi(FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)

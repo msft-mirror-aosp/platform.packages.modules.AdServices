@@ -32,6 +32,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
+import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.content.Context;
 import android.net.Uri;
@@ -43,9 +44,10 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -58,7 +60,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
@@ -114,7 +115,7 @@ public abstract class FledgeScenarioTest {
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
                     .setPpapiAppAllowList(sContext.getPackageName())
-                    .setAdIdKillSwitchForTests(false);
+                    .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
 
     @Rule(order = 6)
     public MockWebServerRule mMockWebServerRule =
@@ -156,9 +157,17 @@ public abstract class FledgeScenarioTest {
     }
 
     @After
-    public final void tearDown() throws IOException {
+    public final void tearDown() throws Exception {
         if (mMockWebServer != null) {
             mMockWebServer.shutdown();
+        }
+
+        try {
+            leaveCustomAudience(SHOES_CA);
+            leaveCustomAudience(SHIRTS_CA);
+        } catch (Exception e) {
+            // No-op catch here, these are only for cleaning up
+            Log.w(TAG, "Failed while cleaning up custom audiences", e);
         }
     }
 
@@ -216,6 +225,12 @@ public abstract class FledgeScenarioTest {
                 .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
                 .get(TIMEOUT, TimeUnit.SECONDS);
         Log.d(TAG, "Left Custom Audience: " + customAudienceName);
+    }
+
+    protected void doScheduleCustomAudienceUpdate(ScheduleCustomAudienceUpdateRequest request)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        mCustomAudienceClient.scheduleCustomAudienceUpdate(request).get(TIMEOUT, TimeUnit.SECONDS);
+        Log.d(TAG, "Scheduled Custom Audience Update: " + request);
     }
 
     protected String getServerBaseAddress() {

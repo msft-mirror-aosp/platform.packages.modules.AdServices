@@ -35,7 +35,8 @@ import java.util.Objects;
 public final class AdFilteringFeatureFactory {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private final boolean mIsFledgeAdSelectionFilteringEnabled;
+    private final boolean mIsFledgeFrequencyCapFilteringEnabled;
+    private final boolean mIsFledgeAppInstallFilteringEnabled;
     private final int mHistogramAbsoluteMaxTotalEventCount;
     private final int mHistogramLowerMaxTotalEventCount;
     private final int mHistogramAbsoluteMaxPerBuyerEventCount;
@@ -46,8 +47,10 @@ public final class AdFilteringFeatureFactory {
 
     public AdFilteringFeatureFactory(
             AppInstallDao appInstallDao, FrequencyCapDao frequencyCapDao, Flags flags) {
-        mIsFledgeAdSelectionFilteringEnabled =
-                BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled);
+        mIsFledgeFrequencyCapFilteringEnabled =
+                BinderFlagReader.readFlag(flags::getFledgeFrequencyCapFilteringEnabled);
+        mIsFledgeAppInstallFilteringEnabled =
+                BinderFlagReader.readFlag(flags::getFledgeAppInstallFilteringEnabled);
         mHistogramAbsoluteMaxTotalEventCount =
                 BinderFlagReader.readFlag(
                         flags::getFledgeAdCounterHistogramAbsoluteMaxTotalEventCount);
@@ -66,22 +69,39 @@ public final class AdFilteringFeatureFactory {
         mAppInstallDao = appInstallDao;
         mFrequencyCapDao = frequencyCapDao;
         sLogger.v(
-                "Initializing AdFilteringFeatureFactory with filtering %s",
-                mIsFledgeAdSelectionFilteringEnabled ? "enabled" : "disabled");
+                "Initializing AdFilteringFeatureFactory with frequency cap filtering %s and app"
+                        + " install filtering %s",
+                mIsFledgeFrequencyCapFilteringEnabled ? "enabled" : "disabled",
+                mIsFledgeAppInstallFilteringEnabled ? "enabled" : "disabled");
     }
 
     /**
-     * Returns the correct {@link AdFilterer} implementation to use based on the given {@link
-     * Flags}.
+     * Returns the correct {@link FrequencyCapAdFilterer} implementation to use based on the given
+     * {@link Flags}.
      *
-     * @return an instance of {@link AdFiltererImpl} if ad selection filtering is enabled and an
-     *     instance of {@link AdFiltererNoOpImpl} otherwise
+     * @return an instance of {@link FrequencyCapAdFiltererImpl} if frequency cap filtering is
+     *     enabled and an instance of {@link FrequencyCapAdFiltererNoOpImpl} otherwise
      */
-    public AdFilterer getAdFilterer() {
-        if (mIsFledgeAdSelectionFilteringEnabled) {
-            return new AdFiltererImpl(mAppInstallDao, mFrequencyCapDao, Clock.systemUTC());
+    public FrequencyCapAdFilterer getFrequencyCapAdFilterer() {
+        if (mIsFledgeFrequencyCapFilteringEnabled) {
+            return new FrequencyCapAdFiltererImpl(mFrequencyCapDao, Clock.systemUTC());
         } else {
-            return new AdFiltererNoOpImpl();
+            return new FrequencyCapAdFiltererNoOpImpl();
+        }
+    }
+
+    /**
+     * Returns the correct {@link AppInstallAdFilterer} implementation to use based on the given
+     * {@link Flags}.
+     *
+     * @return an instance of {@link AppInstallAdFiltererImpl} if app install filtering is enabled
+     *     and an instance of {@link AppInstallAdFiltererNoOpImpl} otherwise
+     */
+    public AppInstallAdFilterer getAppInstallAdFilterer() {
+        if (mIsFledgeAppInstallFilteringEnabled) {
+            return new AppInstallAdFiltererImpl(mAppInstallDao, Clock.systemUTC());
+        } else {
+            return new AppInstallAdFiltererNoOpImpl();
         }
     }
 
@@ -93,7 +113,7 @@ public final class AdFilteringFeatureFactory {
      *     an {@link AdCounterKeyCopierNoOpImpl} instance otherwise
      */
     public AdCounterKeyCopier getAdCounterKeyCopier() {
-        if (mIsFledgeAdSelectionFilteringEnabled) {
+        if (mIsFledgeFrequencyCapFilteringEnabled) {
             return new AdCounterKeyCopierImpl();
         } else {
             return new AdCounterKeyCopierNoOpImpl();
@@ -108,7 +128,7 @@ public final class AdFilteringFeatureFactory {
      *     enabled, or a {@link FrequencyCapAdDataValidatorNoOpImpl} instance otherwise
      */
     public FrequencyCapAdDataValidator getFrequencyCapAdDataValidator() {
-        if (mIsFledgeAdSelectionFilteringEnabled) {
+        if (mIsFledgeFrequencyCapFilteringEnabled) {
             return new FrequencyCapAdDataValidatorImpl();
         } else {
             return new FrequencyCapAdDataValidatorNoOpImpl();
@@ -127,7 +147,7 @@ public final class AdFilteringFeatureFactory {
             boolean auctionServerEnabledForUpdateHistogram) {
         Objects.requireNonNull(adSelectionEntryDao);
 
-        if (mIsFledgeAdSelectionFilteringEnabled) {
+        if (mIsFledgeFrequencyCapFilteringEnabled) {
             return new AdCounterHistogramUpdaterImpl(
                     adSelectionEntryDao,
                     mFrequencyCapDao,

@@ -26,9 +26,9 @@ import android.cts.statsdatom.lib.ReportUtils;
 import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
-import com.android.adservices.common.BackgroundLogReceiver;
-import com.android.adservices.common.HostSideSdkLevelSupportRule;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.BackgroundLogReceiver;
+import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
 import com.android.os.AtomsProto;
 import com.android.os.AtomsProto.AdServicesSettingsUsageReported;
@@ -81,8 +81,8 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
                     .setTopicsKillSwitch(false)
                     .setAdServicesEnabled(true)
                     .setMddBackgroundTaskKillSwitch(true)
-                    .setConsentManagerDebugMode(true)
-                    .setDisableTopicsEnrollmentCheckForTests(true)
+                    .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setFlag(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                     .setFlag(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, true);
 
     @Rule(order = 3)

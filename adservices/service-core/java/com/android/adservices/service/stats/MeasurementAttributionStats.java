@@ -32,6 +32,7 @@ public class MeasurementAttributionStats {
     private long mAttributionDelay;
     private String mSourceRegistrant;
     private int mAggregateReportCount;
+    private int mNullAggregateReportCount;
     private int mAggregateDebugReportCount;
     private int mEventReportCount;
     private int mEventDebugReportCount;
@@ -55,6 +56,8 @@ public class MeasurementAttributionStats {
                 && Objects.equals(
                         mSourceRegistrant, measurementAttributionStats.getSourceRegistrant())
                 && mAggregateReportCount == measurementAttributionStats.getAggregateReportCount()
+                && mNullAggregateReportCount
+                        == measurementAttributionStats.getNullAggregateReportCount()
                 && mAggregateDebugReportCount
                         == measurementAttributionStats.getAggregateDebugReportCount()
                 && mEventReportCount == measurementAttributionStats.getEventReportCount()
@@ -74,6 +77,7 @@ public class MeasurementAttributionStats {
                 mAttributionDelay,
                 mSourceRegistrant,
                 mAggregateReportCount,
+                mNullAggregateReportCount,
                 mAggregateDebugReportCount,
                 mEventReportCount,
                 mEventDebugReportCount);
@@ -117,6 +121,10 @@ public class MeasurementAttributionStats {
 
     public int getAggregateReportCount() {
         return mAggregateReportCount;
+    }
+
+    public int getNullAggregateReportCount() {
+        return mNullAggregateReportCount;
     }
 
     public int getAggregateDebugReportCount() {
@@ -201,6 +209,13 @@ public class MeasurementAttributionStats {
         public @NonNull MeasurementAttributionStats.Builder setAggregateReportCount(
                 int aggregateReportCount) {
             mBuilding.mAggregateReportCount = aggregateReportCount;
+            return this;
+        }
+
+        /** See {@link MeasurementAttributionStats#getNullAggregateReportCount()} . */
+        public @NonNull MeasurementAttributionStats.Builder setNullAggregateReportCount(
+                int nullAggregateReportCount) {
+            mBuilding.mNullAggregateReportCount = nullAggregateReportCount;
             return this;
         }
 

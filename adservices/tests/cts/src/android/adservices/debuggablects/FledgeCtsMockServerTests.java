@@ -48,10 +48,10 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -171,7 +171,8 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
 
-        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
+
+        PhFlagsFixture.overrideFledgeAdSelectionContextualAdsEnabled(false);
 
         // Enable CTS to be run with versions of WebView < M105
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
@@ -207,8 +208,8 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
 
         leaveJoinedCustomAudiences();
 
-        // Reset the filtering flag
-        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
+
+        PhFlagsFixture.overrideFledgeAdSelectionContextualAdsEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 

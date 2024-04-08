@@ -29,7 +29,7 @@ import android.adservices.utils.ScenarioDispatcher;
 
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Rule;
 import org.junit.Test;

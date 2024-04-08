@@ -29,10 +29,8 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 
-import androidx.test.filters.FlakyTest;
-
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Test;
 
@@ -43,7 +41,6 @@ import java.util.concurrent.ExecutionException;
 @SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
 public final class AdSelectionReportingTest extends FledgeScenarioTest {
 
-    @FlakyTest(bugId = 303534327)
     @Test
     public void testReportImpression_defaultAdSelection_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
@@ -64,7 +61,6 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
     }
 
-    @FlakyTest(bugId = 303534327)
     @Test
     public void testReportImpression_buyerRequestFails_sellerRequestSucceeds() throws Exception {
         ScenarioDispatcher dispatcher =
@@ -144,7 +140,6 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
                 .containsNoneIn(dispatcher.getVerifyNotCalledPaths());
     }
 
-    @FlakyTest(bugId = 303534327)
     @Test
     public void testReportImpression_registerBuyerAndSellerBeacons_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
@@ -266,7 +261,6 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
                 .containsNoneIn(dispatcher.getVerifyNotCalledPaths());
     }
 
-    @FlakyTest(bugId = 303534327)
     @Test
     public void testReportImpression_withBuyerBeacon_onlyReportsForViewInteraction()
             throws Exception {

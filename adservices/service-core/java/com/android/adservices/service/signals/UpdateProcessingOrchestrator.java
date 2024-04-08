@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SEMANTIC_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SYNTACTIC_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_SIZE_BUCKETS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
+
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 
@@ -28,8 +33,8 @@ import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEven
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.VisibleForTesting;
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -81,7 +86,8 @@ public class UpdateProcessingOrchestrator {
             String packageName,
             Instant creationTime,
             JSONObject json,
-            DevContext devContext) {
+            DevContext devContext,
+            UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder) {
         sLogger.v("Processing signal updates for " + adtech);
         try {
             // Load the current signals, organizing them into a map for quick access
@@ -103,7 +109,22 @@ public class UpdateProcessingOrchestrator {
              * An update encoder event, in case the update processors reported an update in encoder
              * endpoint.
              */
-            UpdateOutput combinedUpdates = runProcessors(json, currentSignalsMap);
+            UpdateOutput combinedUpdates;
+            if (jsonProcessingStatsBuilder == null) {
+                combinedUpdates =
+                        runProcessors(json, currentSignalsMap, jsonProcessingStatsBuilder);
+            } else {
+                jsonProcessingStatsBuilder.setJsonSize(
+                        computeSize(json.toString().getBytes().length, JSON_SIZE_BUCKETS));
+                try {
+                    combinedUpdates =
+                            runProcessors(json, currentSignalsMap, jsonProcessingStatsBuilder);
+                } catch (IllegalArgumentException e) {
+                    jsonProcessingStatsBuilder.setJsonProcessingStatus(
+                            JSON_PROCESSING_STATUS_SEMANTIC_ERROR);
+                    throw e;
+                }
+            }
 
             List<DBProtectedSignal> updatedSignals =
                     updateProtectedSignalInMemory(
@@ -117,6 +138,10 @@ public class UpdateProcessingOrchestrator {
 
             writeChanges(adtech, creationTime, combinedUpdates, devContext);
         } catch (JSONException e) {
+            if (jsonProcessingStatsBuilder != null) {
+                jsonProcessingStatsBuilder.setJsonProcessingStatus(
+                        JSON_PROCESSING_STATUS_SYNTACTIC_ERROR);
+            }
             throw new IllegalArgumentException("Couldn't unpack signal updates JSON", e);
         }
     }
@@ -166,7 +191,9 @@ public class UpdateProcessingOrchestrator {
     }
 
     private UpdateOutput runProcessors(
-            JSONObject json, Map<ByteBuffer, Set<DBProtectedSignal>> currentSignalsMap)
+            JSONObject json,
+            Map<ByteBuffer, Set<DBProtectedSignal>> currentSignalsMap,
+            UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder)
             throws JSONException {
 
         UpdateOutput combinedUpdates = new UpdateOutput();
@@ -182,6 +209,10 @@ public class UpdateProcessingOrchestrator {
             combinedUpdates.getToAdd().addAll(output.getToAdd());
             combinedUpdates.getToRemove().addAll(output.getToRemove());
             if (!Collections.disjoint(combinedUpdates.getKeysTouched(), output.getKeysTouched())) {
+                if (jsonProcessingStatsBuilder != null) {
+                    jsonProcessingStatsBuilder.setJsonProcessingStatus(
+                            JSON_PROCESSING_STATUS_SEMANTIC_ERROR);
+                }
                 throw new IllegalArgumentException(COLLISION_ERROR);
             }
             combinedUpdates.getKeysTouched().addAll(output.getKeysTouched());

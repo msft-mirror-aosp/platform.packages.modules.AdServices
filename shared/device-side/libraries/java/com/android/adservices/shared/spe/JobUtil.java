@@ -21,7 +21,7 @@ import android.app.job.JobInfo;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.modules.utils.build.SdkLevel;
 
-/** A class for utility methods. */
+/** A class for job utility methods. */
 public final class JobUtil {
     private JobUtil() {
         throw new AssertionError(

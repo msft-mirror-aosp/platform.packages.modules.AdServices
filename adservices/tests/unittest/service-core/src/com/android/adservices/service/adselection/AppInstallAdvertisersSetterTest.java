@@ -41,7 +41,6 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.os.LimitExceededException;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAppInstallPermissions;
@@ -54,6 +53,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -346,15 +346,15 @@ public class AppInstallAdvertisersSetterTest {
     }
 
     private static class AppInstallAdvertisersSetterTestFlags implements Flags {
-        private final boolean mAdSelectionFilteringEnabled;
+        private final boolean mAppInstallFilteringEnabled;
 
         AppInstallAdvertisersSetterTestFlags(boolean filteringEnabled) {
-            mAdSelectionFilteringEnabled = filteringEnabled;
+            mAppInstallFilteringEnabled = filteringEnabled;
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return mAdSelectionFilteringEnabled;
+        public boolean getFledgeAppInstallFilteringEnabled() {
+            return mAppInstallFilteringEnabled;
         }
     }
 }

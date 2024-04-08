@@ -30,8 +30,6 @@ import java.util.Objects;
  * The request object wrapping the required and optional parameters to schedule a deferred update
  * for Custom Audience on device. Allows AdTechs to provide an Update Uri, and the minimum Delay
  * Time to schedule the update.
- *
- * @hide
  */
 @FlaggedApi(FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
 public final class ScheduleCustomAudienceUpdateRequest {

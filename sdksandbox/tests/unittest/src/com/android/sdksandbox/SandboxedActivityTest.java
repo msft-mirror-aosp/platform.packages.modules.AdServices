@@ -17,12 +17,16 @@
 package com.android.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
+import android.app.sdksandbox.testutils.FakeSdkSandboxActivityRegistryInjector;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
@@ -45,10 +49,37 @@ public class SandboxedActivityTest {
 
     private static final String SDK_NAME = "SDK_NAME";
     private SandboxedSdkContext mSdkContext;
+    private SdkSandboxActivityRegistry mRegistry;
+    private SdkSandboxLocalSingleton mSdkSandboxLocalSingleton;
+    private ISdkToServiceCallback mServiceCallback;
+    private FakeInjector mInjector;
+    private FakeSdkSandboxActivityRegistryInjector mActivityRegistryInjector;
+
+    static class FakeInjector extends SandboxedActivity.Injector {
+        private final SdkSandboxActivityRegistry mRegistry;
+
+        FakeInjector(SdkSandboxActivityRegistry registry) {
+            mRegistry = registry;
+        }
+
+        @Override
+        SdkSandboxActivityRegistry getSdkSandboxActivityRegistry() {
+            return mRegistry;
+        }
+    }
 
     @Before
     public void setUp() {
         assumeTrue(SdkLevel.isAtLeastU());
+        mSdkSandboxLocalSingleton = Mockito.mock(SdkSandboxLocalSingleton.class);
+        mServiceCallback = Mockito.mock(ISdkToServiceCallback.class);
+        Mockito.when(mSdkSandboxLocalSingleton.getSdkToServiceCallback())
+                .thenReturn(mServiceCallback);
+        mActivityRegistryInjector =
+                new FakeSdkSandboxActivityRegistryInjector(mSdkSandboxLocalSingleton);
+
+        mRegistry = SdkSandboxActivityRegistry.getInstance(mActivityRegistryInjector);
+        mInjector = new FakeInjector(mRegistry);
         mSdkContext = Mockito.mock(SandboxedSdkContext.class);
         Mockito.when(mSdkContext.getSdkName()).thenReturn(SDK_NAME);
     }
@@ -56,13 +87,12 @@ public class SandboxedActivityTest {
     @Test
     public void testSandboxedActivityCreation() {
         SdkSandboxActivityHandler sdkSandboxActivityHandler = Mockito.spy(activity -> {});
-        SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
-        IBinder token = registry.register(mSdkContext, sdkSandboxActivityHandler);
+        IBinder token = mRegistry.register(mSdkContext, sdkSandboxActivityHandler);
 
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
                         () -> {
-                            SandboxedActivity sandboxedActivity = new SandboxedActivity();
+                            SandboxedActivity sandboxedActivity = new SandboxedActivity(mInjector);
                             Intent intent = buildIntent(sandboxedActivity, token);
                             sandboxedActivity.setIntent(intent);
 
@@ -84,7 +114,7 @@ public class SandboxedActivityTest {
                 .runWithScissors(
                         () -> {
                             SandboxedActivity sandboxedActivity =
-                                    Mockito.spy(new SandboxedActivity());
+                                    Mockito.spy(new SandboxedActivity(mInjector));
                             sandboxedActivity.setIntent(new Intent());
 
                             sandboxedActivity.notifySdkOnActivityCreation();
@@ -99,7 +129,7 @@ public class SandboxedActivityTest {
                 .runWithScissors(
                         () -> {
                             SandboxedActivity sandboxedActivity =
-                                    Mockito.spy(new SandboxedActivity());
+                                    Mockito.spy(new SandboxedActivity(mInjector));
 
                             Intent intent = new Intent();
                             Bundle extras = new Bundle();
@@ -118,7 +148,7 @@ public class SandboxedActivityTest {
                 .runWithScissors(
                         () -> {
                             SandboxedActivity sandboxedActivity =
-                                    Mockito.spy(new SandboxedActivity());
+                                    Mockito.spy(new SandboxedActivity(mInjector));
 
                             Intent intent = new Intent();
                             Bundle extras = new Bundle();
@@ -139,7 +169,7 @@ public class SandboxedActivityTest {
                 .runWithScissors(
                         () -> {
                             SandboxedActivity sandboxedActivity =
-                                    Mockito.spy(new SandboxedActivity());
+                                    Mockito.spy(new SandboxedActivity(mInjector));
                             Intent intent = buildIntent(sandboxedActivity, new Binder());
                             sandboxedActivity.setIntent(intent);
 
@@ -152,21 +182,20 @@ public class SandboxedActivityTest {
     @Test
     public void testMultipleSandboxedActivitiesForTheSameHandler() {
         SdkSandboxActivityHandler sdkSandboxActivityHandler = activity -> {};
-        SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
-        IBinder token = registry.register(mSdkContext, sdkSandboxActivityHandler);
+        IBinder token = mRegistry.register(mSdkContext, sdkSandboxActivityHandler);
 
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
                         () -> {
                             SandboxedActivity sandboxedActivity1 =
-                                    Mockito.spy(new SandboxedActivity());
+                                    Mockito.spy(new SandboxedActivity(mInjector));
                             Intent intent = buildIntent(sandboxedActivity1, token);
 
                             sandboxedActivity1.setIntent(intent);
                             sandboxedActivity1.notifySdkOnActivityCreation();
 
                             SandboxedActivity sandboxedActivity2 =
-                                    Mockito.spy(new SandboxedActivity());
+                                    Mockito.spy(new SandboxedActivity(mInjector));
                             sandboxedActivity2.setIntent(intent);
                             sandboxedActivity2.notifySdkOnActivityCreation();
 
@@ -176,21 +205,16 @@ public class SandboxedActivityTest {
                         1000);
     }
 
-    /**
-     * If customized SDK context flag is enabled, the activity base context should be wrapped in a
-     * new instance of `SandboxedSdkContext`.
-     */
+    /** The activity base context should be wrapped in a new instance of `SandboxedSdkContext`. */
     @Test
     public void testAttachBaseContextWrapsTheBaseContextIfCustomizedSdkContextFlagIsEnabled() {
         SdkSandboxActivityHandler sdkSandboxActivityHandler = Mockito.spy(activity -> {});
-        SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
-        IBinder token = registry.register(mSdkContext, sdkSandboxActivityHandler);
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
+        IBinder token = mRegistry.register(mSdkContext, sdkSandboxActivityHandler);
 
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
                         () -> {
-                            SandboxedActivity sandboxedActivity = new SandboxedActivity();
+                            SandboxedActivity sandboxedActivity = new SandboxedActivity(mInjector);
                             Intent intent = buildIntent(sandboxedActivity, token);
                             sandboxedActivity.setIntent(intent);
 
@@ -207,38 +231,6 @@ public class SandboxedActivityTest {
                             assertThat(newBaseContext).isNotNull();
                             assertThat(newBaseContext.getBaseContext())
                                     .isEqualTo(activityBaseContext);
-                        },
-                        1000);
-    }
-
-    /**
-     * If customized SDK context flag is disabled, the base context should be used directly without
-     * wrapping.
-     */
-    @Test
-    public void testAttachBaseContextUseTheBaseContextIfCustomizedSdkContextFlagIsDisabled() {
-        SdkSandboxActivityHandler sdkSandboxActivityHandler = Mockito.spy(activity -> {});
-        SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
-        IBinder token = registry.register(mSdkContext, sdkSandboxActivityHandler);
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(false);
-
-        new Handler(Looper.getMainLooper())
-                .runWithScissors(
-                        () -> {
-                            SandboxedActivity sandboxedActivity = new SandboxedActivity();
-                            Intent intent = buildIntent(sandboxedActivity, token);
-                            sandboxedActivity.setIntent(intent);
-
-                            Context activityBaseContext = Mockito.mock(Context.class);
-
-                            Mockito.when(mSdkContext.createContextWithNewBase(activityBaseContext))
-                                    .thenCallRealMethod();
-                            Mockito.when(mSdkContext.getBaseContext()).thenCallRealMethod();
-
-                            sandboxedActivity.attachBaseContext(activityBaseContext);
-
-                            Context newBaseContext = sandboxedActivity.getBaseContext();
-                            assertThat(newBaseContext).isNotInstanceOf(SandboxedSdkContext.class);
                         },
                         1000);
     }

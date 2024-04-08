@@ -28,10 +28,10 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.ValidatorTestUtil;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,7 +61,7 @@ public class AdSelectionFromOutcomesConfigValidatorTest {
 
     @Before
     public void setup() {
-        mFlags = FlagsFactory.getFlagsForTest();
+        mFlags = FakeFlagsFactory.getFlagsForTest();
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mValidator =
                 new AdSelectionFromOutcomesConfigValidator(

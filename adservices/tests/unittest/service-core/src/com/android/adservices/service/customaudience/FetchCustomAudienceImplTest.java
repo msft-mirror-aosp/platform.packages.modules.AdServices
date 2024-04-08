@@ -65,6 +65,7 @@ import static com.android.adservices.service.customaudience.CustomAudienceTimest
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceValidator.DAILY_UPDATE_URI_FIELD_NAME;
+import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullJsonResponseStringWithInvalidAdRenderId;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponse;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseString;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseStringWithAdRenderId;
@@ -106,7 +107,6 @@ import android.os.RemoteException;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -130,6 +130,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -167,7 +168,7 @@ public class FetchCustomAudienceImplTest {
             AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
     private static final Clock CLOCK = CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -1079,6 +1080,45 @@ public class FetchCustomAudienceImplTest {
     }
 
     @Test
+    public void testImpl_withAdRenderId_onlyInvalidAdRenderIds_fail() throws Exception {
+        // Enable server auction Ad Render Ids
+        mFetchCustomAudienceImpl =
+                getImplWithFlags(
+                        new FetchCustomAudienceFlags() {
+                            @Override
+                            public boolean getFledgeAuctionServerAdRenderIdEnabled() {
+                                return true;
+                            }
+
+                            @Override
+                            public long getFledgeAuctionServerAdRenderIdMaxLength() {
+                                return 1;
+                            }
+                        });
+
+        // Respond with a complete custom audience with ad render ids including the request values
+        // as is.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullJsonResponseStringWithInvalidAdRenderId(
+                                                        BUYER))));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertFalse(callback.mIsSuccess);
+        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+
+        // Assert failure due to the invalid response is logged.
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
+    }
+
+    @Test
     public void testImpl_runNormally_withAdRenderId_AdRenderIdFlagDisabled() throws Exception {
         // Disable server auction Ad Render Ids
         mFetchCustomAudienceImpl =
@@ -1347,7 +1387,12 @@ public class FetchCustomAudienceImplTest {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAppInstallFilteringEnabled() {
             return true;
         }
     }

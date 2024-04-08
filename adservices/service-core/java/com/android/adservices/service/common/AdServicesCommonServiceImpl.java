@@ -23,6 +23,7 @@ import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
@@ -271,7 +272,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         boolean adserviceEnabled = mFlags.getAdServicesEnabled();
         if (adserviceEnabled
                 && mFlags.getGaUxFeatureEnabled()
-                && DeviceRegionProvider.isEuDevice(mContext, mFlags)) {
+                && DeviceRegionProvider.isEuDevice(mContext)) {
             // Check if GA UX was notice before
             ConsentManager consentManager = ConsentManager.getInstance();
             if (!consentManager.wasGaUxNotificationDisplayed()) {
@@ -300,7 +301,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     public boolean reconsentIfNeededForROW() {
         ConsentManager consentManager = ConsentManager.getInstance();
         return mFlags.getGaUxFeatureEnabled()
-                && !DeviceRegionProvider.isEuDevice(mContext, mFlags)
+                && !DeviceRegionProvider.isEuDevice(mContext)
                 && !consentManager.wasGaUxNotificationDisplayed()
                 && consentManager.wasNotificationDisplayed()
                 && consentManager.getConsent().isGiven();
@@ -328,14 +329,27 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
                         // TO-DO (b/286664178): remove the block after API is fully ramped up.
                         if (!mFlags.getEnableAdServicesSystemApi()) {
-                            callback.onResult(
-                                    new EnableAdServicesResponse.Builder()
-                                            .setStatusCode(STATUS_SUCCESS)
-                                            .setApiEnabled(false)
-                                            .setSuccess(false)
-                                            .build());
+                            handleEnableAdServiceSuccess(
+                                    callback, /* apiEnabled= */ false, /* success= */ false);
                             LogUtil.d("enableAdServices(): API is disabled.");
                             return;
+                        }
+
+                        // On T+ devices, {@link AdServicesCommon} only use the service that comes
+                        // from AdServices APK. Modifications made by
+                        // BackCompatInit affect only components within the ExtServices APK and have
+                        // no effect on services originating from the AdServices APK.
+                        // On S- devices, the AdServicesCommonService is solely
+                        // contained within the ExtServices APK
+                        if (mFlags.getEnableBackCompatInit()) {
+                            LogUtil.d("BackCompatInit is enabled in enableAdServices().");
+                            AdServicesBackCompatInit.getInstance().initializeComponents();
+
+                            if (!PackageManagerCompatUtils.isAdServicesActivityEnabled(mContext)) {
+                                callback.onFailure(STATUS_ADSERVICES_ACTIVITY_DISABLED);
+                                LogUtil.d("BackCompatInit failed to enable rb activities.");
+                                return;
+                            }
                         }
 
                         Trace.beginSection("AdServicesCommonService#EnableAdServices_UxEngineFlow");
@@ -343,13 +357,8 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         Trace.endSection();
 
                         LogUtil.d("enableAdServices(): UxEngine started.");
-
-                        callback.onResult(
-                                new EnableAdServicesResponse.Builder()
-                                        .setStatusCode(STATUS_SUCCESS)
-                                        .setApiEnabled(true)
-                                        .setSuccess(true)
-                                        .build());
+                        handleEnableAdServiceSuccess(
+                                callback, /* apiEnabled= */ true, /* success= */ true);
                     } catch (Exception e) {
                         LogUtil.e("enableAdServices() failed to complete: " + e.getMessage());
                     }
@@ -433,9 +442,9 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             callback.onFailure(resultCode);
                             return;
                         }
+                        ConsentManager consentManager = ConsentManager.getInstance();
                         if (mFlags.isGetAdServicesCommonStatesApiEnabled()) {
                             LogUtil.d("start getting states");
-                            ConsentManager consentManager = ConsentManager.getInstance();
                             AdServicesCommonStates adservicesCommonStates =
                                     new AdServicesCommonStates.Builder()
                                             .setMeasurementState(
@@ -451,6 +460,8 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                     new AdServicesCommonStatesResponse.Builder(
                                                     adservicesCommonStates)
                                             .build());
+                            consentManager.setMeasurementDataReset(false);
+                            consentManager.setPaDataReset(false);
                             return;
                         }
                         LogUtil.d("service is not started");
@@ -500,16 +511,33 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             ConsentManager consentManager, AdServicesApiType apiType) {
         if (apiType == AdServicesApiType.FLEDGE) {
             if (consentManager.isPasFledgeConsentGiven()) {
+                if (consentManager.isPaDataReset()) {
+                    return ConsentStatus.WAS_RESET;
+                }
                 return ConsentStatus.GIVEN;
             }
             return ConsentStatus.REVOKED;
         }
         if (apiType == AdServicesApiType.MEASUREMENTS) {
             if (consentManager.isPasMeasurementConsentGiven()) {
+                if (consentManager.isMeasurementDataReset()) {
+                    return ConsentStatus.WAS_RESET;
+                }
                 return ConsentStatus.GIVEN;
             }
             return ConsentStatus.REVOKED;
         }
         return ConsentStatus.REVOKED;
+    }
+
+    private void handleEnableAdServiceSuccess(
+            IEnableAdServicesCallback callback, boolean apiEnabled, boolean success)
+            throws RemoteException {
+        callback.onResult(
+                new EnableAdServicesResponse.Builder()
+                        .setStatusCode(STATUS_SUCCESS)
+                        .setApiEnabled(apiEnabled)
+                        .setSuccess(success)
+                        .build());
     }
 }

@@ -41,9 +41,11 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
+
 
 /**
  * Fragment for the confirmation view after accepting or rejecting to be part of Privacy Sandbox
@@ -65,7 +67,7 @@ public class ConsentNotificationPasFragment extends Fragment {
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View inflatedView;
-        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity());
         mIsRenotify = requireActivity().getIntent().getBooleanExtra(IS_RENOTIFY_KEY, false);
         mIsFirstTimeRow = false;
         if (mIsRenotify) {
@@ -206,6 +208,11 @@ public class ConsentNotificationPasFragment extends Fragment {
                 || consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
     }
 
+    private static boolean isFledgeOrMsmtEnabledV2() {
+        ConsentManagerV2 consentManagerV2 = ConsentManagerV2.getInstance();
+        return consentManagerV2.getConsent(AdServicesApiType.FLEDGE).isGiven()
+                || consentManagerV2.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+    }
     /**
      * Allows the positive, acceptance button to scroll the view.
      *
