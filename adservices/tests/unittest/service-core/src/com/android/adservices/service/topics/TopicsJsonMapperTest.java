@@ -22,8 +22,8 @@ import static com.android.adservices.service.topics.TopicsJsonMapper.KEY_TOPIC_I
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.json.JSONException;
 import org.json.JSONObject;

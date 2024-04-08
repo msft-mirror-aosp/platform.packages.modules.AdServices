@@ -41,8 +41,8 @@ import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 

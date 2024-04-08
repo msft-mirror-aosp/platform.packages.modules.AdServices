@@ -32,7 +32,6 @@ import androidx.annotation.Nullable;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -52,6 +51,7 @@ import com.android.adservices.service.shell.customaudience.CustomAudienceShellCo
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.ShellCommandStats;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
 import com.android.adservices.shared.testing.common.BlockingCallableWrapper;
 
 import com.google.common.collect.ImmutableList;

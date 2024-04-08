@@ -27,7 +27,6 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
@@ -35,6 +34,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableDataFixture;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
