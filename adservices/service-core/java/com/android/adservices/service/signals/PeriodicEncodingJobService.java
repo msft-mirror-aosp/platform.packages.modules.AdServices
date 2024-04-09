@@ -202,7 +202,6 @@ public class PeriodicEncodingJobService extends JobService {
                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
                                 new ComponentName(context, PeriodicEncodingJobService.class))
                         .setRequiresBatteryNotLow(true)
-                        .setRequiresDeviceIdle(true)
                         .setPeriodic(
                                 flags.getProtectedSignalPeriodicEncodingJobPeriodMs(),
                                 flags.getProtectedSignalsPeriodicEncodingJobFlexMs())
