@@ -64,7 +64,7 @@ public final class PackageManagerCompatUtils {
     // TODO(b/263904312): Remove after max_sdk_version is implemented.
     // TODO(b/272737642) scan services instead of hardcode
     public static final ImmutableList<Pair<String, Integer>>
-            SERVICE_CLASSES_AND_ENABLE_STATUS_ON_R_PAIRS =
+            SERVICE_CLASSES_AND_MIN_SDK_SUPPORT_PAIRS =
                     ImmutableList.of(
                             new Pair<>(
                                     /* service= */ "com.android.adservices.adid.AdIdService",
