@@ -44,6 +44,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -140,6 +141,7 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
         }
         mMockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
         mServerBaseAddress = getServerBaseAddress();
+        dispatcher.setServerBaseURL(new URL(mServerBaseAddress));
     }
 
     private String getServerBaseAddress() {
