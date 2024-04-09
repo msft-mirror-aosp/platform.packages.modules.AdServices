@@ -182,44 +182,39 @@ public class AttributionJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
                                             AttributionJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
-
+                    ExtendedMockito.doReturn(
+                                    AttributionJobHandler.ProcessingResult
+                                            .SUCCESS_ALL_RECORDS_PROCESSED)
+                            .when(mSpyService)
+                            .processPendingAttributions();
                     ExtendedMockito.doNothing()
                             .when(mSpyLogger)
                             .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
-
                     // Execute
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    callback.assertJobFinished();
 
                     assertTrue(result);
 
-                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
-                            .jobFinished(any(), anyBoolean());
+                    ExtendedMockito.verify(
+                            () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)),
+                            timeout(WAIT_IN_MILLIS).atLeast(1));
 
-                    JobServiceCallback secondCallback = createJobFinishedCallback(mSpyService);
                     // Execute
                     result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    secondCallback.assertJobFinished();
 
                     // Validate
                     assertTrue(result);
 
                     // Verify the job ran successfully twice
-                    verify(mMockDatastoreManager, timeout(WAIT_IN_MILLIS).atLeast(2))
-                            .runInTransactionWithResult(any());
-                    verify(mSpyService, timeout(WAIT_IN_MILLIS).atLeast(2))
-                            .jobFinished(any(), anyBoolean());
                     ExtendedMockito.verify(
-                            () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
-                            never());
+                            () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)),
+                            timeout(WAIT_IN_MILLIS).atLeast(2));
                     verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
                 });
     }

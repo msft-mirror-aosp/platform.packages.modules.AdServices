@@ -37,19 +37,20 @@ public class SdkSandboxInstallationTest extends BaseHostJUnit4Test {
     @Test
     @LargeTest // Reboot device
     public void testSdkSandbox_deviceReboot_sdkInstalled() throws Exception {
-        assertInstalled(
-                getDevice().executeShellCommand("pm dump-package " + SDK_PROVIDER1), SDK_PROVIDER1);
 
         assertInstalled(
-                getDevice().executeShellCommand("pm dump-package " + SDK_PROVIDER2), SDK_PROVIDER2);
+                getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER1), SDK_PROVIDER1);
+
+        assertInstalled(
+                getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER2), SDK_PROVIDER2);
 
         getDevice().reboot();
         getDevice().waitForBootComplete(TIME_OUT);
 
         assertInstalled(
-                getDevice().executeShellCommand("pm dump-package " + SDK_PROVIDER1), SDK_PROVIDER1);
+                getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER1), SDK_PROVIDER1);
         assertInstalled(
-                getDevice().executeShellCommand("pm dump-package " + SDK_PROVIDER2), SDK_PROVIDER2);
+                getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER2), SDK_PROVIDER2);
     }
 
     private static void assertInstalled(String str, String provider) {

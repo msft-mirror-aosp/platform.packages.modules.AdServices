@@ -267,16 +267,14 @@ public class CacheManager {
 
                         EncryptedTopic encryptedTopic = EncryptedTopic.getDefaultInstance();
                         if (mFlags.getTopicsEncryptionEnabled()) {
-                            // Add encrypted Topic if encryption feature flag is turned on.
-                            try {
+                            // Add encrypted topic if encryption feature flag is turned on.
+                            if (mCachedEncryptedTopics.containsKey(epochId - numEpoch)) {
                                 encryptedTopic =
                                         mCachedEncryptedTopics
                                                 .get(epochId - numEpoch)
                                                 .getOrDefault(
                                                         Pair.create(app, sdk),
                                                         EncryptedTopic.getDefaultInstance());
-                            } catch (NullPointerException e) {
-                                sLogger.d("Missing EncryptedTopic for " + topic, e);
                             }
                         }
 

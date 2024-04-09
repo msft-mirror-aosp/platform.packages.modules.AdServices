@@ -1,0 +1,13 @@
+{
+  "mocks": [
+    {
+      "request": {
+        "path": "seller/reportImpression?render_uri={base_url}/render/shoes/0?bid=10"
+      },
+      "response": {
+        "body": "DefaultResponse.txt"
+      },
+      "verify_called": true
+    }
+  ]
+}

@@ -74,7 +74,7 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     private int mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
 
     AdServicesShellCommand(Context context) {
-        this(new Injector(), PhFlags.getInstance(), context);
+        this(new Injector(), FlagsFactory.getFlags(), context);
     }
 
     @VisibleForTesting

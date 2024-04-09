@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
+import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.json.JSONArray;
@@ -38,6 +39,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,12 +51,10 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>The scenario files are stored in assets/data/scenarios/*.json as well as any supporting files
  * in the data folder. Each scenario defines a set of request / response pairings which are used to
- * configure a {@link com.google.mockwebserver.MockWebServer} instance. This class is thread-local
- * safe.
+ * configure a {@link MockWebServer} instance. This class is thread-local safe.
  */
 public class ScenarioDispatcher extends Dispatcher {
 
-    public static final String BASE_ADDRESS = "https://localhost:38383";
     private static final String FAKE_ADDRESS_1 = "https://localhost:38384";
     private static final String FAKE_ADDRESS_2 = "https://localhost:38385";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -64,15 +64,17 @@ public class ScenarioDispatcher extends Dispatcher {
             "x_fledge_buyer_bidding_logic_version";
     public static final int TIMEOUT_SEC = 8;
 
-    private final ImmutableMap<Request, Response> mRequestToResponseMap;
+    private ImmutableMap<Request, Response> mRequestToResponseMap;
     private final String mPrefix;
-    private final ImmutableMap<String, String> mSubstitutionMap;
-    private final ImmutableMap<String, String> mSubstitutionVariables;
+    private ImmutableMap<String, String> mSubstitutionMap;
+    private ImmutableMap<String, String> mSubstitutionVariables;
 
     // The value is not used and we always insert a fixed value of 1.
     private final ConcurrentHashMap<String, Integer> mCalledPaths;
 
-    private final CountDownLatch mUniqueCallCount;
+    private CountDownLatch mUniqueCallCount;
+    private URL mServerBaseURL;
+    private final String mScenarioPath;
 
     /**
      * Setup the dispatcher for a given scenario.
@@ -137,22 +139,11 @@ public class ScenarioDispatcher extends Dispatcher {
         return ImmutableSet.copyOf(mCalledPaths.keySet());
     }
 
-    private ScenarioDispatcher(String scenarioPath, String prefix)
-            throws IOException, JSONException {
+    private ScenarioDispatcher(String scenarioPath, String prefix) {
         mPrefix = prefix;
         sLogger.v(String.format("Setting up scenario with file: %s", scenarioPath));
-
-        JSONObject json = new JSONObject(loadTextResource(scenarioPath));
         mCalledPaths = new ConcurrentHashMap<>();
-        mSubstitutionMap = parseSubstitutions(json);
-        mSubstitutionVariables =
-                ImmutableMap.of(
-                        "{base_url}", BASE_ADDRESS + prefix,
-                        "{adtech1_url}", BASE_ADDRESS + prefix,
-                        "{adtech2_url}", FAKE_ADDRESS_1 + prefix,
-                        "{adtech3_url}", FAKE_ADDRESS_2 + prefix);
-        mRequestToResponseMap = parseMocks(json);
-        mUniqueCallCount = new CountDownLatch(mRequestToResponseMap.size());
+        mScenarioPath = scenarioPath;
     }
 
     private static ImmutableMap<String, String> parseSubstitutions(JSONObject json) {
@@ -202,6 +193,7 @@ public class ScenarioDispatcher extends Dispatcher {
                         .setVerifyCalled(getBooleanOptional("verify_called", mock))
                         .setVerifyNotCalled(getBooleanOptional("verify_not_called", mock))
                         .build();
+        sLogger.v("Setting up mock at path: " + request.getPath());
         return Pair.create(request, response);
     }
 
@@ -221,10 +213,10 @@ public class ScenarioDispatcher extends Dispatcher {
         }
     }
 
-    private static Request parseRequest(JSONObject json) {
+    private Request parseRequest(JSONObject json) {
         Request.Builder builder = Request.newBuilder();
         try {
-            builder.setPath(json.getString("path"));
+            builder.setPath(getStringWithSubstitutions(json.getString("path")));
         } catch (JSONException e) {
             throw new IllegalArgumentException("could not extract `path` from request", e);
         }
@@ -275,6 +267,12 @@ public class ScenarioDispatcher extends Dispatcher {
 
     @Override
     public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+        boolean hasSetBaseAddress = mServerBaseURL != null;
+        if (!hasSetBaseAddress) {
+            throw new IllegalStateException(
+                    "Cannot serve request as setServerBaseAddress() has not been called.");
+        }
+
         String path = pathWithoutPrefix(request.getPath());
 
         for (Request mockRequest : mRequestToResponseMap.keySet()) {
@@ -316,6 +314,14 @@ public class ScenarioDispatcher extends Dispatcher {
         return new MockResponse().setResponseCode(404);
     }
 
+    private String getStringWithSubstitutions(String string) {
+        // Apply substitutions to string.
+        for (Map.Entry<String, String> keyValuePair : mSubstitutionVariables.entrySet()) {
+            string = string.replace(keyValuePair.getKey(), keyValuePair.getValue());
+        }
+        return string;
+    }
+
     private synchronized void recordCalledPath(String path) {
         if (mCalledPaths.containsKey(path)) {
             sLogger.v(
@@ -345,13 +351,40 @@ public class ScenarioDispatcher extends Dispatcher {
         }
     }
 
+    /**
+     * Set the server base address.
+     *
+     * <p>This method must be called for the {@link MockWebServer} to be properly used for scenario
+     * testing, as it populates the variable substitutions (e.g. base_url) to be available to the
+     * URL templates.
+     *
+     * @param serverBaseURL address to map.
+     */
+    // TODO(b/333403102): Improve the interface for this class by removing this method.
+    public void setServerBaseURL(URL serverBaseURL) throws JSONException, IOException {
+        mServerBaseURL = serverBaseURL;
+        // Needs HTTPS for real tests and HTTP for ScenarioDispatcher tests.
+        String host = mServerBaseURL.getProtocol() + "://localhost:" + mServerBaseURL.getPort();
+        mSubstitutionVariables =
+                ImmutableMap.of(
+                        "{base_url}", host + mPrefix,
+                        "{base_host}", host,
+                        "{adtech2_url}", FAKE_ADDRESS_1 + mPrefix,
+                        "{adtech3_url}", FAKE_ADDRESS_2 + mPrefix);
+        // Parsing paths requires server URL upfront.
+        JSONObject json = new JSONObject(loadTextResource(mScenarioPath));
+        mSubstitutionMap = parseSubstitutions(json);
+        mRequestToResponseMap = parseMocks(json);
+        mUniqueCallCount = new CountDownLatch(mRequestToResponseMap.size());
+    }
+
     @AutoValue
     abstract static class Request {
         abstract String getPath();
 
         abstract ImmutableMap<String, String> getHeaders();
 
-        static Request.Builder newBuilder() {
+        static Builder newBuilder() {
             return new AutoValue_ScenarioDispatcher_Request.Builder();
         }
 
@@ -377,7 +410,7 @@ public class ScenarioDispatcher extends Dispatcher {
 
         abstract int getDelaySeconds();
 
-        static Response.Builder newBuilder() {
+        static Builder newBuilder() {
             return new AutoValue_ScenarioDispatcher_Response.Builder();
         }
 
@@ -415,7 +448,7 @@ public class ScenarioDispatcher extends Dispatcher {
             // Only remove the first redundant "/" if no prefix is explicitly defined.
             return path.substring(1);
         }
-        return path.replace(mPrefix + "/", "");
+        return path.replaceFirst(mPrefix + "/", "");
     }
 
     private String loadTextResourceWithSubstitutions(String fileName) {

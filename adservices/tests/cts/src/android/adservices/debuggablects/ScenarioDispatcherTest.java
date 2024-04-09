@@ -43,6 +43,7 @@ public class ScenarioDispatcherTest {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/scenario-test-001.json", "");
         MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        dispatcher.setServerBaseURL(new URL(mMockWebServerRule.getServerBaseAddress()));
 
         makeSimpleGetRequest(new URL(mMockWebServerRule.getServerBaseAddress() + "/bidding"));
 
@@ -55,6 +56,7 @@ public class ScenarioDispatcherTest {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/scenario-test-001.json", "/hello");
         MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        dispatcher.setServerBaseURL(new URL(mMockWebServerRule.getServerBaseAddress()));
 
         URL url = new URL(mMockWebServerRule.getServerBaseAddress() + "/hello/bidding");
         makeSimpleGetRequest(url);
@@ -68,6 +70,7 @@ public class ScenarioDispatcherTest {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/scenario-test-002.json", "");
         MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        dispatcher.setServerBaseURL(new URL(mMockWebServerRule.getServerBaseAddress()));
 
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
@@ -84,6 +87,7 @@ public class ScenarioDispatcherTest {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/scenario-test-003.json", "");
         MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        dispatcher.setServerBaseURL(new URL(mMockWebServerRule.getServerBaseAddress()));
 
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding")); // Call something else.
@@ -98,6 +102,7 @@ public class ScenarioDispatcherTest {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/scenario-test-004.json", "");
         MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        dispatcher.setServerBaseURL(new URL(mMockWebServerRule.getServerBaseAddress()));
 
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         long startTime = System.currentTimeMillis();
@@ -115,6 +120,7 @@ public class ScenarioDispatcherTest {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/scenario-test-005.json", "");
         MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        dispatcher.setServerBaseURL(new URL(mMockWebServerRule.getServerBaseAddress()));
 
         makeSimpleGetRequest(new URL(mMockWebServerRule.getServerBaseAddress() + "/hello/world"));
 
@@ -129,6 +135,7 @@ public class ScenarioDispatcherTest {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/scenario-test-006.json", "");
         MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        dispatcher.setServerBaseURL(new URL(mMockWebServerRule.getServerBaseAddress()));
 
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
@@ -146,6 +153,7 @@ public class ScenarioDispatcherTest {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/scenario-test-007.json", "");
         MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        dispatcher.setServerBaseURL(new URL(mMockWebServerRule.getServerBaseAddress()));
 
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
@@ -159,6 +167,59 @@ public class ScenarioDispatcherTest {
 
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(List.of("/seller/reportImpression"));
+        server.shutdown();
+    }
+
+    @Test
+    public void testScenarioDispatcher_withQueryParamPath_success() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-008.json", "");
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        String path =
+                "/seller/reportImpression?render_uri=https://localhost:38383/render/shoes/0?bid=10";
+        dispatcher.setServerBaseURL(new URL(mMockWebServerRule.getServerBaseAddress()));
+
+        makeSimpleGetRequest(new URL(baseAddress + path));
+
+        assertThat(dispatcher.getCalledPaths()).containsExactly(path);
+        server.shutdown();
+    }
+
+    @Test
+    public void testScenarioDispatcher_withQueryParamPath_doesNotFallback() throws Exception {
+        String prefix = "/123";
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-009.json", prefix);
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        dispatcher.setServerBaseURL(new URL(mMockWebServerRule.getServerBaseAddress()));
+
+        // Same structure as testScenarioDispatcher_withQueryParamPath_success except adding some
+        // more data into the path.
+        makeSimpleGetRequest(
+                server.getUrl(
+                        prefix
+                                + "/seller/reportImpression?render_uri=https://localhost:38383"
+                                + "/render/shoes/0?bid=10"));
+
+        assertThat(dispatcher.getCalledPaths()).doesNotContain("/seller/reportImpression");
+        server.shutdown();
+    }
+
+    @Test
+    public void testScenarioDispatcher_withServerPathInQueryParams_success() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-010.json", "");
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        String path =
+                "/seller/reportImpression?render_uri="
+                        + mMockWebServerRule.getServerBaseAddress()
+                        + "/render/shoes/0?bid=10";
+        dispatcher.setServerBaseURL(new URL(mMockWebServerRule.getServerBaseAddress()));
+
+        makeSimpleGetRequest(server.getUrl(path));
+
+        assertThat(dispatcher.getCalledPaths()).containsExactly(path);
         server.shutdown();
     }
 
