@@ -32,13 +32,13 @@ import android.adservices.adselection.SignedContextualAds;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.SignatureVerificationLogger;
 import com.android.adservices.service.stats.SignatureVerificationStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;

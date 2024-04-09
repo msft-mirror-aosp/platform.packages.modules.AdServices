@@ -45,7 +45,6 @@ import android.content.ComponentName;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
@@ -54,6 +53,7 @@ import com.android.adservices.shared.spe.framework.TestJobService;
 import com.android.adservices.shared.spe.framework.TestJobServiceFactory;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;

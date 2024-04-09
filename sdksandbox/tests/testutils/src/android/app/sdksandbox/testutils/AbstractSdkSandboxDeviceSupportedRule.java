@@ -15,8 +15,8 @@
  */
 package android.app.sdksandbox.testutils;
 
-import com.android.adservices.common.Logger;
-import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.Logger.RealLogger;
 
 import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;

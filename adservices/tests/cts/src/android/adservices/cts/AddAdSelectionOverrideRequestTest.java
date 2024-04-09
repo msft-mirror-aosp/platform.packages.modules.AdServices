@@ -26,7 +26,7 @@ import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableMap;
 

@@ -41,8 +41,8 @@ import android.util.Log;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.MoreExecutors;
