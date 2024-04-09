@@ -318,16 +318,20 @@ public class Combinatorics {
      * Returns the max information gain given the num of trigger states, attribution scope limit and
      * max num event states.
      *
-     * @param numTriggerStates number of trigger states
-     * @param attributionScopeLimit attribution scope limit
-     * @param maxEventStates max num event states
-     * @return the max information gain
+     * @param numTriggerStates The number of trigger states.
+     * @param attributionScopeLimit The attribution scope limit.
+     * @param maxEventStates The maximum number of event states (expected to be positive).
+     * @return The max information gain.
      */
     public static double getMaxInformationGainWithAttributionScope(
             long numTriggerStates,
             long attributionScopeLimit,
             long maxEventStates,
             double privacyEpsilon) {
+        if (numTriggerStates <= 0 || maxEventStates <= 0) {
+            throw new IllegalArgumentException(
+                    "numTriggerStates and maxEventStates must be positive");
+        }
         double maxInformationGain = 0;
         // Choosing the smaller dimension for iteration.
         if (attributionScopeLimit > maxEventStates) {
