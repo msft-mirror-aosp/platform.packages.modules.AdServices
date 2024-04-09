@@ -54,7 +54,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the AdSelection Override Logic */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionOverrider {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

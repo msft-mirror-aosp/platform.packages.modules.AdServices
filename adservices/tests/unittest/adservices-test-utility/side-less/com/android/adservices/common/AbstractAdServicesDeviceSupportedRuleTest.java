@@ -19,6 +19,12 @@ package com.android.adservices.common;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.shared.testing.DeviceConditionsViolatedException;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.ScreenSize;
+import com.android.adservices.shared.testing.StandardStreamsLogger;
+import com.android.adservices.shared.testing.TestAnnotations;
+
 import com.google.common.truth.Expect;
 
 import org.junit.Before;
@@ -57,6 +63,7 @@ public class AbstractAdServicesDeviceSupportedRuleTest {
                 new FakeAdServicesDeviceSupportedRule(mRealLogger, mAbstractDeviceSupportHelper);
         mockIsGoDevice(false);
         mockIsLowRamDevice(false);
+        mockIsLargeScreenDevice(false);
     }
 
     @Test
@@ -88,6 +95,20 @@ public class AbstractAdServicesDeviceSupportedRuleTest {
     }
 
     @Test
+    public void testIsLargeScreenevice_returnsTrue() {
+        mockIsLargeScreenDevice(true);
+
+        expect.that(mAdServicesDeviceSupportedRule.isLargeScreenDevice()).isTrue();
+    }
+
+    @Test
+    public void testIsLargeScreenDevice_returnsFalse() {
+        mockIsLargeScreenDevice(false);
+
+        expect.that(mAdServicesDeviceSupportedRule.isLargeScreenDevice()).isFalse();
+    }
+
+    @Test
     public void testIsGoDevice_returnsTrue() {
         mockIsGoDevice(true);
 
@@ -116,6 +137,56 @@ public class AbstractAdServicesDeviceSupportedRuleTest {
     public void testAnnotatedWithLowRam_deviceLowRam() throws Throwable {
         mockIsLowRamDevice(true);
         Description description = createTestMethod(TestAnnotations.requiresLowRamDevice());
+
+        mAdServicesDeviceSupportedRule.apply(mBaseStatement, description).evaluate();
+
+        mBaseStatement.assertEvaluated();
+    }
+
+    @Test
+    public void testAnnotatedWithLargeScreen_deviceSmallScreen() {
+        mockIsLargeScreenDevice(false);
+        Description description =
+                createTestMethod(TestAnnotations.requiresScreenSizeDevice(ScreenSize.LARGE_SCREEN));
+
+        assertTestThrowsAssumptionsViolatedException(
+                description,
+                String.format(
+                        AbstractAdServicesDeviceSupportedRule
+                                .REQUIRES_SCREEN_SIZE_ASSUMPTION_FAILED_ERROR_MESSAGE,
+                        ScreenSize.LARGE_SCREEN));
+    }
+
+    @Test
+    public void testAnnotatedWithLargeScreen_deviceLargeScreen() throws Throwable {
+        mockIsLargeScreenDevice(true);
+        Description description =
+                createTestMethod(TestAnnotations.requiresScreenSizeDevice(ScreenSize.LARGE_SCREEN));
+
+        mAdServicesDeviceSupportedRule.apply(mBaseStatement, description).evaluate();
+
+        mBaseStatement.assertEvaluated();
+    }
+
+    @Test
+    public void testAnnotatedWithSmallScreen_deviceLargeScreen() {
+        mockIsLargeScreenDevice(true);
+        Description description =
+                createTestMethod(TestAnnotations.requiresScreenSizeDevice(ScreenSize.SMALL_SCREEN));
+
+        assertTestThrowsAssumptionsViolatedException(
+                description,
+                String.format(
+                        AbstractAdServicesDeviceSupportedRule
+                                .REQUIRES_SCREEN_SIZE_ASSUMPTION_FAILED_ERROR_MESSAGE,
+                        ScreenSize.SMALL_SCREEN));
+    }
+
+    @Test
+    public void testAnnotatedWithSmallScreen_deviceSmallScreen() throws Throwable {
+        mockIsLargeScreenDevice(false);
+        Description description =
+                createTestMethod(TestAnnotations.requiresScreenSizeDevice(ScreenSize.SMALL_SCREEN));
 
         mAdServicesDeviceSupportedRule.apply(mBaseStatement, description).evaluate();
 
@@ -232,6 +303,10 @@ public class AbstractAdServicesDeviceSupportedRuleTest {
 
     private void mockIsLowRamDevice(boolean isLowRam) {
         when(mAbstractDeviceSupportHelper.isLowRamDevice()).thenReturn(isLowRam);
+    }
+
+    private void mockIsLargeScreenDevice(boolean isLargeScreen) {
+        when(mAbstractDeviceSupportHelper.isLargeScreenDevice()).thenReturn(isLargeScreen);
     }
 
     private void mockIsGoDevice(boolean isGoDevice) {

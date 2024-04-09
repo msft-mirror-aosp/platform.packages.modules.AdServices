@@ -206,6 +206,17 @@ public class AsyncRegistrationQueueRunner {
         }
     }
 
+    private static boolean isNavigationOriginAlreadyRegisteredForRegistration(
+            @NonNull Source source, IMeasurementDao dao, Flags flags) throws DatastoreException {
+        if (!flags.getMeasurementEnableNavigationReportingOriginCheck()
+                || source.getSourceType() != Source.SourceType.NAVIGATION) {
+            return false;
+        }
+        return dao.countNavigationSourcesPerReportingOrigin(
+                        source.getRegistrationOrigin(), source.getRegistrationId())
+                > 0;
+    }
+
     private void processSourceRegistration(
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -269,6 +280,7 @@ public class AsyncRegistrationQueueRunner {
                 source.setStatus(Source.Status.MARKED_TO_DELETE);
             }
             insertSourceFromTransaction(source, dao);
+
             mDebugReportApi.scheduleSourceSuccessDebugReport(source, dao);
         }
     }
@@ -340,6 +352,11 @@ public class AsyncRegistrationQueueRunner {
             DebugReportApi debugReportApi)
             throws DatastoreException {
         Flags flags = FlagsFactory.getFlags();
+        // Do not persist the navigation source if the same reporting origin has been registered
+        // for the registration.
+        if (isNavigationOriginAlreadyRegisteredForRegistration(source, dao, flags)) {
+            return false;
+        }
         long windowStartTime =
                 source.getEventTime() - flags.getMeasurementRateLimitWindowMilliseconds();
         Optional<Uri> publisher = getTopLevelPublisher(topOrigin, publisherType);
@@ -435,7 +452,16 @@ public class AsyncRegistrationQueueRunner {
                             publisher, source.getEnrollmentId());
             return false;
         }
-        if (!source.hasValidInformationGain(flags)) {
+        try {
+            if (!source.validateAndSetNumReportStates(flags)
+                    || !source.validateAndSetMaxEventStates(flags)
+                    || !source.hasValidInformationGain(flags)) {
+                debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
+                return false;
+            }
+        } catch (ArithmeticException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Calculating the number of report states overflowed.");
             debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
             return false;
         }
@@ -653,6 +679,10 @@ public class AsyncRegistrationQueueRunner {
         if (sourceId == null) {
             // Source was not saved due to DB size restrictions
             return;
+        }
+
+        if (mFlags.getMeasurementEnableAttributionScope()) {
+            dao.updateSourcesForAttributionScope(source);
         }
 
         if (fakeReports != null) {

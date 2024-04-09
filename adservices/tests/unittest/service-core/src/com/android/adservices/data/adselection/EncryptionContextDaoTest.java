@@ -26,8 +26,8 @@ import android.content.Context;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.io.BaseEncoding;
 
@@ -155,7 +155,8 @@ public class EncryptionContextDaoTest {
                 .setCreationInstant(CREATION_TIME)
                 .setKeyConfig(KEY_CONFIG_BYTES)
                 .setSharedSecret(SHARED_SECRET_BYTES)
-                .setSeed(SEED_BYTES);
+                .setSeed(SEED_BYTES)
+                .setHasMediaTypeChanged(false);
     }
 
     private DBEncryptionContext getDbEncryptionContext(long contextId) throws Exception {
@@ -171,6 +172,7 @@ public class EncryptionContextDaoTest {
                 .setKeyConfig(KEY_CONFIG_BYTES)
                 .setSharedSecret(insertedContext.getSharedSecret())
                 .setSeed(insertedContext.getSeed())
+                .setHasMediaTypeChanged(false)
                 .build();
     }
 }

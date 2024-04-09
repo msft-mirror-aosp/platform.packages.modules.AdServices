@@ -22,11 +22,13 @@ import static org.junit.Assert.assertNotEquals;
 import android.adservices.common.AdSelectionSignals;
 import android.os.Parcel;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.nio.charset.StandardCharsets;
 
 public class AdSelectionSignalsTest {
 
@@ -41,7 +43,9 @@ public class AdSelectionSignalsTest {
     @Test
     public void testAdSelectionSignalsGetSizeInBytes() {
         AdSelectionSignals identicalId = AdSelectionSignals.fromString(SIGNALS_STRING);
-        assertEquals(identicalId.toString().getBytes().length, SIGNALS_STRING.getBytes().length);
+        assertEquals(
+                identicalId.toString().getBytes(StandardCharsets.UTF_8).length,
+                SIGNALS_STRING.getBytes(StandardCharsets.UTF_8).length);
     }
 
     @Test

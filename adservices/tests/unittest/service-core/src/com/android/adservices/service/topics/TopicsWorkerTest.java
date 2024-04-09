@@ -45,7 +45,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockRandom;
 import com.android.adservices.cobalt.TopicsCobaltLogger;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.EncryptedTopic;
@@ -55,6 +54,8 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -97,6 +98,7 @@ public class TopicsWorkerTest {
     @Mock AdServicesManager mMockAdServicesManager;
     @Mock AppSearchConsentManager mAppSearchConsentManager;
     @Mock TopicsCobaltLogger mTopicsCobaltLogger;
+    @Mock Clock mClock;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -132,7 +134,8 @@ public class TopicsWorkerTest {
                         mBlockedTopicsManager,
                         new GlobalBlockedTopicsManager(
                                 /* globalBlockedTopicIds= */ new HashSet<>()),
-                        mTopicsCobaltLogger);
+                        mTopicsCobaltLogger,
+                        mClock);
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
 

@@ -28,7 +28,6 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 
 /** Class to provide implementation when Debug Reporting is enabled for on device auction. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class DebugReportingEnabled extends DebugReporting {
 

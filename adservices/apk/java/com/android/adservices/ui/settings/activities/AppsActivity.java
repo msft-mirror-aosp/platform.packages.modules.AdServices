@@ -33,7 +33,6 @@ import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
  * Android application activity for controlling applications which interacted with FLEDGE
  * (Remarketing) APIs.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppsActivity extends AdServicesBaseActivity {
     private AppsActionDelegate mActionDelegate;

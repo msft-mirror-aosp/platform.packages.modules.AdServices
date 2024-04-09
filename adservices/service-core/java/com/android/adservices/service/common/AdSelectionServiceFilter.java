@@ -34,7 +34,6 @@ import com.android.adservices.service.exception.FilterException;
 import java.util.Objects;
 
 /** Utility class to filter FLEDGE requests. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
     public AdSelectionServiceFilter(

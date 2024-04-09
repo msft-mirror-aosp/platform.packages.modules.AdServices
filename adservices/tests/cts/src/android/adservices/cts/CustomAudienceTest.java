@@ -39,8 +39,8 @@ import android.os.Parcel;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.RequiresLowRamDevice;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 
 import com.google.common.collect.ImmutableList;
 

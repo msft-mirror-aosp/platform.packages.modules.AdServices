@@ -28,7 +28,6 @@ import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.modules.utils.build.SdkLevel;
 import com.android.server.sdksandbox.proto.Activity.ActivityAllowlists;
 import com.android.server.sdksandbox.proto.Activity.AllowedActivities;
 import com.android.server.sdksandbox.proto.BroadcastReceiver.AllowedBroadcastReceivers;
@@ -63,9 +62,6 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
             "apply_sdk_sandbox_next_restrictions";
 
     private static final boolean DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS = false;
-    private static final String PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED =
-            "sdksandbox_customized_sdk_context_enabled";
-    private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
 
     private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
             "sdksandbox_broadcastreceiver_allowlist_per_targetSdkVersion";
@@ -103,13 +99,6 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                     DeviceConfig.NAMESPACE_ADSERVICES,
                     PROPERTY_DISABLE_SDK_SANDBOX,
                     DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
-
-    @GuardedBy("mLock")
-    private boolean mCustomizedSdkContextEnabled =
-            DeviceConfig.getBoolean(
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
-                    DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
 
     @GuardedBy("mLock")
     private boolean mEnforceRestrictions =
@@ -209,12 +198,6 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                             this.mSdkSandboxManagerService.stopAllSandboxes();
                         }
                         break;
-                    case PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED:
-                        mCustomizedSdkContextEnabled =
-                                properties.getBoolean(
-                                        PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
-                                        DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
-                        break;
                     case PROPERTY_ENFORCE_RESTRICTIONS:
                         mEnforceRestrictions =
                                 properties.getBoolean(
@@ -285,7 +268,7 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
         }
     }
 
-    public void setKillSwitchState(boolean enabled) {
+    void setKillSwitchState(boolean enabled) {
         synchronized (mLock) {
             DeviceConfig.setProperty(
                     DeviceConfig.NAMESPACE_ADSERVICES,
@@ -299,16 +282,6 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     void unregisterPropertiesListener() {
         DeviceConfig.removeOnPropertiesChangedListener(this);
-    }
-
-    public boolean isCustomizedSdkContextEnabled() {
-        // Can only be enabled on U+ devices
-        if (!SdkLevel.isAtLeastU()) {
-            return false;
-        }
-        synchronized (mLock) {
-            return mCustomizedSdkContextEnabled;
-        }
     }
 
     public boolean areRestrictionsEnforced() {

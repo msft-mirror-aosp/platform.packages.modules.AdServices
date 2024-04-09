@@ -33,7 +33,6 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /** This class represents the data access object for the consent data written to AppSearch. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @Document
 class AppSearchConsentDao extends AppSearchDao {

@@ -31,6 +31,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -84,7 +85,7 @@ public final class DebugReportApiTest {
         MockitoAnnotations.initMocks(this);
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         mDebugReportApi = spy(new DebugReportApi(mContext, mFlags));
 
         when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
@@ -98,6 +99,8 @@ public final class DebugReportApiTest {
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
         when(mFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
+        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
     }
 
     @Test

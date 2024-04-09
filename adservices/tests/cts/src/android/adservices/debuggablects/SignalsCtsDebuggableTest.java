@@ -21,9 +21,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import android.adservices.clients.signals.ProtectedSignalsClient;
 import android.adservices.signals.UpdateSignalsRequest;
@@ -32,12 +30,11 @@ import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
 import android.net.Uri;
 
-
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.adservices.common.SupportedByConditionRule;
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import com.google.mockwebserver.MockWebServer;
 
@@ -47,11 +44,12 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@SetFlagDisabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
 @RequiresSdkLevelAtLeastT
 public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
@@ -108,17 +106,18 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
     }
 
     @Test
+    @SetFlagDisabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testUpdateSignals_badUri_failure() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/signals-default.json", "");
         setupDefaultMockWebServer(dispatcher);
-        Uri uri = Uri.parse("");
+        Uri uri = Uri.EMPTY;
         UpdateSignalsRequest request = new UpdateSignalsRequest.Builder(uri).build();
         ExecutionException e =
                 assertThrows(
                         ExecutionException.class,
                         () -> mProtectedSignalsClient.updateSignals(request).get());
-        assertEquals("SecurityException", e.getCause().getClass().getSimpleName());
+        assertThat(e.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -132,7 +131,7 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
                 assertThrows(
                         ExecutionException.class,
                         () -> mProtectedSignalsClient.updateSignals(request).get());
-        assertTrue(e.getCause() instanceof IllegalArgumentException);
+        assertThat(e.getCause()).isInstanceOf(IllegalArgumentException.class);
     }
 
     // TODO(b/299336069) Get rid of the repeated code here.
@@ -142,6 +141,7 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
         }
         mMockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
         mServerBaseAddress = getServerBaseAddress();
+        dispatcher.setServerBaseURL(new URL(mServerBaseAddress));
     }
 
     private String getServerBaseAddress() {
