@@ -1462,4 +1462,24 @@ public final class FlagsConstants {
     /** Key for enabling custom error code sampling. */
     public static final String KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED =
             "custom_error_code_sampling_enabled";
+
+    /** Key for PAS script download read timeout flag */
+    public static final String KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS =
+            "pas_script_download_read_timeout_ms";
+
+    /** Key for PAS script download connection timeout flag */
+    public static final String KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS =
+            "pas_script_download_connection_timeout_ms";
+
+    /** Key for PAS signals download read timeout flag */
+    public static final String KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS =
+            "pas_signals_download_read_timeout_ms";
+
+    /** Key for PAS signals download connection timeout flag */
+    public static final String KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS =
+            "pas_signals_download_connection_timeout_ms";
+
+    /** Key for PAS script execution timeout flag */
+    public static final String KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS =
+            "pas_script_execution_timeout_ms";
 }

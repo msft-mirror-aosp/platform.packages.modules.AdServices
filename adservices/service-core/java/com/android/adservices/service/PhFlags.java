@@ -99,6 +99,11 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.MAX_PERCENTAGE;
@@ -5327,6 +5332,31 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS
                         + " = "
                         + getAdServicesJsScriptEngineMaxRetryAttempts());
+        writer.println(
+                "\t"
+                        + KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS
+                        + " = "
+                        + getPasScriptDownloadReadTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS
+                        + " = "
+                        + getPasScriptDownloadConnectionTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS
+                        + " = "
+                        + getPasSignalsDownloadReadTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS
+                        + " = "
+                        + getPasSignalsDownloadConnectionTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS
+                        + " = "
+                        + getPasScriptExecutionTimeoutMs());
     }
 
     @VisibleForTesting
@@ -6431,6 +6461,40 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getCustomErrorCodeSamplingEnabled() {
         return getDeviceConfigFlag(
                 KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED, DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED);
+    }
+
+    @Override
+    public int getPasScriptDownloadReadTimeoutMs() {
+        return getDeviceConfigFlag(
+                KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS,
+                DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getPasScriptDownloadConnectionTimeoutMs() {
+        return getDeviceConfigFlag(
+                KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getPasSignalsDownloadReadTimeoutMs() {
+        return getDeviceConfigFlag(
+                KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS,
+                DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getPasSignalsDownloadConnectionTimeoutMs() {
+        return getDeviceConfigFlag(
+                KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getPasScriptExecutionTimeoutMs() {
+        return getDeviceConfigFlag(
+                KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS, DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers
