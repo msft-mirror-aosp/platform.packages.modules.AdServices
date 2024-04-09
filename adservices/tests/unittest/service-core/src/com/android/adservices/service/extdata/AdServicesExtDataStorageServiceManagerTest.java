@@ -33,6 +33,7 @@ import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_M
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
 import static com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager.UNKNOWN_PACKAGE_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADEXT_DATA_SERVICE;
@@ -119,6 +120,8 @@ public class AdServicesExtDataStorageServiceManagerTest {
                 .when(() -> AdServicesExtDataStorageServiceWorker.getInstance(mContext));
         doReturn(mAdServicesLogger).when(AdServicesLoggerImpl::getInstance);
         mManager = AdServicesExtDataStorageServiceManager.getInstance(mContext);
+
+        mockCobaltLoggingFlags(mFlags, false);
     }
 
     @Test
@@ -467,7 +470,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
         expect.that(stats.getApiClass())
                 .isEqualTo(AD_SERVICES_API_CALLED__API_CLASS__ADEXT_DATA_SERVICE);
         expect.that(stats.getApiName()).isEqualTo(apiName);
-        expect.that(stats.getResult().getResultCode()).isEqualTo(expectedResultCode);
+        expect.that(stats.getResultCode()).isEqualTo(expectedResultCode);
         expect.that(stats.getAppPackageName()).isEqualTo(mContext.getPackageName());
         expect.that(stats.getSdkPackageName()).isEqualTo(UNKNOWN_PACKAGE_NAME);
     }

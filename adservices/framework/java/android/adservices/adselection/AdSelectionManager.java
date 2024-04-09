@@ -65,7 +65,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well as
  * report impressions.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -232,13 +231,13 @@ public class AdSelectionManager {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
-
         try {
             final AdSelectionService service = getServiceProvider().getService();
             service.getAdSelectionData(
                     new GetAdSelectionDataInput.Builder()
                             .setSeller(request.getSeller())
                             .setCallerPackageName(getCallerPackageName())
+                            .setCoordinatorOriginUri(request.getCoordinatorOriginUri())
                             .build(),
                     new CallerMetadata.Builder()
                             .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
@@ -296,7 +295,10 @@ public class AdSelectionManager {
      *
      * <p>The output is passed by the receiver, which either returns an {@link AdSelectionOutcome}
      * for a successful run, or an {@link Exception} includes the type of the exception thrown and
-     * the corresponding error message.
+     * the corresponding error message. The {@link AdSelectionOutcome#getAdSelectionId()} is not
+     * guaranteed to be the same as the {@link
+     * PersistAdSelectionResultRequest#getAdSelectionDataId()} or the deprecated {@link
+     * PersistAdSelectionResultRequest#getAdSelectionId()}.
      *
      * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
      * the API received to run the ad selection.

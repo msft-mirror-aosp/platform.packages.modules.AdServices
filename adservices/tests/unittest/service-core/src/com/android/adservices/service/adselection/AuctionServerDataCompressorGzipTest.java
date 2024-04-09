@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Assert;
 import org.junit.Before;

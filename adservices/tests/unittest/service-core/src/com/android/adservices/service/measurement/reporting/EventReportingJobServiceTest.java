@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
+import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -50,17 +51,14 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.Clock;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.testing.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -97,7 +95,6 @@ public class EventReportingJobServiceTest {
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(DatastoreManagerFactory.class)
-                    .spyStatic(EnrollmentDao.class)
                     .spyStatic(EventReportingJobService.class)
                     .spyStatic(FlagsFactory.class)
                     .spyStatic(AdServicesJobServiceLogger.class)
@@ -111,10 +108,8 @@ public class EventReportingJobServiceTest {
         mMockDatastoreManager = mock(DatastoreManager.class);
         mMockJobScheduler = mock(JobScheduler.class);
 
-        StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
-        mSpyLogger =
-                spy(new AdServicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
         when(mMockFlags.getMeasurementEventReportingJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementEventReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_UNMETERED);
@@ -515,8 +510,6 @@ public class EventReportingJobServiceTest {
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
-        ExtendedMockito.doReturn(mock(EnrollmentDao.class))
-                .when(() -> EnrollmentDao.getInstance(any()));
         ExtendedMockito.doReturn(mMockDatastoreManager)
                 .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
         ExtendedMockito.doNothing().when(() -> EventReportingJobService.schedule(any(), any()));

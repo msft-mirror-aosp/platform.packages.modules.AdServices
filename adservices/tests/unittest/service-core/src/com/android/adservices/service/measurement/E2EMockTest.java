@@ -177,7 +177,7 @@ public abstract class E2EMockTest extends E2ETest {
                         mFlags,
                         /* enable seed */ true,
                         AdServicesLoggerImpl.getInstance(),
-                        EnrollmentUtil.getInstance(sContext));
+                        EnrollmentUtil.getInstance());
 
         mAsyncSourceFetcher =
                 spy(
@@ -395,7 +395,6 @@ public abstract class E2EMockTest extends E2ETest {
         long reportTime = timestamp + delay;
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
                         mDatastoreManager,
                         reportTime
                                 - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
@@ -412,7 +411,6 @@ public abstract class E2EMockTest extends E2ETest {
 
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
                         mDatastoreManager,
                         reportTime - maxAggregateReportUploadRetryWindowMs,
                         reportTime,
@@ -430,7 +428,7 @@ public abstract class E2EMockTest extends E2ETest {
             throws IOException, JSONException {
         Object[] reportCaptures =
                 DebugReportingJobHandlerWrapper.spyPerformScheduledPendingReports(
-                        mEnrollmentDao, mDatastoreManager, sContext);
+                        mDatastoreManager, sContext);
 
         processActualDebugReports(
                 timestamp,
@@ -463,7 +461,6 @@ public abstract class E2EMockTest extends E2ETest {
 
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
                         mDatastoreManager,
                         reportingJob.mTimestamp
                                 - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
@@ -488,7 +485,6 @@ public abstract class E2EMockTest extends E2ETest {
 
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
                         mDatastoreManager,
                         reportingJob.mTimestamp - maxAggregateReportUploadRetryWindowMs,
                         reportingJob.mTimestamp,
@@ -592,13 +588,15 @@ public abstract class E2EMockTest extends E2ETest {
         List<JSONObject> result = new ArrayList<>();
         for (int i = 0; i < destinations.size(); i++) {
             JSONObject sharedInfo = new JSONObject(payloads.get(i).getString("shared_info"));
+            long optionalDelay =
+                    aggregateReports.get(i).getTriggerContextId() == null ? reportDelay : 0;
             result.add(
                     new JSONObject()
                             .put(
                                     TestFormatJsonMapping.REPORT_TIME_KEY,
                                     String.valueOf(
                                             aggregateReports.get(i).getScheduledReportTime()
-                                                    + reportDelay))
+                                                    + optionalDelay))
                             .put(
                                     TestFormatJsonMapping.REPORT_TO_KEY,
                                     destinations.get(i).toString())
@@ -644,6 +642,11 @@ public abstract class E2EMockTest extends E2ETest {
             aggregateJson.put(
                     AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME,
                     sharedInfo.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME));
+        }
+        if (!data.isNull(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID)) {
+            aggregateJson.put(
+                    AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID,
+                    data.optString(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID));
         }
 
         return aggregateJson;

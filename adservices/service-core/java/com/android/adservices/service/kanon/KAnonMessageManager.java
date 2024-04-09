@@ -24,6 +24,7 @@ import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.service.Flags;
 
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -50,12 +51,25 @@ public class KAnonMessageManager {
      * This method is used to persist NEW {@link KAnonMessageEntity} in the {@link DBKAnonMessage}
      * table.
      */
-    public void persistNewAnonMessageEntities(List<KAnonMessageEntity> kAnonMessageEntityList) {
+    public List<KAnonMessageEntity> persistNewAnonMessageEntities(
+            List<KAnonMessageEntity> kAnonMessageEntityList) {
         List<DBKAnonMessage> dbkAnonMessages =
                 kAnonMessageEntityList.stream()
                         .map(this::parseKAnonMessageEntityToNewDBKAnonMessage)
                         .collect(Collectors.toList());
-        mKAnonMessageDao.insertAllKAnonMessages(dbkAnonMessages);
+        long[] ids = mKAnonMessageDao.insertAllKAnonMessages(dbkAnonMessages);
+        List<KAnonMessageEntity> newKAnonMessageEntities = new ArrayList<>();
+        for (int i = 0; i < ids.length; i++) {
+            KAnonMessageEntity currentEntity = kAnonMessageEntityList.get(i);
+            newKAnonMessageEntities.add(
+                    KAnonMessageEntity.builder()
+                            .setAdSelectionId(currentEntity.getAdSelectionId())
+                            .setMessageId(ids[i])
+                            .setHashSet(currentEntity.getHashSet())
+                            .setStatus(currentEntity.getStatus())
+                            .build());
+        }
+        return newKAnonMessageEntities;
     }
 
     /**
@@ -82,19 +96,42 @@ public class KAnonMessageManager {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Returns the number of messages with NOT_PROCESSED {@link KAnonMessageConstants.MessageStatus}
+     * status in the database.
+     */
+    public int getNumberOfUnprocessedMessagesInDB() {
+        return mKAnonMessageDao.getNumberOfMessagesWithStatus(
+                KAnonMessageConstants.MessageStatus.NOT_PROCESSED);
+    }
+
+    /** Updates the status of messages in the table. */
+    public void updateMessagesStatus(
+            List<KAnonMessageEntity> messageEntities,
+            @KAnonMessageEntity.KanonMessageEntityStatus int status) {
+        List<Long> idsToUpdate =
+                messageEntities.stream()
+                        .map(KAnonMessageEntity::getMessageId)
+                        .collect(Collectors.toList());
+
+        mKAnonMessageDao.updateMessagesStatus(
+                idsToUpdate, KAnonMessageConstants.fromKAnonMessageEntityStatus(status));
+    }
+
     private DBKAnonMessage parseKAnonMessageEntityToNewDBKAnonMessage(
             KAnonMessageEntity kAnonMessageEntity) {
         if (kAnonMessageEntity == null) {
             return null;
         }
-        // TODO(b/321942045) Calculate expiry instant by picking up values from flag.
         return DBKAnonMessage.builder()
                 .setAdSelectionId(kAnonMessageEntity.getAdSelectionId())
                 .setKanonHashSet(kAnonMessageEntity.getHashSet())
                 .setStatus(
                         KAnonMessageConstants.fromKAnonMessageEntityStatus(
                                 kAnonMessageEntity.getStatus()))
-                .setExpiryInstant(mClock.instant())
+                // TODO(b/325606196): stable kanon flags.
+                .setExpiryInstant(
+                        mClock.instant().plusSeconds(mFlags.getFledgeKAnonMessageTtlSeconds()))
                 .setCreatedAt(mClock.instant())
                 .build();
     }

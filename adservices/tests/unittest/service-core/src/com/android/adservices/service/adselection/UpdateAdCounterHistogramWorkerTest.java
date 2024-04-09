@@ -16,6 +16,13 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -33,14 +40,12 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.adservices.adselection.UpdateAdCounterHistogramCallback;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.FrequencyCapFilters;
 import android.os.Parcel;
 import android.os.RemoteException;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -49,6 +54,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -103,7 +109,7 @@ public class UpdateAdCounterHistogramWorkerTest {
                                 AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
                                 CommonFixture.VALID_BUYER_1,
-                                CommonFixture.TEST_PACKAGE_NAME)
+                                TEST_PACKAGE_NAME)
                         .build();
     }
 
@@ -121,13 +127,13 @@ public class UpdateAdCounterHistogramWorkerTest {
         verify(mHistogramUpdaterMock)
                 .updateNonWinHistogram(
                         eq(AD_SELECTION_ID),
-                        eq(CommonFixture.TEST_PACKAGE_NAME),
+                        eq(TEST_PACKAGE_NAME),
                         eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK),
                         eq(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(LOGGING_API_NAME), eq(AdServicesStatusUtils.STATUS_SUCCESS), anyInt());
+                        eq(LOGGING_API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -136,7 +142,7 @@ public class UpdateAdCounterHistogramWorkerTest {
         sourceParcel.writeLong(AD_SELECTION_ID);
         sourceParcel.writeInt(FrequencyCapFilters.AD_EVENT_TYPE_MAX + 10);
         CommonFixture.VALID_BUYER_1.writeToParcel(sourceParcel, 0);
-        sourceParcel.writeString(CommonFixture.TEST_PACKAGE_NAME);
+        sourceParcel.writeString(TEST_PACKAGE_NAME);
         sourceParcel.setDataPosition(0);
 
         UpdateAdCounterHistogramInput invalidInputParams =
@@ -159,7 +165,8 @@ public class UpdateAdCounterHistogramWorkerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(LOGGING_API_NAME),
-                        eq(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
 
@@ -185,13 +192,13 @@ public class UpdateAdCounterHistogramWorkerTest {
 
         assertThat(callbackLatch.await(CALLBACK_WAIT_MS, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(callback.mIsSuccess).isFalse();
-        assertThat(callback.mFledgeErrorResponse.getStatusCode())
-                .isEqualTo(AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+        assertThat(callback.mFledgeErrorResponse.getStatusCode()).isEqualTo(STATUS_INTERNAL_ERROR);
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(LOGGING_API_NAME),
-                        eq(AdServicesStatusUtils.STATUS_INTERNAL_ERROR),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_INTERNAL_ERROR),
                         anyInt());
 
         verifyNoMoreInteractions(mHistogramUpdaterMock);
@@ -234,7 +241,8 @@ public class UpdateAdCounterHistogramWorkerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(LOGGING_API_NAME),
-                        eq(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
 
         verifyNoMoreInteractions(mHistogramUpdaterMock);
@@ -256,19 +264,20 @@ public class UpdateAdCounterHistogramWorkerTest {
         assertThat(callbackLatch.await(CALLBACK_WAIT_MS, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(callback.mIsSuccess).isFalse();
         assertThat(callback.mFledgeErrorResponse.getStatusCode())
-                .isEqualTo(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                .isEqualTo(STATUS_INVALID_ARGUMENT);
 
         verify(mHistogramUpdaterMock)
                 .updateNonWinHistogram(
                         eq(AD_SELECTION_ID),
-                        eq(CommonFixture.TEST_PACKAGE_NAME),
+                        eq(TEST_PACKAGE_NAME),
                         eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK),
                         eq(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(LOGGING_API_NAME),
-                        eq(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
 
@@ -283,7 +292,8 @@ public class UpdateAdCounterHistogramWorkerTest {
                 .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(LOGGING_API_NAME),
-                        eq(AdServicesStatusUtils.STATUS_UNKNOWN_ERROR),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_UNKNOWN_ERROR),
                         anyInt());
 
         CountDownLatch callbackLatch = new CountDownLatch(1);
@@ -298,19 +308,20 @@ public class UpdateAdCounterHistogramWorkerTest {
         verify(mHistogramUpdaterMock)
                 .updateNonWinHistogram(
                         eq(AD_SELECTION_ID),
-                        eq(CommonFixture.TEST_PACKAGE_NAME),
+                        eq(TEST_PACKAGE_NAME),
                         eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK),
                         eq(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(LOGGING_API_NAME), eq(AdServicesStatusUtils.STATUS_SUCCESS), anyInt());
+                        eq(LOGGING_API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
 
         assertThat(logCallbackErrorLatch.await(CALLBACK_WAIT_MS, TimeUnit.MILLISECONDS)).isTrue();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(LOGGING_API_NAME),
-                        eq(AdServicesStatusUtils.STATUS_UNKNOWN_ERROR),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_UNKNOWN_ERROR),
                         anyInt());
     }
 
@@ -329,7 +340,8 @@ public class UpdateAdCounterHistogramWorkerTest {
                 .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(LOGGING_API_NAME),
-                        eq(AdServicesStatusUtils.STATUS_UNKNOWN_ERROR),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_UNKNOWN_ERROR),
                         anyInt());
 
         CountDownLatch callbackLatch = new CountDownLatch(1);
@@ -344,21 +356,23 @@ public class UpdateAdCounterHistogramWorkerTest {
         verify(mHistogramUpdaterMock)
                 .updateNonWinHistogram(
                         eq(AD_SELECTION_ID),
-                        eq(CommonFixture.TEST_PACKAGE_NAME),
+                        eq(TEST_PACKAGE_NAME),
                         eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK),
                         eq(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(LOGGING_API_NAME),
-                        eq(AdServicesStatusUtils.STATUS_INTERNAL_ERROR),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_INTERNAL_ERROR),
                         anyInt());
 
         assertThat(logCallbackErrorLatch.await(CALLBACK_WAIT_MS, TimeUnit.MILLISECONDS)).isTrue();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(LOGGING_API_NAME),
-                        eq(AdServicesStatusUtils.STATUS_UNKNOWN_ERROR),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_UNKNOWN_ERROR),
                         anyInt());
     }
 
@@ -430,7 +444,7 @@ public class UpdateAdCounterHistogramWorkerTest {
         }
 
         public FlagsOverridingAdFiltering() {
-            this(FLEDGE_AD_SELECTION_FILTERING_ENABLED);
+            this(FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED);
         }
 
         @Override
@@ -444,7 +458,7 @@ public class UpdateAdCounterHistogramWorkerTest {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
             return mShouldEnableAdFilteringFeature;
         }
     }

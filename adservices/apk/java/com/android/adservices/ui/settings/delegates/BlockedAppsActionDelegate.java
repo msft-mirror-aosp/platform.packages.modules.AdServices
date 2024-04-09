@@ -38,7 +38,6 @@ import java.io.IOException;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedAppsActionDelegate {
     private final BlockedAppsActivity mBlockedAppsActivity;
@@ -66,7 +65,7 @@ public class BlockedAppsActionDelegate {
                         if (event == BlockedAppsViewModelUiEvent.RESTORE_APP) {
                             UiStatsLogger.logUnblockAppSelected();
                             mBlockedAppsViewModel.restoreAppConsent(app);
-                            if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                            if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                 if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                     DialogFragmentManager.showUnblockAppDialog(
                                             mBlockedAppsActivity, app);

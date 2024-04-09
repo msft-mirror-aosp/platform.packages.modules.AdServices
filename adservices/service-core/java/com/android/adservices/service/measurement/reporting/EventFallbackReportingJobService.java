@@ -30,7 +30,6 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
@@ -70,7 +69,7 @@ public final class EventFallbackReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch()) {
@@ -88,8 +87,7 @@ public final class EventFallbackReportingJobService extends JobService {
                         () -> {
                             processPendingReports();
 
-                            AdServicesJobServiceLogger.getInstance(
-                                            EventFallbackReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
                                             /* isSuccessful= */ true,
@@ -110,7 +108,6 @@ public final class EventFallbackReportingJobService extends JobService {
                 long eventMainReportingJobPeriodMs =
                         AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
                 new EventReportingJobHandler(
-                                EnrollmentDao.getInstance(getApplicationContext()),
                                 DatastoreManagerFactory.getDatastoreManager(
                                         getApplicationContext()),
                                 FlagsFactory.getFlags(),
@@ -137,7 +134,7 @@ public final class EventFallbackReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -202,7 +199,7 @@ public final class EventFallbackReportingJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID, skipReason);
         }
 

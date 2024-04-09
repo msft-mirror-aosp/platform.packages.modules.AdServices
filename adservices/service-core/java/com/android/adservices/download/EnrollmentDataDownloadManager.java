@@ -31,7 +31,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.util.Pair;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
@@ -46,6 +45,7 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
@@ -91,7 +91,7 @@ public class EnrollmentDataDownloadManager {
                 context,
                 flags,
                 AdServicesLoggerImpl.getInstance(),
-                EnrollmentUtil.getInstance(context),
+                EnrollmentUtil.getInstance(),
                 new EncryptionKeyFetcher(MDD_DOWNLOAD_JOB));
     }
 
@@ -103,8 +103,8 @@ public class EnrollmentDataDownloadManager {
             EnrollmentUtil enrollmentUtil,
             EncryptionKeyFetcher encryptionKeyFetcher) {
         mContext = context.getApplicationContext();
-        mMobileDataDownload = MobileDataDownloadFactory.getMdd(context, flags);
-        mFileStorage = MobileDataDownloadFactory.getFileStorage(context);
+        mMobileDataDownload = MobileDataDownloadFactory.getMdd(flags);
+        mFileStorage = MobileDataDownloadFactory.getFileStorage();
         mFlags = flags;
         mLogger = logger;
         mEnrollmentUtil = enrollmentUtil;
@@ -112,16 +112,16 @@ public class EnrollmentDataDownloadManager {
     }
 
     /** Gets an instance of EnrollmentDataDownloadManager to be used. */
-    public static EnrollmentDataDownloadManager getInstance(@NonNull Context context) {
+    public static EnrollmentDataDownloadManager getInstance() {
         if (sEnrollmentDataDownloadManager == null) {
             synchronized (EnrollmentDataDownloadManager.class) {
                 if (sEnrollmentDataDownloadManager == null) {
                     sEnrollmentDataDownloadManager =
                             new EnrollmentDataDownloadManager(
-                                    context,
+                                    ApplicationContextSingleton.get(),
                                     FlagsFactory.getFlags(),
                                     AdServicesLoggerImpl.getInstance(),
-                                    EnrollmentUtil.getInstance(context),
+                                    EnrollmentUtil.getInstance(),
                                     new EncryptionKeyFetcher(MDD_DOWNLOAD_JOB));
                 }
             }
@@ -225,7 +225,7 @@ public class EnrollmentDataDownloadManager {
                     EnrollmentData enrollmentData =
                             new EnrollmentData.Builder()
                                     .setEnrollmentId(enrollmentId)
-                                    .setCompanyId(data[1])
+                                    .setEnrolledAPIs(data[1])
                                     .setSdkNames(data[2])
                                     .setAttributionSourceRegistrationUrl(
                                             data[3].contains(" ")
@@ -244,6 +244,7 @@ public class EnrollmentDataDownloadManager {
                                                     ? Arrays.asList(data[6].split(" "))
                                                     : List.of(data[6]))
                                     .setEncryptionKeyUrl(data[7])
+                                    .setEnrolledSite(data[7])
                                     .build();
                     newEnrollments.add(enrollmentData);
                 } else {
@@ -270,7 +271,6 @@ public class EnrollmentDataDownloadManager {
         }
     }
 
-    @VisibleForTesting
     public enum DownloadStatus {
         SUCCESS,
         NO_FILE_AVAILABLE,
@@ -319,21 +319,15 @@ public class EnrollmentDataDownloadManager {
         SharedPreferences prefs =
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = prefs.edit();
-        if (buildId != null) {
-            edit.putInt(BUILD_ID, buildId.intValue());
-        }
-        if (fileGroupStatus != null) {
-            edit.putInt(FILE_GROUP_STATUS, fileGroupStatus.getNumber());
-        }
-        if (buildId != null || fileGroupStatus != null) {
-            if (!edit.commit()) {
-                LogUtil.e(
-                        "Saving shared preferences - %s , %s and %s failed",
-                        ENROLLMENT_SHARED_PREF, BUILD_ID, FILE_GROUP_STATUS);
-                ErrorLogUtil.e(
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
-            }
+        edit.putInt(BUILD_ID, buildId.intValue());
+        edit.putInt(FILE_GROUP_STATUS, fileGroupStatus.getNumber());
+        if (!edit.commit()) {
+            LogUtil.e(
+                    "Saving shared preferences - %s , %s and %s failed",
+                    ENROLLMENT_SHARED_PREF, BUILD_ID, FILE_GROUP_STATUS);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         }
     }
 }

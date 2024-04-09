@@ -32,14 +32,12 @@ public abstract class CommonPhFlags implements CommonFlags {
 
     @Override
     public boolean getAdServicesShellCommandEnabled() {
-        return getAdServicesShellCommandEnabledFromDeviceConfig();
+        return getFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, ADSERVICES_SHELL_COMMAND_ENABLED);
     }
 
-    static boolean getAdServicesShellCommandEnabledFromDeviceConfig() {
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ADSERVICES_SHELL_COMMAND_ENABLED,
-                /* defaultValue */ ADSERVICES_SHELL_COMMAND_ENABLED);
+    @SuppressWarnings("AvoidDeviceConfigUsage") // Helper / infra method
+    protected boolean getFlag(String name, boolean defaultValue) {
+        return DeviceConfig.getBoolean(DeviceConfig.NAMESPACE_ADSERVICES, name, defaultValue);
     }
 
     @Override
@@ -48,6 +46,6 @@ public abstract class CommonPhFlags implements CommonFlags {
                 "\t"
                         + KEY_ADSERVICES_SHELL_COMMAND_ENABLED
                         + " = "
-                        + getAdServicesShellCommandEnabledFromDeviceConfig());
+                        + getAdServicesShellCommandEnabled());
     }
 }

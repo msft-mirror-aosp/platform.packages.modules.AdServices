@@ -19,6 +19,9 @@ package com.android.adservices.common;
 
 import android.os.SystemProperties;
 
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Nullable;
+import com.android.adservices.shared.testing.SystemPropertiesHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.errorprone.annotations.FormatMethod;
@@ -26,9 +29,6 @@ import com.google.errorprone.annotations.FormatString;
 
 /** Device-side implementation of {@link SystemPropertiesHelper.Interface}. */
 final class DeviceSideSystemPropertiesHelper extends SystemPropertiesHelper.Interface {
-
-    private static final Logger sLogger =
-            new Logger(AndroidLogger.getInstance(), DeviceSideSystemPropertiesHelper.class);
 
     private static final DeviceSideSystemPropertiesHelper sInstance =
             new DeviceSideSystemPropertiesHelper();

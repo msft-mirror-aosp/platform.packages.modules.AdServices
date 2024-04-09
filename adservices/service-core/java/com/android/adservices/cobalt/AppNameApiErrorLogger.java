@@ -16,15 +16,21 @@
 
 package com.android.adservices.cobalt;
 
-import static android.adservices.common.AdServicesStatusUtils.API_NAME_GET_TOPICS;
-import static android.adservices.common.AdServicesStatusUtils.API_NAME_PUT_AD_SERVICES_EXT_DATA;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_ENCRYPTION_FAILURE;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static com.android.adservices.cobalt.CobaltLoggerConstantUtils.METRIC_ID;
+import static com.android.adservices.cobalt.CobaltLoggerConstantUtils.RANGE_LOWER_API_CODE;
+import static com.android.adservices.cobalt.CobaltLoggerConstantUtils.RANGE_LOWER_ERROR_CODE;
+import static com.android.adservices.cobalt.CobaltLoggerConstantUtils.RANGE_UPPER_API_CODE;
+import static com.android.adservices.cobalt.CobaltLoggerConstantUtils.RANGE_UPPER_ERROR_CODE;
+import static com.android.adservices.cobalt.CobaltLoggerConstantUtils.UNKNOWN_EVENT_CODE;
 
-import android.adservices.common.AdServicesStatusUtils.ApiNameCode;
-import android.adservices.common.AdServicesStatusUtils.StatusCode;
+import android.annotation.Nullable;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.cobalt.CobaltLogger;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
@@ -36,34 +42,40 @@ import java.util.Objects;
  */
 public final class AppNameApiErrorLogger {
 
-    // The per package api errors metric has an id of 2.
-    //
-    // See //packages/modules/AdServices/adservices/service-core/resources/cobalt_registry.textpb
-    // for the full metric.
-    private static final int METRIC_ID = 2;
+    private static final AppNameApiErrorLogger sInstance = new AppNameApiErrorLogger();
 
-    private static final int UNKNOWN_EVENT_CODE = 0;
+    @Nullable private final CobaltLogger mCobaltLogger;
 
-    // This logging currently supports error codes in range of 0 to 19. Update the
-    // RANGE_UPPER_ERROR_CODE value when adding new error codes in
-    // packages/modules/AdServices/adservices/framework/java/android/adservices/common/
-    // AdServicesStatusUtils.java
-    private static final int RANGE_LOWER_ERROR_CODE = STATUS_INTERNAL_ERROR;
+    /** Returns the singleton of the {@code AppNameApiErrorLogger}. */
+    public static AppNameApiErrorLogger getInstance() {
+        return sInstance;
+    }
 
-    private static final int RANGE_UPPER_ERROR_CODE = STATUS_ENCRYPTION_FAILURE;
-
-    // This logging currently supports api codes in range of 0 to 28. Update the
-    // RANGE_UPPER_API_CODE when adding new error codes in
-    // packages/modules/AdServices/adservices/framework/java/android/adservices/common/
-    // AdServicesStatusUtils.java
-    private static final int RANGE_LOWER_API_CODE = API_NAME_GET_TOPICS;
-
-    private static final int RANGE_UPPER_API_CODE = API_NAME_PUT_AD_SERVICES_EXT_DATA;
-
-    private final CobaltLogger mCobaltLogger;
-
-    public AppNameApiErrorLogger(CobaltLogger cobaltLogger) {
+    @VisibleForTesting
+    AppNameApiErrorLogger(CobaltLogger cobaltLogger) {
         this.mCobaltLogger = cobaltLogger;
+    }
+
+    @VisibleForTesting
+    AppNameApiErrorLogger() {
+        this(getDefaultCobaltLogger());
+    }
+
+    @Nullable
+    private static CobaltLogger getDefaultCobaltLogger() {
+        CobaltLogger logger = null;
+        try {
+            Flags flags = FlagsFactory.getFlags();
+            if (flags.getAppNameApiErrorCobaltLoggingEnabled()) {
+                logger = CobaltFactory.getCobaltLogger(ApplicationContextSingleton.get(), flags);
+            } else {
+                LogUtil.d("Cobalt logger is disabled.");
+            }
+        } catch (CobaltInitializationException | RuntimeException e) {
+            LogUtil.e(e, "Cobalt logger initialization failed.");
+            // TODO(b/323253975): Add CEL.
+        }
+        return logger;
     }
 
     /**
@@ -75,8 +87,19 @@ public final class AppNameApiErrorLogger {
      * @param errorCode the error code in int
      */
     @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/323263328): Remove @SuppressWarnings.
-    public void logErrorOccurrence(
-            String appPackageName, @ApiNameCode int apiCode, @StatusCode int errorCode) {
+    public void logErrorOccurrence(String appPackageName, int apiCode, int errorCode) {
+        if (!isEnabled()) {
+            LogUtil.w("Skip logging because Cobalt logger is null");
+            return;
+        }
+
+        if (errorCode == 0) {
+            LogUtil.d(
+                    "Skip logging success event for app package name: %s, api code %d.",
+                    appPackageName, apiCode);
+            return;
+        }
+
         Objects.requireNonNull(appPackageName, "appPackageName cannot be null");
         int apiCodeEvent = getRangeValue(RANGE_LOWER_API_CODE, RANGE_UPPER_API_CODE, apiCode);
         int errorCodeEvent =
@@ -84,6 +107,11 @@ public final class AppNameApiErrorLogger {
 
         mCobaltLogger.logString(
                 METRIC_ID, appPackageName, ImmutableList.of(apiCodeEvent, errorCodeEvent));
+    }
+
+    @VisibleForTesting
+    boolean isEnabled() {
+        return mCobaltLogger != null;
     }
 
     /**

@@ -22,7 +22,7 @@ import android.adservices.common.AdTechIdentifier;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,7 +45,8 @@ public class SetAppInstallAdvertisersRequestTest {
 
     @Test
     public void testBuildsSetAppInstallAdvertisersRequest() {
-        SetAppInstallAdvertisersRequest request = new SetAppInstallAdvertisersRequest(ADVERTISERS);
+        SetAppInstallAdvertisersRequest request =
+                new SetAppInstallAdvertisersRequest.Builder().setAdvertisers(ADVERTISERS).build();
 
         assertThat(request.getAdvertisers()).isEqualTo(ADVERTISERS);
     }

@@ -17,8 +17,9 @@
 package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_ENROLLMENT_BLOCKLISTED;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 
+import static com.android.adservices.service.stats.ApiCallStats.failureResult;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
@@ -40,17 +41,12 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
     @Test
     public void testBuilderCreateSuccess() {
         ApiCallStats stats =
-                new ApiCallStats.Builder()
+                newCanonicalBuilder()
                         .setCode(AD_SERVICES_API_CALLED)
                         .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__TARGETING)
                         .setApiName(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS)
-                        .setAppPackageName(mAppPackageName)
-                        .setSdkPackageName(mSdkPackageName)
                         .setLatencyMillisecond(LATENCY_MS)
-                        .setResult(
-                                new ApiCallStats.Result(
-                                        STATUS_INVALID_ARGUMENT,
-                                        FAILURE_REASON_ENROLLMENT_BLOCKLISTED))
+                        .setResult(failureResult(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET))
                         .build();
 
         expect.withMessage("%s.getCode()", stats)
@@ -71,26 +67,41 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s.getLatencyMillisecond()", stats)
                 .that(stats.getLatencyMillisecond())
                 .isEqualTo(LATENCY_MS);
+
         expect.withMessage("%s.getResultCode()", stats)
-                .that(stats.getResult().getResultCode())
+                .that(stats.getResultCode())
                 .isEqualTo(STATUS_INVALID_ARGUMENT);
         expect.withMessage("%s.getFailureReason()", stats)
-                .that(stats.getResult().getFailureReason())
-                .isEqualTo(FAILURE_REASON_ENROLLMENT_BLOCKLISTED);
+                .that(stats.getFailureReason())
+                .isEqualTo(FAILURE_REASON_UNSET);
+    }
+
+    @Test
+    public void testBuilder_resultThatTakesIntegers() {
+        ApiCallStats stats =
+                newCanonicalBuilder()
+                        .setResult(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)
+                        .build();
+        expect.withMessage("%s.getResultCode()", stats)
+                .that(stats.getResultCode())
+                .isEqualTo(STATUS_INVALID_ARGUMENT);
+        expect.withMessage("%s.getFailureReason()", stats)
+                .that(stats.getFailureReason())
+                .isEqualTo(FAILURE_REASON_UNSET);
     }
 
     @Test
     public void testNullSdkPackageName_throwsNPE() {
         assertThrows(
                 NullPointerException.class,
-                () -> new ApiCallStats.Builder().setSdkPackageName(null).build());
+                () -> new ApiCallStats.Builder().setSdkPackageName(null));
     }
 
     @Test
     public void testNullAppPackageName_throwsNPE() {
         assertThrows(
                 NullPointerException.class,
-                () -> new ApiCallStats.Builder().setAppPackageName(null).build());
+                () -> new ApiCallStats.Builder().setAppPackageName(null));
     }
 
     @Test
@@ -108,19 +119,19 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testBuild_nullResult() {
+        assertThrows(NullPointerException.class, () -> newCanonicalBuilder().setResult(null));
+    }
+
+    @Test
     public void testToString() {
         ApiCallStats stats =
-                new ApiCallStats.Builder()
+                newCanonicalBuilder()
                         .setCode(AD_SERVICES_API_CALLED)
                         .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__TARGETING)
                         .setApiName(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS)
-                        .setAppPackageName(mAppPackageName)
-                        .setSdkPackageName(mSdkPackageName)
                         .setLatencyMillisecond(LATENCY_MS)
-                        .setResult(
-                                new ApiCallStats.Result(
-                                        STATUS_INVALID_ARGUMENT,
-                                        FAILURE_REASON_ENROLLMENT_BLOCKLISTED))
+                        .setResult(failureResult(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET))
                         .build();
 
         String toString = stats.toString();
@@ -133,7 +144,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
         expect.that(toString).contains("SdkPackageName='" + mSdkPackageName + "'");
         expect.that(toString).contains("LatencyMillisecond=" + LATENCY_MS);
         expect.that(toString).contains("ResultCode=" + STATUS_INVALID_ARGUMENT);
-        expect.that(toString).contains("FailureReason=" + FAILURE_REASON_ENROLLMENT_BLOCKLISTED);
+        expect.that(toString).contains("FailureReason=" + FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -145,7 +156,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
         String baseSdkPackageName = mSdkPackageName;
         int baseLatencyMs = LATENCY_MS;
         int resultCode = STATUS_INVALID_ARGUMENT;
-        int failureReason = FAILURE_REASON_ENROLLMENT_BLOCKLISTED;
+        int failureReason = FAILURE_REASON_UNSET;
 
         ApiCallStats equals1 =
                 new ApiCallStats.Builder()
@@ -155,7 +166,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setAppPackageName(baseAppPackageName)
                         .setSdkPackageName(baseSdkPackageName)
                         .setLatencyMillisecond(baseLatencyMs)
-                        .setResult(new ApiCallStats.Result(resultCode, failureReason))
+                        .setResult(failureResult(resultCode, failureReason))
                         .build();
 
         ApiCallStats equals2 =
@@ -166,7 +177,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setAppPackageName(baseAppPackageName)
                         .setSdkPackageName(baseSdkPackageName)
                         .setLatencyMillisecond(baseLatencyMs)
-                        .setResult(new ApiCallStats.Result(resultCode, failureReason))
+                        .setResult(failureResult(resultCode, failureReason))
                         .build();
 
         ApiCallStats different1 =
@@ -177,7 +188,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setAppPackageName(baseAppPackageName)
                         .setSdkPackageName(baseSdkPackageName)
                         .setLatencyMillisecond(baseLatencyMs)
-                        .setResult(new ApiCallStats.Result(resultCode, failureReason))
+                        .setResult(failureResult(resultCode, failureReason))
                         .build();
 
         ApiCallStats different2 =
@@ -188,7 +199,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setAppPackageName(baseAppPackageName)
                         .setSdkPackageName(baseSdkPackageName)
                         .setLatencyMillisecond(baseLatencyMs)
-                        .setResult(new ApiCallStats.Result(resultCode, failureReason))
+                        .setResult(failureResult(resultCode, failureReason))
                         .build();
 
         ApiCallStats different3 =
@@ -199,7 +210,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setAppPackageName(baseAppPackageName)
                         .setSdkPackageName(baseSdkPackageName)
                         .setLatencyMillisecond(baseLatencyMs)
-                        .setResult(new ApiCallStats.Result(resultCode, failureReason))
+                        .setResult(failureResult(resultCode, failureReason))
                         .build();
 
         ApiCallStats different4 =
@@ -210,7 +221,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setAppPackageName(baseAppPackageName + ".doh")
                         .setSdkPackageName(baseSdkPackageName)
                         .setLatencyMillisecond(baseLatencyMs)
-                        .setResult(new ApiCallStats.Result(resultCode, failureReason))
+                        .setResult(failureResult(resultCode, failureReason))
                         .build();
 
         ApiCallStats different5 =
@@ -221,7 +232,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setAppPackageName(baseAppPackageName)
                         .setSdkPackageName(baseSdkPackageName + ".doh")
                         .setLatencyMillisecond(baseLatencyMs)
-                        .setResult(new ApiCallStats.Result(resultCode, failureReason))
+                        .setResult(failureResult(resultCode, failureReason))
                         .build();
 
         ApiCallStats different6 =
@@ -232,7 +243,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setAppPackageName(baseAppPackageName)
                         .setSdkPackageName(baseSdkPackageName)
                         .setLatencyMillisecond(baseLatencyMs + 42)
-                        .setResult(new ApiCallStats.Result(resultCode, failureReason))
+                        .setResult(failureResult(resultCode, failureReason))
                         .build();
 
         ApiCallStats different7 =
@@ -243,9 +254,21 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setAppPackageName(baseAppPackageName)
                         .setSdkPackageName(baseSdkPackageName)
                         .setLatencyMillisecond(baseLatencyMs)
-                        .setResult(new ApiCallStats.Result(resultCode + 42, failureReason))
+                        .setResult(failureResult(resultCode + 42, failureReason))
                         .build();
 
+        ApiCallStats different8 =
+                new ApiCallStats.Builder()
+                        .setCode(baseCode)
+                        .setApiClass(baseApiClass)
+                        .setApiName(baseApiName)
+                        .setAppPackageName(baseAppPackageName)
+                        .setSdkPackageName(baseSdkPackageName)
+                        .setLatencyMillisecond(baseLatencyMs)
+                        .setResult(failureResult(resultCode, failureReason + 42))
+                        .build();
+
+        expectObjectsAreEqual(equals1, equals1);
         expectObjectsAreEqual(equals1, equals2);
 
         expectObjectsAreNotEqual(equals1, null);
@@ -258,5 +281,13 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
         expectObjectsAreNotEqual(equals1, different5);
         expectObjectsAreNotEqual(equals1, different6);
         expectObjectsAreNotEqual(equals1, different7);
+        expectObjectsAreNotEqual(equals1, different8);
+    }
+
+    // Creates a builder with the bare minimum required state.
+    private ApiCallStats.Builder newCanonicalBuilder() {
+        return new ApiCallStats.Builder()
+                .setAppPackageName(mAppPackageName)
+                .setSdkPackageName(mSdkPackageName);
     }
 }

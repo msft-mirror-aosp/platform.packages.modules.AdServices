@@ -16,6 +16,7 @@
 
 package com.android.adservices.mockito;
 
+import static com.android.adservices.shared.testing.SyncCallback.DEFAULT_TIMEOUT_MS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -25,6 +26,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,13 +35,19 @@ import android.app.job.JobService;
 import android.content.Context;
 import android.util.Log;
 
-import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
+import com.android.adservices.shared.util.Clock;
+import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesStatsdJobServiceLogger;
+
+import java.util.concurrent.Executors;
 
 /** Provides Mockito expectation for common calls. */
 public final class MockitoExpectations {
@@ -47,7 +55,7 @@ public final class MockitoExpectations {
     private static final String TAG = MockitoExpectations.class.getSimpleName();
 
     /**
-     * Not a expectation itself, but it sets a mock as the application context on {@link
+     * Not an expectation itself, but it sets a mock as the application context on {@link
      * ApplicationContextSingleton}, and returns it.
      */
     public static Context setApplicationContextSingleton() {
@@ -65,7 +73,18 @@ public final class MockitoExpectations {
      */
     public static NoFailureSyncCallback<ApiCallStats> mockLogApiCallStats(
             AdServicesLogger adServicesLogger) {
-        NoFailureSyncCallback<ApiCallStats> callback = new NoFailureSyncCallback<>();
+        return mockLogApiCallStats(adServicesLogger, DEFAULT_TIMEOUT_MS);
+    }
+
+    /**
+     * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
+     * object that blocks until that call is made. This method allows to pass in a customized
+     * timeout.
+     */
+    public static NoFailureSyncCallback<ApiCallStats> mockLogApiCallStats(
+            AdServicesLogger adServicesLogger, int timeoutMs) {
+        NoFailureSyncCallback<ApiCallStats> callback = new NoFailureSyncCallback<>(timeoutMs);
+
         doAnswer(
                         inv -> {
                             Log.v(TAG, "mockLogApiCallStats(): inv=" + inv);
@@ -126,6 +145,34 @@ public final class MockitoExpectations {
      */
     public static void mockBackgroundJobsLoggingKillSwitch(Flags flag, boolean overrideValue) {
         when(flag.getBackgroundJobsLoggingKillSwitch()).thenReturn(overrideValue);
+    }
+
+    /** Mocks a call to {@link Flags#getCobaltLoggingEnabled()}, returning overrideValue. */
+    public static void mockCobaltLoggingEnabled(Flags flags, boolean enabled) {
+        when(flags.getCobaltLoggingEnabled()).thenReturn(enabled);
+    }
+
+    /**
+     * Mocks a call to {@link Flags#getAppNameApiErrorCobaltLoggingEnabled()}, returning
+     * overrideValue.
+     */
+    public static void mockAppNameApiErrorCobaltLoggingEnabled(Flags flags, boolean enabled) {
+        when(flags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(enabled);
+    }
+
+    /**
+     * Mocks a call to {@link Flags#getAdservicesReleaseStageForCobalt()}, returning {@code DEBUG}
+     * as the testing release stage.
+     */
+    public static void mockAdservicesReleaseStageForCobalt(Flags flags) {
+        when(flags.getAdservicesReleaseStageForCobalt()).thenReturn("DEBUG");
+    }
+
+    /** Mocks calls to override Cobalt app name api error logging related flags. */
+    public static void mockCobaltLoggingFlags(Flags flags, boolean override) {
+        mockCobaltLoggingEnabled(flags, override);
+        mockAppNameApiErrorCobaltLoggingEnabled(flags, override);
+        mockAdservicesReleaseStageForCobalt(flags);
     }
 
     /**
@@ -211,6 +258,20 @@ public final class MockitoExpectations {
         callback.assertLoggingFinished();
 
         verify(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+    }
+
+    /** Get a spied instance of {@link AdServicesJobServiceLogger}. */
+    public static AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
+            Context context, Flags flags) {
+        return spy(
+                new AdServicesJobServiceLogger(
+                        context,
+                        Clock.getInstance(),
+                        mock(AdServicesStatsdJobServiceLogger.class),
+                        mock(AdServicesErrorLogger.class),
+                        Executors.newCachedThreadPool(),
+                        AdServicesJobInfo.getJobIdToJobNameMap(),
+                        flags));
     }
 
     private MockitoExpectations() {

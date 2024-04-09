@@ -23,26 +23,21 @@ import static com.google.common.truth.Truth.assertThat;
 import android.provider.DeviceConfig;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.fixture.SysPropForceDefaultValueFixture;
-import com.android.modules.utils.testing.StaticMockFixture;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.fixture.TestableSystemProperties;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Test;
 
-import java.util.function.Supplier;
 
 public final class CommonPhFlagsTest extends AdServicesExtendedMockitoTestCase {
     private final CommonFlags mPhFlags = new CommonPhFlags() {};
 
     @Override
-    protected Supplier<? extends StaticMockFixture>[] getStaticMockFixtureSuppliers() {
-        @SuppressWarnings("unchecked")
-        Supplier<? extends StaticMockFixture>[] suppliers =
-                (Supplier<? extends StaticMockFixture>[])
-                        new Supplier<?>[] {
-                            TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new
-                        };
-        return suppliers;
+    protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
+        return newDefaultAdServicesExtendedMockitoRuleBuilder()
+                .addStaticMockFixtures(TestableDeviceConfig::new, TestableSystemProperties::new)
+                .build();
     }
 
     @Test

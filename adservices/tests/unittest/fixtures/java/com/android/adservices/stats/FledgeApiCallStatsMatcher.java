@@ -40,7 +40,7 @@ public class FledgeApiCallStatsMatcher implements ArgumentMatcher<ApiCallStats> 
         return actualApiCallStats.getCode() == AD_SERVICES_API_CALLED
                 && actualApiCallStats.getApiClass() == AD_SERVICES_API_CALLED__API_CLASS__FLEDGE
                 && actualApiCallStats.getApiName() == mExpectedApiName
-                && actualApiCallStats.getResult().getResultCode() == mExpectedResultCode;
+                && actualApiCallStats.getResultCode() == mExpectedResultCode;
     }
 
     /** Writes out expected fields to be matched. */

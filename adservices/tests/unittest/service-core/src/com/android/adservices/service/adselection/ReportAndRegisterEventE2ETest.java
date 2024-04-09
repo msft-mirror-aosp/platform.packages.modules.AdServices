@@ -61,13 +61,13 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
@@ -85,14 +85,17 @@ import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -102,6 +105,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
@@ -110,9 +114,11 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -165,9 +171,12 @@ public class ReportAndRegisterEventE2ETest {
     private EnrollmentDao mEnrollmentDao;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
-    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
+    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategy =
+            MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDaoMock;
     @Mock private AdIdFetcher mAdIdFetcher;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     private static final Instant ACTIVATION_TIME = Instant.now();
     private static final String CALLER_SDK_NAME = "sdk.package.name";
@@ -237,6 +246,11 @@ public class ReportAndRegisterEventE2ETest {
 
     @Mock private DebugReportApi mDebugReportApiMock;
     @Mock private SourceNoiseHandler mSourceNoiseHandlerMock;
+    private RetryStrategyFactory mRetryStrategyFactory;
+    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    private ConsentedDebugConfigurationGeneratorFactory
+            mConsentedDebugConfigurationGeneratorFactory;
+    private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -261,9 +275,11 @@ public class ReportAndRegisterEventE2ETest {
 
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
 
+        doReturn(mFlags).when(() -> FlagsFactory.getFlags());
+
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
 
@@ -295,6 +311,7 @@ public class ReportAndRegisterEventE2ETest {
                 spy(
                         new MeasurementImpl(
                                 CONTEXT,
+                                FakeFlagsFactory.getFlagsForTest(),
                                 mDatastoreManagerSpy,
                                 mClickVerifierMock,
                                 mMeasurementDataDeleterMock,
@@ -306,9 +323,22 @@ public class ReportAndRegisterEventE2ETest {
         when(mEnrollmentDaoMock.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(ENROLLMENT_DATA);
 
-        doReturn(mFlags).when(() -> FlagsFactory.getFlags());
 
         when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContext);
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
+        mConsentedDebugConfigurationDao =
+                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionDatabase.class)
+                        .build()
+                        .consentedDebugConfigurationDao();
+        mConsentedDebugConfigurationGeneratorFactory =
+                new ConsentedDebugConfigurationGeneratorFactory(
+                        false, mConsentedDebugConfigurationDao);
+        mEgressConfigurationGenerator =
+                EgressConfigurationGenerator.createInstance(
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        mAdIdFetcher,
+                        Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        mLightweightExecutorService);
 
         mAdSelectionService = getAdSelectionServiceImpl(mFlags);
 
@@ -380,6 +410,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
 
@@ -425,6 +456,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -466,6 +498,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -518,6 +551,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -570,6 +604,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -620,6 +655,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -669,6 +705,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -709,7 +746,7 @@ public class ReportAndRegisterEventE2ETest {
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
         ReportAndRegisterEventTestCallback callback =
-                callReportEvent(input, /* shouldCountLog = */ true);
+                callReportEvent(input, /* shouldCountLog= */ true);
 
         // Process async registration.
         mAsyncRegistrationQueueRunnerSpy.runAsyncRegistrationQueueWorker();
@@ -725,6 +762,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -784,6 +822,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -842,6 +881,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -902,6 +942,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -947,7 +988,7 @@ public class ReportAndRegisterEventE2ETest {
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
         ReportAndRegisterEventTestCallback callback =
-                callReportEvent(input, /* shouldCountLog = */ true);
+                callReportEvent(input, /* shouldCountLog= */ true);
 
         // Process async registration.
         mAsyncRegistrationQueueRunnerSpy.runAsyncRegistrationQueueWorker();
@@ -963,6 +1004,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -998,10 +1040,14 @@ public class ReportAndRegisterEventE2ETest {
                 mAdSelectionServiceFilterMock,
                 mAdFilteringFeatureFactory,
                 mConsentManagerMock,
-                mObliviousHttpEncryptorMock,
+                mMultiCloudSupportStrategy,
                 mAdSelectionDebugReportDaoMock,
                 mAdIdFetcher,
-                false);
+                mUnusedKAnonSignJoinFactory,
+                false,
+                mRetryStrategyFactory,
+                mConsentedDebugConfigurationGeneratorFactory,
+                mEgressConfigurationGenerator);
     }
 
     private void initializeReportingArtifacts() throws JSONException {
@@ -1116,7 +1162,7 @@ public class ReportAndRegisterEventE2ETest {
                     };
             doAnswer(countDownAnswer)
                     .when(mAdServicesLoggerMock)
-                    .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                    .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
         }
 
         // Counted down callback call
@@ -1194,6 +1240,11 @@ public class ReportAndRegisterEventE2ETest {
 
         @Override
         public boolean getGaUxFeatureEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAppPackageNameLoggingEnabled() {
             return true;
         }
     }

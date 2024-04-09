@@ -29,6 +29,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.Validator;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.internal.annotations.GuardedBy;
@@ -57,6 +58,7 @@ public class CustomAudienceImpl {
     @NonNull private final Validator<CustomAudience> mCustomAudienceValidator;
     @NonNull private final Clock mClock;
     @NonNull private final Flags mFlags;
+    private final boolean mAuctionServerRequestFlagsEnabled;
 
     @VisibleForTesting
     public CustomAudienceImpl(
@@ -76,6 +78,8 @@ public class CustomAudienceImpl {
         mCustomAudienceValidator = customAudienceValidator;
         mClock = clock;
         mFlags = flags;
+        mAuctionServerRequestFlagsEnabled =
+                BinderFlagReader.readFlag(flags::getFledgeAuctionServerRequestFlagsEnabled);
     }
 
     /**
@@ -95,7 +99,7 @@ public class CustomAudienceImpl {
                         new CustomAudienceImpl(
                                 customAudienceDao,
                                 new CustomAudienceQuantityChecker(customAudienceDao, flags),
-                                CustomAudienceValidator.getInstance(context),
+                                CustomAudienceValidator.getInstance(context, flags),
                                 Clock.systemUTC(),
                                 flags);
             }
@@ -123,13 +127,17 @@ public class CustomAudienceImpl {
         sLogger.v("Validating CA");
         mCustomAudienceValidator.validate(customAudience);
 
-        boolean adSelectionFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
-        sLogger.v("Ad Selection filtering enabled flag is %s", adSelectionFilteringEnabled);
+        boolean frequencyCapFilteringEnabled = mFlags.getFledgeFrequencyCapFilteringEnabled();
+        sLogger.v("Frequency cap filtering enabled flag is %s", frequencyCapFilteringEnabled);
+        boolean appInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
+        sLogger.v("App install filtering enabled flag is %s", appInstallFilteringEnabled);
         boolean adRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
         sLogger.v("Ad render id enabled flag is %s", adRenderIdEnabled);
         AdDataConversionStrategy dataConversionStrategy =
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                        adSelectionFilteringEnabled, adRenderIdEnabled);
+                        frequencyCapFilteringEnabled,
+                        appInstallFilteringEnabled,
+                        adRenderIdEnabled);
 
         boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
         sLogger.v("Is debuggable custom audience: %b", isDebuggableCustomAudience);
@@ -143,7 +151,8 @@ public class CustomAudienceImpl {
                         currentTime,
                         customAudienceDefaultExpireIn,
                         dataConversionStrategy,
-                        isDebuggableCustomAudience);
+                        isDebuggableCustomAudience,
+                        mAuctionServerRequestFlagsEnabled);
 
         sLogger.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(

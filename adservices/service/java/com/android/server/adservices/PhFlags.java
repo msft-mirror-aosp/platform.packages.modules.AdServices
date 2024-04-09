@@ -16,7 +16,6 @@
 package com.android.server.adservices;
 
 import android.annotation.NonNull;
-import android.provider.DeviceConfig;
 
 import com.android.adservices.service.CommonPhFlags;
 
@@ -43,10 +42,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getAdServicesSystemServiceEnabled() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
-                /* defaultValue */ ADSERVICES_SYSTEM_SERVICE_ENABLED);
+        return getFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, ADSERVICES_SYSTEM_SERVICE_ENABLED);
     }
 }

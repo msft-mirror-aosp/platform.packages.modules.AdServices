@@ -17,6 +17,7 @@
 package com.android.adservices.service.kanon;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -30,6 +31,7 @@ import com.android.adservices.data.kanon.KAnonMessageConstants;
 import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +41,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -57,6 +58,7 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
     @Mock private Clock mockClock;
     @Mock private KAnonCaller mockKanonCaller;
+    @Mock private AdServicesLogger mockAdServicesLogger;
 
     private final Instant FIXED_TIME = Instant.now();
     private static final long AD_SELECTION_ID_1 = 1;
@@ -80,7 +82,13 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
         mFlags = FlagsFactory.getFlags();
         mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
         mKAnonSignJoinManager =
-                new KAnonSignJoinManager(mockKanonCaller, mKAnonMessageManager, mFlags, mockClock);
+                new KAnonSignJoinManager(
+                        mContext,
+                        mockKanonCaller,
+                        mKAnonMessageManager,
+                        mFlags,
+                        mockClock,
+                        mockAdServicesLogger);
     }
 
     @Test
@@ -112,7 +120,9 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
                 });
         countDownLatch.await();
 
-        verify(mockKanonCaller).signAndJoinMessages(messageEntityList);
+        verify(mockKanonCaller)
+                .signAndJoinMessages(
+                        messageEntityList, KAnonCaller.KAnonCallerSource.BACKGROUND_JOB);
     }
 
     @Test
@@ -141,7 +151,7 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
                 });
         countDownLatch.await();
 
-        verify(mockKanonCaller).signAndJoinMessages(Collections.emptyList());
+        verifyNoMoreInteractions(mockKanonCaller);
     }
 
     private static class KAnonSignJoinBackgroundWorkerFlags implements Flags {
@@ -154,6 +164,11 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
         @Override
         public int getFledgeKAnonMessagesPerBackgroundProcess() {
             return mMessagesPerBackgroundRun;
+        }
+
+        @Override
+        public boolean getFledgeKAnonBackgroundProcessEnabled() {
+            return true;
         }
     }
 }

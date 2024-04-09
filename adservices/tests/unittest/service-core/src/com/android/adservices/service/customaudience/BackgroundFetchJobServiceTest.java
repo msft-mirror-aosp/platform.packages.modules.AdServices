@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -55,7 +55,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -63,7 +62,7 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -110,8 +109,6 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
     @Mock private JobParameters mJobParametersMock;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private PackageManager mPackageManagerMock;
-    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
-    private AdServicesJobServiceLogger mSpyLogger;
 
     @Before
     public void setup() {
@@ -119,8 +116,6 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
-
-        mSpyLogger = mockAdservicesJobServiceLogger(sContext, mMockStatsdLogger);
     }
 
     @After
@@ -139,10 +134,12 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
                     }
                 };
         doReturn(mFlagsWithDisabledBgFWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, mFlagsWithDisabledBgFWithoutLogging);
 
         testOnStartJobFlagDisabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -156,12 +153,14 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
                     }
                 };
         doReturn(mFlagsWithDisabledBgFWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, mFlagsWithDisabledBgFWithLogging);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
 
-        verifyOnStartJobLogged(mSpyLogger, onStartJobCallback);
+        verifyOnStartJobLogged(logger, onStartJobCallback);
         onJobDoneCallback.assertLoggingFinished();
     }
 
@@ -200,10 +199,11 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         FlagsWithEnabledBgFGaUxEnabledWithoutLogging flags =
                 new FlagsWithEnabledBgFGaUxEnabledWithoutLogging();
         doReturn(flags).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, flags);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -212,12 +212,13 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         FlagsWithEnabledBgFGaUxEnabledWithLogging flags =
                 new FlagsWithEnabledBgFGaUxEnabledWithLogging();
         doReturn(flags).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, flags);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
         // Verify logging has happened
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
+        verifyBackgroundJobsSkipLogged(logger, callback);
     }
 
     @Test
@@ -282,10 +283,13 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
                 new FlagsWithEnabledBgFGaUxDisabledWithoutLogging();
         doReturn(flagsWithEnabledBgFGaUxDisabledWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithEnabledBgFGaUxDisabledWithoutLogging);
 
         testOnStartJobUpdateSuccess();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -294,12 +298,15 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         Flags flagsWithEnabledBgFGaUxDisabledWithLogging =
                 new FlagsWithEnabledBgFGaUxDisabledWithLogging();
         doReturn(flagsWithEnabledBgFGaUxDisabledWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithEnabledBgFGaUxDisabledWithLogging);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateSuccess();
 
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
+        verifyJobFinishedLogged(logger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
@@ -307,10 +314,13 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
                 new FlagsWithEnabledBgFGaUxDisabledWithoutLogging();
         doReturn(flagsWithEnabledBgFGaUxDisabledWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithEnabledBgFGaUxDisabledWithoutLogging);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -318,12 +328,15 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         Flags flagsWithEnabledBgFGaUxDisabledWithLogging =
                 new FlagsWithEnabledBgFGaUxDisabledWithLogging();
         doReturn(flagsWithEnabledBgFGaUxDisabledWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithEnabledBgFGaUxDisabledWithLogging);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
+        verifyJobFinishedLogged(logger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
@@ -396,10 +409,11 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
         testOnStopJobCallsStopWork();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -407,11 +421,12 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ false);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStopJobCallsStopWork();
 
-        verifyOnStopJobLogged(mSpyLogger, callback);
+        verifyOnStopJobLogged(logger, callback);
     }
 
     @Test
@@ -494,10 +509,11 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
         testOnStartJobShouldDisableJobTrue();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -505,12 +521,13 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
             throws ExecutionException, InterruptedException, TimeoutException {
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
         testOnStartJobShouldDisableJobTrue();
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     private void testOnStartJobShouldDisableJobTrue()

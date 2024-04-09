@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.ui.data;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
 
 import android.adservices.common.AdServicesStates;
@@ -142,7 +144,9 @@ public class UxStatesManager {
         boolean isNotificationDisplayed =
                 mConsentManager.wasGaUxNotificationDisplayed()
                         || mConsentManager.wasU18NotificationDisplayed()
-                        || mConsentManager.wasNotificationDisplayed();
+                        || mConsentManager.wasNotificationDisplayed()
+                        || (getFlag(KEY_PAS_UX_ENABLED)
+                                && mConsentManager.wasPasNotificationDisplayed());
         // We follow the Chrome's capabilities practice here, when user is not in adult account and
         // u18 account, (the u18 account is for teen and un-supervised account), we are consider
         // them as supervised accounts for now, it actually also contains robot account, but we
@@ -168,5 +172,28 @@ public class UxStatesManager {
             return false;
         }
         return true;
+    }
+
+    /**
+     * PAS could be enabled but user may not have received notification, so user would see GA UX
+     * instead of PAS UX. Before the notification card is shown the notification has not been
+     * displayed yet, so if the calling context is related to this then we should only look at the
+     * PAS UX flag.
+     *
+     * @param beforeNotificationShown True if the calling context is logic before PAS notification
+     *     shown has been recorded.
+     * @return True if user will see PAS UX for settings/notification, otherwise false.
+     */
+    public boolean pasUxIsActive(boolean beforeNotificationShown) {
+        return getFlag(KEY_PAS_UX_ENABLED)
+                && (wasPasNotificationDisplayed() || beforeNotificationShown);
+    }
+
+    /** Returns if PAS notification was displayed. */
+    private boolean wasPasNotificationDisplayed() {
+        if (getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)) {
+            return getFlag(KEY_PAS_UX_ENABLED);
+        }
+        return ConsentManager.getInstance().wasPasNotificationDisplayed();
     }
 }

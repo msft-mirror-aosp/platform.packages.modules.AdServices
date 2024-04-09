@@ -20,10 +20,20 @@ package com.android.adservices.flags;
  * This class is not auto-merged into {@code main} - to add a new constant here, you <b>MUST</b>
  * follow the process below:
  *
+ * <p><b>NOTE</b>these flags are only set on <code>@FlaggedApi</code> annotations, not by {@code
+ * DeviceConfig}. Hence, it's expected that a flag with the same name (but without the prefix)
+ * exists on {@link com.android.adservices.service.FlagsConstants}; if there isn't one yet, you'll
+ * need to add the new flag to one of the constants on {@link
+ * com.android.adservices.service.FlagsConstantsTest} (in both steps 1 and 2 below), and properly
+ * fix it later.
+ *
  * <ol>
  *   <li>Add a new flag to {@code adservices/flags/adservices_flags.aconfig} on {@code main} first.
+ *       Make sure to include a {@code Test: atest
+ *       AdServicesServiceCoreUnitTests:FlagsConstantsTest} in the CL (and to run the test before
+ *       uploading it).
  *   <li>Add it here in a CL that's {@code Merged-In:} the same CL as main (and preferably using the
- *       same {@code Change-Id:}.
+ *       same {@code Change-Id:}. Add the same {@code Test:} line.
  *   <li><b>THEN</b> you can add code that uses the flag (for example, adding new flags on {@link
  *       com.android.adservices.service.Flags} and {@link com.android.adservices.service.PhFlags} -
  *       see examples on those classes).
@@ -50,6 +60,8 @@ public final class Flags {
             ACONFIG_PREFIX + "fledge_ad_selection_filtering_enabled";
     public static final String FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED =
             ACONFIG_PREFIX + "fledge_schedule_custom_audience_update_enabled";
+    public static final String FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED =
+            ACONFIG_PREFIX + "fledge_server_auction_multi_cloud_enabled";
     public static final String FLAG_PROTECTED_SIGNALS_ENABLED =
             ACONFIG_PREFIX + "protected_signals_enabled";
     public static final String FLAG_GET_ADSERVICES_COMMON_STATES_API_ENABLED =

@@ -29,7 +29,6 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
@@ -66,7 +65,7 @@ public final class DebugReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(DEBUG_REPORT_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(DEBUG_REPORT_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
             LoggerFactory.getMeasurementLogger().e("DebugReportingJobService is disabled");
@@ -78,7 +77,7 @@ public final class DebugReportingJobService extends JobService {
                 sBlockingExecutor.submit(
                         () -> {
                             sendReports();
-                            AdServicesJobServiceLogger.getInstance(DebugReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             DEBUG_REPORT_JOB_ID,
                                             /* isSuccessful */ true,
@@ -95,7 +94,7 @@ public final class DebugReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, DEBUG_REPORT_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -164,11 +163,9 @@ public final class DebugReportingJobService extends JobService {
         final JobLockHolder lock = JobLockHolder.getInstance(DEBUG_REPORTING);
         if (lock.tryLock()) {
             try {
-                EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
                 DatastoreManager datastoreManager =
                         DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new EventReportingJobHandler(
-                                enrollmentDao,
                                 datastoreManager,
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
@@ -178,7 +175,6 @@ public final class DebugReportingJobService extends JobService {
                         .setIsDebugInstance(true)
                         .performScheduledPendingReportsInWindow(0, 0);
                 new AggregateReportingJobHandler(
-                                enrollmentDao,
                                 datastoreManager,
                                 new AggregateEncryptionKeyManager(
                                         datastoreManager, getApplicationContext()),

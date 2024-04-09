@@ -21,7 +21,10 @@ import static com.android.compatibility.common.util.ShellIdentityUtils.invokeSta
 
 import android.provider.DeviceConfig;
 
-import com.android.adservices.common.AndroidSdk.Level;
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.AndroidSdk.Level;
+import com.android.adservices.shared.testing.DeviceConfigHelper;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -49,7 +52,7 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
     public boolean asyncSet(String name, String value) {
         mLog.v("asyncSet(%s=%s)", name, value);
         return callWithDeviceConfigPermissions(
-                () -> DeviceConfig.setProperty(mNamespace, name, value, /* makeDefault= */ false));
+                () -> DeviceConfigUtil.setDeviceConfigFlag(mNamespace, name, value));
     }
 
     @Override

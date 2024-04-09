@@ -15,8 +15,6 @@
  */
 package com.android.adservices;
 
-import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
-
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_EXT_DATA_STORAGE_SERVICE;
@@ -30,6 +28,7 @@ import static com.android.adservices.AdServicesCommon.ACTION_MEASUREMENT_SERVICE
 import static com.android.adservices.AdServicesCommon.ACTION_PROTECTED_SIGNALS_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_SHELL_COMMAND_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
+import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_BINDER_TIMEOUT;
 import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW;
 
 import android.annotation.Nullable;
@@ -60,16 +59,20 @@ import java.util.function.Function;
  *
  * @hide
  */
+// TODO(b/251429601): Add unit test for this class.
 class AndroidServiceBinder<T> extends ServiceBinder<T> {
     // TODO: Revisit it.
     private static final int BIND_FLAGS = Context.BIND_AUTO_CREATE | Context.BIND_IMPORTANT;
 
-    // TODO(b/218519915): have a better timeout handling.
-    private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
+    // It likely causes ANR if a binder call blocks the main thread for >5 seconds.
+    private static final int DEFAULT_BINDER_CONNECTION_TIMEOUT_MS = 5_000;
 
     private final String mServiceIntentAction;
     private final Function<IBinder, T> mBinderConverter;
     private final Context mContext;
+
+    // TODO(b/218519915): have a better timeout handling.
+    private final int mBinderTimeout;
 
     // A CountDownloadLatch which will be opened when the connection is established or any error
     // occurs.
@@ -85,6 +88,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
     private final boolean mSimulatingLowRamDevice;
 
+    // TODO(b/330796095): Create infra for below 2 DEBUG flags to properly test them.
     protected AndroidServiceBinder(
             Context context, String serviceIntentAction, Function<IBinder, T> converter) {
         mServiceIntentAction = serviceIntentAction;
@@ -101,6 +105,12 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                     "Service %s disabled because of system property %s",
                     serviceIntentAction, SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
         }
+
+        // Allow debugging environment including tests to override the binder timeout.
+        mBinderTimeout =
+                SystemProperties.getInt(
+                        SYSTEM_PROPERTY_FOR_DEBUGGING_BINDER_TIMEOUT,
+                        DEFAULT_BINDER_CONNECTION_TIMEOUT_MS);
     }
 
     public T getService() {
@@ -164,15 +174,16 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
         // Note: We must not hold the lock while waiting for the connection since the
         // onServiceConnected callback also needs to acquire the lock. This would cause a deadlock.
         try {
+            LogUtil.v("Binder Timeout is: %d", mBinderTimeout);
             // TODO(b/218519915): Better timeout handling
-            mConnectionCountDownLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            mConnectionCountDownLatch.await(mBinderTimeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             throw new RuntimeException("Thread interrupted"); // TODO Handle it better.
         }
 
         synchronized (mLock) {
             if (mService == null) {
-                throw new ServiceUnavailableException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+                throw new ServiceUnavailableException();
             }
             return mService;
         }

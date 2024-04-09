@@ -185,9 +185,11 @@ public class AsyncTriggerFetcher {
                 }
                 builder.setAggregateDeduplicationKeys(validAggregateDeduplicationKeysString.get());
             }
+            boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
                 JSONArray filters = Filter.maybeWrapFilters(json, TriggerHeaderContract.FILTERS);
-                if (!FetcherUtil.areValidAttributionFilters(filters, mFlags, true)) {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        filters, mFlags, true, shouldCheckFilterSize)) {
                     LoggerFactory.getMeasurementLogger().d("parseTrigger: filters are invalid.");
                     asyncFetchStatus.setEntityStatus(
                             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
@@ -198,7 +200,8 @@ public class AsyncTriggerFetcher {
             if (!json.isNull(TriggerHeaderContract.NOT_FILTERS)) {
                 JSONArray notFilters =
                         Filter.maybeWrapFilters(json, TriggerHeaderContract.NOT_FILTERS);
-                if (!FetcherUtil.areValidAttributionFilters(notFilters, mFlags, true)) {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        notFilters, mFlags, true, shouldCheckFilterSize)) {
                     LoggerFactory.getMeasurementLogger()
                             .d("parseTrigger: not-filters are invalid.");
                     asyncFetchStatus.setEntityStatus(
@@ -211,11 +214,10 @@ public class AsyncTriggerFetcher {
                 builder.setIsDebugReporting(json.optBoolean(TriggerHeaderContract.DEBUG_REPORTING));
             }
             if (!json.isNull(TriggerHeaderContract.DEBUG_KEY)) {
-                try {
-                    builder.setDebugKey(
-                            new UnsignedLong(json.getString(TriggerHeaderContract.DEBUG_KEY)));
-                } catch (NumberFormatException e) {
-                    LoggerFactory.getMeasurementLogger().e(e, "Parsing trigger debug key failed");
+                Optional<UnsignedLong> maybeDebugKey =
+                        FetcherUtil.extractUnsignedLong(json, TriggerHeaderContract.DEBUG_KEY);
+                if (maybeDebugKey.isPresent()) {
+                    builder.setDebugKey(maybeDebugKey.get());
                 }
             }
             if (mFlags.getMeasurementEnableXNA()
@@ -273,10 +275,51 @@ public class AsyncTriggerFetcher {
                 builder.setDebugJoinKey(json.optString(TriggerHeaderContract.DEBUG_JOIN_KEY));
             }
 
-            builder.setAggregatableSourceRegistrationTimeConfig(
-                    getSourceRegistrationTimeConfig(json));
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
+            Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig =
+                    getSourceRegistrationTimeConfig(json);
 
+            builder.setAggregatableSourceRegistrationTimeConfig(sourceRegistrationTimeConfig);
+
+            if (mFlags.getMeasurementEnableTriggerContextId()
+                    && !json.isNull(TriggerHeaderContract.TRIGGER_CONTEXT_ID)) {
+                if (Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
+                        sourceRegistrationTimeConfig)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "parseTrigger: %s cannot be set when %s has a value of %s",
+                                    TriggerHeaderContract.TRIGGER_CONTEXT_ID,
+                                    TriggerHeaderContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME,
+                                    Trigger.SourceRegistrationTimeConfig.INCLUDE.name());
+                    asyncFetchStatus.setEntityStatus(
+                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+                    return Optional.empty();
+                }
+
+                Optional<String> contextIdOpt = getValidTriggerContextId(json);
+                if (contextIdOpt.isEmpty()) {
+                    asyncFetchStatus.setEntityStatus(
+                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+                    return Optional.empty();
+                }
+
+                builder.setTriggerContextId(contextIdOpt.get());
+            }
+
+            if (mFlags.getMeasurementEnableAttributionScope()
+                    && !json.isNull(TriggerHeaderContract.ATTRIBUTION_SCOPE)) {
+                Optional<String> attributionScope =
+                        FetcherUtil.extractString(
+                                json.get(TriggerHeaderContract.ATTRIBUTION_SCOPE),
+                                mFlags.getMeasurementMaxAttributionScopeLength());
+                if (attributionScope.isEmpty()) {
+                    asyncFetchStatus.setEntityStatus(
+                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+                    return Optional.empty();
+                }
+                builder.setAttributionScope(attributionScope.get());
+            }
+
+            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger().e(e, "Trigger Parsing failed");
@@ -288,6 +331,31 @@ public class AsyncTriggerFetcher {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
             return Optional.empty();
         }
+    }
+
+    private Optional<String> getValidTriggerContextId(JSONObject json) throws JSONException {
+        Object triggerContextIdObj = json.get(TriggerHeaderContract.TRIGGER_CONTEXT_ID);
+        if (!(triggerContextIdObj instanceof String)) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "%s: %s, is not a String",
+                            TriggerHeaderContract.TRIGGER_CONTEXT_ID,
+                            json.get(TriggerHeaderContract.TRIGGER_CONTEXT_ID).toString());
+            return Optional.empty();
+        }
+
+        String contextId = triggerContextIdObj.toString();
+        if (contextId.length() > mFlags.getMeasurementMaxLengthOfTriggerContextId()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Length of %s: \"%s\", exceeds max length of %d",
+                            TriggerHeaderContract.TRIGGER_CONTEXT_ID,
+                            contextId,
+                            mFlags.getMeasurementMaxLengthOfTriggerContextId());
+            return Optional.empty();
+        }
+
+        return Optional.of(contextId);
     }
 
     private Trigger.SourceRegistrationTimeConfig getSourceRegistrationTimeConfig(JSONObject json) {
@@ -357,7 +425,18 @@ public class AsyncTriggerFetcher {
             urlConnection.setRequestMethod("POST");
             urlConnection.setInstanceFollowRedirects(false);
             headers = urlConnection.getHeaderFields();
-            asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headers));
+            long headerSize = FetcherUtil.calculateHeadersCharactersLength(headers);
+            if (mFlags.getMeasurementEnableUpdateTriggerHeaderLimit()
+                    && headerSize > mFlags.getMaxTriggerRegistrationHeaderSizeBytes()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "Trigger registration header size exceeds limit bytes "
+                                        + mFlags.getMaxTriggerRegistrationHeaderSizeBytes());
+                asyncFetchStatus.setResponseStatus(
+                        AsyncFetchStatus.ResponseStatus.HEADER_SIZE_LIMIT_EXCEEDED);
+                return Optional.empty();
+            }
+            asyncFetchStatus.setResponseSize(headerSize);
             int responseCode = urlConnection.getResponseCode();
             LoggerFactory.getMeasurementLogger().d("Response code = " + responseCode);
             if (!FetcherUtil.isRedirect(responseCode) && !FetcherUtil.isSuccess(responseCode)) {
@@ -427,92 +506,51 @@ public class AsyncTriggerFetcher {
                 JSONObject eventTriggerDatum = eventTriggerDataArr.getJSONObject(i);
                 UnsignedLong triggerData = new UnsignedLong(0L);
                 if (!eventTriggerDatum.isNull("trigger_data")) {
-                    if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                        Optional<UnsignedLong> maybeTriggerData =
-                                FetcherUtil.extractUnsignedLong(eventTriggerDatum, "trigger_data");
-                        if (!maybeTriggerData.isPresent()) {
-                            return Optional.empty();
-                        }
-                        triggerData = maybeTriggerData.get();
-                    } else {
-                        try {
-                            triggerData = new UnsignedLong(
-                                    eventTriggerDatum.getString("trigger_data"));
-                        } catch (NumberFormatException e) {
-                            LoggerFactory.getMeasurementLogger()
-                                    .d(e, "getValidEventTriggerData: parsing trigger_data failed.");
-                        }
+                    Optional<UnsignedLong> maybeTriggerData =
+                            FetcherUtil.extractUnsignedLong(eventTriggerDatum, "trigger_data");
+                    if (!maybeTriggerData.isPresent()) {
+                        return Optional.empty();
                     }
+                    triggerData = maybeTriggerData.get();
                 }
                 validEventTriggerDatum.put("trigger_data", triggerData);
                 if (!eventTriggerDatum.isNull("priority")) {
-                    if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                        Optional<Long> maybePriority =
-                                FetcherUtil.extractLongString(eventTriggerDatum, "priority");
-                        if (!maybePriority.isPresent()) {
-                            return Optional.empty();
-                        }
-                        validEventTriggerDatum.put("priority", String.valueOf(maybePriority.get()));
-                    } else {
-                        try {
-                            validEventTriggerDatum.put("priority", String.valueOf(
-                                    Long.parseLong(eventTriggerDatum.getString("priority"))));
-                        } catch (NumberFormatException e) {
-                            LoggerFactory.getMeasurementLogger()
-                                    .d(e, "getValidEventTriggerData: parsing priority failed.");
-                        }
+                    Optional<Long> maybePriority =
+                            FetcherUtil.extractLongString(eventTriggerDatum, "priority");
+                    if (!maybePriority.isPresent()) {
+                        return Optional.empty();
                     }
+                    validEventTriggerDatum.put("priority", String.valueOf(maybePriority.get()));
                 }
                 if (!eventTriggerDatum.isNull("value")) {
-                    if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                        Optional<Long> maybeValue =
-                                FetcherUtil.extractLong(eventTriggerDatum, "value");
-                        if (!maybeValue.isPresent()) {
-                            return Optional.empty();
-                        }
-                        long value = maybeValue.get();
-                        if (value < 1L || value > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
-                            return Optional.empty();
-                        }
-                        validEventTriggerDatum.put("value", value);
-                    } else {
-                        try {
-                            long value = Long.parseLong(eventTriggerDatum.getString("value"));
-                            if (value < 1L || value > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
-                                return Optional.empty();
-                            }
-                            validEventTriggerDatum.put("value", value);
-                        } catch (NumberFormatException e) {
-                            LoggerFactory.getMeasurementLogger()
-                                    .d(e, "getValidEventTriggerData: parsing value failed.");
-                        }
+                    Optional<Long> maybeValue =
+                            FetcherUtil.extractLong(eventTriggerDatum, "value");
+                    if (!maybeValue.isPresent()) {
+                        return Optional.empty();
                     }
+                    long value = maybeValue.get();
+                    if (value < 1L || value > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
+                        return Optional.empty();
+                    }
+                    validEventTriggerDatum.put("value", value);
                 }
                 if (!eventTriggerDatum.isNull("deduplication_key")) {
-                    if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                        Optional<UnsignedLong> maybeDedupKey = FetcherUtil.extractUnsignedLong(
-                                eventTriggerDatum, "deduplication_key");
-                        if (!maybeDedupKey.isPresent()) {
-                            return Optional.empty();
-                        }
-                        validEventTriggerDatum.put("deduplication_key", maybeDedupKey.get());
-                    } else {
-                        try {
-                            validEventTriggerDatum.put("deduplication_key", new UnsignedLong(
-                                    eventTriggerDatum.getString("deduplication_key")));
-                        } catch (NumberFormatException e) {
-                            LoggerFactory.getMeasurementLogger()
-                                    .d(
-                                            e,
-                                            "getValidEventTriggerData: parsing deduplication_key "
-                                                    + "failed.");
-                        }
+                    Optional<UnsignedLong> maybeDedupKey = FetcherUtil.extractUnsignedLong(
+                            eventTriggerDatum, "deduplication_key");
+                    if (!maybeDedupKey.isPresent()) {
+                        return Optional.empty();
                     }
+                    validEventTriggerDatum.put("deduplication_key", maybeDedupKey.get());
                 }
+                boolean shouldCheckFilterSize =
+                        !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
                 if (!eventTriggerDatum.isNull("filters")) {
                     JSONArray filters = Filter.maybeWrapFilters(eventTriggerDatum, "filters");
                     if (!FetcherUtil.areValidAttributionFilters(
-                            filters, mFlags, /* canIncludeLookbackWindow= */ true)) {
+                            filters,
+                            mFlags,
+                            /* canIncludeLookbackWindow= */ true,
+                            shouldCheckFilterSize)) {
                         LoggerFactory.getMeasurementLogger()
                                 .d("getValidEventTriggerData: filters are invalid.");
                         return Optional.empty();
@@ -523,7 +561,10 @@ public class AsyncTriggerFetcher {
                     JSONArray notFilters =
                             Filter.maybeWrapFilters(eventTriggerDatum, "not_filters");
                     if (!FetcherUtil.areValidAttributionFilters(
-                            notFilters, mFlags, /* canIncludeLookbackWindow= */ true)) {
+                            notFilters,
+                            mFlags,
+                            /* canIncludeLookbackWindow= */ true,
+                            shouldCheckFilterSize)) {
                         LoggerFactory.getMeasurementLogger()
                                 .d("getValidEventTriggerData: not-filters are invalid.");
                         return Optional.empty();
@@ -534,9 +575,7 @@ public class AsyncTriggerFetcher {
             } catch (JSONException e) {
                 LoggerFactory.getMeasurementLogger()
                         .d(e, "AsyncTriggerFetcher: JSONException parsing event trigger datum.");
-                if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                    return Optional.empty();
-                }
+                return Optional.empty();
             } catch (NumberFormatException e) {
                 LoggerFactory.getMeasurementLogger()
                         .d(
@@ -552,6 +591,7 @@ public class AsyncTriggerFetcher {
     private Optional<String> getValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)
             throws JSONException {
         JSONArray validAggregateTriggerData = new JSONArray();
+        boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
         for (int i = 0; i < aggregateTriggerDataArr.length(); i++) {
             JSONObject aggregateTriggerData = aggregateTriggerDataArr.getJSONObject(i);
             String keyPiece = aggregateTriggerData.optString("key_piece");
@@ -560,47 +600,39 @@ public class AsyncTriggerFetcher {
                         .d("Aggregate trigger data key-piece is invalid. %s", keyPiece);
                 return Optional.empty();
             }
-            JSONArray sourceKeys = aggregateTriggerData.optJSONArray("source_keys");
-            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                if (aggregateTriggerData.isNull("source_keys")) {
-                    sourceKeys = new JSONArray();
-                    aggregateTriggerData.put("source_keys", sourceKeys);
-                } else {
-                    // Registration will be rejected if source-keys is not a list
-                    sourceKeys = aggregateTriggerData.getJSONArray("source_keys");
-                }
+            JSONArray sourceKeys;
+            if (aggregateTriggerData.isNull("source_keys")) {
+                sourceKeys = new JSONArray();
+                aggregateTriggerData.put("source_keys", sourceKeys);
+            } else {
+                // Registration will be rejected if source-keys is not a list
+                sourceKeys = aggregateTriggerData.getJSONArray("source_keys");
             }
-            if (sourceKeys == null
-                    || sourceKeys.length()
+            if (shouldCheckFilterSize
+                    && sourceKeys.length()
                             > mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration()) {
                 LoggerFactory.getMeasurementLogger()
                         .d(
-                                "Aggregate trigger data source-keys list failed to parse or has"
-                                        + " more entries than permitted.");
+                                "Aggregate trigger data source-keys list has more entries "
+                                        + "than permitted.");
                 return Optional.empty();
             }
             for (int j = 0; j < sourceKeys.length(); j++) {
-                if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                    Object sourceKey = sourceKeys.get(j);
-                    if (!(sourceKey instanceof String)
-                            || !FetcherUtil.isValidAggregateKeyId((String) sourceKey)) {
-                        LoggerFactory.getMeasurementLogger()
-                                .d("Aggregate trigger data source-key is invalid. %s", sourceKey);
-                        return Optional.empty();
-                    }
-                } else {
-                    String key = sourceKeys.optString(j);
-                    if (!FetcherUtil.isValidAggregateKeyId(key)) {
-                        LoggerFactory.getMeasurementLogger()
-                                .d("Aggregate trigger data source-key is invalid. %s", key);
-                        return Optional.empty();
-                    }
+                Object sourceKey = sourceKeys.get(j);
+                if (!(sourceKey instanceof String)
+                        || !FetcherUtil.isValidAggregateKeyId((String) sourceKey)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d("Aggregate trigger data source-key is invalid. %s", sourceKey);
+                    return Optional.empty();
                 }
             }
             if (!aggregateTriggerData.isNull("filters")) {
                 JSONArray filters = Filter.maybeWrapFilters(aggregateTriggerData, "filters");
                 if (!FetcherUtil.areValidAttributionFilters(
-                        filters, mFlags, /* canIncludeLookbackWindow= */ true)) {
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        shouldCheckFilterSize)) {
                     LoggerFactory.getMeasurementLogger()
                             .d("Aggregate trigger data filters are invalid.");
                     return Optional.empty();
@@ -610,7 +642,10 @@ public class AsyncTriggerFetcher {
             if (!aggregateTriggerData.isNull("not_filters")) {
                 JSONArray notFilters = Filter.maybeWrapFilters(aggregateTriggerData, "not_filters");
                 if (!FetcherUtil.areValidAttributionFilters(
-                        notFilters, mFlags, /* canIncludeLookbackWindow= */ true)) {
+                        notFilters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        shouldCheckFilterSize)) {
                     LoggerFactory.getMeasurementLogger()
                             .d("Aggregate trigger data not-filters are invalid.");
                     return Optional.empty();
@@ -628,8 +663,9 @@ public class AsyncTriggerFetcher {
     }
 
     private boolean isValidAggregateValues(JSONObject aggregateValues) throws JSONException {
-        if (aggregateValues.length()
-                > mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration()) {
+        if (!mFlags.getMeasurementEnableUpdateTriggerHeaderLimit()
+                && aggregateValues.length()
+                        > mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "Aggregate values have more keys than permitted. %s",
@@ -644,16 +680,14 @@ public class AsyncTriggerFetcher {
                         .d("Aggregate values key ID is invalid. %s", id);
                 return false;
             }
-            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                Object maybeInt = aggregateValues.get(id);
-                if (!(maybeInt instanceof Integer)
-                        || ((Integer) maybeInt) < 1
-                        || ((Integer) maybeInt)
-                                > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
-                    LoggerFactory.getMeasurementLogger()
-                            .d("Aggregate values '%s' is invalid. %s", id, maybeInt);
-                    return false;
-                }
+            Object maybeInt = aggregateValues.get(id);
+            if (!(maybeInt instanceof Integer)
+                    || ((Integer) maybeInt) < 1
+                    || ((Integer) maybeInt)
+                            > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate values '%s' is invalid. %s", id, maybeInt);
+                return false;
             }
         }
         return true;
@@ -662,8 +696,10 @@ public class AsyncTriggerFetcher {
     private Optional<String> getValidAggregateDuplicationKeysString(
             JSONArray aggregateDeduplicationKeys) throws JSONException {
         JSONArray validAggregateDeduplicationKeys = new JSONArray();
-        if (aggregateDeduplicationKeys.length()
-                > mFlags.getMeasurementMaxAggregateDeduplicationKeysPerRegistration()) {
+        boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
+        if (shouldCheckFilterSize
+                && aggregateDeduplicationKeys.length()
+                        > mFlags.getMeasurementMaxAggregateDeduplicationKeysPerRegistration()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "Aggregate deduplication keys have more keys than permitted. %s",
@@ -674,26 +710,21 @@ public class AsyncTriggerFetcher {
             JSONObject aggregateDedupKey = new JSONObject();
             JSONObject deduplicationKeyObj = aggregateDeduplicationKeys.getJSONObject(i);
 
-            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                if (!deduplicationKeyObj.isNull("deduplication_key")) {
-                    Optional<UnsignedLong> maybeDedupKey = FetcherUtil.extractUnsignedLong(
-                            deduplicationKeyObj, "deduplication_key");
-                    if (!maybeDedupKey.isPresent()) {
-                        return Optional.empty();
-                    }
-                    aggregateDedupKey.put("deduplication_key", maybeDedupKey.get().toString());
+            if (!deduplicationKeyObj.isNull("deduplication_key")) {
+                Optional<UnsignedLong> maybeDedupKey = FetcherUtil.extractUnsignedLong(
+                        deduplicationKeyObj, "deduplication_key");
+                if (!maybeDedupKey.isPresent()) {
+                    return Optional.empty();
                 }
-            } else {
-                String deduplicationKey = deduplicationKeyObj.optString("deduplication_key");
-                if (!deduplicationKeyObj.isNull("deduplication_key")
-                        && FetcherUtil.isValidAggregateDeduplicationKey(deduplicationKey)) {
-                    aggregateDedupKey.put("deduplication_key", deduplicationKey);
-                }
+                aggregateDedupKey.put("deduplication_key", maybeDedupKey.get().toString());
             }
             if (!deduplicationKeyObj.isNull("filters")) {
                 JSONArray filters = Filter.maybeWrapFilters(deduplicationKeyObj, "filters");
                 if (!FetcherUtil.areValidAttributionFilters(
-                        filters, mFlags, /* canIncludeLookbackWindow= */ true)) {
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        shouldCheckFilterSize)) {
                     LoggerFactory.getMeasurementLogger()
                             .d("Aggregate deduplication key: " + i + " contains invalid filters.");
                     return Optional.empty();
@@ -703,7 +734,10 @@ public class AsyncTriggerFetcher {
             if (!deduplicationKeyObj.isNull("not_filters")) {
                 JSONArray notFilters = Filter.maybeWrapFilters(deduplicationKeyObj, "not_filters");
                 if (!FetcherUtil.areValidAttributionFilters(
-                        notFilters, mFlags, /* canIncludeLookbackWindow= */ true)) {
+                        notFilters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        shouldCheckFilterSize)) {
                     LoggerFactory.getMeasurementLogger()
                             .d(
                                     "Aggregate deduplication key: "
@@ -767,5 +801,7 @@ public class AsyncTriggerFetcher {
         String DEBUG_AD_ID = "debug_ad_id";
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
         String AGGREGATABLE_SOURCE_REGISTRATION_TIME = "aggregatable_source_registration_time";
+        String TRIGGER_CONTEXT_ID = "trigger_context_id";
+        String ATTRIBUTION_SCOPE = "attribution_scope";
     }
 }

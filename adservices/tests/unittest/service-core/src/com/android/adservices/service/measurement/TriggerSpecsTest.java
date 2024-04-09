@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import android.util.Pair;
 
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -69,7 +69,7 @@ public class TriggerSpecsTest {
             throws JSONException {
         assertNotEquals(
                 new TriggerSpecs(
-                        SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), 3, null),
+                        SourceFixture.getTriggerSpecValueCountJsonTwoTriggerSpecs(), 3, null),
                 new TriggerSpecs(
                         SourceFixture.getTriggerSpecArrayCountValidBaseline(), 3, null));
     }
@@ -77,7 +77,7 @@ public class TriggerSpecsTest {
     @Test
     public void constructorThreeParameters_completeExpectation_success() throws JSONException {
         TriggerSpecs testObject = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), 3, null);
+                SourceFixture.getTriggerSpecValueCountJsonTwoTriggerSpecs(), 3, null);
 
         // Assertion
         assertEquals(3, testObject.getMaxReports());
@@ -137,12 +137,12 @@ public class TriggerSpecsTest {
         // Assertion
         assertEquals(
                 new TriggerSpecs(
-                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
+                        SourceFixture.getTriggerSpecCountEncodedJsonValidBaseline(),
                         "3",
                         source,
                         PRIVACY_PARAMETERS_JSON),
                 new TriggerSpecs(
-                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
+                        SourceFixture.getTriggerSpecCountEncodedJsonValidBaseline(),
                         "3",
                         source,
                         PRIVACY_PARAMETERS_JSON));
@@ -150,7 +150,7 @@ public class TriggerSpecsTest {
 
     @Test
     public void equals_fourParamConstructorFromRawJSON_returnsTrue() throws JSONException {
-        String triggerSpecsString = SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline();
+        String triggerSpecsString = SourceFixture.getTriggerSpecCountEncodedJsonValidBaseline();
         // Assertion
         assertEquals(
                 new TriggerSpecs(triggerSpecsString, "3", null, PRIVACY_PARAMETERS_JSON),
@@ -206,12 +206,12 @@ public class TriggerSpecsTest {
         // Assertion
         assertNotEquals(
                 new TriggerSpecs(
-                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
+                        SourceFixture.getTriggerSpecCountEncodedJsonValidBaseline(),
                         "3",
                         source1,
                         PRIVACY_PARAMETERS_JSON),
                 new TriggerSpecs(
-                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
+                        SourceFixture.getTriggerSpecCountEncodedJsonValidBaseline(),
                         "3",
                         source2,
                         PRIVACY_PARAMETERS_JSON));
@@ -220,7 +220,7 @@ public class TriggerSpecsTest {
     @Test
     public void encodeToJson_equal() throws JSONException {
         TriggerSpecs testObject1 = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
+                SourceFixture.getTriggerSpecValueSumEncodedJsonValidBaseline(),
                 "3",
                 null,
                 PRIVACY_PARAMETERS_JSON);
@@ -239,11 +239,19 @@ public class TriggerSpecsTest {
         TriggerSpecs testObject = new TriggerSpecs(
                 SourceFixture.getTriggerSpecArrayCountValidBaseline(), 3, source);
         // Oblige building privacy parameters for the trigger specs
-        testObject.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        testObject.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         // Assertion
         assertEquals(3, testObject.getPrivacyParamsForComputation()[0][0]);
         assertArrayEquals(new int[] {3, 3, 3}, testObject.getPrivacyParamsForComputation()[1]);
         assertArrayEquals(new int[] {4, 4, 4}, testObject.getPrivacyParamsForComputation()[2]);
+    }
+
+    @Test
+    public void testGetNumStates() {
+        Source source = SourceFixture.getMinimalValidSourceBuilder().build();
+        TriggerSpecs testObject =
+                new TriggerSpecs(SourceFixture.getTriggerSpecArrayCountValidBaseline(), 3, source);
+        assertEquals(220L, testObject.getNumStates(source, FakeFlagsFactory.getFlagsForTest()));
     }
 
     @Test
@@ -258,7 +266,7 @@ public class TriggerSpecsTest {
     @Test
     public void getTriggerDataFromIndex_equal() throws JSONException {
         TriggerSpecs triggerSpecs = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), 3, null);
+                SourceFixture.getTriggerSpecValueCountJsonTwoTriggerSpecs(), 3, null);
         // Assertion
         assertEquals(new UnsignedLong(1L), triggerSpecs.getTriggerDataFromIndex(0));
         assertEquals(new UnsignedLong(3L), triggerSpecs.getTriggerDataFromIndex(2));
@@ -298,7 +306,7 @@ public class TriggerSpecsTest {
     public void containsTriggerData_variousTriggerDataTypes_correctlyDetermines()
             throws JSONException {
         TriggerSpecs testTriggerSpecs = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), 3, null);
+                SourceFixture.getTriggerSpecValueCountJsonTwoTriggerSpecs(), 3, null);
         // Assertion
         assertTrue(testTriggerSpecs.containsTriggerData(new UnsignedLong(1L)));
         assertTrue(testTriggerSpecs.containsTriggerData(new UnsignedLong(2L)));

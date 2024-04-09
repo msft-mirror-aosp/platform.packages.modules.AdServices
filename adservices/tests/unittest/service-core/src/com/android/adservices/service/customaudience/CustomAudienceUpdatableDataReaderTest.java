@@ -16,8 +16,12 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_RENDER_ID_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AUCTION_SERVER_REQUEST_FLAGS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.OMIT_ADS_VALUE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -32,12 +36,12 @@ import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.JsonFixture;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
@@ -58,7 +62,18 @@ public class CustomAudienceUpdatableDataReaderTest {
     private static final List<DBAdData> INVALID_DB_AD_DATA_LIST =
             DBAdDataFixture.getInvalidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
 
-    private final Flags mFlags = FlagsFactory.getFlagsForTest();
+    private final Flags mFlags =
+            new FakeFlagsFactory.TestFlags() {
+                @Override
+                public boolean getFledgeFrequencyCapFilteringEnabled() {
+                    return true;
+                }
+
+                @Override
+                public boolean getFledgeAppInstallFilteringEnabled() {
+                    return true;
+                }
+            };
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -81,13 +96,104 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
         assertEquals(
                 AdSelectionSignals.fromString(validUserBiddingSignalsAsJsonObjectString),
                 reader.getUserBiddingSignalsFromJsonObject());
+    }
+
+    @Test
+    public void testGetAuctionServerRequestFlagsSuccess() throws JSONException {
+        List<String> flagsList = ImmutableList.of(OMIT_ADS_VALUE);
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addAuctionServerRequestFlagsToJsonObject(
+                        null, flagsList, true);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+
+        assertEquals(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS, reader.getAuctionServerRequestFlags());
+    }
+
+    @Test
+    public void testGetAuctionServerRequestFlagsNoMatchInFlags() throws JSONException {
+        List<String> flagsList = ImmutableList.of();
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addAuctionServerRequestFlagsToJsonObject(
+                        null, flagsList, true);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+
+        assertEquals(0, reader.getAuctionServerRequestFlags());
+    }
+
+    @Test
+    public void testGetAuctionServerRequestFlagsNoFlagsField() throws JSONException {
+        JSONObject responseObject = new JSONObject();
+        JsonFixture.addHarmlessJunkValues(responseObject);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+
+        assertEquals(0, reader.getAuctionServerRequestFlags());
+    }
+
+    @Test
+    public void testGetAuctionServerRequestFlagsFlagsNotArray() throws JSONException {
+        JSONObject responseObject =
+                new JSONObject().put(AUCTION_SERVER_REQUEST_FLAGS_KEY, OMIT_ADS_VALUE);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+
+        assertThrows(JSONException.class, reader::getAuctionServerRequestFlags);
     }
 
     @Test
@@ -109,7 +215,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -134,7 +241,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -152,7 +260,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
         assertThrows(JSONException.class, reader::getUserBiddingSignalsFromJsonObject);
@@ -169,7 +278,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
         assertThrows(JSONException.class, reader::getUserBiddingSignalsFromJsonObject);
@@ -187,7 +297,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
         assertThrows(JSONException.class, reader::getUserBiddingSignalsFromJsonObject);
@@ -211,7 +322,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -234,7 +346,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -258,7 +371,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -284,7 +398,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -302,7 +417,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
         assertThrows(JSONException.class, reader::getTrustedBiddingDataFromJsonObject);
@@ -319,7 +435,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
         assertThrows(JSONException.class, reader::getTrustedBiddingDataFromJsonObject);
@@ -337,7 +454,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
         assertThrows(JSONException.class, reader::getTrustedBiddingDataFromJsonObject);
@@ -359,7 +477,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -382,7 +501,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         1,
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -404,7 +524,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -428,6 +549,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
+                        false,
                         false,
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
@@ -454,7 +576,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         true,
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -491,7 +614,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         false,
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -518,7 +642,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         true,
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
         assertTrue(reader.getAdsFromJsonObject().isEmpty());
@@ -542,7 +667,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         true,
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
         assertTrue(reader.getAdsFromJsonObject().isEmpty());
@@ -563,7 +689,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -589,7 +716,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -607,7 +735,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
         assertThrows(JSONException.class, reader::getAdsFromJsonObject);
@@ -624,7 +753,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
         assertThrows(JSONException.class, reader::getAdsFromJsonObject);
@@ -641,7 +771,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -662,7 +793,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -686,7 +818,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         1,
                         mFlags.getFledgeCustomAudienceMaxNumAds(),
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
@@ -708,7 +841,8 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         1,
-                        mFlags.getFledgeAdSelectionFilteringEnabled(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 

@@ -42,6 +42,13 @@ public class DeviceRegionProvider {
      */
     public static boolean isEuDevice(@NonNull Context context) {
         Objects.requireNonNull(context);
+
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getEnableTabletRegionFix() && flags.isEeaDeviceFeatureEnabled()) {
+            LogUtil.d("Server side region detection for tablet and phone enabled.");
+            return FlagsFactory.getFlags().isEeaDevice();
+        }
+        // We don't need following logic once the enableTabletRegionFix is fully ramp up.
         if (context.getPackageManager().hasSystemFeature(FEATURE_TELEPHONY)) {
             TelephonyManager telephonyManager = context.getSystemService(TelephonyManager.class);
             // if there is no telephony manager accessible, we fall back to EU device
@@ -65,57 +72,10 @@ public class DeviceRegionProvider {
             if (getUiEeaCountriesSet().contains(deviceCountryIso.toUpperCase(Locale.ENGLISH))) {
                 return true;
             }
-
             return false;
         }
         // if there is no telephony feature, we fall back to EU device
         return true;
-    }
-
-    /**
-     * @return true if the device should be treated as EU device, otherwise false.
-     * @param context {@link Context} of the caller.
-     */
-    public static boolean isEuDevice(@NonNull Context context, @NonNull Flags flags) {
-        Objects.requireNonNull(context);
-        if (context.getPackageManager().hasSystemFeature(FEATURE_TELEPHONY)) {
-            TelephonyManager telephonyManager = context.getSystemService(TelephonyManager.class);
-            // if there is no telephony manager accessible, we fall back to EU device
-            if (telephonyManager == null) return true;
-
-            // we use PH to determine whether device is in the EEA region.
-            if (flags.isEeaDeviceFeatureEnabled()) {
-                return flags.isEeaDevice();
-            }
-
-            // and fall back to sim card locations if the feature is not yet enabled.
-            // if there is no sim card installed, we fall back to EU device
-            String deviceCountryIso = telephonyManager.getSimCountryIso();
-            if (deviceCountryIso.isEmpty()) {
-                return true;
-            }
-
-            // if simCountryIso detects the user's country as one of EEA countries
-            // we treat this device as EU device, otherwise ROW device
-            if (getUiEeaCountriesSet(flags)
-                    .contains(deviceCountryIso.toUpperCase(Locale.ENGLISH))) {
-                return true;
-            }
-
-            return false;
-        }
-        // if there is no telephony feature, we fall back to EU device
-        return true;
-    }
-
-    private static Set<String> getUiEeaCountriesSet(Flags flags) {
-        String uiEeaCountries = flags.getUiEeaCountries();
-        if (!isValidEeaCountriesString(uiEeaCountries)) {
-            LogUtil.e("Invalid EEA countries string.");
-            return Set.of();
-        } else {
-            return Set.of(uiEeaCountries.split(","));
-        }
     }
 
     private static Set<String> getUiEeaCountriesSet() {

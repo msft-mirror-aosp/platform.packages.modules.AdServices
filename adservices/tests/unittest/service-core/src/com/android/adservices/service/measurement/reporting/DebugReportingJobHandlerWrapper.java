@@ -23,7 +23,6 @@ import static org.mockito.Mockito.verify;
 import android.content.Context;
 import android.net.Uri;
 
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -38,13 +37,12 @@ import java.io.IOException;
 /** A wrapper class to expose a constructor for DebugReportingJobHandler in testing. */
 public class DebugReportingJobHandlerWrapper {
     public static Object[] spyPerformScheduledPendingReports(
-            EnrollmentDao enrollmentDao, DatastoreManager datastoreManager, Context context)
+            DatastoreManager datastoreManager, Context context)
             throws IOException, JSONException {
         // Set up debug reporting job handler spy
         DebugReportingJobHandler debugReportingJobHandler =
                 Mockito.spy(
                         new DebugReportingJobHandler(
-                                enrollmentDao,
                                 datastoreManager,
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),

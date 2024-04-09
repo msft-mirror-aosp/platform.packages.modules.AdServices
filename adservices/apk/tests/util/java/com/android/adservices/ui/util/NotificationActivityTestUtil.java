@@ -75,14 +75,39 @@ public final class NotificationActivityTestUtil {
         device.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
     }
 
+    /**
+     * Start PAS Renotify Notification.
+     *
+     * @param isEUActivity Is the activity EU.
+     * @param device UiDevice
+     * @throws InterruptedException Interrupted Exception
+     */
+    public static void startRenotifyPasActivity(boolean isEUActivity, UiDevice device)
+            throws InterruptedException {
+        if (sContext.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d("adservices", "this does not have read_device_config permission");
+        } else {
+            Log.d("adservices", "this has read_device_config permission");
+        }
+
+        String notificationPackage = NOTIFICATION_PACKAGE;
+        Intent intent = new Intent(notificationPackage);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("isEUDevice", isEUActivity);
+        intent.putExtra("IS_RENOTIFY_KEY", true);
+
+        sContext.startActivity(intent);
+        device.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
+    }
+
     /***
      * Click on the More button on the notification page.
      * @param device device
-     * @throws InterruptedException interruptedException
      */
-    public static void clickMoreToBottom(UiDevice device) throws InterruptedException {
+    public static void clickMoreToBottom(UiDevice device) {
         UiObject2 moreButton =
-                ApkTestUtil.getElement(sContext, device, R.string.notificationUI_more_button_text);
+                ApkTestUtil.getElement(device, R.string.notificationUI_more_button_text);
 
         if (moreButton == null) {
             LogUtil.e("More Button not Found");
@@ -94,9 +119,7 @@ public final class NotificationActivityTestUtil {
             moreButton.clickAndWait(Until.scrollFinished(Direction.DOWN), SCROLL_WAIT_TIME);
             // Retrieve a new instance to avoid android.support.test.uiautomator
             // .StaleObjectException.
-            moreButton =
-                    ApkTestUtil.getElement(
-                            sContext, device, R.string.notificationUI_more_button_text);
+            moreButton = ApkTestUtil.getElement(device, R.string.notificationUI_more_button_text);
         }
         assertWithMessage("More button").that(moreButton).isNull();
     }

@@ -35,10 +35,13 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.TopicsEncryptionEpochComputationReportedStats;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -55,7 +58,6 @@ import java.util.Random;
 import java.util.Set;
 
 /** A class to manage Epoch computation. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class EpochManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
@@ -116,10 +118,12 @@ public class EpochManager {
     private final Random mRandom;
     private final Classifier mClassifier;
     private final Flags mFlags;
-    // Use Clock.SYSTEM_CLOCK except in unit tests, which pass in a local instance of Clock to mock.
+    // Use Clock.getInstance() except in unit tests, which pass in a local instance of Clock to
+    // mock.
     private final Clock mClock;
     private final ClassifierManager mClassifierManager;
     private final EncryptionManager mEncryptionManager;
+    private final AdServicesLogger mAdServicesLogger;
 
     @VisibleForTesting
     EpochManager(
@@ -130,7 +134,8 @@ public class EpochManager {
             Flags flags,
             @NonNull Clock clock,
             @NonNull ClassifierManager classifierManager,
-            @NonNull EncryptionManager encryptionManager) {
+            @NonNull EncryptionManager encryptionManager,
+            @NonNull AdServicesLogger adServicesLogger) {
         mTopicsDao = topicsDao;
         mDbHelper = dbHelper;
         mRandom = random;
@@ -139,6 +144,7 @@ public class EpochManager {
         mClock = clock;
         mClassifierManager = classifierManager;
         mEncryptionManager = encryptionManager;
+        mAdServicesLogger = adServicesLogger;
     }
 
     /** Returns an instance of the EpochManager given a context. */
@@ -153,9 +159,10 @@ public class EpochManager {
                                 new Random(),
                                 ClassifierManager.getInstance(context),
                                 FlagsFactory.getFlags(),
-                                Clock.SYSTEM_CLOCK,
+                                Clock.getInstance(),
                                 ClassifierManager.getInstance(context),
-                                EncryptionManager.getInstance(context));
+                                EncryptionManager.getInstance(context),
+                                AdServicesLoggerImpl.getInstance());
             }
             return sSingleton;
         }
@@ -252,21 +259,57 @@ public class EpochManager {
             // Return returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
             Map<Pair<String, String>, Topic> returnedAppSdkTopics =
                     computeReturnedAppSdkTopics(callersCanLearnMap, appSdksUsageMap, topTopics);
-            sLogger.v("returnedAppSdkTopics size is  %d", returnedAppSdkTopics.size());
+            int countOfTopicsBeforeEncryption = returnedAppSdkTopics.size();
+            sLogger.v("returnedAppSdkTopics size is  %d", countOfTopicsBeforeEncryption);
 
             // And persist the map to DB so that we can reuse later.
             mTopicsDao.persistReturnedAppTopicsMap(currentEpochId, returnedAppSdkTopics);
 
+            int countOfEncryptedTopics = 0;
+            int latencyOfWholeEncryptionProcessMs = 0;
+            int latencyOfPersistingEncryptedTopicsToDbMs = 0;
             // Encrypt and store encrypted topics if the feature is enabled and the version 9 db
             // is available.
             if (mFlags.getTopicsEncryptionEnabled() && mFlags.getEnableDatabaseSchemaVersion9()) {
+                long topicsEncryptionStartTimestamp = mClock.currentTimeMillis();
                 // encryptedTopicMapTopics = Map<Pair<App, Sdk>, EncryptedTopic>
                 Map<Pair<String, String>, EncryptedTopic> encryptedTopicMapTopics =
                         encryptTopicsMap(returnedAppSdkTopics);
-                sLogger.v("encryptedTopicMapTopics size is  %d", returnedAppSdkTopics.size());
+                if (mFlags.getTopicsEncryptionMetricsEnabled()) {
+                    latencyOfWholeEncryptionProcessMs =
+                            (int) (mClock.currentTimeMillis() - topicsEncryptionStartTimestamp);
+                }
+                countOfEncryptedTopics = encryptedTopicMapTopics.size();
+                sLogger.v("encryptedTopicMapTopics size is  %d", countOfEncryptedTopics);
 
+                long persistEncryptedTopicsToDbStartTimestamp = mClock.currentTimeMillis();
                 mTopicsDao.persistReturnedAppEncryptedTopicsMap(
                         currentEpochId, encryptedTopicMapTopics);
+                if (mFlags.getTopicsEncryptionMetricsEnabled()) {
+                    latencyOfPersistingEncryptedTopicsToDbMs =
+                            (int) (mClock.currentTimeMillis()
+                                    - persistEncryptedTopicsToDbStartTimestamp);
+                }
+            }
+
+            if (mFlags.getTopicsEncryptionMetricsEnabled()) {
+                int latencyOfEncryptionPerTopicMs =
+                        countOfTopicsBeforeEncryption == 0
+                                ? 0
+                                : latencyOfWholeEncryptionProcessMs / countOfTopicsBeforeEncryption;
+                mAdServicesLogger.logTopicsEncryptionEpochComputationReportedStats(
+                        TopicsEncryptionEpochComputationReportedStats.builder()
+                                .setCountOfTopicsBeforeEncryption(countOfTopicsBeforeEncryption)
+                                .setCountOfEmptyEncryptedTopics(
+                                        countOfTopicsBeforeEncryption - countOfEncryptedTopics)
+                                .setCountOfEncryptedTopics(countOfEncryptedTopics)
+                                .setLatencyOfWholeEncryptionProcessMs(
+                                        latencyOfWholeEncryptionProcessMs)
+                                .setLatencyOfEncryptionPerTopicMs(latencyOfEncryptionPerTopicMs)
+                                .setLatencyOfPersistingEncryptedTopicsToDbMs(
+                                        latencyOfPersistingEncryptedTopicsToDbMs)
+                                .build()
+                );
             }
 
             // Mark the transaction successful.

@@ -46,7 +46,6 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /** CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -492,7 +491,36 @@ public class CustomAudienceManager {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
-        // TODO(b/323307651) To be implemented
+        try {
+            final ICustomAudienceService service = getService();
+
+            service.scheduleCustomAudienceUpdate(
+                    new ScheduleCustomAudienceUpdateInput.Builder(
+                                    request.getUpdateUri(),
+                                    getCallerPackageName(),
+                                    request.getMinDelay(),
+                                    request.getPartialCustomAudienceList())
+                            .build(),
+                    new ScheduleCustomAudienceUpdateCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> receiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
+                        }
+                    });
+
+        } catch (RemoteException e) {
+            sLogger.e(e, "Exception");
+            receiver.onError(new IllegalStateException("Internal Error!", e));
+        }
     }
 
     private String getCallerPackageName() {

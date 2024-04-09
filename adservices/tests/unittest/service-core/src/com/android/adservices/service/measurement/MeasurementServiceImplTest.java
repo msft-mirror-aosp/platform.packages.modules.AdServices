@@ -16,12 +16,9 @@
 
 package com.android.adservices.service.measurement;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
@@ -96,7 +93,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -326,7 +323,7 @@ public final class MeasurementServiceImplTest {
                                 STATUS_UNAUTHORIZED,
                                 createRegistrationSourceRequest(true),
                                 /* assertFailureReason= */ true,
-                                FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST));
+                                FAILURE_REASON_UNSET));
     }
 
     @Test
@@ -334,7 +331,9 @@ public final class MeasurementServiceImplTest {
         runWithMocks(
                 Api.REGISTER_SOURCE,
                 new AccessDenier().deniedByAppPackageMsmtApiApp(),
-                () -> registerSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
+                () ->
+                        registerSourceAndAssertFailure(
+                                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST));
     }
 
     @Test
@@ -345,10 +344,10 @@ public final class MeasurementServiceImplTest {
                 new AccessDenier().deniedByAppPackageMsmtApiApp(),
                 () ->
                         registerSourceAndAssertFailure(
-                                STATUS_CALLER_NOT_ALLOWED,
+                                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
                                 createRegistrationSourceRequest(),
                                 /* assertFailureReason= */ true,
-                                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST));
+                                FAILURE_REASON_UNSET));
     }
 
     @Test
@@ -396,7 +395,7 @@ public final class MeasurementServiceImplTest {
                                 STATUS_BACKGROUND_CALLER,
                                 createRegistrationSourceRequest(),
                                 /* assertFailureReason= */ true,
-                                FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND));
+                                FAILURE_REASON_UNSET));
     }
 
     @Test
@@ -551,7 +550,9 @@ public final class MeasurementServiceImplTest {
         runWithMocks(
                 Api.REGISTER_TRIGGER,
                 new AccessDenier().deniedByAppPackageMsmtApiApp(),
-                () -> registerTriggerAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
+                () ->
+                        registerTriggerAndAssertFailure(
+                                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST));
     }
 
     @Test
@@ -762,7 +763,9 @@ public final class MeasurementServiceImplTest {
         runWithMocks(
                 Api.DELETE_REGISTRATIONS,
                 new AccessDenier().deniedByAppPackageMsmtApiApp(),
-                () -> deleteRegistrationsAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
+                () ->
+                        deleteRegistrationsAndAssertFailure(
+                                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST));
     }
 
     @Test
@@ -771,7 +774,9 @@ public final class MeasurementServiceImplTest {
         runWithMocks(
                 Api.DELETE_REGISTRATIONS,
                 new AccessDenier().deniedByAppPackageWebContextClientApp(),
-                () -> deleteRegistrationsAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
+                () ->
+                        deleteRegistrationsAndAssertFailure(
+                                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST));
     }
 
     @Test
@@ -1375,7 +1380,9 @@ public final class MeasurementServiceImplTest {
         runWithMocks(
                 Api.REGISTER_SOURCES,
                 new AccessDenier().deniedByAppPackageMsmtApiApp(),
-                () -> registerSourcesAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
+                () ->
+                        registerSourcesAndAssertFailure(
+                                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST));
     }
 
     @Test
@@ -1477,7 +1484,9 @@ public final class MeasurementServiceImplTest {
         runWithMocks(
                 Api.REGISTER_WEB_SOURCE,
                 new AccessDenier().deniedByAppPackageMsmtApiApp(),
-                () -> registerWebSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
+                () ->
+                        registerWebSourceAndAssertFailure(
+                                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST));
     }
 
     @Test
@@ -1486,7 +1495,9 @@ public final class MeasurementServiceImplTest {
         runWithMocks(
                 Api.REGISTER_WEB_SOURCE,
                 new AccessDenier().deniedByAppPackageWebContextClientApp(),
-                () -> registerWebSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
+                () ->
+                        registerWebSourceAndAssertFailure(
+                                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST));
     }
 
     @Test
@@ -1743,7 +1754,9 @@ public final class MeasurementServiceImplTest {
         runWithMocks(
                 Api.REGISTER_WEB_TRIGGER,
                 new AccessDenier().deniedByAppPackageMsmtApiApp(),
-                () -> registerWebTriggerAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
+                () ->
+                        registerWebTriggerAndAssertFailure(
+                                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST));
     }
 
     @Test
@@ -2005,14 +2018,14 @@ public final class MeasurementServiceImplTest {
     private void assertFailureReasonLogged(int failureReason) {
         ArgumentCaptor<ApiCallStats> captorStatus = ArgumentCaptor.forClass(ApiCallStats.class);
         verify(mMockAdServicesLogger, timeout(TIMEOUT)).logApiCallStats(captorStatus.capture());
-        assertEquals(failureReason, captorStatus.getValue().getResult().getFailureReason());
+        assertEquals(failureReason, captorStatus.getValue().getFailureReason());
     }
 
     private MeasurementServiceImpl createServiceWithMocks() {
         return new MeasurementServiceImpl(
                 mMockMeasurementImpl,
                 mMockContext,
-                Clock.SYSTEM_CLOCK,
+                Clock.getInstance(),
                 mMockConsentManager,
                 mMockThrottler,
                 new CachedFlags(mMockFlags),

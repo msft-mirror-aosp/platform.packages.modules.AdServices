@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SET_APP_INSTALL_ADVERTISERS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
 
@@ -40,6 +43,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -52,10 +56,12 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the Set App Install Advertisers logic */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppInstallAdvertisersSetter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
+    @VisibleForTesting
+    public static final String FILTERING_IS_DISABLED = "App install filtering disabled";
 
     private static final String AD_TECH_IDENTIFIER_ERROR_MESSAGE_SCOPE = "app install adtech set";
     private static final String AD_TECH_IDENTIFIER_ERROR_MESSAGE_ROLE = "adtech";
@@ -67,6 +73,7 @@ public class AppInstallAdvertisersSetter {
     @NonNull private final ConsentManager mConsentManager;
     private final int mCallerUid;
     private DevContext mDevContext;
+    @NonNull private final Flags mFlags;
 
     public AppInstallAdvertisersSetter(
             @NonNull AppInstallDao appInstallDao,
@@ -92,6 +99,7 @@ public class AppInstallAdvertisersSetter {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mConsentManager = consentManager;
         mDevContext = devContext;
+        mFlags = flags;
     }
 
     /**
@@ -125,7 +133,10 @@ public class AppInstallAdvertisersSetter {
                                 // Note: Success is logged before the callback to ensure
                                 // deterministic testing.
                                 mAdServicesLogger.logFledgeApiCallStats(
-                                        shortApiName, AdServicesStatusUtils.STATUS_SUCCESS, 0);
+                                        shortApiName,
+                                        input.getCallerPackageName(),
+                                        STATUS_SUCCESS,
+                                        /*latencyMs=*/ 0);
                                 invokeSuccess(callback);
                             }
 
@@ -146,11 +157,13 @@ public class AppInstallAdvertisersSetter {
                                     // component.
                                     mAdServicesLogger.logFledgeApiCallStats(
                                             shortApiName,
-                                            AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED,
-                                            0);
+                                            input.getCallerPackageName(),
+                                            STATUS_USER_CONSENT_REVOKED,
+                                            /*latencyMs=*/ 0);
                                     invokeSuccess(callback);
                                 } else {
-                                    notifyFailureToCaller(callback, t);
+                                    notifyFailureToCaller(
+                                            input.getCallerPackageName(), callback, t);
                                 }
                             }
                         },
@@ -187,7 +200,9 @@ public class AppInstallAdvertisersSetter {
     }
 
     private void notifyFailureToCaller(
-            @NonNull SetAppInstallAdvertisersCallback callback, @NonNull Throwable t) {
+            @NonNull String callerAppPackageName,
+            @NonNull SetAppInstallAdvertisersCallback callback,
+            @NonNull Throwable t) {
         int resultCode;
 
         boolean isFilterException = t instanceof FilterException;
@@ -205,7 +220,10 @@ public class AppInstallAdvertisersSetter {
         // Note: Failure is logged before the callback to ensure deterministic testing.
         if (!isFilterException) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS, resultCode, 0);
+                    AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS,
+                    callerAppPackageName,
+                    resultCode,
+                    /*latencyMs=*/ 0);
         }
 
         invokeFailure(callback, resultCode, t.getMessage());
@@ -213,6 +231,11 @@ public class AppInstallAdvertisersSetter {
 
     private Void doSetAppInstallAdvertisers(
             Set<AdTechIdentifier> advertisers, String callerPackageName) {
+        if (!mFlags.getFledgeAppInstallFilteringEnabled()) {
+            sLogger.v(FILTERING_IS_DISABLED);
+            throw new IllegalStateException(FILTERING_IS_DISABLED);
+        }
+
         validateRequest(advertisers, callerPackageName);
 
         sLogger.v(

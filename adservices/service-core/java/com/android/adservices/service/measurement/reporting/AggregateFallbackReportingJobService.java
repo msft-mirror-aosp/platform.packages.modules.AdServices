@@ -30,7 +30,6 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
@@ -70,7 +69,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch()) {
@@ -88,8 +87,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
                         () -> {
                             processPendingReports();
 
-                            AdServicesJobServiceLogger.getInstance(
-                                            AggregateFallbackReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
                                             /* isSuccessful= */ true,
@@ -116,7 +114,6 @@ public final class AggregateFallbackReportingJobService extends JobService {
                 DatastoreManager datastoreManager =
                         DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new AggregateReportingJobHandler(
-                                EnrollmentDao.getInstance(getApplicationContext()),
                                 datastoreManager,
                                 new AggregateEncryptionKeyManager(
                                         datastoreManager, getApplicationContext()),
@@ -142,7 +139,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(
                         params, MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -211,7 +208,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID, skipReason);
         }
 

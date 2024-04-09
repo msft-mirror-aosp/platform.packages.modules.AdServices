@@ -16,10 +16,12 @@
 
 package com.android.adservices.service.shell;
 
-import androidx.annotation.NonNull;
-
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
+import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -31,21 +33,37 @@ import java.util.Objects;
  */
 public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier {
 
-    @NonNull private final Flags mFlags;
-    @NonNull private final CustomAudienceDao mCustomAudienceDao;
+    private final Flags mFlags;
+    private final CustomAudienceDao mCustomAudienceDao;
+    private final BackgroundFetchRunner mBackgroundFetchRunner;
+    private final ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
 
     TestShellCommandFactorySupplier(
-            @NonNull Flags flags, @NonNull CustomAudienceDao customAudienceDao) {
+            Flags flags,
+            BackgroundFetchRunner backgroundFetchRunner,
+            CustomAudienceDao customAudienceDao,
+            ConsentedDebugConfigurationDao consentedDebugConfigurationDao) {
         mFlags = Objects.requireNonNull(flags, "Flags cannot be null");
         mCustomAudienceDao =
                 Objects.requireNonNull(customAudienceDao, "CustomAudienceDao cannot be null");
+        mBackgroundFetchRunner =
+                Objects.requireNonNull(
+                        backgroundFetchRunner, "BackgroundFetchRunner cannot be null");
+        mConsentedDebugConfigurationDao =
+                Objects.requireNonNull(
+                        consentedDebugConfigurationDao,
+                        "ConsentedDebugConfigurationDao cannot be null");
     }
 
     @Override
     public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {
         return ImmutableList.of(
-                CommonShellCommandFactory.getInstance(),
                 new CustomAudienceShellCommandFactory(
-                        mFlags.getFledgeCustomAudienceCLIEnabledStatus(), mCustomAudienceDao));
+                        mFlags.getFledgeCustomAudienceCLIEnabledStatus(),
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao),
+                new AdSelectionShellCommandFactory(
+                        mFlags.getFledgeConsentedDebuggingCliEnabledStatus(),
+                        mConsentedDebugConfigurationDao));
     }
 }

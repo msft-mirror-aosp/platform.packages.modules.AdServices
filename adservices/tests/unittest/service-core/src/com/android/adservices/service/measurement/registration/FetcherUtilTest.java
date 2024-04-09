@@ -17,10 +17,11 @@ package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,6 +32,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -86,7 +88,7 @@ public final class FetcherUtilTest {
 
     @Before
     public void setup() {
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
     }
 
     @Test
@@ -213,6 +215,15 @@ public final class FetcherUtilTest {
     }
 
     @Test
+    public void extractString_various() {
+        assertThat(FetcherUtil.extractString(Integer.valueOf(64), 10).isEmpty()).isTrue();
+        assertThat(FetcherUtil.extractString(Long.valueOf(64L), 10).isEmpty()).isTrue();
+        assertThat(FetcherUtil.extractString("", 10).isPresent()).isTrue();
+        assertThat(FetcherUtil.extractString("a", 10).isPresent()).isTrue();
+        assertThat(FetcherUtil.extractString("abcd", 3).isEmpty()).isTrue();
+    }
+
+    @Test
     public void extractLongString_maxValue_success() throws JSONException {
         String longString = "9223372036854775807";
         JSONObject obj = new JSONObject().put(KEY, longString);
@@ -278,8 +289,13 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void testIsValidAggregateKeyId_null() {
+    public void testIsValidAggregateKeyId_null_returnsFalse() {
         assertFalse(FetcherUtil.isValidAggregateKeyId(null));
+    }
+
+    @Test
+    public void testIsValidAggregateKeyId_empty_returnsFalse() {
+        assertFalse(FetcherUtil.isValidAggregateKeyId(""));
     }
 
     @Test
@@ -309,6 +325,11 @@ public final class FetcherUtilTest {
     }
 
     @Test
+    public void testIsValidAggregateKeyPiece_emptyString() {
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece("", mFlags));
+    }
+
+    @Test
     public void testIsValidAggregateKeyPiece_missingPrefix() {
         assertFalse(FetcherUtil.isValidAggregateKeyPiece("1234", mFlags));
     }
@@ -334,7 +355,28 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
                 + "}]";
         JSONArray filters = new JSONArray(json);
-        assertTrue(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        assertTrue(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_removeSizeConstraints_valid() throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        assertTrue(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -344,11 +386,16 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
                 + "}";
         JSONObject filters = new JSONObject(json);
-        assertTrue(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        assertTrue(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
     }
 
     @Test
-    public void areValidAttributionFilters_lookbackWindowAllowedAndInvalid_returnsTrue()
+    public void areValidAttributionFilters_lookbackWindowAllowedAndValid_returnsTrue()
             throws JSONException {
         String json =
                 "[{"
@@ -358,7 +405,31 @@ public final class FetcherUtilTest {
                         + "}]";
         JSONArray filters = new JSONArray(json);
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        assertTrue(FetcherUtil.areValidAttributionFilters(filters, mFlags, true));
+        assertTrue(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void areValidAttributionFilters_validlLookbackWindowA_removeSizeConstrains_returnsTrue()
+            throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 123"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertTrue(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -372,7 +443,32 @@ public final class FetcherUtilTest {
                         + "}]";
         JSONArray filters = new JSONArray(json);
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, true));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void
+            areValidAttributionFilters_invalidLookbackWindow_removeSizeConstraints_returnsFalse()
+                    throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": abcd"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -385,8 +481,33 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 123"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void
+            areValidAttributionFilters_lookbackWindowDisllowed_removeSizeConstraints_returnsFalse()
+                    throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 123"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -399,7 +520,31 @@ public final class FetcherUtilTest {
                         + "}]";
         JSONArray filters = new JSONArray(json);
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, true));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void areValidAttributionFilters_zeroLookbackWindow_removeSizeConstraints_returnsFalse()
+            throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 0"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -413,13 +558,55 @@ public final class FetcherUtilTest {
                         + "}]";
         JSONArray filters = new JSONArray(json);
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, true));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        /* shouldCheckFilterSize= */ true));
     }
 
     @Test
-    public void testAreValidAttributionFilters_filterMap_null() {
+    public void
+            areValidAttributionFilters_negativeLookbackWindow_removeSizeConstraints_returnsFalse()
+                    throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": -123"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterMap_null() throws JSONException {
         JSONObject nullFilterMap = null;
-        assertFalse(FetcherUtil.areValidAttributionFilters(nullFilterMap, mFlags, false));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        nullFilterMap,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterMapNull_removeSizeConstraints_returnFalse()
+            throws JSONException {
+        JSONObject nullFilterMap = null;
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        nullFilterMap,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -431,7 +618,30 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("}]");
         JSONArray filters = new JSONArray(json.toString());
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterSet_tooManyFilters_removeSizeConstraints()
+            throws JSONException {
+        StringBuilder json = new StringBuilder("[{");
+        json.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
+                        .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                        .collect(Collectors.joining(",")));
+        json.append("}]");
+        JSONArray filters = new JSONArray(json.toString());
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -443,7 +653,30 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("}");
         JSONObject filters = new JSONObject(json.toString());
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterMap_tooManyFilters_removeSizeConstraints()
+            throws JSONException {
+        StringBuilder json = new StringBuilder("{");
+        json.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
+                        .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                        .collect(Collectors.joining(",")));
+        json.append("}");
+        JSONObject filters = new JSONObject(json.toString());
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -453,7 +686,31 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
                 + "}]";
         JSONArray filters = new JSONArray(json);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterSet_longKeyWithoutSizeConstraints_returnsTrue()
+            throws JSONException {
+        String json =
+                "[{"
+                        + "\""
+                        + LONG_FILTER_STRING
+                        + "\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        assertTrue(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -463,7 +720,31 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
                 + "}";
         JSONObject filters = new JSONObject(json);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterMap_longKeyWithoutSizeConstraints_returnsTrue()
+            throws JSONException {
+        String json =
+                "{"
+                        + "\""
+                        + LONG_FILTER_STRING
+                        + "\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
+                        + "}";
+        JSONObject filters = new JSONObject(json);
+        assertTrue(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -480,7 +761,35 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("]");
         JSONArray filters = new JSONArray(json.toString());
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterSet_removeFilterMapNumberConstraints()
+            throws JSONException {
+        StringBuilder json = new StringBuilder("[");
+        json.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET + 1)
+                        .mapToObj(
+                                i ->
+                                        "{\"filter-string-1\": [\"filter-value-1\"],"
+                                                + "\"filter-string-2\": [\"filter-value-"
+                                                + i
+                                                + "\"]}")
+                        .collect(Collectors.joining(",")));
+        json.append("]");
+        JSONArray filters = new JSONArray(json.toString());
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -494,7 +803,34 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("]}]");
         JSONArray filters = new JSONArray(json.toString());
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterSet_removeMaxValueLimit()
+            throws JSONException {
+        StringBuilder json =
+                new StringBuilder(
+                        "[{"
+                                + "\"filter-string-1\": [\"filter-value-1\"],"
+                                + "\"filter-string-2\": [");
+        json.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                        .mapToObj(i -> "\"filter-value-" + i + "\"")
+                        .collect(Collectors.joining(",")));
+        json.append("]}]");
+        JSONArray filters = new JSONArray(json.toString());
+        assertTrue(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -508,7 +844,34 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("]}");
         JSONObject filters = new JSONObject(json.toString());
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterMap_removeMaxValueLimit()
+            throws JSONException {
+        StringBuilder json =
+                new StringBuilder(
+                        "{"
+                                + "\"filter-string-1\": [\"filter-value-1\"],"
+                                + "\"filter-string-2\": [");
+        json.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                        .mapToObj(i -> "\"filter-value-" + i + "\"")
+                        .collect(Collectors.joining(",")));
+        json.append("]}");
+        JSONObject filters = new JSONObject(json.toString());
+        assertTrue(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -518,7 +881,31 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"" + LONG_FILTER_STRING + "\"]"
                 + "}]";
         JSONArray filters = new JSONArray(json);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterSet_removeValueLengthLimit()
+            throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \""
+                        + LONG_FILTER_STRING
+                        + "\"]"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        assertTrue(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
     }
 
     @Test
@@ -528,7 +915,63 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"" + LONG_FILTER_STRING + "\"]"
                 + "}";
         JSONObject filters = new JSONObject(json);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterMap_removeValueLengthLimit()
+            throws JSONException {
+        String json =
+                "{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \""
+                        + LONG_FILTER_STRING
+                        + "\"]"
+                        + "}";
+        JSONObject filters = new JSONObject(json);
+        assertTrue(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ false));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterSetIncludesNullValue_returnsFalse()
+            throws JSONException {
+        String json = "[{"
+                + "\"filter-string-1\": [\"filter-value-1\", null],"
+                + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
+                + "}]";
+        JSONArray filters = new JSONArray(json);
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterSetIncludesNumericValue_returnsFalse()
+            throws JSONException {
+        String json = "[{"
+                + "\"filter-string-1\": [\"filter-value-1\", 37],"
+                + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
+                + "}]";
+        JSONArray filters = new JSONArray(json);
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
     }
 
     @Test
@@ -536,9 +979,6 @@ public final class FetcherUtilTest {
         // Setup
         int registrationType = 1;
         long maxAllowedHeadersSize = 30;
-        doReturn(maxAllowedHeadersSize)
-                .when(mFlags)
-                .getMaxResponseBasedRegistrationPayloadSizeBytes();
         Map<String, List<String>> headersMap = createHeadersMap();
         int headersMapSize = 28;
 
@@ -555,7 +995,8 @@ public final class FetcherUtilTest {
         asyncFetchStatus.setRegistrationDelay(0L);
         asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
 
-        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
+        FetcherUtil.emitHeaderMetrics(
+                maxAllowedHeadersSize, mLogger, asyncRegistration, asyncFetchStatus);
 
         // Verify
         verify(mLogger)
@@ -582,9 +1023,6 @@ public final class FetcherUtilTest {
         // Setup
         int registrationType = 1;
         long maxAllowedHeadersSize = 25;
-        doReturn(maxAllowedHeadersSize)
-                .when(mFlags)
-                .getMaxResponseBasedRegistrationPayloadSizeBytes();
         Map<String, List<String>> headersMap = createHeadersMap();
         int headersMapSize = 28;
 
@@ -601,7 +1039,8 @@ public final class FetcherUtilTest {
         asyncFetchStatus.setRegistrationDelay(0L);
         asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
 
-        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
+        FetcherUtil.emitHeaderMetrics(
+                maxAllowedHeadersSize, mLogger, asyncRegistration, asyncFetchStatus);
 
         // Verify
         verify(mLogger)
@@ -628,9 +1067,6 @@ public final class FetcherUtilTest {
         // Setup
         int registrationType = 1;
         long maxAllowedHeadersSize = 25;
-        doReturn(maxAllowedHeadersSize)
-                .when(mFlags)
-                .getMaxResponseBasedRegistrationPayloadSizeBytes();
 
         Map<String, List<String>> headersMap = new HashMap<>();
         headersMap.put("key1", Arrays.asList("val11", "val12"));
@@ -650,7 +1086,8 @@ public final class FetcherUtilTest {
         asyncFetchStatus.setRegistrationDelay(0L);
         asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
 
-        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
+        FetcherUtil.emitHeaderMetrics(
+                maxAllowedHeadersSize, mLogger, asyncRegistration, asyncFetchStatus);
 
         // Verify
         verify(mLogger)
@@ -689,8 +1126,13 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void isValidAggregateDeduplicationKey_nullValue_success() {
+    public void isValidAggregateDeduplicationKey_nullValue_returnsFalse() {
         assertFalse(FetcherUtil.isValidAggregateDeduplicationKey(null));
+    }
+
+    @Test
+    public void isValidAggregateDeduplicationKey_empty_returnsFalse() {
+        assertFalse(FetcherUtil.isValidAggregateDeduplicationKey(""));
     }
 
     private Map<String, List<String>> createHeadersMap() {

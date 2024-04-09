@@ -19,12 +19,13 @@ package com.android.adservices.service.common;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION;
-import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_ADID;
+import static com.android.adservices.service.common.AppManifestConfigParser.TAG_AD_SELECTION;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_APPSETID;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_CUSTOM_AUDIENCES;
+import static com.android.adservices.service.common.AppManifestConfigParser.TAG_PROTECTED_SIGNALS;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_TOPICS;
 
 import android.annotation.NonNull;
@@ -40,12 +41,11 @@ public final class AppManifestConfig {
     @NonNull private final AppManifestIncludesSdkLibraryConfig mIncludesSdkLibraryConfig;
     @Nullable private final AppManifestAttributionConfig mAttributionConfig;
     @Nullable private final AppManifestCustomAudiencesConfig mCustomAudiencesConfig;
+    @Nullable private final AppManifestProtectedSignalsConfig mProtectedSignalsConfig;
+    @Nullable private final AppManifestAdSelectionConfig mAdSelectionConfig;
     @Nullable private final AppManifestTopicsConfig mTopicsConfig;
     @Nullable private final AppManifestAdIdConfig mAdIdConfig;
     @Nullable private final AppManifestAppSetIdConfig mAppSetIdConfig;
-    // TODO(b/297585683): remove this attribute (and update test cases) once it's always enabled by
-    // default (it will be initially determined by a flag).
-    private final boolean mEnabledByDefault;
 
     /**
      * AdServices manifest config must contain configs for Attribution, Custom Audiences, AdId,
@@ -57,26 +57,29 @@ public final class AppManifestConfig {
      * @param includesSdkLibraryConfig the list of Sdk Libraries included in the app.
      * @param attributionConfig the config for Attribution.
      * @param customAudiencesConfig the config for Custom Audiences.
+     * @param protectedSignalsConfig the config for Protected Signals.
+     * @param adSelectionConfig the config for Ad Selection
      * @param topicsConfig the config for Topics.
      * @param adIdConfig the config for adId.
      * @param appSetIdConfig the config for appSetId.
-     * @param enabledByDefault whether APIs should be enabled by default when missing from the
      */
     public AppManifestConfig(
             @NonNull AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig,
             @Nullable AppManifestAttributionConfig attributionConfig,
             @Nullable AppManifestCustomAudiencesConfig customAudiencesConfig,
+            @Nullable AppManifestProtectedSignalsConfig protectedSignalsConfig,
+            @Nullable AppManifestAdSelectionConfig adSelectionConfig,
             @Nullable AppManifestTopicsConfig topicsConfig,
             @Nullable AppManifestAdIdConfig adIdConfig,
-            @Nullable AppManifestAppSetIdConfig appSetIdConfig,
-            boolean enabledByDefault) {
+            @Nullable AppManifestAppSetIdConfig appSetIdConfig) {
         mIncludesSdkLibraryConfig = includesSdkLibraryConfig;
         mAttributionConfig = attributionConfig;
         mCustomAudiencesConfig = customAudiencesConfig;
+        mProtectedSignalsConfig = protectedSignalsConfig;
+        mAdSelectionConfig = adSelectionConfig;
         mTopicsConfig = topicsConfig;
         mAdIdConfig = adIdConfig;
         mAppSetIdConfig = appSetIdConfig;
-        mEnabledByDefault = enabledByDefault;
     }
 
     /** Getter for IncludesSdkLibraryConfig. */
@@ -130,6 +133,53 @@ public final class AppManifestConfig {
     public @Result int isAllowedCustomAudiencesAccess(@NonNull String enrollmentId) {
         return isAllowedAccess(TAG_CUSTOM_AUDIENCES, mCustomAudiencesConfig, enrollmentId);
     }
+
+    /**
+     * Getter for ProtectedSignalsConfig.
+     *
+     * <p>If the tag is not found in the app manifest config, this config is {@code null}.
+     */
+    @Nullable
+    public AppManifestProtectedSignalsConfig getProtectedSignalsConfig() {
+        return getConfig(
+                TAG_PROTECTED_SIGNALS,
+                mProtectedSignalsConfig,
+                AppManifestProtectedSignalsConfig::getEnabledByDefaultInstance);
+    }
+
+    /**
+     * Returns a status code indication if an ad tech with the given enrollment ID is permitted to
+     * access the protected signals API for config represented by this object.
+     *
+     * <p>See constants in {@link AppManifestConfigCall} for the returned value.
+     */
+    public @Result int isAllowedProtectedSignalsAccess(@NonNull String enrollmentId) {
+        return isAllowedAccess(TAG_PROTECTED_SIGNALS, mProtectedSignalsConfig, enrollmentId);
+    }
+
+    /**
+     * Getter for AdSelectionConfig.
+     *
+     * <p>If the tag is not found in the app manifest config, this config is {@code null}.
+     */
+    @Nullable
+    public AppManifestAdSelectionConfig getAdSelectionConfig() {
+        return getConfig(
+                TAG_AD_SELECTION,
+                mAdSelectionConfig,
+                AppManifestAdSelectionConfig::getEnabledByDefaultInstance);
+    }
+
+    /**
+     * Returns a status code indication if an ad tech with the given enrollment ID is permitted to
+     * access the ad selection API for config represented by this object.
+     *
+     * <p>See constants in {@link AppManifestConfigCall} for the returned value.
+     */
+    public @Result int isAllowedAdSelectionAccess(@NonNull String enrollmentId) {
+        return isAllowedAccess(TAG_AD_SELECTION, mAdSelectionConfig, enrollmentId);
+    }
+
 
     /**
      * Getter for TopicsConfig.
@@ -198,22 +248,19 @@ public final class AppManifestConfig {
         if (config != null) {
             return config;
         }
-        if (mEnabledByDefault) {
-            LogUtil.v("app manifest config tag '%s' not found, returning default", tag);
-            return supplier.get();
-        }
-        LogUtil.v("app manifest config tag '%s' not found, returning null", tag);
-        return null;
+
+        LogUtil.v("app manifest config tag '%s' not found, returning default", tag);
+        return supplier.get();
     }
 
     private @Result int isAllowedAccess(
             String tag, @Nullable AppManifestApiConfig config, String partnerId) {
         if (config == null) {
             LogUtil.v(
-                    "app manifest config tag '%s' not found, returning %b", tag, mEnabledByDefault);
-            return mEnabledByDefault
-                    ? RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION
-                    : RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION;
+                    "app manifest config tag '%s' not found, returning"
+                            + " RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION (%d)",
+                    tag, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+            return RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION;
         }
         if (config.getAllowAllToAccess()) {
             return RESULT_ALLOWED_APP_ALLOWS_ALL;

@@ -35,6 +35,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_
 import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
@@ -51,6 +52,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DELETE_EX
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
@@ -110,7 +112,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -135,6 +137,7 @@ import com.android.adservices.service.measurement.reporting.AggregateReportingJo
 import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ConsentMigrationStats;
@@ -175,6 +178,7 @@ import java.util.stream.Collectors;
 @SpyStatic(AdServicesLoggerImpl.class)
 @SpyStatic(AggregateFallbackReportingJobService.class)
 @SpyStatic(AggregateReportingJobService.class)
+@SpyStatic(ImmediateAggregateReportingJobService.class)
 @SpyStatic(AsyncRegistrationQueueJobService.class)
 @SpyStatic(AsyncRegistrationFallbackJobService.class)
 @SpyStatic(AttributionJobService.class)
@@ -192,7 +196,7 @@ import java.util.stream.Collectors;
 @SpyStatic(VerboseDebugReportingFallbackJobService.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MaintenanceJobService.class)
-@SpyStatic(MddJobService.class)
+@SpyStatic(MddJob.class)
 @SpyStatic(EncryptionKeyJobService.class)
 @SpyStatic(CobaltJobService.class)
 @SpyStatic(UiStatsLogger.class)
@@ -201,7 +205,8 @@ import java.util.stream.Collectors;
 @MockStatic(SdkLevel.class)
 @SmallTest
 public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCase {
-
+    public static final int UX_TYPE_COUNT = 5;
+    public static final int ENROLLMENT_CHANNEL_COUNT = 22;
     private BooleanFileDatastore mDatastore;
     private BooleanFileDatastore mConsentDatastore;
     private ConsentManagerV2 mConsentManager;
@@ -278,14 +283,15 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         // Default to use PPAPI consent to test migration-irrelevant logic.
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
         doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+        doReturn(true).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
+        doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         doReturn(true).when(mMockFlags).getAdservicesConsentMigrationLoggingEnabled();
         doReturn(true).when(mMockFlags).getEnrollmentEnableLimitedLogging();
         doReturn(mAdServicesLoggerImplMock).when(AdServicesLoggerImpl::getInstance);
         doReturn(true).when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         doReturn(true)
                 .when(() -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        doNothing().when(MddJob::scheduleAllMddJobs);
         doReturn(true)
                 .when(
                         () ->
@@ -296,6 +302,11 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                 .when(
                         () ->
                                 AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean()));
+        doNothing()
+                .when(
+                        () ->
+                                ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                         any(), anyBoolean()));
         doNothing().when(() -> AttributionFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing()
@@ -312,7 +323,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                 .when(() -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing().when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
         doReturn(true).when(() -> EpochJobService.scheduleIfNeeded(any(), anyBoolean()));
-        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(MddJob::scheduleAllMddJobs);
         doNothing().when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing()
                 .when(() -> EventFallbackReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -590,7 +601,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     public void testJobsAreScheduledAfterEnablingKillSwitchOff() {
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
-        doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+        mockMeasurementEnabled(true);
         doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
         doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
 
@@ -598,7 +609,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
 
         verify(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
         verify(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-        verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)), times(3));
+        verify(MddJob::scheduleAllMddJobs, times(3));
         verify(
                 () -> EncryptionKeyJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 times(2));
@@ -609,6 +620,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(
                 () ->
                         AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)));
+        verify(
+                () ->
+                        ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)));
         verify(() -> AttributionFallbackJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         verify(
@@ -635,14 +650,14 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                 () ->
                         AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)));
-        verify(() -> CobaltJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        verify(() -> CobaltJobService.scheduleIfNeeded(any(Context.class), eq(false)), times(2));
     }
 
     @Test
     public void testJobsAreNotScheduledAfterEnablingKillSwitchOn() {
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
-        doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
+        mockMeasurementEnabled(false);
         doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
         doReturn(false).when(mMockFlags).getCobaltLoggingEnabled();
 
@@ -653,7 +668,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 never());
-        verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)), never());
+        verify(MddJob::scheduleAllMddJobs, never());
         verify(
                 () -> EncryptionKeyJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 never());
@@ -663,6 +678,11 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(
                 () ->
                         AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)),
+                never());
+        verify(
+                () ->
+                        ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)),
                 never());
         verify(
@@ -724,6 +744,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mJobSchedulerMock).cancel(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId());
@@ -740,6 +761,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mJobSchedulerMock).cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(ENCRYPTION_KEY_PERIODIC_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(COBALT_LOGGING_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId());
 
         verifyNoMoreInteractions(mJobSchedulerMock);
     }
@@ -763,8 +785,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
-    public void testDataIsResetAfterConsentIsRevokedFilteringDisabled() throws IOException {
-        doReturn(false).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+    public void testDataIsResetAfterConsentIsRevokedFrequencyCapFilteringDisabled()
+            throws IOException {
+        doReturn(false).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         mConsentManager.disable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptOutSelected());
@@ -776,7 +799,28 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mEnrollmentDaoSpy).deleteAll();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
-        verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
+        verifyZeroInteractions(mFrequencyCapDaoMock);
+        verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mUserProfileIdManagerMock).deleteId();
+    }
+
+    @Test
+    public void testDataIsResetAfterConsentIsRevokedAppInstallFilteringDisabled()
+            throws IOException {
+        doReturn(false).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
+        mConsentManager.disable(mSpyContext);
+
+        verify(() -> UiStatsLogger.logOptOutSelected());
+
+        SystemClock.sleep(1000);
+        verify(mTopicsWorkerMock).clearAllTopicsData(any());
+        // TODO(b/240988406): change to test for correct method call
+        verify(mAppConsentDaoSpy).clearAllConsentData();
+        verify(mEnrollmentDaoSpy).deleteAll();
+        verify(mMeasurementImplMock).deleteAllMeasurementData(any());
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verifyZeroInteractions(mAppInstallDaoMock);
+        verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
@@ -799,8 +843,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
-    public void testDataIsResetAfterConsentIsGivenFilteringDisabled() throws IOException {
-        doReturn(false).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+    public void testDataIsResetAfterConsentIsGivenFrequencyCapFilteringDisabled()
+            throws IOException {
+        doReturn(false).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         mConsentManager.enable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptInSelected());
@@ -811,7 +856,27 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
-        verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
+        verifyZeroInteractions(mFrequencyCapDaoMock);
+        verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mUserProfileIdManagerMock).deleteId();
+        verify(mUserProfileIdManagerMock).getOrCreateId();
+    }
+
+    @Test
+    public void testDataIsResetAfterConsentIsGivenAppInstallFilteringDisabled() throws IOException {
+        doReturn(false).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
+        mConsentManager.enable(mSpyContext);
+
+        verify(() -> UiStatsLogger.logOptInSelected());
+
+        SystemClock.sleep(1000);
+        verify(mTopicsWorkerMock).clearAllTopicsData(any());
+        // TODO(b/240988406): change to test for correct method call
+        verify(mAppConsentDaoSpy).clearAllConsentData();
+        verify(mMeasurementImplMock).deleteAllMeasurementData(any());
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verifyZeroInteractions(mAppInstallDaoMock);
+        verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
     }
@@ -3155,7 +3220,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
-
     @Test
     public void testAllThreeConsentsPerApiAreGivenAggregatedConsentIsSet_PpApiOnly()
             throws RemoteException, IOException {
@@ -3487,6 +3551,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         () ->
                                 PackageManagerCompatUtils.getPackageUid(
                                         any(), eq(packageName), anyInt()));
+    }
+
+    private void mockMeasurementEnabled(boolean value) {
+        when(mMockFlags.getMeasurementEnabled()).thenReturn(value);
     }
 
     private List<ApplicationInfo> createApplicationInfos(String... packageNames) {
@@ -4153,8 +4221,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             spyConsentManager.setUx(ux);
         }
 
-        verify(mUxStatesDaoMock, times(5)).getUx();
-        verify(mUxStatesDaoMock, times(5)).setUx(any());
+        verify(mUxStatesDaoMock, times(UX_TYPE_COUNT)).getUx();
+        verify(mUxStatesDaoMock, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4171,8 +4239,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             spyConsentManager.setUx(ux);
         }
 
-        verify(mMockIAdServicesManager, times(5)).getUx();
-        verify(mMockIAdServicesManager, times(5)).setUx(any());
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).getUx();
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4189,8 +4257,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             spyConsentManager.setUx(ux);
         }
 
-        verify(mMockIAdServicesManager, times(5)).getUx();
-        verify(mMockIAdServicesManager, times(5)).setUx(any());
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).getUx();
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4208,8 +4276,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             spyConsentManager.setUx(ux);
         }
 
-        verify(mAppSearchConsentManagerMock, times(5)).getUx();
-        verify(mAppSearchConsentManagerMock, times(5)).setUx(any());
+        verify(mAppSearchConsentManagerMock, times(UX_TYPE_COUNT)).getUx();
+        verify(mAppSearchConsentManagerMock, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4240,8 +4308,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             }
         }
 
-        verify(mUxStatesDaoMock, times(20)).getEnrollmentChannel(any());
-        verify(mUxStatesDaoMock, times(20)).setEnrollmentChannel(any(), any());
+        verify(mUxStatesDaoMock, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel(any());
+        verify(mUxStatesDaoMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(any(), any());
     }
 
     @Test
@@ -4261,8 +4330,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             }
         }
 
-        verify(mMockIAdServicesManager, times(20)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(20)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4282,8 +4352,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             }
         }
 
-        verify(mMockIAdServicesManager, times(20)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(20)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4304,7 +4375,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             }
         }
 
-        verify(mAppSearchConsentManagerMock, times(20)).getEnrollmentChannel(any());
-        verify(mAppSearchConsentManagerMock, times(20)).setEnrollmentChannel(any(), any());
+        verify(mAppSearchConsentManagerMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .getEnrollmentChannel(any());
+        verify(mAppSearchConsentManagerMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(any(), any());
     }
 }

@@ -16,9 +16,10 @@
 
 package com.android.adservices.service.shell;
 
+import android.annotation.NonNull;
 import android.annotation.Nullable;
 
-import com.google.common.collect.ImmutableSet;
+import java.util.List;
 
 /**
  * Base factory to run the shell command.
@@ -27,7 +28,7 @@ import com.google.common.collect.ImmutableSet;
  *
  * <p>Each API can extend this factory to implement API specific shell commands.
  */
-interface ShellCommandFactory {
+public interface ShellCommandFactory {
     /**
      * Returns the implemented {@link ShellCommand} object for a particular cmd.
      *
@@ -36,9 +37,11 @@ interface ShellCommandFactory {
     @Nullable
     ShellCommand getShellCommand(String cmd);
 
-    /** Returns the set of shell commands implemented for this factory. */
-    ImmutableSet<String> getAllCommands();
+    /** Returns the prefix of shell commands implemented for this factory. */
+    @NonNull
+    String getCommandPrefix();
 
-    // TODO(b/308009734): Add help command as part of factory which shows help for commands
-    //  implemented in a factory.
+    /** Returns the help instructions for all commands provided by this factory. */
+    @NonNull
+    List<String> getAllCommandsHelp();
 }

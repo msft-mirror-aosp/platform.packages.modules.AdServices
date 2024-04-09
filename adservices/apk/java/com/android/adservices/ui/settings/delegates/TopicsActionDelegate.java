@@ -41,7 +41,6 @@ import com.android.settingslib.widget.MainSwitchBar;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsActionDelegate {
     private final TopicsActivity mTopicsActivity;
@@ -84,7 +83,7 @@ public class TopicsActionDelegate {
                                 break;
                             case BLOCK_TOPIC:
                                 UiStatsLogger.logBlockTopicSelected();
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockTopicDialog(
                                                 mTopicsActivity, mTopicsViewModel, topic);
@@ -98,7 +97,7 @@ public class TopicsActionDelegate {
                                 break;
                             case RESET_TOPICS:
                                 UiStatsLogger.logResetTopicSelected();
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetTopicDialog(
                                                 mTopicsActivity, mTopicsViewModel);

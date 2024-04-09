@@ -24,12 +24,14 @@ import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SAN
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeTrue;
 
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.SandboxLatencyInfo;
+import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.StatsdUtil;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
@@ -38,8 +40,12 @@ import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -128,6 +134,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
     private boolean mDisabledForegroundCheck;
     private SdkSandboxManagerLocal mSdkSandboxManagerLocal;
     private SdkSandboxStatsdLogger mSdkSandboxStatsdLogger;
+    private int mClientAppUid;
 
     private static FakeSdkSandboxProvider sProvider;
 
@@ -182,7 +189,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                 TIME_SANDBOX_CALLED_SDK,
                 TIME_SDK_CALL_COMPLETED,
                 TIME_SANDBOX_CALLED_SYSTEM_SERVER);
-        sProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
+        sProvider = Mockito.spy(new FakeSdkSandboxProvider(mSdkSandboxService));
 
         mSdkSandboxStatsdLogger = Mockito.spy(new SdkSandboxStatsdLogger());
         mInjector =
@@ -204,6 +211,8 @@ public class SdkSandboxStatsdMetricsUnitTest {
         mService.forceEnableSandbox();
         mSdkSandboxManagerLocal = mService.getLocalManager();
         assertThat(mSdkSandboxManagerLocal).isNotNull();
+
+        mClientAppUid = Process.myUid();
     }
 
     @After
@@ -773,7 +782,8 @@ public class SdkSandboxStatsdMetricsUnitTest {
                         StatsdUtil
                                 .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY,
                         StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
-                        /*latencyMillis=*/ 123);
+                        /*latencyMillis=*/ 123,
+                        mClientAppUid);
     }
 
     @Test
@@ -795,7 +805,8 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__ENFORCE_ALLOWED_TO_HOST_SANDBOXED_ACTIVITY,
                         SdkSandboxStatsLog
                                 .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION,
-                        (int) (TIME_EVENT_FINISHED - TIME_EVENT_STARTED));
+                        (int) (TIME_EVENT_FINISHED - TIME_EVENT_STARTED),
+                        mClientAppUid);
     }
 
     @Test
@@ -815,7 +826,8 @@ public class SdkSandboxStatsdMetricsUnitTest {
                         Mockito.eq(
                                 SdkSandboxStatsLog
                                         .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION),
-                        Mockito.anyInt());
+                        Mockito.anyInt(),
+                        Mockito.eq(mClientAppUid));
     }
 
     @Test
@@ -838,7 +850,8 @@ public class SdkSandboxStatsdMetricsUnitTest {
                         Mockito.eq(
                                 SdkSandboxStatsLog
                                         .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION_NO_SANDBOX_PROCESS),
-                        Mockito.anyInt());
+                        Mockito.anyInt(),
+                        Mockito.eq(mClientAppUid));
     }
 
     @Test
@@ -864,7 +877,8 @@ public class SdkSandboxStatsdMetricsUnitTest {
                         Mockito.eq(
                                 SdkSandboxStatsLog
                                         .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_ILLEGAL_ARGUMENT_EXCEPTION),
-                        Mockito.anyInt());
+                        Mockito.anyInt(),
+                        Mockito.eq(mClientAppUid));
     }
 
     @Test
@@ -888,7 +902,104 @@ public class SdkSandboxStatsdMetricsUnitTest {
                         Mockito.eq(
                                 SdkSandboxStatsLog
                                         .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS),
-                        Mockito.anyInt());
+                        Mockito.anyInt(),
+                        Mockito.eq(mClientAppUid));
+    }
+
+    @Test
+    public void testRegisterActivityInterception_SuccessWithRightComponent_CallsStatsd() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        Intent intent =
+                new Intent()
+                        .setAction(SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY)
+                        .setPackage(getSandboxPackageName())
+                        .setComponent(new ComponentName(getSandboxPackageName(), ""));
+        mInjector.setLatencyTimeSeries(Arrays.asList(TIME_EVENT_STARTED, TIME_EVENT_FINISHED));
+
+        interceptActivityLaunch(intent);
+
+        Mockito.verify(mSdkSandboxStatsdLogger)
+                .logSandboxActivityApiLatency(
+                        SdkSandboxStatsLog
+                                .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
+                        SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                        (int) (TIME_EVENT_FINISHED - TIME_EVENT_STARTED),
+                        mClientAppUid);
+    }
+
+    @Test
+    public void testRegisterActivityInterception_NullIntent_StatsdNotCalled() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        interceptActivityLaunch(null);
+
+        Mockito.verify(mSdkSandboxStatsdLogger, Mockito.never())
+                .logSandboxActivityApiLatency(
+                        Mockito.eq(
+                                SdkSandboxStatsLog
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY),
+                        Mockito.eq(
+                                SdkSandboxStatsLog
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE),
+                        Mockito.anyInt(),
+                        Mockito.eq(mClientAppUid));
+    }
+
+    @Test
+    public void testRegisterActivityInterception_WrongComponent_StatsdNotCalled() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        Intent intent =
+                new Intent()
+                        .setAction(SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY)
+                        .setPackage(getSandboxPackageName())
+                        .setComponent(new ComponentName("random", ""));
+
+        interceptActivityLaunch(intent);
+
+        Mockito.verify(mSdkSandboxStatsdLogger, Mockito.never())
+                .logSandboxActivityApiLatency(
+                        Mockito.eq(
+                                SdkSandboxStatsLog
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY),
+                        Mockito.eq(
+                                SdkSandboxStatsLog
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE),
+                        Mockito.anyInt(),
+                        Mockito.eq(mClientAppUid));
+    }
+
+    @Test
+    public void testRegisterActivityInterception_NoSandboxProcessName_CallsStatsd()
+            throws PackageManager.NameNotFoundException {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        Mockito.doThrow(new PackageManager.NameNotFoundException())
+                .when(sProvider)
+                .toSandboxProcessName(Mockito.any(CallingInfo.class));
+        Intent intent =
+                new Intent()
+                        .setAction(SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY)
+                        .setPackage(getSandboxPackageName())
+                        .setComponent(new ComponentName(getSandboxPackageName(), ""));
+
+        assertThrows(
+                SecurityException.class,
+                () -> {
+                    interceptActivityLaunch(intent);
+                });
+
+        Mockito.verify(mSdkSandboxStatsdLogger)
+                .logSandboxActivityApiLatency(
+                        Mockito.eq(
+                                SdkSandboxStatsLog
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY),
+                        Mockito.eq(
+                                SdkSandboxStatsLog
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION),
+                        Mockito.anyInt(),
+                        Mockito.eq(mClientAppUid));
     }
 
     private void disableForegroundCheck() {
@@ -947,6 +1058,25 @@ public class SdkSandboxStatsdMetricsUnitTest {
 
     private String getSandboxPackageName() {
         return mSpyContext.getPackageManager().getSdkSandboxPackageName();
+    }
+
+    private ActivityInterceptorCallback.ActivityInterceptResult interceptActivityLaunch(
+            Intent intent) {
+        ActivityInfo activityInfo = new ActivityInfo();
+        activityInfo.applicationInfo = new ApplicationInfo();
+        ActivityInterceptorCallback.ActivityInterceptorInfo info =
+                new ActivityInterceptorCallback.ActivityInterceptorInfo.Builder(
+                                mClientAppUid,
+                                /* callingUid= */ 0,
+                                /* callingPid= */ 0,
+                                /* callingPackage= */ 0,
+                                /* callingFeatureId= */ 0,
+                                intent,
+                                /* activityOptions= */ null,
+                                activityInfo)
+                        .setCallingPackage(TEST_PACKAGE)
+                        .build();
+        return mInterceptorCallbackArgumentCaptor.getValue().onInterceptActivityLaunch(info);
     }
 
     private void assertFailedSandboxLatencyInfoAtSystemServerAppToSandbox(

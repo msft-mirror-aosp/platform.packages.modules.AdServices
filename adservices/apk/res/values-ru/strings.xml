@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"Вы отказались от участия в программе"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"Благодарим за ответ. Технологии Privacy Sandbox отключены.\n\nЧтобы ознакомиться с информацией о бета-тестировании или снова принять в нем участие, перейдите в настройки конфиденциальности."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"Открыть настройки"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"ОК"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"Вы участвуете в бета-тестировании"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"На вашем устройстве включены технологии Privacy Sandbox, поэтому приложения могут опробовать новые варианты показа рекламы с более высоким уровнем конфиденциальности. Чтобы отказаться от участия в бета-тестировании, перейдите в настройки конфиденциальности."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"ОК"</string>
@@ -231,52 +230,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Мы запускаем новую функцию конфиденциальности. Для оценки эффективности рекламы приложения в Android могут обмениваться только определенными типами данных, в том числе о времени показа объявления пользователю."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Изменения можно внести в настройках конфиденциальности рекламы."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Приложения, которые вы используете, могут запрашивать у Android сведения для оценки эффективности рекламы. Android позволяет приложениям собирать только определенные типы данных."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Новые функции конфиденциальности в рекламе"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Выбирайте, какая реклама будет вам показываться. При ее персонализации ваши личные данные не раскрываются."</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Обновление функций конфиденциальности в рекламе"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Выбирайте, какая реклама будет вам показываться. При ее персонализации ваши личные данные не раскрываются."</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Мы добавляем в Android новые функции конфиденциальности в рекламе, чтобы ограничивать доступ приложений к вашим данным при показе персонализированной рекламы."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Приложения и партнеры по рекламе могут использовать информацию о ваших действиях в других приложениях на текущем устройстве, чтобы персонализировать рекламу. При этом по-прежнему обеспечивается безопасность и конфиденциальность ваших личных данных."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"О рекламе, предлагаемой приложениями"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Приложения обмениваются некоторыми типами данных, например о времени суток, когда вам была показана реклама. Это позволяет оценивать ее эффективность."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Об оценке эффективности рекламы"</string>
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android определяет интересные вам темы на основе данных о том, какие приложения вы недавно запускали. Кроме того, приложения и партнеры разработчиков по рекламе могут использовать информацию о ваших действиях в других приложениях на текущем устройстве, чтобы персонализировать рекламу, обеспечивая при этом безопасность и конфиденциальность ваших личных данных."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"• Используемые вами приложения также могут определять ваши интересы на основе истории действий в приложениях. Например, если вы часто открываете кулинарные приложения, то можете видеть рекламу доставки еды или контента на близкие темы в других приложениях.\n\nПриложения надежно хранят эту информацию, чтобы только партнеры по рекламе могли использовать ее для персонализации рекламы в других приложениях."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Впоследствии другие приложения, которые вы открываете, смогут запрашивать информацию об интересующих вас темах или рекламе, предложенной используемыми приложениями."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Используемые вами приложения могут запрашивать у Android сведения для оценки эффективности рекламы. Android помогает обеспечивать вашу конфиденциальность, ограничивая информацию, которой приложения могут обмениваться друг с другом."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Какие данные используются?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Приложения, которые вы используете, могут запрашивать у Android информацию для оценки эффективности рекламы. Android защищает вашу конфиденциальность, ограничивая данные, которыми приложения могут обмениваться друг с другом."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Как обеспечивается защита моих личных данных?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android обеспечивает конфиденциальность по-разному, например агрегирует данные и добавляет к ним шум, чтобы защитить вашу личную информацию и ограничить сведения, которыми приложения могут обмениваться друг с другом.\n\nДанные для оценки эффективности рекламы также регулярно удаляются с вашего устройства."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"История ваших действий в приложениях может использоваться для того, чтобы предлагать рекламу."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Как приложения используют эти данные?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Приложения надежно хранят эту информацию, чтобы только партнеры по рекламе могли использовать ее для персонализации рекламы в других приложениях. Например, если вы часто открываете кулинарные приложения, то в других приложениях можете видеть рекламу контента на близкие темы или доставки продуктов."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Как я могу управлять этими данными?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Вы можете запретить определенным приложениям передавать информацию о ваших действиях партнерам по рекламе. В настройках конфиденциальности можно в любой момент отключить рекламу, предлагаемую приложениями, или сбросить связанные с такой рекламой данные. Кроме того, Android регулярно удаляет эту информацию."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868">"Подробнее о том, "<a href="https://support.google.com/android?p=ad_privacy">"как Android помогает защищать вашу конфиденциальность"</a>"…"</string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Приложения и партнеры по рекламе могут использовать информацию о ваших действиях в других приложениях на текущем устройстве, чтобы персонализировать рекламу. При этом по-прежнему обеспечивается безопасность и конфиденциальность ваших личных данных.\n\nНапример, если вы часто открываете кулинарные приложения, то в других приложениях можете видеть рекламу контента на близкие темы или доставки продуктов.\n\nAndroid регулярно удаляет эту информацию. Кроме того, вы можете запрещать приложениям передавать ее партнерам по рекламе."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="7911915685966727993">"В целях персонализации приложения и партнеры по рекламе обычно учитывают, какие темы вас интересуют. Приложения надежно хранят эту информацию, чтобы только партнеры по рекламе могли использовать ее при показе рекламы в других приложениях.\n\nПриложению можно запретить передавать сведения о ваших действиях партнерам по рекламе. Кроме того, Android регулярно удаляет эти сведения. Если вы продолжите пользоваться приложением, его данные могут снова попасть в список.\n\nПерсонализация рекламы зависит от многих факторов, например от этого параметра и используемого приложения, а также настроек рекламного идентификатора и тем объявлений.\n\nПодробнее "<a href="https://support.google.com/android?p=ad_privacy">"о рекламе, предлагаемой приложениями"</a>"…"</string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android обеспечивает конфиденциальность по-разному, например агрегирует данные и добавляет к ним шум, чтобы защитить вашу личную информацию и ограничить сведения, которыми приложения могут обмениваться друг с другом.\n\nВ вашем браузере может быть похожая функция. Если включить оценку эффективности рекламы в браузере и на устройстве Android, компании смогут отслеживать этот показатель на посещаемых вами сайтах и в приложениях, которые вы используете. История браузера хранится на устройстве и доступна только вам.\n\nПодробнее "<a href="https://support.google.com/android?p=ad_privacy">"об оценке эффективности рекламы"</a>"…"</string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4957955199367073977">"Android определяет, какие темы вам интересны, на основе того, какими приложениями вы пользовались в последние несколько недель.\n\nПриложения, которые вы открываете, могут запрашивать у Android данные об этих темах, чтобы персонализировать для вас рекламу. Android сообщает до трех рекламных тем, не раскрывая ваши личные данные и информацию об использовании приложений.\n\nAndroid регулярно удаляет данные о темах рекламы. Однако темы могут снова появляться в списке, если вы продолжаете пользоваться приложениями. Вы также можете заблокировать нежелательные темы, и Android не будет сообщать о них приложениям.\n\nПерсонализация рекламы зависит от многих факторов, например от этого параметра и используемого приложения, а также от настроек рекламного идентификатора и рекламы, предлагаемой приложениями.\n\nПодробнее "<a href="https://support.google.com/android?p=ad_privacy">"о темах объявлений"</a>"…"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Цветные символы, представляющие интересные темы, например музыка, новости и спорт"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Цветное изображение замка внутри круга"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Маленькое черно-белое изображение – девять точек, формирующих квадрат"</string>

@@ -138,29 +138,29 @@
   "output": {
     "event_level_results": [
       {
-        "report_time": "800177000001",
+        "report_time": "800173400001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "800177000",
+          "scheduled_report_time": "800173400",
           "source_event_id": "2",
           "trigger_data": "2",
           "source_type": "navigation",
           "trigger_summary_bucket": [1, 1],
-          "randomized_trigger_rate": 0.0001371835308365974
+          "randomized_trigger_rate": 0.0001372
         }
       },
       {
-        "report_time": "800177000001",
+        "report_time": "800173400001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "800177000",
+          "scheduled_report_time": "800173400",
           "source_event_id": "2",
           "trigger_data": "1",
           "source_type": "navigation",
           "trigger_summary_bucket": [1, 1],
-          "randomized_trigger_rate": 0.0001371835308365974
+          "randomized_trigger_rate": 0.0001372
         }
       }
     ],

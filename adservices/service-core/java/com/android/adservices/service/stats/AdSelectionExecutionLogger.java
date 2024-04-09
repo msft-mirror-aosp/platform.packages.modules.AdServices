@@ -34,8 +34,10 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.adselection.AdBiddingOutcome;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -425,7 +427,8 @@ public class AdSelectionExecutionLogger extends ApiServiceLatencyCalculator {
             throw new IllegalStateException(REPEATED_END_GET_AD_SELECTION_LOGIC);
         }
         sLogger.v("End a successful get-ad-selection-logic process.");
-        this.mGetAdSelectionLogicScriptSizeInBytes = adSelectionLogic.getBytes().length;
+        this.mGetAdSelectionLogicScriptSizeInBytes =
+                adSelectionLogic.getBytes(StandardCharsets.UTF_8).length;
         this.mGetAdSelectionLogicEndTimestamp = getServiceElapsedTimestamp();
     }
 
@@ -464,7 +467,7 @@ public class AdSelectionExecutionLogger extends ApiServiceLatencyCalculator {
         }
         sLogger.v("End a successful get-trusted-signals process.");
         this.mFetchedTrustedScoringSignalsDataSizeInBytes =
-                adSelectionSignals.toString().getBytes().length;
+                adSelectionSignals.toString().getBytes(StandardCharsets.UTF_8).length;
         this.mGetTrustedScoringSignalsEndTimestamp = getServiceElapsedTimestamp();
     }
 

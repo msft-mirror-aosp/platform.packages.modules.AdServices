@@ -69,6 +69,9 @@ android_library {
         "modules-utils-testable-device-config",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+    },
 }
 
 android_library {
@@ -92,6 +95,9 @@ android_library {
         "truth",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+    },
 }
 
 java_library_host {
@@ -104,6 +110,7 @@ java_library_host {
     static_libs: ["compatibility-host-util"],
     libs: [
         "tradefed",
+        "framework-annotations-lib",
     ],
 }
 
@@ -127,6 +134,9 @@ java_defaults {
     ],
     defaults: [
         "modules-utils-testable-device-config-defaults",
+    ],
+    libs: [
+        "framework-configinfrastructure",
     ],
     static_libs: [
          "adservices-service-core",

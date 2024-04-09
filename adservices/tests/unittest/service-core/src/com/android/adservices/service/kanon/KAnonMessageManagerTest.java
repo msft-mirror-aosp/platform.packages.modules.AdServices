@@ -25,12 +25,12 @@ import android.content.Context;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.kanon.DBKAnonMessage;
 import com.android.adservices.data.kanon.KAnonDatabase;
 import com.android.adservices.data.kanon.KAnonMessageConstants;
 import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,6 +63,18 @@ public class KAnonMessageManagerTest {
             KAnonMessageEntity.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setHashSet(HASH_SET_1)
+                    .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
+                    .build();
+    private final KAnonMessageEntity mKAnonMessageEntity2 =
+            KAnonMessageEntity.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_2)
+                    .setHashSet(HASH_SET_2)
+                    .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
+                    .build();
+    private final KAnonMessageEntity mKAnonMessageEntity3 =
+            KAnonMessageEntity.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_3)
+                    .setHashSet(HASH_SET_3)
                     .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
                     .build();
     private final DBKAnonMessage mDbkAnonMessage1 =
@@ -108,6 +120,11 @@ public class KAnonMessageManagerTest {
 
     @Test
     public void testPersistNewAnonMessageEntities_shouldPersistSuccessfully() {
+        long secondsTtl = 100;
+        Instant fixedInstant = Instant.now();
+        when(mockClock.instant()).thenReturn(fixedInstant);
+        when(mockFlags.getFledgeKAnonMessageTtlSeconds()).thenReturn(secondsTtl);
+        mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mockFlags, mockClock);
         mKAnonMessageManager.persistNewAnonMessageEntities(List.of(mKAnonMessageEntity));
 
         List<DBKAnonMessage> dbkAnonMessages =
@@ -176,6 +193,51 @@ public class KAnonMessageManagerTest {
 
     @Test
     public void testPersistNewAnonMessageEntities_messageWithUnsetId_shouldHaveIdGenerated() {
+        List<KAnonMessageEntity> insertedEntries =
+                mKAnonMessageManager.persistNewAnonMessageEntities(List.of(mKAnonMessageEntity));
+
+        List<DBKAnonMessage> dbkAnonMessages =
+                mKAnonMessageDao.getNLatestKAnonMessagesWithStatus(
+                        5, KAnonMessageConstants.MessageStatus.NOT_PROCESSED);
+
+        assertThat(insertedEntries.size()).isEqualTo(1);
+        assertThat(dbkAnonMessages.size()).isEqualTo(1);
+        assertThat(dbkAnonMessages.get(0).getMessageId())
+                .isEqualTo(insertedEntries.get(0).getMessageId());
+    }
+
+    @Test
+    public void persistNewAnonMessageEntities_multipleMessages_returnsEntriesWithCorrectId() {
+        List<KAnonMessageEntity> insertedEntries =
+                mKAnonMessageManager.persistNewAnonMessageEntities(
+                        List.of(mKAnonMessageEntity, mKAnonMessageEntity2, mKAnonMessageEntity3));
+
+        List<KAnonMessageEntity> messageEntitiesFromDB =
+                mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
+                        10, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
+
+        assertThat(insertedEntries.size()).isEqualTo(3);
+        assertThat(messageEntitiesFromDB.size()).isEqualTo(3);
+        for (KAnonMessageEntity entityInDB : messageEntitiesFromDB) {
+            String hashSet = entityInDB.getHashSet();
+            List<KAnonMessageEntity> entityWithSameHashSet =
+                    insertedEntries.stream()
+                            .filter(message -> message.getHashSet().equals(hashSet))
+                            .collect(Collectors.toList());
+            assertThat(entityWithSameHashSet.size()).isEqualTo(1);
+            assertThat(entityWithSameHashSet.get(0).getMessageId())
+                    .isEqualTo(entityInDB.getMessageId());
+        }
+    }
+
+    @Test
+    public void testPersistNewAnonMessageEntities_ttlIsPickedUpFromDatabase() {
+        long secondsTtl = 100;
+        Instant fixedInstant = Instant.now();
+        when(mockClock.instant()).thenReturn(fixedInstant);
+        when(mockFlags.getFledgeKAnonMessageTtlSeconds()).thenReturn(secondsTtl);
+        mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mockFlags, mockClock);
+
         mKAnonMessageManager.persistNewAnonMessageEntities(List.of(mKAnonMessageEntity));
 
         List<DBKAnonMessage> dbkAnonMessages =
@@ -183,6 +245,7 @@ public class KAnonMessageManagerTest {
                         5, KAnonMessageConstants.MessageStatus.NOT_PROCESSED);
 
         assertThat(dbkAnonMessages.size()).isEqualTo(1);
-        assertThat(dbkAnonMessages.get(0).getMessageId()).isNotNull();
+        assertThat(dbkAnonMessages.get(0).getExpiryInstant().toEpochMilli())
+                .isEqualTo(fixedInstant.plusSeconds(secondsTtl).toEpochMilli());
     }
 }

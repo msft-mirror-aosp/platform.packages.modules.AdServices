@@ -16,14 +16,15 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_PROTECTED_SIGNALS;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_EXIST;
-import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
 import static com.android.adservices.service.common.AppManifestConfigCall.isAllowed;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
@@ -39,7 +40,6 @@ import android.content.res.XmlResourceParser;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.modules.utils.build.SdkLevel;
@@ -94,6 +94,48 @@ public final class AppManifestConfigHelper {
                 appPackageName,
                 enrollmentId,
                 config -> config.isAllowedCustomAudiencesAccess(enrollmentId));
+    }
+
+    /**
+     * Parses the app's manifest config to determine whether the given {@code enrollmentId}
+     * associated with an ad tech is permitted to use the Protected Signals API.
+     *
+     * @param appPackageName the package name of the app whose manifest config will be read
+     * @param enrollmentId the enrollment ID associate with the ad tech
+     * @return {@code true} if API access is allowed, {@code false} if it's not or if there was an
+     *     error parsing the app manifest config.
+     */
+    public static boolean isAllowedProtectedSignalsAccess(
+            String appPackageName, String enrollmentId) {
+        return isAllowedApiAccess(
+                "isAllowedProtectedSignalsAccess()",
+                API_PROTECTED_SIGNALS,
+                appPackageName,
+                enrollmentId,
+                config -> config.isAllowedProtectedSignalsAccess(enrollmentId));
+    }
+
+    /**
+     * Parses the app's manifest config to determine whether the given {@code enrollmentId}
+     * associated with an ad tech is permitted to use the Ad Selection API.
+     *
+     * @param appPackageName the package name of the app whose manifest config will be read
+     * @param enrollmentId the enrollment ID associate with the ad tech
+     * @return {@code true} if API access is allowed, {@code false} if it's not or if there was an
+     *     error parsing the app manifest config.
+     */
+    public static boolean isAllowedAdSelectionAccess(String appPackageName, String enrollmentId) {
+        boolean adSelectionAccess =
+                isAllowedApiAccess(
+                        "isAllowedAdSelectionAccess()",
+                        API_AD_SELECTION,
+                        appPackageName,
+                        enrollmentId,
+                        config -> config.isAllowedAdSelectionAccess(enrollmentId));
+        // You can use the ad selection APIs with any of the 3 manifest permissions
+        return adSelectionAccess
+                || isAllowedCustomAudiencesAccess(appPackageName, enrollmentId)
+                || isAllowedProtectedSignalsAccess(appPackageName, enrollmentId);
     }
 
     /**
@@ -185,22 +227,18 @@ public final class AppManifestConfigHelper {
         Objects.requireNonNull(enrollmentId);
 
         AppManifestConfigCall call = new AppManifestConfigCall(appPackageName, api);
-        boolean enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
 
         try {
             XmlResourceParser in = getXmlParser(appPackageName);
             if (in == null) {
-                call.result =
-                        enabledByDefault
-                                ? RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG
-                                : RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
+                call.result = RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
                 LogUtil.v(
-                        "%s: returning %b for app (%s) that doesn't have the AdServices XML config",
-                        method, enabledByDefault, appPackageName);
-                return enabledByDefault;
+                        "%s: returning true for app (%s) that doesn't have the AdServices XML"
+                                + " config",
+                        method, appPackageName);
+                return true;
             }
-            AppManifestConfig appManifestConfig =
-                    AppManifestConfigParser.getConfig(in, enabledByDefault);
+            AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
             call.result = checker.isAllowedAccess(appManifestConfig);
         } catch (NameNotFoundException e) {
             call.result = RESULT_DISALLOWED_APP_DOES_NOT_EXIST;

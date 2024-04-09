@@ -16,30 +16,18 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
-import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 
 import android.provider.DeviceConfig;
@@ -55,44 +43,27 @@ import android.provider.DeviceConfig;
  * Manifest.permission.WRITE_DEVICE_CONFIG}, but a better approach would be to use {@link
  * com.android.adservices.common.AdServicesFlagsSetterRule} instead (as that rule will take care of
  * automatically resetting the flags to the initial value, among other features).
+ *
+ * @deprecated TODO(b/317418539) - most usages (especially on CTS) are better suited by the {@link
+ *     com.android.adservices.common.AdServicesFlagsSetterRule} JUnit rule, which provides other
+ *     advantages like properly resetting the flag at the end of the test (while tests using this
+ *     fixture need to manually use a {@code try / finally} block to do so) and supporting
+ *     annotations. So, assuming your test already uses the rule, all you need to do is to annotate
+ *     the test method with the proper annotations (like
+ *     {@code @SetFlagEnabled(FlagsConstants.MY_FEATURE_FLAG}} or
+ *     {@code @SetIntegerFlag(name=FlagsConstants.MY_CONFIG_FLAG}, value=42)} or call the {@code
+ *     setFlag()} method of the rule when the value is not static (for example, if the rule
+ *     reference is called @{code flags}, simply call {@code
+ *     flags.setFlag(FlagsConstant.MY_PGK_ALLOWLIST_FLAG, pkgNames)}).
  */
+@Deprecated
 public final class PhFlagsFixture {
-    public static final long DEFAULT_API_RATE_LIMIT_SLEEP_MS =
-            (long) (1500 / SDK_REQUEST_PERMITS_PER_SECOND) + 100L;
 
-    // TODO(b/273656890): Investigate dynamic timeouts for device types
-    public static final long ADDITIONAL_TIMEOUT = 3_000L;
-    public static final long EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS =
-            FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS + ADDITIONAL_TIMEOUT;
-    public static final long EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS =
-            FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS + ADDITIONAL_TIMEOUT;
-    public static final long EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS =
-            FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS + ADDITIONAL_TIMEOUT;
-    public static final long EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
-            FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS + ADDITIONAL_TIMEOUT * 4;
-    public static final long EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS =
-            FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS + ADDITIONAL_TIMEOUT;
-    public static final long EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
-            FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS + ADDITIONAL_TIMEOUT;
-    public static final int EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS =
-            FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS + (int) ADDITIONAL_TIMEOUT;
-    public static final int EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS =
-            FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS + (int) ADDITIONAL_TIMEOUT;
-
-    public static final int
-            EXTENDED_AD_SELECTION_DATA_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS =
-                    FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS
-                            + (int) ADDITIONAL_TIMEOUT;
-    public static final int
-            EXTENDED_AD_SELECTION_DATA_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS =
-                    FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS
-                            + (int) ADDITIONAL_TIMEOUT;
-
-    /** Enables test to override the flag enabling ad selection filtering */
-    public static void overrideFledgeAdSelectionFilteringEnabled(boolean value) {
+    /** Enables test to override the flag enabling ad selection with contextual ads */
+    public static void overrideFledgeAdSelectionContextualAdsEnabled(boolean value) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
+                KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED,
                 Boolean.toString(value),
                 false);
     }
@@ -265,6 +236,15 @@ public final class PhFlagsFixture {
                 false);
     }
 
+    /** Enables or disables the HTTP cache */
+    public static void overrideHttpClientCacheEnabled(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE,
+                Boolean.toString(value),
+                false);
+    }
+
     public static void overrideSdkRequestPermitsPerSecond(int value) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -287,15 +267,6 @@ public final class PhFlagsFixture {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_CPC_BILLING_ENABLED,
-                Boolean.toString(value),
-                false);
-    }
-
-    /** Overrides whether the protected signals cleanup runs. */
-    public static void overrideProtectedSignalsCleanupEnabled(boolean value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED,
                 Boolean.toString(value),
                 false);
     }
@@ -355,4 +326,10 @@ public final class PhFlagsFixture {
                 Long.toString(timeoutMs),
                 false);
     }
+
+    // DO NOT ADD MORE METHODS HERE, THIS CLASS IS DEPRECATED.
+    //
+    // If you still need a new method instead of using AdServicesFlagsSetterRule or other infra,
+    // please add a TODO(b/317418539) comment on such method explaining why (and include a
+    // Bug: 317418539 line in the CL that adds it).
 }

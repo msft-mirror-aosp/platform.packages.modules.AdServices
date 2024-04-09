@@ -52,6 +52,13 @@
                      "com.android.adservices.service.customaudience.BackgroundFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+
+        <!-- FLEDGE Schedule Custom Audience Update Job -->
+        <service android:name=
+                     "com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- FLEDGE Background Key Fetch Job -->
         <service android:name=
                      "com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService"
@@ -102,6 +109,11 @@
             android:name="com.android.adservices.cobalt.CobaltJobService"
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+        <provider
+            android:name="com.android.adservices.common.AdServicesTestingProvider"
+            android:authorities="com.android.adservices.provider.testing"
+            android:exported="false"
+        />
         <uses-library android:name="android.ext.adservices" android:required="false" />
     </application>
     <instrumentation
