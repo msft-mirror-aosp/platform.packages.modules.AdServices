@@ -377,7 +377,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(
-                new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
+                new SetAppInstallAdvertisersRequest.Builder()
+                        .setAdvertisers(Collections.EMPTY_SET)
+                        .build());
 
         // Set disable seed enrollment to false
         ShellUtils.runShellCommand("device_config put adservices enable_enrollment_test_seed true");
@@ -398,7 +400,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mTestCustomAudienceClient.resetAllCustomAudienceOverrides();
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(
-                new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
+                new SetAppInstallAdvertisersRequest.Builder()
+                        .setAdvertisers(Collections.EMPTY_SET)
+                        .build());
         leaveJoinedCustomAudiences();
 
         // Reset the filtering flag
@@ -1793,7 +1797,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Allow BUYER_2 to filter on the test package
         SetAppInstallAdvertisersRequest request =
-                new SetAppInstallAdvertisersRequest(new HashSet<>(Arrays.asList(BUYER_2)));
+                new SetAppInstallAdvertisersRequest.Builder()
+                        .setAdvertisers(new HashSet<>(Arrays.asList(BUYER_2)))
+                        .build();
         ListenableFuture<Void> appInstallFuture =
                 mAdSelectionClient.setAppInstallAdvertisers(request);
         assertNull(appInstallFuture.get());
@@ -1931,8 +1937,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Allow BUYER_2 to filter on the test package
         SetAppInstallAdvertisersRequest request =
-                new SetAppInstallAdvertisersRequest(
-                        new HashSet<>(Arrays.asList(BUYER_2, INVALID_EMPTY_BUYER)));
+                new SetAppInstallAdvertisersRequest.Builder()
+                        .setAdvertisers(new HashSet<>(Arrays.asList(BUYER_2, INVALID_EMPTY_BUYER)))
+                        .build();
         mAdSelectionClient.setAppInstallAdvertisers(request);
         ListenableFuture<Void> appInstallFuture =
                 mAdSelectionClient.setAppInstallAdvertisers(request);
