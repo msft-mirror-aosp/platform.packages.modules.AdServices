@@ -4564,6 +4564,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID;
     }
 
+    /** Flag for enabling measurement registrations using ODP */
+    boolean MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION = false;
+
+    /** Return true if measurement registrations through ODP is enabled */
+    default boolean getMeasurementEnableOdpWebTriggerRegistration() {
+        return MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.

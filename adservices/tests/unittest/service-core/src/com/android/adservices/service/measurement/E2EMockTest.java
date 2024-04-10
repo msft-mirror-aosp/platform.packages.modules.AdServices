@@ -63,6 +63,7 @@ import com.android.adservices.service.measurement.attribution.AttributionJobHand
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
@@ -188,9 +189,7 @@ public abstract class E2EMockTest extends E2ETest {
         mAsyncTriggerFetcher =
                 spy(
                         new AsyncTriggerFetcher(
-                                sContext,
-                                mEnrollmentDao,
-                                mFlags));
+                                sContext, mEnrollmentDao, mFlags, new NoOdpDelegationWrapper()));
         mDebugReportApi =
                 new DebugReportApi(
                         sContext,

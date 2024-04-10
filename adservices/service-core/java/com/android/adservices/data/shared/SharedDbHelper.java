@@ -39,9 +39,7 @@ import com.android.adservices.data.enrollment.SqliteObjectMapper;
 import com.android.adservices.data.shared.migration.ISharedDbMigrator;
 import com.android.adservices.data.shared.migration.SharedDbMigratorV2;
 import com.android.adservices.data.shared.migration.SharedDbMigratorV3;
-import com.android.adservices.data.shared.migration.SharedDbMigratorV4;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -67,10 +65,7 @@ public class SharedDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adservices_shared.db");
-    public static final int DATABASE_VERSION_V3 = 3;
-    // Version 4: Adds enrolled_apis and enrolled_site columns to enrollment table, guarded by
-    // feature flag
-    public static final int DATABASE_VERSION_V4 = 4;
+    public static final int CURRENT_DATABASE_VERSION = 3;
     private static SharedDbHelper sSingleton = null;
     private final File mDbFile;
     private final int mDbVersion;
@@ -94,7 +89,7 @@ public class SharedDbHelper extends SQLiteOpenHelper {
                         new SharedDbHelper(
                                 ctx,
                                 DATABASE_NAME,
-                                getDatabaseVersionToCreate(),
+                                CURRENT_DATABASE_VERSION,
                                 DbHelper.getInstance(ctx));
             }
             return sSingleton;
@@ -143,18 +138,8 @@ public class SharedDbHelper extends SQLiteOpenHelper {
         super.onOpen(db);
     }
 
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    public List<ISharedDbMigrator> getOrderedDbMigrators() {
-        return ImmutableList.of(
-                new SharedDbMigratorV2(), new SharedDbMigratorV3(), new SharedDbMigratorV4());
-    }
-
-    /**
-     * Check whether enrolled_apis and enrolled_site column is supported in Enrollment Table. These
-     * columns are introduced in Version 4.
-     */
-    public boolean supportsEnrollmentAPISchemaColumns() {
-        return mDbVersion >= DATABASE_VERSION_V4;
+    private List<ISharedDbMigrator> getOrderedDbMigrators() {
+        return ImmutableList.of(new SharedDbMigratorV2(), new SharedDbMigratorV3());
     }
 
     /** Check whether db has all tables. */
@@ -207,12 +192,7 @@ public class SharedDbHelper extends SQLiteOpenHelper {
     }
 
     private void createSchema(SQLiteDatabase db) {
-        if (FlagsFactory.getFlags().getSharedDatabaseSchemaVersion4Enabled()) {
-            EnrollmentTables.CREATE_STATEMENTS_V2.forEach(db::execSQL);
-        } else {
-            EnrollmentTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
-        }
-
+        EnrollmentTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
         EncryptionKeyTables.CREATE_STATEMENTS_V3.forEach(db::execSQL);
     }
 
@@ -300,12 +280,5 @@ public class SharedDbHelper extends SQLiteOpenHelper {
                 oldVersion, newVersion);
         getOrderedDbMigrators()
                 .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
-    }
-
-    // Get the database version to create. It may be different depending on Flags status.
-    static int getDatabaseVersionToCreate() {
-        return FlagsFactory.getFlags().getSharedDatabaseSchemaVersion4Enabled()
-                ? DATABASE_VERSION_V4
-                : DATABASE_VERSION_V3;
     }
 }

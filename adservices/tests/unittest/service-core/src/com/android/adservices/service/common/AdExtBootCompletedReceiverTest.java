@@ -20,6 +20,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import android.content.Intent;
 
 import androidx.test.filters.SmallTest;
@@ -29,33 +31,39 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.Spy;
 
 @SmallTest
 @SpyStatic(AdServicesBackCompatInit.class)
 public class AdExtBootCompletedReceiverTest extends AdServicesExtendedMockitoTestCase {
-
     @Mock private AdServicesBackCompatInit mMockBackCompatInit;
+    @Spy private AdExtBootCompletedReceiver mSpyReceiver;
 
     @Test
-    public void testExecuteBackCompatInit() {
-        AdExtBootCompletedReceiver bootCompletedReceiver =
-                Mockito.spy(new AdExtBootCompletedReceiver());
-        doReturn(mMockBackCompatInit).when(() -> AdServicesBackCompatInit.getInstance());
+    public void testOnReceive_withNoException_executesBackCompatInit() {
+        doReturn(mMockBackCompatInit).when(AdServicesBackCompatInit::getInstance);
 
-        bootCompletedReceiver.onReceive(mContext, new Intent());
+        mSpyReceiver.onReceive(mContext, new Intent());
 
         verify(mMockBackCompatInit).initializeComponents();
     }
 
     @Test
-    public void testExecuteBackCompatInit_exception_shouldNotThrow() {
-        AdExtBootCompletedReceiver bootCompletedReceiver =
-                Mockito.spy(new AdExtBootCompletedReceiver());
-        doReturn(mMockBackCompatInit).when(() -> AdServicesBackCompatInit.getInstance());
+    public void testOnReceive_withExceptionThrown_handlesGracefully() {
+        doReturn(mMockBackCompatInit).when(AdServicesBackCompatInit::getInstance);
         doThrow(IllegalArgumentException.class).when(mMockBackCompatInit).initializeComponents();
 
         // No exception expected, so no need to explicitly handle any exceptions here.
-        bootCompletedReceiver.onReceive(mContext, new Intent());
+        mSpyReceiver.onReceive(mContext, new Intent());
+    }
+
+    @Test
+    public void testClassNameMatchesExpectedValue() {
+        // IMPORTANT: AdExtBootCompletedReceiver class name is hardcoded in places
+        // like AdExtServicesManifest. If the name changes, ensure changes are made in
+        // unison across all appropriate places.
+        assertWithMessage("AdExtBootCompletedReceiver class name")
+                .that(AdExtBootCompletedReceiver.class.getName())
+                .isEqualTo("com.android.adservices.service.common.AdExtBootCompletedReceiver");
     }
 }
