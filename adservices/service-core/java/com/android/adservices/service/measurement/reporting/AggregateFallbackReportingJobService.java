@@ -18,7 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.AGGREGATE_REPORTING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -30,7 +30,6 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
@@ -40,7 +39,7 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -70,7 +69,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch()) {
@@ -88,8 +87,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
                         () -> {
                             processPendingReports();
 
-                            AdservicesJobServiceLogger.getInstance(
-                                            AggregateFallbackReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
                                             /* isSuccessful= */ true,
@@ -116,7 +114,6 @@ public final class AggregateFallbackReportingJobService extends JobService {
                 DatastoreManager datastoreManager =
                         DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new AggregateReportingJobHandler(
-                                EnrollmentDao.getInstance(getApplicationContext()),
                                 datastoreManager,
                                 new AggregateEncryptionKeyManager(
                                         datastoreManager, getApplicationContext()),
@@ -142,7 +139,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(
                         params, MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -211,7 +208,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID, skipReason);
         }
 

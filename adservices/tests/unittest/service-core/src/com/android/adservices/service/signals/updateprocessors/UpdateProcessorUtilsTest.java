@@ -28,9 +28,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -40,6 +43,9 @@ import java.util.HashSet;
 public class UpdateProcessorUtilsTest {
 
     private static final String COMMAND = "put";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testCastToJSONArraySuccess() {

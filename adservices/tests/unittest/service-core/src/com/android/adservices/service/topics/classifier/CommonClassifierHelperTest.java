@@ -37,6 +37,7 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
@@ -98,7 +99,10 @@ public class CommonClassifierHelperTest {
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
     @Mock AdServicesLogger mLogger;
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(FlagsFactory.class)

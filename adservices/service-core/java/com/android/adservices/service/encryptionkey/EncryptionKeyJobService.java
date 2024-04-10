@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.encryptionkey;
 
-import static com.android.adservices.spe.AdservicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -33,7 +33,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -61,7 +61,7 @@ public class EncryptionKeyJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(ENCRYPTION_KEY_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(ENCRYPTION_KEY_JOB_ID);
 
         if (FlagsFactory.getFlags().getEncryptionKeyPeriodicFetchKillSwitch()) {
             LogUtil.e(
@@ -75,7 +75,7 @@ public class EncryptionKeyJobService extends JobService {
                 sBlockingExecutor.submit(
                         () -> {
                             fetchAndUpdateEncryptionKeys();
-                            AdservicesJobServiceLogger.getInstance(EncryptionKeyJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             ENCRYPTION_KEY_JOB_ID,
                                             /* isSuccessful */ true,
@@ -93,7 +93,7 @@ public class EncryptionKeyJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, ENCRYPTION_KEY_JOB_ID, shouldRetry);
         return shouldRetry;
     }

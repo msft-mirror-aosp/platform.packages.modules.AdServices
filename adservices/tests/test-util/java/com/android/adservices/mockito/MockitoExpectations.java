@@ -16,6 +16,7 @@
 
 package com.android.adservices.mockito;
 
+import static com.android.adservices.shared.testing.SyncCallback.DEFAULT_TIMEOUT_MS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -25,6 +26,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,13 +35,19 @@ import android.app.job.JobService;
 import android.content.Context;
 import android.util.Log;
 
-import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
+import com.android.adservices.shared.util.Clock;
+import com.android.adservices.spe.AdServicesJobInfo;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesStatsdJobServiceLogger;
+
+import java.util.concurrent.Executors;
 
 /** Provides Mockito expectation for common calls. */
 public final class MockitoExpectations {
@@ -47,7 +55,7 @@ public final class MockitoExpectations {
     private static final String TAG = MockitoExpectations.class.getSimpleName();
 
     /**
-     * Not a expectation itself, but it sets a mock as the application context on {@link
+     * Not an expectation itself, but it sets a mock as the application context on {@link
      * ApplicationContextSingleton}, and returns it.
      */
     public static Context setApplicationContextSingleton() {
@@ -65,7 +73,18 @@ public final class MockitoExpectations {
      */
     public static NoFailureSyncCallback<ApiCallStats> mockLogApiCallStats(
             AdServicesLogger adServicesLogger) {
-        NoFailureSyncCallback<ApiCallStats> callback = new NoFailureSyncCallback<>();
+        return mockLogApiCallStats(adServicesLogger, DEFAULT_TIMEOUT_MS);
+    }
+
+    /**
+     * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
+     * object that blocks until that call is made. This method allows to pass in a customized
+     * timeout.
+     */
+    public static NoFailureSyncCallback<ApiCallStats> mockLogApiCallStats(
+            AdServicesLogger adServicesLogger, int timeoutMs) {
+        NoFailureSyncCallback<ApiCallStats> callback = new NoFailureSyncCallback<>(timeoutMs);
+
         doAnswer(
                         inv -> {
                             Log.v(TAG, "mockLogApiCallStats(): inv=" + inv);
@@ -79,8 +98,8 @@ public final class MockitoExpectations {
         return callback;
     }
 
-    /** Verifies methods in {@link AdservicesJobServiceLogger} were never called. */
-    public static void verifyLoggingNotHappened(AdservicesJobServiceLogger logger) {
+    /** Verifies methods in {@link AdServicesJobServiceLogger} were never called. */
+    public static void verifyLoggingNotHappened(AdServicesJobServiceLogger logger) {
         // Mock logger to call actual public logging methods. Because when the feature flag of
         // logging is on, these methods are actually called, but the internal logging methods will
         // not be invoked.
@@ -90,9 +109,9 @@ public final class MockitoExpectations {
         verify(logger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
-    /** Verifies {@link AdservicesJobServiceLogger#recordJobSkipped(int, int)} is called once. */
+    /** Verifies {@link AdServicesJobServiceLogger#recordJobSkipped(int, int)} is called once. */
     public static void verifyBackgroundJobsSkipLogged(
-            AdservicesJobServiceLogger logger, JobServiceLoggingCallback callback)
+            AdServicesJobServiceLogger logger, JobServiceLoggingCallback callback)
             throws InterruptedException {
         callback.assertLoggingFinished();
 
@@ -101,7 +120,7 @@ public final class MockitoExpectations {
 
     /** Verifies the logging flow of a successful {@link JobService}'s execution is called once. */
     public static void verifyJobFinishedLogged(
-            AdservicesJobServiceLogger logger,
+            AdServicesJobServiceLogger logger,
             JobServiceLoggingCallback onStartJobCallback,
             JobServiceLoggingCallback onJobDoneCallback)
             throws InterruptedException {
@@ -110,11 +129,11 @@ public final class MockitoExpectations {
     }
 
     /**
-     * Verifies {@link AdservicesJobServiceLogger#recordOnStopJob(JobParameters, int, boolean)} is
+     * Verifies {@link AdServicesJobServiceLogger#recordOnStopJob(JobParameters, int, boolean)} is
      * called once.
      */
     public static void verifyOnStopJobLogged(
-            AdservicesJobServiceLogger logger, JobServiceLoggingCallback callback)
+            AdServicesJobServiceLogger logger, JobServiceLoggingCallback callback)
             throws InterruptedException {
         callback.assertLoggingFinished();
 
@@ -128,12 +147,40 @@ public final class MockitoExpectations {
         when(flag.getBackgroundJobsLoggingKillSwitch()).thenReturn(overrideValue);
     }
 
+    /** Mocks a call to {@link Flags#getCobaltLoggingEnabled()}, returning overrideValue. */
+    public static void mockCobaltLoggingEnabled(Flags flags, boolean enabled) {
+        when(flags.getCobaltLoggingEnabled()).thenReturn(enabled);
+    }
+
     /**
-     * Mock {@link AdservicesJobServiceLogger#persistJobExecutionData(int, long)} to wait for it to
+     * Mocks a call to {@link Flags#getAppNameApiErrorCobaltLoggingEnabled()}, returning
+     * overrideValue.
+     */
+    public static void mockAppNameApiErrorCobaltLoggingEnabled(Flags flags, boolean enabled) {
+        when(flags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(enabled);
+    }
+
+    /**
+     * Mocks a call to {@link Flags#getAdservicesReleaseStageForCobalt()}, returning {@code DEBUG}
+     * as the testing release stage.
+     */
+    public static void mockAdservicesReleaseStageForCobalt(Flags flags) {
+        when(flags.getAdservicesReleaseStageForCobalt()).thenReturn("DEBUG");
+    }
+
+    /** Mocks calls to override Cobalt app name api error logging related flags. */
+    public static void mockCobaltLoggingFlags(Flags flags, boolean override) {
+        mockCobaltLoggingEnabled(flags, override);
+        mockAppNameApiErrorCobaltLoggingEnabled(flags, override);
+        mockAdservicesReleaseStageForCobalt(flags);
+    }
+
+    /**
+     * Mock {@link AdServicesJobServiceLogger#persistJobExecutionData(int, long)} to wait for it to
      * complete.
      */
     public static JobServiceLoggingCallback syncPersistJobExecutionData(
-            AdservicesJobServiceLogger logger) {
+            AdServicesJobServiceLogger logger) {
         JobServiceLoggingCallback callback = new JobServiceLoggingCallback();
         doAnswer(
                         invocation -> {
@@ -152,15 +199,15 @@ public final class MockitoExpectations {
      * complete.
      *
      * <ul>
-     *   <li>{@link AdservicesJobServiceLogger#recordOnStopJob(JobParameters, int, boolean)}
-     *   <li>{@link AdservicesJobServiceLogger#recordJobSkipped(int, int)}
-     *   <li>{@link AdservicesJobServiceLogger#recordJobFinished(int, boolean, boolean)}
+     *   <li>{@link AdServicesJobServiceLogger#recordOnStopJob(JobParameters, int, boolean)}
+     *   <li>{@link AdServicesJobServiceLogger#recordJobSkipped(int, int)}
+     *   <li>{@link AdServicesJobServiceLogger#recordJobFinished(int, boolean, boolean)}
      * </ul>
      *
      * @throws IllegalStateException if there is more than one method is called.
      */
     public static JobServiceLoggingCallback syncLogExecutionStats(
-            AdservicesJobServiceLogger logger) {
+            AdServicesJobServiceLogger logger) {
         JobServiceLoggingCallback callback = new JobServiceLoggingCallback();
 
         doAnswer(
@@ -194,7 +241,7 @@ public final class MockitoExpectations {
      * Verify the logging methods in {@link JobService#onStartJob(JobParameters)} has been invoked.
      */
     public static void verifyOnStartJobLogged(
-            AdservicesJobServiceLogger logger, JobServiceLoggingCallback callback)
+            AdServicesJobServiceLogger logger, JobServiceLoggingCallback callback)
             throws InterruptedException {
         callback.assertLoggingFinished();
 
@@ -206,11 +253,25 @@ public final class MockitoExpectations {
      * invoked.
      */
     public static void verifyOnJobFinishedLogged(
-            AdservicesJobServiceLogger logger, JobServiceLoggingCallback callback)
+            AdServicesJobServiceLogger logger, JobServiceLoggingCallback callback)
             throws InterruptedException {
         callback.assertLoggingFinished();
 
         verify(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+    }
+
+    /** Get a spied instance of {@link AdServicesJobServiceLogger}. */
+    public static AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
+            Context context, Flags flags) {
+        return spy(
+                new AdServicesJobServiceLogger(
+                        context,
+                        Clock.getInstance(),
+                        mock(AdServicesStatsdJobServiceLogger.class),
+                        mock(AdServicesErrorLogger.class),
+                        Executors.newCachedThreadPool(),
+                        AdServicesJobInfo.getJobIdToJobNameMap(),
+                        flags));
     }
 
     private MockitoExpectations() {
@@ -218,7 +279,7 @@ public final class MockitoExpectations {
     }
 
     private static void callRealPublicMethodsForBackgroundJobLogging(
-            AdservicesJobServiceLogger logger) {
+            AdServicesJobServiceLogger logger) {
         doCallRealMethod().when(logger).recordOnStartJob(anyInt());
         doCallRealMethod().when(logger).recordOnStopJob(any(), anyInt(), anyBoolean());
         doCallRealMethod().when(logger).recordJobSkipped(anyInt(), anyInt());

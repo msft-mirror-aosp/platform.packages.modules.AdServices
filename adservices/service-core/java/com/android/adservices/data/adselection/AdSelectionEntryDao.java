@@ -82,13 +82,13 @@ public abstract class AdSelectionEntryDao {
     /**
      * Add an ad selection override for Buyers' decision logic
      *
-     * @param buyersDecisionLogicOverride is an override for the ad_selection_buyer_logic_overrides
-     *     If a {@link DBBuyerDecisionOverride} object with the {@code adSelectionConfigId} already
-     *     exists, this will replace the existing object.
+     * @param perBuyerDecisionLogicOverride is an override for the
+     *     ad_selection_buyer_logic_overrides. If a {@link DBBuyerDecisionOverride} object with the
+     *     {@code adSelectionConfigId} already exists, this will replace the existing object.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    public abstract void persistBuyersDecisionLogicOverride(
-            List<DBBuyerDecisionOverride> buyersDecisionLogicOverride);
+    public abstract void persistPerBuyerDecisionLogicOverride(
+            List<DBBuyerDecisionOverride> perBuyerDecisionLogicOverride);
 
     /**
      * Adds a list of registered ad interactions to the table registered_ad_interactions
@@ -327,7 +327,7 @@ public abstract class AdSelectionEntryDao {
                     + " ad_selection_config_id = :adSelectionConfigId AND app_package_name ="
                     + " :appPackageName")
     @Nullable
-    public abstract List<DBBuyerDecisionOverride> getBuyersDecisionLogicOverride(
+    public abstract List<DBBuyerDecisionOverride> getPerBuyerDecisionLogicOverride(
             String adSelectionConfigId, String appPackageName);
 
     /**
@@ -829,10 +829,41 @@ public abstract class AdSelectionEntryDao {
     }
 
     /** Reads ReportingData from DB associated with the given adSelectionId. */
-    public ReportingData getReportingDataForId(long adSelectionId) {
+    public ReportingData getReportingDataForId(long adSelectionId, boolean shouldUseUnifiedTables) {
         if (doesAdSelectionIdExistInInitializationTable(adSelectionId)) {
-            return getReportingUris(adSelectionId);
-        } else if (doesAdSelectionIdExist(adSelectionId)) {
+            ReportingData uris = getReportingUris(adSelectionId);
+            if (!Objects.isNull(uris)) {
+                // Only return if Uris are found, otherwise try to compute if unified flag is on
+                return uris;
+            } else if (shouldUseUnifiedTables) {
+                DBReportingComputationInfo reportingComputationInfoById =
+                        getReportingComputationInfoById(adSelectionId);
+                ReportingComputationData reportingComputationData =
+                        ReportingComputationData.builder()
+                                .setBuyerDecisionLogicJs(
+                                        reportingComputationInfoById.getBuyerDecisionLogicJs())
+                                .setBuyerDecisionLogicUri(
+                                        reportingComputationInfoById.getBiddingLogicUri())
+                                .setSellerContextualSignals(
+                                        parseAdSelectionSignalsOrEmpty(
+                                                reportingComputationInfoById
+                                                        .getSellerContextualSignals()))
+                                .setBuyerContextualSignals(
+                                        parseAdSelectionSignalsOrEmpty(
+                                                reportingComputationInfoById
+                                                        .getBuyerContextualSignals()))
+                                .setWinningCustomAudienceSignals(
+                                        reportingComputationInfoById.getCustomAudienceSignals())
+                                .setWinningRenderUri(
+                                        reportingComputationInfoById.getWinningAdRenderUri())
+                                .setWinningBid(reportingComputationInfoById.getWinningAdBid())
+                                .build();
+                return ReportingData.builder()
+                        .setReportingComputationData(reportingComputationData)
+                        .build();
+            }
+        } else if (!shouldUseUnifiedTables && doesAdSelectionIdExist(adSelectionId)) {
+            // only look in old tables if unified tables flag is off
             DBAdSelectionEntry adSelectionEntry = getAdSelectionEntityById(adSelectionId);
             ReportingComputationData reportingComputationData =
                     ReportingComputationData.builder()
@@ -852,10 +883,9 @@ public abstract class AdSelectionEntryDao {
             return ReportingData.builder()
                     .setReportingComputationData(reportingComputationData)
                     .build();
-        } else {
-            // no reporting Info for this ad selection id
-            return null;
         }
+        // no reporting Info for this ad selection id
+        return null;
     }
 
     /**

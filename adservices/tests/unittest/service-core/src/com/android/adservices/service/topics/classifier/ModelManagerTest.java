@@ -39,13 +39,13 @@ import static org.mockito.Mockito.when;
 import android.content.Context;
 import android.content.res.AssetManager;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +54,6 @@ import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -71,9 +70,12 @@ import java.util.List;
 import java.util.Map;
 
 /** Model Manager Test {@link ModelManager}. */
-public class ModelManagerTest {
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(ModelManager.class)
+@SpyStatic(ErrorLogUtil.class)
+@RequiresSdkLevelAtLeastS
+public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
 
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     // Change this to a higher number when classifier_test_assets_metadata build_id changed.
     private static final int CLIENT_FILE_GROUP_BUILD_ID = 9;
     private ImmutableList<Integer> mProductionLabels;
@@ -101,16 +103,8 @@ public class ModelManagerTest {
     private static final String GET_ASSETS_METADATA_MAP_METHOD_NAME = "getAssetsMetadataMap";
     private static final String GET_APPS_TOPIC_MAP_METHOD_NAME = "getAppsTopicMap";
 
-    @Mock SynchronousFileStorage mMockFileStorage;
-    @Mock Map<String, ClientFile> mMockDownloadedFiles;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMock =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(ModelManager.class)
-                    .spyStatic(ErrorLogUtil.class)
-                    .build();
+    @Mock private SynchronousFileStorage mMockFileStorage;
+    @Mock private Map<String, ClientFile> mMockDownloadedFiles;
 
     @Before
     public void setUp() {
@@ -214,7 +208,7 @@ public class ModelManagerTest {
         // classification because downloaded model build id is bigger.
         ClientFileGroup clientFileGroup =
                 ClientFileGroup.newBuilder().setBuildId(CLIENT_FILE_GROUP_BUILD_ID).build();
-        doReturn(clientFileGroup).when(() -> ModelManager.getClientFileGroup(any(Context.class)));
+        doReturn(clientFileGroup).when(() -> ModelManager.getClientFileGroup());
 
         mProductionModelManager =
                 new ModelManager(

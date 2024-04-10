@@ -46,11 +46,12 @@ import android.os.Process;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -65,6 +66,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @RequiresSdkLevelAtLeastS // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+@SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
+@SetFlagDisabled(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE)
+@SetFlagDisabled(KEY_ISOLATE_MAX_HEAP_SIZE_BYTES)
 public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -98,16 +102,6 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
 
     private TestAdSelectionClient mTestAdSelectionClient;
     private boolean mIsDebugMode;
-
-    // TODO(b/317411225): remove this method and annotate the class with
-    // @SetFlagEnabled / @SetFlagDisabled instead
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return super.getAdServicesFlagsSetterRule()
-                .setFlag(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE, false)
-                .setFlag(KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, false)
-                .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true);
-    }
 
     @Before
     public void setup() {

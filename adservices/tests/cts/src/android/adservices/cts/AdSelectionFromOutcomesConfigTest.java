@@ -30,11 +30,17 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Collections;
 
 public class AdSelectionFromOutcomesConfigTest {
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidAdSelectionFromOutcomesConfigSuccess() {

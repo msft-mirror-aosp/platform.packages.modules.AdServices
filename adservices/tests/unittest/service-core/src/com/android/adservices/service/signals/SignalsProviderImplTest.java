@@ -21,6 +21,7 @@ import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,6 +49,9 @@ public class SignalsProviderImplTest {
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
 
     private SignalsProviderImpl mSignalStorage;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

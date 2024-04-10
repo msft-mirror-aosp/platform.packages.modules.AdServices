@@ -22,18 +22,20 @@ import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.os.LimitExceededException;
 
-import androidx.annotation.NonNull;
+import androidx.test.filters.FlakyTest;
+
+import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
+import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
 
@@ -68,59 +70,46 @@ public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 322812739)
     public void testAdIdCompatibleManager_verifyRateLimitReached() throws Exception {
-        final AdIdCompatibleManager adIdCompatibleManager = new AdIdCompatibleManager(sContext);
+        AdIdCompatibleManager adIdCompatibleManager = new AdIdCompatibleManager(sContext);
+        AdServicesOutcomeReceiverForTests<AdId> callback;
 
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = flags.getAdIdRequestPerSecond();
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = flags.getAdIdRequestPerSecond();
         for (int i = 0; i < requestPerSecond; i++) {
-            assertThat(getAdIdAndVerifyRateLimitReached(adIdCompatibleManager)).isFalse();
+            callback = new AdServicesOutcomeReceiverForTests<>();
+            adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
+            callback.assertSuccess();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
         // triggering one more call without checking the outcome.
-        getAdIdAndVerifyRateLimitReached(adIdCompatibleManager);
+        callback = new AdServicesOutcomeReceiverForTests<>();
+        adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
 
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit = getAdIdAndVerifyRateLimitReached(adIdCompatibleManager);
-        final boolean executedInLessThanOneSec =
+        callback = new AdServicesOutcomeReceiverForTests<>();
+        adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertThat(reachedLimit).isTrue();
+            callback.assertFailure(LimitExceededException.class);
         }
     }
 
-    private boolean getAdIdAndVerifyRateLimitReached(AdIdCompatibleManager manager)
-            throws InterruptedException {
-        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+    @Test
+    @RequiresLowRamDevice
+    public void testAdIdCompatibleManagerTest_whenDeviceNotSupported() throws Exception {
+        AdIdCompatibleManager adIdCompatibleManager = new AdIdCompatibleManager(sContext);
+        AdServicesOutcomeReceiverForTests<AdId> callback =
+                new AdServicesOutcomeReceiverForTests<>();
 
-        manager.getAdId(
-                CALLBACK_EXECUTOR,
-                createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+        adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
 
-        countDownLatch.await();
-        return reachedLimit.get();
-    }
-
-    private AdServicesOutcomeReceiver<AdId, Exception> createCallbackWithCountdownOnLimitExceeded(
-            CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
-        return new AdServicesOutcomeReceiver<>() {
-            @Override
-            public void onResult(@NonNull AdId result) {
-                countDownLatch.countDown();
-            }
-
-            @Override
-            public void onError(@NonNull Exception error) {
-                if (error instanceof LimitExceededException) {
-                    reachedLimit.set(true);
-                }
-                countDownLatch.countDown();
-            }
-        };
+        callback.assertFailure(ServiceUnavailableException.class);
     }
 }

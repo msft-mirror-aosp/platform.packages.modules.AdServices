@@ -164,29 +164,6 @@ public class AppConsentStorageManager implements IConsentStorage {
         }
     }
 
-    /**
-     * Retrieves the default AdId state.
-     *
-     * @return true if the AdId is enabled by default, false otherwise.
-     */
-    @Override
-    public boolean getDefaultAdIdState() {
-        return Objects.requireNonNullElse(
-                mDatastore.get(ConsentConstants.DEFAULT_AD_ID_STATE), false);
-    }
-
-    /**
-     * Retrieves the PP API default consent.
-     *
-     * @return AdServicesApiConsent.
-     */
-    @Override
-    public AdServicesApiConsent getDefaultConsent(AdServicesApiType apiType) {
-        return AdServicesApiConsent.getConsent(
-                Objects.requireNonNullElse(
-                        mDatastore.get(apiType.toDefaultConsentDatastoreKey()), false));
-    }
-
     /** Returns current enrollment channel. */
     @Override
     public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
@@ -306,19 +283,6 @@ public class AppConsentStorageManager implements IConsentStorage {
         mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account);
     }
 
-    /** Saves the default AdId state bit to data stores based on source of truth. */
-    @Override
-    public void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException {
-        mDatastore.put(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState);
-    }
-
-    /** Saves the PP API default consent of a user. */
-    @Override
-    public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent)
-            throws IOException {
-        mDatastore.put(apiType.toDefaultConsentDatastoreKey(), defaultConsent);
-    }
-
     /**
      * Saves information to the storage that GA UX notification was displayed for the first time to
      * the user.
@@ -336,6 +300,15 @@ public class AppConsentStorageManager implements IConsentStorage {
     public void recordNotificationDisplayed(boolean wasNotificationDisplayed) throws IOException {
         // test
         mDatastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, wasNotificationDisplayed);
+    }
+
+    /**
+     * Saves information to the storage that Pas notification was displayed for the first time to
+     * the user.
+     */
+    @Override
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) throws IOException {
+        mDatastore.put(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, wasPasDisplayed);
     }
 
     /** Saves information to the storage that user interacted with consent manually. */
@@ -447,5 +420,24 @@ public class AppConsentStorageManager implements IConsentStorage {
                 mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED), false);
     }
 
+    @Override
+    public boolean wasPasNotificationDisplayed() throws IOException {
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE), false);
+    }
 
+    /** Set the measurement data reset activity happens based on consent_source_of_truth. */
+    @Override
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) throws IOException {
+        mDatastore.put(ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset);
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    @Override
+    public boolean isMeasurementDataReset() throws IOException {
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.IS_MEASUREMENT_DATA_RESET), false);
+    }
 }

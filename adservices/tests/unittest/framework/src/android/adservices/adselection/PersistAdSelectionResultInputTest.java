@@ -25,6 +25,9 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class PersistAdSelectionResultInputTest {
@@ -35,6 +38,9 @@ public class PersistAdSelectionResultInputTest {
     private static final byte[] AD_SELECTION_RESULT = new byte[] {1, 2, 3, 4};
     private static final byte[] ANOTHER_AD_SELECTION_RESULT = new byte[] {5, 6, 7, 8};
     private static final long AD_SELECTION_ID = 12345;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildPersistAdSelectionResultInput() {

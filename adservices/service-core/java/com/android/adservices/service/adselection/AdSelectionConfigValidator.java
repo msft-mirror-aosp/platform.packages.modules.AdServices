@@ -111,7 +111,7 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
         }
 
         violations.addAll(
-                validateSignedContextualAds(adSelectionConfig.getBuyerSignedContextualAds()));
+                validateSignedContextualAds(adSelectionConfig.getPerBuyerSignedContextualAds()));
     }
 
     private ImmutableList<String> validateSignedContextualAds(

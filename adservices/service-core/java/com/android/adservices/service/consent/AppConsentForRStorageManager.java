@@ -163,6 +163,16 @@ public class AppConsentForRStorageManager extends AppConsentStorageManager {
                 getAdExtExceptionMessage(/* illegalAction= */ "store if beta notif was displayed"));
     }
 
+    /**
+     * Saves information to the storage that Pas notification was displayed for the first time to
+     * the user.
+     */
+    @Override
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) throws IOException {
+        throw new IllegalStateException(
+                getAdExtExceptionMessage(/* illegalAction= */ "store if PAS notif was displayed"));
+    }
+
     /** Records user manual interaction bit. */
     @Override
     public void recordUserManualInteractionWithConsent(int interaction) {
@@ -215,19 +225,6 @@ public class AppConsentForRStorageManager extends AppConsentStorageManager {
                         /* illegalAction= */ "check if consent has been revoked for" + " app"));
     }
 
-    @Override
-    public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent)
-            throws IOException {
-        if (apiType == AdServicesApiType.MEASUREMENTS) {
-            super.recordDefaultConsent(apiType, defaultConsent);
-        } else {
-            throw new IllegalStateException(
-                    getAdExtExceptionMessage(
-                            /* illegalAction= */ "record default consent for "
-                                    + apiType.toString()));
-        }
-    }
-
     /** Stores isU18Account bit in AdExtData. */
     @Override
     public void setU18Account(boolean isU18Account) {
@@ -256,6 +253,12 @@ public class AppConsentForRStorageManager extends AppConsentStorageManager {
     @Override
     public boolean wasU18NotificationDisplayed() {
         return mAdExtDataManager.getNotificationDisplayed();
+    }
+
+    /** PAS update not supported on Android R yet. */
+    @Override
+    public boolean wasPasNotificationDisplayed() {
+        return false;
     }
 
     private static String getAdExtExceptionMessage(String illegalAction) {

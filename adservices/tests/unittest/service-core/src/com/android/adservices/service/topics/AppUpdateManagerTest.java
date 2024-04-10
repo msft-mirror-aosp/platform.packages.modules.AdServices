@@ -45,9 +45,11 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -80,6 +82,9 @@ public class AppUpdateManagerTest {
 
     @Mock PackageManager mMockPackageManager;
     @Mock Flags mMockFlags;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

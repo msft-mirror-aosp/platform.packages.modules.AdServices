@@ -22,6 +22,9 @@ import static org.junit.Assert.assertThrows;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -42,6 +45,9 @@ public final class GetTopicsResponseTest {
                             /* mKeyIdentifier */ "publicKey",
                             /* mEncapsulatedKey */ "encapsulatedKey"
                                     .getBytes(StandardCharsets.UTF_8)));
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetTopicsResponseBuilder_nullableThrows() {

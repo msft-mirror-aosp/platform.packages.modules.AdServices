@@ -26,7 +26,9 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.internal.annotations.VisibleForTesting;
@@ -39,7 +41,6 @@ import com.google.common.collect.ImmutableList;
  * interacting with the {@link ConsentManager} that persists and changes the topics data in a
  * storage.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsViewModel extends AndroidViewModel {
 
@@ -48,6 +49,8 @@ public class BlockedTopicsViewModel extends AndroidViewModel {
     private final MutableLiveData<ImmutableList<Topic>> mBlockedTopics;
     private final ConsentManager mConsentManager;
 
+    private final ConsentManagerV2 mConsentManagerV2;
+
     /** UI event triggered by view model */
     public enum BlockedTopicsViewModelUiEvent {
         RESTORE_TOPIC,
@@ -55,16 +58,23 @@ public class BlockedTopicsViewModel extends AndroidViewModel {
 
     public BlockedTopicsViewModel(@NonNull Application application) {
         super(application);
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            mConsentManagerV2 = ConsentManagerV2.getInstance();
+            mConsentManager = null;
+        } else {
+            mConsentManager = ConsentManager.getInstance();
+            mConsentManagerV2 = null;
+        }
 
-        mConsentManager = ConsentManager.getInstance(application);
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
     }
 
     @VisibleForTesting
-    public BlockedTopicsViewModel(@NonNull Application application, ConsentManager consentManager) {
+    public BlockedTopicsViewModel(
+            @NonNull Application application, ConsentManagerV2 consentManagerV2) {
         super(application);
-
-        mConsentManager = consentManager;
+        mConsentManagerV2 = consentManagerV2;
+        mConsentManager = null;
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
     }
 
@@ -83,7 +93,11 @@ public class BlockedTopicsViewModel extends AndroidViewModel {
      * @param topic the topic to be restored.
      */
     public void restoreTopicConsent(Topic topic) {
-        mConsentManager.restoreConsentForTopic(topic);
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            mConsentManagerV2.restoreConsentForTopic(topic);
+        } else {
+            mConsentManager.restoreConsentForTopic(topic);
+        }
         refresh();
     }
 
@@ -120,6 +134,10 @@ public class BlockedTopicsViewModel extends AndroidViewModel {
     }
 
     private ImmutableList<Topic> getBlockedTopicsFromConsentManager() {
-        return mConsentManager.getTopicsWithRevokedConsent();
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return mConsentManagerV2.getTopicsWithRevokedConsent();
+        } else {
+            return mConsentManager.getTopicsWithRevokedConsent();
+        }
     }
 }

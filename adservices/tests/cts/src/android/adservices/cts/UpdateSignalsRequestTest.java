@@ -24,7 +24,9 @@ import android.adservices.signals.UpdateSignalsInput;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.net.Uri;
 
-import org.junit.Ignore;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -33,15 +35,24 @@ import org.junit.Test;
  * <p>If this class is un-ignored {@link android.adservices.signals.UpdateSignalsInputTest} should
  * be deleted.
  */
-@Ignore
 public class UpdateSignalsRequestTest {
 
     private static final Uri URI = Uri.parse("https://example.com/somecoolsignals");
     private static final Uri OTHER_URI = Uri.parse("https://example.com/lesscoolsignals");
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testBuild() {
         UpdateSignalsRequest request = new UpdateSignalsRequest.Builder(URI).build();
+        assertEquals(URI, request.getUpdateUri());
+    }
+
+    @Test
+    public void testSetUpdateUri() {
+        UpdateSignalsRequest request =
+                new UpdateSignalsRequest.Builder(URI).setUpdateUri(URI).build();
         assertEquals(URI, request.getUpdateUri());
     }
 

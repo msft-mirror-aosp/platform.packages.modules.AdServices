@@ -18,7 +18,6 @@ package com.android.adservices.service.topics.classifier;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -27,10 +26,12 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.CacheManager;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
@@ -40,6 +41,7 @@ import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -74,6 +76,9 @@ public class PrecomputedClassifierTest {
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
     @Mock AdServicesLogger mLogger;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
@@ -85,9 +90,8 @@ public class PrecomputedClassifierTest {
                         .strictness(Strictness.WARN)
                         .startMocking();
 
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(null)
-                .when(() -> ModelManager.getDownloadedFiles(any(Context.class)));
+        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(null).when(() -> ModelManager.getDownloadedFiles());
 
         mModelManager =
                 new ModelManager(

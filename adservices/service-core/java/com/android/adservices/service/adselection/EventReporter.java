@@ -65,7 +65,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the Event Reporting logic */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class EventReporter {
     public static final String NO_MATCH_FOUND_IN_AD_SELECTION_DB =
@@ -255,7 +254,10 @@ public abstract class EventReporter {
         }
     }
 
-    void notifyFailureToCaller(@NonNull ReportInteractionCallback callback, @NonNull Throwable t) {
+    void notifyFailureToCaller(
+            @NonNull String callerAppPackageName,
+            @NonNull ReportInteractionCallback callback,
+            @NonNull Throwable t) {
         int resultCode;
 
         boolean isFilterException = t instanceof FilterException;
@@ -272,7 +274,8 @@ public abstract class EventReporter {
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         // Note: Failure is logged before the callback to ensure deterministic testing.
         if (!isFilterException) {
-            mAdServicesLogger.logFledgeApiCallStats(LOGGING_API_NAME, resultCode, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    LOGGING_API_NAME, callerAppPackageName, resultCode, /*latencyMs=*/ 0);
         }
 
         try {

@@ -34,6 +34,7 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -69,6 +70,9 @@ public class AuctionResultValidatorTest {
                 .setScore(VALID_SCORE)
                 .setBid(VALID_BID);
     }
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

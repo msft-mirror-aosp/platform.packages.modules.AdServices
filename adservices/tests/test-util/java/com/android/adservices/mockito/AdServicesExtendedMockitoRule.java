@@ -16,10 +16,11 @@
 
 package com.android.adservices.mockito;
 
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.shouldClearInlineMocksAfterTest;
 import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import android.app.ActivityManager;
 import android.os.Binder;
 import android.os.Process;
 import android.util.Log;
@@ -27,9 +28,12 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.LogEntry.Level;
 import com.android.adservices.shared.testing.common.TestHelper;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 
@@ -112,13 +116,13 @@ public class AdServicesExtendedMockitoRule
 
     /**
      * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
-     * FlagsFactory#getFlagsForTest()}
+     * FakeFlagsFactory#getFlagsForTest()}
      *
      * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
      *     equivalent annotations) on {@link FlagsFactory}.
      */
-    public final void mockGetFlagsForTesting(Flags mockedFlags) {
-        mockGetFlags(FlagsFactory.getFlagsForTest());
+    public final void mockGetFlagsForTesting() {
+        mockGetFlags(FakeFlagsFactory.getFlagsForTest());
     }
 
     /**
@@ -145,6 +149,81 @@ public class AdServicesExtendedMockitoRule
         logV("mockGetCallingUidOrThrow(Process.myUid=%d)", uid);
         mockBinderGetCallingUidOrThrow(uid);
     }
+
+    /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
+    public final void mockIsAtLeastR(boolean isIt) {
+        logV("mockIsAtLeastR(%b)", isIt);
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(isIt).when(SdkLevel::isAtLeastR);
+    }
+
+    /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
+    public final void mockIsAtLeastS(boolean isIt) {
+        logV("mockIsAtLeastS(%b)", isIt);
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(isIt).when(SdkLevel::isAtLeastS);
+    }
+
+    /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
+    public final void mockIsAtLeastT(boolean isIt) {
+        logV("mockIsAtLeastT(%b)", isIt);
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(isIt).when(SdkLevel::isAtLeastT);
+    }
+
+    /** Mocks a call to SDK level to return R */
+    public final void mockSdkLevelR() {
+        logV("mockSdkLevelR()");
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(true).when(SdkLevel::isAtLeastR);
+        doReturn(false).when(SdkLevel::isAtLeastS);
+        doReturn(false).when(SdkLevel::isAtLeastSv2);
+        doReturn(false).when(SdkLevel::isAtLeastT);
+        doReturn(false).when(SdkLevel::isAtLeastU);
+    }
+
+    /**
+     * Mocks a call to {@link ActivityManager#getCurrentUser()}, returning {@code user}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link ActivityManager}.
+     */
+    public final void mockGetCurrentUser(int user) {
+        logV("mockGetCurrentUser(user=%d)", user);
+        assertSpiedOrMocked(ActivityManager.class);
+        doReturn(user).when(ActivityManager::getCurrentUser);
+    }
+
+    /**
+     * Statically spy on {@code Log.v} for that {@code tag}.
+     *
+     * @return object that can be used to assert the {@code Log.v} calls.
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link Log}.
+     */
+    public final LogInterceptor interceptLogV(String tag) {
+        logV("interceptLogV(%s)", tag);
+        assertSpiedOrMocked(Log.class);
+
+        return LogInterceptor.forTagAndLevels(tag, Level.VERBOSE);
+    }
+
+    /**
+     * Statically spy on {@code Log.e} for that {@code tag}.
+     *
+     * @return object that can be used to assert the {@code Log.e} calls.
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link Log}.
+     */
+    public final LogInterceptor interceptLogE(String tag) {
+        logV("interceptLogE(%s)", tag);
+        assertSpiedOrMocked(Log.class);
+
+        return LogInterceptor.forTagAndLevels(tag, Level.ERROR);
+    }
+
+    // NOTE: current tests are only intercepting v and e, but we could add more methods on demand
+    // (even one that takes Level...levels)
 
     // mock only, don't log
     private void mockBinderGetCallingUidOrThrow(int uid) {
@@ -185,7 +264,7 @@ public class AdServicesExtendedMockitoRule
     }
 
     @Override
-    protected boolean getClearInlineMethodsAtTheEnd(Description description) {
+    protected final boolean getClearInlineMethodsAtTheEnd(Description description) {
         ClearInlineMocksMode annotation = getAnnotation(description, ClearInlineMocksMode.class);
         if (annotation != null) {
             boolean shouldClear = shouldClearInlineMocksAfterTest(description, annotation.value());

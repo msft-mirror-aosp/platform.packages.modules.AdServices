@@ -46,13 +46,9 @@ public class AdServicesCommon {
     public static final String ACTION_AD_SELECTION_SERVICE =
             "android.adservices.adselection.AD_SELECTION_SERVICE";
 
-    /**
-     * Intent action to discover the protected signals service in the APK.
-     *
-     * @hide
-     */
+    /** Intent action to discover the protected signals service in the APK. */
     public static final String ACTION_PROTECTED_SIGNALS_SERVICE =
-            "android.adservices.adselection.PROTECTED_SIGNALS_SERVICE";
+            "android.adservices.signals.PROTECTED_SIGNALS_SERVICE";
 
     /** Intent action to discover the Measurement service in the APK. */
     public static final String ACTION_MEASUREMENT_SERVICE =
@@ -94,6 +90,9 @@ public class AdServicesCommon {
     /** The package name suffix of the ExtServices APK on R/S */
     public static final String ADEXTSERVICES_PACKAGE_NAME_SUFFIX = "android.ext.services";
 
+    /** Suffix for the AdServices APEX package name. */
+    public static final String ADSERVICES_APEX_NAME_SUFFIX = "android.adservices";
+
     /**
      * Suffix for the ExtServices APEX Package name. Used to figure out the installed apex version.
      */
@@ -112,6 +111,13 @@ public class AdServicesCommon {
     /** System property used to simulate AdServices behavior on devices with low memory. */
     public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
             SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
+
+    /** The name of System Property for the binder timeout */
+    public static final String BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME = "binder_timeout";
+
+    /** System property used to allow test to override the binder's timeout. */
+    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_BINDER_TIMEOUT =
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME;
 
     /** Path name for Adservice class names */
     public static final String ADSERVICES_CLASS_PATH_PREFIX = "com.android.adservices.";

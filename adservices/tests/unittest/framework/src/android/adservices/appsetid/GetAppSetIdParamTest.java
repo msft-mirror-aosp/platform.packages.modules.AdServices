@@ -24,10 +24,12 @@ import android.os.Parcel;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** Unit tests for {@link GetAppSetIdParam} */
+@RequiresSdkLevelAtLeastS()
 @SmallTest
 public final class GetAppSetIdParamTest extends AdServicesUnitTestCase {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";

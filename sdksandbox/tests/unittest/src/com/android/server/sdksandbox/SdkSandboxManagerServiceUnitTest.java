@@ -54,12 +54,10 @@ import android.app.sdksandbox.testutils.SdkSandboxStorageManagerUtility;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ProviderInfo;
 import android.content.pm.UserInfo;
 import android.os.Binder;
 import android.os.Bundle;
@@ -69,11 +67,8 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
-import android.provider.DeviceConfig;
-import android.util.ArrayMap;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.shared.testing.common.DumpHelper;
@@ -109,7 +104,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -126,33 +120,11 @@ public class SdkSandboxManagerServiceUnitTest {
             "com.android.codeproviderresources";
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
     private static final String PROPERTY_DISABLE_SANDBOX = "disable_sdk_sandbox";
-    private static final long TIME_APP_CALLED_SYSTEM_SERVER = 1;
 
     private static final String TEST_KEY = "key";
     private static final String TEST_VALUE = "value";
     private static final SharedPreferencesUpdate TEST_UPDATE =
             new SharedPreferencesUpdate(new ArrayList<>(), getTestBundle());
-
-    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
-
-    private static final String PROPERTY_SERVICES_ALLOWLIST =
-            "services_allowlist_per_targetSdkVersion";
-
-    private static final String PROPERTY_ACTIVITY_ALLOWLIST =
-            "sdksandbox_activity_allowlist_per_targetSdkVersion";
-
-    private static final String PROPERTY_NEXT_ACTIVITY_ALLOWLIST =
-            "sdksandbox_next_activity_allowlist";
-
-    private static final String INTENT_ACTION = "action.test";
-    private static final String PACKAGE_NAME = "packageName.test";
-    private static final String COMPONENT_CLASS_NAME = "className.test";
-    private static final String COMPONENT_PACKAGE_NAME = "componentPackageName.test";
-
-    private static final String PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS =
-            "apply_sdk_sandbox_next_restrictions";
-    private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST =
-            "sdksandbox_next_service_allowlist";
 
     private SdkSandboxManagerService mService;
     private ActivityManager mAmSpy;
@@ -180,10 +152,10 @@ public class SdkSandboxManagerServiceUnitTest {
     private SdkSandboxStorageManager mSdkSandboxStorageManager;
     private static SdkSandboxManagerLocal sSdkSandboxManagerLocal;
     private CallingInfo mCallingInfo;
+    private DeviceConfigUtil mDeviceConfigUtil;
 
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
 
     @Before
     public void setup() {
@@ -254,15 +226,17 @@ public class SdkSandboxManagerServiceUnitTest {
                                 mSpyContext,
                                 mSdkSandboxStorageManager,
                                 sProvider,
-                                sSdkSandboxPulledAtoms));
+                                sSdkSandboxPulledAtoms,
+                                new SdkSandboxStatsdLogger()));
 
         mService = new SdkSandboxManagerService(mSpyContext, mInjector);
-        mService.forceEnableSandbox();
         sSdkSandboxManagerLocal = mService.getLocalManager();
         assertThat(sSdkSandboxManagerLocal).isNotNull();
 
         sSdkSandboxSettingsListener = mService.getSdkSandboxSettingsListener();
         assertThat(sSdkSandboxSettingsListener).isNotNull();
+        mDeviceConfigUtil = new DeviceConfigUtil(sSdkSandboxSettingsListener);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
 
         mClientAppUid = Process.myUid();
         mSandboxLatencyInfo = new SandboxLatencyInfo();
@@ -404,7 +378,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         LoadSdkException thrown = callback.getLoadSdkException();
         assertEquals(LOAD_SDK_INTERNAL_ERROR, thrown.getLoadSdkErrorCode());
-        assertThat(thrown).hasMessageThat().contains("does.not.exist not found");
+        assertThat(thrown).hasMessageThat().contains("does.not.exist");
     }
 
     @Test
@@ -432,7 +406,7 @@ public class SdkSandboxManagerServiceUnitTest {
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_NOT_FOUND);
-        assertThat(callback.getLoadSdkErrorMsg()).contains("not found for loading");
+        assertThat(callback.getLoadSdkErrorMsg()).contains("does.not.exist");
     }
 
     @Test
@@ -965,146 +939,6 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(sProvider.getSdkSandboxServiceForApp(mCallingInfo)).isNull();
     }
 
-    /** Tests that only allowed intents may be sent from the sdk sandbox. */
-    @Test
-    public void testEnforceAllowedToSendBroadcast() {
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        Intent disallowedIntent = new Intent(Intent.ACTION_SCREEN_ON);
-        assertThrows(
-                SecurityException.class,
-                () -> sSdkSandboxManagerLocal.enforceAllowedToSendBroadcast(disallowedIntent));
-    }
-
-    /** Tests that no broadcast can be sent from the sdk sandbox. */
-    @Test
-    public void testCanSendBroadcast() {
-        assertThat(sSdkSandboxManagerLocal.canSendBroadcast(new Intent())).isFalse();
-    }
-
-    /** Tests that only allowed activities may be started from the sdk sandbox. */
-    @Test
-    public void testEnforceAllowedToStartActivity_defaultAllowedValues() {
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
-            Intent allowedIntent = new Intent(action);
-            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(allowedIntent);
-        }
-
-        Intent intentWithoutAction = new Intent();
-        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intentWithoutAction);
-
-        Intent disallowedIntent = new Intent(Intent.ACTION_SCREEN_OFF);
-        assertThrows(
-                SecurityException.class,
-                () -> sSdkSandboxManagerLocal.enforceAllowedToStartActivity(disallowedIntent));
-    }
-
-    @Test
-    public void testEnforceAllowedToStartActivity_restrictionsNotApplied() {
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        Intent intent = new Intent(Intent.ACTION_CALL);
-        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
-    }
-
-    @Test
-    public void testEnforceAllowedToStartActivity_deviceConfigAllowlist() {
-        /** Allowlist: Intent.ACTION_CALL */
-        String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
-        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        Intent intent = new Intent(Intent.ACTION_CALL);
-        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
-
-        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
-            assertThrows(
-                    SecurityException.class,
-                    () ->
-                            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
-                                    new Intent(action)));
-        }
-    }
-
-    @Test
-    public void testEnforceAllowedToStartActivity_restrictionEnforcedDeviceConfigAllowlistNotSet() {
-        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, null);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
-            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(action));
-        }
-
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
-                                new Intent(Intent.ACTION_CALL)));
-    }
-
-    @Test
-    public void testEnforceAllowedToStartActivity_restrictionsNotEnforced() {
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent());
-    }
-
-    @Test
-    public void testEnforceAllowedToStartActivity_nextRestrictionsApplied() {
-        /** Allowlist: Intent.ACTION_CALL */
-        String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
-        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(Intent.ACTION_CALL));
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
-                                new Intent(Intent.ACTION_VIEW)));
-
-        /** Allowlist: Intent.ACTION_WEB_SEARCH */
-        String encodedNextAllowedActivities = "CiBhbmRyb2lkLmludGVudC5hY3Rpb24uV0VCX1NFQVJDSA==";
-        setDeviceConfigProperty(PROPERTY_NEXT_ACTIVITY_ALLOWLIST, encodedNextAllowedActivities);
-
-        setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
-        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(Intent.ACTION_WEB_SEARCH));
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
-                                new Intent(Intent.ACTION_CALL)));
-    }
-
-    @Test
-    public void testEnforceAllowedToStartActivity_nextRestrictionsAppliedButAllowlistNotSet() {
-        setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
-        setDeviceConfigProperty(PROPERTY_NEXT_ACTIVITY_ALLOWLIST, "");
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        Intent intent = new Intent(Intent.ACTION_CALL);
-
-        assertThrows(
-                SecurityException.class,
-                () -> sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent));
-        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
-            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(action));
-        }
-
-        /** Allowlist: Intent.ACTION_CALL */
-        String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
-        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
-
-        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
-        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
-            assertThrows(
-                    SecurityException.class,
-                    () ->
-                            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
-                                    new Intent(action)));
-        }
-    }
-
     @Test
     public void testEnforceAllowedToHostSandboxedActivityFailIfCalledFromSandboxUid()
             throws RemoteException {
@@ -1354,97 +1188,6 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(processName).isEqualTo(TEST_PACKAGE + "_sdk_sandbox_instr");
     }
 
-    /**
-     * Tests expected behavior when restrictions are enabled and only protected broadcasts included.
-     */
-    @Test
-    public void testCanRegisterBroadcastReceiver_deviceConfigUnsetProtectedBroadcasts() {
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        assertThat(
-                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(Intent.ACTION_SCREEN_OFF),
-                                /*flags= */ 0,
-                                /*onlyProtectedBroadcasts= */ true))
-                .isTrue();
-    }
-
-    /** Tests expected behavior when restrictions are enabled and no protected broadcast. */
-    @Test
-    public void testCanRegisterBroadcastReceiver_deviceConfigUnsetUnprotectedBroadcasts() {
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        assertThat(
-                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(Intent.ACTION_SEND),
-                                /*flags= */ 0,
-                                /*onlyProtectedBroadcasts= */ false))
-                .isFalse();
-    }
-
-    /** Tests expected behavior when broadcast receiver restrictions are not applied. */
-    @Test
-    public void testCanRegisterBroadcastReceiver_restrictionsNotApplied() {
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
-        assertThat(
-                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(Intent.ACTION_SEND),
-                                /*flags= */ 0,
-                                /*onlyProtectedBroadcasts= */ false))
-                .isTrue();
-    }
-
-    /** Tests expected behavior when broadcast receiver restrictions are applied. */
-    @Test
-    public void testCanRegisterBroadcastReceiver_restrictionsApplied() {
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
-        assertThat(
-                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(Intent.ACTION_SEND),
-                                /*flags= */ 0,
-                                /*onlyProtectedBroadcasts= */ false))
-                .isFalse();
-    }
-
-    /** Tests expected behavior when callingUid is not a sandbox UID. */
-    @Test
-    public void testCanRegisterBroadcastReceiver_notSandboxProcess() {
-        assertThat(
-                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(Intent.ACTION_SEND),
-                                /*flags= */ 0,
-                                /*onlyProtectedBroadcasts= */ false))
-                .isTrue();
-    }
-
-    /** Tests expected behavior when IntentFilter is blank. */
-    @Test
-    public void testCanRegisterBroadcastReceiver_blankIntentFilter() {
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        assertThat(
-                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(),
-                                /*flags= */ 0,
-                                /*onlyProtectedBroadcasts= */ false))
-                .isFalse();
-    }
-
-    /**
-     * Tests expected behavior when broadcast receiver is registering a broadcast which contains
-     * only protected broadcasts
-     */
-    @Test
-    public void testCanRegisterBroadcastReceiver_protectedBroadcast() {
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
-        assertThat(
-                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(Intent.ACTION_SEND),
-                                /*flags= */ Context.RECEIVER_NOT_EXPORTED,
-                                /*onlyProtectedBroadcasts= */ true))
-                .isTrue();
-    }
-
     @Test
     public void testNotifyInstrumentationStarted_killsSandboxProcess() throws Exception {
         disableKillUid();
@@ -1540,6 +1283,14 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testGetEffectiveTargetSdkVersion() throws Exception {
+        assertThat(
+                        sSdkSandboxManagerLocal.getEffectiveTargetSdkVersion(
+                                Process.toSdkSandboxUid(mClientAppUid)))
+                .isEqualTo(34);
+    }
+
+    @Test
     public void testGetSandboxedSdks_afterLoadSdkSuccess() throws Exception {
         loadSdk(SDK_NAME);
         assertThat(mService.getSandboxedSdks(TEST_PACKAGE, mSandboxLatencyInfo)).hasSize(1);
@@ -1565,452 +1316,6 @@ public class SdkSandboxManagerServiceUnitTest {
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode()).isEqualTo(LOAD_SDK_INTERNAL_ERROR);
         assertThat(mService.getSandboxedSdks(TEST_PACKAGE, mSandboxLatencyInfo)).isEmpty();
-    }
-
-    @Test
-    public void testEnforceAllowedToStartOrBindService_disallowNonExistentPackage() {
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        Intent intent = new Intent().setComponent(new ComponentName("nonexistent.package", "test"));
-        assertThrows(
-                SecurityException.class,
-                () -> sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent));
-    }
-
-    @Test
-    public void testEnforceAllowedToStartOrBindService_AdServicesApkNotPresent() throws Exception {
-        String adServicesPackageName = mInjector.getAdServicesPackageName();
-        Mockito.when(mInjector.getAdServicesPackageName()).thenReturn(null);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        Intent intent = new Intent().setComponent(new ComponentName(adServicesPackageName, "test"));
-        assertThrows(
-                SecurityException.class,
-                () -> sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent));
-    }
-
-    @Test
-    public void testEnforceAllowedToStartOrBindService_allowedPackages() throws Exception {
-        Intent intent =
-                new Intent()
-                        .setComponent(
-                                new ComponentName(mInjector.getAdServicesPackageName(), "test"));
-        sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
-    }
-
-    @Test
-    public void testServiceRestriction_noFieldsSet() {
-        /**
-         * Service allowlist
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value: {
-         *     allowed_services: {
-         *     }
-         *   }
-         * }
-         */
-        String encodedServiceAllowlist = "CgYIIhICCgA=";
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        /** Allows all the services to start/ bind */
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        testServiceRestriction(
-                                /*action=*/ null,
-                                /*packageName=*/ null,
-                                /*componentClassName=*/ null,
-                                /*componentPackageName=*/ null));
-    }
-
-    @Test
-    public void testServiceRestriction_oneFieldSet() {
-        /**
-         * Service allowlist
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value: {
-         *     allowed_services: {
-         *       action : "*"
-         *       packageName : "packageName.test"
-         *       componentClassName : "*"
-         *       componentPackageName : "*"
-         *     }
-         *     allowed_services: {
-         *       action : "*"
-         *       packageName : "*"
-         *       componentClassName : "className.test"
-         *       componentPackageName : "*"
-         *     }
-         *     allowed_services: {
-         *       action : "action.test"
-         *       packageName : "*"
-         *       componentClassName : "*"
-         *       componentPackageName : "*"
-         *     }
-         *     allowed_services: {
-         *       action : "*"
-         *       packageName : "*"
-         *       componentClassName : "*"
-         *       componentPackageName : "componentPackageName.test"
-         *     }
-         *   }
-         * }
-         */
-        String encodedServiceAllowlist =
-                "CnoIIhJ2ChsKASoSEHBhY2thZ2VOYW1lLnRlc3QaASoiASoKGQoBKhIBKhoOY2xhc3NOYW1lLnRlc3QiA"
-                    + "SoKFgoLYWN0aW9uLnRlc3QSASoaASoiASoKJAoBKhIBKhoBKiIZY29tcG9uZW50UGFja2FnZU5h"
-                    + "bWUudGVzdA==";
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ null,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ null);
-
-        testServiceRestriction(
-                /*action=*/ null,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ null);
-
-        testServiceRestriction(
-                /*action=*/ null,
-                /*packageName=*/ null,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ null);
-
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        testServiceRestriction(
-                                /*action=*/ null,
-                                /*packageName=*/ null,
-                                /*componentClassName=*/ null,
-                                /*componentPackageName=*/ null));
-    }
-
-    @Test
-    public void testServiceRestriction_twoFieldsSet() {
-        /**
-         * Service allowlist
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value: {
-         *     allowed_services: {
-         *       action : "action.test"
-         *       packageName : "packageName.test"
-         *       componentClassName : "*"
-         *       componentPackageName : "*"
-         *     }
-         *     allowed_services: {
-         *       action : "action.test"
-         *       packageName : "*"
-         *       componentClassName : "className.test"
-         *       componentPackageName : "*"
-         *     }
-         *     allowed_services: {
-         *       action : "*"
-         *       packageName : "packageName.test"
-         *       componentClassName : "className.test"
-         *       componentPackageName : "*"
-         *     }
-         *   }
-         * }
-         */
-        String encodedServiceAllowlist =
-                "CnoIIhJ2CiUKC2FjdGlvbi50ZXN0EhBwYWNrYWdlTmFtZS50ZXN0GgEqIgEqCiMKC2FjdGlvbi50ZXN0Eg"
-                    + "EqGg5jbGFzc05hbWUudGVzdCIBKgooCgEqEhBwYWNrYWdlTmFtZS50ZXN0Gg5jbGFzc05hbWUud"
-                    + "GVzdCIBKg==";
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ null);
-
-        testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ null,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ null);
-
-        testServiceRestriction(
-                /*action=*/ null,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ null);
-
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        testServiceRestriction(
-                                /*action=*/ null,
-                                /*packageName=*/ null,
-                                /*componentClassName=*/ null,
-                                /*componentPackageName=*/ null));
-
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        testServiceRestriction(
-                                /*action=*/ INTENT_ACTION,
-                                /*packageName=*/ null,
-                                /*componentClassName=*/ null,
-                                /*componentPackageName=*/ null));
-    }
-
-    @Test
-    public void testServiceRestriction_threeFieldsSet() {
-        /**
-         * Service allowlist
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value: {
-         *     allowed_services: {
-         *       action : "action.test"
-         *       packageName : "packageName.test"
-         *       componentClassName : "className.test"
-         *       componentPackageName : "*"
-         *     }
-         *     allowed_services: {
-         *       action : "action.test"
-         *       packageName : "packageName.test"
-         *       componentClassName : "*"
-         *       componentPackageName : "componentPackageName.test"
-         *     }
-         *     allowed_services: {
-         *       action : "action.test"
-         *       packageName : "*"
-         *       componentClassName : "className.test"
-         *       componentPackageName : "componentPackageName.test"
-         *     }
-         *     allowed_services: {
-         *       action : "*"
-         *       packageName : "packageName.test"
-         *       componentClassName : "className.test"
-         *       componentPackageName : "componentPackageName.test"
-         *     }
-         *   }
-         * }
-         */
-        String encodedServiceAllowlist =
-                "CvcBCCIS8gEKMgoLYWN0aW9uLnRlc3QSEHBhY2thZ2VOYW1lLnRlc3QaDmNsYXNzTmFtZS50ZXN0IgEqCj"
-                    + "0KC2FjdGlvbi50ZXN0EhBwYWNrYWdlTmFtZS50ZXN0GgEqIhljb21wb25lbnRQYWNrYWdlTmFtZ"
-                    + "S50ZXN0CjsKC2FjdGlvbi50ZXN0EgEqGg5jbGFzc05hbWUudGVzdCIZY29tcG9uZW50UGFja2Fn"
-                    + "ZU5hbWUudGVzdApACgEqEhBwYWNrYWdlTmFtZS50ZXN0Gg5jbGFzc05hbWUudGVzdCIZY29tcG9"
-                    + "uZW50UGFja2FnZU5hbWUudGVzdA==";
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ null);
-
-        testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ COMPONENT_PACKAGE_NAME);
-
-        testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ null,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ COMPONENT_PACKAGE_NAME);
-
-        testServiceRestriction(
-                /*action=*/ null,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ COMPONENT_PACKAGE_NAME);
-
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        testServiceRestriction(
-                                /*action=*/ INTENT_ACTION,
-                                /*packageName=*/ null,
-                                /*componentClassName=*/ null,
-                                /*componentPackageName=*/ null));
-    }
-
-    @Test
-    public void testServiceRestriction_multipleEntriesAllowlist() {
-        /**
-         * Service allowlist
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value: {
-         *     allowed_services: {
-         *       action : "action.test1"
-         *       packageName : "packageName.test1"
-         *       componentClassName : "className.test1"
-         *       componentPackageName : "componentPackageName.test1"
-         *     }
-         *     allowed_services: {
-         *       action : "action.test2"
-         *       packageName : "packageName.test2"
-         *       componentClassName : "className.test2"
-         *       componentPackageName : "componentPackageName.test2"
-         *     }
-         *   }
-         * }
-         */
-        String encodedServiceAllowlist =
-                "CqUBCCISoAEKTgoMYWN0aW9uLnRlc3QxEhFwYWNrYWdlTmFtZS50ZXN0MRoPY2xhc3NOYW1lLnRlc3QxI"
-                    + "hpjb21wb25lbnRQYWNrYWdlTmFtZS50ZXN0MQpOCgxhY3Rpb24udGVzdDISEXBhY2thZ2VOYW1l"
-                    + "LnRlc3QyGg9jbGFzc05hbWUudGVzdDIiGmNvbXBvbmVudFBhY2thZ2VOYW1lLnRlc3Qy";
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        testServiceRestriction(
-                /*action=*/ "action.test1",
-                /*packageName=*/ "packageName.test1",
-                /*componentClassName=*/ "className.test1",
-                /*componentPackageName=*/ "componentPackageName.test1");
-    }
-
-    @Test
-    public void testServiceRestrictions_DeviceConfigNextAllowlistApplied() throws Exception {
-        setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
-        /**
-         * Service allowlist
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value: {
-         *     allowed_services: {
-         *       action : "action.test"
-         *       packageName : "packageName.test"
-         *       componentClassName : "className.test"
-         *       componentPackageName : "*"
-         *     }
-         *   }
-         * }
-         */
-        String encodedServiceAllowlist =
-                "CjgIIhI0CjIKC2FjdGlvbi50ZXN0EhBwYWNrYWdlTmFtZS50ZXN0Gg5jbGFzc05hbWUudGVzdCIBKg==";
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
-
-        /**
-         * Service allowlist
-         * allowed_services {
-         *   action : "action.next"
-         *   packageName : "packageName.next"
-         *   componentClassName : "className.next"
-         *   componentPackageName : "*"
-         * }
-         */
-        String encodedNextServiceAllowlist =
-                "CjIKC2FjdGlvbi5uZXh0EhBwYWNrYWdlTmFtZS5uZXh0Gg5jbGFzc05hbWUubmV4dCIBKg==";
-        setDeviceConfigProperty(PROPERTY_NEXT_SERVICE_ALLOWLIST, encodedNextServiceAllowlist);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        testServiceRestriction(
-                /*action=*/ "action.next",
-                /*packageName=*/ "packageName.next",
-                /*componentClassName=*/ "className.next",
-                /*componentPackageName=*/ null);
-
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        testServiceRestriction(
-                                /*action=*/ "action.test",
-                                /*packageName=*/ "packageName.test",
-                                /*componentClassName=*/ "className.test",
-                                /*componentPackageName=*/ null));
-    }
-
-    @Test
-    public void testServiceRestrictions_ComponentNotSet() {
-        /**
-         * Service allowlist
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value: {
-         *     allowed_services: {
-         *       action : "action.test"
-         *       packageName : "*"
-         *       componentClassName : "*"
-         *       componentPackageName: "*"
-         *     }
-         *   }
-         * }
-         */
-        final String encodedServiceAllowlist = "ChwIIhIYChYKC2FjdGlvbi50ZXN0EgEqGgEqIgEq";
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
-
-        final Intent intent = new Intent(INTENT_ACTION);
-        sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
-    }
-    @Test
-    public void testServiceRestrictions_AllFieldsSetToWildcard() {
-        /**
-         * Service allowlist
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value: {
-         *     allowed_services: {
-         *       action : "*"
-         *       packageName : "*"
-         *       componentPackageName : "*"
-         *       componentClassName : "*"
-         *     }
-         *   }
-         * }
-         */
-        String encodedServiceAllowlist = "ChIIIhIOCgwKASoSASoaASoiASo=";
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ COMPONENT_PACKAGE_NAME,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ COMPONENT_PACKAGE_NAME);
-
-        testServiceRestriction(
-                /*action=*/ null,
-                /*packageName=*/ null,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ null);
-
-        testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ null,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ null);
-    }
-
-    @Test
-    public void testServiceRestrictions_AllFieldsSet() {
-        /**Service allowlist
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value: {
-         *     allowed_services: {
-         *       action : "action.test"
-         *       packageName : "packageName.test"
-         *       componentClassName : "className.test"
-         *       componentPackageName : "componentPackageName.test"
-         *       }
-         *     }
-         * }
-         */
-        String encodedServiceAllowlist =
-                "ClAIIhJMCkoKC2FjdGlvbi50ZXN0EhBwYWNrYWdlTmFtZS50ZXN0Gg5jbGFzc05hbWUudGVzdCIZY29tc"
-                        + "G9uZW50UGFja2FnZU5hbWUudGVzdA==";
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        testServiceRestriction(
-                INTENT_ACTION, PACKAGE_NAME, COMPONENT_CLASS_NAME, COMPONENT_PACKAGE_NAME);
     }
 
     @Test
@@ -2092,7 +1397,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.syncDataFromClient("does.not.exist", mSandboxLatencyInfo, TEST_UPDATE, callback);
 
         assertEquals(PREFERENCES_SYNC_INTERNAL_ERROR, callback.getErrorCode());
-        assertThat(callback.getErrorMsg()).contains("does.not.exist not found");
+        assertThat(callback.getErrorMsg()).contains("does.not.exist");
     }
 
     @Test
@@ -2278,29 +1583,35 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testHandleShellCommandExecutesCommand() {
-        final FileDescriptor in = FileDescriptor.in;
-        final FileDescriptor out = FileDescriptor.out;
-        final FileDescriptor err = FileDescriptor.err;
-
-        final SdkSandboxShellCommand command = Mockito.mock(SdkSandboxShellCommand.class);
-        Mockito.when(mInjector.createShellCommand(mService, mSpyContext)).thenReturn(command);
-
+    public void testHandleShellCommandExecutesCommand() throws Exception {
+        SdkSandboxShellCommand command = Mockito.mock(SdkSandboxShellCommand.class);
+        Mockito.when(
+                        mInjector.createShellCommand(
+                                mService, mSpyContext, /* supportsAdServicesShellCmd= */ true))
+                .thenReturn(command);
         final String[] args = new String[] {"start"};
+        try (ParcelFileDescriptor pfdIn = ParcelFileDescriptor.dup(FileDescriptor.in);
+                ParcelFileDescriptor pfdOut = ParcelFileDescriptor.dup(FileDescriptor.out);
+                ParcelFileDescriptor pfdErr = ParcelFileDescriptor.dup(FileDescriptor.err)) {
 
-        mService.handleShellCommand(
-                new ParcelFileDescriptor(in),
-                new ParcelFileDescriptor(out),
-                new ParcelFileDescriptor(err),
-                args);
+            mService.handleShellCommand(pfdIn, pfdOut, pfdErr, args);
 
-        Mockito.verify(mInjector).createShellCommand(mService, mSpyContext);
-        Mockito.verify(command).exec(mService, in, out, err, args);
+            Mockito.verify(mInjector)
+                    .createShellCommand(
+                            mService, mSpyContext, /* supportsAdServicesShellCmd= */ true);
+            Mockito.verify(command)
+                    .exec(
+                            mService,
+                            pfdIn.getFileDescriptor(),
+                            pfdOut.getFileDescriptor(),
+                            pfdErr.getFileDescriptor(),
+                            args);
+        }
     }
 
     @Test
     public void testIsDisabled() {
-        mService.forceEnableSandbox();
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
         assertThat(mService.isSdkSandboxDisabled()).isFalse();
     }
 
@@ -2309,13 +1620,12 @@ public class SdkSandboxManagerServiceUnitTest {
         // SDK sandbox is enabled for an emulator, even if the killswitch is turned on provided
         // AdServices APK is present.
         Mockito.when(mInjector.isEmulator()).thenReturn(true);
-        sSdkSandboxSettingsListener.setKillSwitchState(true);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
         assertThat(mService.isSdkSandboxDisabled()).isFalse();
 
         // SDK sandbox is disabled when the killswitch is enabled if the device is not an emulator.
-        mService.clearSdkSandboxState();
         Mockito.when(mInjector.isEmulator()).thenReturn(false);
-        sSdkSandboxSettingsListener.setKillSwitchState(true);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
         assertThat(mService.isSdkSandboxDisabled()).isTrue();
     }
 
@@ -2324,28 +1634,26 @@ public class SdkSandboxManagerServiceUnitTest {
         // SDK sandbox is disabled for an emulator, if AdServices APK is not present.
         Mockito.doReturn(false).when(mInjector).isAdServiceApkPresent();
         Mockito.when(mInjector.isEmulator()).thenReturn(true);
-        sSdkSandboxSettingsListener.setKillSwitchState(true);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
         assertThat(mService.isSdkSandboxDisabled()).isTrue();
     }
 
     @Test
     public void testSdkSandboxDisabledForAdServiceApkMissing() {
         Mockito.doReturn(true).when(mInjector).isAdServiceApkPresent();
-        sSdkSandboxSettingsListener.setKillSwitchState(false);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
         assertThat(mService.isSdkSandboxDisabled()).isFalse();
 
         Mockito.doReturn(false).when(mInjector).isAdServiceApkPresent();
-        sSdkSandboxSettingsListener.setKillSwitchState(false);
         assertThat(mService.isSdkSandboxDisabled()).isTrue();
     }
 
     @Test
     public void testKillswitchStopsSandbox() throws Exception {
         disableKillUid();
-        setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
-        sSdkSandboxSettingsListener.setKillSwitchState(false);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
         loadSdk(SDK_NAME);
-        setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
         int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
         assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isEqualTo(null);
@@ -2356,7 +1664,7 @@ public class SdkSandboxManagerServiceUnitTest {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
 
-        sSdkSandboxSettingsListener.setKillSwitchState(true);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,
@@ -2369,39 +1677,6 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
         assertThat(callback.getLoadSdkErrorMsg()).isEqualTo("SDK sandbox is disabled");
-    }
-
-    @Test
-    public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_DefaultAccess() {
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, null);
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        // The default value of the flag enforcing restrictions is true and access should be
-        // restricted.
-        assertThat(
-                        sSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
-                                new ProviderInfo()))
-                .isFalse();
-    }
-
-    @Test
-    public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_AccessNotAllowed() {
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
-        assertThat(
-                        sSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
-                                new ProviderInfo()))
-                .isFalse();
-    }
-
-    @Test
-    public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_AccessAllowed() {
-        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
-        assertThat(
-                        sSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
-                                new ProviderInfo()))
-                .isTrue();
     }
 
     @Test
@@ -2702,39 +1977,6 @@ public class SdkSandboxManagerServiceUnitTest {
             assumeTrue("Device must be at least U", SdkLevel.isAtLeastU());
         } else {
             assumeFalse("Device must be less than U", SdkLevel.isAtLeastU());
-        }
-    }
-
-    private void testServiceRestriction(
-            @Nullable String action,
-            @Nullable String packageName,
-            @Nullable String componentClassName,
-            @Nullable String componentPackageName) {
-        Intent intent = Objects.isNull(action) ? new Intent() : new Intent(action);
-        intent.setPackage(packageName);
-        if (Objects.isNull(componentPackageName)) {
-            componentPackageName = "nonexistent.package";
-        }
-        if (Objects.isNull(componentClassName)) {
-            componentClassName = "nonexistent.class";
-        }
-        intent.setComponent(new ComponentName(componentPackageName, componentClassName));
-
-        sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
-    }
-
-    private void setDeviceConfigProperty(String property, String value) {
-        // Explicitly calling the onPropertiesChanged method to avoid race conditions
-        if (value == null) {
-            // Map.of() does not handle null, so we need to use an ArrayMap to delete a property
-            ArrayMap<String, String> properties = new ArrayMap<>();
-            properties.put(property, null);
-            sSdkSandboxSettingsListener.onPropertiesChanged(
-                    new DeviceConfig.Properties(DeviceConfig.NAMESPACE_ADSERVICES, properties));
-        } else {
-            sSdkSandboxSettingsListener.onPropertiesChanged(
-                    new DeviceConfig.Properties(
-                            DeviceConfig.NAMESPACE_ADSERVICES, Map.of(property, value)));
         }
     }
 

@@ -39,7 +39,6 @@ import com.android.adservices.service.exception.FilterException;
 import java.util.Objects;
 
 /** Utility class to filter FLEDGE requests. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AbstractFledgeServiceFilter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -134,14 +133,18 @@ public abstract class AbstractFledgeServiceFilter {
      *
      * @param uriForAdTech a {@link Uri} matching the ad tech to check against
      * @param callerPackageName the package name to check against
+     * @param apiType The type of API calling: custom audience or protect signals
      * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
      *     to perform the operation
      */
     protected AdTechIdentifier getAndAssertAdTechFromUriAllowed(
-            String callerPackageName, Uri uriForAdTech, int apiName)
+            String callerPackageName,
+            Uri uriForAdTech,
+            int apiName,
+            @AppManifestConfigCall.ApiType int apiType)
             throws FledgeAuthorizationFilter.AdTechNotAllowedException {
         return mFledgeAuthorizationFilter.getAndAssertAdTechFromUriAllowed(
-                mContext, callerPackageName, uriForAdTech, apiName);
+                mContext, callerPackageName, uriForAdTech, apiName, apiType);
     }
 
     /**
@@ -157,7 +160,8 @@ public abstract class AbstractFledgeServiceFilter {
             AdTechIdentifier adTech,
             String callerPackageName,
             int apiName,
-            @NonNull DevContext devContext)
+            @NonNull DevContext devContext,
+            @AppManifestConfigCall.ApiType int apiType)
             throws FledgeAuthorizationFilter.AdTechNotAllowedException {
         Uri adTechUri = Uri.parse("https://" + adTech.toString());
         boolean isLocalhostAddress =
@@ -170,7 +174,7 @@ public abstract class AbstractFledgeServiceFilter {
 
         if (!mFlags.getDisableFledgeEnrollmentCheck()) {
             mFledgeAuthorizationFilter.assertAdTechAllowed(
-                    mContext, callerPackageName, adTech, apiName);
+                    mContext, callerPackageName, adTech, apiName, apiType);
         }
     }
 
@@ -180,9 +184,10 @@ public abstract class AbstractFledgeServiceFilter {
      * @param callerPackageName the package name to be validated.
      * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
      */
-    protected void assertAppInAllowList(String callerPackageName, int apiName)
+    protected void assertAppInAllowList(
+            String callerPackageName, int apiName, @AppManifestConfigCall.ApiType int apiType)
             throws FledgeAllowListsFilter.AppNotAllowedException {
-        mFledgeAllowListsFilter.assertAppCanUsePpapi(callerPackageName, apiName);
+        mFledgeAllowListsFilter.assertAppInAllowlist(callerPackageName, apiName, apiType);
     }
 
     /**

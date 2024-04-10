@@ -97,9 +97,7 @@ public class UxEngineTest {
                         .initMocks(this)
                         .startMocking();
 
-        ExtendedMockito.doReturn(mConsentManager).when(
-                () -> ConsentManager.getInstance(any())
-        );
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
         ExtendedMockito.doReturn(mFlags)
                 .when(FlagsFactory::getFlags);

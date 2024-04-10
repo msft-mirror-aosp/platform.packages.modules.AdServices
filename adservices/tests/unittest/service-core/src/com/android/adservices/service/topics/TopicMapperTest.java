@@ -24,10 +24,12 @@ import android.content.Context;
 import android.content.res.Resources;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -37,6 +39,9 @@ import org.mockito.MockitoAnnotations;
 public class TopicMapperTest {
     @Mock private Context mContext;
     @Mock private Resources mResources;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     /** Setup needed before every test in this class. */
     @Before

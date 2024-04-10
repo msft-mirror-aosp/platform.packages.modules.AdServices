@@ -31,6 +31,8 @@ import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.kanon.KAnonDatabase;
+import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -52,6 +54,7 @@ public class FledgeMaintenanceTasksWorker {
     @NonNull private final EncryptionContextDao mEncryptionContextDao;
     @NonNull private final Flags mFlags;
     @NonNull private final Clock mClock;
+    @NonNull private final KAnonMessageDao mKAnonMessageDao;
 
     @NonNull private final AdServicesLogger mAdServicesLogger;
 
@@ -64,7 +67,8 @@ public class FledgeMaintenanceTasksWorker {
             @NonNull EncryptionContextDao encryptionContextDao,
             @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
             @NonNull Clock clock,
-            @NonNull AdServicesLogger adServicesLogger) {
+            @NonNull AdServicesLogger adServicesLogger,
+            @NonNull KAnonMessageDao kAnonMessageDao) {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(frequencyCapDao);
@@ -73,6 +77,7 @@ public class FledgeMaintenanceTasksWorker {
         Objects.requireNonNull(encryptionContextDao);
         Objects.requireNonNull(adSelectionDebugReportDao);
         Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(kAnonMessageDao);
 
         mFlags = flags;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -82,6 +87,7 @@ public class FledgeMaintenanceTasksWorker {
         mClock = clock;
         mAdSelectionDebugReportDao = adSelectionDebugReportDao;
         mAdServicesLogger = adServicesLogger;
+        mKAnonMessageDao = kAnonMessageDao;
     }
 
     private FledgeMaintenanceTasksWorker(@NonNull Context context) {
@@ -97,6 +103,7 @@ public class FledgeMaintenanceTasksWorker {
                 AdSelectionDebugReportingDatabase.getInstance(context)
                         .getAdSelectionDebugReportDao();
         mAdServicesLogger = StatsdAdServicesLogger.getInstance();
+        mKAnonMessageDao = KAnonDatabase.getInstance(context).kAnonMessageDao();
     }
 
     /** Creates a new instance of {@link FledgeMaintenanceTasksWorker}. */
@@ -122,7 +129,6 @@ public class FledgeMaintenanceTasksWorker {
         sLogger.v("Clearing expired Buyer Decision Logic data ");
         mAdSelectionEntryDao.removeExpiredBuyerDecisionLogic();
 
-
         if (mFlags.getFledgeBeaconReportingMetricsEnabled()) {
             long numUrisBeforeClearing = mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions();
 
@@ -133,10 +139,8 @@ public class FledgeMaintenanceTasksWorker {
 
             mAdServicesLogger.logInteractionReportingTableClearedStats(
                     InteractionReportingTableClearedStats.builder()
-                            .setNumUrisCleared(
-                                    (int) (numUrisAfterClearing - numUrisBeforeClearing))
-                            .build()
-            );
+                            .setNumUrisCleared((int) (numUrisAfterClearing - numUrisBeforeClearing))
+                            .build());
         } else {
             sLogger.v("Clearing expired Registered Ad Interaction data ");
             mAdSelectionEntryDao.removeExpiredRegisteredAdInteractions();
@@ -182,9 +186,9 @@ public class FledgeMaintenanceTasksWorker {
 
         // Read from flags directly, since this maintenance task worker is attached to a background
         //  job with unknown lifetime
-        if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
+        if (!mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             sLogger.v(
-                    "Ad selection filtering disabled; skipping Frequency Cap histogram"
+                    "Frequency cap filtering disabled; skipping Frequency Cap histogram"
                             + " maintenance");
             return;
         }
@@ -220,5 +224,14 @@ public class FledgeMaintenanceTasksWorker {
         sLogger.v(
                 "Cleared %d Frequency Cap histogram events for disallowed source apps",
                 numDisallowedSourceAppEvents);
+    }
+
+    /** Deletes the expired {@link com.android.adservices.service.kanon.KAnonMessageEntity} */
+    public void clearExpiredKAnonMessageEntities() {
+        if (mFlags.getFledgeKAnonSignJoinFeatureEnabled()) {
+            sLogger.v("Clearing expired KAnon message entities");
+            mKAnonMessageDao.removeExpiredEntities(mClock.instant());
+            sLogger.v("Cleared expired KAnon message entities");
+        }
     }
 }

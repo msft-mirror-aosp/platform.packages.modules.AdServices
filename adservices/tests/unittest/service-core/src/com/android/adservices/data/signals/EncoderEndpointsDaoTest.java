@@ -27,7 +27,10 @@ import android.content.Context;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class EncoderEndpointsDaoTest {
@@ -36,6 +39,9 @@ public class EncoderEndpointsDaoTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private EncoderEndpointsDao mEncoderEndpointsDao;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

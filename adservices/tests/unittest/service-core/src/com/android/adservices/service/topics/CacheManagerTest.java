@@ -34,6 +34,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockRandom;
+import com.android.adservices.cobalt.TopicsCobaltLogger;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.CombinedTopic;
@@ -45,12 +46,15 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
+import com.android.adservices.service.stats.TopicsEncryptionGetTopicsReportedStats;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
-import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -76,6 +80,11 @@ import java.util.stream.Stream;
 public final class CacheManagerTest {
     @SuppressWarnings({"unused"})
     private static final String TAG = "CacheManagerTest";
+    private static final long TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_START_TIMESTAMP = 100L;
+    private static final long TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_END_TIMESTAMP = 150L;
+    private static final int TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_LATENCY =
+            (int) (TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_END_TIMESTAMP
+                    - TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_START_TIMESTAMP);
 
     @SuppressWarnings({"unused"})
     private final Context mContext = ApplicationProvider.getApplicationContext();
@@ -93,6 +102,10 @@ public final class CacheManagerTest {
     @Mock TopicsCobaltLogger mTopicsCobaltLogger;
 
     @Mock Random mRandom;
+    @Mock Clock mMockClock;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -127,7 +140,8 @@ public final class CacheManagerTest {
                         mLogger,
                         mBlockedTopicsManager,
                         mGlobalBlockedTopicsManager,
-                        mTopicsCobaltLogger);
+                        mTopicsCobaltLogger,
+                        mMockClock);
     }
 
     @Test
@@ -720,7 +734,8 @@ public final class CacheManagerTest {
                         mLogger,
                         mBlockedTopicsManager,
                         new GlobalBlockedTopicsManager(globalBlockedTopicIds),
-                        mTopicsCobaltLogger);
+                        mTopicsCobaltLogger,
+                        mMockClock);
         mCacheManager.loadCache(currentEpochId);
 
         verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
@@ -812,7 +827,8 @@ public final class CacheManagerTest {
                         mLogger,
                         blockedTopicsManager,
                         globalBlockedTopicsManager,
-                        mTopicsCobaltLogger);
+                        mTopicsCobaltLogger,
+                        mMockClock);
 
         ArgumentCaptor<GetTopicsReportedStats> argument =
                 ArgumentCaptor.forClass(GetTopicsReportedStats.class);
@@ -940,6 +956,13 @@ public final class CacheManagerTest {
 
     @Test
     public void testGetTopics_enableEncryption_success() {
+        // Initializes the argumentCaptor to collect topics encryption metrics.
+        ArgumentCaptor<TopicsEncryptionGetTopicsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(TopicsEncryptionGetTopicsReportedStats.class);
+        // Sets up the timestamps for topics encryption metrics logging.
+        when(mMockClock.currentTimeMillis()).thenReturn(
+                TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_START_TIMESTAMP,
+                TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_END_TIMESTAMP);
         // Assume the current epochId is 4L, we will load cache for returned topics in the last 3
         // epochs: epochId in {3, 2, 1}.
         long currentEpochId = 4L;
@@ -949,6 +972,7 @@ public final class CacheManagerTest {
         // Enable encryption
         when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
         when(mMockFlags.getTopicsEncryptionEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsEncryptionMetricsEnabled()).thenReturn(true);
 
         Topic topic1 =
                 Topic.create(
@@ -1004,10 +1028,24 @@ public final class CacheManagerTest {
         assertThat(combinedTopics2.size()).isEqualTo(1);
         assertThat(combinedTopics2.get(0).getTopic()).isEqualTo(topic2);
         assertThat(combinedTopics2.get(0).getEncryptedTopic()).isEqualTo(encryptedTopic2);
+
+        // Verifies the topics encryption metrics are logged correctly.
+        verify(mLogger).logTopicsEncryptionGetTopicsReportedStats(argumentCaptor.capture());
+        TopicsEncryptionGetTopicsReportedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getLatencyOfReadingEncryptedTopicsFromDbMs())
+                .isEqualTo(TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_LATENCY);
+        assertThat(stats.getCountOfEncryptedTopics()).isEqualTo(2);
     }
 
     @Test
     public void testGetTopics_enableEncryption_missingEncryptedTopics() {
+        // Initializes the argumentCaptor to collect topics encryption metrics.
+        ArgumentCaptor<TopicsEncryptionGetTopicsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(TopicsEncryptionGetTopicsReportedStats.class);
+        // Sets up the timestamps for topics encryption metrics logging.
+        when(mMockClock.currentTimeMillis()).thenReturn(
+                TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_START_TIMESTAMP,
+                TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_END_TIMESTAMP);
         // Assume the current epochId is 4L, we will load cache for returned topics in the last 3
         // epochs: epochId in {3, 2, 1}.
         long currentEpochId = 4L;
@@ -1017,6 +1055,7 @@ public final class CacheManagerTest {
         // Enable encryption
         when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
         when(mMockFlags.getTopicsEncryptionEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsEncryptionMetricsEnabled()).thenReturn(true);
 
         Topic topic1 =
                 Topic.create(
@@ -1082,6 +1121,13 @@ public final class CacheManagerTest {
                 .containsExactly(
                         CombinedTopic.create(topic1, EncryptedTopic.getDefaultInstance()),
                         CombinedTopic.create(topic2, EncryptedTopic.getDefaultInstance()));
+
+        // Verifies the topics encryption metrics are logged correctly.
+        verify(mLogger).logTopicsEncryptionGetTopicsReportedStats(argumentCaptor.capture());
+        TopicsEncryptionGetTopicsReportedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getLatencyOfReadingEncryptedTopicsFromDbMs())
+                .isEqualTo(TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_LATENCY);
+        assertThat(stats.getCountOfEncryptedTopics()).isEqualTo(1);
     }
 
     @Test
@@ -1104,7 +1150,8 @@ public final class CacheManagerTest {
                         mLogger,
                         blockedTopicsManager,
                         globalBlockedTopicsManager,
-                        mTopicsCobaltLogger);
+                        mTopicsCobaltLogger,
+                        mMockClock);
 
         ArgumentCaptor<GetTopicsReportedStats> argument =
                 ArgumentCaptor.forClass(GetTopicsReportedStats.class);

@@ -19,7 +19,7 @@ package com.android.adservices.service.adselection.encryption;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
-import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB;
 
 import android.annotation.RequiresApi;
 import android.annotation.SuppressLint;
@@ -39,7 +39,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -53,8 +53,6 @@ import java.util.concurrent.TimeoutException;
  * Background fetch for Fledge encryption key fetch from the Key Management Servers and periodic
  * deletion of expired keys.
  */
-// TODO(b/269798827): Enable for R.
-
 @SuppressLint("LineLength")
 @RequiresApi(Build.VERSION_CODES.S)
 public class BackgroundKeyFetchJobService extends JobService {
@@ -76,7 +74,7 @@ public class BackgroundKeyFetchJobService extends JobService {
 
         LoggerFactory.getFledgeLogger().d("BackgroundKeyFetchJobService.onStartJob");
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID);
 
         if (FlagsFactory.getFlags().getFledgeAuctionServerKillSwitch()) {
@@ -97,7 +95,7 @@ public class BackgroundKeyFetchJobService extends JobService {
 
         // Skip the execution and cancel the job if user consent is revoked.
         // Use the per-API consent with GA UX.
-        if (!ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven()) {
+        if (!ConsentManager.getInstance().getConsent(AdServicesApiType.FLEDGE).isGiven()) {
             LoggerFactory.getFledgeLogger()
                     .d("User Consent is revoked ; skipping and cancelling job");
             return skipAndCancelKeyFetchJob(
@@ -121,8 +119,7 @@ public class BackgroundKeyFetchJobService extends JobService {
                             @Override
                             public void onSuccess(Void result) {
                                 boolean shouldRetry = false;
-                                AdservicesJobServiceLogger.getInstance(
-                                                BackgroundKeyFetchJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID,
                                                 /* isSuccessful= */ true,
@@ -147,9 +144,7 @@ public class BackgroundKeyFetchJobService extends JobService {
                                                             + " internal error");
                                 } else if (t instanceof TimeoutException) {
                                     LoggerFactory.getFledgeLogger()
-                                            .e(
-                                                    t,
-                                                    "FLEDGE background key fetch timeout exceeded");
+                                            .e(t, "FLEDGE background key fetch timeout exceeded");
                                 } else {
                                     LoggerFactory.getFledgeLogger()
                                             .e(
@@ -159,8 +154,7 @@ public class BackgroundKeyFetchJobService extends JobService {
                                 }
 
                                 boolean shouldRetry = false;
-                                AdservicesJobServiceLogger.getInstance(
-                                                BackgroundKeyFetchJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID,
                                                 /* isSuccessful= */ false,
@@ -181,7 +175,7 @@ public class BackgroundKeyFetchJobService extends JobService {
 
         boolean shouldRetry = true;
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(
                         params, FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -191,7 +185,7 @@ public class BackgroundKeyFetchJobService extends JobService {
         this.getSystemService(JobScheduler.class)
                 .cancel(FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID);
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordJobSkipped(FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID, skipReason);
 
         jobFinished(params, false);

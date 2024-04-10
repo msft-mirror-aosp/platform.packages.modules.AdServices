@@ -18,6 +18,25 @@ package com.android.adservices.service.common.httpclient;
 
 import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
 
+import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.EMPTY_BODY;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_NETWORK_FAILURE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_TIMEOUT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_DOWNLOAD_LATENCY_BUCKETS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_AD_TECH_ID;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_END_TIMESTAMP;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_START_TIMESTAMP;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_TIME;
+import static com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImplTest.KEY_FETCH_NETWORK_END_TIMESTAMP;
+import static com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImplTest.KEY_FETCH_NETWORK_LATENCY_MS;
+import static com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImplTest.KEY_FETCH_NETWORK_START_TIMESTAMP;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -30,6 +49,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.adservices.exceptions.AdServicesNetworkException;
 import android.adservices.exceptions.RetryableAdServicesNetworkException;
@@ -51,10 +71,19 @@ import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
 import com.android.adservices.service.common.cache.HttpCache;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.service.stats.ServerAuctionKeyFetchCalledStats;
+import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImpl;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
+import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.mockwebserver.Dispatcher;
@@ -66,7 +95,9 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.Returns;
@@ -114,9 +145,15 @@ public class AdServicesHttpsClientTest {
     @Mock private URL mUrlMock;
     @Mock private HttpsURLConnection mURLConnectionMock;
     @Mock private InputStream mInputStreamMock;
+    @Mock private Clock mMockClock;
     private HttpCache mCache;
     private CacheEntryDao mCacheEntryDao;
     private String mData;
+    private AdServicesLogger mAdServicesLoggerSpy;
+    private ArgumentCaptor<EncodingFetchStats> mEncodingJsFetchStatsArgumentCaptor;
+    private ArgumentCaptor<ServerAuctionKeyFetchCalledStats>
+            mServerAuctionKeyFetchCalledStatsArgumentCaptor;
+    private FetchProcessLogger mFetchProcessLogger;
 
     @Before
     public void setup() throws Exception {
@@ -462,7 +499,13 @@ public class AdServicesHttpsClientTest {
 
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.create(
-                        uri, requestProperties, responseHeaderKeys, false, DEV_CONTEXT_DISABLED);
+                        uri,
+                        requestProperties,
+                        responseHeaderKeys,
+                        false,
+                        DEV_CONTEXT_DISABLED,
+                        AdServicesHttpUtil.HttpMethodType.GET,
+                        EMPTY_BODY);
 
         assertEquals(uri, request.getUri());
         assertEquals(requestProperties, request.getRequestProperties());
@@ -486,7 +529,13 @@ public class AdServicesHttpsClientTest {
 
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.create(
-                        uri, requestProperties, responseHeaderKeys, false, DEV_CONTEXT_ENABLED);
+                        uri,
+                        requestProperties,
+                        responseHeaderKeys,
+                        false,
+                        DEV_CONTEXT_ENABLED,
+                        AdServicesHttpUtil.HttpMethodType.GET,
+                        EMPTY_BODY);
 
         assertEquals(uri, request.getUri());
         assertEquals(requestProperties, request.getRequestProperties());
@@ -518,6 +567,8 @@ public class AdServicesHttpsClientTest {
 
     @Test
     public void testFetchPayloadResponsesUsesCache() throws Exception {
+        setupEncodingJsFetchStatsLogging();
+
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         new Dispatcher() {
@@ -548,13 +599,14 @@ public class AdServicesHttpsClientTest {
         // will get cache miss, no point asserting further
         assumeTrue(mCache.getCachedEntriesCount() == 1);
         AdServicesHttpClientResponse response =
-                mClient.fetchPayload(
+                mClient.fetchPayloadWithLogging(
                                 AdServicesHttpClientRequest.builder()
                                         .setUri(Uri.parse(url.toString()))
                                         .setUseCache(true)
                                         .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
                                         .setDevContext(DEV_CONTEXT_DISABLED)
-                                        .build())
+                                        .build(),
+                                mFetchProcessLogger)
                         .get();
         assertEquals(mJsScript, response.getResponseBody());
         assertTrue(
@@ -568,6 +620,9 @@ public class AdServicesHttpsClientTest {
         assertEquals(
                 "Only one header should have been cached", 1, response.getResponseHeaders().size());
         assertEquals("This call should have been cached", 1, server.getRequestCount());
+
+        // Verify the logging of EncodingFetchStats
+        verifyEncodingJsFetchStatsLogging(ENCODING_FETCH_STATUS_SUCCESS);
     }
 
     @Test
@@ -859,9 +914,314 @@ public class AdServicesHttpsClientTest {
         assertEquals(mJsScript, response.getResponseBody());
     }
 
+    @Test
+    public void testperformRequestAndGetResponseInBytes_postsCorrectData() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+        URL url = server.getUrl(mReportingPath);
+        byte[] postedBody = {1, 2, 3};
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(
+                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBody)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.POST)
+                        .build();
+
+        mClient.performRequestGetResponseInBase64String(request).get();
+
+        RecordedRequest recordedRequest1 = server.takeRequest();
+        assertThat(recordedRequest1.getMethod())
+                .isEqualTo(AdServicesHttpUtil.HttpMethodType.POST.name());
+        assertThat(recordedRequest1.getBody()).isEqualTo(postedBody);
+    }
+
+    @Test
+    public void performRequestGetResponseBytes_getRequestNonEmptyBody_requestBodyShouldBeEmpty()
+            throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+        URL url = server.getUrl(mReportingPath);
+        byte[] postedBody = {1, 2, 3};
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(
+                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBody)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.GET)
+                        .build();
+
+        mClient.performRequestGetResponseInBase64String(request).get();
+
+        RecordedRequest recordedRequest = server.takeRequest();
+        assertThat(recordedRequest.getMethod())
+                .isEqualTo(AdServicesHttpUtil.HttpMethodType.GET.name());
+        assertThat(recordedRequest.getBody()).isEqualTo(EMPTY_BODY);
+    }
+
+    @Test
+    public void testperformRequestAndGetResponseInBytes_shouldReturnResponseInBytes()
+            throws Exception {
+        byte[] byteResponse = {1, 2, 3, 54};
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody(byteResponse)));
+        URL url = server.getUrl(mReportingPath);
+        byte[] postedBodyInBytes = {1, 2, 3};
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(
+                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBodyInBytes)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.GET)
+                        .build();
+
+        AdServicesHttpClientResponse response =
+                mClient.performRequestGetResponseInBase64String(request).get();
+
+        String expectedResponseString = BaseEncoding.base64().encode(byteResponse);
+        assertThat(response.getResponseBody()).isEqualTo(expectedResponseString);
+    }
+
+    @Test
+    public void performRequestGetResponseBytes_failedStatusCode_shouldThrowErrorWithCorrectCode()
+            throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setResponseCode(429)));
+        URL url = server.getUrl(mReportingPath);
+        byte[] postedBody = {1, 2, 3};
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(
+                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBody)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.GET)
+                        .build();
+
+        // Assert future chain throws an AdServicesNetworkException.
+        Exception wrapperException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mClient.performRequestGetResponseInBase64String(request).get());
+        assertThat(wrapperException.getCause()).isInstanceOf(AdServicesNetworkException.class);
+
+        // Assert the expected AdServicesNetworkException is thrown.
+        AdServicesNetworkException exception =
+                (AdServicesNetworkException) wrapperException.getCause();
+        assertThat(exception.getErrorCode())
+                .isEqualTo(AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS);
+    }
+
+    @Test
+    public void testPerformRequestAndGetResponseInString_shouldReturnResponseString()
+            throws Exception {
+        String stringResponse = "This is a plain String response which could also be a JSON String";
+        byte[] postedBodyInBytes = "{[1,2,3]}".getBytes("UTF-8");
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request)
+                            throws InterruptedException {
+                        assertEquals(new String(postedBodyInBytes), new String(request.getBody()));
+                        return new MockResponse().setBody(stringResponse);
+                    }
+                };
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        URL url = server.getUrl(mReportingPath);
+
+        ImmutableMap<String, String> requestProperties =
+                ImmutableMap.of(
+                        "Content-Type", "application/json",
+                        "Accept", "application/json");
+
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(requestProperties)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBodyInBytes)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.POST)
+                        .build();
+
+        AdServicesHttpClientResponse response =
+                mClient.performRequestGetResponseInPlainString(request).get();
+
+        assertEquals(1, server.getRequestCount());
+        assertThat(response.getResponseBody()).isEqualTo(stringResponse);
+    }
+
+    @Test
+    public void testFetchPayloadSuccessfulResponseWithEncodingJsFetchLogging() throws Exception {
+        setupEncodingJsFetchStatsLogging();
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody(mJsScript)));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        AdServicesHttpClientResponse result =
+                fetchPayloadWithEncodingJsFetchLogging(
+                        Uri.parse(url.toString()), DEV_CONTEXT_DISABLED, mFetchProcessLogger);
+        assertEquals(mJsScript, result.getResponseBody());
+
+        // Verify the logging of EncodingFetchStats
+        verifyEncodingJsFetchStatsLogging(ENCODING_FETCH_STATUS_SUCCESS);
+    }
+
+    @Test
+    public void testFetchPayloadFailedResponseWithEncodingJsFetchLogging() throws Exception {
+        setupEncodingJsFetchStatsLogging();
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setResponseCode(305)));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                fetchPayloadWithEncodingJsFetchLogging(
+                                        Uri.parse(url.toString()),
+                                        DEV_CONTEXT_DISABLED,
+                                        mFetchProcessLogger));
+        assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
+
+        // Verify the logging of EncodingFetchStats
+        verifyEncodingJsFetchStatsLogging(ENCODING_FETCH_STATUS_NETWORK_FAILURE);
+    }
+
+    @Test
+    public void testFetchPayloadDomainDoesNotExistWithEncodingJsFetchLogging() throws Exception {
+        setupEncodingJsFetchStatsLogging();
+
+        mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                fetchPayloadWithEncodingJsFetchLogging(
+                                        Uri.parse(mFakeUrl),
+                                        DEV_CONTEXT_DISABLED,
+                                        mFetchProcessLogger));
+        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+
+        // Verify the logging of EncodingFetchStats
+        verifyEncodingJsFetchStatsLogging(ENCODING_FETCH_STATUS_UNSET);
+    }
+
+    @Test
+    public void testThrowsIOExceptionWhenConnectionTimesOutWithEncodingJsFetchLogging()
+            throws Exception {
+        setupEncodingJsFetchStatsLogging();
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(
+                                new MockResponse()
+                                        .setBody(mJsScript)
+                                        .throttleBody(
+                                                mBytesPerPeriod,
+                                                mClient.getConnectTimeoutMs()
+                                                        + mClient.getReadTimeoutMs()
+                                                        + mTimeoutDeltaMs,
+                                                TimeUnit.MILLISECONDS)));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                fetchPayloadWithEncodingJsFetchLogging(
+                                        Uri.parse(url.toString()),
+                                        DEV_CONTEXT_DISABLED,
+                                        mFetchProcessLogger));
+        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+
+        // Verify the logging of EncodingFetchStats
+        verifyEncodingJsFetchStatsLogging(ENCODING_FETCH_STATUS_TIMEOUT);
+    }
+
+    @Test
+    public void testFetchPayloadSuccessfulResponseWithServerAuctionKeyFetchLogging()
+            throws Exception {
+        setupServerAuctionKeyFetchCalledStatsLogging();
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody(mJsScript)));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        AdServicesHttpClientResponse result =
+                mClient.fetchPayloadWithLogging(
+                                Uri.parse(url.toString()),
+                                DEV_CONTEXT_DISABLED,
+                                mFetchProcessLogger)
+                        .get();
+        assertEquals(mJsScript, result.getResponseBody());
+
+        // Verify the logging of EncodingFetchStats
+        verifyServerAuctionKeyFetchCalledStatsLogging(200);
+    }
+
+    @Test
+    public void testperformRequestAndGetResponseInBytesWithServerAuctionKeyFetchLogging()
+            throws Exception {
+        setupServerAuctionKeyFetchCalledStatsLogging();
+
+        byte[] byteResponse = {1, 2, 3, 54};
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody(byteResponse)));
+        URL url = server.getUrl(mReportingPath);
+        byte[] postedBodyInBytes = {1, 2, 3};
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(
+                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBodyInBytes)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.GET)
+                        .build();
+
+        AdServicesHttpClientResponse response =
+                mClient.performRequestGetResponseInBase64StringWithLogging(
+                                request, mFetchProcessLogger)
+                        .get();
+
+        String expectedResponseString = BaseEncoding.base64().encode(byteResponse);
+        assertThat(response.getResponseBody()).isEqualTo(expectedResponseString);
+
+        // Verify the logging of EncodingFetchStats
+        verifyServerAuctionKeyFetchCalledStatsLogging(200);
+    }
+
     private AdServicesHttpClientResponse fetchPayload(Uri uri, DevContext devContext)
             throws Exception {
         return mClient.fetchPayload(uri, devContext).get();
+    }
+
+    private AdServicesHttpClientResponse fetchPayloadWithEncodingJsFetchLogging(
+            Uri uri, DevContext devContext, FetchProcessLogger logger) throws Exception {
+        return mClient.fetchPayloadWithLogging(
+                        AdServicesHttpClientRequest.builder()
+                                .setUri(uri)
+                                .setDevContext(devContext)
+                                .build(),
+                        logger)
+                .get();
     }
 
     private Void getAndReadNothing(Uri uri, DevContext devContext) throws Exception {
@@ -870,5 +1230,61 @@ public class AdServicesHttpsClientTest {
 
     private Void postJson(Uri uri, String data, DevContext devContext) throws Exception {
         return mClient.postPlainText(uri, data, devContext).get();
+    }
+
+    private void setupEncodingJsFetchStatsLogging() {
+        mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
+        mEncodingJsFetchStatsArgumentCaptor = ArgumentCaptor.forClass(EncodingFetchStats.class);
+
+        when(mMockClock.currentTimeMillis())
+                .thenReturn(TEST_JS_DOWNLOAD_START_TIMESTAMP, TEST_JS_DOWNLOAD_END_TIMESTAMP);
+        EncodingFetchStats.Builder encodingJsFetchStatsBuilder = EncodingFetchStats.builder();
+        mFetchProcessLogger =
+                new EncodingJsFetchProcessLoggerImpl(
+                        mAdServicesLoggerSpy, mMockClock, encodingJsFetchStatsBuilder);
+        mFetchProcessLogger.setJsDownloadStartTimestamp(mMockClock.currentTimeMillis());
+        mFetchProcessLogger.setAdTechId(TEST_AD_TECH_ID);
+    }
+
+    private void verifyEncodingJsFetchStatsLogging(int statusCode) {
+        verify(mAdServicesLoggerSpy)
+                .logEncodingJsFetchStats(mEncodingJsFetchStatsArgumentCaptor.capture());
+
+        EncodingFetchStats stats = mEncodingJsFetchStatsArgumentCaptor.getValue();
+        assertThat(stats.getFetchStatus()).isEqualTo(statusCode);
+        assertThat(stats.getAdTechId()).isEqualTo(TEST_AD_TECH_ID);
+        assertThat(stats.getHttpResponseCode()).isEqualTo(FIELD_UNSET);
+        assertThat(stats.getJsDownloadTime())
+                .isEqualTo(computeSize(TEST_JS_DOWNLOAD_TIME, JS_DOWNLOAD_LATENCY_BUCKETS));
+    }
+
+    private void setupServerAuctionKeyFetchCalledStatsLogging() {
+        mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
+        mServerAuctionKeyFetchCalledStatsArgumentCaptor =
+                ArgumentCaptor.forClass(ServerAuctionKeyFetchCalledStats.class);
+
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(KEY_FETCH_NETWORK_START_TIMESTAMP, KEY_FETCH_NETWORK_END_TIMESTAMP);
+        mFetchProcessLogger =
+                new ServerAuctionKeyFetchExecutionLoggerImpl(mMockClock, mAdServicesLoggerSpy);
+        mFetchProcessLogger.setSource(SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION);
+        mFetchProcessLogger.setEncryptionKeySource(SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK);
+        mFetchProcessLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+    }
+
+    private void verifyServerAuctionKeyFetchCalledStatsLogging(int statusCode) {
+        verify(mAdServicesLoggerSpy)
+                .logServerAuctionKeyFetchCalledStats(
+                        mServerAuctionKeyFetchCalledStatsArgumentCaptor.capture());
+
+        ServerAuctionKeyFetchCalledStats stats =
+                mServerAuctionKeyFetchCalledStatsArgumentCaptor.getValue();
+        assertThat(stats.getSource()).isEqualTo(SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION);
+        assertThat(stats.getEncryptionKeySource())
+                .isEqualTo(SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK);
+        assertThat(stats.getCoordinatorSource())
+                .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+        assertThat(stats.getNetworkStatusCode()).isEqualTo(statusCode);
+        assertThat(stats.getNetworkLatencyMillis()).isEqualTo(KEY_FETCH_NETWORK_LATENCY_MS);
     }
 }

@@ -43,10 +43,12 @@ import com.android.adservices.service.adselection.HistogramEvent;
 import com.android.adservices.service.adselection.HistogramEventFixture;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
@@ -67,6 +69,9 @@ public class FrequencyCapDaoTest {
     private FrequencyCapDao mFrequencyCapDao;
 
     private MockitoSession mStaticMockSession;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

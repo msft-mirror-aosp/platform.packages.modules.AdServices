@@ -380,7 +380,7 @@ public class DbState {
                         .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
                         .setAttributionMode(
                                 sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
-                        .setFilterData(sJSON.optString("filterData", null))
+                        .setFilterDataString(sJSON.optString("filterData", null))
                         .setRegistrationOrigin(getRegistrationOrigin(sJSON))
                         .setTriggerSpecsString(sJSON.optString("triggerSpecs", null))
                         .setEventAttributionStatus(sJSON.optString("eventAttributionStatus", null));
@@ -428,6 +428,10 @@ public class DbState {
                 .setFilters(tJSON.optString("filters", null))
                 .setNotFilters(tJSON.optString("not_filters", null))
                 .setRegistrationOrigin(getRegistrationOrigin(tJSON))
+                .setAggregatableSourceRegistrationTimeConfig(
+                        Trigger.SourceRegistrationTimeConfig.valueOf(
+                                tJSON.getString("aggregatableSourceRegistrationTimeConfig")))
+                .setTriggerContextId(tJSON.optString("triggerContextId", null))
                 .build();
     }
 
@@ -570,7 +574,8 @@ public class DbState {
                                         rJSON.optString(
                                                 "aggregation_coordinator_origin",
                                                 "https://test.test")))
-                        .setIsFakeReport(rJSON.optBoolean("isFakeReport", false));
+                        .setIsFakeReport(rJSON.optBoolean("isFakeReport", false))
+                        .setTriggerContextId(rJSON.optString("triggerContextId", null));
 
         if (rJSON.opt("dedupKey") != null) {
             builder.setDedupKey(new UnsignedLong(rJSON.getString("dedupKey")));

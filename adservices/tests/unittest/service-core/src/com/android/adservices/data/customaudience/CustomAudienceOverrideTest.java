@@ -23,6 +23,9 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class CustomAudienceOverrideTest {
@@ -31,6 +34,9 @@ public class CustomAudienceOverrideTest {
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final Long BIDDING_LOGIC_JS_VERSION = 3L;
     private static final String TRUSTED_BIDDING_DATA = "{\"trusted_bidding_data\":1}";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildDBAdSelectionOverride() {

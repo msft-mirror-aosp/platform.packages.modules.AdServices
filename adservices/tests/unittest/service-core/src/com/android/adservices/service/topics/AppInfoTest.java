@@ -20,6 +20,9 @@ import static org.junit.Assert.assertThrows;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -30,6 +33,9 @@ public final class AppInfoTest {
 
     private static final String APP_NAME = "appName";
     private static final String APP_DESCRIPTION = "appDescription";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testCreation() throws Exception {

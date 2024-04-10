@@ -179,7 +179,6 @@
     ]
   },
   "output": {
-    "unparsable_registrations": [],
     "reports": [
       {
         "payload": {
@@ -189,7 +188,8 @@
               "key": "0x559",
               "value": 123
             }
-          ]
+          ],
+          "source_registration_time": "0"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601000"
@@ -198,40 +198,40 @@
         "payload": {
           "attribution_destination": "android-app://com.destination",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "176400",
+          "scheduled_report_time": "172800",
           "source_event_id": "123",
           "source_type": "navigation",
           "trigger_data": "7"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "176400000"
+        "report_time": "172800000"
       },
       {
         "payload": {
           "attribution_destination": "android-app://com.destination",
-          "scheduled_report_time": "176402",
+          "scheduled_report_time": "172802",
           "source_event_id": "456",
           "trigger_data": "0",
           "source_type": "navigation",
           "trigger_summary_bucket": [10, 99],
           "trigger_debug_keys": ["333"],
           "source_debug_key": "111",
-          "randomized_trigger_rate": 0.000012472785585841613
+          "randomized_trigger_rate": 0.0000125
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "176402000"
+        "report_time": "172802000"
       },
       {
         "payload": {
           "attribution_destination": "android-app://com.destination",
-          "scheduled_report_time": "176402",
+          "scheduled_report_time": "172802",
           "source_event_id": "456",
           "trigger_data": "0",
           "source_type": "navigation",
           "trigger_summary_bucket": [10, 99],
           "trigger_debug_keys": ["222"],
           "source_debug_key": "111",
-          "randomized_trigger_rate": 0.000012472785585841613
+          "randomized_trigger_rate": 0.0000125
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "report_time": "3000"
@@ -239,14 +239,14 @@
       {
         "payload": {
           "attribution_destination": "android-app://com.destination",
-          "scheduled_report_time": "176402",
+          "scheduled_report_time": "172802",
           "source_event_id": "456",
           "trigger_data": "0",
           "source_type": "navigation",
           "trigger_summary_bucket": [10, 99],
           "trigger_debug_keys": ["333"],
           "source_debug_key": "111",
-          "randomized_trigger_rate": 0.000012472785585841613
+          "randomized_trigger_rate": 0.0000125
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "report_time": "4000"

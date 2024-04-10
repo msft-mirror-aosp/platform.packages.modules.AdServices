@@ -15,10 +15,6 @@
  */
 package com.android.adservices.common;
 
-import android.content.Context;
-
-import androidx.test.InstrumentationRegistry;
-
 import org.junit.Rule;
 
 /**
@@ -42,9 +38,6 @@ public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
     protected static final String LOGCAT_TAG_UI = LOGCAT_TAG_ADSERVICES + ".ui";
     protected static final String LOGCAT_TAG_ADID = LOGCAT_TAG_ADSERVICES + ".adid";
     protected static final String LOGCAT_TAG_APPSETID = LOGCAT_TAG_ADSERVICES + ".appsetid";
-
-    // TODO(b/314188692): move to AdServicesTestCase (and refactor subclasses to use it)
-    protected static final Context sContext = InstrumentationRegistry.getTargetContext();
 
     @Rule(order = 5)
     public final AdServicesFlagsSetterRule flags = getAdServicesFlagsSetterRule();

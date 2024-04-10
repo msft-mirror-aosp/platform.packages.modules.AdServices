@@ -21,8 +21,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -72,6 +72,7 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -79,6 +80,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
@@ -136,6 +138,9 @@ public class OutcomeSelectionRunnerTest {
     private ListeningExecutorService mBlockingExecutorService;
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -217,6 +222,7 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
@@ -263,6 +269,7 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -334,6 +341,7 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_TIMEOUT),
                         anyInt());
     }

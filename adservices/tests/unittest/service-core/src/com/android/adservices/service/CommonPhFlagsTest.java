@@ -22,23 +22,23 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.provider.DeviceConfig;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.topics.fixture.SysPropForceDefaultValueFixture;
+import com.android.adservices.service.fixture.TestableSystemProperties;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public final class CommonPhFlagsTest {
 
-    @Rule
-    public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .addStaticMockFixtures(
-                            TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new)
-                    .build();
-
+public final class CommonPhFlagsTest extends AdServicesExtendedMockitoTestCase {
     private final CommonFlags mPhFlags = new CommonPhFlags() {};
+
+    @Override
+    protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
+        return newDefaultAdServicesExtendedMockitoRuleBuilder()
+                .addStaticMockFixtures(TestableDeviceConfig::new, TestableSystemProperties::new)
+                .build();
+    }
 
     @Test
     public void testGetAdServicesShellCommandEnabled() {

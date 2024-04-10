@@ -24,6 +24,9 @@ import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -32,6 +35,9 @@ import org.junit.runners.JUnit4;
 public final class EncryptedCobaltEnvelopeParamsTest {
     private static final byte[] BYTES = {0x0a, 0x0b, 0x0c};
     private static final int KEY_INDEX = 5;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void nullCiphertext_throws() throws Exception {
@@ -49,6 +55,8 @@ public final class EncryptedCobaltEnvelopeParamsTest {
         assertThat(params.getEnvironment()).isEqualTo(ENVIRONMENT_PROD);
         assertThat(params.getKeyIndex()).isEqualTo(KEY_INDEX);
         assertThat(params.getCipherText()).isEqualTo(BYTES);
+        // No file descriptor marshalling.
+        assertThat(params.describeContents()).isEqualTo(0);
     }
 
     @Test
@@ -65,5 +73,7 @@ public final class EncryptedCobaltEnvelopeParamsTest {
         assertThat(outputParams.getEnvironment()).isEqualTo(ENVIRONMENT_PROD);
         assertThat(outputParams.getKeyIndex()).isEqualTo(KEY_INDEX);
         assertThat(outputParams.getCipherText()).isEqualTo(BYTES);
+        // No file descriptor marshalling.
+        assertThat(outputParams.describeContents()).isEqualTo(0);
     }
 }

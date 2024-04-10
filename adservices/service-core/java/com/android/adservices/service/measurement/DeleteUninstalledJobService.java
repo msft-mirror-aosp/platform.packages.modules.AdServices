@@ -17,7 +17,7 @@
 package com.android.adservices.service.measurement;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -35,7 +35,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -61,7 +61,7 @@ public final class DeleteUninstalledJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDeleteUninstalledKillSwitch()) {
@@ -78,7 +78,7 @@ public final class DeleteUninstalledJobService extends JobService {
                     MeasurementImpl.getInstance(this).deleteAllUninstalledMeasurementData();
 
                     boolean shouldRetry = false;
-                    AdservicesJobServiceLogger.getInstance(DeleteUninstalledJobService.this)
+                    AdServicesJobServiceLogger.getInstance()
                             .recordJobFinished(
                                     MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
                                     /* isSuccessful */ true,
@@ -93,7 +93,7 @@ public final class DeleteUninstalledJobService extends JobService {
         LoggerFactory.getMeasurementLogger().d("DeleteUninstalledJobService.onStopJob");
         boolean shouldRetry = false;
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, MEASUREMENT_DELETE_UNINSTALLED_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -154,7 +154,7 @@ public final class DeleteUninstalledJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID, skipReason);
         }
 

@@ -74,7 +74,7 @@ public interface SdkSandboxServiceProvider {
      *
      * @param callingInfo app for which the sandbox kill is being requested.
      */
-    void stopSandboxService(CallingInfo callingInfo) throws PackageManager.NameNotFoundException;
+    void stopSandboxService(CallingInfo callingInfo);
 
     /**
      * Return {@link ISdkSandboxService} connected for {@code callingInfo} or otherwise {@code
@@ -135,6 +135,8 @@ public interface SdkSandboxServiceProvider {
      * Returns sandbox process name for the passed app package name.
      *
      * @param callingInfo app for which the sandbox status is being requested.
+     * @throws PackageManager.NameNotFoundException exception thrown if the app corresponding to the
+     *     callingInfo does not exist (e.g. if it is not installed).
      */
     @NonNull
     String toSandboxProcessName(@NonNull CallingInfo callingInfo)

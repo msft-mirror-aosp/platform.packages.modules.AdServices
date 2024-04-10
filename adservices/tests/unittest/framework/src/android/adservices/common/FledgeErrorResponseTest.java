@@ -25,11 +25,17 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link FledgeErrorResponse} */
 @SmallTest
 public final class FledgeErrorResponseTest {
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildFledgeErrorResponse() {

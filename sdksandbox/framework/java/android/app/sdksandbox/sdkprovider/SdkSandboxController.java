@@ -32,6 +32,7 @@ import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.StatsdUtil;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -40,6 +41,7 @@ import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -130,10 +132,18 @@ public class SdkSandboxController {
      */
     public @NonNull List<SandboxedSdk> getSandboxedSdks() {
         enforceSandboxedSdkContextInitialization();
+        SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS_VIA_CONTROLLER);
+        // TODO(b/319659746) : Rename the method to something more generic than using App.
+        // TODO(b/321909787) : Use injector to set time in order to write unit tests.
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(SystemClock.elapsedRealtime());
+
         try {
             return mSdkSandboxLocalSingleton
                     .getSdkToServiceCallback()
-                    .getSandboxedSdks(((SandboxedSdkContext) mContext).getClientPackageName());
+                    .getSandboxedSdks(
+                            ((SandboxedSdkContext) mContext).getClientPackageName(),
+                            sandboxLatencyInfo);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -163,6 +173,11 @@ public class SdkSandboxController {
             @NonNull OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver) {
         enforceSandboxedSdkContextInitialization();
         final LoadSdkReceiverProxy callbackProxy = new LoadSdkReceiverProxy(executor, receiver);
+        SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK_VIA_CONTROLLER);
+        // TODO(b/319659746) : Rename the method to something more generic than using App.
+        // TODO(b/321909787) : Use injector to set time in order to write unit tests.
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(SystemClock.elapsedRealtime());
 
         try {
             mSdkSandboxLocalSingleton
@@ -170,7 +185,7 @@ public class SdkSandboxController {
                     .loadSdk(
                             ((SandboxedSdkContext) mContext).getClientPackageName(),
                             sdkName,
-                            SystemClock.elapsedRealtime(),
+                            sandboxLatencyInfo,
                             params,
                             callbackProxy);
         } catch (RemoteException e) {
@@ -221,10 +236,19 @@ public class SdkSandboxController {
         if (!SdkLevel.isAtLeastU()) {
             throw new UnsupportedOperationException();
         }
+        // TODO(b/321909787) : Use injector to set time for unit tests.
+        long timeEventStarted = SystemClock.elapsedRealtime();
         enforceSandboxedSdkContextInitialization();
 
-        return mSdkSandboxActivityRegistry.register(
-                (SandboxedSdkContext) mContext, sdkSandboxActivityHandler);
+        IBinder token =
+                mSdkSandboxActivityRegistry.register(
+                        (SandboxedSdkContext) mContext, sdkSandboxActivityHandler);
+        logSandboxActivityApiLatency(
+                StatsdUtil
+                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__REGISTER_SDK_SANDBOX_ACTIVITY_HANDLER,
+                StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                timeEventStarted);
+        return token;
     }
 
     /**
@@ -248,9 +272,15 @@ public class SdkSandboxController {
         if (!SdkLevel.isAtLeastU()) {
             throw new UnsupportedOperationException();
         }
+        long timeEventStarted = SystemClock.elapsedRealtime();
         enforceSandboxedSdkContextInitialization();
 
         mSdkSandboxActivityRegistry.unregister(sdkSandboxActivityHandler);
+        logSandboxActivityApiLatency(
+                StatsdUtil
+                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__UNREGISTER_SDK_SANDBOX_ACTIVITY_HANDLER,
+                StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                timeEventStarted);
     }
 
     /**
@@ -329,7 +359,37 @@ public class SdkSandboxController {
         }
     }
 
-    private static class LoadSdkReceiverProxy extends ILoadSdkCallback.Stub {
+    private void logLatenciesFromSandbox(SandboxLatencyInfo sandboxLatencyInfo) {
+        // TODO(b/319659746) : Rename the method to something more generic than using App.
+        sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(SystemClock.elapsedRealtime());
+        try {
+            mSdkSandboxLocalSingleton
+                    .getSdkToServiceCallback()
+                    .logLatenciesFromSandbox(sandboxLatencyInfo);
+        } catch (RemoteException e) {
+            Log.e(
+                    TAG,
+                    "Logging metrics for method "
+                            + sandboxLatencyInfo.getMethod()
+                            + " failed with exception "
+                            + e.getMessage());
+        }
+    }
+
+    private void logSandboxActivityApiLatency(int method, int callResult, long timeEventStarted) {
+        try {
+            mSdkSandboxLocalSingleton
+                    .getSdkToServiceCallback()
+                    .logSandboxActivityApiLatencyFromSandbox(
+                            method,
+                            callResult,
+                            (int) (SystemClock.elapsedRealtime() - timeEventStarted));
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    private class LoadSdkReceiverProxy extends ILoadSdkCallback.Stub {
         private final Executor mExecutor;
         private final OutcomeReceiver<SandboxedSdk, LoadSdkException> mCallback;
 
@@ -342,12 +402,14 @@ public class SdkSandboxController {
         @Override
         public void onLoadSdkSuccess(
                 SandboxedSdk sandboxedSdk, SandboxLatencyInfo sandboxLatencyInfo) {
+            SdkSandboxController.this.logLatenciesFromSandbox(sandboxLatencyInfo);
             mExecutor.execute(() -> mCallback.onResult(sandboxedSdk));
         }
 
         @Override
         public void onLoadSdkFailure(
                 LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
+            SdkSandboxController.this.logLatenciesFromSandbox(sandboxLatencyInfo);
             mExecutor.execute(() -> mCallback.onError(exception));
         }
     }

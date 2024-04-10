@@ -31,6 +31,8 @@ import androidx.room.testing.MigrationTestHelper;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
@@ -44,12 +46,15 @@ public class ProtectedSignalsDatabaseMigrationTest {
     private static final Instrumentation INSTRUMENTATION =
             InstrumentationRegistry.getInstrumentation();
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
+
+    @Rule(order = 1)
     public MigrationTestHelper helper =
             new MigrationTestHelper(INSTRUMENTATION, ProtectedSignalsDatabase.class);
 
     @Test
-    public void testMigrate1To2() throws IOException {
+    public void testMigration1To2() throws IOException {
         try (SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 1)) {
             List<String> tables = listTables(db);
             assertTrue(tables.contains(DBProtectedSignal.TABLE_NAME));
@@ -78,7 +83,7 @@ public class ProtectedSignalsDatabaseMigrationTest {
     }
 
     @Test
-    public void testMigrate2To3() throws IOException {
+    public void testMigration2To3() throws IOException {
         final String encoderLogicMetadataTable = "encoder_logics";
         final int version = 2;
         final int failedEncodingCount = 3;

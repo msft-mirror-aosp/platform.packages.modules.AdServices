@@ -15,6 +15,8 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.shared.testing.AndroidLogger;
+
 /** See {@link AbstractAdServicesDeviceSupportedRule}. */
 public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
 

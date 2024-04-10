@@ -43,11 +43,9 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCap;
 import android.adservices.common.KeyedFrequencyCapFixture;
-import android.content.Context;
 import android.net.Uri;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
@@ -58,6 +56,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -75,11 +74,13 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionE2ETest.AdSelectionTestCallback;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest.FlagsOverridingAdFiltering;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.HttpCache;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
@@ -89,8 +90,12 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -103,7 +108,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 
 import java.io.File;
 import java.time.Duration;
@@ -114,6 +118,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLBACK_WAIT_MS = 500;
@@ -175,7 +180,6 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                                                     .build())
                                     .build())
                     .build();
-    @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
     @Mock private HttpCache mHttpCacheMock;
     @Mock private DevContextFilter mDevContextFilterMock;
@@ -186,7 +190,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     @Mock private File mAdSelectionDbFileMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
     @Mock private FledgeAllowListsFilter mFledgeAllowListsFilterMock;
-
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
@@ -204,39 +208,46 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     private AdSelectionServiceImpl mAdSelectionServiceImpl;
     private UpdateAdCounterHistogramInput mInputParams;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategy =
+            MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
+    private RetryStrategyFactory mRetryStrategyFactory;
+    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    private ConsentedDebugConfigurationGeneratorFactory
+            mConsentedDebugConfigurationGeneratorFactory;
+    private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
     @Before
     public void setup() {
         mAdSelectionEntryDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                Room.inMemoryDatabaseBuilder(mSpyContext, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncodedPayloadDao();
         mAppInstallDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, SharedStorageDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, SharedStorageDatabase.class)
                         .build()
                         .appInstallDao();
         mFrequencyCapDaoSpy =
                 Mockito.spy(
-                        Room.inMemoryDatabaseBuilder(mContextSpy, SharedStorageDatabase.class)
+                        Room.inMemoryDatabaseBuilder(mSpyContext, SharedStorageDatabase.class)
                                 .build()
                                 .frequencyCapDao());
 
         Flags flagsEnablingAdFiltering = new FlagsOverridingAdFiltering(true);
         doReturn(flagsEnablingAdFiltering).when(FlagsFactory::getFlags);
 
-        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContextSpy);
-        mEnrollmentDao = EnrollmentDao.getInstance(mContextSpy);
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mSpyContext);
+        mEnrollmentDao = EnrollmentDao.getInstance(mSpyContext);
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
@@ -244,9 +255,9 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
         mFledgeAuthorizationFilterSpy =
                 ExtendedMockito.spy(
                         new FledgeAuthorizationFilter(
-                                mContextSpy.getPackageManager(),
+                                mSpyContext.getPackageManager(),
                                 new EnrollmentDao(
-                                        mContextSpy,
+                                        mSpyContext,
                                         DbTestUtil.getSharedDbHelperForTest(),
                                         flagsEnablingAdFiltering),
                                 mAdServicesLoggerMock));
@@ -254,6 +265,21 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
                         mAppInstallDao, mFrequencyCapDaoSpy, flagsEnablingAdFiltering);
+
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
+        mConsentedDebugConfigurationDao =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
+                        .build()
+                        .consentedDebugConfigurationDao();
+        mConsentedDebugConfigurationGeneratorFactory =
+                new ConsentedDebugConfigurationGeneratorFactory(
+                        false, mConsentedDebugConfigurationDao);
+        mEgressConfigurationGenerator =
+                EgressConfigurationGenerator.createInstance(
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        mAdIdFetcher,
+                        Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        mLightweightExecutorService);
 
         mAdSelectionServiceImpl =
                 new AdSelectionServiceImpl(
@@ -269,7 +295,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContextSpy,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsEnablingAdFiltering,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -277,10 +303,14 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
-                        false);
+                        mUnusedKAnonSignJoinFactory,
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder(
@@ -299,10 +329,10 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                 .createDevContext();
 
         // Required stubs for Ad Selection loggers
-        doReturn(Clock.SYSTEM_CLOCK.elapsedRealtime() - 100)
+        doReturn(Clock.getInstance().elapsedRealtime() - 100)
                 .when(mCallerMetadataMock)
                 .getBinderElapsedTimestamp();
-        doReturn(mAdSelectionDbFileMock).when(mContextSpy).getDatabasePath(any());
+        doReturn(mAdSelectionDbFileMock).when(mSpyContext).getDatabasePath(any());
         doReturn(10L).when(mAdSelectionDbFileMock).length();
 
         // Required stubs for Ad Selection signals/logic fetching
@@ -337,7 +367,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                                         .setResponseBody(AdSelectionE2ETest.USE_BID_AS_SCORE_JS)
                                         .build()))
                 .when(mAdServicesHttpsClientMock)
-                .fetchPayload(any(AdServicesHttpClientRequest.class));
+                .fetchPayloadWithLogging(
+                        any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class));
     }
 
     @Test
@@ -377,10 +408,11 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
-                        mContextSpy,
+                .assertAppDeclaredAnyPermission(
+                        mSpyContext,
                         CommonFixture.TEST_PACKAGE_NAME_1,
-                        AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM);
+                        AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM,
+                        AdSelectionServiceImpl.PERMISSIONS_SET);
 
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
 
@@ -401,10 +433,11 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
         verifyNoMoreInteractions(mFrequencyCapDaoSpy);
 
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
-                        mContextSpy,
+                .assertAppDeclaredAnyPermission(
+                        mSpyContext,
                         CommonFixture.TEST_PACKAGE_NAME_1,
-                        AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM);
+                        AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM,
+                        AdSelectionServiceImpl.PERMISSIONS_SET);
     }
 
     @Test
@@ -429,7 +462,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContextSpy,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDisabledAdFiltering,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -437,10 +470,14 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
-                        false);
+                        mUnusedKAnonSignJoinFactory,
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -455,7 +492,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     public void testUpdateHistogramExceedingRateLimitNotifiesError() throws InterruptedException {
         class FlagsWithLowRateLimit implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -469,7 +506,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
 
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAdTechAllowed(any(), any(), any(), anyInt());
+                .assertAdTechAllowed(any(), any(), any(), anyInt(), anyInt());
 
         try {
             Flags flagsWithLowRateLimit = new FlagsWithLowRateLimit();
@@ -492,13 +529,13 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                             mLightweightExecutorService,
                             mBackgroundExecutorService,
                             mScheduledExecutor,
-                            mContextSpy,
+                            mSpyContext,
                             mAdServicesLoggerMock,
                             flagsWithLowRateLimit,
                             CallingAppUidSupplierProcessImpl.create(),
                             mFledgeAuthorizationFilterSpy,
                             new AdSelectionServiceFilter(
-                                    mContextSpy,
+                                    mSpyContext,
                                     mConsentManagerMock,
                                     flagsWithLowRateLimit,
                                     mAppImportanceFilterMock,
@@ -507,10 +544,14 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                                     Throttler.getInstance(flagsWithLowRateLimit)),
                             mAdFilteringFeatureFactory,
                             mConsentManagerMock,
-                            mObliviousHttpEncryptor,
+                            mMultiCloudSupportStrategy,
                             mAdSelectionDebugReportDao,
                             mAdIdFetcher,
-                            false);
+                            mUnusedKAnonSignJoinFactory,
+                            false,
+                            mRetryStrategyFactory,
+                            mConsentedDebugConfigurationGeneratorFactory,
+                            mEgressConfigurationGenerator);
 
             UpdateAdCounterHistogramTestCallback callback =
                     callUpdateAdCounterHistogram(mInputParams);
@@ -543,7 +584,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         .setAds(Collections.singletonList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -577,7 +618,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback callback = callSelectAds();
 
@@ -611,7 +652,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -657,7 +698,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -693,7 +734,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_2, "/update"),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -721,7 +762,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
             }
 
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -750,7 +791,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContextSpy,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         new FlagsWithLowEventCounts(),
                         CallingAppUidSupplierProcessImpl.create(),
@@ -758,10 +799,14 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
-                        false);
+                        mUnusedKAnonSignJoinFactory,
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -781,7 +826,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -837,7 +882,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
             }
 
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -866,7 +911,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContextSpy,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         new FlagsWithLowPerBuyerEventCounts(),
                         CallingAppUidSupplierProcessImpl.create(),
@@ -874,10 +919,14 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
-                        false);
+                        mUnusedKAnonSignJoinFactory,
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -897,7 +946,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 

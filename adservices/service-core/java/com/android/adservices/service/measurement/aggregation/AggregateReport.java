@@ -50,7 +50,7 @@ public class AggregateReport {
     private String mId;
     private Uri mPublisher;
     private Uri mAttributionDestination;
-    private long mSourceRegistrationTime;
+    @Nullable private Long mSourceRegistrationTime;
     private long mScheduledReportTime;   // triggerTime + random([10min, 1hour])
     private String mEnrollmentId;
     private String mDebugCleartextPayload;
@@ -66,6 +66,7 @@ public class AggregateReport {
     private Uri mRegistrationOrigin;
     private Uri mAggregationCoordinatorOrigin;
     private boolean mIsFakeReport;
+    @Nullable private String mTriggerContextId;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -92,7 +93,7 @@ public class AggregateReport {
         mId = null;
         mPublisher = null;
         mAttributionDestination = null;
-        mSourceRegistrationTime = 0L;
+        mSourceRegistrationTime = null;
         mScheduledReportTime = 0L;
         mEnrollmentId = null;
         mDebugCleartextPayload = null;
@@ -104,6 +105,7 @@ public class AggregateReport {
         mDedupKey = null;
         mRegistrationOrigin = null;
         mAggregationCoordinatorOrigin = null;
+        mTriggerContextId = null;
     }
 
     @Override
@@ -114,7 +116,7 @@ public class AggregateReport {
         AggregateReport aggregateReport = (AggregateReport) obj;
         return Objects.equals(mPublisher, aggregateReport.mPublisher)
                 && Objects.equals(mAttributionDestination, aggregateReport.mAttributionDestination)
-                && mSourceRegistrationTime == aggregateReport.mSourceRegistrationTime
+                && Objects.equals(mSourceRegistrationTime, aggregateReport.mSourceRegistrationTime)
                 && mScheduledReportTime == aggregateReport.mScheduledReportTime
                 && Objects.equals(mEnrollmentId, aggregateReport.mEnrollmentId)
                 && Objects.equals(mDebugCleartextPayload, aggregateReport.mDebugCleartextPayload)
@@ -132,7 +134,8 @@ public class AggregateReport {
                 && Objects.equals(
                         mAggregationCoordinatorOrigin,
                         aggregateReport.mAggregationCoordinatorOrigin)
-                && mIsFakeReport == aggregateReport.mIsFakeReport;
+                && mIsFakeReport == aggregateReport.mIsFakeReport
+                && Objects.equals(mTriggerContextId, aggregateReport.mTriggerContextId);
     }
 
     @Override
@@ -155,7 +158,8 @@ public class AggregateReport {
                 mDedupKey,
                 mRegistrationOrigin,
                 mAggregationCoordinatorOrigin,
-                mIsFakeReport);
+                mIsFakeReport,
+                mTriggerContextId);
     }
 
     /**
@@ -179,10 +183,9 @@ public class AggregateReport {
         return mAttributionDestination;
     }
 
-    /**
-     * Source registration time.
-     */
-    public long getSourceRegistrationTime() {
+    /** Source registration time. */
+    @Nullable
+    public Long getSourceRegistrationTime() {
         return mSourceRegistrationTime;
     }
 
@@ -267,6 +270,12 @@ public class AggregateReport {
     /** Is the report a null report. */
     public boolean isFakeReport() {
         return mIsFakeReport;
+    }
+
+    /** Returns the trigger's context id. */
+    @Nullable
+    public String getTriggerContextId() {
+        return mTriggerContextId;
     }
 
     /**
@@ -356,10 +365,8 @@ public class AggregateReport {
             return this;
         }
 
-        /**
-         * See {@link AggregateReport#getSourceRegistrationTime()}.
-         */
-        public Builder setSourceRegistrationTime(long sourceRegistrationTime) {
+        /** See {@link AggregateReport#getSourceRegistrationTime()}. */
+        public Builder setSourceRegistrationTime(@Nullable Long sourceRegistrationTime) {
             mAttributionReport.mSourceRegistrationTime = sourceRegistrationTime;
             return this;
         }
@@ -453,14 +460,14 @@ public class AggregateReport {
             return this;
         }
 
-        /** See {@link AggregateReport#getRegistrationOrigin()} ()} */
+        /** See {@link AggregateReport#getRegistrationOrigin()} */
         @NonNull
         public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mAttributionReport.mRegistrationOrigin = registrationOrigin;
             return this;
         }
 
-        /** See {@link AggregateReport#getAggregationCoordinatorOrigin()} ()} */
+        /** See {@link AggregateReport#getAggregationCoordinatorOrigin()} */
         public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
             mAttributionReport.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
             return this;
@@ -472,24 +479,34 @@ public class AggregateReport {
             return this;
         }
 
+        /** See {@link AggregateReport#getTriggerContextId()} */
+        public Builder setTriggerContextId(@Nullable String triggerContextId) {
+            mAttributionReport.mTriggerContextId = triggerContextId;
+            return this;
+        }
+
         /**
          * Given a {@link Trigger} trigger, source registration time, reporting delay, and the api
          * version, initialize an {@link AggregateReport.Builder} builder that builds a null
          * aggregate report. A null aggregate report is used to obscure the number of real aggregate
          * reports.
          *
-         * @param trigger the trigger that created a real aggregate report
+         * @param trigger the trigger
          * @param fakeSourceTime a fake source registration time
-         * @param delay amount of delay in ms to wait before sending out report
+         * @param delay amount of delay in ms to wait before sending out report. Only applicable if
+         *     the trigger's trigger context id is null
          * @param apiVersion api version string that is sent to aggregate service
          * @return builder initialized to build a null aggregate report
          * @throws JSONException thrown if fake contributions create invalid JSON. Fake
          *     contributions are hardcoded, so this should not be thrown.
          */
         public Builder getNullAggregateReportBuilder(
-                Trigger trigger, long fakeSourceTime, long delay, String apiVersion)
+                Trigger trigger, @Nullable Long fakeSourceTime, long delay, String apiVersion)
                 throws JSONException {
-            long reportTime = trigger.getTriggerTime() + delay;
+            long reportTime = trigger.getTriggerTime();
+            if (trigger.getTriggerContextId() == null) {
+                reportTime += delay;
+            }
             AggregateHistogramContribution paddingContribution =
                     new AggregateHistogramContribution.Builder().setPaddingContribution().build();
 
@@ -507,6 +524,7 @@ public class AggregateReport {
             mAttributionReport.mTriggerDebugKey = trigger.getDebugKey();
             mAttributionReport.mIsFakeReport = true;
             mAttributionReport.mTriggerId = trigger.getId();
+            mAttributionReport.mTriggerContextId = trigger.getTriggerContextId();
 
             if (trigger.getAggregationCoordinatorOrigin() != null) {
                 mAttributionReport.mAggregationCoordinatorOrigin =

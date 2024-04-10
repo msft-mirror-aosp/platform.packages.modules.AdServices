@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.access;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
-
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -32,20 +30,17 @@ public class PermissionAccessResolver implements IAccessResolver {
     }
 
     @Override
-    public boolean isAllowed(@NonNull Context context) {
-        return mAllowed;
+    public AccessInfo getAccessInfo(@NonNull Context context) {
+        int statusCode =
+                mAllowed
+                        ? AdServicesStatusUtils.STATUS_SUCCESS
+                        : AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
+        return new AccessInfo(mAllowed, statusCode);
     }
 
     @NonNull
     @Override
     public String getErrorMessage() {
         return ERROR_MESSAGE;
-    }
-
-    @NonNull
-    @Override
-    @AdServicesStatusUtils.StatusCode
-    public int getErrorStatusCode() {
-        return STATUS_PERMISSION_NOT_REQUESTED;
     }
 }

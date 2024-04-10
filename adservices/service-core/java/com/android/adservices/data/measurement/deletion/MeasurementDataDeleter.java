@@ -191,7 +191,7 @@ public class MeasurementDataDeleter {
                             .e(
                                     error,
                                     "MeasurementDataDeleter::delete unable to build attributed "
-                                            + "triggers. Source ID: %",
+                                            + "triggers. Source ID: %s",
                                     sourceId);
                 }
             }

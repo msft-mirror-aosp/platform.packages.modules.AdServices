@@ -74,8 +74,8 @@ public final class AttributionConfigTest {
         assertEquals(600000L, attributionConfig.getSourceExpiryOverride().longValue());
         assertEquals(99L, attributionConfig.getPriority().longValue());
         assertEquals(604800L, attributionConfig.getExpiry().longValue());
-        List<FilterMap> filterData = attributionConfig.getFilterData();
-        assertEquals(1, filterData.get(0).getAttributionFilterMap().get("campaign_type").size());
+        FilterMap filterData = attributionConfig.getFilterData();
+        assertEquals(1, filterData.getAttributionFilterMap().get("campaign_type").size());
         assertEquals(100000L, attributionConfig.getPostInstallExclusivityWindow().longValue());
     }
 
@@ -136,7 +136,7 @@ public final class AttributionConfigTest {
                         .setSourceExpiryOverride(600000L)
                         .setPriority(99L)
                         .setExpiry(604800L)
-                        .setFilterData(List.of(filterData))
+                        .setFilterData(filterData)
                         .setPostInstallExclusivityWindow(100000L)
                         .build();
 
@@ -219,9 +219,7 @@ public final class AttributionConfigTest {
         attributionConfig.put("expiry", 604800L);
         JSONObject filterDataJson = new JSONObject();
         filterDataJson.put("campaign_type", new JSONArray(Collections.singletonList("install")));
-        JSONArray filterDataSet = new JSONArray();
-        filterDataSet.put(filterDataJson);
-        attributionConfig.put("filter_data", filterDataSet);
+        attributionConfig.put("filter_data", filterDataJson);
         attributionConfig.put("post_install_exclusivity_window", 100000L);
         return attributionConfig;
     }
@@ -250,7 +248,7 @@ public final class AttributionConfigTest {
                 .setSourceExpiryOverride(600000L)
                 .setPriority(99L)
                 .setExpiry(604800L)
-                .setFilterData(List.of(filterData))
+                .setFilterData(filterData)
                 .setPostInstallExclusivityWindow(100000L)
                 .build();
     }
@@ -282,7 +280,7 @@ public final class AttributionConfigTest {
                 .setSourceExpiryOverride(600000L)
                 .setPriority(99L)
                 .setExpiry(604800L)
-                .setFilterData(List.of(filterData))
+                .setFilterData(filterData)
                 .setPostInstallExclusivityWindow(100000L)
                 .build();
     }

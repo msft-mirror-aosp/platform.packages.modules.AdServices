@@ -56,6 +56,8 @@ public class SourceNoiseHandlerTest {
                 .when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS)
                 .when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
+        doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
+                .when(mFlags).getMeasurementMaxReportStatesPerSourceRegistration();
         mSourceNoiseHandler =
                 spy(new SourceNoiseHandler(mFlags, new EventReportWindowCalcDelegate(mFlags)));
     }
@@ -64,7 +66,7 @@ public class SourceNoiseHandlerTest {
     public void fakeReports_flexEventReport_generatesFromStaticReportStates() {
         Source source = SourceFixture.getValidSourceWithFlexEventReportWithFewerState();
         // Force increase the probability of random attribution.
-        doReturn(0.50D).when(mSourceNoiseHandler).getRandomAttributionProbability(source);
+        doReturn(0.50D).when(mSourceNoiseHandler).getRandomizedSourceResponsePickRate(source);
         int falseCount = 0;
         int neverCount = 0;
         int truthCount = 0;
@@ -485,7 +487,7 @@ public class SourceNoiseHandlerTest {
 
     private void verifyAlgorithmicFakeReportGeneration(Source source, int expectedCardinality) {
         // Force increase the probability of random attribution.
-        doReturn(0.50D).when(mSourceNoiseHandler).getRandomAttributionProbability(source);
+        doReturn(0.50D).when(mSourceNoiseHandler).getRandomizedSourceResponsePickRate(source);
         int falseCount = 0;
         int neverCount = 0;
         int truthCount = 0;

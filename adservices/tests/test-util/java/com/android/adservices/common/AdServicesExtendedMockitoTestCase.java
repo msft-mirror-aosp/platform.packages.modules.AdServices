@@ -17,25 +17,35 @@ package com.android.adservices.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mode.CLEAR_AFTER_TEST_CLASS;
 
+import android.content.Context;
+
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.quality.Strictness;
+
 
 /**
  * Base class for all unit tests that use {@code ExtendedMockito} - for "regular Mockito" use {@link
  * AdServicesMockitoTestCase} instead).
  *
- * <p><b>NOTE:</b> subclasses MUST use
- * {@link com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic} and/or
- * (@link com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic} to set which static
- * classes are mocked ad/or spied.
+ * <p><b>NOTE:</b> subclasses MUST use {@link
+ * com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic} and/or {@link
+ * com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic} to set which static classes are
+ * mocked ad/or spied.
  */
 @ClearInlineMocksMode(CLEAR_AFTER_TEST_CLASS)
 public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTestCase {
+
+    @Mock protected Context mMockContext;
+
+    /** Spy the {@link AdServicesUnitTestCase#sContext} */
+    @Spy protected final Context mSpyContext = sContext;
 
     // NOTE: must use CLEAR_AFTER_TEST_CLASS by default (defined as a class annotation, so it's used
     // by both ExtendedMockitoInlineCleanerRule and AdServicesExtendedMockitoRule), as some tests
@@ -47,19 +57,35 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
             new ExtendedMockitoInlineCleanerRule();
 
     @Rule(order = 10)
-    public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this).setStrictness(getStrictness()).build();
+    public final AdServicesExtendedMockitoRule extendedMockito = getAdServicesExtendedMockitoRule();
 
     /**
-     * Allows subclasses to override the default strictness of the {@link #extendedMockito} rule.
+     * Gets the {@link AdServicesExtendedMockitoRule} that will be set as the {@code
+     * extendedMockito} rule.
      *
-     * <p><b>NOTE: </b>ideally the strictness shouldn't be matter and this method should only be
-     * temporarily overridden (for example, to return {@code STRICT_STUBS}) to debug / improve the
-     * test (for example, to remove unnecessary expectations after some refactoring).
+     * <p>By default returns a rule created using {@link
+     * #newDefaultAdServicesExtendedMockitoRuleBuilder()}, which is enough for most tests. But
+     * subclasses can override it to handle special cases that cannot be configured through
+     * annotations, like :
      *
-     * @return {@link Strictness#LENIENT} by default
+     * <ul>
+     *   <li>Changing the strictness mode.
+     *   <li>Setting the {@link com.android.modules.utils.testing.StaticMockFixture}s.
+     * </ul>
      */
-    protected Strictness getStrictness() {
-        return Strictness.LENIENT;
+    protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
+        return newDefaultAdServicesExtendedMockitoRuleBuilder().build();
     }
+
+    /**
+     * Creates a new {@link AdServicesExtendedMockitoRule.Builder} with the default properties.
+     *
+     * @return builder that initialize mocks for the class, using {@link Strictness.LENIENT lenient}
+     *     mode.
+     */
+    protected final AdServicesExtendedMockitoRule.Builder
+            newDefaultAdServicesExtendedMockitoRuleBuilder() {
+        return new AdServicesExtendedMockitoRule.Builder(this).setStrictness(Strictness.LENIENT);
+    }
+
 }

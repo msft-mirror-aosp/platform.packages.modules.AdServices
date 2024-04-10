@@ -37,15 +37,17 @@ public class AppPackageAccessResolver implements IAccessResolver {
     }
 
     @Override
-    public boolean isAllowed(@NonNull Context context) {
-        return AllowLists.isPackageAllowListed(mAllowList, mPackageName) && !isBlocked();
-    }
-
-    @NonNull
-    @Override
-    @AdServicesStatusUtils.StatusCode
-    public int getErrorStatusCode() {
-        return AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+    public AccessInfo getAccessInfo(@NonNull Context context) {
+        boolean isInAllowList = AllowLists.isPackageAllowListed(mAllowList, mPackageName);
+        boolean isInBlockList = isBlocked();
+        if (isInAllowList && !isInBlockList) {
+            return new AccessInfo(true, AdServicesStatusUtils.STATUS_SUCCESS);
+        }
+        return new AccessInfo(
+                false,
+                !isInAllowList
+                        ? AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST
+                        : AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_BLOCKLISTED);
     }
 
     @NonNull

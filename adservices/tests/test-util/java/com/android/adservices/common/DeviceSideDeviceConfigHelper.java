@@ -15,10 +15,16 @@
  */
 package com.android.adservices.common;
 
+import static android.os.Build.VERSION.SDK_INT;
+
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
 import android.provider.DeviceConfig;
 
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.AndroidSdk.Level;
+import com.android.adservices.shared.testing.DeviceConfigHelper;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -46,7 +52,7 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
     public boolean asyncSet(String name, String value) {
         mLog.v("asyncSet(%s=%s)", name, value);
         return callWithDeviceConfigPermissions(
-                () -> DeviceConfig.setProperty(mNamespace, name, value, /* makeDefault= */ false));
+                () -> DeviceConfigUtil.setDeviceConfigFlag(mNamespace, name, value));
     }
 
     @Override
@@ -59,6 +65,11 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
         }
         // Use shell command instead
         return super.asyncDelete(name);
+    }
+
+    @Override
+    public Level getDeviceApiLevel() {
+        return Level.forLevel(SDK_INT);
     }
 
     @Override

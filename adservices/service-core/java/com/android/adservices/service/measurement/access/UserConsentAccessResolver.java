@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.access;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
-
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -31,7 +29,7 @@ import com.android.adservices.service.consent.ConsentManager;
 
 /**
  * Resolves whether user consent has been provided or not to use the PPAPI. {@link
- * #isAllowed(Context)} will return true if consent notification was shown and opt-in occurred.
+ * #getAccessInfo(Context)} will return true if consent notification was shown and opt-in occurred.
  * Opt-in can happen by default value as well based on the region.
  */
 // TODO(b/269798827): Enable for R.
@@ -45,18 +43,15 @@ public class UserConsentAccessResolver implements IAccessResolver {
     }
 
     @Override
-    public boolean isAllowed(@NonNull Context context) {
+    public AccessInfo getAccessInfo(@NonNull Context context) {
         AdServicesApiConsent userConsent =
                 mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS);
-
-        return userConsent.isGiven();
-    }
-
-    @NonNull
-    @Override
-    @AdServicesStatusUtils.StatusCode
-    public int getErrorStatusCode() {
-        return STATUS_USER_CONSENT_REVOKED;
+        boolean consented = userConsent.isGiven();
+        int statusCode =
+                consented
+                        ? AdServicesStatusUtils.STATUS_SUCCESS
+                        : AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+        return new AccessInfo(consented, statusCode);
     }
 
     @NonNull

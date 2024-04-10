@@ -55,7 +55,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /** Class to manage blocked {@link Topic}s. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
@@ -75,8 +74,8 @@ public class BlockedTopicsManager {
     private static final String ERROR_MESSAGE_GET_BLOCKED_TOPICS =
             "Failed to get all blocked topics.";
 
-    private static final String ERROR_MESSAGE_CLEAR_BLOCKED_TOPICS_IN_SYSTEM_SERVER =
-            "Failed to clear all blocked topics in system server.";
+    private static final String ERROR_MESSAGE_CLEAR_BLOCKED_TOPICS =
+            "Failed to clear all blocked topics";
     private static final Object LOCK = new Object();
 
     private final TopicsDao mTopicsDao;
@@ -240,7 +239,7 @@ public class BlockedTopicsManager {
                         e,
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REMOVE_BLOCKED_TOPIC_FAILURE,
                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
-                throw new RuntimeException(ERROR_MESSAGE_REMOVE_BLOCKED_TOPIC);
+                throw new RuntimeException(ERROR_MESSAGE_REMOVE_BLOCKED_TOPIC, e);
             }
         }
     }
@@ -288,8 +287,7 @@ public class BlockedTopicsManager {
                         e,
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_GET_BLOCKED_TOPIC_FAILURE,
                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
-                sLogger.e("Failed to retrieve blocked topics: ", e);
-                throw new RuntimeException(ERROR_MESSAGE_GET_BLOCKED_TOPICS);
+                throw new RuntimeException(ERROR_MESSAGE_GET_BLOCKED_TOPICS, e);
             }
         }
     }
@@ -336,7 +334,7 @@ public class BlockedTopicsManager {
                         e,
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_CLEAR_ALL_BLOCKED_TOPICS_IN_SYSTEM_SERVER_FAILURE,
                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
-                throw new RuntimeException(ERROR_MESSAGE_CLEAR_BLOCKED_TOPICS_IN_SYSTEM_SERVER);
+                throw new RuntimeException(ERROR_MESSAGE_CLEAR_BLOCKED_TOPICS, e);
             }
         }
     }

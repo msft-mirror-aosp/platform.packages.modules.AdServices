@@ -23,9 +23,11 @@ import static com.android.adservices.service.topics.TopicsJsonMapper.KEY_TOPIC_I
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Locale;
@@ -37,6 +39,9 @@ public class TopicsJsonMapperTest {
     private static final long TAXONOMY_VERSION = 2L;
     private static final Topic SAMPLE_TOPIC =
             Topic.create(TOPIC_ID, TAXONOMY_VERSION, MODEL_VERSION);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void getTopicJson() throws JSONException {

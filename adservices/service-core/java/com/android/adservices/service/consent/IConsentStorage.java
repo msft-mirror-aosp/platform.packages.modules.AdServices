@@ -112,21 +112,6 @@ public interface IConsentStorage {
     @NonNull
     PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() throws IOException;
 
-    /**
-     * Retrieves the default AdId state.
-     *
-     * @return true if the AdId is enabled by default, false otherwise.
-     */
-    boolean getDefaultAdIdState() throws IOException;
-
-    /**
-     * Retrieves the default consent.
-     *
-     * @return AdServicesApiConsent.
-     */
-    @NonNull
-    AdServicesApiConsent getDefaultConsent(AdServicesApiType apiType) throws IOException;
-
     /** Returns current enrollment channel. */
     @NonNull
     PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
@@ -176,13 +161,6 @@ public interface IConsentStorage {
     /** Returns whether the isU18Account bit is true. */
     boolean isU18Account() throws IOException;
 
-    /** Saves the default AdId state bit to data stores based on source of truth. */
-    void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException;
-
-    /** Saves the default consent of a user. */
-    void recordDefaultConsent(@NonNull AdServicesApiType apiType, boolean defaultConsent)
-            throws IOException;
-
     /**
      * Saves information to the storage that GA UX notification was displayed for the first time to
      * the user.
@@ -194,6 +172,12 @@ public interface IConsentStorage {
      * user.
      */
     void recordNotificationDisplayed(boolean wasNotificationDisplayed) throws IOException;
+
+    /**
+     * Saves information to the storage that Pas notification was displayed for the first time to
+     * the user.
+     */
+    void recordPasNotificationDisplayed(boolean wasPasDisplayed) throws IOException;
 
     /** Saves information to the storage that user interacted with consent manually. */
     void recordUserManualInteractionWithConsent(int interaction) throws IOException;
@@ -274,4 +258,15 @@ public interface IConsentStorage {
 
     /** Returns whether the wasU18NotificationDisplayed bit is true. */
     boolean wasU18NotificationDisplayed() throws IOException;
+
+    /** Returns whether the wasPasNotificationDisplayed bit is true. */
+    boolean wasPasNotificationDisplayed() throws IOException;
+
+    /** Set the measurement data reset activity happens based on consent_source_of_truth. */
+    void setMeasurementDataReset(boolean isMeasurementDataReset) throws IOException;
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    boolean isMeasurementDataReset() throws IOException;
 }

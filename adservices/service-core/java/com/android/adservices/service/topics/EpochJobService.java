@@ -21,7 +21,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_FETCH_JOB_SCHEDULER_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_HANDLE_JOB_SERVICE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
-import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
@@ -42,7 +42,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -50,7 +50,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /** Epoch computation job. This will be run approximately once per epoch to compute Topics. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class EpochJobService extends JobService {
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
@@ -66,7 +65,7 @@ public final class EpochJobService extends JobService {
 
         LoggerFactory.getTopicsLogger().d("EpochJobService.onStartJob");
 
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(TOPICS_EPOCH_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(TOPICS_EPOCH_JOB_ID);
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             ErrorLogUtil.e(
@@ -98,7 +97,7 @@ public final class EpochJobService extends JobService {
                         LoggerFactory.getTopicsLogger().d("Epoch Computation succeeded!");
 
                         boolean shouldRetry = false;
-                        AdservicesJobServiceLogger.getInstance(EpochJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         TOPICS_EPOCH_JOB_ID, /* isSuccessful= */ true, shouldRetry);
 
@@ -117,7 +116,7 @@ public final class EpochJobService extends JobService {
                                 .e(t, "Failed to handle JobService: " + params.getJobId());
 
                         boolean shouldRetry = false;
-                        AdservicesJobServiceLogger.getInstance(EpochJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         TOPICS_EPOCH_JOB_ID,
                                         /* isSuccessful= */ false,
@@ -142,7 +141,7 @@ public final class EpochJobService extends JobService {
         // execution is completed or not to avoid executing the task twice.
         boolean shouldRetry = false;
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, TOPICS_EPOCH_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -223,7 +222,7 @@ public final class EpochJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(TOPICS_EPOCH_JOB_ID, skipReason);
         }
 

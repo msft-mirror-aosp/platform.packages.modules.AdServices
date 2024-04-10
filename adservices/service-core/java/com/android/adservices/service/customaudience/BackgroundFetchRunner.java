@@ -43,6 +43,7 @@ import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 import com.google.common.util.concurrent.FluentFuture;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.CancellationException;
@@ -140,7 +141,7 @@ public class BackgroundFetchRunner {
     }
 
     /** Updates a single given custom audience and persists the results. */
-    public FluentFuture<?> updateCustomAudience(
+    public FluentFuture<UpdateResultType> updateCustomAudience(
             @NonNull Instant jobStartTime,
             @NonNull final DBCustomAudienceBackgroundFetchData fetchData) {
         Objects.requireNonNull(jobStartTime);
@@ -171,7 +172,11 @@ public class BackgroundFetchRunner {
                                 if (Objects.nonNull(updatableData.getAds())) {
                                     numOfAds = updatableData.getAds().size();
                                     adsDataSizeInBytes =
-                                            updatableData.getAds().toString().getBytes().length;
+                                            updatableData
+                                                    .getAds()
+                                                    .toString()
+                                                    .getBytes(StandardCharsets.UTF_8)
+                                                    .length;
                                 }
                                 resultCode = STATUS_SUCCESS;
                             } else {
@@ -188,11 +193,11 @@ public class BackgroundFetchRunner {
                             } catch (Exception e) {
                                 sLogger.d(
                                         "Error when closing updateCustomAudienceExecutionLogger, "
-                                                + "skipping metrics logging: {}",
+                                                + "skipping metrics logging: %s",
                                         e.getMessage());
                             }
 
-                            return null;
+                            return updatableData.getInitialUpdateResult();
                         },
                         AdServicesExecutors.getBackgroundExecutor());
     }

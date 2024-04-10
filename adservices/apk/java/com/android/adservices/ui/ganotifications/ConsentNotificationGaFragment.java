@@ -50,6 +50,7 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
@@ -88,7 +89,7 @@ public class ConsentNotificationGaFragment extends Fragment {
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity());
         View rootView;
         if (mIsEUDevice) {
             rootView =
@@ -121,6 +122,7 @@ public class ConsentNotificationGaFragment extends Fragment {
 
         // set up left control button and right control button
         Button leftControlButton = requireActivity().findViewById(R.id.leftControlButton);
+        boolean isConsentManagerV2 = FlagsFactory.getFlags().getEnableConsentManagerV2();
         leftControlButton.setOnClickListener(
                 view -> {
                     if (mIsEUDevice) {
@@ -128,12 +130,24 @@ public class ConsentNotificationGaFragment extends Fragment {
                                 LANDING_PAGE_OPT_OUT_CLICKED, getContext());
 
                         // opt-out confirmation activity
-                        ConsentManager.getInstance(requireContext())
-                                .disable(requireContext(), AdServicesApiType.TOPICS);
+                        if (isConsentManagerV2) {
+                            ConsentManagerV2.getInstance()
+                                    .disable(requireContext(), AdServicesApiType.TOPICS);
+                        } else {
+                            ConsentManager.getInstance()
+                                    .disable(requireContext(), AdServicesApiType.TOPICS);
+                        }
+
                         if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                            ConsentManager.getInstance(requireContext())
-                                    .recordUserManualInteractionWithConsent(
-                                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                            if (isConsentManagerV2) {
+                                ConsentManagerV2.getInstance()
+                                        .recordUserManualInteractionWithConsent(
+                                                ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED);
+                            } else {
+                                ConsentManager.getInstance()
+                                        .recordUserManualInteractionWithConsent(
+                                                ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                            }
                         }
                         Bundle args = new Bundle();
                         args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, false);
@@ -258,14 +272,27 @@ public class ConsentNotificationGaFragment extends Fragment {
                 if (mIsEUDevice) {
                     ConsentNotificationActivity.handleAction(
                             LANDING_PAGE_OPT_IN_CLICKED, getContext());
-
+                    boolean isConsentManagerV2 =
+                            FlagsFactory.getFlags().getEnableConsentManagerV2();
                     // opt-in confirmation activity
-                    ConsentManager.getInstance(requireContext())
-                            .enable(requireContext(), AdServicesApiType.TOPICS);
+                    if (isConsentManagerV2) {
+                        ConsentManagerV2.getInstance()
+                                .enable(requireContext(), AdServicesApiType.TOPICS);
+                    } else {
+                        ConsentManager.getInstance()
+                                .enable(requireContext(), AdServicesApiType.TOPICS);
+                    }
+
                     if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                        ConsentManager.getInstance(requireContext())
-                                .recordUserManualInteractionWithConsent(
-                                        ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                        if (isConsentManagerV2) {
+                            ConsentManagerV2.getInstance()
+                                    .recordUserManualInteractionWithConsent(
+                                            ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED);
+                        } else {
+                            ConsentManager.getInstance()
+                                    .recordUserManualInteractionWithConsent(
+                                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                        }
                     }
                     Bundle args = new Bundle();
                     args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, true);
@@ -273,11 +300,18 @@ public class ConsentNotificationGaFragment extends Fragment {
                 } else {
                     ConsentNotificationActivity.handleAction(
                             LANDING_PAGE_GOT_IT_CLICKED, getContext());
-
+                    boolean isConsentManagerV2 =
+                            FlagsFactory.getFlags().getEnableConsentManagerV2();
                     if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                        ConsentManager.getInstance(requireContext())
-                                .recordUserManualInteractionWithConsent(
-                                        ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                        if (isConsentManagerV2) {
+                            ConsentManagerV2.getInstance()
+                                    .recordUserManualInteractionWithConsent(
+                                            ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED);
+                        } else {
+                            ConsentManager.getInstance()
+                                    .recordUserManualInteractionWithConsent(
+                                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                        }
                     }
                     // acknowledge and dismiss
                     requireActivity().finish();

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -26,8 +27,7 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNo
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
-import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
+import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 
@@ -36,7 +36,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
@@ -49,7 +48,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
-import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.os.SystemClock;
@@ -57,16 +55,16 @@ import android.os.SystemClock;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.mockito.ExtendedMockitoExpectations;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.shared.testing.JobServiceCallback;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -89,7 +87,7 @@ public class EpochJobServiceTest {
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
-    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
 
     @Spy private EpochJobService mSpyEpochJobService;
 
@@ -102,16 +100,18 @@ public class EpochJobServiceTest {
     @Mock private JobParameters mMockJobParameters;
     @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
-    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
-    private AdservicesJobServiceLogger mSpyLogger;
+    private AdServicesJobServiceLogger mSpyLogger;
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesExtendedMockitoRule extendedMockito =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(EpochJobService.class)
                     .spyStatic(TopicsWorker.class)
                     .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .spyStatic(AdServicesJobServiceLogger.class)
                     .spyStatic(ErrorLogUtil.class)
                     .mockStatic(ServiceCompatUtils.class)
                     .setStrictness(Strictness.WARN)
@@ -131,9 +131,7 @@ public class EpochJobServiceTest {
                 .when(mSpyEpochJobService)
                 .getSystemService(JobScheduler.class);
 
-        mSpyLogger =
-                ExtendedMockitoExpectations.mockAdservicesJobServiceLogger(
-                        CONTEXT, mMockStatsdLogger);
+        mSpyLogger = mockAdServicesJobServiceLogger(CONTEXT, mMockFlags);
     }
 
     @After
@@ -356,7 +354,8 @@ public class EpochJobServiceTest {
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyEpochJobService);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyEpochJobService);
 
         // Now verify that when the Job starts, it will schedule itself.
         assertThat(mSpyEpochJobService.onStartJob(mMockJobParameters)).isTrue();
@@ -434,19 +433,5 @@ public class EpochJobServiceTest {
     private void testOnStopJob() {
         // Verify nothing throws
         mSpyEpochJobService.onStopJob(mMockJobParameters);
-    }
-
-    private JobServiceCallback createJobFinishedCallback(JobService jobService) {
-        JobServiceCallback callback = new JobServiceCallback();
-
-        doAnswer(
-                        unusedInvocation -> {
-                            callback.onJobFinished();
-                            return null;
-                        })
-                .when(jobService)
-                .jobFinished(any(), anyBoolean());
-
-        return callback;
     }
 }

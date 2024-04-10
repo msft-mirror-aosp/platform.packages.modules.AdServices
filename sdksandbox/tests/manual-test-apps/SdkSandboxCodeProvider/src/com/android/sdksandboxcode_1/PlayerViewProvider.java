@@ -20,29 +20,40 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
+import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.ui.PlayerView;
 
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** Create PlayerView with Player and controlling playback based on host activity lifecycle. */
 class PlayerViewProvider {
+
+    private static final String TAG = "PlayerViewProvider";
 
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     private final WeakHashMap<PlayerView, PlayerState> mCreatedViews = new WeakHashMap<>();
 
+    private final AtomicLong mLastCreatedViewId = new AtomicLong(0);
+
     private boolean mHostActivityStarted = true;
 
     public View createPlayerView(Context windowContext, String videoUrl) {
+        final long viewId = mLastCreatedViewId.incrementAndGet();
+        final PlayerViewLogger logger = new PlayerViewLogger(viewId);
+        logger.info("Creating PlayerView");
+
         final PlayerView view = new PlayerView(windowContext);
-        final PlayerState playerState = new PlayerState(windowContext, videoUrl);
+        final PlayerState playerState = new PlayerState(windowContext, logger, videoUrl);
 
         mMainHandler.post(
                 () -> {
@@ -86,19 +97,22 @@ class PlayerViewProvider {
 
     private static final class PlayerState {
         private final Context mContext;
+        private final PlayerViewLogger mLogger;
         private final MediaItem mMediaItem;
         private ExoPlayer mPlayer;
         private boolean mAutoPlay;
         private long mAutoPlayPosition;
 
-        private PlayerState(Context context, String videoUrl) {
+        private PlayerState(Context context, PlayerViewLogger logger, String videoUrl) {
             mContext = context;
+            mLogger = logger;
             mMediaItem = MediaItem.fromUri(Uri.parse(videoUrl));
             mAutoPlayPosition = C.TIME_UNSET;
             mAutoPlay = true;
         }
 
         private Player initializePlayer() {
+            mLogger.info("Initializing Player");
             if (mPlayer != null) {
                 return mPlayer;
             }
@@ -113,6 +127,7 @@ class PlayerViewProvider {
                     new ExoPlayer.Builder(mContext)
                             .setAudioAttributes(audioAttributes, true)
                             .build();
+            mPlayer.addListener(new PlayerListener(mPlayer, mLogger));
             mPlayer.setPlayWhenReady(mAutoPlay);
             mPlayer.setMediaItem(mMediaItem);
             boolean hasStartPosition = mAutoPlayPosition != C.TIME_UNSET;
@@ -125,6 +140,7 @@ class PlayerViewProvider {
         }
 
         private void releasePlayer() {
+            mLogger.info("Releasing Player");
             if (mPlayer == null) {
                 return;
             }
@@ -134,6 +150,63 @@ class PlayerViewProvider {
 
             mPlayer.release();
             mPlayer = null;
+        }
+    }
+
+    private static class PlayerListener implements Player.Listener {
+
+        private final Player mPlayer;
+
+        private final PlayerViewLogger mLogger;
+
+        private PlayerListener(Player player, PlayerViewLogger logger) {
+            mPlayer = player;
+            mLogger = logger;
+        }
+
+        @Override
+        public void onIsLoadingChanged(boolean isLoading) {
+            mLogger.info("Player onIsLoadingChanged, isLoading = " + isLoading);
+        }
+
+        @Override
+        public void onPlaybackStateChanged(int playbackState) {
+            mLogger.info("Player onPlaybackStateChanged, playbackState = " + playbackState);
+            if (playbackState == Player.STATE_READY) {
+                // Unmute at new playback
+                mPlayer.setVolume(1);
+            }
+        }
+
+        @Override
+        public void onIsPlayingChanged(boolean isPlaying) {
+            mLogger.info("Player onIsPlayingChanged, isPlaying = " + isPlaying);
+            if (!isPlaying) {
+                // For testing, mute the video when it is paused until end of current playback.
+                mPlayer.setVolume(0);
+            }
+        }
+
+        @Override
+        public void onPlayerError(PlaybackException error) {
+            mLogger.error(error);
+        }
+    }
+
+    private static final class PlayerViewLogger {
+
+        private final long mViewId;
+
+        private PlayerViewLogger(long viewId) {
+            mViewId = viewId;
+        }
+
+        public void info(String message) {
+            Log.i(TAG, "[PlayerView#" + mViewId + "] " + message);
+        }
+
+        public void error(Exception exception) {
+            Log.e(TAG, "[PlayerView#" + mViewId + "] " + exception.getMessage(), exception);
         }
     }
 }

@@ -16,11 +16,20 @@
 
 package com.android.adservices.data.signals;
 
+import static com.android.adservices.data.signals.EncoderLogicHandler.EMPTY_ADTECH_ID;
 import static com.android.adservices.data.signals.EncoderLogicHandler.ENCODER_VERSION_RESPONSE_HEADER;
 import static com.android.adservices.data.signals.EncoderLogicHandler.FALLBACK_VERSION;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_OTHER_FAILURE;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_AD_TECH_ID;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_END_TIMESTAMP;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_START_TIMESTAMP;
+
+import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -29,10 +38,18 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -78,15 +95,23 @@ public class EncoderLogicHandlerTest {
 
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
 
+    @Mock private Clock mMockClock;
+
     @Captor ArgumentCaptor<DBEncoderLogicMetadata> mDBEncoderLogicArgumentCaptor;
 
     private ListeningExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
 
     private ExecutorService mService = Executors.newFixedThreadPool(5);
     private EncoderLogicHandler mEncoderLogicHandler;
+    private AdServicesLogger mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
+    private Flags mFlags;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
+        mFlags = new EncoderLogicHandlerTestFlags();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
@@ -94,7 +119,9 @@ public class EncoderLogicHandlerTest {
                         mEncoderLogicMetadataDao,
                         mProtectedSignalsDao,
                         mAdServicesHttpsClient,
-                        mExecutorService);
+                        mExecutorService,
+                        mAdServicesLoggerSpy,
+                        mFlags);
     }
 
     @Test
@@ -132,7 +159,9 @@ public class EncoderLogicHandlerTest {
 
         ListenableFuture<AdServicesHttpClientResponse> responseFuture =
                 Futures.immediateFuture(response);
-        when(mAdServicesHttpsClient.fetchPayload(request)).thenReturn(responseFuture);
+        when(mAdServicesHttpsClient.fetchPayloadWithLogging(
+                        any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class)))
+                .thenReturn(responseFuture);
         when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
 
         boolean updateSucceeded =
@@ -145,6 +174,16 @@ public class EncoderLogicHandlerTest {
     @Test
     public void testDownloadAndUpdate_skipped()
             throws ExecutionException, InterruptedException, TimeoutException {
+        ArgumentCaptor<EncodingFetchStats> argumentCaptor =
+                ArgumentCaptor.forClass(EncodingFetchStats.class);
+        when(mMockClock.currentTimeMillis()).thenReturn(TEST_JS_DOWNLOAD_END_TIMESTAMP);
+        EncodingFetchStats.Builder encodingJsFetchStatsBuilder = EncodingFetchStats.builder();
+        FetchProcessLogger fetchProcessLogger =
+                new EncodingJsFetchProcessLoggerImpl(
+                        mAdServicesLoggerSpy, mMockClock, encodingJsFetchStatsBuilder);
+        fetchProcessLogger.setJsDownloadStartTimestamp(TEST_JS_DOWNLOAD_START_TIMESTAMP);
+        fetchProcessLogger.setAdTechId(TEST_AD_TECH_ID);
+
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         DBEncoderEndpoint encoderEndpoint = null;
 
@@ -158,6 +197,14 @@ public class EncoderLogicHandlerTest {
 
         verifyZeroInteractions(
                 mAdServicesHttpsClient, mEncoderPersistenceDao, mEncoderLogicMetadataDao);
+
+        // Verify the logging of EncodingFetchStats
+        verify(mAdServicesLoggerSpy).logEncodingJsFetchStats(argumentCaptor.capture());
+
+        EncodingFetchStats stats = argumentCaptor.getValue();
+        assertThat(stats.getFetchStatus()).isEqualTo(ENCODING_FETCH_STATUS_OTHER_FAILURE);
+        assertThat(stats.getAdTechId()).isEqualTo(EMPTY_ADTECH_ID);
+        assertThat(stats.getHttpResponseCode()).isEqualTo(FIELD_UNSET);
     }
 
     @Test
@@ -348,5 +395,12 @@ public class EncoderLogicHandlerTest {
                     writeWhileUnLockedLatch.countDown();
                 });
         assertTrue(writeWhileUnLockedLatch.await(5, TimeUnit.SECONDS));
+    }
+
+    private static class EncoderLogicHandlerTestFlags implements Flags {
+        @Override
+        public boolean getPasExtendedMetricsEnabled() {
+            return true;
+        }
     }
 }

@@ -28,11 +28,13 @@ import android.os.Process;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.Futures;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -48,6 +50,9 @@ public class AuctionServerDebugReportingTest {
     @Mock private Flags mFlagsMock;
     @Mock private AdIdFetcher mAdIdFetcher;
     private ExecutorService mLightweightExecutorService;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

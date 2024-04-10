@@ -159,6 +159,9 @@ public final class AdData implements Parcelable {
      * <p>Ad render id is collected for each {@link AdData} when server auction request is received.
      *
      * <p>Any {@link AdData} without ad render id will be ineligible for server-side auction.
+     *
+     * <p>The overall size of the CA is limited. The size of this field is considered using
+     * {@link String#getBytes()} in {@code UTF-8} encoding.
      */
     @Nullable
     public String getAdRenderId() {
@@ -294,9 +297,9 @@ public final class AdData implements Parcelable {
          */
         @NonNull
         public AdData build() {
-            Objects.requireNonNull(mRenderUri);
+            Objects.requireNonNull(mRenderUri, "The render URI has not been provided");
             // TODO(b/231997523): Add JSON field validation.
-            Objects.requireNonNull(mMetadata);
+            Objects.requireNonNull(mMetadata, "The metadata has not been provided");
 
             return new AdData(this);
         }

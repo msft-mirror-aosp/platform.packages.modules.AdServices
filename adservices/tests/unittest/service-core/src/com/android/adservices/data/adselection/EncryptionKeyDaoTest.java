@@ -27,9 +27,12 @@ import android.content.Context;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -87,6 +90,9 @@ public class EncryptionKeyDaoTest {
                     .build();
 
     private EncryptionKeyDao mEncryptionKeyDao;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

@@ -57,6 +57,8 @@ public class GetAdSelectionDataLatency {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD =
             "CustomAudienceOneBuyerOneCaOneAd.json";
+    private static final String CUSTOM_AUDIENCE_SERVER_AUCTION_ONE_BUYER_LARGE_CA =
+            "ServerPerformanceCustomAudiencesOneBuyerLargeCa.json";
     private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
 
     private static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
@@ -345,6 +347,7 @@ public class GetAdSelectionDataLatency {
 
     @Test
     public void test_withoutFiltering_varyingCAs_500() throws Exception {
+        increaseMaxCAsPerApp();
         List<CustomAudience> customAudiences =
                 CustomAudienceFixture.getNValidCustomAudiences(
                         /* nBuyers= */ 4, /* nCAsPerBuyer= */ 500, /* nAdsPerCA= */ 5);
@@ -368,10 +371,15 @@ public class GetAdSelectionDataLatency {
                         (endTime - startTime) / NANO_TO_MILLISECONDS));
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetMaxCAsPerApp();
     }
+
+
 
     @Test
     public void test_withoutFiltering_varyingCAs_1000() throws Exception {
+        increaseMaxCAsPerApp();
+        increasePayloadBucketSize();
         List<CustomAudience> customAudiences =
                 CustomAudienceFixture.getNValidCustomAudiences(
                         /* nBuyers= */ 4, /* nCAsPerBuyer= */ 1000, /* nAdsPerCA= */ 5);
@@ -395,6 +403,8 @@ public class GetAdSelectionDataLatency {
                         (endTime - startTime) / NANO_TO_MILLISECONDS));
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetPayloadBucketSize();
+        resetMaxCAsPerApp();
     }
 
     @Test
@@ -512,6 +522,7 @@ public class GetAdSelectionDataLatency {
     @Test
     public void test_withoutFiltering_varyingAds_1000() throws Exception {
         increaseMaximumAds();
+        increasePayloadBucketSize();
         List<CustomAudience> customAudiences =
                 CustomAudienceFixture.getNValidCustomAudiences(
                         /* nBuyers= */ 4, /* nCAsPerBuyer= */ 10, /* nAdsPerCA= */ 1000);
@@ -535,7 +546,206 @@ public class GetAdSelectionDataLatency {
                         (endTime - startTime) / NANO_TO_MILLISECONDS));
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetPayloadBucketSize();
         resetMaximumAds();
+    }
+
+    @Test
+    public void test_withoutFiltering_limits_baseline() throws Exception {
+        increaseMaximumAds();
+        List<CustomAudience> customAudiences =
+                CustomAudienceTestFixture.readCustomAudiences(
+                        CUSTOM_AUDIENCE_SERVER_AUCTION_ONE_BUYER_LARGE_CA);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_limits_baseline",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetMaximumAds();
+    }
+
+    @Test
+    public void test_withoutFiltering_limits_min() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 2, /* nCAsPerBuyer= */ 50, /* nAdsPerCA= */ 25);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_limits_min",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
+
+    @Test
+    public void test_withoutFiltering_limits_belowAverage() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 50, /* nAdsPerCA= */ 25);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_limits_belowAverage",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
+
+    @Test
+    public void test_withoutFiltering_limits_average() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 100, /* nAdsPerCA= */ 25);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_limits_average",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
+
+    @Test
+    public void test_withoutFiltering_limits_aboveAverage() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 10, /* nCAsPerBuyer= */ 100, /* nAdsPerCA= */ 25);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_limits_aboveAverage",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
+
+    @Test
+    public void test_withoutFiltering_limits_max() throws Exception {
+        increaseApiTimeout();
+        increaseMaxCAsPerApp();
+        increaseMaximumAds();
+        increasePayloadBucketSize();
+
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 10, /* nCAsPerBuyer= */ 400, /* nAdsPerCA= */ 25);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        long startTime = System.nanoTime();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_limits_max",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+
+        resetPayloadBucketSize();
+        resetMaxCAsPerApp();
+        resetMaximumAds();
+        resetApiTimeout();
+    }
+
+    void increaseApiTimeout() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_auction_server_overall_timeout_ms 100000");
+    }
+
+    void resetApiTimeout() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_auction_server_overall_timeout_ms 5000");
+    }
+
+    void increaseMaxCAsPerApp() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_max_count 10000");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_per_app_max_count 10000");
+    }
+
+    void resetMaxCAsPerApp() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_max_count 4000");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_per_app_max_count 1000");
     }
 
     void increaseMaximumAds() {

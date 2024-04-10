@@ -15,7 +15,10 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.Nullable;
+import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
 import java.util.Objects;
 
@@ -35,6 +38,12 @@ abstract class AbstractDeviceSupportHelper {
     // TODO(b/297408848): rename to AdServicesLite something
     private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
             SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
+    private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_LARGE_SCREEN =
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "large_screen_device";
+
+    // Used only for Go device checks, which rely on checking GMS Core and Play Store.
+    public static final String GMS_CORE_PACKAGE = "com.google.android.gms";
+    public static final String PLAY_STORE_PACKAGE = "com.android.vending";
 
     protected final Logger mLog;
     private final SystemPropertiesHelper.Interface mSystemProperties;
@@ -64,6 +73,10 @@ abstract class AbstractDeviceSupportHelper {
         return supported;
     }
 
+    public final boolean isGoDevice() {
+        return isLowRamDevice() && isPhone() && hasGmsCore() && hasPlayStore();
+    }
+
     // TODO(b/297408848): rename to isAdservicesLiteDevice() or something like that
     /** Checks whether the device has low ram. */
     public final boolean isLowRamDevice() {
@@ -91,14 +104,48 @@ abstract class AbstractDeviceSupportHelper {
         return isIt;
     }
 
+    public final boolean isLargeScreenDevice() {
+        if (isDebuggable()) {
+            String overriddenValue =
+                    mSystemProperties.get(SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_LARGE_SCREEN);
+            if (isNotEmpty(overriddenValue)) {
+                boolean isLargeScreenDevice = Boolean.valueOf(overriddenValue);
+                mLog.i(
+                        "isLargeScreenDevice(): returning %b as defined by system property %s (%s)",
+                        isLargeScreenDevice,
+                        SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_LARGE_SCREEN,
+                        overriddenValue);
+                return isLargeScreenDevice;
+            }
+        }
+
+        boolean isLargeScreenDevice = isLargeScreenDeviceByDefault();
+        boolean isPhone = isPhone();
+        boolean isIt = isPhone && isLargeScreenDevice;
+        mLog.v(
+                "isLargeScreenDevice(): returning non-simulated value %b when isPhone=%b and"
+                        + " isLargeScreenDevice=%b",
+                isIt, isPhone, isLargeScreenDevice);
+        return isIt;
+    }
+
+    protected abstract boolean hasGmsCore();
+
+    protected abstract boolean hasPlayStore();
+
     protected abstract boolean hasPackageManagerFeature(String feature);
 
     protected abstract boolean isLowRamDeviceByDefault();
 
+    protected abstract boolean isLargeScreenDeviceByDefault();
+
     protected abstract boolean isDebuggable();
 
+    @Nullable
+    protected abstract String getAdServicesPackageName();
+
     private boolean isDeviceSupportedByDefault() {
-        return isPhone() && !isLowRamDevice();
+        return isPhone() && !isGoDevice();
     }
 
     private boolean isPhone() {

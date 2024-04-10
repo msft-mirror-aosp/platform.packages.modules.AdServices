@@ -27,7 +27,9 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.service.js.JSScriptArgument;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 @SmallTest
@@ -42,6 +44,9 @@ public class SelectAdsFromOutcomesArgumentUtilTest {
                     .setWinningAdBid(BID)
                     .setWinningAdRenderUri(URI)
                     .build();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testConvertsToScriptArgument() {

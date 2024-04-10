@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.CommonFixture;
 
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -41,6 +42,9 @@ public class SignalEvictionControllerTest {
     @Mock private SignalEvictor mSignalEvictorMock2;
     @Mock private SignalEvictor mSignalEvictorMock3;
     private SignalEvictionController mController;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

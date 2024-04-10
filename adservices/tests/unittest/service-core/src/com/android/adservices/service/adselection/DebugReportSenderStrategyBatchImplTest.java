@@ -29,11 +29,13 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -49,6 +51,9 @@ public class DebugReportSenderStrategyBatchImplTest {
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     private DebugReportSenderStrategyBatchImpl mDebugReportSender;
     private MockitoSession mStaticMockSession;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

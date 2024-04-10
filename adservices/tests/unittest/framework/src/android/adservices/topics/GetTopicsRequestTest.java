@@ -22,6 +22,9 @@ import static org.junit.Assert.assertThrows;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -30,6 +33,9 @@ import org.junit.Test;
 @SmallTest
 public final class GetTopicsRequestTest {
     private static final String SOME_SDK_NAME = "SomeSDKName";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuilder_notSettingSdkName() {

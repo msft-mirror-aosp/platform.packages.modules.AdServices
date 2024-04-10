@@ -244,7 +244,7 @@ public class BackgroundFetchWorker {
                                             jobStartTime);
                                     mBackgroundFetchRunner.deleteDisallowedOwnerCustomAudiences();
                                     mBackgroundFetchRunner.deleteDisallowedBuyerCustomAudiences();
-                                    if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
+                                    if (mFlags.getFledgeAppInstallFilteringEnabled()) {
                                         mBackgroundFetchRunner
                                                 .deleteDisallowedPackageAppInstallEntries();
                                     }
@@ -283,7 +283,7 @@ public class BackgroundFetchWorker {
         } catch (Exception e) {
             sLogger.d(
                     "Error when closing backgroundFetchExecutionLogger, "
-                            + "skipping metrics logging: {}",
+                            + "skipping metrics logging: %s",
                     e.getMessage());
         }
     }

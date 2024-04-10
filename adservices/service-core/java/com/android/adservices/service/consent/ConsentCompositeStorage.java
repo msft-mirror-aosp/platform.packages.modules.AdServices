@@ -277,50 +277,6 @@ public class ConsentCompositeStorage implements IConsentStorage {
         }
     }
 
-    /**
-     * Retrieves the default AdId state.
-     *
-     * @return true if the AdId is enabled by default, false otherwise.
-     */
-    @Override
-    public boolean getDefaultAdIdState() {
-        for (IConsentStorage storage : getConsentStorageList()) {
-            try {
-                return storage.getDefaultAdIdState();
-            } catch (ConsentStorageDeferException e) {
-                LogUtil.i(
-                        "Skip current storage manager %s. Defer to next one",
-                        storage.getClass().getSimpleName());
-            } catch (IOException e) {
-                logDatastoreWhileRecordingDefaultConsent(e);
-                return false;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Retrieves the PP API default consent.
-     *
-     * @return AdServicesApiConsent.
-     */
-    @Override
-    public AdServicesApiConsent getDefaultConsent(AdServicesApiType apiType) {
-        for (IConsentStorage storage : getConsentStorageList()) {
-            try {
-                return storage.getDefaultConsent(apiType);
-            } catch (ConsentStorageDeferException e) {
-                LogUtil.i(
-                        "Skip current storage manager %s. Defer to next one",
-                        storage.getClass().getSimpleName());
-            } catch (IOException e) {
-                logDatastoreWhileRecordingDefaultConsent(e);
-                return AdServicesApiConsent.REVOKED;
-            }
-        }
-        return AdServicesApiConsent.REVOKED;
-    }
-
     /** Returns current enrollment channel. */
     @Override
     public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
@@ -582,40 +538,6 @@ public class ConsentCompositeStorage implements IConsentStorage {
         }
     }
 
-    /** Saves the default AdId state bit to data stores based on source of truth. */
-    @Override
-    public void recordDefaultAdIdState(boolean defaultAdIdState) {
-        for (IConsentStorage storage : getConsentStorageList()) {
-            try {
-                storage.recordDefaultAdIdState(defaultAdIdState);
-            } catch (ConsentStorageDeferException e) {
-                LogUtil.i(
-                        "Skip current storage manager %s. Defer to next one",
-                        storage.getClass().getSimpleName());
-            } catch (IOException e) {
-                logDatastoreManualInteractionException(e);
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    /** Saves the default consent of a user. */
-    @Override
-    public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent) {
-        for (IConsentStorage storage : getConsentStorageList()) {
-            try {
-                storage.recordDefaultConsent(apiType, defaultConsent);
-            } catch (ConsentStorageDeferException e) {
-                LogUtil.i(
-                        "Skip current storage manager %s. Defer to next one",
-                        storage.getClass().getSimpleName());
-            } catch (IOException e) {
-                logDatastoreManualInteractionException(e);
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
     /**
      * Saves information to the storage that GA UX notification was displayed for the first time to
      * the user.
@@ -645,6 +567,26 @@ public class ConsentCompositeStorage implements IConsentStorage {
         for (IConsentStorage storage : getConsentStorageList()) {
             try {
                 storage.recordNotificationDisplayed(wasNotificationDisplayed);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDatastoreManualInteractionException(e);
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    /**
+     * Saves information to the storage that Pas notification was displayed for the first time to
+     * the user.
+     */
+    @Override
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.recordPasNotificationDisplayed(wasPasDisplayed);
             } catch (ConsentStorageDeferException e) {
                 LogUtil.i(
                         "Skip current storage manager %s. Defer to next one",
@@ -829,10 +771,10 @@ public class ConsentCompositeStorage implements IConsentStorage {
                         storage.getClass().getSimpleName());
             } catch (IOException e) {
                 logDataStoreWhileRecordingException(e);
-                return false;
+                return true;
             }
         }
-        return false;
+        return true;
     }
 
     /**
@@ -852,10 +794,10 @@ public class ConsentCompositeStorage implements IConsentStorage {
                         storage.getClass().getSimpleName());
             } catch (IOException e) {
                 logDataStoreWhileRecordingException(e);
-                return false;
+                return true;
             }
         }
-        return false;
+        return true;
     }
 
     /** Returns whether the wasU18NotificationDisplayed bit is true. */
@@ -864,6 +806,59 @@ public class ConsentCompositeStorage implements IConsentStorage {
         for (IConsentStorage storage : getConsentStorageList()) {
             try {
                 return storage.wasU18NotificationDisplayed();
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                return true;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean wasPasNotificationDisplayed() {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                return storage.wasPasNotificationDisplayed();
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                return true;
+            }
+        }
+        return true;
+    }
+
+    /** Set the measurement data reset activity happens based on consent_source_of_truth. */
+    @Override
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.setMeasurementDataReset(isMeasurementDataReset);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+            }
+        }
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    @Override
+    public boolean isMeasurementDataReset() {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                return storage.isMeasurementDataReset();
             } catch (ConsentStorageDeferException e) {
                 LogUtil.i(
                         "Skip current storage manager %s. Defer to next one",

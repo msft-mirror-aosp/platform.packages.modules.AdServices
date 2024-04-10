@@ -19,11 +19,17 @@ package com.android.adservices.service.signals.updateprocessors;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class UpdateProcessorSelectorTest {
 
     public UpdateProcessorSelector mUpdateProcessorSelector = new UpdateProcessorSelector();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testInvalid() {

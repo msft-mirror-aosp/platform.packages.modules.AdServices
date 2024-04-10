@@ -98,11 +98,11 @@
   },
   "output": {
     "event_level_results": [{
-      "report_time": "800176400001",
+      "report_time": "800172800001",
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
         "attribution_destination": "android-app://example.2d1.test",
-        "scheduled_report_time": "800176400",
+        "scheduled_report_time": "800172800",
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
@@ -120,7 +120,8 @@
           {"key": "0x559", "value": 32768},
           {"key": "0xa85", "value": 1664}
         ],
-        "trigger_debug_key" : "8971346783"
+        "trigger_debug_key" : "8971346783",
+        "source_registration_time": "799977600"
       }
     }] ,
     "debug_event_level_results": [],

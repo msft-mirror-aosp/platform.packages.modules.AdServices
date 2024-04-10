@@ -127,6 +127,7 @@ public class MeasurementCtsDebuggableTest {
     public void setup() throws Exception {
         mMeasurementManager = MeasurementManager.get(sContext);
         Objects.requireNonNull(mMeasurementManager);
+        executeDeleteRegistrations();
     }
 
     @Test
@@ -615,8 +616,7 @@ public class MeasurementCtsDebuggableTest {
                 "device_config put adservices global_kill_switch false");
 
         // Override Ad ID kill switch.
-        getUiDevice().executeShellCommand(
-                "setprop debug.adservices.adid_kill_switch false");
+        getUiDevice().executeShellCommand("device_config put adservices adid_kill_switch false");
 
         // Override measurement kill switch.
         getUiDevice().executeShellCommand(
@@ -663,10 +663,6 @@ public class MeasurementCtsDebuggableTest {
 
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
-                + "measurement_min_event_report_delay_millis 0");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
                 + "measurement_enable_configurable_aggregate_report_delay true");
 
         getUiDevice().executeShellCommand(
@@ -693,8 +689,7 @@ public class MeasurementCtsDebuggableTest {
                 "device_config put adservices global_kill_switch null");
 
         // Reset Ad ID kill switch.
-        getUiDevice().executeShellCommand(
-                "setprop debug.adservices.adid_kill_switch null");
+        getUiDevice().executeShellCommand("device_config put adservices adid_kill_switch null");
 
         // Reset measurement kill switch.
         getUiDevice().executeShellCommand(
@@ -728,10 +723,6 @@ public class MeasurementCtsDebuggableTest {
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
                 + "measurement_event_reports_vtc_early_reporting_windows null");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_min_event_report_delay_millis null");
 
         getUiDevice().executeShellCommand(
                 "device_config put adservices "

@@ -35,10 +35,12 @@ import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -50,6 +52,9 @@ public class AuctionEncryptionKeyParserTest {
 
     private Flags mFlags = new AuctionEncryptionKeyParserTestFlags();
     private AuctionEncryptionKeyParser mAuctionEncryptionKeyParser;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

@@ -69,6 +69,9 @@ android_library {
         "modules-utils-testable-device-config",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+    },
 }
 
 android_library {
@@ -92,6 +95,9 @@ android_library {
         "truth",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+    },
 }
 
 java_library_host {
@@ -101,8 +107,10 @@ java_library_host {
         ":adservices-service-core-flags-constants-sources",
         ":adservices-test-utility-sideless-sources",
     ],
+    static_libs: ["compatibility-host-util"],
     libs: [
         "tradefed",
+        "framework-annotations-lib",
     ],
 }
 
@@ -111,6 +119,7 @@ filegroup {
     srcs: [
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoRule.java",
         "java/com/android/adservices/mockito/ExtendedMockitoInlineCleanerRule.java",
+        "java/com/android/adservices/mockito/LogInterceptor.java",
     ],
     path: "java",
     visibility: [
@@ -125,6 +134,9 @@ java_defaults {
     ],
     defaults: [
         "modules-utils-testable-device-config-defaults",
+    ],
+    libs: [
+        "framework-configinfrastructure",
     ],
     static_libs: [
          "adservices-service-core",

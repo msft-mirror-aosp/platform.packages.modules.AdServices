@@ -31,8 +31,9 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -122,7 +123,7 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
         OutcomeReceiverForTests<AppSetId> receiver = new OutcomeReceiverForTests<>();
 
         appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, receiver);
-        receiver.assertFailure(IllegalStateException.class);
+        receiver.assertFailure(ServiceUnavailableException.class);
     }
 
     private boolean getAppSetIdAndVerifyRateLimitReached(AppSetIdManager manager)

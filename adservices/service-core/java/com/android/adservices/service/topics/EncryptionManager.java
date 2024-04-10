@@ -33,7 +33,7 @@ import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
@@ -59,8 +59,6 @@ public class EncryptionManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
     private static final int ENCAPSULATED_KEY_LENGTH = 32;
-    private static final String TEST_PUBLIC_KEY_BASE64 =
-            "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=";
 
     private static EncryptionManager sSingleton;
 
@@ -90,7 +88,7 @@ public class EncryptionManager {
                                 new HpkeEncrypter(),
                                 EnrollmentDao.getInstance(context),
                                 EncryptionKeyDao.getInstance(context),
-                                PhFlags.getInstance());
+                                FlagsFactory.getFlags());
             }
         }
         return sSingleton;

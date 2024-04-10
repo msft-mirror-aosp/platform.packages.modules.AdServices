@@ -27,12 +27,18 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 @SmallTest
 public class FetchAndJoinCustomAudienceRequestTest {
     public static final Uri VALID_FETCH_URI_1 =
             CustomAudienceFixture.getValidFetchUriByBuyer(CommonFixture.VALID_BUYER_1, "1");
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidRequest_all_success() {
@@ -107,6 +113,19 @@ public class FetchAndJoinCustomAudienceRequestTest {
         assertThat(request.getFetchUri()).isEqualTo(VALID_FETCH_URI_1);
         assertThat(request.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+    }
+
+    @Test
+    public void testBuildValidRequest_withFetchUri_success() {
+        Uri overrideFetchUri =
+                CustomAudienceFixture.getValidFetchUriByBuyer(
+                        CommonFixture.VALID_BUYER_1, /* token= */ "2");
+        final FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+                        .setFetchUri(overrideFetchUri)
+                        .build();
+
+        assertThat(request.getFetchUri()).isEqualTo(overrideFetchUri);
     }
 
     @Test

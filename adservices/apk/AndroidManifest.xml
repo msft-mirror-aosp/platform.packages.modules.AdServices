@@ -122,6 +122,9 @@
     <!-- Allows JobScheduler to persist jobs across reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- Required for sending measurement events -->
+    <uses-permission android:name="android.permission.ondevicepersonalization.NOTIFY_MEASUREMENT_EVENT"/>
+
     <application
         android:label="@string/app_label"
         android:forceQueryable="true"
@@ -284,6 +287,11 @@
             </intent-filter>
         </service>
 
+        <!-- The JobService schedules all jobs for AdServices using SPE framework. -->
+        <service android:name="com.android.adservices.spe.AdServicesJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Daily maintenance Job. -->
         <service android:name="com.android.adservices.service.MaintenanceJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
@@ -345,6 +353,12 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- Measurement immediate aggregate report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Measurement Attribution Job.-->
         <service android:name=
                      "com.android.adservices.service.measurement.attribution.AttributionJobService"
@@ -374,6 +388,12 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- FLEDGE Schedule Custom Audience Update Job -->
+        <service android:name=
+                     "com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- FLEDGE Ad selection debug report sender Job -->
         <service android:name=
                      "com.android.adservices.service.adselection.DebugReportSenderJobService"
@@ -383,6 +403,18 @@
         <!-- FLEDGE Protected Signals periodic encoding job -->
         <service android:name=
                      "com.android.adservices.service.signals.PeriodicEncodingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- FLEDGE KAnon sign join background job -->
+        <service android:name=
+                     "com.android.adservices.service.kanon.KAnonSignJoinBackgroundJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- FLEDGE Background Key Fetch Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 

@@ -23,6 +23,7 @@ android_test {
     ],
     static_libs: [
         "adservices-clients",
+        "adservices-shared-exceptions",
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
@@ -52,6 +53,7 @@ android_test {
     ],
     static_libs: [
         "adservices-clients",
+        "adservices-shared-exceptions",
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",

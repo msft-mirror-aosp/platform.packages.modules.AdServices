@@ -149,6 +149,24 @@ public class TriggerSpecs {
         return mPrivacyParams.getInformationGain();
     }
 
+    /** @return whether the trigger specs have a valid report state count */
+    public boolean hasValidReportStateCount(Source source, Flags flags) {
+        if (mPrivacyParams == null) {
+            buildPrivacyParameters(source, flags);
+        }
+        return mPrivacyParams.hasValidReportStateCount();
+    }
+
+    /**
+     * @return The number of report state counts for the trigger specifications, or 0 if invalid.
+     */
+    public long getNumStates(Source source, Flags flags) {
+        if (mPrivacyParams == null) {
+            buildPrivacyParameters(source, flags);
+        }
+        return mPrivacyParams.getNumStates();
+    }
+
     /** @return the probability to use fake report */
     public double getFlipProbability(Source source, Flags flags) {
         if (mPrivacyParams == null) {
@@ -283,7 +301,7 @@ public class TriggerSpecs {
         for (EventReport eventReport : sourceEventReports) {
             // Delete pending reports since we may have different ones based on new trigger priority
             // ordering.
-            if (eventReport.getReportTime() >= triggerTime) {
+            if (eventReport.getReportTime() > triggerTime) {
                 reportsToDelete.add(eventReport);
                 continue;
             }
@@ -422,7 +440,7 @@ public class TriggerSpecs {
      *
      * @return String encoded the privacy parameters
      */
-    public String encodePrivacyParametersToJSONString() {
+    public String encodePrivacyParametersToJsonString() {
         JSONObject json = new JSONObject();
         try {
             json.put(
@@ -431,7 +449,7 @@ public class TriggerSpecs {
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
                     .e(
-                            "TriggerSpecs::encodePrivacyParametersToJSONString is unable to encode"
+                            "TriggerSpecs::encodePrivacyParametersToJsonString is unable to encode"
                                     + " PrivacyParams to JSON");
             return null;
         }
@@ -461,9 +479,9 @@ public class TriggerSpecs {
     private class PrivacyComputationParams {
         private final int[] mPerTypeNumWindowList;
         private final int[] mPerTypeCapList;
-        private final long mNumStates;
-        private final double mFlipProbability;
-        private final double mInformationGain;
+        private long mNumStates;
+        private double mFlipProbability;
+        private double mInformationGain;
 
         PrivacyComputationParams(Source source, Flags flags) {
             mPerTypeNumWindowList = computePerTypeNumWindowList();
@@ -477,12 +495,21 @@ public class TriggerSpecs {
                 updatedPerTypeNumWindowList[i] = mPerTypeNumWindowList[i] * destinationMultiplier;
             }
 
-            // compute number of state and other privacy parameters
-            mNumStates =
-                    Combinatorics.getNumStatesFlexApi(
-                            mMaxEventLevelReports, updatedPerTypeNumWindowList, mPerTypeCapList);
+            long reportStateCountLimit = flags.getMeasurementMaxReportStatesPerSourceRegistration();
+
+            long numStates = Combinatorics.getNumStatesFlexApi(
+                    mMaxEventLevelReports,
+                    updatedPerTypeNumWindowList,
+                    mPerTypeCapList,
+                    reportStateCountLimit);
+
+            if (numStates > reportStateCountLimit) {
+                return;
+            }
+
+            mNumStates = numStates;
             mFlipProbability = Combinatorics.getFlipProbability(mNumStates);
-            mInformationGain = Combinatorics.getInformationGain(mNumStates, mFlipProbability);
+            mInformationGain = source.getInformationGain(flags, mNumStates, mFlipProbability);
         }
 
         PrivacyComputationParams(String inputLine) throws JSONException {
@@ -493,6 +520,14 @@ public class TriggerSpecs {
             mPerTypeCapList = null;
             mNumStates = -1;
             mInformationGain = -1.0;
+        }
+
+        private boolean hasValidReportStateCount() {
+            return mNumStates != 0;
+        }
+
+        private long getNumStates() {
+            return mNumStates;
         }
 
         private double getFlipProbability() {

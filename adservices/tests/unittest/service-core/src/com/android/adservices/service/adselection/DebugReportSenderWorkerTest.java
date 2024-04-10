@@ -37,6 +37,7 @@ import com.android.adservices.data.adselection.DBAdSelectionDebugReport;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.Futures;
 
@@ -68,6 +69,9 @@ public class DebugReportSenderWorkerTest {
     private Clock mClockMock;
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     private DebugReportSenderWorker mDebugReportSenderWorker;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

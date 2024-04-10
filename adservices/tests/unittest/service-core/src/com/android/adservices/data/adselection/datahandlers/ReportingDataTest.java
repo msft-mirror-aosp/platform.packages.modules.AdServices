@@ -27,7 +27,9 @@ import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -65,6 +67,9 @@ public class ReportingDataTest {
             CommonFixture.getUri(AdSelectionConfigFixture.SELLER, REPORTING_FRAGMENT);
     private static final Uri RENDER_URI = Uri.parse("http://www.domain.com/advert");
     private static final double BID = 5;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuild_bothComputationDataAndUriSet_throwsIAE() {

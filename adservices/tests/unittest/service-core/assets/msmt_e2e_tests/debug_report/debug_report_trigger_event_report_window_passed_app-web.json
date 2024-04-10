@@ -88,11 +88,11 @@
   },
   "output": {
     "event_level_results": [{
-      "report_time": "1643325573000",
+      "report_time": "1643321973000",
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
         "attribution_destination": "https://1d1.test",
-        "scheduled_report_time": "1643325573",
+        "scheduled_report_time": "1643321973",
         "source_event_id": "1",
         "trigger_data": "1",
         "source_type": "navigation",
@@ -106,7 +106,7 @@
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
       "payload": {
         "attribution_destination": "https://1d1.test",
-        "scheduled_report_time": "1643325573",
+        "scheduled_report_time": "1643321973",
         "source_event_id": "1",
         "trigger_data": "1",
         "source_type": "navigation",
@@ -117,6 +117,7 @@
     }],
     "verbose_debug_reports": [
       {
+        "report_time": "1643321974000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
         "payload": [
           {

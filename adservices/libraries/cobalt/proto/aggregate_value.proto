@@ -23,6 +23,7 @@ message AggregateValue {
   oneof aggregate_value {
     // Used by COUNT.
     int64 integer_value = 1;
+
     // Used by STRING_COUNTS.
     LocalIndexHistogram index_histogram = 2;
   }
