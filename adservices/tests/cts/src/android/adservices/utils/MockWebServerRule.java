@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
@@ -49,6 +50,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 /** Instances of this class are not thread safe. */
 public class MockWebServerRule implements TestRule {
+    private static final String TAG = "adservices.fledge";
     private static final int UNINITIALIZED = -1;
     private final InputStream mCertificateInputStream;
     private final char[] mKeyStorePassword;
@@ -188,9 +190,12 @@ public class MockWebServerRule implements TestRule {
     }
 
     private void reserveServerListeningPort() throws IOException {
-        ServerSocket serverSocket = new ServerSocket(38383);
+        // Ask the operating system (via magic number 0) to give us a free port. This prevents any
+        // issues where the port has not yet been freed from previous test runs.
+        ServerSocket serverSocket = new ServerSocket(0);
         serverSocket.setReuseAddress(true);
         mPort = serverSocket.getLocalPort();
+        Log.d(TAG, "MockWebServer binding to port: " + mPort);
         serverSocket.close();
     }
 
