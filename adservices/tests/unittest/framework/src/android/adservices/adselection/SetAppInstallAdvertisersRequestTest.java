@@ -39,8 +39,7 @@ public class SetAppInstallAdvertisersRequestTest {
 
     @Test
     public void testBuildsSetAppInstallAdvertisersRequest() {
-        SetAppInstallAdvertisersRequest request =
-                new SetAppInstallAdvertisersRequest.Builder().setAdvertisers(ADVERTISERS).build();
+        SetAppInstallAdvertisersRequest request = new SetAppInstallAdvertisersRequest(ADVERTISERS);
 
         assertThat(request.getAdvertisers()).isEqualTo(ADVERTISERS);
     }
