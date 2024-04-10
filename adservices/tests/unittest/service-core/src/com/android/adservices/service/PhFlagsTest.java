@@ -343,6 +343,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATIO
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_PREINSTALL_CHECK;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
@@ -7881,6 +7882,23 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID,
                 MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID,
                 Flags::getMeasurementMaxLengthOfTriggerContextId);
+    }
+
+    @Test
+    public void testGetMeasurementEnableOdpRegistration() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementEnableOdpWebTriggerRegistration())
+                .isEqualTo(MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION);
+
+        boolean phOverridingValue = !MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementEnableOdpWebTriggerRegistration())
+                .isEqualTo(phOverridingValue);
     }
 
     @Test

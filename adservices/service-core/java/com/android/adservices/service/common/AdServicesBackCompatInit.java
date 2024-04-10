@@ -23,10 +23,9 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
-import androidx.annotation.Nullable;
-
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
@@ -39,14 +38,13 @@ import java.util.stream.Collectors;
 
 /** Handles the Back Compat initialization for AdExtServices APK. */
 public final class AdServicesBackCompatInit {
-
     private final Context mContext;
-    @Nullable private final String mPackageName;
+    private final Flags mFlags;
 
     @VisibleForTesting
     AdServicesBackCompatInit(Context context) {
         this.mContext = Objects.requireNonNull(context);
-        this.mPackageName = context.getPackageName();
+        this.mFlags = FlagsFactory.getFlags();
     }
 
     /** Gets an instance of {@link AdServicesBackCompatInit}. */
@@ -54,12 +52,15 @@ public final class AdServicesBackCompatInit {
         return new AdServicesBackCompatInit(ApplicationContextSingleton.get());
     }
 
-    /** Initialize back compat components in ExtServices package. */
+    /**
+     * Initialize back compat components in ExtServices package. Skips execution if executed within
+     * the AdServices package.
+     */
     public void initializeComponents() {
-
-        if (isAdServicesPackageName(mPackageName)) {
-            // Running within the AdServices package, so don't do anything.
-            LogUtil.d("Running within package %s, not changing component state", mPackageName);
+        String packageName = mContext.getPackageName();
+        if (isNullOrAdServicesPackageName(packageName)) {
+            // Package name is null or running within the AdServices package, so don't do anything.
+            LogUtil.d("Running within package %s, not changing component state", packageName);
             return;
         }
 
@@ -75,10 +76,9 @@ public final class AdServicesBackCompatInit {
         }
 
         // If this is an S- device but the flags are disabled, do nothing.
-        if (FlagsFactory.getFlags().getEnableBackCompat()
-                && FlagsFactory.getFlags().getAdServicesEnabled()
-                && !FlagsFactory.getFlags().getGlobalKillSwitch()) {
-
+        if (mFlags.getEnableBackCompat()
+                && mFlags.getAdServicesEnabled()
+                && !mFlags.getGlobalKillSwitch()) {
             registerPackagedChangedBroadcastReceivers();
             updateAdExtServicesActivities(/* shouldEnable= */ true);
             updateAdExtServicesServices(/* shouldEnable= */ true);
@@ -90,11 +90,9 @@ public final class AdServicesBackCompatInit {
 
     /**
      * Cancels all scheduled jobs if running within the ExtServices APK. Needed because we could
-     * have some persistent jobs that were scheduled on S before an OTA to T. This operation will be
-     * bypassed if executed within the AdServices package.
+     * have some persistent jobs that were scheduled on S before an OTA to T.
      */
-    @VisibleForTesting
-    void disableScheduledBackgroundJobs() {
+    private void disableScheduledBackgroundJobs() {
         try {
             JobScheduler scheduler = mContext.getSystemService(JobScheduler.class);
             if (scheduler == null) {
@@ -110,7 +108,9 @@ public final class AdServicesBackCompatInit {
                     scheduler.cancel(jobId);
                 }
             }
-            LogUtil.d("All AdServices scheduled jobs cancelled on package %s", mPackageName);
+            LogUtil.d(
+                    "All AdServices scheduled jobs cancelled on package %s",
+                    mContext.getPackageName());
         } catch (Exception e) {
             LogUtil.e(e, "Error when cancelling scheduled jobs");
         }
@@ -119,34 +119,29 @@ public final class AdServicesBackCompatInit {
     /**
      * Registers a receiver for any broadcasts regarding changes to any packages for all users on
      * the device at boot up. After receiving the broadcast, send an explicit broadcast to the
-     * AdServices module as that user. This operation will be bypassed if executed within the
-     * AdServices package.
+     * AdServices module as that user.
      */
-    @VisibleForTesting
     @SuppressWarnings("NewApi")
-    void registerPackagedChangedBroadcastReceivers() {
-        boolean result = PackageChangedReceiver.enableReceiver(mContext, FlagsFactory.getFlags());
+    private void registerPackagedChangedBroadcastReceivers() {
+        boolean result = PackageChangedReceiver.enableReceiver(mContext, mFlags);
         LogUtil.d(
                 "Package Change Receiver registration: Success=%s, Package=%s",
-                result, mPackageName);
+                result, mContext.getPackageName());
     }
 
-    @VisibleForTesting
     @SuppressWarnings("NewApi")
-    void unregisterPackageChangedBroadcastReceivers() {
-        boolean result = PackageChangedReceiver.disableReceiver(mContext, FlagsFactory.getFlags());
+    private void unregisterPackageChangedBroadcastReceivers() {
+        boolean result = PackageChangedReceiver.disableReceiver(mContext, mFlags);
         LogUtil.d(
                 "Package Change Receiver unregistration: Success=%s, Package=%s",
-                result, mPackageName);
+                result, mContext.getPackageName());
     }
 
     /**
      * Activities for user consent and control are disabled by default. Only on S- devices, after
-     * the flag is enabled, we enable the activities. This operation will be bypassed if executed
-     * within the AdServices package.
+     * the flag is enabled, we enable the activities.
      */
-    @VisibleForTesting
-    void updateAdExtServicesActivities(boolean shouldEnable) {
+    private void updateAdExtServicesActivities(boolean shouldEnable) {
         try {
             updateComponents(PackageManagerCompatUtils.CONSENT_ACTIVITIES_CLASSES, shouldEnable);
             LogUtil.d("Updated state of AdExtServices activities: [enabled=%s]", shouldEnable);
@@ -158,17 +153,14 @@ public final class AdServicesBackCompatInit {
     /**
      * Disables services that have intent filters specified in the AdExtServicesManifest to prevent
      * duplicates on T+ devices, Conversely, it enables these services on devices running versions S
-     * and below. This operation will be bypassed if executed within the AdServices package.
+     * and below.
      */
-    @VisibleForTesting
-    void updateAdExtServicesServices(boolean shouldEnable) {
+    private void updateAdExtServicesServices(boolean shouldEnable) {
         try {
+            int currentSdkInt = getSdkLevelInt();
             List<String> servicesToUpdate =
-                    PackageManagerCompatUtils.SERVICE_CLASSES_AND_ENABLE_STATUS_ON_R_PAIRS.stream()
-                            // If enabling, enable services that are only supported on current
-                            // SDK version. If disabling, it's safe to disable all service
-                            // components just in case they were enabled prior.
-                            .filter(p -> !shouldEnable || p.second <= Build.VERSION.SDK_INT)
+                    PackageManagerCompatUtils.SERVICE_CLASSES_AND_MIN_SDK_SUPPORT_PAIRS.stream()
+                            .filter(p -> p.second <= currentSdkInt)
                             .map(p -> p.first)
                             .collect(Collectors.toList());
             updateComponents(servicesToUpdate, shouldEnable);
@@ -178,15 +170,12 @@ public final class AdServicesBackCompatInit {
         }
     }
 
-    @VisibleForTesting
-    void updateComponents(List<String> components, boolean shouldEnable) {
-        Objects.requireNonNull(components);
-        Objects.requireNonNull(mPackageName);
-
+    private void updateComponents(List<String> components, boolean shouldEnable) {
         PackageManager packageManager = mContext.getPackageManager();
+        String packageName = mContext.getPackageName();
         for (String component : components) {
             packageManager.setComponentEnabledSetting(
-                    new ComponentName(mPackageName, component),
+                    new ComponentName(packageName, component),
                     shouldEnable
                             ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED
                             : PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
@@ -194,8 +183,13 @@ public final class AdServicesBackCompatInit {
         }
     }
 
-    private boolean isAdServicesPackageName(String packageName) {
+    private boolean isNullOrAdServicesPackageName(String packageName) {
         return packageName == null
                 || packageName.endsWith(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX);
+    }
+
+    @VisibleForTesting
+    static int getSdkLevelInt() {
+        return Build.VERSION.SDK_INT;
     }
 }

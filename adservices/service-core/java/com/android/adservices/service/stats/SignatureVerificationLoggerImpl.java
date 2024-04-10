@@ -246,12 +246,15 @@ public class SignatureVerificationLoggerImpl implements SignatureVerificationLog
             SignatureVerificationStats.VerificationStatus verificationStatus;
             if (signingVerificationStatus
                     == SignatureVerificationStats.VerificationStatus.VERIFIED.getValue()) {
-                sLogger.v("Log SignatureVerificationStats for a successful ad selection run.");
+                sLogger.v(
+                        "Log SignatureVerificationStats for a successful signature verification"
+                                + " run.");
                 verificationStatus = SignatureVerificationStats.VerificationStatus.VERIFIED;
             } else if (signingVerificationStatus
                     == SignatureVerificationStats.VerificationStatus.VERIFICATION_FAILED
                             .getValue()) {
-                sLogger.v("Log SignatureVerificationStats for a failed ad selection run.");
+                sLogger.v(
+                        "Log SignatureVerificationStats for a failed signature verification run.");
                 verificationStatus =
                         SignatureVerificationStats.VerificationStatus.VERIFICATION_FAILED;
             } else {
