@@ -45,13 +45,13 @@ import com.android.adservices.service.common.SingletonRunner;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
+import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperImpl;
+import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperNoOpImpl;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerNoLoggingImpl;
-import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
-import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperImpl;
-import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperNoOpImpl;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -81,7 +81,7 @@ public class PeriodicEncodingJobWorker {
 
     public static final String PAYLOAD_PERSISTENCE_ERROR_MSG = "Failed to persist encoded payload";
 
-    private static final int PER_BUYER_ENCODING_TIMEOUT_SECONDS = 5;
+    private final int mPerBuyerEncodingTimeoutMs;
 
     private final int mEncodedPayLoadMaxSizeBytes;
     private final int mEncoderLogicMaximumFailure;
@@ -138,6 +138,7 @@ public class PeriodicEncodingJobWorker {
         mEnrollmentDao = enrollmentDao;
         mClock = clock;
         mAdServicesLogger = adServicesLogger;
+        mPerBuyerEncodingTimeoutMs = mFlags.getPasScriptExecutionTimeoutMs();
     }
 
     /**
@@ -280,8 +281,8 @@ public class PeriodicEncodingJobWorker {
         } else {
             logHelper = new EncodingExecutionLogHelperNoOpImpl();
         }
-        return runEncodingPerBuyer(
-                metadata, PER_BUYER_ENCODING_TIMEOUT_SECONDS, logHelper, encodingJobRunStatsLogger)
+        int timeoutSeconds = mPerBuyerEncodingTimeoutMs / 1000;
+        return runEncodingPerBuyer(metadata, timeoutSeconds, logHelper, encodingJobRunStatsLogger)
                 .catching(
                         Exception.class,
                         (e) -> {
