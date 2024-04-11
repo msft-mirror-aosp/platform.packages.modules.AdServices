@@ -16,9 +16,7 @@
 
 package android.adservices.cts;
 
-import static com.google.common.truth.Truth.assertThat;
 
-import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.common.AdTechIdentifier;
 
 import org.junit.Ignore;
@@ -35,9 +33,5 @@ public class SetAppInstallAdvertisersRequestTest {
                             AdTechIdentifier.fromString("example2.com")));
 
     @Ignore
-    public void testBuildsSetAppInstallAdvertisersRequest() {
-        SetAppInstallAdvertisersRequest request = new SetAppInstallAdvertisersRequest(ADVERTISERS);
-
-        assertThat(request.getAdvertisers()).isEqualTo(ADVERTISERS);
-    }
+    public void testBuildsSetAppInstallAdvertisersRequest() {}
 }
