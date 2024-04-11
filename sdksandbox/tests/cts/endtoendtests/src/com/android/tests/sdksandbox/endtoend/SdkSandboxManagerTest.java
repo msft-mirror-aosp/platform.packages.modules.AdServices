@@ -38,12 +38,15 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.testutils.ConfigListener;
+import android.app.sdksandbox.testutils.DeviceConfigUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallback;
@@ -62,6 +65,7 @@ import android.platform.test.annotations.RequiresFlagsDisabled;
 import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
+import android.provider.DeviceConfig;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
@@ -71,7 +75,6 @@ import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.Until;
 
-import com.android.compatibility.common.util.DeviceConfigStateHelper;
 import com.android.ctssdkprovider.IActivityActionExecutor;
 import com.android.ctssdkprovider.IActivityStarter;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
@@ -79,6 +82,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -134,19 +138,48 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     private ActivityScenario<TestActivity> mScenario;
 
     private SdkSandboxManager mSdkSandboxManager;
-
-    private final DeviceConfigStateHelper mDeviceConfig =
-            new DeviceConfigStateHelper(NAMESPACE_WINDOW_MANAGER);
+    private String mInitialValueAsmRestrictionsEnabled;
 
     private final Random mRandom = new Random();
+    private ConfigListener mConfigListener;
+    private DeviceConfigUtils mDeviceConfigUtils;
 
     @Before
     public void setup() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.READ_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_DEVICE_CONFIG);
+
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
         mScenario = activityScenarioRule.getScenario();
-        mDeviceConfig.set(ASM_RESTRICTIONS_ENABLED, "1");
+
+        mConfigListener = new ConfigListener();
+        DeviceConfig.addOnPropertiesChangedListener(
+                NAMESPACE_WINDOW_MANAGER, context.getMainExecutor(), mConfigListener);
+        mDeviceConfigUtils = new DeviceConfigUtils(mConfigListener, NAMESPACE_WINDOW_MANAGER);
+
+        mInitialValueAsmRestrictionsEnabled =
+                DeviceConfig.getProperty(NAMESPACE_WINDOW_MANAGER, ASM_RESTRICTIONS_ENABLED);
+        mDeviceConfigUtils.deleteProperty(ASM_RESTRICTIONS_ENABLED);
         sUiDevice.setOrientationNatural();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (mDeviceConfigUtils != null) {
+            mDeviceConfigUtils.resetToInitialValue(
+                    ASM_RESTRICTIONS_ENABLED, mInitialValueAsmRestrictionsEnabled);
+        }
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .dropShellPermissionIdentity();
+
+        DeviceConfig.removeOnPropertiesChangedListener(mConfigListener);
     }
 
     @Test
