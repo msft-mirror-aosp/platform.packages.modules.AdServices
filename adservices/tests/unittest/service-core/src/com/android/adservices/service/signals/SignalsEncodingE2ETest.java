@@ -43,6 +43,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
@@ -79,11 +80,11 @@ import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEven
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -97,9 +98,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -107,29 +106,26 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class SignalsEncodingE2ETest {
+@MockStatic(PeriodicEncodingJobService.class)
+@RequiresSdkLevelAtLeastT
+public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final long WAIT_TIME_SECONDS = 10L;
 
     private static final String SIGNALS_PATH = "/signals";
     private static final String ENCODER_PATH = "/encoder";
 
-    private MockitoSession mStaticMockSession = null;
-
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
     // certain minimum version.
-    @Rule(order = 1)
+    @Rule(order = 11)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             WebViewSupportUtil.createJSSandboxAvailableRule(
                     ApplicationProvider.getApplicationContext());
 
-    @Rule(order = 2)
+    @Rule(order = 12)
     public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     private final AdServicesLogger mAdServicesLoggerMock =
@@ -138,6 +134,7 @@ public class SignalsEncodingE2ETest {
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
     @Mock private Throttler mMockThrottler;
     @Mock private DevContextFilter mDevContextFilterMock;
+    @Mock private AdServicesLoggerImpl mAdServicesLoggerImplMock;
 
     private FlagsWithEnabledPeriodicEncoding mFlagsWithProtectedSignalsAndEncodingEnabled =
             new FlagsWithEnabledPeriodicEncoding();
@@ -176,12 +173,6 @@ public class SignalsEncodingE2ETest {
 
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(PeriodicEncodingJobService.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
         mSignalsDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
                         .build()
@@ -274,9 +265,7 @@ public class SignalsEncodingE2ETest {
                         mConsentManagerMock,
                         mDevContextFilterMock,
                         AdServicesExecutors.getBackgroundExecutor(),
-                        new AdServicesLoggerImpl(
-                                new StatsdAdServicesLogger(
-                                        mFlagsWithProtectedSignalsAndEncodingEnabled)),
+                        mAdServicesLoggerImplMock,
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
@@ -325,10 +314,6 @@ public class SignalsEncodingE2ETest {
     public void teardown() {
         if (mEncoderPersistenceDao != null) {
             mEncoderPersistenceDao.deleteAllEncoders();
-        }
-
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
         }
     }
 

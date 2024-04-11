@@ -44,9 +44,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         this(StatsdAdServicesLogger.getInstance());
     }
 
-    /** Constructor for {@link AdServicesLoggerImpl}. */
     @VisibleForTesting
-    public AdServicesLoggerImpl(StatsdAdServicesLogger statsdAdServicesLogger) {
+    AdServicesLoggerImpl(StatsdAdServicesLogger statsdAdServicesLogger) {
         mStatsdAdServicesLogger = statsdAdServicesLogger;
     }
 
