@@ -50,6 +50,7 @@ import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.RegistrationRequestFixture;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
+import android.adservices.ondevicepersonalization.OnDevicePersonalizationSystemEventManager;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -6313,8 +6314,35 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void getOdpWrapper_odpAvailable_success() throws Exception {
+    public void getOdpWrapper_odpUnavailable_returnsNoOdpWrapper() {
         ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
+        when(FlagsFactory.getFlags()).thenReturn(mFlags);
+        when(mFlags.getMeasurementEnableOdpWebTriggerRegistration()).thenReturn(true);
+        doReturn(sContext.getPackageManager()).when(mMockContext).getPackageManager();
+        doReturn(null)
+                .when(mMockContext)
+                .getSystemService(OnDevicePersonalizationSystemEventManager.class);
+        AsyncTriggerFetcher fetcher = new AsyncTriggerFetcher(mMockContext);
+        assertTrue(fetcher.getOdpWrapper() instanceof NoOdpDelegationWrapper);
+    }
+
+    @Test
+    public void getOdpWrapper_odpAvailable_success() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        OnDevicePersonalizationSystemEventManager odpManager =
+                mock(OnDevicePersonalizationSystemEventManager.class);
+        when(FlagsFactory.getFlags()).thenReturn(mFlags);
+        when(mFlags.getMeasurementEnableOdpWebTriggerRegistration()).thenReturn(true);
+        doReturn(sContext.getPackageManager()).when(mMockContext).getPackageManager();
+        doReturn(odpManager)
+                .when(mMockContext)
+                .getSystemService(OnDevicePersonalizationSystemEventManager.class);
+        AsyncTriggerFetcher fetcher = new AsyncTriggerFetcher(mMockContext);
+        assertTrue(fetcher.getOdpWrapper() instanceof OdpDelegationWrapperImpl);
+    }
+
+    @Test
+    public void fetchTrigger_odpAvailable_success() throws Exception {
         OdpDelegationWrapperImpl odpDelegationWrapperImplMock =
                 mock(OdpDelegationWrapperImpl.class);
         AsyncTriggerFetcher fetcher =
