@@ -262,7 +262,7 @@ public class SignalsEncodingE2ETest {
                         mConsentManagerMock,
                         mDevContextFilterMock,
                         AdServicesExecutors.getBackgroundExecutor(),
-                        AdServicesLoggerImpl.getInstance(),
+                        ExtendedMockito.mock(AdServicesLoggerImpl.class),
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter);

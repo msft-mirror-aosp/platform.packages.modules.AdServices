@@ -251,7 +251,7 @@ public class SignalsIntakeE2ETest {
                         mConsentManagerMock,
                         mDevContextFilterMock,
                         AdServicesExecutors.getBackgroundExecutor(),
-                        AdServicesLoggerImpl.getInstance(),
+                        mAdServicesLoggerMock,
                         FlagsFactory.getFlagsForTest(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter);
