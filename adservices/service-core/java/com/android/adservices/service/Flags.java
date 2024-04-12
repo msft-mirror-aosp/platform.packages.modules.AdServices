@@ -4572,6 +4572,12 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
     }
 
+    float DEFAULT_MEASUREMENT_PRIVACY_EPSILON = 14f;
+
+    default float getMeasurementPrivacyEpsilon() {
+        return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
