@@ -62,7 +62,7 @@
         <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
 
-        <option name="run-command" value="svc power stayon false" />
+        <option name="teardown-command" value="svc power stayon false" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
         <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
     </target_preparer>
