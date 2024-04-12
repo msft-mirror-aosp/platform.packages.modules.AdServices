@@ -245,7 +245,7 @@ public class AdFilteringLoggerImpl implements AdFilteringLogger {
         try {
             AdFilteringProcessAdSelectionReportedStats adFilteringStats =
                     getAdFilteringProcessAdSelectionReportedStats(mFilterProcessType);
-
+            sLogger.v("Logging Ad Filtering Metrics: %s", adFilteringStats);
             mAdServicesLogger.logAdFilteringProcessAdSelectionReportedStats(adFilteringStats);
         } catch (Exception e) {
             sLogger.e(
