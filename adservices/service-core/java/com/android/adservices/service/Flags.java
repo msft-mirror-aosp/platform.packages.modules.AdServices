@@ -1780,7 +1780,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default value for feature flag for PAS unlimited egress in Server auctions. */
-    boolean DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS = true;
+    boolean DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS = false;
 
     /**
      * @return feature flag to enable PAS unlimited egress in Server auctions
