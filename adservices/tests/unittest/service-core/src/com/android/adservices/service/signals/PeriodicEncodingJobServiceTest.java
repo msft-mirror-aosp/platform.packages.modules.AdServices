@@ -33,6 +33,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockM
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -90,6 +91,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
+    private static final long PERIOD = 42 * 60 * 1000;
     private static final JobScheduler JOB_SCHEDULER = sContext.getSystemService(JobScheduler.class);
 
     @Spy
@@ -724,7 +726,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     }
 
     @Test
-    public void testScheduleIfNeededSkippedAlreadyScheduled() {
+    public void testScheduleIfNeeded_AlreadyScheduled_isNotRescheduled() {
         Flags flagsEnabledPeriodicEncoding =
                 new Flags() {
                     @Override
@@ -746,12 +748,119 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     public boolean getGlobalKillSwitch() {
                         return false;
                     }
+
+                    @Override
+                    public long getProtectedSignalPeriodicEncodingJobPeriodMs() {
+                        return PERIOD;
+                    }
                 };
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
                                 new ComponentName(sContext, PeriodicEncodingJobService.class))
-                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .setPeriodic(PERIOD)
+                        // ensure that the job does not run during the test
+                        .setRequiresDeviceIdle(true)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        JobInfo job = JOB_SCHEDULER.getPendingJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID);
+        assertNotNull(job);
+        assertEquals(PERIOD, job.getIntervalMillis());
+
+        doCallRealMethod()
+                .when(() -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)));
+
+        PeriodicEncodingJobService.scheduleIfNeeded(sContext, flagsEnabledPeriodicEncoding, false);
+
+        ExtendedMockito.verify(() -> PeriodicEncodingJobService.schedule(any(), any()), never());
+        verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
+    }
+
+    @Test
+    public void testScheduleIfNeeded_AlreadyScheduledTimeoutChanged_isRescheduled() {
+        Flags flagsEnabledPeriodicEncoding =
+                new Flags() {
+                    @Override
+                    public boolean getGaUxFeatureEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getGlobalKillSwitch() {
+                        return false;
+                    }
+
+                    @Override
+                    public long getProtectedSignalPeriodicEncodingJobPeriodMs() {
+                        return PERIOD;
+                    }
+                };
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
+                                new ComponentName(sContext, PeriodicEncodingJobService.class))
+                        .setPeriodic(30 * 60 * 1000)
+                        // ensure that the job does not run during the test
+                        .setRequiresDeviceIdle(true)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID));
+
+        doCallRealMethod()
+                .when(() -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)));
+
+        PeriodicEncodingJobService.scheduleIfNeeded(sContext, flagsEnabledPeriodicEncoding, false);
+
+        ExtendedMockito.verify(() -> PeriodicEncodingJobService.schedule(any(), any()));
+        verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
+    }
+
+    @Test
+    public void testScheduleIfNeededUnderMin() {
+        Flags flagsEnabledPeriodicEncoding =
+                new Flags() {
+                    @Override
+                    public boolean getGaUxFeatureEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getGlobalKillSwitch() {
+                        return false;
+                    }
+
+                    @Override
+                    public long getProtectedSignalPeriodicEncodingJobPeriodMs() {
+                        return 60 * 1000;
+                    }
+                };
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
+                                new ComponentName(sContext, PeriodicEncodingJobService.class))
+                        .setPeriodic(30 * 60 * 1000)
+                        // ensure that the job does not run during the test
+                        .setRequiresDeviceIdle(true)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(JOB_SCHEDULER.getPendingJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID));

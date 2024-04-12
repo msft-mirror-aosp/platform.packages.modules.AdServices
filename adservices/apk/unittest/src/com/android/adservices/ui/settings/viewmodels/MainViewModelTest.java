@@ -31,7 +31,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.ConsentManagerV2;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -41,32 +41,31 @@ import org.mockito.Mock;
 
 /** Tests for {@link MainViewModel}. */
 @SpyStatic(FlagsFactory.class)
-@SpyStatic(ConsentManagerV2.class)
+@SpyStatic(ConsentManager.class)
 public final class MainViewModelTest extends AdServicesExtendedMockitoTestCase {
 
     private MainViewModel mMainViewModel;
-    @Mock private ConsentManagerV2 mConsentManager;
+    @Mock private ConsentManager mConsentManager;
     @Mock private Flags mMockFlags;
 
     /** Setup needed before every test in this class. */
     @Before
     public void setup() {
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
-        doReturn(true).when(mMockFlags).getEnableConsentManagerV2();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManagerV2.getInstance());
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         mMainViewModel =
                 new MainViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
     }
 
-    /** Test if getConsent returns true if the {@link ConsentManagerV2} always returns true. */
+    /** Test if getConsent returns true if the {@link ConsentManager} always returns true. */
     @Test
     public void testGetConsentReturnsTrue() {
         assertTrue(mMainViewModel.getConsent().getValue());
     }
 
-    /** Test if getConsent returns false if the {@link ConsentManagerV2} always returns false. */
+    /** Test if getConsent returns false if the {@link ConsentManager} always returns false. */
     @Test
     public void testGetConsentReturnsFalse() {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsent();
@@ -76,7 +75,7 @@ public final class MainViewModelTest extends AdServicesExtendedMockitoTestCase {
         assertFalse(mMainViewModel.getConsent().getValue());
     }
 
-    /** Test if setConsent enables consent with a call to {@link ConsentManagerV2}. */
+    /** Test if setConsent enables consent with a call to {@link ConsentManager}. */
     @Test
     public void testSetConsentTrue() {
         mMainViewModel.setConsent(true);
@@ -84,7 +83,7 @@ public final class MainViewModelTest extends AdServicesExtendedMockitoTestCase {
         verify(mConsentManager, times(1)).enable(any(Context.class));
     }
 
-    /** Test if setConsent revokes consent with a call to {@link ConsentManagerV2}. */
+    /** Test if setConsent revokes consent with a call to {@link ConsentManager}. */
     @Test
     public void testSetConsentFalse() {
         mMainViewModel.setConsent(false);

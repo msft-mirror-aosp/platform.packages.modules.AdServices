@@ -5215,4 +5215,54 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getCustomErrorCodeSamplingEnabled() {
         return DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
     }
+
+    /** Read timeout for downloading PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Read timeout for downloading PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptDownloadReadTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
+    }
+
+    /** Connection timeout for downloading PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Connection timeout for downloading PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptDownloadConnectionTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Read timeout for downloading PAS signals in milliseconds */
+    int DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Read timeout for downloading PAS signals in milliseconds
+     */
+    default int getPasSignalsDownloadReadTimeoutMs() {
+        return DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
+    }
+
+    /** Connection timeout for downloading PAS encoding signals in milliseconds */
+    int DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Connection timeout for downloading PAS signals in milliseconds
+     */
+    default int getPasSignalsDownloadConnectionTimeoutMs() {
+        return DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Timeout for executing PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Timeout for executing PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptExecutionTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
+    }
 }

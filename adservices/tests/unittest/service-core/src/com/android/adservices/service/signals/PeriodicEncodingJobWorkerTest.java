@@ -158,6 +158,7 @@ public class PeriodicEncodingJobWorkerTest {
         when(mFlags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop())
                 .thenReturn(maxFailedRun);
         when(mFlags.getPasExtendedMetricsEnabled()).thenReturn(true);
+        when(mFlags.getPasScriptExecutionTimeoutMs()).thenReturn(1000);
         mJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,

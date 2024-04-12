@@ -424,16 +424,6 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         mAppSearchConsentWorker.recordNotificationDisplayed(wasNotificationDisplayed);
     }
 
-    /**
-     * Saves information to the storage that Pas notification was displayed for the first time to
-     * the user.
-     */
-    @Override
-    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) throws IOException {
-        throw new IllegalStateException(
-                getAdExtExceptionMessage(/* illegalAction= */ "store if PAS notif was displayed"));
-    }
-
     /** Saves information to the storage that user interacted with consent manually. */
     public void recordUserManualInteractionWithConsent(int interaction) {
         mAppSearchConsentWorker.recordUserManualInteractionWithConsent(interaction);
@@ -589,26 +579,6 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         return mAppSearchConsentWorker.wasU18NotificationDisplayed();
     }
 
-    @Override
-    public boolean wasPasNotificationDisplayed() throws IOException {
-        // PAS update not supported on S yet
-        return false;
-    }
-
-    /** Set the measurement data reset activity happens based on consent_source_of_truth. */
-    @Override
-    public void setMeasurementDataReset(boolean isMeasurementDataReset) throws IOException {
-        mAppSearchConsentWorker.setMeasurementDataReset(isMeasurementDataReset);
-    }
-
-    /**
-     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
-     */
-    @Override
-    public boolean isMeasurementDataReset() throws IOException {
-        return mAppSearchConsentWorker.isMeasurementDataReset();
-    }
-
     /**
      * Checks whether migration of consent data from AppSearch to PPAPI/System server should occur.
      * The migration should only happen once after OTA from S to T.
@@ -685,11 +655,5 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
                 .stream()
                 .map(applicationInfo -> applicationInfo.packageName)
                 .collect(Collectors.toSet());
-    }
-
-    private static String getAdExtExceptionMessage(String illegalAction) {
-        return String.format(
-                "Attempting to %s using PPAPI_AND_ADEXT_SERVICE consent source of truth!",
-                illegalAction);
     }
 }

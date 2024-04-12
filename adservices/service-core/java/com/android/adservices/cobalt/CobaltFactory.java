@@ -51,6 +51,8 @@ import java.util.concurrent.ScheduledExecutorService;
 public final class CobaltFactory {
     private static final Object SINGLETON_LOCK = new Object();
 
+    private static final long APEX_VERSION_WHEN_NOT_FOUND = -1L;
+
     /*
      * Uses the prod pipeline because AdServices' reports are for either the DEBUG or GA release
      * stage and DEBUG is sufficient for local testing.
@@ -188,26 +190,19 @@ public final class CobaltFactory {
         PackageManager packageManager = context.getPackageManager();
         List<PackageInfo> installedPackages =
                 packageManager.getInstalledPackages(PackageManager.MATCH_APEX);
-        long adservicesVersion =
-                installedPackages.stream()
-                        .filter(
-                                s ->
-                                        s.isApex
-                                                && s.packageName.endsWith(
-                                                        ADSERVICES_APEX_NAME_SUFFIX))
-                        .findFirst()
-                        .map(PackageInfo::getLongVersionCode)
-                        .orElse(APEX_VERSION_WHEN_NOT_FOUND);
+        long adservicesVersion = APEX_VERSION_WHEN_NOT_FOUND;
+        long extservicesVersion = APEX_VERSION_WHEN_NOT_FOUND;
 
-        if (adservicesVersion != APEX_VERSION_WHEN_NOT_FOUND) {
-            return String.valueOf(adservicesVersion);
+        for (PackageInfo packageInfo : installedPackages) {
+            if (packageInfo.isApex
+                    && packageInfo.packageName.endsWith(ADSERVICES_APEX_NAME_SUFFIX)) {
+                adservicesVersion = packageInfo.getLongVersionCode();
+                return String.valueOf(adservicesVersion);
+            } else if (packageInfo.isApex
+                    && packageInfo.packageName.endsWith(EXTSERVICES_APEX_NAME_SUFFIX)) {
+                extservicesVersion = packageInfo.getLongVersionCode();
+            }
         }
-
-        return installedPackages.stream()
-                .filter(s -> s.isApex && s.packageName.endsWith(EXTSERVICES_APEX_NAME_SUFFIX))
-                .findFirst()
-                .map(PackageInfo::getLongVersionCode)
-                .orElse(APEX_VERSION_WHEN_NOT_FOUND)
-                .toString();
+        return String.valueOf(extservicesVersion);
     }
 }

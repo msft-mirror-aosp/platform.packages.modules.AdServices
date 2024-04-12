@@ -173,12 +173,6 @@ public interface IConsentStorage {
      */
     void recordNotificationDisplayed(boolean wasNotificationDisplayed) throws IOException;
 
-    /**
-     * Saves information to the storage that Pas notification was displayed for the first time to
-     * the user.
-     */
-    void recordPasNotificationDisplayed(boolean wasPasDisplayed) throws IOException;
-
     /** Saves information to the storage that user interacted with consent manually. */
     void recordUserManualInteractionWithConsent(int interaction) throws IOException;
 
@@ -258,15 +252,4 @@ public interface IConsentStorage {
 
     /** Returns whether the wasU18NotificationDisplayed bit is true. */
     boolean wasU18NotificationDisplayed() throws IOException;
-
-    /** Returns whether the wasPasNotificationDisplayed bit is true. */
-    boolean wasPasNotificationDisplayed() throws IOException;
-
-    /** Set the measurement data reset activity happens based on consent_source_of_truth. */
-    void setMeasurementDataReset(boolean isMeasurementDataReset) throws IOException;
-
-    /**
-     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
-     */
-    boolean isMeasurementDataReset() throws IOException;
 }

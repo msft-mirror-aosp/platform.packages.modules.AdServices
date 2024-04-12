@@ -73,7 +73,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobHandlerWrapper;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONArray;
@@ -177,7 +177,7 @@ public abstract class E2EMockTest extends E2ETest {
                         DbTestUtil.getSharedDbHelperForTest(),
                         mFlags,
                         /* enable seed */ true,
-                        AdServicesLoggerImpl.getInstance(),
+                        new NoOpLoggerImpl(),
                         EnrollmentUtil.getInstance());
 
         mAsyncSourceFetcher =

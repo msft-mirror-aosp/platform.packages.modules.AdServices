@@ -28,7 +28,6 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -47,7 +46,7 @@ public class TopicsViewModelTest {
 
     private TopicsViewModel mTopicsViewModel;
     private BlockedTopicsViewModel mBlockedTopicsViewModel;
-    @Mock private ConsentManagerV2 mConsentManagerV2;
+    @Mock private ConsentManager mConsentManager;
     @Mock private Flags mMockFlags;
     private MockitoSession mStaticMockSession = null;
 
@@ -61,14 +60,13 @@ public class TopicsViewModelTest {
                         .initMocks(this)
                         .startMocking();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
-        doReturn(true).when(mMockFlags).getEnableConsentManagerV2();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         mTopicsViewModel =
                 new TopicsViewModel(
-                        ApplicationProvider.getApplicationContext(), mConsentManagerV2, true, true);
+                        ApplicationProvider.getApplicationContext(), mConsentManager, true);
         mBlockedTopicsViewModel =
                 new BlockedTopicsViewModel(
-                        ApplicationProvider.getApplicationContext(), mConsentManagerV2);
+                        ApplicationProvider.getApplicationContext(), mConsentManager);
     }
 
     /** Teardown needed before every test in this class. */
@@ -83,11 +81,11 @@ public class TopicsViewModelTest {
     @Test
     public void testGetTopicsReturnsNoTopics() {
         ImmutableList<Topic> topicsList = ImmutableList.of();
-        doReturn(topicsList).when(mConsentManagerV2).getKnownTopicsWithConsent();
+        doReturn(topicsList).when(mConsentManager).getKnownTopicsWithConsent();
 
         mTopicsViewModel =
                 new TopicsViewModel(
-                        ApplicationProvider.getApplicationContext(), mConsentManagerV2, true, true);
+                        ApplicationProvider.getApplicationContext(), mConsentManager, true);
 
         assertThat(mTopicsViewModel.getTopics().getValue()).containsExactlyElementsIn(topicsList);
     }
@@ -100,11 +98,11 @@ public class TopicsViewModelTest {
         Topic topic1 = Topic.create(1, 1, 1);
         Topic topic2 = Topic.create(2, 1, 1);
         ImmutableList<Topic> topicsList = ImmutableList.copyOf(new Topic[] {topic1, topic2});
-        doReturn(topicsList).when(mConsentManagerV2).getKnownTopicsWithConsent();
+        doReturn(topicsList).when(mConsentManager).getKnownTopicsWithConsent();
 
         mTopicsViewModel =
                 new TopicsViewModel(
-                        ApplicationProvider.getApplicationContext(), mConsentManagerV2, true, true);
+                        ApplicationProvider.getApplicationContext(), mConsentManager, true);
 
         assertThat(mTopicsViewModel.getTopics().getValue()).containsExactlyElementsIn(topicsList);
     }
@@ -115,7 +113,7 @@ public class TopicsViewModelTest {
         Topic topic1 = Topic.create(1, 1, 1);
         mTopicsViewModel.revokeTopicConsent(topic1);
 
-        verify(mConsentManagerV2, times(1)).revokeConsentForTopic(topic1);
+        verify(mConsentManager, times(1)).revokeConsentForTopic(topic1);
     }
 
     /** Test if restoreTopicConsent blocks a topic with a call to {@link ConsentManager}. */
@@ -124,6 +122,6 @@ public class TopicsViewModelTest {
         Topic topic1 = Topic.create(1, 1, 1);
         mBlockedTopicsViewModel.restoreTopicConsent(topic1);
 
-        verify(mConsentManagerV2, times(1)).restoreConsentForTopic(topic1);
+        verify(mConsentManager, times(1)).restoreConsentForTopic(topic1);
     }
 }

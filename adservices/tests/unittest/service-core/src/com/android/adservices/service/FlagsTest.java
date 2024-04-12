@@ -21,6 +21,11 @@ import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
@@ -466,6 +471,46 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getJobSchedulingLoggingSamplingRate()",
                 DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE,
                 Flags::getJobSchedulingLoggingSamplingRate);
+    }
+
+    @Test
+    public void testGetPasScriptDownloadReadTimeoutMs() {
+        testFlag(
+                "getPasScriptDownloadReadTimeoutMs()",
+                DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS,
+                Flags::getPasScriptDownloadReadTimeoutMs);
+    }
+
+    @Test
+    public void testGetPasScriptDownloadConnectionTimeoutMs() {
+        testFlag(
+                "getPasScriptDownloadConnectionTimeoutMs()",
+                DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                Flags::getPasScriptDownloadConnectionTimeoutMs);
+    }
+
+    @Test
+    public void testGetPasSignalsDownloadReadTimeoutMs() {
+        testFlag(
+                "getPasSignalsDownloadReadTimeoutMs()",
+                DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS,
+                Flags::getPasSignalsDownloadReadTimeoutMs);
+    }
+
+    @Test
+    public void testGetPasSignalsDownloadConnectionTimeoutMs() {
+        testFlag(
+                "getPasSignalsDownloadConnectionTimeoutMs()",
+                DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                Flags::getPasSignalsDownloadConnectionTimeoutMs);
+    }
+
+    @Test
+    public void testGetPasScriptExecutionTimeoutMs() {
+        testFlag(
+                "getPasScriptExecutionTimeoutMs()",
+                DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS,
+                Flags::getPasScriptExecutionTimeoutMs);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

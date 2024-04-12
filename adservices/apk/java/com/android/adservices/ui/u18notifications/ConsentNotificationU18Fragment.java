@@ -48,7 +48,6 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
@@ -69,22 +68,11 @@ public class ConsentNotificationU18Fragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupListeners(savedInstanceState);
         ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED, getContext());
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            if (ConsentManagerV2.getInstance().getUx() == RVC_UX
-                    && ConsentManagerV2.getInstance().getUserManualInteractionWithConsent()
-                            != MANUAL_INTERACTIONS_RECORDED) {
-                ConsentManagerV2.getInstance()
-                        .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
-            }
-        } else {
-            if (ConsentManager.getInstance().getUx() == RVC_UX
-                    && ConsentManager.getInstance().getUserManualInteractionWithConsent()
-                            != MANUAL_INTERACTIONS_RECORDED) {
-                ConsentManager.getInstance()
-                        .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
-            }
+        if (ConsentManager.getInstance().getUx() == RVC_UX
+                && ConsentManager.getInstance().getUserManualInteractionWithConsent()
+                        != MANUAL_INTERACTIONS_RECORDED) {
+            ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
         }
-
     }
 
     @Override
@@ -198,15 +186,9 @@ public class ConsentNotificationU18Fragment extends Fragment {
                 ConsentNotificationActivity.handleAction(LANDING_PAGE_GOT_IT_CLICKED, getContext());
 
                 if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                    if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-                        ConsentManagerV2.getInstance()
-                                .recordUserManualInteractionWithConsent(
-                                        ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED);
-                    } else {
-                        ConsentManager.getInstance()
-                                .recordUserManualInteractionWithConsent(
-                                        ConsentManager.MANUAL_INTERACTIONS_RECORDED);
-                    }
+                    ConsentManager.getInstance()
+                            .recordUserManualInteractionWithConsent(
+                                    ConsentManager.MANUAL_INTERACTIONS_RECORDED);
 
                     // acknowledge and dismiss
                     requireActivity().finish();
