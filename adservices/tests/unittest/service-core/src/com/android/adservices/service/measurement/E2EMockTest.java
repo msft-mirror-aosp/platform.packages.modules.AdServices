@@ -176,7 +176,7 @@ public abstract class E2EMockTest extends E2ETest {
                         DbTestUtil.getSharedDbHelperForTest(),
                         mFlags,
                         /* enable seed */ true,
-                        AdServicesLoggerImpl.getInstance(),
+                        mock(AdServicesLoggerImpl.class),
                         EnrollmentUtil.getInstance(sContext));
 
         mAsyncSourceFetcher =
