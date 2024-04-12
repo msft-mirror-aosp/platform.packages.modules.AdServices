@@ -57,6 +57,13 @@ public class ConsentNotificationTrigger {
     public static final int NOTIFICATION_ID = 67920;
     private static final String CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
     private static final int NOTIFICATION_PRIORITY = NotificationCompat.PRIORITY_MAX;
+    // Request codes should be different for notifications that are not mutually exclusive per user.
+    // When in doubt, always use a different request code.
+    private static final int BETA_REQUEST_CODE = 1;
+    private static final int GA_REQUEST_CODE = 2;
+    private static final int U18_REQUEST_CODE = 3;
+    private static final int GA_WITH_PAS_REQUEST_CODE = 4;
+
     /**
      * Shows consent notification as the highest priority notification to the user.
      *
@@ -392,7 +399,8 @@ public class ConsentNotificationTrigger {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
 
         PendingIntent pendingIntent =
-                PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+                PendingIntent.getActivity(
+                        context, GA_REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE);
 
         String bigText =
                 isEuDevice
@@ -437,7 +445,7 @@ public class ConsentNotificationTrigger {
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
-                        context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+                        context, BETA_REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.BigTextStyle textStyle =
                 new NotificationCompat.BigTextStyle()
                         .bigText(
@@ -476,7 +484,7 @@ public class ConsentNotificationTrigger {
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
-                        context, /* requestCode= */ 1, intent, PendingIntent.FLAG_IMMUTABLE);
+                        context, U18_REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.BigTextStyle textStyle =
                 new NotificationCompat.BigTextStyle()
                         .bigText(
@@ -500,7 +508,8 @@ public class ConsentNotificationTrigger {
         intent.putExtra(IS_RENOTIFY_KEY, isRenotify);
 
         PendingIntent pendingIntent =
-                PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+                PendingIntent.getActivity(
+                        context, GA_WITH_PAS_REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE);
 
         String bigText =
                 isRenotify
