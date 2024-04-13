@@ -150,6 +150,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
 
     @Test
     public void testLogFledgeApiCallStatsWithAppPackageNameLogging() {
+        mockAppNameApiErrorLogger();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
         String appPackageName = TEST_PACKAGE_NAME;
@@ -161,6 +162,12 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         // Verify method logging app package name is called.
         verify(mStatsdLoggerMock)
                 .logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+
+        verify(mMockAppNameApiErrorLogger)
+                .logErrorOccurrence(
+                        appPackageName,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        STATUS_SUCCESS);
     }
 
     @Test

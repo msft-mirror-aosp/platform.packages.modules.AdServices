@@ -1278,6 +1278,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH =
             "measurement_max_attribution_scope_length";
 
+    public static final String KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON =
+            "measurement_event_api_default_epsilon";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";

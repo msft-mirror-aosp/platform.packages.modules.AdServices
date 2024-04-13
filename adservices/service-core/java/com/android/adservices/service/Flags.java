@@ -1780,7 +1780,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default value for feature flag for PAS unlimited egress in Server auctions. */
-    boolean DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS = true;
+    boolean DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS = false;
 
     /**
      * @return feature flag to enable PAS unlimited egress in Server auctions
@@ -4570,6 +4570,12 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Return true if measurement registrations through ODP is enabled */
     default boolean getMeasurementEnableOdpWebTriggerRegistration() {
         return MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
+    }
+
+    float DEFAULT_MEASUREMENT_PRIVACY_EPSILON = 14f;
+
+    default float getMeasurementPrivacyEpsilon() {
+        return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
     }
 
     /**
