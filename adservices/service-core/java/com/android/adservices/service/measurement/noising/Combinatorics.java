@@ -256,9 +256,8 @@ public class Combinatorics {
      * @param numOfStates Number of States
      * @return the probability to use fake reports
      */
-    public static double getFlipProbability(long numOfStates) {
-        double epsilon = (double) PrivacyParams.getPrivacyEpsilon();
-        return numOfStates / (numOfStates + Math.exp(epsilon) - 1D);
+    public static double getFlipProbability(long numOfStates, double privacyEpsilon) {
+        return (numOfStates) / (numOfStates + Math.exp(privacyEpsilon) - 1D);
     }
 
     private static double getBinaryEntropy(double x) {
@@ -286,17 +285,19 @@ public class Combinatorics {
     }
 
     private static double getFakeProbability(
-            long numOfStates, long numUsedScopes, long numEventStates) {
+            long numOfStates, long numUsedScopes, long numEventStates, double privacyEpsilon) {
         double pickRateForSource =
-                getFlipProbability(numOfStates) * (numOfStates - 1L) / numOfStates;
+                getFlipProbability(numOfStates, privacyEpsilon) * (numOfStates - 1L) / numOfStates;
         double pickRateForEvent =
-                getFlipProbability(numEventStates) * (numEventStates - 1L) / numEventStates;
+                getFlipProbability(numEventStates, privacyEpsilon)
+                        * (numEventStates - 1L)
+                        / numEventStates;
         return 1 - (1 - pickRateForSource) * Math.pow(1 - pickRateForEvent, (double) numUsedScopes);
     }
 
     @VisibleForTesting
     static double calculateInformationGainWithAttributionScope(
-            long numOfStates, long numUsedScopes, long numEventStates) {
+            long numOfStates, long numUsedScopes, long numEventStates, double privacyEpsilon) {
         BigInteger totalNumStates =
                 BigInteger.valueOf(numOfStates)
                         .add(
@@ -306,7 +307,8 @@ public class Combinatorics {
             return 0d;
         }
         double log2Q = DoubleMath.log2(totalNumStates.doubleValue());
-        double fakeProbability = getFakeProbability(numOfStates, numUsedScopes, numEventStates);
+        double fakeProbability =
+                getFakeProbability(numOfStates, numUsedScopes, numEventStates, privacyEpsilon);
         return log2Q
                 - getBinaryEntropy(fakeProbability)
                 - fakeProbability * DoubleMath.log2(totalNumStates.doubleValue() - 1);
@@ -322,7 +324,10 @@ public class Combinatorics {
      * @return the max information gain
      */
     public static double getMaxInformationGainWithAttributionScope(
-            long numTriggerStates, long attributionScopeLimit, long maxEventStates) {
+            long numTriggerStates,
+            long attributionScopeLimit,
+            long maxEventStates,
+            double privacyEpsilon) {
         double maxInformationGain = 0;
         // Choosing the smaller dimension for iteration.
         if (attributionScopeLimit > maxEventStates) {
@@ -334,7 +339,10 @@ public class Combinatorics {
                 LongToDoubleFunction infoGainFunction =
                         (numUsedScopes) ->
                                 calculateInformationGainWithAttributionScope(
-                                        numTriggerStates, numUsedScopes, currentNumEventStates);
+                                        numTriggerStates,
+                                        numUsedScopes,
+                                        currentNumEventStates,
+                                        privacyEpsilon);
                 maxInformationGain =
                         Math.max(
                                 maxInformationGain,
@@ -349,7 +357,10 @@ public class Combinatorics {
                 LongToDoubleFunction infoGainFunction =
                         (numEventStates) ->
                                 calculateInformationGainWithAttributionScope(
-                                        numTriggerStates, currentNumUsedScopes, numEventStates);
+                                        numTriggerStates,
+                                        currentNumUsedScopes,
+                                        numEventStates,
+                                        privacyEpsilon);
                 maxInformationGain =
                         Math.max(
                                 maxInformationGain,

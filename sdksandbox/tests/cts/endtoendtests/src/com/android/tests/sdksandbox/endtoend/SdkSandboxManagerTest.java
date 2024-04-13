@@ -26,6 +26,7 @@ import static androidx.lifecycle.Lifecycle.State;
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -958,7 +959,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
                         actionExecutor =
                                 (IActivityActionExecutor)
                                         sdk.startActivity(activityStarter, extras);
-                    } catch (RemoteException e) {
+                    } catch (Exception e) {
                         fail("Got exception while starting activity: " + e.getMessage());
                     }
                     activityExecutorContainer.setExecutor(actionExecutor);
@@ -970,9 +971,12 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
                     sUiDevice.wait(
                             Until.hasObject(By.textContains(randomText)), WAIT_FOR_TEXT_IN_MS));
         } else {
-            assertTrue(
-                    sUiDevice.wait(
-                            Until.hasObject(By.textContains(randomText)), WAIT_FOR_TEXT_IN_MS));
+            assertWithMessage("Activity has random text")
+                    .that(
+                            sUiDevice.wait(
+                                    Until.hasObject(By.textContains(randomText)),
+                                    WAIT_FOR_TEXT_IN_MS))
+                    .isTrue();
         }
         return actionExecutor;
     }

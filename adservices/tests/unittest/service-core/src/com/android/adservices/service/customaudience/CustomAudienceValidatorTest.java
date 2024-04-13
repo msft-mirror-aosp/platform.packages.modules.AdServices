@@ -26,7 +26,6 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.common.AdDataValidator;
 import com.android.adservices.service.common.AdRenderIdValidator;
@@ -37,6 +36,7 @@ import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl
 import com.android.adservices.service.common.JsonValidator;
 import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.common.ValidatorUtil;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Assert;
 import org.junit.Rule;

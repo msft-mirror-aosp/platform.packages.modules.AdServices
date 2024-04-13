@@ -17,10 +17,6 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesFlag;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
-import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
@@ -39,11 +35,20 @@ import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_
 import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.FlagsTest.getConstantValue;
@@ -232,6 +237,159 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
     }
 
     @Test
+    public void testGetMeasurementApiRegisterWebSourceKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH",
+                Flags::getMeasurementApiRegisterWebSourceKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterWebSourceKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementApiRegisterWebSourceKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterSourcesKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH",
+                Flags::getMeasurementApiRegisterSourcesKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterSourcesKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementApiRegisterSourcesKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterWebTriggerKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH",
+                Flags::getMeasurementApiRegisterWebTriggerKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterWebTriggerKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementApiRegisterWebTriggerKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAggregateFallbackReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobAggregateFallbackReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAggregateFallbackReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobAggregateFallbackReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAggregateReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobAggregateReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAggregateReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobAggregateReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAttributionKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH,
+                "MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH",
+                Flags::getMeasurementJobAttributionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAttributionKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH,
+                "MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobAttributionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
+                Flags::getMeasurementVerboseDebugReportingFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementVerboseDebugReportingFallbackJobKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementVerboseDebugReportingFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementDebugReportingFallbackJobKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
+                Flags::getMeasurementDebugReportingFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementDebugReportingFallbackJobKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementDebugReportingFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDeleteExpiredKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
+                "MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH",
+                Flags::getMeasurementJobDeleteExpiredKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDeleteExpiredKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
+                "MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobDeleteExpiredKillSwitch);
+    }
+
+    @Test
     public void testGetCobaltLoggingEnabled() {
         mFlagsTestHelper.testFeatureFlagGuardedByGlobalKs(
                 KEY_COBALT_LOGGING_ENABLED,
@@ -247,33 +405,37 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testConsentNotificationDebugMode() {
-        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
                 KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
-                CONSENT_NOTIFICATION_DEBUG_MODE,
+                "CONSENT_NOTIFICATION_DEBUG_MODE",
+                /* guard= */ null,
                 Flags::getConsentNotificationDebugMode);
     }
 
     @Test
     public void testConsentNotificationActivityDebugMode() {
-        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
-                CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                "CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE",
+                /* guard= */ null,
                 Flags::getConsentNotificationActivityDebugMode);
     }
 
     @Test
     public void testConsentManagerOTADebugMode() {
-        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
                 KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
-                DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE,
+                "DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE",
+                /* guard= */ null,
                 Flags::getConsentManagerOTADebugMode);
     }
 
     @Test
     public void testConsentNotifiedDebugMode() {
-        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
                 KEY_CONSENT_NOTIFIED_DEBUG_MODE,
-                CONSENT_NOTIFIED_DEBUG_MODE,
+                "CONSENT_NOTIFIED_DEBUG_MODE",
+                /* guard= */ null,
                 Flags::getConsentNotifiedDebugMode);
     }
 

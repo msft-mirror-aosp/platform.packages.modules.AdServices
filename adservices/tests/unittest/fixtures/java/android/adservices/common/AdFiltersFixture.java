@@ -16,15 +16,11 @@
 
 package android.adservices.common;
 
-import static android.adservices.common.AdDataFixture.APP_INSTALL_ENABLED;
-
 public class AdFiltersFixture {
 
     public static AdFilters getValidUnhiddenFilters() {
         AdFilters.Builder builder = new AdFilters.Builder();
-        if (APP_INSTALL_ENABLED) {
-            builder.setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
-        }
+        builder.setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
         builder.setFrequencyCapFilters(FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS);
         return builder.build();
     }
