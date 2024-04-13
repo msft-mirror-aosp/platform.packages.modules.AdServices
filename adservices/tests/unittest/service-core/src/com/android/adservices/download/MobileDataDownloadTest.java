@@ -33,7 +33,6 @@ import android.os.SystemClock;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
@@ -49,6 +48,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;

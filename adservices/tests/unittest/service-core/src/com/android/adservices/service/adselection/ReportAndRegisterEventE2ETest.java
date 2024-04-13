@@ -61,7 +61,6 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -110,6 +109,8 @@ import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.ondevicepersonalization.IOdpDelegationWrapper;
+import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
@@ -119,6 +120,7 @@ import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -232,6 +234,7 @@ public class ReportAndRegisterEventE2ETest {
     private MeasurementImpl mMeasurementImplSpy;
     @Mock EnrollmentDao mEnrollmentDaoMock;
     @Mock MeasurementDataDeleter mMeasurementDataDeleterMock;
+    IOdpDelegationWrapper mIOdpDelegationWrapperMock = mock(NoOdpDelegationWrapper.class);
 
     AdSelectionServiceImpl mAdSelectionService;
     private AsyncRegistrationQueueRunner mAsyncRegistrationQueueRunnerSpy;
@@ -242,7 +245,8 @@ public class ReportAndRegisterEventE2ETest {
 
     @Spy
     private AsyncTriggerFetcher mAsyncTriggerFetcherSpy =
-            new AsyncTriggerFetcher(CONTEXT, mEnrollmentDaoMock, mFlags);
+            new AsyncTriggerFetcher(
+                    CONTEXT, mEnrollmentDaoMock, mFlags, mIOdpDelegationWrapperMock);
 
     @Mock private DebugReportApi mDebugReportApiMock;
     @Mock private SourceNoiseHandler mSourceNoiseHandlerMock;

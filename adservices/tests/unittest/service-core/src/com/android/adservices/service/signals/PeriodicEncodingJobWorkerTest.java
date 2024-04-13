@@ -37,7 +37,6 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.DBEncodedPayload;
@@ -56,6 +55,7 @@ import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerNoLoggingImpl;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -158,6 +158,7 @@ public class PeriodicEncodingJobWorkerTest {
         when(mFlags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop())
                 .thenReturn(maxFailedRun);
         when(mFlags.getPasExtendedMetricsEnabled()).thenReturn(true);
+        when(mFlags.getPasScriptExecutionTimeoutMs()).thenReturn(1000);
         mJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,

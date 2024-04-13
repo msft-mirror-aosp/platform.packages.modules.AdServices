@@ -25,8 +25,8 @@ import android.os.LimitExceededException;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 
 import org.junit.Assert;
 import org.junit.Before;
