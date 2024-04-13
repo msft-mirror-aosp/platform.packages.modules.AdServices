@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,26 @@
  * limitations under the License.
  */
 
-package android.adservices.test.scenario.adservices;
+package android.adservices.test.scenario.adservices.iapc;
 
 import android.platform.test.microbenchmark.Microbenchmark;
 import android.platform.test.rule.DropCachesRule;
+import android.platform.test.rule.KillAppsRule;
+
+import com.android.adservices.common.AdServicesSupportHelper;
 
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
+/** The {@link Microbenchmark} class for Ad ID API call. */
 @RunWith(Microbenchmark.class)
-// TODO(b/333900177): Remove this test once the new Ad ID CB test is stable.
-public class GetAdIdMicrobenchmark extends GetAdId {
-    @Rule public RuleChain rules = RuleChain.outerRule(new DropCachesRule());
+public final class GetAdIdApiCallMicrobenchmark extends GetAdIdApiCall {
+    @Rule(order = 12)
+    public RuleChain rules =
+            RuleChain.outerRule(
+                            new KillAppsRule(
+                                    AdServicesSupportHelper.getInstance()
+                                            .getAdServicesPackageName()))
+                    .around(new DropCachesRule());
 }

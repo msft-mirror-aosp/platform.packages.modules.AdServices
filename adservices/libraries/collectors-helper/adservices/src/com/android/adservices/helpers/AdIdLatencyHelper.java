@@ -31,6 +31,12 @@ import java.util.regex.Pattern;
 
 /** A helper class consists helper methods to collect Ad ID API hot/code start-up latencies. */
 public final class AdIdLatencyHelper {
+    /** A tag used to measure Ad ID API hot start-up latency. */
+    public static final String AD_ID_HOT_START_LATENCY_METRIC = "AD_ID_HOT_START_LATENCY_METRIC";
+
+    /** A tag used to measure Ad ID API cold start-up latency. */
+    public static final String AD_ID_COLD_START_LATENCY_METRIC = "AD_ID_COLD_START_LATENCY_METRIC";
+
     /** Gets a logcat version of {@link LatencyHelper}. */
     public static LatencyHelper getLogcatCollector() {
         return LatencyHelper.getLogcatLatencyHelper(
@@ -45,12 +51,6 @@ public final class AdIdLatencyHelper {
 
     private static class AdIdProcessInputForLatencyMetrics
             implements LatencyHelper.ProcessInputForLatencyMetrics {
-
-        private static final String AD_ID_HOT_START_LATENCY_METRIC =
-                "AD_ID_HOT_START_LATENCY_METRIC";
-        private static final String AD_ID_COLD_START_LATENCY_METRIC =
-                "AD_ID_COLD_START_LATENCY_METRIC";
-
         @Override
         public String getTestLabel() {
             return "GetAdIdApiCall";
