@@ -84,7 +84,6 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs) {
         mStatsdAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, latencyMs);
-        // TODO(b/324155747): Add Cobalt app name api error logging.
     }
 
     @Override
@@ -92,7 +91,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
             int apiName, String appPackageName, int resultCode, int latencyMs) {
         mStatsdAdServicesLogger.logFledgeApiCallStats(
                 apiName, appPackageName, resultCode, latencyMs);
-        // TODO(b/324155747): Add Cobalt app name api error logging.
+
+        cobaltLogAppNameApiError(appPackageName, apiName, resultCode);
     }
 
     @Override

@@ -106,13 +106,6 @@ public final class PrivacyParams {
 
     /** Maximum time an aggregate report is delayed after trigger */
     public static final long AGGREGATE_REPORT_DELAY_SPAN = TimeUnit.MINUTES.toMillis(10L);
-
-    private static final int PRIVACY_EPSILON = 14;
-
-    public static int getPrivacyEpsilon() {
-        return PRIVACY_EPSILON;
-    }
-
     public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001D;
 
     /**

@@ -25,5 +25,6 @@ android_test {
         "adservices-collectors-helper-test",
     ],
 
+    min_sdk_version: "30",
     sdk_version: "current",
 }

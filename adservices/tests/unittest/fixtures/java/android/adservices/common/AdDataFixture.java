@@ -31,8 +31,6 @@ import java.util.List;
 
 /** Utility class supporting ad services API unit tests */
 public class AdDataFixture {
-    // TODO(b/266837113) Set to true once app install is unhidden
-    public static final boolean APP_INSTALL_ENABLED = false;
     public static final String VALID_METADATA = "{\"example\": \"metadata\", \"valid\": true}";
     public static final String INVALID_METADATA = "not.{real!metadata} = 1";
 

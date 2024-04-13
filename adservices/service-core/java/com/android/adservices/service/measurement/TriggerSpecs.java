@@ -508,8 +508,10 @@ public class TriggerSpecs {
             }
 
             mNumStates = numStates;
-            mFlipProbability = Combinatorics.getFlipProbability(mNumStates);
-            mInformationGain = source.getInformationGain(flags, mNumStates, mFlipProbability);
+            mFlipProbability =
+                    Combinatorics.getFlipProbability(
+                            mNumStates, (double) flags.getMeasurementPrivacyEpsilon());
+            mInformationGain = Combinatorics.getInformationGain(mNumStates, mFlipProbability);
         }
 
         PrivacyComputationParams(String inputLine) throws JSONException {

@@ -1724,7 +1724,10 @@ public class SourceTest {
         long numStates = 2925L;
         assertThat(
                         testSource.getInformationGain(
-                                mFlags, numStates, Combinatorics.getFlipProbability(numStates)))
+                                mFlags,
+                                numStates,
+                                Combinatorics.getFlipProbability(
+                                        numStates, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)))
                 .isWithin(PrivacyParams.NUMBER_EQUAL_THRESHOLD)
                 .of(11.461727965384876d);
     }
@@ -1732,6 +1735,8 @@ public class SourceTest {
     @Test
     public void testGetInformationGain_attributionScopeOn_includesAttributionScopeParams() {
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementPrivacyEpsilon())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionScopeLimit(100L)
@@ -1740,7 +1745,10 @@ public class SourceTest {
         long numStates = 2925L;
         assertThat(
                         testSource.getInformationGain(
-                                mFlags, numStates, Combinatorics.getFlipProbability(numStates)))
+                                mFlags,
+                                numStates,
+                                Combinatorics.getFlipProbability(
+                                        numStates, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)))
                 .isWithin(PrivacyParams.NUMBER_EQUAL_THRESHOLD)
                 .of(11.680063513093458d);
     }
@@ -1748,11 +1756,16 @@ public class SourceTest {
     @Test
     public void testGetInformationGain_attributionScopeOnParamsNull_fallbackToDefaultValue() {
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementPrivacyEpsilon())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
         Source testSource = SourceFixture.getMinimalValidSourceBuilder().build();
         long numStates = 2925L;
         assertThat(
                         testSource.getInformationGain(
-                                mFlags, numStates, Combinatorics.getFlipProbability(numStates)))
+                                mFlags,
+                                numStates,
+                                Combinatorics.getFlipProbability(
+                                        numStates, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)))
                 .isWithin(PrivacyParams.NUMBER_EQUAL_THRESHOLD)
                 .of(11.461727965384876d);
     }
@@ -1819,6 +1832,9 @@ public class SourceTest {
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainNavigation();
+        doReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)
+                .when(flags)
+                .getMeasurementPrivacyEpsilon();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"

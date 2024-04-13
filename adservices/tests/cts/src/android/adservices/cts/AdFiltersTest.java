@@ -18,7 +18,6 @@ package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdFiltersFixture;
 import android.adservices.common.AppInstallFilters;
@@ -246,13 +245,14 @@ public class AdFiltersTest {
     public void testToString() {
         final AdFilters originalFilters = AdFiltersFixture.getValidUnhiddenFilters();
 
-        final String expectedString =
-                String.format(
-                        "AdFilters{mFrequencyCapFilters="
-                                + FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS
-                                + getAppInstallString()
-                                + "}");
-        assertThat(originalFilters.toString()).isEqualTo(expectedString);
+        assertThat(originalFilters.toString()).contains("AdFilters{");
+        assertThat(originalFilters.toString())
+                .contains(
+                        "mFrequencyCapFilters="
+                                + FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS);
+        assertThat(originalFilters.toString())
+                .contains(
+                        "mAppInstallFilters=" + AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
     }
 
     @Test
@@ -265,14 +265,5 @@ public class AdFiltersTest {
                         .build();
 
         assertThat(adFilters.describeContents()).isEqualTo(0);
-    }
-
-    private String getAppInstallString() {
-        String toReturn = "";
-        if (AdDataFixture.APP_INSTALL_ENABLED) {
-            toReturn +=
-                    ", mAppInstallFilters=" + AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS;
-        }
-        return toReturn;
     }
 }

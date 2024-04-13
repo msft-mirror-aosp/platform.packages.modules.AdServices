@@ -4148,6 +4148,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 .KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH
                         + " = "
                         + getMeasurementJobImmediateAggregateReportingKillSwitch());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON
+                        + " = "
+                        + getMeasurementPrivacyEpsilon());
+
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t"
@@ -6085,6 +6092,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 FlagsConstants
                                         .KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
                                 MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH));
+    }
+
+    @Override
+    public float getMeasurementPrivacyEpsilon() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON,
+                DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
     }
 
     @Override

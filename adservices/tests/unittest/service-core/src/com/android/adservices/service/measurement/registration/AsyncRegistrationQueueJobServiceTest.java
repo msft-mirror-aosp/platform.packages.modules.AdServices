@@ -121,6 +121,8 @@ public class AsyncRegistrationQueueJobServiceTest {
                 .thenReturn(JOB_TRIGGER_MIN_DELAY_MS);
         when(mMockFlags.getMeasurementAsyncRegistrationJobTriggerMaxDelayMs())
                 .thenReturn(JOB_TRIGGER_MAX_DELAY_MS);
+        when(mMockFlags.getMeasurementPrivacyEpsilon())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
     }
 
     @Test
