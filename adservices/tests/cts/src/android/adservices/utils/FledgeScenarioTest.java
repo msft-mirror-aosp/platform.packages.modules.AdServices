@@ -60,6 +60,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 
+import java.net.URL;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
@@ -299,6 +300,7 @@ public abstract class FledgeScenarioTest {
         mMockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
         mServerBaseAddress = getServerBaseAddress();
         mAdTechIdentifier = AdTechIdentifier.fromString(mMockWebServer.getHostName());
+        dispatcher.setServerBaseURL(new URL(mServerBaseAddress));
         Log.d(TAG, "Started default MockWebServer.");
     }
 
