@@ -16,7 +16,7 @@
 
 package com.android.adservices.mockito;
 
-import static com.android.adservices.common.SyncCallback.DEFAULT_TIMEOUT_MS;
+import static com.android.adservices.shared.testing.SyncCallback.DEFAULT_TIMEOUT_MS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -35,13 +35,13 @@ import android.app.job.JobService;
 import android.content.Context;
 import android.util.Log;
 
-import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;

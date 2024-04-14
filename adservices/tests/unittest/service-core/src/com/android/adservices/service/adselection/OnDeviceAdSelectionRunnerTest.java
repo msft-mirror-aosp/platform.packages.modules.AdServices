@@ -75,6 +75,7 @@ import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTes
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.TOTAL_BIDDING_STAGE_LATENCY_IN_MS;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.sCallerMetadata;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.FILTER_PROCESS_TYPE_CONTEXTUAL_ADS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.FILTER_PROCESS_TYPE_CUSTOM_AUDIENCES;
 import static com.android.adservices.service.stats.SignatureVerificationLoggerImplTest.SIGNATURE_VERIFICATION_END_KEY_FETCH;
 import static com.android.adservices.service.stats.SignatureVerificationLoggerImplTest.SIGNATURE_VERIFICATION_END_SERIALIZATION;
@@ -137,8 +138,6 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.DBAdDataFixture;
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
@@ -183,6 +182,8 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.RunAdBiddingProcessReportedStats;
 import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.adservices.service.stats.SignatureVerificationStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -298,6 +299,7 @@ public class OnDeviceAdSelectionRunnerTest {
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private List<AdTechIdentifier> mCustomAudienceBuyers;
     private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
+    private AdSelectionConfig.Builder mAdSelectionConfigBuilderWithNoBuyers;
 
     private DBCustomAudience mDBCustomAudienceForBuyer1;
     private DBCustomAudience mDBCustomAudienceForBuyer2;
@@ -377,6 +379,12 @@ public class OnDeviceAdSelectionRunnerTest {
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_VALID)
                         .setCustomAudienceBuyers(mCustomAudienceBuyers)
+                        .setDecisionLogicUri(DECISION_LOGIC_URI)
+                        .setTrustedScoringSignalsUri(TRUSTED_SIGNALS_URI);
+        mAdSelectionConfigBuilderWithNoBuyers =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setSeller(SELLER_VALID)
+                        .setCustomAudienceBuyers(Collections.emptyList())
                         .setDecisionLogicUri(DECISION_LOGIC_URI)
                         .setTrustedScoringSignalsUri(TRUSTED_SIGNALS_URI);
 
@@ -3018,7 +3026,7 @@ public class OnDeviceAdSelectionRunnerTest {
         int expectedNumOfAdsFiltered = 1;
         int expectedNumOfCAsBeforeFiltering = 2;
         int expectedNumOfCAsFiltered = 0;
-        verifyLogForAdFiltering(
+        verifyLogForAdFilteringForCAs(
                 expectedNumOfAdsBeforeFiltering,
                 expectedNumOfAdsFiltered,
                 expectedNumOfCAsBeforeFiltering,
@@ -3146,7 +3154,7 @@ public class OnDeviceAdSelectionRunnerTest {
         int expectedNumOfAdsFiltered = 1;
         int expectedNumOfCAsBeforeFiltering = 2;
         int expectedNumOfCAsFiltered = 0;
-        verifyLogForAdFiltering(
+        verifyLogForAdFilteringForCAs(
                 expectedNumOfAdsBeforeFiltering,
                 expectedNumOfAdsFiltered,
                 expectedNumOfCAsBeforeFiltering,
@@ -3253,7 +3261,7 @@ public class OnDeviceAdSelectionRunnerTest {
         int expectedNumOfAdsFiltered = caWithFilterAd.getAds().size();
         int expectedNumOfCAsBeforeFiltering = 2;
         int expectedNumOfCAsFiltered = 1;
-        verifyLogForAdFiltering(
+        verifyLogForAdFilteringForCAs(
                 expectedNumOfAdsBeforeFiltering,
                 expectedNumOfAdsFiltered,
                 expectedNumOfCAsBeforeFiltering,
@@ -3376,10 +3384,7 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testContextualAdsEnabled_success() throws AdServicesException {
         Map<AdTechIdentifier, SignedContextualAds> signedContextualAdsMap = createContextualAds();
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder
-                        .build()
-                        .cloneToBuilder()
-                        .setCustomAudienceBuyers(Collections.emptyList())
+                mAdSelectionConfigBuilderWithNoBuyers
                         .setPerBuyerSignedContextualAds(signedContextualAdsMap)
                         .build();
 
@@ -3457,10 +3462,7 @@ public class OnDeviceAdSelectionRunnerTest {
             throws AdServicesException {
         Map<AdTechIdentifier, SignedContextualAds> signedContextualAdsMap = createContextualAds();
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder
-                        .build()
-                        .cloneToBuilder()
-                        .setCustomAudienceBuyers(Collections.emptyList())
+                mAdSelectionConfigBuilderWithNoBuyers
                         .setPerBuyerSignedContextualAds(signedContextualAdsMap)
                         .build();
 
@@ -3535,10 +3537,7 @@ public class OnDeviceAdSelectionRunnerTest {
             throws AdServicesException {
         Map<AdTechIdentifier, SignedContextualAds> signedContextualAdsMap = createContextualAds();
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder
-                        .build()
-                        .cloneToBuilder()
-                        .setCustomAudienceBuyers(Collections.emptyList())
+                mAdSelectionConfigBuilderWithNoBuyers
                         .setPerBuyerSignedContextualAds(signedContextualAdsMap)
                         .build();
 
@@ -3612,14 +3611,105 @@ public class OnDeviceAdSelectionRunnerTest {
     }
 
     @Test
-    public void testContextualAdsDisabled_contextualAdsRemovedFromAuction_success() {
+    public void testContextualAds_failedSignatureContextualAdsRemovec_loggingEnabled()
+            throws AdServicesException {
+        Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
+        SignedContextualAds contextualAdsWithInvalidSignature =
+                new SignedContextualAds.Builder(contextualAdsMap.get(BUYER_2))
+                        .setSignature(new byte[] {1, 2, 3})
+                        .build();
+        contextualAdsMap.put(BUYER_2, contextualAdsWithInvalidSignature);
+
+        AdSelectionConfig adSelectionConfig =
+                mAdSelectionConfigBuilderWithNoBuyers
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
+                        .build();
+
+        final Flags flags =
+                new OnDeviceAdSelectionRunnerTestFlags() {
+                    @Override
+                    public long getAdSelectionOverallTimeoutMs() {
+                        return 300;
+                    }
+
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAdSelectionContextualAdsMetricsEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
+                        return true;
+                    }
+                };
+
+        setAdSelectionExecutionLoggerMockWithAdFiltering();
+        mAdSelectionRunner =
+                new OnDeviceAdSelectionRunner(
+                        mContextSpy,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mMockAdsScoreGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClockSpy,
+                        mAdServicesLoggerMock,
+                        flags,
+                        CALLER_UID,
+                        mAdSelectionServiceFilterMock,
+                        mAdSelectionExecutionLogger,
+                        mPerBuyerBiddingRunnerMock,
+                        mFrequencyCapAdFilterer,
+                        mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock,
+                        false,
+                        mKAnonSignJoinFactoryMock,
+                        mAppInstallAdFilterer);
+
+        invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+
+        verify(mMockAdsScoreGenerator)
+                .runAdScoring(
+                        eq(Collections.EMPTY_LIST), mAdSelectionConfigArgumentCaptor.capture());
+        assertEquals(
+                "The contextual ad with invalid signature should've removed before scoring",
+                Map.of(BUYER_1, contextualAdsMap.get(BUYER_1)),
+                mAdSelectionConfigArgumentCaptor.getValue().getPerBuyerSignedContextualAds());
+
+        int numOfContextualAdsBeforeFiltering =
+                contextualAdsMap.get(BUYER_1).getAdsWithBid().size();
+        int numOfContextualAdsFiltered = 0;
+        int numOfContextualAdBundlesFilteredNoAds = 0;
+        int numOfContextualAdBundlesFilteredInvalidSignatures = 1;
+        verifyLogForAdFilteringForContextualAds(
+                numOfContextualAdsBeforeFiltering,
+                numOfContextualAdsFiltered,
+                numOfContextualAdBundlesFilteredNoAds,
+                numOfContextualAdBundlesFilteredInvalidSignatures);
+    }
+
+    @Test
+    public void testContextualAdsDisabled_contextualAdsRemovedFromAuction() {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder
-                        .build()
-                        .cloneToBuilder()
-                        .setCustomAudienceBuyers(Collections.emptyList())
-                        // Despite populating Contextual Ads, they will be removed
+                mAdSelectionConfigBuilderWithNoBuyers
                         .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
         final Flags flags =
@@ -3683,10 +3773,7 @@ public class OnDeviceAdSelectionRunnerTest {
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
 
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder
-                        .build()
-                        .cloneToBuilder()
-                        .setCustomAudienceBuyers(Collections.emptyList())
+                mAdSelectionConfigBuilderWithNoBuyers
                         .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
@@ -3709,6 +3796,11 @@ public class OnDeviceAdSelectionRunnerTest {
 
                     @Override
                     public boolean getFledgeAdSelectionContextualAdsMetricsEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
                         return true;
                     }
                 };
@@ -3775,10 +3867,17 @@ public class OnDeviceAdSelectionRunnerTest {
                         .getValue()
                         .getPerBuyerSignedContextualAds()
                         .containsKey(CommonFixture.VALID_BUYER_2));
-        int expectedNumOfKeysFetched = 1;
-        verifyLogForSuccessfulSignatureVerificationForContextualAds(
-                adSelectionConfig.getPerBuyerSignedContextualAds().size(),
-                expectedNumOfKeysFetched);
+
+        int numOfContextualAdsBeforeFiltering =
+                SignedContextualAdsFixture.countAdsIn(contextualAdsMap);
+        int numOfContextualAdsFiltered = contextualAdsMap.get(BUYER_2).getAdsWithBid().size();
+        int numOfContextualAdBundlesFilteredNoAds = 1;
+        int numOfContextualAdBundlesFilteredInvalidSignatures = 0;
+        verifyLogForAdFilteringForContextualAds(
+                numOfContextualAdsBeforeFiltering,
+                numOfContextualAdsFiltered,
+                numOfContextualAdBundlesFilteredNoAds,
+                numOfContextualAdBundlesFilteredInvalidSignatures);
     }
 
     @Test
@@ -4654,7 +4753,7 @@ public class OnDeviceAdSelectionRunnerTest {
         }
     }
 
-    private void verifyLogForAdFiltering(
+    private void verifyLogForAdFilteringForCAs(
             int numOfAdsBeforeFiltering,
             int numOfAdsFiltered,
             int numOfCAsBeforeFiltering,
@@ -4682,6 +4781,37 @@ public class OnDeviceAdSelectionRunnerTest {
         assertThat(stats.getNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures()).isEqualTo(0);
         assertThat(stats.getNumOfContextualAdsFilteredOutOfBiddingNoAds()).isEqualTo(0);
         assertThat(stats.getTotalNumOfContextualAdsBeforeFiltering()).isEqualTo(0);
+    }
+
+    private void verifyLogForAdFilteringForContextualAds(
+            int numOfContextualAdsBeforeFiltering,
+            int numOfContextualAdsFiltered,
+            int numOfContextualAdBundlesFilteredNoAds,
+            int numOfContextualAdBundlesFilteredInvalidSignatures) {
+        verify(mAdServicesLoggerMock, times(2))
+                .logAdFilteringProcessAdSelectionReportedStats(mAdFilteringCaptor.capture());
+        AdFilteringProcessAdSelectionReportedStats stats =
+                mAdFilteringCaptor.getAllValues().stream()
+                        .filter(e -> e.getFilterProcessType() == FILTER_PROCESS_TYPE_CONTEXTUAL_ADS)
+                        .findFirst()
+                        .orElse(null);
+
+        assertThat(stats).isNotNull();
+        assertThat(stats.getFilterProcessType()).isEqualTo(FILTER_PROCESS_TYPE_CONTEXTUAL_ADS);
+        assertThat(stats.getNumOfContextualAdsFiltered()).isEqualTo(numOfContextualAdsFiltered);
+        assertThat(stats.getNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures())
+                .isEqualTo(numOfContextualAdBundlesFilteredInvalidSignatures);
+        assertThat(stats.getNumOfContextualAdsFilteredOutOfBiddingNoAds())
+                .isEqualTo(numOfContextualAdBundlesFilteredNoAds);
+        assertThat(stats.getTotalNumOfContextualAdsBeforeFiltering())
+                .isEqualTo(numOfContextualAdsBeforeFiltering);
+        assertThat(stats.getTotalNumOfAdsBeforeFiltering()).isEqualTo(0);
+        assertThat(stats.getNumOfAdsFilteredOutOfBidding()).isEqualTo(0);
+        assertThat(stats.getNumOfCustomAudiencesFilteredOutOfBidding()).isEqualTo(0);
+        assertThat(stats.getTotalNumOfCustomAudiencesBeforeFiltering()).isEqualTo(0);
+        assertThat(stats.getNumOfAdCounterKeysInFcapFilters()).isEqualTo(0);
+        assertThat(stats.getNumOfPackageInAppInstallFilters()).isEqualTo(0);
+        assertThat(stats.getNumOfDbOperations()).isEqualTo(0);
     }
 
     private void verifyAndSetupCommonSuccessScenario(AdSelectionConfig adSelectionConfig)

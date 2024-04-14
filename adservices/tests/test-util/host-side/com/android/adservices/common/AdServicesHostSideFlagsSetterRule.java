@@ -15,6 +15,10 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.shared.testing.ConsoleLogger;
+import com.android.adservices.shared.testing.HostSideDeviceConfigHelper;
+import com.android.adservices.shared.testing.HostSideSystemPropertiesHelper;
+import com.android.adservices.shared.testing.TestDeviceHelper;
 import com.android.tradefed.device.ITestDevice;
 
 /** See {@link AbstractAdServicesFlagsSetterRule}. */

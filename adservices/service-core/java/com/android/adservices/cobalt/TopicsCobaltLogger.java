@@ -19,6 +19,7 @@ package com.android.adservices.cobalt;
 import com.android.adservices.data.topics.Topic;
 import com.android.cobalt.CobaltLogger;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 
@@ -50,9 +51,9 @@ public final class TopicsCobaltLogger {
     // 0 is the event code for an unknown topic.
     private static final int UNKNOWN_TOPIC = 0;
 
-    private final CobaltLogger mCobaltLogger;
+    private final Supplier<CobaltLogger> mCobaltLogger;
 
-    public TopicsCobaltLogger(CobaltLogger cobaltLogger) {
+    public TopicsCobaltLogger(Supplier<CobaltLogger> cobaltLogger) {
         this.mCobaltLogger = cobaltLogger;
     }
 
@@ -87,6 +88,7 @@ public final class TopicsCobaltLogger {
                         : UNKNOWN_TOPIC;
 
         // Ignore the returned future because occurrence logging does not need to block.
-        mCobaltLogger.logOccurrence(METRIC_ID, count, ImmutableList.of(eventCode));
+        var unused =
+                mCobaltLogger.get().logOccurrence(METRIC_ID, count, ImmutableList.of(eventCode));
     }
 }

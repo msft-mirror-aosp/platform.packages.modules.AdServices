@@ -295,6 +295,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mFlags.getMeasurementEnableUpdateTriggerHeaderLimit()).thenReturn(false);
         when(mFlags.getMaxResponseBasedRegistrationPayloadSizeBytes())
                 .thenReturn(Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
+        when(mFlags.getMeasurementPrivacyEpsilon())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
         when(mMeasurementDao.insertSource(any())).thenReturn(DEFAULT_SOURCE_ID);
         when(mSpyContext.getPackageManager()).thenReturn(mPackageManager);
     }
@@ -522,6 +524,15 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
                 .thenReturn(validAsyncRegistration);
+        Answer<?> answerAsyncSourceFetcher =
+                invocation -> {
+                    AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    return Optional.of(mMockedSource);
+                };
+        doAnswer(answerAsyncSourceFetcher)
+                .when(mAsyncSourceFetcher)
+                .fetchSource(any(), any(), any());
 
         // Execution
         ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();

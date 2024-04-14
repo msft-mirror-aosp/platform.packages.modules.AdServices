@@ -52,7 +52,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -63,10 +63,8 @@ import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -85,6 +83,7 @@ import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEven
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -108,18 +107,16 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class SignalsIntakeE2ETest {
+@RequiresSdkLevelAtLeastT
+public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final Uri URI = Uri.parse("https://localhost");
     private static final long WAIT_TIME_SECONDS = 1L;
 
     private static final String SIGNALS_PATH = "/signals";
 
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-
-    @Rule
-    public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(FlagsFactory.class).build();
+    @Rule(order = 11)
+    public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -154,9 +151,6 @@ public class SignalsIntakeE2ETest {
     private ListeningExecutorService mBackgroundExecutorService;
     private Flags mFlags;
     private EnrollmentDao mEnrollmentDao;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -266,7 +260,7 @@ public class SignalsIntakeE2ETest {
                         mConsentManagerMock,
                         mDevContextFilterMock,
                         AdServicesExecutors.getBackgroundExecutor(),
-                        AdServicesLoggerImpl.getInstance(),
+                        mAdServicesLoggerMock,
                         FakeFlagsFactory.getFlagsForTest(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
