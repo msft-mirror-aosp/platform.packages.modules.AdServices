@@ -28,7 +28,7 @@ import android.adservices.adselection.ReportEventRequest;
 import android.view.InputEvent;
 import android.view.KeyEvent;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.json.JSONObject;
 import org.junit.Before;

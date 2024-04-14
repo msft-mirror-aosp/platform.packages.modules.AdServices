@@ -43,8 +43,8 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.base.Strings;
 

@@ -18,7 +18,7 @@ package com.android.adservices.common.synccallback;
 
 import android.app.job.JobService;
 
-import com.android.adservices.common.SyncCallback;
+import com.android.adservices.shared.testing.SyncCallback;
 
 /**
  * A synchronized callback used for logging {@link JobService} on testing purpose.

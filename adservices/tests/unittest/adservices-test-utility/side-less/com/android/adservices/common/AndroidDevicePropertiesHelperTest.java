@@ -15,6 +15,9 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.shared.testing.AndroidDevicePropertiesHelper;
+import com.android.adservices.shared.testing.ScreenSize;
+
 import com.google.common.truth.Expect;
 
 import org.junit.Rule;

@@ -20,7 +20,7 @@ import static android.adservices.appsetid.GetAppSetIdResult.SCOPE_APP;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 

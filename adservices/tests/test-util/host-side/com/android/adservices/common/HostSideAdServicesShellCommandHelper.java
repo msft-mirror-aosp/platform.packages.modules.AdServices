@@ -16,6 +16,9 @@
 
 package com.android.adservices.common;
 
+import com.android.adservices.shared.testing.ConsoleLogger;
+import com.android.adservices.shared.testing.TestDeviceHelper;
+
 public final class HostSideAdServicesShellCommandHelper
         extends AbstractAdServicesShellCommandHelper {
     public HostSideAdServicesShellCommandHelper() {
