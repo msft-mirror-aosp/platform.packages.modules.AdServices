@@ -18,6 +18,8 @@ package com.android.adservices.common;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
 
+import com.android.adservices.shared.testing.ExceptionFailureSyncCallback;
+
 /** Stub implementation of {@link AdServicesOutcomeReceiver} for tests. */
 public final class AdServicesOutcomeReceiverForTests<T> extends ExceptionFailureSyncCallback<T>
         implements AdServicesOutcomeReceiver<T, Exception> {}

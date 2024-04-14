@@ -104,7 +104,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     @NonNull private final Flags mFlags;
 
     @VisibleForTesting
-    protected StatsdAdServicesLogger(@NonNull Flags flags) {
+    StatsdAdServicesLogger(@NonNull Flags flags) {
         this.mFlags = Objects.requireNonNull(flags);
     }
 

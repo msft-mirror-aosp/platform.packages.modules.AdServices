@@ -33,9 +33,9 @@ import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.adservices.common.annotations.SetFlagEnabled;
-import com.android.adservices.common.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import org.json.JSONException;
 import org.json.JSONObject;

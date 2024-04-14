@@ -18,7 +18,7 @@ package com.android.adservices.service.common;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 
-import com.android.adservices.common.SyncCallback;
+import com.android.adservices.shared.testing.SyncCallback;
 
 /** OnSharedPreferenceChangeListener implementation that blocks until the first key is received. */
 public final class SyncOnSharedPreferenceChangeListener

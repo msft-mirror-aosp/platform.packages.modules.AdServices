@@ -24,6 +24,7 @@ import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.compatibility.common.util.FileUtils;
 import com.android.compatibility.common.util.SystemUtil;
 

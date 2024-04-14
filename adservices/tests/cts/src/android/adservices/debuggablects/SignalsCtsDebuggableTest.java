@@ -31,10 +31,10 @@ import android.adservices.utils.ScenarioDispatcher;
 import android.net.Uri;
 
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.adservices.common.SupportedByConditionRule;
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import com.google.mockwebserver.MockWebServer;
 
@@ -44,6 +44,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -140,6 +141,7 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
         }
         mMockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
         mServerBaseAddress = getServerBaseAddress();
+        dispatcher.setServerBaseURL(new URL(mServerBaseAddress));
     }
 
     private String getServerBaseAddress() {

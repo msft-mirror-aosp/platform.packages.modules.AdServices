@@ -122,6 +122,9 @@
     <!-- Allows JobScheduler to persist jobs across reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- Required for sending measurement events -->
+    <uses-permission android:name="android.permission.ondevicepersonalization.NOTIFY_MEASUREMENT_EVENT"/>
+
     <application
         android:label="@string/app_label"
         android:forceQueryable="true"
