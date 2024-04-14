@@ -867,6 +867,8 @@ public abstract class AdSelectionRunner {
         sLogger.v("Filtering contextual ads in Ad Selection Config");
         ProtectedAudienceSignatureManager signatureManager = getSignatureManager();
         SignedContextualAds filtered;
+        int numOfContextualAdsBeforeFiltering = 0;
+        int numOfContextualAdsAfterFiltering = 0;
         int numOfContextualAdsRemovedWithZeroAds = 0;
         int numOfContextualAdsRemovedWithUnverifiedSignatures = 0;
         for (Map.Entry<AdTechIdentifier, SignedContextualAds> entry :
@@ -885,7 +887,7 @@ public abstract class AdSelectionRunner {
             } else {
                 sLogger.v("Contextual ads for buyer '%s' is verified", entry.getKey());
             }
-
+            numOfContextualAdsBeforeFiltering += entry.getValue().getAdsWithBid().size();
             logStartContextualAdsAppInstallFiltering();
             filtered = mAppInstallAdFilterer.filterContextualAds(entry.getValue());
             logEndContextualAdsAppInstallFiltering();
@@ -893,7 +895,7 @@ public abstract class AdSelectionRunner {
             logStartContextualAdsFcapFiltering();
             filtered = mFrequencyCapAdFilterer.filterContextualAds(filtered);
             logEndContextualAdsFcapFiltering();
-
+            numOfContextualAdsAfterFiltering += filtered.getAdsWithBid().size();
             if (filtered.getAdsWithBid().isEmpty()) {
                 sLogger.v(
                         "All the ads are filtered for a contextual ads for buyer: %s. Contextual"
@@ -912,8 +914,8 @@ public abstract class AdSelectionRunner {
                     filteredContextualAdsMap.get(entry.getKey()).getAdsWithBid().size());
         }
         logEndContextualAdsFiltering(
-                adSelectionConfig.getPerBuyerSignedContextualAds(),
-                filteredContextualAdsMap,
+                numOfContextualAdsBeforeFiltering,
+                numOfContextualAdsAfterFiltering,
                 numOfContextualAdsRemovedWithUnverifiedSignatures,
                 numOfContextualAdsRemovedWithZeroAds);
         return adSelectionConfig
@@ -943,15 +945,15 @@ public abstract class AdSelectionRunner {
     }
 
     private void logEndContextualAdsFiltering(
-            Map<AdTechIdentifier, SignedContextualAds> beforeFiltering,
-            Map<AdTechIdentifier, SignedContextualAds> afterFiltering,
+            int numOfContextualAdsBeforeFiltering,
+            int numOfContextualAdsAfterFiltering,
             int numOfContextualAdsRemovedWithUnverifiedSignatures,
             int numOfContextualAdsRemovedWithZeroAds) {
         mContextualAdsFilteringLogger.setAdFilteringEndTimestamp();
         mContextualAdsFilteringLogger.setTotalNumOfContextualAdsBeforeFiltering(
-                beforeFiltering.size());
+                numOfContextualAdsBeforeFiltering);
         mContextualAdsFilteringLogger.setNumOfContextualAdsFiltered(
-                beforeFiltering.size() - afterFiltering.size());
+                numOfContextualAdsBeforeFiltering - numOfContextualAdsAfterFiltering);
         mContextualAdsFilteringLogger.setNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures(
                 numOfContextualAdsRemovedWithUnverifiedSignatures);
         mContextualAdsFilteringLogger.setNumOfContextualAdsFilteredOutOfBiddingNoAds(

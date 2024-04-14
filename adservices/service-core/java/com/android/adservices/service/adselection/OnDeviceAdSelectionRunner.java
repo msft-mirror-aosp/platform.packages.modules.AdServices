@@ -571,6 +571,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         String sellerContextualSignalsString;
         // There should always be a winner.
         AdScoringOutcome scoringWinner = winningAdScoringOutcomeAndContext.first;
+        sLogger.v("Scoring Winner: %s", scoringWinner);
         if (Objects.isNull(scoringWinner.getBuyerContextualSignals())) {
             buyerContextualSignalsString = "{}";
         } else {

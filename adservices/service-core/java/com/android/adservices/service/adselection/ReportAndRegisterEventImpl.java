@@ -111,14 +111,16 @@ class ReportAndRegisterEventImpl extends EventReporter {
                 new FutureCallback<Void>() {
                     @Override
                     public void onSuccess(Void result) {
-                        sLogger.v("reportEvent() was notified as successful.");
+                        sLogger.v(
+                                "reportEvent() with attribution registration was notified as"
+                                        + " successful");
                         notifySuccessToCaller(callback);
                         performReporting(input);
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
-                        sLogger.e(t, "reportEvent() failed!");
+                        sLogger.e(t, "reportEvent() with attribution registration failed!");
                         if (t instanceof FilterException
                                 && t.getCause() instanceof ConsentManager.RevokedConsentException) {
                             // Skip logging if a FilterException occurs.

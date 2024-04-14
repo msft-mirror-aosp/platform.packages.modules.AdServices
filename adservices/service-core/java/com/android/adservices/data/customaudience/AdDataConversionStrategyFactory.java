@@ -241,6 +241,7 @@ public class AdDataConversionStrategyFactory {
                 mFrequencyCapFiltersConversionStrategy.fromServiceObjectFilters(
                         parcelable, adFiltersBuilder);
                 adFilters = adFiltersBuilder.build();
+                sLogger.v("Final Ad Filters in fromServiceObject: %s", adFilters);
                 adDataBuilder.setAdFilters(adFilters);
             }
         }
