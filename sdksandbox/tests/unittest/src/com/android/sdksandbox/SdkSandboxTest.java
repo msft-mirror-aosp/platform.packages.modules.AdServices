@@ -50,6 +50,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
+import com.google.common.truth.Expect;
+
 import dalvik.system.PathClassLoader;
 
 import org.junit.After;
@@ -149,6 +151,8 @@ public class SdkSandboxTest {
 
     @Rule
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
+    @Rule public final Expect mExpect = Expect.create();
 
     @BeforeClass
     public static void setupClass() {
@@ -286,8 +290,8 @@ public class SdkSandboxTest {
         SdkSandboxStorageCallback sdkSandboxStorageCallback = new SdkSandboxStorageCallback();
         mService.computeSdkStorage(sharedPaths, sdkPaths, sdkSandboxStorageCallback);
 
-        assertThat(sdkSandboxStorageCallback.getSdkStorage()).isEqualTo(1024F);
-        assertThat(sdkSandboxStorageCallback.getSharedStorage()).isEqualTo(1024F);
+        mExpect.that(sdkSandboxStorageCallback.getSdkStorage()).isEqualTo(1024F);
+        mExpect.that(sdkSandboxStorageCallback.getSharedStorage()).isEqualTo(1024F);
     }
 
     @Test
@@ -383,9 +387,9 @@ public class SdkSandboxTest {
                         SANDBOX_LATENCY_INFO,
                         callback);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
-        assertThat(callback.mSurfacePackage).isNull();
-        assertThat(callback.mSuccessful).isFalse();
-        assertThat(callback.mErrorCode)
+        mExpect.that(callback.mSurfacePackage).isNull();
+        mExpect.that(callback.mSuccessful).isFalse();
+        mExpect.that(callback.mErrorCode)
                 .isEqualTo(IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR);
     }
 
@@ -422,8 +426,8 @@ public class SdkSandboxTest {
 
         // Verify that ClientSharedPreference contains the synced data
         SharedPreferences pref = mService.getClientSharedPreferences();
-        assertThat(pref.getAll().keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
-        assertThat(pref.getAll().values()).containsExactlyElementsIn(TEST_DATA.values());
+        mExpect.that(pref.getAll().keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
+        mExpect.that(pref.getAll().values()).containsExactlyElementsIn(TEST_DATA.values());
     }
 
     @Test
@@ -451,13 +455,13 @@ public class SdkSandboxTest {
 
         // Verify that ClientSharedPreference contains the synced data
         SharedPreferences pref = mService.getClientSharedPreferences();
-        assertThat(pref.getAll().keySet()).containsExactlyElementsIn(bundle.keySet());
-        assertThat(pref.getString("string", "")).isEqualTo("value");
-        assertThat(pref.getBoolean("boolean", false)).isEqualTo(true);
-        assertThat(pref.getInt("integer", 0)).isEqualTo(1);
-        assertThat(pref.getFloat("float", 0.0f)).isEqualTo(1.0f);
-        assertThat(pref.getLong("long", 0L)).isEqualTo(1L);
-        assertThat(pref.getStringSet("arrayList", Collections.emptySet()))
+        mExpect.that(pref.getAll().keySet()).containsExactlyElementsIn(bundle.keySet());
+        mExpect.that(pref.getString("string", "")).isEqualTo("value");
+        mExpect.that(pref.getBoolean("boolean", false)).isEqualTo(true);
+        mExpect.that(pref.getInt("integer", 0)).isEqualTo(1);
+        mExpect.that(pref.getFloat("float", 0.0f)).isEqualTo(1.0f);
+        mExpect.that(pref.getLong("long", 0L)).isEqualTo(1L);
+        mExpect.that(pref.getStringSet("arrayList", Collections.emptySet()))
                 .containsExactly("list1", "list2");
     }
 
@@ -474,8 +478,8 @@ public class SdkSandboxTest {
 
         // Verify that ClientSharedPreference contains the synced data
         SharedPreferences pref = mService.getClientSharedPreferences();
-        assertThat(pref.getAll().keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
-        assertThat(pref.getString(KEY_TO_UPDATE, "")).isEqualTo("update");
+        mExpect.that(pref.getAll().keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
+        mExpect.that(pref.getString(KEY_TO_UPDATE, "")).isEqualTo("update");
     }
 
     @Test
@@ -518,21 +522,21 @@ public class SdkSandboxTest {
                 SANDBOX_LATENCY_INFO);
         loadSdkCallback.assertLoadSdkIsSuccessful();
 
-        assertThat(loadSdkCallback.mSandboxLatencyInfo.getSystemServerToSandboxLatency())
+        mExpect.that(loadSdkCallback.mSandboxLatencyInfo.getSystemServerToSandboxLatency())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
                                         - TIME_SYSTEM_SERVER_CALL_FINISHED));
-        assertThat(loadSdkCallback.mSandboxLatencyInfo.getSdkLatency())
+        mExpect.that(loadSdkCallback.mSandboxLatencyInfo.getSdkLatency())
                 .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
 
-        assertThat(loadSdkCallback.mSandboxLatencyInfo.getSandboxLatency())
+        mExpect.that(loadSdkCallback.mSandboxLatencyInfo.getSandboxLatency())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_CALLED_SYSTEM_SERVER
                                         - TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
                                         - (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK)));
-        assertThat(loadSdkCallback.mSandboxLatencyInfo.getTimeSandboxCalledSystemServer())
+        mExpect.that(loadSdkCallback.mSandboxLatencyInfo.getTimeSandboxCalledSystemServer())
                 .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
     }
 
@@ -572,18 +576,18 @@ public class SdkSandboxTest {
 
         SandboxLatencyInfo sandboxLatencyInfo = unloadSdkInSandboxCallback.getSandboxLatencyInfo();
 
-        assertThat(sandboxLatencyInfo.getSdkLatency())
+        mExpect.that(sandboxLatencyInfo.getSdkLatency())
                 .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
 
-        assertThat(sandboxLatencyInfo.getSandboxLatency())
+        mExpect.that(sandboxLatencyInfo.getSandboxLatency())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_CALLED_SYSTEM_SERVER
                                         - TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
                                         - (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK)));
-        assertThat(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
+        mExpect.that(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
                 .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
-        assertThat(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
+        mExpect.that(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
                 .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
         if (SdkLevel.isAtLeastU()) {
             Mockito.verify(mRegistry).unregisterAllActivityHandlersForSdk(SDK_NAME);
@@ -631,16 +635,16 @@ public class SdkSandboxTest {
                         SANDBOX_LATENCY_INFO,
                         callback);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
-        assertThat(callback.mSurfacePackage).isNotNull();
-        assertThat(callback.mSandboxLatencyInfo.getSdkLatency())
+        mExpect.that(callback.mSurfacePackage).isNotNull();
+        mExpect.that(callback.mSandboxLatencyInfo.getSdkLatency())
                 .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
-        assertThat(callback.mSandboxLatencyInfo.getSandboxLatency())
+        mExpect.that(callback.mSandboxLatencyInfo.getSandboxLatency())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_CALLED_SYSTEM_SERVER
                                         - TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
                                         - (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK)));
-        assertThat(callback.mSandboxLatencyInfo.getTimeSandboxCalledSystemServer())
+        mExpect.that(callback.mSandboxLatencyInfo.getTimeSandboxCalledSystemServer())
                 .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
     }
 
