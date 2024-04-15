@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
@@ -181,13 +180,14 @@ public class EventReportingJobServiceTest {
                                             EventReportingJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
                     callback.assertJobFinished();
 
-                    callback = createJobFinishedCallback(mSpyService);
+                    callback = new JobServiceCallback().expectJobFinished(mSpyService);
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
 
                     callback.assertJobFinished();
@@ -446,7 +446,7 @@ public class EventReportingJobServiceTest {
         // Setup
         enableKillSwitch();
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
 
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -467,7 +467,7 @@ public class EventReportingJobServiceTest {
         ExtendedMockito.doNothing()
                 .when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
 
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -489,7 +489,7 @@ public class EventReportingJobServiceTest {
                                 ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                         any(Context.class)));
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
 
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
