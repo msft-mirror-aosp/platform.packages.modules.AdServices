@@ -4564,6 +4564,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID;
     }
 
+    /** Flag for enabling measurement registrations using ODP */
+    boolean MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION = false;
+
+    /** Return true if measurement registrations through ODP is enabled */
+    default boolean getMeasurementEnableOdpWebTriggerRegistration() {
+        return MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
@@ -5206,5 +5214,55 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns {@code boolean} determining whether custom error code sampling is enabled. */
     default boolean getCustomErrorCodeSamplingEnabled() {
         return DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
+    }
+
+    /** Read timeout for downloading PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Read timeout for downloading PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptDownloadReadTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
+    }
+
+    /** Connection timeout for downloading PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Connection timeout for downloading PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptDownloadConnectionTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Read timeout for downloading PAS signals in milliseconds */
+    int DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Read timeout for downloading PAS signals in milliseconds
+     */
+    default int getPasSignalsDownloadReadTimeoutMs() {
+        return DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
+    }
+
+    /** Connection timeout for downloading PAS encoding signals in milliseconds */
+    int DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Connection timeout for downloading PAS signals in milliseconds
+     */
+    default int getPasSignalsDownloadConnectionTimeoutMs() {
+        return DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Timeout for executing PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Timeout for executing PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptExecutionTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
     }
 }

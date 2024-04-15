@@ -93,6 +93,11 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
 import static com.android.adservices.service.Flags.DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
@@ -348,6 +353,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATIO
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_PREINSTALL_CHECK;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
@@ -960,6 +966,11 @@ import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DIS
 import static com.android.adservices.service.FlagsConstants.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST;
@@ -8452,6 +8463,23 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableOdpRegistration() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementEnableOdpWebTriggerRegistration())
+                .isEqualTo(MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION);
+
+        boolean phOverridingValue = !MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementEnableOdpWebTriggerRegistration())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetEnableAdservicesApiEnabled() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_ENABLE_ADSERVICES_API_ENABLED,
@@ -8963,6 +8991,46 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL,
                 ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL,
                 Flags::getEncodedErrorCodeListPerSampleInterval);
+    }
+
+    @Test
+    public void testGetPasScriptDownloadReadTimeoutMs() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS,
+                DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS,
+                Flags::getPasScriptDownloadReadTimeoutMs);
+    }
+
+    @Test
+    public void testGetPasScriptDownloadConnectionTimeoutMs() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                Flags::getPasScriptDownloadConnectionTimeoutMs);
+    }
+
+    @Test
+    public void testGetPasSignalsDownloadReadTimeoutMs() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS,
+                DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS,
+                Flags::getPasSignalsDownloadReadTimeoutMs);
+    }
+
+    @Test
+    public void testGetPasSignalsDownloadConnectionTimeoutMs() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                Flags::getPasSignalsDownloadConnectionTimeoutMs);
+    }
+
+    @Test
+    public void testPasScriptExecutionTimeoutMs() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS,
+                DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS,
+                Flags::getPasScriptExecutionTimeoutMs);
     }
 
     private void setMeasurementKillSwitch(boolean value) {

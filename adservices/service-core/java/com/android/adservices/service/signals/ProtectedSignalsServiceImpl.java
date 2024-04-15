@@ -82,7 +82,6 @@ import java.util.concurrent.ExecutorService;
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
 
-    public static final int TIMEOUT_MS = 5000;
     public static final long MAX_SIZE_BYTES = 10000;
     public static final String ADTECH_CALLER_NAME = "caller";
     public static final String CLASS_NAME = "ProtectedSignalsServiceImpl";
@@ -112,8 +111,10 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                 AdServicesExecutors.getLightWeightExecutor(),
                                 new AdServicesHttpsClient(
                                         AdServicesExecutors.getBlockingExecutor(),
-                                        TIMEOUT_MS,
-                                        TIMEOUT_MS,
+                                        FlagsFactory.getFlags()
+                                                .getPasSignalsDownloadConnectionTimeoutMs(),
+                                        FlagsFactory.getFlags()
+                                                .getPasSignalsDownloadReadTimeoutMs(),
                                         FlagsFactory.getFlags()
                                                 .getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())),
                         new UpdateProcessingOrchestrator(
