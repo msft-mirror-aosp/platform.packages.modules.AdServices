@@ -342,22 +342,42 @@ class MeasurementDao implements IMeasurementDao {
         return selectSourceIdsByDestinations(destinations, sourceWhereStatement);
     }
 
-    private void ignoreSourcesForAttributionScope(
-            @NonNull Source pendingSource, @NonNull String sourceWhereStatement)
+    private void ignoreSourcesAndDeleteFakeReportsForAttributionScope(
+            @NonNull Source pendingSource, @NonNull String attributionScopeWhereStatement)
             throws DatastoreException {
+        String selectSourceIdStatement =
+                selectSourceIdsByOriginAndDestination(
+                        pendingSource.getRegistrationOrigin().toString(),
+                        pendingSource.getAllAttributionDestinations(),
+                        attributionScopeWhereStatement);
         final SQLiteDatabase db = mSQLTransaction.getDatabase();
-        ContentValues values = new ContentValues();
-        values.put(SourceContract.STATUS, Source.Status.IGNORED);
+        // Delete any pending reports which have trigger_time >= new source’s registration time.
+        // Note selectSourceIdStatement will only select ACTIVE sources, which means we need to
+        // delete pending reports before deactivating the sources (before they are de-activated).
+        ContentValues eventReportValues = new ContentValues();
+        eventReportValues.put(
+                MeasurementTables.EventReportContract.STATUS, EventReport.Status.MARKED_TO_DELETE);
+        db.update(
+                MeasurementTables.EventReportContract.TABLE,
+                eventReportValues,
+                mergeConditions(
+                        " AND ",
+                        MeasurementTables.EventReportContract.SOURCE_ID
+                                + " IN ("
+                                + selectSourceIdStatement
+                                + ")",
+                        MeasurementTables.EventReportContract.TRIGGER_TIME
+                                + " >= "
+                                + pendingSource.getEventTime()),
+                new String[] {});
+
+        // Delete any pending reports which have trigger_time >= new source’s registration time.
+        ContentValues sourceValues = new ContentValues();
+        sourceValues.put(SourceContract.STATUS, Source.Status.IGNORED);
         db.update(
                 SourceContract.TABLE,
-                values,
-                SourceContract.ID
-                        + " IN ("
-                        + selectSourceIdsByOriginAndDestination(
-                                pendingSource.getRegistrationOrigin().toString(),
-                                pendingSource.getAllAttributionDestinations(),
-                                sourceWhereStatement)
-                        + ")",
+                sourceValues,
+                SourceContract.ID + " IN (" + selectSourceIdStatement + ")",
                 new String[] {});
     }
 
@@ -374,7 +394,7 @@ class MeasurementDao implements IMeasurementDao {
                         SourceContract.MAX_EVENT_STATES
                                 + " != "
                                 + pendingSource.getMaxEventStates());
-        ignoreSourcesForAttributionScope(pendingSource, sourceWhereStatement);
+        ignoreSourcesAndDeleteFakeReportsForAttributionScope(pendingSource, sourceWhereStatement);
     }
 
     private void deactivateSourcesWithSmallerAttributionScopeLimit(@NonNull Source pendingSource)
@@ -386,7 +406,7 @@ class MeasurementDao implements IMeasurementDao {
                         SourceContract.ATTRIBUTION_SCOPE_LIMIT
                                 + " < "
                                 + pendingSource.getAttributionScopeLimit());
-        ignoreSourcesForAttributionScope(pendingSource, sourceWhereStatement);
+        ignoreSourcesAndDeleteFakeReportsForAttributionScope(pendingSource, sourceWhereStatement);
     }
 
     private String getDeleteAttributionScopesWhereStatement(
@@ -1872,8 +1892,7 @@ class MeasurementDao implements IMeasurementDao {
         String sourceId = eventReports.get(0).getSourceId();
 
         Map<String, List<String>> triggerIdToEventReportIdsMap =
-                eventReports
-                        .stream()
+                eventReports.stream()
                         .collect(
                                 Collectors.groupingBy(
                                         EventReport::getTriggerId,
@@ -1886,8 +1905,11 @@ class MeasurementDao implements IMeasurementDao {
             String triggerId = entry.getKey();
             List<String> eventReportIds = entry.getValue();
 
-            String eventReportsWhereStatement = MeasurementTables.EventReportContract.ID
-                    + " IN ('" + String.join("','", eventReportIds) + "')";
+            String eventReportsWhereStatement =
+                    MeasurementTables.EventReportContract.ID
+                            + " IN ('"
+                            + String.join("','", eventReportIds)
+                            + "')";
 
             db.delete(
                     MeasurementTables.EventReportContract.TABLE,
