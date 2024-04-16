@@ -95,7 +95,8 @@ public final class EncryptionKeyConverterUtil {
             builder.setId(UUID.randomUUID().toString());
             builder.setKeyType(
                     EncryptionKey.KeyType.valueOf(
-                            getStringFromJson(jsonObject, KEY_TYPE_KEY).toUpperCase(Locale.ROOT)));
+                            getStringFromJson(jsonObject, KEY_TYPE_KEY)
+                                    .toUpperCase(Locale.ENGLISH)));
             builder.setEnrollmentId(getStringFromJson(jsonObject, ENROLLMENT_ID_KEY));
             builder.setReportingOrigin(
                     Uri.parse(getStringFromJson(jsonObject, REPORTING_ORIGIN_KEY)));
@@ -103,7 +104,7 @@ public final class EncryptionKeyConverterUtil {
             builder.setProtocolType(
                     EncryptionKey.ProtocolType.valueOf(
                             getStringFromJson(jsonObject, PROTOCOL_TYPE_KEY)
-                                    .toUpperCase(Locale.ROOT)));
+                                    .toUpperCase(Locale.ENGLISH)));
             builder.setKeyCommitmentId(jsonObject.getInt(KEY_ID_KEY));
             builder.setBody(getStringFromJson(jsonObject, BODY_KEY));
             builder.setExpiration(jsonObject.getLong(EXPIRATION_KEY));

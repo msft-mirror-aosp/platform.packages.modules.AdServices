@@ -57,6 +57,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -464,7 +465,7 @@ public class CacheManager {
         boolean isVerbose =
                 args != null
                         && args.length >= 1
-                        && Integer.parseInt(args[0].toLowerCase()) == VERBOSE;
+                        && Integer.parseInt(args[0].toLowerCase(Locale.ENGLISH)) == VERBOSE;
         writer.println("==== CacheManager Dump ====");
         writer.println(String.format("mCachedTopics size: %d", mCachedTopics.size()));
         writer.println(String.format("mCachedBlockedTopics size: %d", mCachedBlockedTopics.size()));
