@@ -48,6 +48,9 @@ java_test_host {
     test_config: "SdkSandboxShellHostTest.xml",
     libs: ["tradefed"],
     test_suites: ["general-tests"],
+    static_libs: [
+        "SdkSandboxHostTestUtils",
+    ],
     data: [
         ":TestCodeProvider",
         ":TestCodeProvider2",

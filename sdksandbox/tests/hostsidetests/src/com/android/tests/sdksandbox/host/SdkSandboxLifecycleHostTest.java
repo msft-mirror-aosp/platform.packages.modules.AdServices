@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.hosttestutils.AwaitUtils;
 import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 
@@ -533,16 +534,11 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     private void waitForProcessDeath(String processName) throws Exception {
-        int timeElapsed = 0;
-        while (timeElapsed <= 30000) {
-            final String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-            if (processDump.contains(processName)) {
-                Thread.sleep(1000);
-                timeElapsed += 1000;
-                continue;
-            }
-            return;
-        }
-        throw new AssertionError("Process " + processName + " has not died.");
+        AwaitUtils.waitFor(
+                () -> {
+                    String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+                    return !processDump.contains(processName);
+                },
+                "Process " + processName + " has not died.");
     }
 }
