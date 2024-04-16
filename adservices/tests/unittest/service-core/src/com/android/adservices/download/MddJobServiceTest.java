@@ -16,8 +16,6 @@
 
 package com.android.adservices.download;
 
-import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
-import static com.android.adservices.common.JobServiceTestHelper.createOnStopJobCallback;
 import static com.android.adservices.download.MddJobService.KEY_MDD_TASK_TAG;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
@@ -418,7 +416,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyMddJobService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyMddJobService);
 
         // Now verify that when the Job starts, it will unschedule itself.
         assertThat(mSpyMddJobService.onStartJob(mMockJobParameters)).isFalse();
@@ -436,7 +434,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
         doReturn(mMockMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyMddJobService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyMddJobService);
 
         mSpyMddJobService.onStartJob(mMockJobParameters);
 
@@ -448,7 +446,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     private void testOnStopJob() throws InterruptedException {
-        JobServiceCallback callback = createOnStopJobCallback(mSpyMddJobService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobStopped(mSpyMddJobService);
 
         // Verify nothing throws
         mSpyMddJobService.onStopJob(mMockJobParameters);

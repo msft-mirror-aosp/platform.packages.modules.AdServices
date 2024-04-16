@@ -17,6 +17,7 @@
       },
       "responses": [{
         "url": "https://www.ad-tech1.test",
+        "has_ad_id_permission": true,
         "response": {
           "Attribution-Reporting-Register-Source": {
             "source_event_id": "1",
@@ -53,6 +54,7 @@
       },
       "responses": [{
         "url": "https://www.ad-tech1.test",
+        "has_ad_id_permission": true,
         "response": {
           "Attribution-Reporting-Register-Trigger": {
             "event_trigger_data": [
@@ -61,7 +63,7 @@
                 "priority": "101"
               }
             ],
-            "debug_key": "8971346783", // should not be present in any agg report
+            "debug_key": "8971346783",
             "aggregatable_trigger_data": [
               {
                 "key_piece": "0x400",
@@ -112,6 +114,7 @@
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
+        "trigger_debug_key": "8971346783",
         "randomized_trigger_rate": 0.0008051
       }
     }],
@@ -131,6 +134,7 @@
               "value": 1664
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799977600"
         }
       },
@@ -145,6 +149,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "797408600"
         }
       },
@@ -159,6 +164,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "797495000"
         }
       },
@@ -173,6 +179,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "797581400"
         }
       },
@@ -187,6 +194,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "797667800"
         }
       },
@@ -201,6 +209,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "797754200"
         }
       },
@@ -215,6 +224,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "797840600"
         }
       },
@@ -229,6 +239,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "797927000"
         }
       },
@@ -243,6 +254,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798013400"
         }
       },
@@ -257,6 +269,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798099800"
         }
       },
@@ -271,6 +284,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798186200"
         }
       },
@@ -285,6 +299,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798272600"
         }
       },
@@ -299,6 +314,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798359000"
         }
       },
@@ -313,6 +329,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798445400"
         }
       },
@@ -327,6 +344,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798531800"
         }
       },
@@ -341,6 +359,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798618200"
         }
       },
@@ -355,6 +374,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798704600"
         }
       },
@@ -369,6 +389,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798791000"
         }
       },
@@ -383,6 +404,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798877400"
         }
       },
@@ -397,6 +419,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "798963800"
         }
       },
@@ -411,6 +434,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799050200"
         }
       },
@@ -425,6 +449,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799136600"
         }
       },
@@ -439,6 +464,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799223000"
         }
       },
@@ -453,6 +479,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799309400"
         }
       },
@@ -467,6 +494,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799395800"
         }
       },
@@ -481,6 +509,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799482200"
         }
       },
@@ -495,6 +524,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799568600"
         }
       },
@@ -509,6 +539,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799655000"
         }
       },
@@ -523,6 +554,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799741400"
         }
       },
@@ -537,6 +569,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799827800"
         }
       },
@@ -551,6 +584,7 @@
               "value": 0
             }
           ],
+          "trigger_debug_key": "8971346783",
           "source_registration_time": "799914200"
         }
       }

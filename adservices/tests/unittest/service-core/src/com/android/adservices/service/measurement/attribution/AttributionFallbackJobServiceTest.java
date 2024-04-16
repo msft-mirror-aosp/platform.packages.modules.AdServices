@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.attribution;
 
-import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
@@ -188,13 +187,14 @@ public class AttributionFallbackJobServiceTest {
                                             AttributionFallbackJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
                     callback.assertJobFinished();
 
-                    callback = createJobFinishedCallback(mSpyService);
+                    callback = new JobServiceCallback().expectJobFinished(mSpyService);
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
 
                     callback.assertJobFinished();

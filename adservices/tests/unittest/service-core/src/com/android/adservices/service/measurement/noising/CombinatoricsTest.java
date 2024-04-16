@@ -317,5 +317,17 @@ public class CombinatoricsTest {
                                             Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
                             assertEquals(testCase[3], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    Combinatorics.getMaxInformationGainWithAttributionScope(
+                            0L, 2L, 3L, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+                });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    Combinatorics.getMaxInformationGainWithAttributionScope(
+                            3L, 2L, 0L, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+                });
     }
 }

@@ -24,6 +24,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -521,7 +522,6 @@ public class AggregateReport {
             mAttributionReport.mScheduledReportTime = reportTime;
             mAttributionReport.mDebugCleartextPayload = debugPayload;
             mAttributionReport.mSourceDebugKey = null;
-            mAttributionReport.mTriggerDebugKey = trigger.getDebugKey();
             mAttributionReport.mIsFakeReport = true;
             mAttributionReport.mTriggerId = trigger.getId();
             mAttributionReport.mTriggerContextId = trigger.getTriggerContextId();
@@ -534,6 +534,13 @@ public class AggregateReport {
                         Uri.parse(
                                 AdServicesConfig
                                         .getMeasurementDefaultAggregationCoordinatorOrigin());
+            }
+
+            if ((trigger.getDestinationType() == EventSurfaceType.APP
+                            && trigger.hasAdIdPermission())
+                    || (trigger.getDestinationType() == EventSurfaceType.WEB
+                            && trigger.hasArDebugPermission())) {
+                mAttributionReport.mTriggerDebugKey = trigger.getDebugKey();
             }
 
             return this;
