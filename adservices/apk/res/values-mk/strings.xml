@@ -211,9 +211,9 @@
     <string name="settingsU_main_view_measurement_info" msgid="7231616293146266690">"Апликациите што ги користите може да побараат податоци од Android за да им помогнат да ја измерат изведбата на нивните реклами. Android им дозволува на апликациите да прибираат ограничени типови податоци."</string>
     <string name="settingsU_main_view_learn_more" msgid="1510918572255886819">"Дознајте повеќе за "<a href="https://support.google.com/android?p=ad_privacy">"приватноста за реклами на Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"Вклучено/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> теми"</string>
-    <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{Вклучено / # тема}one{Вклучено / # тема}other{Вклучено / # теми}}"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{Вклучено/# тема}one{Вклучено/# тема}other{Вклучено/# теми}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"Вклучено/<xliff:g id="APPS_COUNT">%1$d</xliff:g> апликации"</string>
-    <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{Вклучено / # апликација}one{Вклучено / # апликација}other{Вклучено / # апликации}}"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{Вклучено/# апликација}one{Вклучено/# апликација}other{Вклучено/# апликации}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"Вклучено"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"Исклучено"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"Темите од интерес зависат од апликациите што сте ги користеле неодамна, а апликациите ги користат за да ви прикажуваат персонализирани реклами.\n\nМоже да ги блокирате темите што не сакате да се споделуваат со апликации. Покрај тоа, Android редовно врши автоматско бришење на темите.\n\nИако оваа функција може да се вклучи, можеби нема да може да го видите списокот со теми сѐ додека функцијава не стане целосно достапна и сѐ додека апликациите не започнат да ја користат."</string>

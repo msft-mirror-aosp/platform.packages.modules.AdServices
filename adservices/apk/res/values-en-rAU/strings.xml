@@ -211,9 +211,9 @@
     <string name="settingsU_main_view_measurement_info" msgid="7231616293146266690">"Apps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data."</string>
     <string name="settingsU_main_view_learn_more" msgid="1510918572255886819">"Learn more about "<a href="https://support.google.com/android?p=ad_privacy">"ads privacy on Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"On/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> topics"</string>
-    <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{On / # topic}other{On / # topics}}"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{On/# topic}other{On/# topics}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"On/<xliff:g id="APPS_COUNT">%1$d</xliff:g> apps"</string>
-    <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{On / # app}other{On / # apps}}"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{On/# app}other{On/# apps}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"On"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"Off"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"Topics of interest are based on the apps you’ve used recently, and are used by apps to show you personalised ads.\n\nYou can block topics you don’t want shared with apps. Android also auto-deletes topics regularly.\n\nWhile this feature can be turned on, you may not see a list of topics until this feature is fully available and apps start using it."</string>

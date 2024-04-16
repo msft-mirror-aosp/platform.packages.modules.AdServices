@@ -46,6 +46,7 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -115,7 +116,7 @@ public abstract class FledgeScenarioTest {
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
                     .setPpapiAppAllowList(sContext.getPackageName())
-                    .setAdIdKillSwitchForTests(false);
+                    .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
 
     @Rule(order = 6)
     public MockWebServerRule mMockWebServerRule =

@@ -215,7 +215,7 @@
     <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"Activado/<xliff:g id="APPS_COUNT">%1$d</xliff:g> apps"</string>
     <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{Activados/# app}other{Activados/# apps}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"Activada"</string>
-    <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"Desactivado"</string>
+    <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"No"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"Tus temas de interés se basan en las apps que usaste recientemente, y estas los usan para mostrarte anuncios personalizados.\n\nPuedes bloquear los temas que no quieras compartir con apps. Android también borra automáticamente los datos sugeridos por apps con regularidad.\n\nAunque puedes activar esta función, es posible que no veas una lista de temas hasta que dicha función esté disponible por completo y las apps comiencen a usarla."</string>
     <string name="settingsUI_topics_switch_title" msgid="6138535622464144001">"Permitir temas de anuncios"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="1855691597262481021">"Temas de anuncios que bloqueaste"</string>
