@@ -161,7 +161,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="7095922654201180593">"Ver apps bloqueadas"</string>
     <string name="settingsUI_reset_apps_title" msgid="3102875782600625477">"Repor interesses estimados pelas apps"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="5821437091309568626">"Nenhuma app está a gerar interesses para si neste momento"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="827670084273365802">"Não existem apps para mostrar neste momento. \nSaiba mais sobre "<a href="https://support.google.com/android?p=ad_privacy">"anúncios sugeridos por apps"</a></string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="827670084273365802">"Sem apps para mostrar neste momento. \nSaiba mais sobre "<a href="https://support.google.com/android?p=ad_privacy">"anúncios sugeridos por apps"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="8524518056879001890">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="6191835773793395323">"A versão beta da privacidade de anúncios do Android fornece novas funcionalidades que as apps podem usar para lhe mostrar anúncios de que pode gostar. Estas tecnologias não usam identificadores de dispositivos.\n\nAs apps podem estimar os tipos de anúncios em que pode ter interesse e guardar estes interesses temporariamente no seu dispositivo. Isto permite que as apps lhe mostrem anúncios relevantes, sem monitorizar a sua atividade em Websites e apps de outros programadores."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="6386103688779633888">"Não tem apps bloqueadas"</string>
@@ -170,7 +170,7 @@
     <string name="settingsUI_measurement_view_intro_text" msgid="2780083472100004780">"As apps e os anunciantes podem pedir ao Android informações que os ajudem a medir o desempenho dos respetivos anúncios.\n\nOs dados de medição de anúncios são apagados do dispositivo regularmente."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="518549441454274773">"Repor dados de medição"</string>
     <string name="settingsUI_measurement_view_footer_text" msgid="823743750634137761">"O Android protege a sua privacidade através da limitação das informações que as apps podem partilhar entre si. Os relatórios são enviados com um atraso para proteger a sua identidade.\n\nO seu navegador pode ter uma definição semelhante. Se a medição de anúncios estiver ativada no Android e no seu navegador, uma empresa pode conseguir medir a eficácia de um anúncio entre as apps que usa e os sites que visita. O seu histórico de navegação permanece privado no dispositivo.\n\nSaiba como o Android protege os seus dados na nossa "<a href="https://policies.google.com/privacy">"Política de Privacidade"</a>"."</string>
-    <string name="settingsUI_measurement_are_reset" msgid="3109724238284555411">"Os dados de medição de anúncios foram repostos"</string>
+    <string name="settingsUI_measurement_are_reset" msgid="3109724238284555411">"Dados de medição de anúncios repostos"</string>
     <string name="settingsUI_dialog_negative_text" msgid="2991743327829379614">"Cancelar"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="7364417538227823889">"Desativar o Privacy Sandbox?"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="277021855863398163">"Se mudar de ideias ou quiser saber mais sobre a privacidade de anúncios beta do Android, aceda às definições de privacidade"</string>

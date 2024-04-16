@@ -203,7 +203,7 @@
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="6054936530818477354">"Android ສາມາດແບ່ງປັນສະເພາະຂໍ້ມູນຈໍາກັດຫຼາຍກັບແອັບ ເພື່ອຊ່ວຍໃຫ້ແອັບສາມາດວັດແທກປະສິດທິພາບຂອງໂຄສະນາຂອງເຂົາເຈົ້າໄດ້."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="7432170540914883206">"ປິດການວັດແທກຜົນຂອງໂຄສະນາບໍ?"</string>
     <string name="settingsUI_dialog_measurement_opt_out_message" msgid="2185287342979898515">"ລາຍງານການວັດແທກຜົນຂອງໂຄສະນາທີ່ຄ້າງຢູ່ຈະຖືກລຶບ ແລະ ຈະບໍ່ມີການສ້າງລາຍງານ ຫຼື ການແບ່ງປັນໃໝ່."</string>
-    <string name="settingsUI_main_view_ga_title" msgid="628993290364476040">"ຄວາມເປັນສ່ວນກ່ຽວກັບຕົວໂຄສະນາ"</string>
+    <string name="settingsUI_main_view_ga_title" msgid="628993290364476040">"ຄວາມເປັນສ່ວນຕົວກ່ຽວກັບໂຄສະນາ"</string>
     <string name="settingsUI_topics_ga_title" msgid="4815364317504405264">"ຫົວຂໍ້ໂຄສະນາ"</string>
     <string name="settingsUI_apps_ga_title" msgid="6646343832670673768">"ໂຄສະນາທີ່ແອັບແນະນຳ"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="5758770045787568091">"Android ຈະບັນທຶກຫົວຂໍ້ທີ່ສົນໃຈໂດຍອີງຕາມແອັບທີ່ທ່ານໃຊ້ຫຼ້າສຸດ ແລະ ຄວາມຖີ່ທີ່ທ່ານໃຊ້ແອັບເຫຼົ່ານີ້."</string>
