@@ -477,6 +477,17 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                         .isCurrentRegistrationUnderClickDeduplicationLimit());
     }
 
+    /** Logs measurement ODP registrations. */
+    public void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats) {
+        AdServicesStatsLog.write(
+                stats.getCode(), stats.getRegistrationType(), stats.getRegistrationStatus());
+    }
+
+    /** Logs measurement ODP API calls. */
+    public void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats) {
+        AdServicesStatsLog.write(stats.getCode(), stats.getLatency(), stats.getApiCallStatus());
+    }
+
     /** log method for consent migrations. */
     public void logConsentMigrationStats(ConsentMigrationStats stats) {
         if (mFlags.getAdservicesConsentMigrationLoggingEnabled()) {
