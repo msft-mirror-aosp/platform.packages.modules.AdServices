@@ -117,13 +117,13 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private static final String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1986/9e98784bcdb26a3eb2ab3f65ee811f43177c761f";
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2998/b35ed340576e8a72385af87b95f1f526abdb7f5f";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/4004/112af649e6414df68a02df500859b23d3a2e643d";
     private static final String PRODUCTION_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/3210/0c19c2a06422c21070192580a136d433ba3ae7f8";
 
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1281/a245b0927ba27b3d954b0ca2775651ccfc9a5e84";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/3548/206afe932d6db2a87cad70421454a0c258297d77";
     private static final String OEM_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1760/1460e6aea598fe7a153100d6e2749f45313ef905";
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
@@ -132,8 +132,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private static final String UI_OTA_RESOURCES_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/3150/672c83fa4aad630a360dc3b7ce43d94ab75852cd";
 
-    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 64;
-    private static final int PTB_ENROLLMENT_ENTRIES = 1;
+    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 79;
+    private static final int PTB_ENROLLMENT_ENTRIES = 6;
     private static final int OEM_ENROLLMENT_ENTRIES = 114;
 
     private static final int PRODUCTION_FILEGROUP_VERSION = 0;
