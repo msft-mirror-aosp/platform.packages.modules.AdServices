@@ -16,6 +16,7 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_GET_MANAGER_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import android.adservices.ondevicepersonalization.OnDevicePersonalizationSystemEventManager;
@@ -822,8 +823,10 @@ public class AsyncTriggerFetcher {
             odpSystemEventManager =
                     context.getSystemService(OnDevicePersonalizationSystemEventManager.class);
         } catch (Exception e) {
-            // TODO Add CEL logging for exceptions (b/330784221)
             LoggerFactory.getMeasurementLogger().d(e, "getOdpDelegationManager: Unknown Exception");
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_GET_MANAGER_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         }
         return (odpSystemEventManager != null)
                 ? new OdpDelegationWrapperImpl(odpSystemEventManager)

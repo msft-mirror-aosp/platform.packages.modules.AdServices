@@ -32,6 +32,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
@@ -116,6 +118,8 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
+import com.android.adservices.service.measurement.ondevicepersonalization.OdpApiCallStatus;
+import com.android.adservices.service.measurement.ondevicepersonalization.OdpRegistrationStatus;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
@@ -613,6 +617,54 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                 .isEqualTo(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION);
         expect.that(loggedStats.getRegistrationStatus()).isEqualTo(UnknownEnumValue);
         expect.that(loggedStats.getRegistrationDelay()).isEqualTo(registrationDelay);
+    }
+
+    @Test
+    public void testLogMeasurementOdpRegistrationsStats() {
+        MeasurementOdpRegistrationStats stats =
+                new MeasurementOdpRegistrationStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION)
+                        .setRegistrationType(
+                                OdpRegistrationStatus.RegistrationType.TRIGGER.getValue())
+                        .setRegistrationStatus(
+                                OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE.getValue())
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementOdpRegistrations(stats);
+        ArgumentCaptor<MeasurementOdpRegistrationStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
+        verify(mStatsdLoggerMock).logMeasurementOdpRegistrations(argumentCaptor.capture());
+        MeasurementOdpRegistrationStats loggedStats = argumentCaptor.getValue();
+        expect.that(loggedStats.getCode())
+                .isEqualTo(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION);
+        expect.that(loggedStats.getRegistrationType())
+                .isEqualTo(OdpRegistrationStatus.RegistrationType.TRIGGER.getValue());
+        expect.that(loggedStats.getRegistrationStatus())
+                .isEqualTo(OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE.getValue());
+    }
+
+    @Test
+    public void testLogMeasurementOdpApiCallStats() {
+        long latency = 5L;
+        MeasurementOdpApiCallStats stats =
+                new MeasurementOdpApiCallStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP)
+                        .setLatency(latency)
+                        .setApiCallStatus(OdpApiCallStatus.ApiCallStatus.SUCCESS.getValue())
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementOdpApiCall(stats);
+        ArgumentCaptor<MeasurementOdpApiCallStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementOdpApiCallStats.class);
+        verify(mStatsdLoggerMock).logMeasurementOdpApiCall(argumentCaptor.capture());
+        MeasurementOdpApiCallStats loggedStats = argumentCaptor.getValue();
+        expect.that(loggedStats.getCode())
+                .isEqualTo(AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP);
+        expect.that(loggedStats.getLatency()).isEqualTo(latency);
+        expect.that(loggedStats.getApiCallStatus())
+                .isEqualTo(OdpApiCallStatus.ApiCallStatus.SUCCESS.getValue());
     }
 
     @Test
