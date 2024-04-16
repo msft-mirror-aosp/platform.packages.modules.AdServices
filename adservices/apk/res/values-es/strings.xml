@@ -152,7 +152,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="1837427989556474858">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="3814232857139974524">"La beta de privacidad en la publicidad de Android proporciona nuevas funciones que las aplicaciones pueden usar para mostrarte anuncios que podrían interesarte. Estas tecnologías no usan identificadores de dispositivo.\n\nAndroid puede estimar el tipo de anuncios que podrían interesarte y guardar los intereses temporalmente en tu dispositivo. Esto permite que las aplicaciones te muestren anuncios relevantes sin monitorizar tu actividad en sitios web ni aplicaciones de otros desarrolladores."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="2592506251182454751">"No tienes temas bloqueados"</string>
-    <string name="settingsUI_no_blocked_topics_ga_text" msgid="3571887649896533532">"No hay temas para los que no quieras sugerencias"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="3571887649896533532">"No hay temas bloqueados"</string>
     <string name="settingsUI_view_blocked_topics_title" msgid="6524865577585338530">"Ver temas para los que no quieres sugerencias"</string>
     <string name="settingsUI_topics_are_reset" msgid="7474478586324962685">"Temas borrados"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="1862215340606433752">"Se han borrado los temas"</string>
@@ -167,7 +167,7 @@
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="6386103688779633888">"No tienes ninguna aplicación bloqueada"</string>
     <string name="settingsUI_no_blocked_apps_ga_text" msgid="5715916198159277202">"No hay aplicaciones para las que no quieras sugerencias"</string>
     <string name="settingsUI_measurement_switch_title" msgid="2111625410373329760">"Permitir medición de anuncios"</string>
-    <string name="settingsUI_measurement_view_intro_text" msgid="2780083472100004780">"Las aplicaciones y los anunciantes pueden solicitar a Android información que les ayude a medir el rendimiento de sus anuncios.\n\nLos datos de medición de anuncios se eliminan regularmente de tu dispositivo."</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="2780083472100004780">"Las aplicaciones y los anunciantes pueden solicitar a Android información que les ayude a medir el rendimiento de sus anuncios.\n\nLos datos de medición de anuncios se eliminan periódicamente de tu dispositivo."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="518549441454274773">"Borrar datos de medición"</string>
     <string name="settingsUI_measurement_view_footer_text" msgid="823743750634137761">"Android protege tu privacidad limitando la información que las aplicaciones pueden compartir entre ellas. Los informes se envían con retraso para proteger tu identidad.\n\nEs posible que tu navegador tenga un ajuste similar. Si la medición de anuncios está activada tanto en Android como en tu navegador, las empresas pueden medir la eficacia de los anuncios entre las aplicaciones que usas y los sitios que visitas. Tu historial de navegación se almacena de forma privada en tu dispositivo.\n\nObtén más información sobre cómo protege Android tus datos en nuestra "<a href="https://policies.google.com/privacy">"Política de Privacidad"</a>"."</string>
     <string name="settingsUI_measurement_are_reset" msgid="3109724238284555411">"Los datos de medición de anuncios se han borrado"</string>
@@ -213,7 +213,7 @@
     <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"Activado: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> temas"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{Activado: # tema}other{Activados: # temas}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"Activado: <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplicaciones"</string>
-    <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{Activada: # aplicación}other{Activadas: # aplicaciones}}"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{Activados: # aplicación}other{Activados: # aplicaciones}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"Activada"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"Desactivado"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"Los temas de interés se basan en las aplicaciones que has usado recientemente, y las aplicaciones los usan para mostrarte anuncios personalizados.\n\nPuedes bloquear los temas que no quieras compartir con aplicaciones. Android también elimina temas regularmente de forma automática.\n\nAunque esta función puede activarse, es posible que no veas una lista de temas hasta que la función esté totalmente disponible y las aplicaciones empiecen a usarla."</string>
