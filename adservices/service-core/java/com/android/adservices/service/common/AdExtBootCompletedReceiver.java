@@ -16,13 +16,15 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_BOOT_COMPLETED_RECEIVER_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-
 import com.android.adservices.LogUtil;
-
+import com.android.adservices.errorlogging.ErrorLogUtil;
 
 /** Handles the BootCompleted initialization for AdExtServices APK on S-. */
 public class AdExtBootCompletedReceiver extends BroadcastReceiver {
@@ -33,6 +35,10 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
             AdServicesBackCompatInit.getInstance().initializeComponents();
         } catch (Exception e) {
             LogUtil.e(e, "AdExtBootCompletedReceiver onReceive failed");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_BOOT_COMPLETED_RECEIVER_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
     }
 }
