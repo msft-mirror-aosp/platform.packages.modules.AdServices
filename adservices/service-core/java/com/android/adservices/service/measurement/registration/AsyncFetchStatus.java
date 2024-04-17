@@ -51,6 +51,7 @@ public class AsyncFetchStatus {
     private boolean mIsRedirectError;
     private int mRetryCount;
     private boolean mIsRedirectOnly;
+    private boolean mIsPARequest;
 
     public AsyncFetchStatus() {
         mResponseStatus = ResponseStatus.UNKNOWN;
@@ -58,6 +59,7 @@ public class AsyncFetchStatus {
         mIsRedirectError = false;
         mResponseSize = 0L;
         mRegistrationDelay = 0L;
+        mIsPARequest = false;
     }
 
     /** Get the status of a communication with an Ad Tech server. */
@@ -133,6 +135,16 @@ public class AsyncFetchStatus {
     /** Set redirect status. */
     public void setRedirectOnlyStatus(boolean isRedirectOnly) {
         mIsRedirectOnly = isRedirectOnly;
+    }
+
+    /** Get PA request status. */
+    public boolean isPARequest() {
+        return mIsPARequest;
+    }
+
+    /** Set PA request status. */
+    public void setPARequestStatus(boolean isPARequest) {
+        mIsPARequest = isPARequest;
     }
 
     /** Returns true if request is successful. */
