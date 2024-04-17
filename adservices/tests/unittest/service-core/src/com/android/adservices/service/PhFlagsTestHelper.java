@@ -94,7 +94,7 @@ public final class PhFlagsTestHelper {
                 .isEqualTo(deviceConfigValue);
     }
 
-    private void testFeatureFlagBackedBySystemProperty(
+    private void testGuardedFeatureFlagBackedBySystemProperty(
             String flagName,
             String defaultValueConstant,
             FeatureFlagType type,
@@ -214,7 +214,7 @@ public final class PhFlagsTestHelper {
             String defaultValueConstant,
             FlagGuard guard,
             Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlagBackedBySystemProperty(
+        testGuardedFeatureFlagBackedBySystemProperty(
                 flagName, defaultValueConstant, FeatureFlagType.FEATURE_FLAG, guard, flaginator);
     }
 
@@ -459,9 +459,9 @@ public final class PhFlagsTestHelper {
      *     "MEASUREMENT_KILL_SWITCH"} defining the default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testFeatureFlagBackedByLegacyKillSwitch(
+    public void testFeatureFlagBackedBySystemPropertyGuardedByLegacyKillSwitch(
             String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlagBackedByLegacyKillSwitch(
+        testFeatureFlagBackedBySystemPropertyGuardedByLegacyKillSwitch(
                 flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
     }
 
@@ -476,12 +476,12 @@ public final class PhFlagsTestHelper {
      *     "MEASUREMENT_KILL_SWITCH"} defining the default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testFeatureFlagBackedByLegacyKillSwitch(
+    public void testFeatureFlagBackedBySystemPropertyGuardedByLegacyKillSwitch(
             String flagName,
             String defaultValueConstant,
             FlagGuard guard,
             Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlagBackedBySystemProperty(
+        testGuardedFeatureFlagBackedBySystemProperty(
                 flagName,
                 defaultValueConstant,
                 FeatureFlagType.FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH,
@@ -489,12 +489,12 @@ public final class PhFlagsTestHelper {
                 flaginator);
     }
 
-    public void testLegacyKillSwitchBackedByLegacyKillSwitch(
+    public void testLegacyKillSwitchGuardedByLegacyKillSwitch(
             String flagName,
             String defaultValueConstant,
             FlagGuard guard,
             Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlagBackedBySystemProperty(
+        testGuardedFeatureFlagBackedBySystemProperty(
                 flagName,
                 defaultValueConstant,
                 FeatureFlagType.LEGACY_KILL_SWITCH,
@@ -512,9 +512,9 @@ public final class PhFlagsTestHelper {
      *     "ADID_KILL_SWITCH"} defining the default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testUnguardedLegacyKillSwitch(
+    public void testUnguardedLegacyKillSwitchBackedBySystemProperty(
             String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlagBackedBySystemProperty(
+        testGuardedFeatureFlagBackedBySystemProperty(
                 flagName,
                 defaultValueConstant,
                 FeatureFlagType.LEGACY_KILL_SWITCH,
@@ -529,9 +529,9 @@ public final class PhFlagsTestHelper {
      * @param defaultValueConstant default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testLegacyKillSwitch(
+    public void testLegacyKillSwitchBackedBySystemProperty(
             String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlagBackedBySystemProperty(
+        testGuardedFeatureFlagBackedBySystemProperty(
                 flagName,
                 defaultValueConstant,
                 FeatureFlagType.LEGACY_KILL_SWITCH,
