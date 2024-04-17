@@ -152,7 +152,9 @@ class SdkSandboxStatsdLogger {
                     latency,
                     success,
                     stage,
-                    callingUid);
+                    callingUid,
+                    // TODO: b/318505128 - add correct result code
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__RESULT_CODE__RESULT_CODE_UNSPECIFIED);
         }
     }
 
