@@ -129,14 +129,13 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
         if (isThrottled(topicsParam, callback)) return;
 
-        final long startServiceTime = mClock.elapsedRealtime();
-        final String packageName = topicsParam.getAppPackageName();
-        final String sdkName = topicsParam.getSdkName();
+        long startServiceTime = mClock.elapsedRealtime();
+        String packageName = topicsParam.getAppPackageName();
+        String sdkName = topicsParam.getSdkName();
 
         // We need to save the Calling Uid before offloading to the background executor. Otherwise,
-        // the Binder.getCallingUid will return the PPAPI process Uid. This also needs to be final
-        // since it's used in the lambda.
-        final int callingUid = Binder.getCallingUidOrThrow();
+        // the Binder.getCallingUid will return the PPAPI process Uid.
+        int callingUid = Binder.getCallingUidOrThrow();
 
         // Check the permission in the same thread since we're looking for caller's permissions.
         // Note: The permission check uses sdk sandbox calling package name since PackageManager
@@ -188,8 +187,8 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                         // Double it to simulate the return binder time is same to call binder time
                         long binderLatency = (startServiceTime - binderCallStartTimeMillis) * 2;
 
-                        final int apiLatency = (int) (serviceLatency + binderLatency);
-                        final int apiName =
+                        int apiLatency = (int) (serviceLatency + binderLatency);
+                        int apiName =
                                 topicsParam.shouldRecordObservation()
                                         ? AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS
                                         : AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
