@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doReturn;
 
+import android.util.Pair;
+
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
@@ -431,6 +433,134 @@ public class EventReportWindowCalcDelegateTest {
                 eventTime + TimeUnit.DAYS.toMillis(2),
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource2d, /* windowIndex= */ 1));
+    }
+
+    @Test
+    public void noiseReportingAndTriggerTime_flexLiteApi_triggerTime() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
+        long sourceTime = System.currentTimeMillis();
+        Source oneWindowNoStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_1_WINDOW_NO_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source oneWindowWithStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_1_WINDOW_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source twoWindowsNoStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_2_WINDOWS_NO_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source fiveWindowsWithStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+
+        assertEquals(
+                Pair.create(sourceTime, sourceTime + TimeUnit.DAYS.toMillis(2)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        oneWindowNoStart, 0));
+        // InstallCase doesn't affect the report time
+        assertEquals(
+                Pair.create(sourceTime, sourceTime + TimeUnit.DAYS.toMillis(2)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        oneWindowNoStart, 0));
+
+        assertEquals(
+                Pair.create(
+                        sourceTime + TimeUnit.DAYS.toMillis(1),
+                        sourceTime + TimeUnit.DAYS.toMillis(2)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        oneWindowWithStart, 0));
+
+        assertEquals(
+                Pair.create(sourceTime, sourceTime + TimeUnit.DAYS.toMillis(2)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        twoWindowsNoStart, 0));
+        assertEquals(
+                Pair.create(
+                        sourceTime + TimeUnit.DAYS.toMillis(2),
+                        sourceTime + TimeUnit.DAYS.toMillis(5)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        twoWindowsNoStart, 1));
+
+        assertEquals(
+                Pair.create(
+                        sourceTime + TimeUnit.DAYS.toMillis(1),
+                        sourceTime + TimeUnit.DAYS.toMillis(2)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        fiveWindowsWithStart, 0));
+        assertEquals(
+                Pair.create(
+                        sourceTime + TimeUnit.DAYS.toMillis(2),
+                        sourceTime + TimeUnit.DAYS.toMillis(5)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        fiveWindowsWithStart, 1));
+
+        assertEquals(
+                Pair.create(
+                        sourceTime + TimeUnit.DAYS.toMillis(5),
+                        sourceTime + TimeUnit.DAYS.toMillis(7)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        fiveWindowsWithStart, 2));
+        assertEquals(
+                Pair.create(
+                        sourceTime + TimeUnit.DAYS.toMillis(7),
+                        sourceTime + TimeUnit.DAYS.toMillis(10)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        fiveWindowsWithStart, 3));
+
+        assertEquals(
+                Pair.create(
+                        sourceTime + TimeUnit.DAYS.toMillis(10),
+                        sourceTime + TimeUnit.DAYS.toMillis(20)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        fiveWindowsWithStart, 4));
+    }
+
+    @Test
+    public void noiseReportingAndTriggerTime_nonFlexLite_triggerTime() {
+        long sourceTime = System.currentTimeMillis();
+        Source nonFlexWindow =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+
+        assertEquals(
+                Pair.create(sourceTime, sourceTime + TimeUnit.DAYS.toMillis(2)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        nonFlexWindow, 0));
+
+        assertEquals(
+                Pair.create(
+                        sourceTime + TimeUnit.DAYS.toMillis(2),
+                        sourceTime + TimeUnit.DAYS.toMillis(7)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        nonFlexWindow, 1));
+
+        assertEquals(
+                Pair.create(
+                        sourceTime + TimeUnit.DAYS.toMillis(7),
+                        sourceTime + TimeUnit.DAYS.toMillis(30)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        nonFlexWindow, 2));
+
+        assertEquals(
+                Pair.create(
+                        sourceTime + TimeUnit.DAYS.toMillis(7),
+                        sourceTime + TimeUnit.DAYS.toMillis(30)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoising(
+                        nonFlexWindow, 3));
     }
 
     @Test
@@ -1277,38 +1407,90 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTimeForNoisingFlexEventApi_validTime_equal() throws JSONException {
-        TriggerSpecs testObject1 = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueCountJsonTwoTriggerSpecs(), 3, null);
+        TriggerSpecs triggerSpecs =
+                new TriggerSpecs(
+                        SourceFixture.getTriggerSpecValueCountJsonTwoTriggerSpecs(), 3, null);
+        long eventTime = System.currentTimeMillis();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setTriggerSpecs(triggerSpecs)
+                        .setEventTime(eventTime)
+                        .build();
         // Assertion
-        assertEquals(new UnsignedLong(1L), testObject1.getTriggerDataFromIndex(0));
-        assertEquals(new UnsignedLong(3L), testObject1.getTriggerDataFromIndex(2));
-        assertEquals(new UnsignedLong(5L), testObject1.getTriggerDataFromIndex(4));
-        assertEquals(new UnsignedLong(7L), testObject1.getTriggerDataFromIndex(6));
+        assertEquals(new UnsignedLong(1L), triggerSpecs.getTriggerDataFromIndex(0));
+        assertEquals(new UnsignedLong(3L), triggerSpecs.getTriggerDataFromIndex(2));
+        assertEquals(new UnsignedLong(5L), triggerSpecs.getTriggerDataFromIndex(4));
+        assertEquals(new UnsignedLong(7L), triggerSpecs.getTriggerDataFromIndex(6));
         assertEquals(
-                TimeUnit.DAYS.toMillis(2),
+                TimeUnit.DAYS.toMillis(2) + eventTime,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
-                        0, 0, testObject1));
+                        0, 0, source));
         assertEquals(
-                TimeUnit.DAYS.toMillis(2),
+                TimeUnit.DAYS.toMillis(2) + eventTime,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
-                        0, 1, testObject1));
+                        0, 1, source));
         assertEquals(
-                TimeUnit.DAYS.toMillis(3),
+                TimeUnit.DAYS.toMillis(3) + eventTime,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
-                        0, 4, testObject1));
+                        0, 4, source));
         assertEquals(
-                TimeUnit.DAYS.toMillis(30),
+                TimeUnit.DAYS.toMillis(30) + eventTime,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
-                        2, 0, testObject1));
+                        2, 0, source));
         assertEquals(
-                TimeUnit.DAYS.toMillis(7),
+                TimeUnit.DAYS.toMillis(7) + eventTime,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
-                        1, 0, testObject1));
+                        1, 0, source));
         assertThrows(
                 IndexOutOfBoundsException.class,
                 () ->
                         mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
-                                1, 5, testObject1));
+                                1, 5, source));
+    }
+
+    @Test
+    public void getReportingAndTriggerTimeForNoisingFlexEventApi_validTime_equal()
+            throws JSONException {
+        TriggerSpecs triggerSpecs =
+                new TriggerSpecs(
+                        SourceFixture.getTriggerSpecValueCountJsonTwoTriggerSpecs(), 3, null);
+        long eventTime = System.currentTimeMillis();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(eventTime)
+                        .setTriggerSpecs(triggerSpecs)
+                        .build();
+        // Assertion
+        assertEquals(
+                Pair.create(eventTime, eventTime + TimeUnit.DAYS.toMillis(2)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoisingFlexEventApi(
+                        0, 0, source));
+        assertEquals(
+                Pair.create(eventTime, eventTime + TimeUnit.DAYS.toMillis(2)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoisingFlexEventApi(
+                        0, 1, source));
+        assertEquals(
+                Pair.create(eventTime, eventTime + TimeUnit.DAYS.toMillis(3)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoisingFlexEventApi(
+                        0, 4, source));
+        assertEquals(
+                Pair.create(
+                        eventTime + TimeUnit.DAYS.toMillis(7),
+                        eventTime + TimeUnit.DAYS.toMillis(30)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoisingFlexEventApi(
+                        2, 0, source));
+        assertEquals(
+                Pair.create(
+                        eventTime + TimeUnit.DAYS.toMillis(2),
+                        eventTime + TimeUnit.DAYS.toMillis(7)),
+                mEventReportWindowCalcDelegate.getReportingAndTriggerTimeForNoisingFlexEventApi(
+                        1, 0, source));
+        assertThrows(
+                IndexOutOfBoundsException.class,
+                () ->
+                        mEventReportWindowCalcDelegate
+                                .getReportingAndTriggerTimeForNoisingFlexEventApi(1, 5, source));
     }
 
     @Test

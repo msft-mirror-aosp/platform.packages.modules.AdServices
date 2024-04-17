@@ -35,6 +35,7 @@ public class MeasurementRegistrationResponseStats {
     private final String mSourceRegistrant;
     private final int mRetryCount;
     private final boolean mIsRedirectOnly;
+    private final boolean mIsPARequest;
 
     private MeasurementRegistrationResponseStats(Builder builder) {
         mCode = builder.mCode;
@@ -49,6 +50,7 @@ public class MeasurementRegistrationResponseStats {
         mSourceRegistrant = builder.mSourceRegistrant;
         mRetryCount = builder.mRetryCount;
         mIsRedirectOnly = builder.mIsRedirectOnly;
+        mIsPARequest = builder.mIsPARequest;
     }
 
     @Override
@@ -67,7 +69,8 @@ public class MeasurementRegistrationResponseStats {
                 && mRegistrationDelay == that.mRegistrationDelay
                 && Objects.equals(mSourceRegistrant, that.mSourceRegistrant)
                 && mRetryCount == that.mRetryCount
-                && mIsRedirectOnly == that.mIsRedirectOnly;
+                && mIsRedirectOnly == that.mIsRedirectOnly
+                && mIsPARequest == that.mIsPARequest;
     }
 
     @Override
@@ -84,7 +87,8 @@ public class MeasurementRegistrationResponseStats {
                 mRegistrationDelay,
                 mSourceRegistrant,
                 mRetryCount,
-                mIsRedirectOnly);
+                mIsRedirectOnly,
+                mIsPARequest);
     }
 
     @Override
@@ -114,6 +118,8 @@ public class MeasurementRegistrationResponseStats {
                 + mRetryCount
                 + ", mIsRedirectOnly="
                 + mIsRedirectOnly
+                + ", mIsPARequest="
+                + mIsPARequest
                 + '}';
     }
 
@@ -166,6 +172,10 @@ public class MeasurementRegistrationResponseStats {
         return mIsRedirectOnly;
     }
 
+    public boolean isPARequest() {
+        return mIsPARequest;
+    }
+
     /** Builder for {@link MeasurementRegistrationResponseStats}. */
     public static final class Builder {
         private final int mCode;
@@ -180,6 +190,7 @@ public class MeasurementRegistrationResponseStats {
         private final String mSourceRegistrant;
         private final int mRetryCount;
         private final boolean mIsRedirectOnly;
+        private final boolean mIsPARequest;
 
         public Builder(
                 int code,
@@ -192,7 +203,8 @@ public class MeasurementRegistrationResponseStats {
                 long registrationDelay,
                 String sourceRegistrant,
                 int retryCount,
-                boolean isRedirectOnly) {
+                boolean isRedirectOnly,
+                boolean isPARequest) {
             mCode = code;
             mRegistrationType = registrationType;
             mResponseSize = responseSize;
@@ -204,6 +216,7 @@ public class MeasurementRegistrationResponseStats {
             mSourceRegistrant = sourceRegistrant;
             mRetryCount = retryCount;
             mIsRedirectOnly = isRedirectOnly;
+            mIsPARequest = isPARequest;
         }
 
         /** See {@link MeasurementRegistrationResponseStats#getAdTechDomain()} . */

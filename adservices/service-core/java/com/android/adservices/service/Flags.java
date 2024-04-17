@@ -1976,7 +1976,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** When enabled, the device is treated as OTA device. */
     default boolean getConsentManagerOTADebugMode() {
-        return DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentManagerOTADebugMode();
     }
 
     boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;

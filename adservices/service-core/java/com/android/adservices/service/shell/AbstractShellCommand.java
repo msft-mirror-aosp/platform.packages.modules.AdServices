@@ -55,7 +55,7 @@ public abstract class AbstractShellCommand implements ShellCommand {
             return null;
         }
         // Boolean.parse returns false when it's invalid
-        switch (arg.trim().toLowerCase(Locale.ROOT)) {
+        switch (arg.trim().toLowerCase(Locale.ENGLISH)) {
             case "true":
                 return Boolean.TRUE;
             case "false":

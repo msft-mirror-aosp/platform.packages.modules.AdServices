@@ -330,6 +330,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 new Source.FakeReport(
                         new UnsignedLong(1L),
                         1L,
+                        1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
@@ -488,6 +489,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 new Source.FakeReport(
                         new UnsignedLong(1L),
                         1L,
+                        1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
@@ -568,7 +570,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
-                        new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
+                        new Source.FakeReport(
+                                new UnsignedLong(1L), 1L, 1L, List.of(APP_DESTINATION)));
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -637,7 +640,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
-                        new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
+                        new Source.FakeReport(
+                                new UnsignedLong(1L), 1L, 1L, List.of(APP_DESTINATION)));
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -698,7 +702,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
-                        new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
+                        new Source.FakeReport(
+                                new UnsignedLong(1L), 1L, 1L, List.of(APP_DESTINATION)));
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -757,7 +762,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
-                        new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
+                        new Source.FakeReport(
+                                new UnsignedLong(1L), 1L, 1L, List.of(APP_DESTINATION)));
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -811,7 +817,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
-                        new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
+                        new Source.FakeReport(
+                                new UnsignedLong(1L), 1L, 1L, List.of(APP_DESTINATION)));
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -897,7 +904,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
-                        new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
+                        new Source.FakeReport(
+                                new UnsignedLong(1L), 1L, 1L, List.of(APP_DESTINATION)));
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -967,7 +975,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
-                        new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
+                        new Source.FakeReport(
+                                new UnsignedLong(1L), 1L, 1L, List.of(APP_DESTINATION)));
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -1040,7 +1049,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
-                        new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
+                        new Source.FakeReport(
+                                new UnsignedLong(1L), 1L, 1L, List.of(APP_DESTINATION)));
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -1116,6 +1126,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 new Source.FakeReport(
                         new UnsignedLong(1L),
                         1L,
+                        1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
@@ -1184,6 +1195,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 new Source.FakeReport(
                         new UnsignedLong(1L),
                         1L,
+                        1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
@@ -1250,6 +1262,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source.FakeReport sf =
                 new Source.FakeReport(
                         new UnsignedLong(1L),
+                        1L,
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
@@ -1318,6 +1331,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source.FakeReport sf =
                 new Source.FakeReport(
                         new UnsignedLong(1L),
+                        1L,
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
@@ -1672,6 +1686,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 new Source.FakeReport(
                         new UnsignedLong(1L),
                         1L,
+                        1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
@@ -1718,6 +1733,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source.FakeReport sf =
                 new Source.FakeReport(
                         new UnsignedLong(1L),
+                        1L,
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
@@ -1772,6 +1788,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source.FakeReport sf =
                 new Source.FakeReport(
                         new UnsignedLong(1L),
+                        1L,
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
@@ -2113,6 +2130,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 new Source.FakeReport(
                         new UnsignedLong(1L),
                         1L,
+                        1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
@@ -2169,6 +2187,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 new Source.FakeReport(
                         new UnsignedLong(1L),
                         1L,
+                        1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
@@ -2213,6 +2232,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source.FakeReport sf =
                 new Source.FakeReport(
                         new UnsignedLong(1L),
+                        1L,
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
@@ -2310,6 +2330,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source.FakeReport sf =
                 new Source.FakeReport(
                         new UnsignedLong(1L),
+                        1L,
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
@@ -4466,6 +4487,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                         new UnsignedLong(0L),
                                         new EventReportWindowCalcDelegate(mFlags)
                                                 .getReportingTimeForNoising(source, 0),
+                                        source.getEventTime(),
                                         destinations))
                 .collect(Collectors.toList());
     }

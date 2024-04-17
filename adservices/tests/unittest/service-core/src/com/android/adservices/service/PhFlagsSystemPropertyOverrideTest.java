@@ -26,7 +26,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
@@ -47,7 +46,15 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
@@ -147,13 +154,13 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetAdIdKillSwitch() {
-        mFlagsTestHelper.testUnguardedLegacyKillSwitch(
+        mFlagsTestHelper.testUnguardedLegacyKillSwitchBackedBySystemProperty(
                 KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", Flags::getAdIdKillSwitch);
     }
 
     @Test
     public void testGetLegacyMeasurementKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_KILL_SWITCH,
                 "MEASUREMENT_KILL_SWITCH",
                 Flags::getLegacyMeasurementKillSwitch);
@@ -161,7 +168,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiDeleteRegistrationsKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
                 "MEASUREMENT_KILL_SWITCH",
                 Flags::getMeasurementApiDeleteRegistrationsKillSwitch);
@@ -169,7 +176,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiDeleteRegistrationsKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
                 "MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH",
                 value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
@@ -178,7 +185,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiStatusKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
                 "MEASUREMENT_API_STATUS_KILL_SWITCH",
                 Flags::getMeasurementApiStatusKillSwitch);
@@ -186,7 +193,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiStatusKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
                 "MEASUREMENT_API_STATUS_KILL_SWITCH",
                 value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
@@ -195,7 +202,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiRegisterSourceKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
                 "MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH",
                 Flags::getMeasurementApiRegisterSourceKillSwitch);
@@ -203,7 +210,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiRegisterSourceKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
                 "MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH",
                 value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
@@ -212,7 +219,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
-        mFlagsTestHelper.testFeatureFlagBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testFeatureFlagBackedBySystemPropertyGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH,
                 "MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
@@ -221,7 +228,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiRegisterTriggerKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH,
                 "MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH",
                 Flags::getMeasurementApiRegisterTriggerKillSwitch);
@@ -229,7 +236,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiRegisterTriggerKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH,
                 "MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
@@ -238,7 +245,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiRegisterWebSourceKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH,
                 "MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH",
                 Flags::getMeasurementApiRegisterWebSourceKillSwitch);
@@ -246,7 +253,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiRegisterWebSourceKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH,
                 "MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
@@ -255,7 +262,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiRegisterSourcesKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH,
                 "MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH",
                 Flags::getMeasurementApiRegisterSourcesKillSwitch);
@@ -263,7 +270,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiRegisterSourcesKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH,
                 "MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
@@ -272,7 +279,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiRegisterWebTriggerKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH,
                 "MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH",
                 Flags::getMeasurementApiRegisterWebTriggerKillSwitch);
@@ -280,7 +287,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementApiRegisterWebTriggerKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH,
                 "MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
@@ -289,7 +296,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementJobAggregateFallbackReportingKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH,
                 "MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH",
                 Flags::getMeasurementJobAggregateFallbackReportingKillSwitch);
@@ -297,7 +304,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementJobAggregateFallbackReportingKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH,
                 "MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
@@ -306,7 +313,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementJobAggregateReportingKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
                 "MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH",
                 Flags::getMeasurementJobAggregateReportingKillSwitch);
@@ -314,7 +321,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementJobAggregateReportingKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
                 "MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
@@ -323,7 +330,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementJobAttributionKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH,
                 "MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH",
                 Flags::getMeasurementJobAttributionKillSwitch);
@@ -331,7 +338,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementJobAttributionKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH,
                 "MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
@@ -340,7 +347,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
                 "MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
                 Flags::getMeasurementVerboseDebugReportingFallbackJobKillSwitch);
@@ -348,7 +355,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementVerboseDebugReportingFallbackJobKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
                 "MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
@@ -357,7 +364,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementDebugReportingFallbackJobKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
                 "MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
                 Flags::getMeasurementDebugReportingFallbackJobKillSwitch);
@@ -365,7 +372,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementDebugReportingFallbackJobKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
                 "MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
@@ -374,7 +381,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementJobDeleteExpiredKillSwitch() {
-        mFlagsTestHelper.testLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
                 "MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH",
                 Flags::getMeasurementJobDeleteExpiredKillSwitch);
@@ -382,11 +389,147 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMeasurementJobDeleteExpiredKillSwitch_measurementOverride() {
-        mFlagsTestHelper.testLegacyKillSwitchBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
                 "MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
                 Flags::getMeasurementJobDeleteExpiredKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDeleteUninstalledKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH,
+                "MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH",
+                Flags::getMeasurementJobDeleteUninstalledKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDeleteUninstalledKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH,
+                "MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobDeleteUninstalledKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobEventFallbackReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobEventFallbackReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobEventFallbackReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobEventFallbackReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobEventReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobEventReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobEventReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobEventReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementReceiverInstallAttributionKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH,
+                "MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH",
+                Flags::getMeasurementReceiverInstallAttributionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementReceiverInstallAttributionKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH,
+                "MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementReceiverInstallAttributionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementReceiverDeletePackagesKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH,
+                "MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH",
+                Flags::getMeasurementReceiverDeletePackagesKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementReceiverDeletePackagesKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH,
+                "MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementReceiverDeletePackagesKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
+                "MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH",
+                Flags::getMeasurementRollbackDeletionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
+                "MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementRollbackDeletionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRegistrationJobQueueKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH,
+                "MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH",
+                Flags::getAsyncRegistrationJobQueueKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRegistrationJobQueueKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH,
+                "MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getAsyncRegistrationJobQueueKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRegistrationFallbackJobKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH",
+                Flags::getAsyncRegistrationFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRegistrationFallbackJobKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getAsyncRegistrationFallbackJobKillSwitch);
     }
 
     @Test
@@ -399,7 +542,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetMddLoggerEnabled() {
-        mFlagsTestHelper.testFeatureFlagBackedByLegacyKillSwitch(
+        mFlagsTestHelper.testFeatureFlagBackedBySystemPropertyGuardedByLegacyKillSwitch(
                 KEY_MDD_LOGGER_KILL_SWITCH, "MDD_LOGGER_KILL_SWITCH", Flags::getMddLoggerEnabled);
     }
 
@@ -419,15 +562,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 "CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE",
                 /* guard= */ null,
                 Flags::getConsentNotificationActivityDebugMode);
-    }
-
-    @Test
-    public void testConsentManagerOTADebugMode() {
-        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
-                KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
-                "DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE",
-                /* guard= */ null,
-                Flags::getConsentManagerOTADebugMode);
     }
 
     @Test

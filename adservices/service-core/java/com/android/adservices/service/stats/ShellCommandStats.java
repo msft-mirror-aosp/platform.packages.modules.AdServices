@@ -156,7 +156,7 @@ public final class ShellCommandStats {
     @Override
     public String toString() {
         return String.format(
-                Locale.ROOT,
+                Locale.ENGLISH,
                 "ShellCommandStats[command=%d, result=%d, latencyMillis=%d]",
                 mCommand,
                 mResult,

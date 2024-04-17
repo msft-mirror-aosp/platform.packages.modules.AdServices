@@ -215,7 +215,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 getAllowlistedAppPackageName(stats.getSourceRegistrant()),
                 stats.getRetryCount(),
                 /* httpResponseCode */ 0,
-                stats.isRedirectOnly());
+                stats.isRedirectOnly(),
+                stats.isPARequest());
     }
 
     @Override

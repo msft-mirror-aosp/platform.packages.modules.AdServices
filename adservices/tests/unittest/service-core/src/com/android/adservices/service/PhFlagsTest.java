@@ -399,10 +399,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_DEDUPLIC
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
@@ -448,18 +444,13 @@ import static com.android.adservices.service.Flags.MEASUREMENT_NULL_AGGREGATE_RE
 import static com.android.adservices.service.Flags.MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
 import static com.android.adservices.service.Flags.MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
 import static com.android.adservices.service.Flags.MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
-import static com.android.adservices.service.Flags.MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
-import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
-import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
@@ -866,9 +857,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_C
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
@@ -922,18 +910,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
@@ -1025,7 +1008,6 @@ import java.util.stream.Collectors;
 /** Unit tests for {@link com.android.adservices.service.PhFlags} */
 @SpyStatic(SdkLevel.class)
 public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
-
 
     private final Flags mPhFlags = PhFlags.getInstance();
     private final Flags mTestFlags = FakeFlagsFactory.getFlagsForTest();
@@ -2675,409 +2657,43 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetMeasurementJobDeleteUninstalledKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobDeleteUninstalledKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementJobDeleteUninstalledKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobDeleteUninstalledKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobDeleteUninstalledKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementJobDeleteUninstalledKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobDeleteUninstalledKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobDeleteUninstalledKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementJobDeleteUninstalledKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobEventFallbackReportingKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobEventFallbackReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementJobEventFallbackReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobEventFallbackReportingKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobEventFallbackReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementJobEventFallbackReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobEventFallbackReportingKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobEventFallbackReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementJobEventFallbackReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobEventReportingKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobEventReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementJobEventReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobEventReportingKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobEventReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementJobEventReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobEventReportingKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobEventReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementJobEventReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementReceiverInstallAttributionKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementReceiverInstallAttributionKillSwitch())
-                .isEqualTo(MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementReceiverInstallAttributionKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementReceiverInstallAttributionKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementReceiverInstallAttributionKillSwitch())
-                .isEqualTo(MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementReceiverInstallAttributionKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementReceiverInstallAttributionKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementReceiverInstallAttributionKillSwitch())
-                .isEqualTo(MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementReceiverInstallAttributionKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementReceiverDeletePackagesKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementReceiverDeletePackagesKillSwitch())
-                .isEqualTo(MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementReceiverDeletePackagesKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementReceiverDeletePackagesKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementReceiverDeletePackagesKillSwitch())
-                .isEqualTo(MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementReceiverDeletePackagesKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementReceiverDeletePackagesKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementReceiverDeletePackagesKillSwitch())
-                .isEqualTo(MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementReceiverDeletePackagesKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRollbackDeletionKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementRollbackDeletionKillSwitch())
-                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementRollbackDeletionKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRollbackDeletionKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementRollbackDeletionKillSwitch())
-                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementRollbackDeletionKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
     public void testGetMeasurementEventReportsVtcEarlyReportingWindows() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
-                .isEqualTo(MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
-
-        String phOverridingValue =
-                MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS + "3600,172800";
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlag(
                 KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS,
+                Flags::getMeasurementEventReportsVtcEarlyReportingWindows);
     }
 
     @Test
     public void testGetMeasurementEventReportsCtcEarlyReportingWindows() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
-                .isEqualTo(MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
-
-        String phOverridingValue =
-                MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS
-                        + "172800,604800"
-                        + "3600,172800";
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlag(
                 KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS,
+                Flags::getMeasurementEventReportsCtcEarlyReportingWindows);
     }
 
     @Test
     public void testGetMeasurementEnableConfigurableAggregateReportDelay() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableConfigurableAggregateReportDelay())
-                .isEqualTo(MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY);
-
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableConfigurableAggregateReportDelay())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY,
+                Flags::getMeasurementEnableConfigurableAggregateReportDelay);
     }
 
     @Test
     public void testGetMeasurementAggregateReportDelay() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementAggregateReportDelayConfig())
-                .isEqualTo(MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG);
-
-        String phOverridingValue = MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG + "1000,1000";
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testFeatureFlag(
                 KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementAggregateReportDelayConfig())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
+                Flags::getMeasurementAggregateReportDelayConfig);
     }
 
     @Test
     public void testGetMeasurementEnableLookbackWindowFilter() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableLookbackWindowFilter())
-                .isEqualTo(MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER);
-
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableLookbackWindowFilter())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRollbackDeletionKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementRollbackDeletionKillSwitch())
-                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementRollbackDeletionKillSwitch())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER,
+                Flags::getMeasurementEnableLookbackWindowFilter);
     }
 
     @Test
@@ -3097,212 +2713,51 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetMeasurementRegistrationJobQueueKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Registration Job Queue kill switch should be off
-        assertThat(mPhFlags.getAsyncRegistrationJobQueueKillSwitch())
-                .isEqualTo(MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAsyncRegistrationJobQueueKillSwitch()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRegistrationJobQueueKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Registration Job Queue kill switch should be off
-        assertThat(mPhFlags.getAsyncRegistrationJobQueueKillSwitch())
-                .isEqualTo(MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getAsyncRegistrationJobQueueKillSwitch()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRegistrationJobQueueKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Registration Job Queue kill switch should be off
-        assertThat(mPhFlags.getAsyncRegistrationJobQueueKillSwitch())
-                .isEqualTo(MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getAsyncRegistrationJobQueueKillSwitch()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRegistrationFallbackJobKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Registration Job Queue kill switch should be off
-        assertThat(mPhFlags.getAsyncRegistrationJobQueueKillSwitch())
-                .isEqualTo(MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAsyncRegistrationFallbackJobKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRegistrationFallbackJobKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Registration Job Queue kill switch should be off
-        assertThat(mPhFlags.getAsyncRegistrationJobQueueKillSwitch())
-                .isEqualTo(MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getAsyncRegistrationFallbackJobKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRegistrationFallbackJobKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Registration Job Queue kill switch should be off
-        assertThat(mPhFlags.getAsyncRegistrationJobQueueKillSwitch())
-                .isEqualTo(MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getAsyncRegistrationFallbackJobKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
     public void testGetMeasurementMaxSourcesPerPublisher() {
-        assertThat(mPhFlags.getMeasurementMaxSourcesPerPublisher())
-                .isEqualTo(MEASUREMENT_MAX_SOURCES_PER_PUBLISHER);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_MAX_SOURCES_PER_PUBLISHER + 20;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMaxSourcesPerPublisher()).isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_SOURCES_PER_PUBLISHER,
+                Flags::getMeasurementMaxSourcesPerPublisher);
     }
 
     @Test
     public void testGetMeasurementMaxTriggersPerDestination() {
-        assertThat(mPhFlags.getMeasurementMaxTriggersPerDestination())
-                .isEqualTo(MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION + 21;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMaxTriggersPerDestination()).isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION,
+                Flags::getMeasurementMaxTriggersPerDestination);
     }
 
     @Test
     public void testGetMeasurementMaxAggregateReportsPerDestination() {
-        assertThat(mPhFlags.getMeasurementMaxAggregateReportsPerDestination())
-                .isEqualTo(MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION + 22;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMaxAggregateReportsPerDestination())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION,
+                Flags::getMeasurementMaxAggregateReportsPerDestination);
     }
 
     @Test
     public void testGetMeasurementMaxEventReportsPerDestination() {
-        assertThat(mPhFlags.getMeasurementMaxEventReportsPerDestination())
-                .isEqualTo(MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION + 23;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMaxEventReportsPerDestination())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION,
+                Flags::getMeasurementMaxEventReportsPerDestination);
     }
 
     @Test
     public void testGetMeasurementMaxAggregateKeysPerSourceRegistration() {
-        assertThat(FlagsFactory.getFlags().getMeasurementMaxAggregateKeysPerSourceRegistration())
-                .isEqualTo(MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = 10;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION,
+                Flags::getMeasurementMaxAggregateKeysPerSourceRegistration);
     }
 
     @Test
     public void testGetMeasurementMaxAggregateKeysPerTriggerRegistration() {
-        assertThat(FlagsFactory.getFlags().getMeasurementMaxAggregateKeysPerTriggerRegistration())
-                .isEqualTo(MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = 10;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION,
+                Flags::getMeasurementMaxAggregateKeysPerTriggerRegistration);
     }
 
     @Test

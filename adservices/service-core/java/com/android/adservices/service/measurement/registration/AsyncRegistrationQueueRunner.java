@@ -651,12 +651,7 @@ public class AsyncRegistrationQueueRunner {
                                         .setTriggerData(fakeReport.getTriggerData())
                                         .setAttributionDestinations(fakeReport.getDestinations())
                                         .setEnrollmentId(source.getEnrollmentId())
-                                        // The query for attribution check is from
-                                        // (triggerTime - 30 days) to triggerTime and max expiry is
-                                        // 30 days, so it's safe to choose triggerTime as source
-                                        // event time so that it gets considered when the query is
-                                        // fired for attribution rate limit check.
-                                        .setTriggerTime(source.getEventTime())
+                                        .setTriggerTime(fakeReport.getTriggerTime())
                                         .setTriggerPriority(0L)
                                         .setTriggerDedupKey(null)
                                         .setSourceType(source.getSourceType())

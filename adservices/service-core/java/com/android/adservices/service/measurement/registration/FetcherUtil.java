@@ -326,7 +326,8 @@ public class FetcherUtil {
                                 asyncFetchStatus.getRegistrationDelay(),
                                 getSourceRegistrantToLog(asyncRegistration),
                                 asyncFetchStatus.getRetryCount(),
-                                asyncFetchStatus.isRedirectOnly())
+                                asyncFetchStatus.isRedirectOnly(),
+                                asyncFetchStatus.isPARequest())
                         .setAdTechDomain(adTechDomain)
                         .build());
     }

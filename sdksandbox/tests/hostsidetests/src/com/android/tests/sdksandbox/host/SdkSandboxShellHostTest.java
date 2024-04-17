@@ -49,7 +49,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
       + "_sdk_sandbox";
     private static final String APP_SANDBOX_NAME = APP_PACKAGE + "_sdk_sandbox";
     private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
-    private HashSet<Integer> mOriginalUsers;
+    private final HashSet<Integer> mOriginalUsers = new HashSet<>();
 
     @Before
     public void setUp() throws Exception {
@@ -64,7 +64,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
             getDevice().executeShellV2Command(String.format("cmd deviceidle whitelist +%s", pkg));
         }
 
-        mOriginalUsers = new HashSet<>(getDevice().listUsers());
+        mOriginalUsers.addAll(getDevice().listUsers());
 
         assertThat(getDevice().enableAdbRoot()).isTrue();
     }
@@ -76,6 +76,8 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
                 getDevice().removeUser(userId);
             }
         }
+        mOriginalUsers.clear();
+
         // Ensure all apps are not in allowlist.
         for (String pkg : new String[] {APP_PACKAGE, DEBUGGABLE_APP_PACKAGE}) {
             getDevice().executeShellV2Command(String.format("cmd deviceidle whitelist -%s", pkg));
@@ -125,6 +127,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
     @Test
     public void testStopSdkSandboxSucceedsForRunningDebuggableApp() throws Exception {
         startActivity(DEBUGGABLE_APP_PACKAGE, DEBUGGABLE_APP_ACTIVITY);
+        waitForProcessStart(DEBUGGABLE_APP_SANDBOX_NAME);
 
         CommandResult output = getDevice().executeShellV2Command(
                 String.format("cmd sdk_sandbox stop %s", DEBUGGABLE_APP_PACKAGE));
@@ -145,6 +148,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
     @Test
     public void testStopSdkSandboxFailsForNonDebuggableApp() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
+        waitForProcessStart(APP_SANDBOX_NAME);
 
         CommandResult output = getDevice().executeShellV2Command(
                 String.format("cmd sdk_sandbox stop %s", APP_PACKAGE));
@@ -157,6 +161,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
     @Test
     public void testStopSdkSandboxFailsForIncorrectUser() throws Exception {
         startActivity(DEBUGGABLE_APP_PACKAGE, DEBUGGABLE_APP_ACTIVITY);
+        waitForProcessStart(DEBUGGABLE_APP_SANDBOX_NAME);
 
         int otherUserId = getDevice().createUser("TestUser_" + System.currentTimeMillis());
         CommandResult output = getDevice().executeShellV2Command(String.format(
