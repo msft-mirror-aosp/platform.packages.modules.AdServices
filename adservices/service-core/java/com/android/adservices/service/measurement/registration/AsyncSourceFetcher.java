@@ -870,6 +870,7 @@ public class AsyncSourceFetcher {
             urlConnection.setInstanceFollowRedirects(false);
             String body = asyncRegistration.getPostBody();
             if (mFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled() && body != null) {
+                asyncFetchStatus.setPARequestStatus(true);
                 urlConnection.setRequestProperty("Content-Type", "text/plain");
                 urlConnection.setDoOutput(true);
                 OutputStream os = urlConnection.getOutputStream();
