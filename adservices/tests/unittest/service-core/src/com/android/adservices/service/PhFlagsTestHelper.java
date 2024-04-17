@@ -222,7 +222,7 @@ public final class PhFlagsTestHelper {
      * Tests the behavior of a feature flag and verifies default value, overridden value are
      * fetched.
      */
-    public void testFeatureFlag(
+    public void testConfigFlag(
             String flagName, String defaultConstantValue, Flaginator<Flags, String> flaginator) {
         testFeatureFlagDefaultOverriddenAndIllegalValue(
                 flagName,

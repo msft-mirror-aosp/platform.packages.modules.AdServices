@@ -1069,7 +1069,7 @@ public final class FlagsConstants {
     // Back-compat keys
     public static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
 
-    public static final String ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED =
+    public static final String KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED =
             "adservices_consent_migration_logging_enabled";
 
     public static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";

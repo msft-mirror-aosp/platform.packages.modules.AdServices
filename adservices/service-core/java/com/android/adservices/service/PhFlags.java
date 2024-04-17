@@ -4974,7 +4974,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getEnableMigrationFromAdExtService());
         writer.println(
                 "\t"
-                        + FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
+                        + FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
                         + " = "
                         + getAdservicesConsentMigrationLoggingEnabled());
         writer.println(
@@ -6011,7 +6011,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getAdservicesConsentMigrationLoggingEnabled() {
         return getDeviceConfigFlag(
-                FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
+                FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
                 DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED);
     }
 

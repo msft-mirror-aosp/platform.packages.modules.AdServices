@@ -46,10 +46,12 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBU
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
@@ -361,6 +363,40 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 "MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
                 mMsmtKillSwitchGuard,
                 Flags::getMeasurementVerboseDebugReportingFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobVerboseDebugReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobVerboseDebugReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobVerboseDebugReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobVerboseDebugReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDebugReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobDebugReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDebugReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobDebugReportingKillSwitch);
     }
 
     @Test
