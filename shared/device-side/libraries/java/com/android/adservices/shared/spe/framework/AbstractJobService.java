@@ -244,6 +244,8 @@ public abstract class AbstractJobService extends JobService {
                 .catching(
                         Exception.class,
                         e -> {
+                            LogUtil.e(e, "Encounter Job Execution Failure for Job %s.", jobName);
+
                             if (e instanceof CancellationException) {
                                 return CANCELLED_BY_SCHEDULER;
                             }
