@@ -452,7 +452,7 @@ public class JSScriptEngineTest {
                 .hasMessageThat()
                 .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
-        verify(mMockSandboxProvider, never()).destroyIfCurrentInstance(mMockedSandbox);
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
     }
 
     @Test
