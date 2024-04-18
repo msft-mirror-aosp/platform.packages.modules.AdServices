@@ -33,7 +33,7 @@ import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
@@ -47,10 +47,9 @@ import java.util.List;
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
 @SetFlagEnabled(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
-@RequiresSdkLevelAtLeastT(reason = "Shell command enabled for T+")
-// TODO(b/332404873): Enable the test for S
+@RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
 public final class CustomAudienceShellCommandsScenarioTest extends FledgeScenarioTest {
-    private static final String OWNER = "android.adservices.debuggablects";
+    private static final String OWNER = sContext.getPackageName();
 
     private final AdServicesShellCommandHelper mShellCommandHelper =
             new AdServicesShellCommandHelper();
