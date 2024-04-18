@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.ondevicepersonalization;
+package com.android.adservices.service;
 
-import com.android.adservices.service.measurement.registration.AsyncRegistration;
+/**
+ * Defines constants used by {@code DebugFlags}.
+ *
+ * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
+ */
+public final class DebugFlagsConstants {
+    private DebugFlagsConstants() {
+        throw new UnsupportedOperationException("Contains only static constants");
+    }
 
-import java.util.List;
-import java.util.Map;
-
-public interface IOdpDelegationWrapper {
-
-    /** attempt to register a trigger using the ODP module. Returns true of API call was made */
-    void registerOdpTrigger(AsyncRegistration asyncRegistration, Map<String, List<String>> headers);
+    // Consent Manager ota debug mode keys.
+    public static final String KEY_CONSENT_MANAGER_OTA_DEBUG_MODE =
+            "consent_manager_ota_debug_mode";
 }

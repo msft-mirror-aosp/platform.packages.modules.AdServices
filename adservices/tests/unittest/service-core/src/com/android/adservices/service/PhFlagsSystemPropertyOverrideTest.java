@@ -20,19 +20,26 @@ import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGet
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
@@ -46,19 +53,26 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBU
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsTest.getConstantValue;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -72,6 +86,7 @@ import com.android.modules.utils.testing.TestableDeviceConfig;
 import org.junit.Rule;
 import org.junit.Test;
 
+@SpyStatic(SdkLevel.class)
 public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
 
     private final Flags mPhFlags = PhFlags.getInstance();
@@ -155,6 +170,9 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetAdIdKillSwitch() {
+        // Values of globalKS should be ignored.
+        mFlagsTestHelper.setGlobalKillSwitch(true);
+
         mFlagsTestHelper.testUnguardedLegacyKillSwitchBackedBySystemProperty(
                 KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", Flags::getAdIdKillSwitch);
     }
@@ -182,6 +200,114 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 "MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH",
                 value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
                 Flags::getMeasurementApiDeleteRegistrationsKillSwitch);
+    }
+
+    @Test
+    public void testUiOtaResourcesFeatureEnabled() {
+        mFlagsTestHelper.testFeatureFlagBackedBySystemPropertyGuardedByGlobalKs(
+                KEY_UI_OTA_RESOURCES_FEATURE_ENABLED,
+                "UI_OTA_RESOURCES_FEATURE_ENABLED",
+                Flags::getUiOtaResourcesFeatureEnabled);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionAppSearchKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
+                "MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH",
+                Flags::getMeasurementRollbackDeletionAppSearchKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionAppSearchKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
+                "MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH",
+                value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
+                Flags::getMeasurementRollbackDeletionAppSearchKillSwitch);
+    }
+
+    @Test
+    public void testGetFledgeCustomAudienceServiceKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH,
+                "FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH",
+                Flags::getFledgeCustomAudienceServiceKillSwitch);
+    }
+
+    @Test
+    public void testGetFledgeSelectAdsKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_FLEDGE_SELECT_ADS_KILL_SWITCH,
+                "FLEDGE_SELECT_ADS_KILL_SWITCH",
+                Flags::getFledgeSelectAdsKillSwitch);
+    }
+
+    @Test
+    public void testGetAppSetIdKillSwitch() {
+        // Values of globalKS should be ignored.
+        mFlagsTestHelper.setGlobalKillSwitch(true);
+
+        mFlagsTestHelper.testUnguardedLegacyKillSwitchBackedBySystemProperty(
+                KEY_APPSETID_KILL_SWITCH, "APPSETID_KILL_SWITCH", Flags::getAppSetIdKillSwitch);
+    }
+
+    @Test
+    public void testGetMddBackgroundTaskKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MDD_BACKGROUND_TASK_KILL_SWITCH,
+                "MDD_BACKGROUND_TASK_KILL_SWITCH",
+                Flags::getMddBackgroundTaskKillSwitch);
+    }
+
+    @Test
+    public void testGetEncryptionKeyPeriodicFetchKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH,
+                "ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH",
+                Flags::getEncryptionKeyPeriodicFetchKillSwitch);
+    }
+
+    @Test
+    public void testGetEncryptionKeyNewEnrollmentFetchKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH,
+                "ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH",
+                Flags::getEncryptionKeyNewEnrollmentFetchKillSwitch);
+    }
+
+    @Test
+    public void testGetTopicsKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_TOPICS_KILL_SWITCH, "TOPICS_KILL_SWITCH", Flags::getTopicsKillSwitch);
+    }
+
+    @Test
+    public void testGetOnDeviceClassifierKillSwitch() {
+        // Values of globalKS should be ignored.
+        mFlagsTestHelper.setGlobalKillSwitch(true);
+
+        mFlagsTestHelper.testUnguardedLegacyKillSwitchBackedBySystemProperty(
+                KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH,
+                "TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH",
+                Flags::getTopicsOnDeviceClassifierKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionREnabled() {
+        // Disable global_kill_switch so that this flag can be tested.
+        mFlagsTestHelper.setGlobalKillSwitch(false);
+        mockGetAdServicesFlag(KEY_ENABLE_BACK_COMPAT, true);
+        extendedMockito.mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastS(false);
+
+        expect.that(mPhFlags.getMeasurementRollbackDeletionREnabled())
+                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_R_ENABLED);
+
+        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
+        mockGetAdServicesFlag(KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED, phOverridingValue);
+
+        expect.that(mPhFlags.getMeasurementRollbackDeletionREnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -364,6 +490,40 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
     }
 
     @Test
+    public void testGetMeasurementJobVerboseDebugReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobVerboseDebugReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobVerboseDebugReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobVerboseDebugReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDebugReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobDebugReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDebugReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobDebugReportingKillSwitch);
+    }
+
+    @Test
     public void testGetMeasurementDebugReportingFallbackJobKillSwitch() {
         mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
                 KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
@@ -535,7 +695,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     @Test
     public void testGetCobaltLoggingEnabled() {
-        mFlagsTestHelper.testFeatureFlagGuardedByGlobalKs(
+        mFlagsTestHelper.testFeatureFlagBackedBySystemPropertyGuardedByGlobalKs(
                 KEY_COBALT_LOGGING_ENABLED,
                 "COBALT_LOGGING_ENABLED",
                 Flags::getCobaltLoggingEnabled);
@@ -563,15 +723,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 "CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE",
                 /* guard= */ null,
                 Flags::getConsentNotificationActivityDebugMode);
-    }
-
-    @Test
-    public void testConsentManagerOTADebugMode() {
-        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
-                KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
-                "DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE",
-                /* guard= */ null,
-                Flags::getConsentManagerOTADebugMode);
     }
 
     @Test

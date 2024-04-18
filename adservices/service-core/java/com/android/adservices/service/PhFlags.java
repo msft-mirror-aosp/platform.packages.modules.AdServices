@@ -2789,13 +2789,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getConsentManagerOTADebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE),
-                DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
-    }
-
-    @Override
     public boolean getRvcPostOtaNotifAgeCheck() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
@@ -3203,11 +3196,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + " = "
                         + getEnableAdServicesSystemApi());
         writer.println("\t" + FlagsConstants.KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE
-                        + " = "
-                        + getConsentManagerOTADebugMode());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK
@@ -4974,7 +4962,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getEnableMigrationFromAdExtService());
         writer.println(
                 "\t"
-                        + FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
+                        + FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
                         + " = "
                         + getAdservicesConsentMigrationLoggingEnabled());
         writer.println(
@@ -6011,7 +5999,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getAdservicesConsentMigrationLoggingEnabled() {
         return getDeviceConfigFlag(
-                FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
+                FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
                 DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED);
     }
 

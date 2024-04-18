@@ -987,10 +987,6 @@ public final class FlagsConstants {
     // Consent Manager debug mode keys.
     public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
-    // Consent Manager ota debug mode keys.
-    public static final String KEY_CONSENT_MANAGER_OTA_DEBUG_MODE =
-            "consent_manager_ota_debug_mode";
-
     // Rvc post ota notification age check keys.
     public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
             "rvc_post_ota_notification_age_check";
@@ -1069,7 +1065,7 @@ public final class FlagsConstants {
     // Back-compat keys
     public static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
 
-    public static final String ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED =
+    public static final String KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED =
             "adservices_consent_migration_logging_enabled";
 
     public static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";

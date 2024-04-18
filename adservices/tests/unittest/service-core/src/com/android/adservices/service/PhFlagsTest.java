@@ -26,7 +26,6 @@ import static com.android.adservices.service.Flags.ADSERVICES_RELEASE_STAGE_FOR_
 import static com.android.adservices.service.Flags.AD_ID_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.Flags.AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.Flags.APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
-import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.APPSETID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE;
@@ -91,6 +90,7 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_FILTE
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
 import static com.android.adservices.service.Flags.DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
@@ -122,8 +122,6 @@ import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
-import static com.android.adservices.service.Flags.ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
@@ -170,7 +168,6 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGRO
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS;
-import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
@@ -254,6 +251,7 @@ import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_REGISTER
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
+import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS;
 import static com.android.adservices.service.Flags.FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
@@ -298,7 +296,6 @@ import static com.android.adservices.service.Flags.IS_U18_SUPERVISED_ACCOUNT_ENA
 import static com.android.adservices.service.Flags.IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
 import static com.android.adservices.service.Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
-import static com.android.adservices.service.Flags.MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
@@ -340,6 +337,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_AGGREGATAB
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_REPORT;
@@ -398,9 +396,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_DEDUPLIC
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
-import static com.android.adservices.service.Flags.MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
@@ -450,8 +446,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_TRIGGER_
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
-import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
@@ -483,21 +477,17 @@ import static com.android.adservices.service.Flags.TOPICS_DISABLE_PLAINTEXT_RESP
 import static com.android.adservices.service.Flags.TOPICS_ENCRYPTION_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_ENCRYPTION_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
-import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_RANDOM_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_TOP_TOPICS;
-import static com.android.adservices.service.Flags.TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
 import static com.android.adservices.service.Flags.TOPICS_TEST_ENCRYPTION_PUBLIC_KEY;
 import static com.android.adservices.service.Flags.UI_DIALOG_FRAGMENT;
 import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
 import static com.android.adservices.service.Flags.UI_FEATURE_TYPE_LOGGING_ENABLED;
-import static com.android.adservices.service.Flags.UI_OTA_RESOURCES_FEATURE_ENABLED;
 import static com.android.adservices.service.Flags.UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
-import static com.android.adservices.service.FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_SHA_CERTS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
@@ -513,7 +503,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETR
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE;
@@ -565,8 +554,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_J
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
@@ -670,7 +657,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AU
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_MAX_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS;
@@ -749,7 +735,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARA
 import static com.android.adservices.service.FlagsConstants.KEY_MAINLINE_TRAIN_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
-import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
@@ -806,6 +791,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_PREINSTALL_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION;
@@ -830,6 +817,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFO
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
@@ -856,9 +844,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_C
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
@@ -871,6 +857,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_FILTERS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW;
@@ -916,8 +904,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGI
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
@@ -961,18 +947,15 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_P
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENCRYPTION_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_NUMBER_OF_TOP_TOPICS;
-import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_EEA_COUNTRIES;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
@@ -1001,8 +984,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /** Unit tests for {@link com.android.adservices.service.PhFlags} */
@@ -1090,7 +1071,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetTopicsTestEncryptionPublicKey() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY,
                 TOPICS_TEST_ENCRYPTION_PUBLIC_KEY,
                 Flags::getTopicsTestEncryptionPublicKey);
@@ -1156,7 +1137,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testCobaltAdservicesApiKeyHex() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_COBALT_ADSERVICES_API_KEY_HEX,
                 COBALT_ADSERVICES_API_KEY_HEX,
                 Flags::getCobaltAdservicesApiKeyHex);
@@ -1164,7 +1145,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testAdservicesReleaseStageForCobalt() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT,
                 ADSERVICES_RELEASE_STAGE_FOR_COBALT,
                 Flags::getAdservicesReleaseStageForCobalt);
@@ -1275,7 +1256,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMddTopicsClassifierManifestFileUrl() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL,
                 MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL,
                 Flags::getMddTopicsClassifierManifestFileUrl);
@@ -1515,7 +1496,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementAggregationCoordinatorOriginList() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
                 MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
                 Flags::getMeasurementAggregationCoordinatorOriginList);
@@ -1523,7 +1504,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementDefaultAggregationCoordinatorOrigin() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
                 MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
                 Flags::getMeasurementDefaultAggregationCoordinatorOrigin);
@@ -1531,7 +1512,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementAggregationCoordinatorPath() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH,
                 MEASUREMENT_AGGREGATION_COORDINATOR_PATH,
                 Flags::getMeasurementAggregationCoordinatorPath);
@@ -1563,7 +1544,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementManifestFileUrl() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MANIFEST_FILE_URL,
                 MEASUREMENT_MANIFEST_FILE_URL,
                 Flags::getMeasurementManifestFileUrl);
@@ -1673,7 +1654,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementDebugJoinKeyEnrollmentAllowList() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST,
                 DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST,
                 Flags::getMeasurementDebugJoinKeyEnrollmentAllowlist);
@@ -1689,7 +1670,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementDebugKeyAdIdMatchingEnrollmentBlocklist() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST,
                 DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST,
                 Flags::getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist);
@@ -1705,7 +1686,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMainlineTrainVersion() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MAINLINE_TRAIN_VERSION,
                 DEFAULT_MAINLINE_TRAIN_VERSION,
                 Flags::getMainlineTrainVersion);
@@ -1713,7 +1694,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetAdservicesVersionMappings() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_ADSERVICES_VERSION_MAPPINGS,
                 DEFAULT_ADSERVICES_VERSION_MAPPINGS,
                 Flags::getAdservicesVersionMappings);
@@ -2658,7 +2639,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementEventReportsVtcEarlyReportingWindows() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS,
                 MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS,
                 Flags::getMeasurementEventReportsVtcEarlyReportingWindows);
@@ -2666,7 +2647,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementEventReportsCtcEarlyReportingWindows() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS,
                 MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS,
                 Flags::getMeasurementEventReportsCtcEarlyReportingWindows);
@@ -2682,7 +2663,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementAggregateReportDelay() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
                 MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
                 Flags::getMeasurementAggregateReportDelayConfig);
@@ -2761,97 +2742,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetAdIdKillSwitch() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getAdIdKillSwitch()).isEqualTo(ADID_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !ADID_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ADID_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAdIdKillSwitch()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetAppSetIdKillSwitch() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getAppSetIdKillSwitch()).isEqualTo(APPSETID_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !APPSETID_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_APPSETID_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAppSetIdKillSwitch()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetTopicsKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getTopicsKillSwitch()).isEqualTo(TOPICS_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !TOPICS_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_TOPICS_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getTopicsKillSwitch()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetOnDeviceClassifierKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getTopicsOnDeviceClassifierKillSwitch())
-                .isEqualTo(TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getTopicsOnDeviceClassifierKillSwitch()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMddBackgroundTaskKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMddBackgroundTaskKillSwitch())
-                .isEqualTo(MDD_BACKGROUND_TASK_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MDD_BACKGROUND_TASK_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MDD_BACKGROUND_TASK_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMddBackgroundTaskKillSwitch()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
     public void test_globalKillswitchOverrides_getAdIdKillSwitch() {
         // Without any overriding, AdId Killswitch is off.
         assertThat(mPhFlags.getAdIdKillSwitch()).isEqualTo(ADID_KILL_SWITCH);
@@ -2875,217 +2765,39 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetAppSetIdKillSwitch_globalOverride() {
-        // test that global killswitch override has no effect on
-        // AppSetIdKillswitch.
-        assertThat(mPhFlags.getAppSetIdKillSwitch()).isEqualTo(APPSETID_KILL_SWITCH);
-
-        boolean phOverridingValue = !APPSETID_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_GLOBAL_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getAppSetIdKillSwitch()).isEqualTo(APPSETID_KILL_SWITCH);
-    }
-
-    @Test
-    public void test_globalKillswitchOverrides_getAppSetIdKillSwitch() {
-        // Without any overriding, AppSetId Killswitch is off.
-        assertThat(mPhFlags.getAppSetIdKillSwitch()).isEqualTo(APPSETID_KILL_SWITCH);
-
-        // Without any overriding, Global Killswitch is off.
-        assertThat(mPhFlags.getGlobalKillSwitch()).isEqualTo(GLOBAL_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = true;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_GLOBAL_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        // Now Global Killswitch is on.
-        assertThat(mPhFlags.getGlobalKillSwitch()).isTrue();
-
-        // Global Killswitch is on, but is ignored by getAppSetIdKillswitch.
-        assertThat(mPhFlags.getAppSetIdKillSwitch()).isFalse();
-    }
-
-    @Test
-    public void test_globalKillswitchOverrides_getTopicsKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // Without any overriding, Topics Killswitch is off.
-        assertThat(mPhFlags.getTopicsKillSwitch()).isEqualTo(TOPICS_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !TOPICS_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        // Now Global Killswitch is on.
-        assertThat(mPhFlags.getGlobalKillSwitch()).isEqualTo(phOverridingValue);
-
-        // Global Killswitch is on and overrides the getTopicsKillswitch.
-        assertThat(mPhFlags.getTopicsKillSwitch()).isEqualTo(true);
-    }
-
-    @Test
-    public void testGetFledgeSelectAdsKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Ad Selection Service kill switch should be off
-        assertThat(mPhFlags.getFledgeSelectAdsKillSwitch())
-                .isEqualTo(FLEDGE_SELECT_ADS_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !FLEDGE_SELECT_ADS_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_SELECT_ADS_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeSelectAdsKillSwitch()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetFledgeCustomAudienceServiceKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Custom Audience Service kill switch should be off
-        assertThat(mPhFlags.getFledgeCustomAudienceServiceKillSwitch())
-                .isEqualTo(FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeCustomAudienceServiceKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
     public void testGetProtectedSignalsEnabled() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Protected Signals Service kill switch should be equal to the
-        // set constant.
-        boolean defaultValue = PROTECTED_SIGNALS_ENABLED;
-        assertThat(mPhFlags.getProtectedSignalsEnabled()).isEqualTo(defaultValue);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !defaultValue;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_PROTECTED_SIGNALS_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getProtectedSignalsEnabled()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetProtectedSignalsEnabled_withGlobalKillSwitchEnabled() {
-        enableGlobalKillSwitch();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_PROTECTED_SIGNALS_ENABLED,
-                "true",
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getProtectedSignalsEnabled()).isFalse();
-    }
-
-    @Test
-    public void testGetEncryptionKeyNewEnrollmentFetchKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch())
-                .isEqualTo(ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetEncryptionKeyPeriodicFetchKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getEncryptionKeyPeriodicFetchKillSwitch())
-                .isEqualTo(ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getEncryptionKeyPeriodicFetchKillSwitch()).isEqualTo(phOverridingValue);
+                PROTECTED_SIGNALS_ENABLED,
+                FeatureFlagType.FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH,
+                value -> overrideGlobalKillSwitch(!value),
+                Flags::getProtectedSignalsEnabled);
     }
 
     @Test
     public void testGetFledgeAuctionServerKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Auction Server kill switch should be off
-        assertThat(mPhFlags.getFledgeAuctionServerKillSwitch())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerKillSwitch()).isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_KILL_SWITCH,
+                FeatureFlagType.LEGACY_KILL_SWITCH,
+                value -> {
+                    overrideGlobalKillSwitch(!value);
+                    overrideSelectAdsKillSwitch(!value);
+                },
+                Flags::getFledgeAuctionServerKillSwitch);
     }
 
     @Test
-    public void test_getFledgeOnDeviceAuctionKillSwitch_setsCorrectValue() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-        disableSelectAdsKillSwitch();
-
-        // without any overrides the Auction Server kill switch should be off
-        assertThat(mPhFlags.getFledgeOnDeviceAuctionKillSwitch())
-                .isEqualTo(FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH);
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+    public void testGetFledgeOnDeviceAuctionKillSwitch_setsCorrectValue() {
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeOnDeviceAuctionKillSwitch()).isEqualTo(phOverridingValue);
+                FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH,
+                FeatureFlagType.LEGACY_KILL_SWITCH,
+                value -> {
+                    overrideGlobalKillSwitch(!value);
+                    overrideSelectAdsKillSwitch(!value);
+                },
+                Flags::getFledgeOnDeviceAuctionKillSwitch);
     }
 
     @Test
@@ -3098,16 +2810,10 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH);
         assertThat(mPhFlags.getFledgeAuctionServerKillSwitch())
                 .isEqualTo(FLEDGE_AUCTION_SERVER_KILL_SWITCH);
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !FLEDGE_SELECT_ADS_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_SELECT_ADS_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
 
-        assertThat(mPhFlags.getFledgeOnDeviceAuctionKillSwitch()).isEqualTo(phOverridingValue);
-        assertThat(mPhFlags.getFledgeAuctionServerKillSwitch()).isEqualTo(phOverridingValue);
+        enableSelectAdsKillSwitch();
+        assertThat(mPhFlags.getFledgeOnDeviceAuctionKillSwitch()).isEqualTo(true);
+        assertThat(mPhFlags.getFledgeAuctionServerKillSwitch()).isEqualTo(true);
     }
 
     @Test
@@ -3961,7 +3667,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mPhFlags.getFledgeAuctionServerPayloadBucketSizes())
                 .isEqualTo(FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
 
-        ImmutableList<Integer> phOverridingValue = ImmutableList.of(-2, -3);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES,
@@ -3974,33 +3679,18 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testgetFledgeAdselectionExpirationWindow() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getAdSelectionExpirationWindowS())
-                .isEqualTo(FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S);
-
-        long phOverridingValue = FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S + 4;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAdSelectionExpirationWindowS()).isEqualTo(phOverridingValue);
+                FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
+                Flags::getAdSelectionExpirationWindowS);
     }
 
     @Test
     public void testGetRegistrationJobQueueIntervalMs() {
-        assertThat(mPhFlags.getAsyncRegistrationJobQueueIntervalMs())
-                .isEqualTo(ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS);
-
-        long phOverridingValue = ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS + 1L;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAsyncRegistrationJobQueueIntervalMs()).isEqualTo(phOverridingValue);
+                ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS,
+                Flags::getAsyncRegistrationJobQueueIntervalMs);
     }
 
     @Test
@@ -4024,132 +3714,66 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMaxResponseBasedRegistrationPayloadSizeBytes_measurementOverride() {
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMaxResponseBasedRegistrationPayloadSizeBytes())
-                .isEqualTo(MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
-
-        long phOverridingValue = MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES + 5L;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
-                Long.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMaxResponseBasedRegistrationPayloadSizeBytes())
-                .isEqualTo(phOverridingValue);
+                MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
+                Flags::getMaxResponseBasedRegistrationPayloadSizeBytes);
     }
 
     @Test
     public void testGetMaxTriggerRegistrationHeaderSizeBytes_measurementOverride() {
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMaxTriggerRegistrationHeaderSizeBytes())
-                .isEqualTo(MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES);
-
-        long phOverridingValue = MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES + 5L;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES,
-                Long.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMaxTriggerRegistrationHeaderSizeBytes())
-                .isEqualTo(phOverridingValue);
+                MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES,
+                Flags::getMaxTriggerRegistrationHeaderSizeBytes);
     }
 
     @Test
     public void testGetMeasurementEnableUpdateTriggerHeaderLimit() {
-        assertThat(mPhFlags.getMeasurementEnableUpdateTriggerHeaderLimit())
-                .isEqualTo(MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT);
-
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEnableUpdateTriggerHeaderLimit())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
+                Flags::getMeasurementEnableUpdateTriggerHeaderLimit);
     }
 
     @Test
     public void testGetOffDeviceAdSelectionRequestCompressionEnabled() {
-        assertThat(mPhFlags.getAdSelectionOffDeviceRequestCompressionEnabled())
-                .isEqualTo(FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getAdSelectionOffDeviceRequestCompressionEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED,
+                Flags::getAdSelectionOffDeviceRequestCompressionEnabled);
     }
 
     @Test
     public void testFledgeCompressionAlgorithmVersionBits() {
-        assertThat(mPhFlags.getFledgeAuctionServerCompressionAlgorithmVersion())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION);
-
-        int phOverridingValue = FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION + 2;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION,
-                String.valueOf(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerCompressionAlgorithmVersion())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION,
+                Flags::getFledgeAuctionServerCompressionAlgorithmVersion);
     }
 
     @Test
     public void testFledgePayloadFormatVersionBits() {
-        assertThat(mPhFlags.getFledgeAuctionServerPayloadFormatVersion())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION);
-
-        int phOverridingValue = FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION + 2;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION,
-                String.valueOf(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerPayloadFormatVersion())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION,
+                Flags::getFledgeAuctionServerPayloadFormatVersion);
     }
 
     @Test
     public void testFledgeAuctionServerEnableDebugReporting() {
-        assertThat(mPhFlags.getFledgeAuctionServerEnableDebugReporting())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING);
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING,
-                String.valueOf(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnableDebugReporting())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING,
+                Flags::getFledgeAuctionServerEnableDebugReporting);
     }
 
     @Test
     public void testFledgeAuctionServerEnablePasUnlimitedEgress() {
-        assertThat(mPhFlags.getFledgeAuctionServerEnablePasUnlimitedEgress())
-                .isEqualTo(DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS);
-
-        boolean phOverridingValue = !DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
-                String.valueOf(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnablePasUnlimitedEgress())
-                .isEqualTo(phOverridingValue);
+                DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                Flags::getFledgeAuctionServerEnablePasUnlimitedEgress);
     }
 
     @Test
@@ -4162,8 +3786,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testEnrollmentBlocklist_multipleEnrollments() {
-        Flags phFlags = PhFlags.getInstance();
-
         String enrollmentId1 = "enrollmentId1";
         String enrollmentId2 = "enrollmentId2";
         String enrollmentId3 = "enrollmentId3";
@@ -4192,47 +3814,26 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetEnrollmentEnableLimitedLogging() {
-        assertThat(mPhFlags.getEnrollmentEnableLimitedLogging())
-                .isEqualTo(ENROLLMENT_ENABLE_LIMITED_LOGGING);
-
-        boolean phOverridingValue = !ENROLLMENT_ENABLE_LIMITED_LOGGING;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getEnrollmentEnableLimitedLogging()).isEqualTo(phOverridingValue);
+                ENROLLMENT_ENABLE_LIMITED_LOGGING,
+                Flags::getEnrollmentEnableLimitedLogging);
     }
 
     @Test
     public void testGetConsentSourceOfTruth() {
-        assertThat(mPhFlags.getConsentSourceOfTruth()).isEqualTo(DEFAULT_CONSENT_SOURCE_OF_TRUTH);
-
-        int phOverridingValue = DEFAULT_CONSENT_SOURCE_OF_TRUTH + 42;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_CONSENT_SOURCE_OF_TRUTH,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getConsentSourceOfTruth()).isEqualTo(phOverridingValue);
+                DEFAULT_CONSENT_SOURCE_OF_TRUTH,
+                Flags::getConsentSourceOfTruth);
     }
 
     @Test
     public void testGetBlockedTopicsSourceOfTruth() {
-        assertThat(mPhFlags.getBlockedTopicsSourceOfTruth())
-                .isEqualTo(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
-
-        int phOverridingValue = DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH + 42;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getBlockedTopicsSourceOfTruth()).isEqualTo(phOverridingValue);
+                DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
+                Flags::getBlockedTopicsSourceOfTruth);
     }
 
     @Test
@@ -4258,14 +3859,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mPhFlags.getGlobalBlockedTopicIds()).isEmpty();
     }
 
-    private void setGlobalBlockedTopicIds(String blockedTopicIds) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_GLOBAL_BLOCKED_TOPIC_IDS,
-                blockedTopicIds,
-                /* makeDefault= */ false);
-    }
-
     @Test
     public void testGetErrorCodeLoggingDenyList() {
         // Without any overriding, the list is empty
@@ -4289,174 +3882,63 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mPhFlags.getErrorCodeLoggingDenyList()).isEqualTo(ImmutableList.of(1, 34));
     }
 
-    private void setErrorCodeLoggingDenyList(String errorCodeLoggingDenyList) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ERROR_CODE_LOGGING_DENY_LIST,
-                errorCodeLoggingDenyList,
-                /* makeDefault= */ false);
-    }
-
-    private void disableGlobalKillSwitch() {
-        overrideGlobalKillSwitch(false);
-    }
-
-    private void enableGlobalKillSwitch() {
-        overrideGlobalKillSwitch(true);
-    }
-
-    private void disableSelectAdsKillSwitch() {
-        // Override the select adds kill switch to test other flag values.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_SELECT_ADS_KILL_SWITCH,
-                Boolean.toString(false),
-                /* makeDefault */ false);
-    }
-
-    private void setEnrollmentBlocklist(String blocklistFlag) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENROLLMENT_BLOCKLIST_IDS,
-                blocklistFlag,
-                false);
-    }
-
     @Test
     public void testGetUiOtaStringsManifestFileUrl() {
-        assertThat(mPhFlags.getUiOtaStringsManifestFileUrl())
-                .isEqualTo(UI_OTA_STRINGS_MANIFEST_FILE_URL);
-
-        String phOverridingValue = UI_OTA_STRINGS_MANIFEST_FILE_URL + "testFileUrl";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getUiOtaStringsManifestFileUrl()).isEqualTo(phOverridingValue);
+                UI_OTA_STRINGS_MANIFEST_FILE_URL,
+                Flags::getUiOtaStringsManifestFileUrl);
     }
 
     @Test
     public void testGetUiOtaResourcesManifestFileUrl() {
-        assertThat(mPhFlags.getUiOtaResourcesManifestFileUrl())
-                .isEqualTo(UI_OTA_RESOURCES_MANIFEST_FILE_URL);
-
-        String phOverridingValue = UI_OTA_RESOURCES_MANIFEST_FILE_URL + "testFileUrl";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getUiOtaResourcesManifestFileUrl()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testUiOtaResourcesFeatureEnabled() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getUiOtaResourcesFeatureEnabled())
-                .isEqualTo(UI_OTA_RESOURCES_FEATURE_ENABLED);
-
-        boolean phOverridingValue = !UI_OTA_RESOURCES_FEATURE_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_UI_OTA_RESOURCES_FEATURE_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getUiOtaResourcesFeatureEnabled()).isEqualTo(phOverridingValue);
+                UI_OTA_RESOURCES_MANIFEST_FILE_URL,
+                Flags::getUiOtaResourcesManifestFileUrl);
     }
 
     @Test
     public void testIsEeaDeviceFeatureEnabled() {
-        assertThat(mPhFlags.isEeaDeviceFeatureEnabled()).isEqualTo(IS_EEA_DEVICE_FEATURE_ENABLED);
-
-        boolean phOverridingValue = !IS_EEA_DEVICE_FEATURE_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_IS_EEA_DEVICE_FEATURE_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.isEeaDeviceFeatureEnabled()).isEqualTo(phOverridingValue);
+                IS_EEA_DEVICE_FEATURE_ENABLED,
+                Flags::isEeaDeviceFeatureEnabled);
     }
 
     @Test
     public void testIsEeaDevice() {
-        assertThat(mPhFlags.isEeaDevice()).isEqualTo(IS_EEA_DEVICE);
-
-        boolean phOverridingValue = !IS_EEA_DEVICE;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_IS_EEA_DEVICE,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.isEeaDevice()).isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testConfigFlag(KEY_IS_EEA_DEVICE, IS_EEA_DEVICE, Flags::isEeaDevice);
     }
 
     @Test
     public void testIsUiFeatureTypeLoggingEnabled() {
-        assertThat(mPhFlags.isUiFeatureTypeLoggingEnabled())
-                .isEqualTo(UI_FEATURE_TYPE_LOGGING_ENABLED);
-
-        boolean phOverridingValue = !UI_FEATURE_TYPE_LOGGING_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_UI_FEATURE_TYPE_LOGGING_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.isUiFeatureTypeLoggingEnabled()).isEqualTo(phOverridingValue);
+                UI_FEATURE_TYPE_LOGGING_ENABLED,
+                Flags::isUiFeatureTypeLoggingEnabled);
     }
 
     @Test
     public void testGetUiEeaCountries() {
-        assertThat(mPhFlags.getUiEeaCountries()).isEqualTo(UI_EEA_COUNTRIES);
-
-        String phOverridingValue = UI_EEA_COUNTRIES + "US,PL,GB";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_UI_EEA_COUNTRIES,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getUiEeaCountries()).isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testConfigFlag(
+                KEY_UI_EEA_COUNTRIES, UI_EEA_COUNTRIES, Flags::getUiEeaCountries);
     }
 
     @Test
     public void testCompatLoggingKillSwitch() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getCompatLoggingKillSwitch()).isEqualTo(COMPAT_LOGGING_KILL_SWITCH);
-
-        boolean phOverridingValue = !COMPAT_LOGGING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_COMPAT_LOGGING_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getCompatLoggingKillSwitch()).isEqualTo(phOverridingValue);
+                COMPAT_LOGGING_KILL_SWITCH,
+                Flags::getCompatLoggingKillSwitch);
     }
 
     @Test
     public void testBackgroundJobsLoggingKillSwitch() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getBackgroundJobsLoggingKillSwitch())
-                .isEqualTo(BACKGROUND_JOBS_LOGGING_KILL_SWITCH);
-
-        boolean phOverridingValue = !BACKGROUND_JOBS_LOGGING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getBackgroundJobsLoggingKillSwitch()).isEqualTo(phOverridingValue);
+                BACKGROUND_JOBS_LOGGING_KILL_SWITCH,
+                Flags::getBackgroundJobsLoggingKillSwitch);
     }
 
     @Test
@@ -4486,2462 +3968,1045 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     private void testEnableBackCompat(
             boolean sdkAtleastT, boolean enableBackCompat, boolean expected) {
         extendedMockito.mockIsAtLeastT(sdkAtleastT);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_BACK_COMPAT,
-                Boolean.toString(enableBackCompat),
-                /* makeDefault */ false);
+        mockGetAdServicesFlag(KEY_ENABLE_BACK_COMPAT, enableBackCompat);
 
         assertThat(mPhFlags.getEnableBackCompat()).isEqualTo(expected);
     }
 
     @Test
     public void testEnableBackCompatAppsearch() {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_BACK_COMPAT,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-        extendedMockito.mockIsAtLeastT(false);
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getEnableAppsearchConsentData())
-                .isEqualTo(ENABLE_APPSEARCH_CONSENT_DATA);
-
-        boolean phOverridingValue = !ENABLE_APPSEARCH_CONSENT_DATA;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_ENABLE_APPSEARCH_CONSENT_DATA,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getEnableAppsearchConsentData()).isEqualTo(phOverridingValue);
+                ENABLE_APPSEARCH_CONSENT_DATA,
+                Flags::getEnableAppsearchConsentData);
     }
 
     @Test
     public void testOverrideEnableAdExtServiceConsentData() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getEnableAdExtServiceConsentData())
-                .isEqualTo(ENABLE_ADEXT_SERVICE_CONSENT_DATA);
-
-        boolean phOverridingValue = !ENABLE_ADEXT_SERVICE_CONSENT_DATA;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getEnableAdExtServiceConsentData()).isEqualTo(phOverridingValue);
+                ENABLE_ADEXT_SERVICE_CONSENT_DATA,
+                Flags::getEnableAdExtServiceConsentData);
     }
 
     @Test
     public void testOverrideEnableU18AppsearchMigration() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getEnableU18AppsearchMigration())
-                .isEqualTo(DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION);
-
-        boolean phOverridingValue = !DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_ENABLE_U18_APPSEARCH_MIGRATION,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getEnableU18AppsearchMigration()).isEqualTo(phOverridingValue);
+                DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION,
+                Flags::getEnableU18AppsearchMigration);
     }
 
     @Test
     public void testOverrideEnableMigrationFromAdExtService() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getEnableMigrationFromAdExtService())
-                .isEqualTo(ENABLE_MIGRATION_FROM_ADEXT_SERVICE);
-
-        boolean phOverridingValue = !ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getEnableMigrationFromAdExtService()).isEqualTo(phOverridingValue);
+                ENABLE_MIGRATION_FROM_ADEXT_SERVICE,
+                Flags::getEnableMigrationFromAdExtService);
     }
 
     @Test
     public void testGetRecordManualInteractionEnabled() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getRecordManualInteractionEnabled())
-                .isEqualTo(RECORD_MANUAL_INTERACTION_ENABLED);
-
-        boolean phOverridingValue = !RECORD_MANUAL_INTERACTION_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_RECORD_MANUAL_INTERACTION_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ true);
-
-        assertThat(mPhFlags.getRecordManualInteractionEnabled()).isEqualTo(phOverridingValue);
+                RECORD_MANUAL_INTERACTION_ENABLED,
+                Flags::getRecordManualInteractionEnabled);
     }
 
     @Test
     public void testNotificationDismissedOnClick() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getNotificationDismissedOnClick())
-                .isEqualTo(DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK);
-
-        boolean phOverridingValue = !DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_NOTIFICATION_DISMISSED_ON_CLICK,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getNotificationDismissedOnClick()).isEqualTo(phOverridingValue);
+                DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK,
+                Flags::getNotificationDismissedOnClick);
     }
 
     @Test
     public void testIsBackCompatActivityFeatureEnabled() {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_BACK_COMPAT,
-                Boolean.toString(true),
-                /* makeDefault */ false);
         extendedMockito.mockIsAtLeastT(false);
-        assertThat(mPhFlags.isBackCompatActivityFeatureEnabled())
-                .isEqualTo(IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
-
-        boolean phOverridingValue = !IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.isBackCompatActivityFeatureEnabled()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRollbackDeletionAppSearchKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_BACK_COMPAT,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-        extendedMockito.mockIsAtLeastT(false);
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
-                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRollbackDeletionREnabled() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_BACK_COMPAT,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-        extendedMockito.mockSdkLevelR();
-
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementRollbackDeletionREnabled())
-                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_R_ENABLED);
-
-        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementRollbackDeletionREnabled()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRollbackDeletionAppSearchKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_BACK_COMPAT,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-        extendedMockito.mockIsAtLeastT(false);
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
-                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementRollbackDeletionAppSearchKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_BACK_COMPAT,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-        extendedMockito.mockIsAtLeastT(false);
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
-                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
-                .isEqualTo(phOverridingValue);
+                IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> mockGetAdServicesFlag(KEY_ENABLE_BACK_COMPAT, value),
+                Flags::isBackCompatActivityFeatureEnabled);
     }
 
     // CHECKSTYLE:ON IndentationCheck
 
     @Test
     public void testU18UxEnabled() {
-        setEnableAdServicesSystemApiFlag(true);
-
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getU18UxEnabled()).isEqualTo(DEFAULT_U18_UX_ENABLED);
-
-        boolean phOverridingValue = !DEFAULT_U18_UX_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_U18_UX_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getU18UxEnabled()).isEqualTo(phOverridingValue);
+                DEFAULT_U18_UX_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> mockGetAdServicesFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, value),
+                Flags::getU18UxEnabled);
     }
 
     @Test
     public void testRvcPostOtaNotifAgeCheck() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getRvcPostOtaNotifAgeCheck())
-                .isEqualTo(DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK);
-
-        boolean phOverridingValue = true;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getRvcPostOtaNotifAgeCheck()).isEqualTo(phOverridingValue);
+                DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK,
+                Flags::getRvcPostOtaNotifAgeCheck);
     }
 
     @Test
-    public void testPasUxEnabled_isRowUser() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(DEFAULT_PAS_UX_ENABLED);
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_IS_EEA_DEVICE_FEATURE_ENABLED,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_IS_EEA_DEVICE,
-                Boolean.toString(false),
-                /* makeDefault */ false);
-
-        boolean phOverridingValue = !DEFAULT_PAS_UX_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+    public void testPasUxEnabled_m05_isEeaDeviceOverride() {
+        mockGetAdServicesFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, true);
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_PAS_UX_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(phOverridingValue);
+                DEFAULT_PAS_UX_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> mockGetAdServicesFlag(KEY_IS_EEA_DEVICE, !value),
+                Flags::getPasUxEnabled);
     }
 
     @Test
-    public void testPasUxEnabled_isEeaUser_m05() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(DEFAULT_PAS_UX_ENABLED);
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_IS_EEA_DEVICE_FEATURE_ENABLED,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_IS_EEA_DEVICE,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        boolean phOverridingValue = !DEFAULT_PAS_UX_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+    public void testPasUxEnabled_m05_eeaDeviceFeatureOverride() {
+        mockGetAdServicesFlag(KEY_IS_EEA_DEVICE, false);
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_PAS_UX_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(false);
+                DEFAULT_PAS_UX_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> mockGetAdServicesFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, value),
+                Flags::getPasUxEnabled);
     }
 
     @Test
-    public void testRvcUxEnabled_adServicesSystemApiTrue() {
-        testRvcUxEnabled(true);
-    }
-
-    @Test
-    public void testRvcUxEnabled_adServicesSystemApiFalse() {
-        testRvcUxEnabled(false);
-    }
-
-    private void testRvcUxEnabled(boolean adServicesSystemApi) {
-        setEnableAdServicesSystemApiFlag(adServicesSystemApi);
-        // When adServicesSystemApi is false, it's always false
-        if (!adServicesSystemApi) {
-            expect.withMessage("getEnableRvcUx() when adServicesSystemApi is false")
-                    .that(mPhFlags.getEnableRvcUx())
-                    .isFalse();
-            return;
-        }
-
-        // Without any overriding, the value is the hard coded constant.
-        boolean defaultValue = DEFAULT_RVC_UX_ENABLED;
-        expect.withMessage("getEnableRvcUx() by default")
-                .that(mPhFlags.getEnableRvcUx())
-                .isEqualTo(defaultValue);
-
-        boolean phOverridingValue = !defaultValue;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+    public void testRvcUxEnabled_adServicesSystemApi() {
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_RVC_UX_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-        expect.withMessage(
-                        "getEnableRvcUx() when adServicesSystemApi is true and setting %s to %s",
-                        KEY_RVC_UX_ENABLED, phOverridingValue)
-                .that(mPhFlags.getEnableRvcUx())
-                .isEqualTo(phOverridingValue);
+                DEFAULT_RVC_UX_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> mockGetAdServicesFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, value),
+                Flags::getEnableRvcUx);
     }
 
     @Test
-    public void testRvcNotificationEnabled_adServicesSystemApiTrue() {
-        testRvcNotificationEnabled(true);
-    }
-
-    @Test
-    public void testRvcNotificationEnabled_adServicesSystemApiFalse() {
-        testRvcNotificationEnabled(false);
-    }
-
-    private void testRvcNotificationEnabled(boolean adServicesSystemApi) {
-        setEnableAdServicesSystemApiFlag(adServicesSystemApi);
-        // When adServicesSystemApi is false, it's always false
-        if (!adServicesSystemApi) {
-            expect.withMessage(
-                            "getEnableRvcPostOtaNotification() when adServicesSystemApi is false")
-                    .that(mPhFlags.getEnableRvcPostOtaNotification())
-                    .isFalse();
-            return;
-        }
-
-        // Without any overriding, the value is the hard coded constant.
-        boolean defaultValue = DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
-        expect.withMessage("getEnableRvcPostOtaNotification() by default")
-                .that(mPhFlags.getEnableRvcPostOtaNotification())
-                .isEqualTo(defaultValue);
-
-        boolean phOverridingValue = !defaultValue;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+    public void testRvcNotificationEnabled() {
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-        expect.withMessage(
-                        "getEnableRvcPostOtaNotification() when adServicesSystemApi is true and"
-                                + " setting %s to %s",
-                        KEY_RVC_POST_OTA_NOTIFICATION_ENABLED, phOverridingValue)
-                .that(mPhFlags.getEnableRvcPostOtaNotification())
-                .isEqualTo(phOverridingValue);
+                DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> mockGetAdServicesFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, value),
+                Flags::getEnableRvcPostOtaNotification);
     }
 
     @Test
     public void testDebugUx() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getDebugUx()).isEqualTo(DEBUG_UX);
-
-        String phOverridingValue = DEBUG_UX + "GA_UX";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_DEBUG_UX,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getDebugUx()).isEqualTo(phOverridingValue);
-    }
-
-    private void setEnableAdServicesSystemApiFlag(boolean value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_AD_SERVICES_SYSTEM_API,
-                Boolean.toString(value),
-                /* makeDefault */ false);
+        mFlagsTestHelper.testConfigFlag(KEY_DEBUG_UX, DEBUG_UX, Flags::getDebugUx);
     }
 
     @Test
     public void testEnableAdServicesSystemApi() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getEnableAdServicesSystemApi())
-                .isEqualTo(DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API);
-
-        boolean phOverridingValue = !DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
-        setEnableAdServicesSystemApiFlag(phOverridingValue);
-
-        assertThat(mPhFlags.getEnableAdServicesSystemApi()).isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ENABLE_AD_SERVICES_SYSTEM_API,
+                DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API,
+                Flags::getEnableAdServicesSystemApi);
     }
 
     @Test
     public void testGetMeasurementEnableCoarseEventReportDestinations() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableCoarseEventReportDestinations())
-                .isEqualTo(DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS);
-
-        boolean phOverridingValue = !DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableCoarseEventReportDestinations())
-                .isEqualTo(phOverridingValue);
+                DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS,
+                Flags::getMeasurementEnableCoarseEventReportDestinations);
     }
 
     @Test
     public void testGetMeasurementMaxDistinctWebDestinationsInSourceRegistration() {
-        assertThat(mPhFlags.getMeasurementMaxDistinctWebDestinationsInSourceRegistration())
-                .isEqualTo(MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue =
-                MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION + 20;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMaxDistinctWebDestinationsInSourceRegistration())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION,
+                Flags::getMeasurementMaxDistinctWebDestinationsInSourceRegistration);
     }
 
     @Test
     public void testGetMeasurementMaxReportingRegisterSourceExpirationInSeconds() {
-        assertThat(mPhFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
-                .isEqualTo(MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue =
-                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
-                        + TimeUnit.DAYS.toSeconds(2);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                Flags::getMeasurementMaxReportingRegisterSourceExpirationInSeconds);
     }
 
     @Test
     public void testGetMeasurementMinReportingRegisterSourceExpirationInSeconds() {
-        assertThat(mPhFlags.getMeasurementMinReportingRegisterSourceExpirationInSeconds())
-                .isEqualTo(MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue =
-                MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
-                        + TimeUnit.DAYS.toSeconds(2);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMinReportingRegisterSourceExpirationInSeconds())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                Flags::getMeasurementMinReportingRegisterSourceExpirationInSeconds);
     }
 
     @Test
     public void testGetMeasurementMaxInstallAttributionWindow() {
-        assertThat(mPhFlags.getMeasurementMaxInstallAttributionWindow())
-                .isEqualTo(MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue = MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW + 20;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMaxInstallAttributionWindow())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW,
+                Flags::getMeasurementMaxInstallAttributionWindow);
     }
 
     @Test
     public void testGetMeasurementMinInstallAttributionWindow() {
-        assertThat(mPhFlags.getMeasurementMinInstallAttributionWindow())
-                .isEqualTo(MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue = MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW + 20;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMinInstallAttributionWindow())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW,
+                Flags::getMeasurementMinInstallAttributionWindow);
     }
 
     @Test
     public void testGetMeasurementMaxPostInstallExclusivityWindow() {
-        assertThat(mPhFlags.getMeasurementMaxPostInstallExclusivityWindow())
-                .isEqualTo(MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue = MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW + 20;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMaxPostInstallExclusivityWindow())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW,
+                Flags::getMeasurementMaxPostInstallExclusivityWindow);
     }
 
     @Test
     public void testGetMeasurementMinPostInstallExclusivityWindow() {
-        assertThat(mPhFlags.getMeasurementMinPostInstallExclusivityWindow())
-                .isEqualTo(MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue = MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW + 20;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMinPostInstallExclusivityWindow())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW,
+                Flags::getMeasurementMinPostInstallExclusivityWindow);
     }
 
     @Test
     public void testGetMeasurementMaxSumOfAggregateValuesPerSource() {
-        assertThat(mPhFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
-                .isEqualTo(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE + 23;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE,
+                Flags::getMeasurementMaxSumOfAggregateValuesPerSource);
     }
 
     @Test
     public void testGetMeasurementRateLimitWindowMilliseconds() {
-        assertThat(mPhFlags.getMeasurementRateLimitWindowMilliseconds())
-                .isEqualTo(MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue = MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS + 20;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementRateLimitWindowMilliseconds())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS,
+                Flags::getMeasurementRateLimitWindowMilliseconds);
     }
 
     @Test
     public void testGetMeasurementMinReportingOriginUpdateWindow() {
-        assertThat(mPhFlags.getMeasurementMinReportingOriginUpdateWindow())
-                .isEqualTo(MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue =
-                MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW + TimeUnit.DAYS.toSeconds(2);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMinReportingOriginUpdateWindow())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW,
+                Flags::getMeasurementMinReportingOriginUpdateWindow);
     }
 
     @Test
     public void testGetMeasurementEnablePreinstallCheck() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        assertThat(mPhFlags.getMeasurementEnablePreinstallCheck())
-                .isEqualTo(MEASUREMENT_ENABLE_PREINSTALL_CHECK);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_PREINSTALL_CHECK;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_PREINSTALL_CHECK,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnablePreinstallCheck()).isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_PREINSTALL_CHECK,
+                Flags::getMeasurementEnablePreinstallCheck);
     }
 
     @Test
     public void testGetMeasurementEnableAraDeduplicationAlignmentV1() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableAraDeduplicationAlignmentV1())
-                .isEqualTo(MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1);
-
-        final boolean phOverridingValue = !MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableAraDeduplicationAlignmentV1())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1,
+                Flags::getMeasurementEnableAraDeduplicationAlignmentV1);
     }
 
     @Test
     public void testGetMeasurementEnableSourceDeactivationAfterFiltering() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableSourceDeactivationAfterFiltering())
-                .isEqualTo(MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING);
-
-        final boolean phOverridingValue = !MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableSourceDeactivationAfterFiltering())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
+                Flags::getMeasurementEnableSourceDeactivationAfterFiltering);
     }
 
     @Test
     public void testGetMeasurementEnableScopedAttributionRateLimit() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableScopedAttributionRateLimit())
-                .isEqualTo(MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT);
-
-        final boolean phOverridingValue = !MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableScopedAttributionRateLimit())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT,
+                Flags::getMeasurementEnableScopedAttributionRateLimit);
     }
 
     @Test
     public void testGetMeasurementEnableSharedSourceDebugKey() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableSharedSourceDebugKey())
-                .isEqualTo(MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY);
-
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableSharedSourceDebugKey())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY,
+                Flags::getMeasurementEnableSharedSourceDebugKey);
     }
 
     @Test
     public void testGetMeasurementEnableSharedFilterDataKeysXNA() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableSharedFilterDataKeysXNA())
-                .isEqualTo(MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA);
-
-        final boolean phOverridingValue = !MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableSharedFilterDataKeysXNA())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA,
+                Flags::getMeasurementEnableSharedFilterDataKeysXNA);
     }
 
     @Test
     public void testGetMeasurementVtcConfigurableMaxEventReportsCount() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
-                .isEqualTo(DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
-
-        int phOverridingValue = DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT + 3;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
-                .isEqualTo(phOverridingValue);
+                DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT,
+                Flags::getMeasurementVtcConfigurableMaxEventReportsCount);
     }
 
     @Test
     public void testGetMeasurementEnableReportingJobsThrowUnaccountedException() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementEnableReportingJobsThrowUnaccountedException())
-                .isEqualTo(MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEnableReportingJobsThrowUnaccountedException())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION,
+                Flags::getMeasurementEnableReportingJobsThrowUnaccountedException);
     }
 
     @Test
     public void testGetMeasurementEnableReportingJobsThrowJsonException() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementEnableReportingJobsThrowJsonException())
-                .isEqualTo(MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEnableReportingJobsThrowJsonException())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION,
+                Flags::getMeasurementEnableReportingJobsThrowJsonException);
     }
 
     @Test
     public void testGetMeasurementEnableReportDeletionOnUnrecoverableException() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementEnableReportDeletionOnUnrecoverableException())
-                .isEqualTo(MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEnableReportDeletionOnUnrecoverableException())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION,
+                Flags::getMeasurementEnableReportDeletionOnUnrecoverableException);
     }
 
     @Test
     public void testGetMeasurementEnableReportingJobsThrowCryptoException() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementEnableReportingJobsThrowCryptoException())
-                .isEqualTo(MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEnableReportingJobsThrowCryptoException())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION,
+                Flags::getMeasurementEnableReportingJobsThrowCryptoException);
     }
 
     @Test
     public void testGetMeasurementEnableDatastoreManagerThrowDataStoreException() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementEnableDatastoreManagerThrowDatastoreException())
-                .isEqualTo(MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEnableDatastoreManagerThrowDatastoreException())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION,
+                Flags::getMeasurementEnableDatastoreManagerThrowDatastoreException);
     }
 
     @Test
     public void testGetMeasurementThrowUnknownExceptionSamplingRate() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementThrowUnknownExceptionSamplingRate())
-                .isEqualTo(MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE);
-
-        // Now overriding with the value from PH.
-        float phOverridingValue = 0.5f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE,
-                Float.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementThrowUnknownExceptionSamplingRate())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE,
+                Flags::getMeasurementThrowUnknownExceptionSamplingRate);
     }
 
     @Test
     public void testGetMeasurementDeleteUninstalledJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementDeleteUninstalledJobPersisted())
-                .isEqualTo(MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementDeleteUninstalledJobPersisted())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED,
+                Flags::getMeasurementDeleteUninstalledJobPersisted);
     }
 
     @Test
     public void testGetMeasurementDeleteUninstalledJobPeriodMs() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementDeleteUninstalledJobPeriodMs())
-                .isEqualTo(MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue = MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS,
-                Long.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementDeleteUninstalledJobPeriodMs())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS,
+                Flags::getMeasurementDeleteUninstalledJobPeriodMs);
     }
 
     @Test
     public void testGetMeasurementDeleteExpiredJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementDeleteExpiredJobPersisted())
-                .isEqualTo(MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementDeleteExpiredJobPersisted()).isEqualTo(phOverridingValue);
+                MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED,
+                Flags::getMeasurementDeleteExpiredJobPersisted);
     }
 
     @Test
     public void testGetMeasurementDeleteExpiredJobRequiresDeviceIdle() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementDeleteExpiredJobRequiresDeviceIdle())
-                .isEqualTo(MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementDeleteExpiredJobRequiresDeviceIdle())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE,
+                Flags::getMeasurementDeleteExpiredJobRequiresDeviceIdle);
     }
 
     @Test
     public void testGetMeasurementDeleteExpiredJobPeriodMs() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementDeleteExpiredJobPeriodMs())
-                .isEqualTo(MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue = MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS,
-                Long.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementDeleteExpiredJobPeriodMs()).isEqualTo(phOverridingValue);
+                MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS,
+                Flags::getMeasurementDeleteExpiredJobPeriodMs);
     }
 
     @Test
     public void testGetMeasurementEventReportingJobRequiredBatteryNotLow() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementEventReportingJobRequiredBatteryNotLow())
-                .isEqualTo(MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEventReportingJobRequiredBatteryNotLow())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
+                Flags::getMeasurementEventReportingJobRequiredBatteryNotLow);
     }
 
     @Test
     public void testGetMeasurementEventReportingJobRequiredNetworkType() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementEventReportingJobRequiredNetworkType())
-                .isEqualTo(MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
-                Integer.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEventReportingJobRequiredNetworkType())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getMeasurementEventReportingJobRequiredNetworkType);
     }
 
     @Test
     public void testGetMeasurementEventReportingJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementEventReportingJobPersisted())
-                .isEqualTo(MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEventReportingJobPersisted())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED,
+                Flags::getMeasurementEventReportingJobPersisted);
     }
 
     @Test
     public void testGetMeasurementEventFallbackReportingJobRequiredBatteryNotLow() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementEventFallbackReportingJobRequiredBatteryNotLow())
-                .isEqualTo(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue =
-                !MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEventFallbackReportingJobRequiredBatteryNotLow())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
+                Flags::getMeasurementEventFallbackReportingJobRequiredBatteryNotLow);
     }
 
     @Test
     public void testGetMeasurementEventFallbackReportingJobRequiredNetworkType() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementEventFallbackReportingJobRequiredNetworkType())
-                .isEqualTo(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
-                Integer.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEventFallbackReportingJobRequiredNetworkType())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getMeasurementEventFallbackReportingJobRequiredNetworkType);
     }
 
     @Test
     public void testGetMeasurementEventFallbackReportingJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementEventFallbackReportingJobPersisted())
-                .isEqualTo(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementEventFallbackReportingJobPersisted())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED,
+                Flags::getMeasurementEventFallbackReportingJobPersisted);
     }
 
     @Test
     public void testGetMeasurementDebugReportingJobRequiredNetworkType() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementDebugReportingJobRequiredNetworkType())
-                .isEqualTo(MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
-                Integer.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementDebugReportingJobRequiredNetworkType())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getMeasurementDebugReportingJobRequiredNetworkType);
     }
 
     @Test
     public void testGetMeasurementDebugReportingFallbackJobRequiredNetworkType() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementDebugReportingFallbackJobRequiredNetworkType())
-                .isEqualTo(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE,
-                Integer.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementDebugReportingFallbackJobRequiredNetworkType())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getMeasurementDebugReportingFallbackJobRequiredNetworkType);
     }
 
     @Test
     public void testGetMeasurementDebugReportingFallbackJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementDebugReportingFallbackJobPersisted())
-                .isEqualTo(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementDebugReportingFallbackJobPersisted())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED,
+                Flags::getMeasurementDebugReportingFallbackJobPersisted);
     }
 
     @Test
     public void testGetMeasurementVerboseDebugReportingJobRequiredNetworkType() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementVerboseDebugReportingJobRequiredNetworkType())
-                .isEqualTo(MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
-                Integer.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementVerboseDebugReportingJobRequiredNetworkType())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getMeasurementVerboseDebugReportingJobRequiredNetworkType);
     }
 
     @Test
     public void testGetMeasurementVerboseDebugReportingFallbackJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementVerboseDebugReportingFallbackJobPersisted())
-                .isEqualTo(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementVerboseDebugReportingFallbackJobPersisted())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED,
+                Flags::getMeasurementVerboseDebugReportingFallbackJobPersisted);
     }
 
     @Test
     public void testGetMeasurementAttributionJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAttributionJobPersisted())
-                .isEqualTo(MEASUREMENT_ATTRIBUTION_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ATTRIBUTION_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ATTRIBUTION_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAttributionJobPersisted()).isEqualTo(phOverridingValue);
+                MEASUREMENT_ATTRIBUTION_JOB_PERSISTED,
+                Flags::getMeasurementAttributionJobPersisted);
     }
 
     @Test
     public void testGetMeasurementAttributionFallbackJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAttributionFallbackJobPersisted())
-                .isEqualTo(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAttributionFallbackJobPersisted())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED,
+                Flags::getMeasurementAttributionFallbackJobPersisted);
     }
 
     @Test
     public void testGetMeasurementAttributionJobTriggeringDelayMs() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAttributionJobTriggeringDelayMs())
-                .isEqualTo(MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS);
-
-        // Now overriding with the value from PH.
-        long phOverridingValue = MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
-                Long.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAttributionJobTriggeringDelayMs())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
+                Flags::getMeasurementAttributionJobTriggeringDelayMs);
     }
 
     @Test
     public void testGetMeasurementAsyncRegistrationQueueJobRequiredNetworkType() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAsyncRegistrationQueueJobRequiredNetworkType())
-                .isEqualTo(MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE,
-                Integer.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAsyncRegistrationQueueJobRequiredNetworkType())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getMeasurementAsyncRegistrationQueueJobRequiredNetworkType);
     }
 
     @Test
     public void testGetMeasurementAsyncRegistrationQueueJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAsyncRegistrationQueueJobPersisted())
-                .isEqualTo(MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAsyncRegistrationQueueJobPersisted())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED,
+                Flags::getMeasurementAsyncRegistrationQueueJobPersisted);
     }
 
     @Test
     public void testGetMeasurementAsyncRegistrationFallbackJobRequiredNetworkType() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAsyncRegistrationFallbackJobRequiredNetworkType())
-                .isEqualTo(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue =
-                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE,
-                Integer.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAsyncRegistrationFallbackJobRequiredNetworkType())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getMeasurementAsyncRegistrationFallbackJobRequiredNetworkType);
     }
 
     @Test
     public void testGetMeasurementAsyncRegistrationFallbackJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAsyncRegistrationFallbackJobPersisted())
-                .isEqualTo(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAsyncRegistrationFallbackJobPersisted())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED,
+                Flags::getMeasurementAsyncRegistrationFallbackJobPersisted);
     }
 
     @Test
     public void testGetMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow())
-                .isEqualTo(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue =
-                !MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW,
+                Flags::getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow);
     }
 
     @Test
     public void testgetMeasurementAggregateReportingJobRequiredBatteryNotLow() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAggregateReportingJobRequiredBatteryNotLow())
-                .isEqualTo(MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAggregateReportingJobRequiredBatteryNotLow())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
+                Flags::getMeasurementAggregateReportingJobRequiredBatteryNotLow);
     }
 
     @Test
     public void testgetMeasurementAggregateReportingJobRequiredNetworkType() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAggregateReportingJobRequiredNetworkType())
-                .isEqualTo(MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue = MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
-                Integer.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAggregateReportingJobRequiredNetworkType())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getMeasurementAggregateReportingJobRequiredNetworkType);
     }
 
     @Test
     public void testgetMeasurementAggregateReportingJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAggregateReportingJobPersisted())
-                .isEqualTo(MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAggregateReportingJobPersisted())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED,
+                Flags::getMeasurementAggregateReportingJobPersisted);
     }
 
     @Test
     public void testGetMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow())
-                .isEqualTo(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue =
-                !MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
+                Flags::getMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow);
     }
 
     @Test
     public void testGetMeasurementAggregateFallbackReportingJobRequiredNetworkType() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAggregateFallbackReportingJobRequiredNetworkType())
-                .isEqualTo(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue =
-                MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
-                Integer.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAggregateFallbackReportingJobRequiredNetworkType())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getMeasurementAggregateFallbackReportingJobRequiredNetworkType);
     }
 
     @Test
     public void testGetMeasurementAggregateFallbackReportingJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementAggregateFallbackReportingJobPersisted())
-                .isEqualTo(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementAggregateFallbackReportingJobPersisted())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED,
+                Flags::getMeasurementAggregateFallbackReportingJobPersisted);
     }
 
     @Test
     public void testGetMeasurementImmediateAggregateReportingJobRequiredBatteryNotLow() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementImmediateAggregateReportingJobRequiredBatteryNotLow())
-                .isEqualTo(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue =
-                !MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementImmediateAggregateReportingJobRequiredBatteryNotLow())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
+                Flags::getMeasurementImmediateAggregateReportingJobRequiredBatteryNotLow);
     }
 
     @Test
     public void testGetMeasurementImmediateAggregateReportingJobRequiredNetworkType() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementImmediateAggregateReportingJobRequiredNetworkType())
-                .isEqualTo(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE);
-
-        // Now overriding with the value from PH.
-        int phOverridingValue =
-                MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
-                Integer.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementImmediateAggregateReportingJobRequiredNetworkType())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getMeasurementImmediateAggregateReportingJobRequiredNetworkType);
     }
 
     @Test
     public void testGetMeasurementImmediateAggregateReportingJobPersisted() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMeasurementImmediateAggregateReportingJobPersisted())
-                .isEqualTo(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementImmediateAggregateReportingJobPersisted())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED,
+                Flags::getMeasurementImmediateAggregateReportingJobPersisted);
     }
 
     @Test
     public void testGetFlexibleEventReportingAPIEnabled() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementFlexibleEventReportingApiEnabled())
-                .isEqualTo(MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED);
-        boolean phOverridingValue = !MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ true);
-
-        assertThat(mPhFlags.getMeasurementFlexibleEventReportingApiEnabled())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
+                Flags::getMeasurementFlexibleEventReportingApiEnabled);
     }
 
     @Test
     public void testGetMeasurementEnableTriggerDataMatching() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableTriggerDataMatching())
-                .isEqualTo(MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING);
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ true);
-
-        assertThat(mPhFlags.getMeasurementEnableTriggerDataMatching()).isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING,
+                Flags::getMeasurementEnableTriggerDataMatching);
     }
 
     @Test
     public void testGetFlexLiteAPIEnabled() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled())
-                .isEqualTo(MEASUREMENT_FLEX_LITE_API_ENABLED);
-
-        boolean phOverridingValue = !MEASUREMENT_FLEX_LITE_API_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ true);
-
-        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled()).isEqualTo(phOverridingValue);
+                MEASUREMENT_FLEX_LITE_API_ENABLED,
+                Flags::getMeasurementFlexLiteApiEnabled);
     }
 
     @Test
     public void testGetMeasurementFlexApiMaxInformationGainEvent() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
-
-        float phOverridingValue = MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT + 6.4f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ true);
-
-        assertThat(phOverridingValue)
-                .isWithin(0.000000001f)
-                .of(mPhFlags.getMeasurementFlexApiMaxInformationGainEvent());
+                MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT,
+                Flags::getMeasurementFlexApiMaxInformationGainEvent);
     }
 
     @Test
     public void testGetMeasurementFlexApiMaxInformationGainNavigation() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementFlexApiMaxInformationGainNavigation())
-                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
-
-        float phOverridingValue = MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION + 6.4f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ true);
-
-        assertThat(phOverridingValue)
-                .isWithin(0.000000001f)
-                .of(mPhFlags.getMeasurementFlexApiMaxInformationGainNavigation());
+                MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION,
+                Flags::getMeasurementFlexApiMaxInformationGainNavigation);
     }
 
     @Test
     public void testGetMeasurementFlexApiMaxInformationGainDualDestinationEvent() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent())
-                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
-
-        float phOverridingValue =
-                MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT + 6.4f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ true);
-
-        assertThat(phOverridingValue)
-                .isWithin(0.000000001f)
-                .of(mPhFlags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent());
+                MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT,
+                Flags::getMeasurementFlexApiMaxInformationGainDualDestinationEvent);
     }
 
     @Test
     public void testGetMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
-                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION);
-
-        float phOverridingValue =
-                MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION + 6.4f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ true);
-
-        assertThat(phOverridingValue)
-                .isWithin(0.000000001f)
-                .of(mPhFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation());
+                MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION,
+                Flags::getMeasurementFlexApiMaxInformationGainDualDestinationNavigation);
     }
 
     @Test
     public void testGetMeasurementMaxReportStatesPerSourceRegistration() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementMaxReportStatesPerSourceRegistration())
-                .isEqualTo(MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
-
-        long phOverridingValue = MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION + 6L;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ true);
-
-        assertThat(mPhFlags.getMeasurementMaxReportStatesPerSourceRegistration())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION,
+                Flags::getMeasurementMaxReportStatesPerSourceRegistration);
     }
 
     @Test
     public void testGetMeasurementFlexApiMaxEventReports() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementFlexApiMaxEventReports())
-                .isEqualTo(MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS);
-
-        int phOverridingValue = MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS + 7;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementFlexApiMaxEventReports()).isEqualTo(phOverridingValue);
+                MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS,
+                Flags::getMeasurementFlexApiMaxEventReports);
     }
 
     @Test
     public void testGetMeasurementFlexApiMaxEventReportWindows() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementFlexApiMaxEventReportWindows())
-                .isEqualTo(MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS);
-
-        int phOverridingValue = MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS + 8;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementFlexApiMaxEventReportWindows())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS,
+                Flags::getMeasurementFlexApiMaxEventReportWindows);
     }
 
     @Test
     public void testGetMeasurementFlexApiMaxTriggerDataCardinality() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementFlexApiMaxTriggerDataCardinality())
-                .isEqualTo(MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY);
-
-        int phOverridingValue = MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY + 11;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementFlexApiMaxTriggerDataCardinality())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY,
+                Flags::getMeasurementFlexApiMaxTriggerDataCardinality);
     }
 
     @Test
     public void testGetMeasurementMinimumEventReportWindowInSeconds() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementMinimumEventReportWindowInSeconds())
-                .isEqualTo(MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS);
-
-        long phOverridingValue = MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS + 7200L;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMinimumEventReportWindowInSeconds())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS,
+                Flags::getMeasurementMinimumEventReportWindowInSeconds);
     }
 
     @Test
     public void testGetMeasurementMinimumAggregatableReportWindowInSeconds() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementMinimumAggregatableReportWindowInSeconds())
-                .isEqualTo(MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS);
-
-        long phOverridingValue = MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS + 7200L;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMinimumAggregatableReportWindowInSeconds())
-                .isEqualTo(phOverridingValue);
+                MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS,
+                Flags::getMeasurementMinimumAggregatableReportWindowInSeconds);
     }
 
     @Test
     public void testFledgeAuctionServerAuctionKeyFetchUri() {
-        assertThat(mPhFlags.getFledgeAuctionServerAuctionKeyFetchUri())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI);
-
-        String phOverridingValue = FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI + "http://test/uri";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerAuctionKeyFetchUri())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
+                Flags::getFledgeAuctionServerAuctionKeyFetchUri);
     }
 
     @Test
     public void testFledgeAuctionServerRefreshExpiredKeysDuringAuction() {
-        assertThat(mPhFlags.getFledgeAuctionServerRefreshExpiredKeysDuringAuction())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION);
-
-        boolean phOverride = !FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION,
-                Boolean.toString(phOverride),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerRefreshExpiredKeysDuringAuction())
-                .isEqualTo(true);
+                FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION,
+                Flags::getFledgeAuctionServerRefreshExpiredKeysDuringAuction);
     }
 
     @Test
     public void testFledgeAuctionServerEnabled() {
-        assertThat(mPhFlags.getFledgeAuctionServerEnabled())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnabled()).isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_ENABLED,
+                Flags::getFledgeAuctionServerEnabled);
     }
 
     @Test
     public void testGetFledgeAuctionServerOmitAdsEnabled() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerOmitAdsEnabled())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerOmitAdsEnabled()).isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED,
+                Flags::getFledgeAuctionServerOmitAdsEnabled);
     }
 
     @Test
     public void testGetFledgeAuctionServerMultiCloudEnabled() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerMultiCloudEnabled())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerMultiCloudEnabled()).isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
+                Flags::getFledgeAuctionServerMultiCloudEnabled);
     }
 
     @Test
     public void testGetFledgeAuctionServerConsentedDebuggingEnabled() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerConsentedDebuggingEnabled())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerConsentedDebuggingEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
+                Flags::getFledgeAuctionServerConsentedDebuggingEnabled);
     }
 
     @Test
     public void testGetFledgeAuctionServerCoordinatorUrlAllowlist() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerCoordinatorUrlAllowlist())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST);
-
-        String phOverridingValue = "https://example.com";
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerCoordinatorUrlAllowlist())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST,
+                Flags::getFledgeAuctionServerCoordinatorUrlAllowlist);
     }
 
     @Test
     public void testGetFledgeAuctionServerRequestFlagsEnabled() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerRequestFlagsEnabled())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerRequestFlagsEnabled())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testFledgeAuctionServerEnabledForReportImpression_overriddenByBaseFeatureFlag() {
-        disableAuctionServerBaseFlag();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnabledForReportImpression()).isEqualTo(false);
+                FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED,
+                Flags::getFledgeAuctionServerRequestFlagsEnabled);
     }
 
     @Test
     public void testFledgeAuctionServerEnabledForReportImpression() {
-        enableAuctionServerBaseFlag();
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnabledForReportImpression())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testFledgeAuctionServerEnabledForReportEvent_overriddenByBaseFeatureFlag() {
-        disableAuctionServerBaseFlag();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnabledForReportEvent()).isEqualTo(false);
+                FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> setAuctionServerBaseFlag(value),
+                Flags::getFledgeAuctionServerEnabledForReportImpression);
     }
 
     @Test
     public void testFledgeAuctionServerEnabledForReportEvent() {
-        enableAuctionServerBaseFlag();
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnabledForReportEvent())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testFledgeAuctionServerEnabledForUpdateHistogram_overriddenByBaseFeatureFlag() {
-        disableAuctionServerBaseFlag();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnabledForUpdateHistogram()).isEqualTo(false);
+                FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> setAuctionServerBaseFlag(value),
+                Flags::getFledgeAuctionServerEnabledForReportEvent);
     }
 
     @Test
     public void testFledgeAuctionServerEnabledForUpdateHistogram() {
-        enableAuctionServerBaseFlag();
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnabledForUpdateHistogram())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testFledgeAuctionServerEnabledForSelectAdsMediation_overriddenByBaseFeatureFlag() {
-        disableAuctionServerBaseFlag();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnabledForSelectAdsMediation()).isEqualTo(false);
+                FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> setAuctionServerBaseFlag(value),
+                Flags::getFledgeAuctionServerEnabledForUpdateHistogram);
     }
 
     @Test
     public void testFledgeAuctionServerEnabledForSelectAdsMediation() {
-        enableAuctionServerBaseFlag();
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnabledForSelectAdsMediation())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> setAuctionServerBaseFlag(value),
+                Flags::getFledgeAuctionServerEnabledForSelectAdsMediation);
     }
 
     @Test
     public void testFledgeAuctionServerEnableAdFilteringInGetAdSelectionData() {
-        boolean phOverridingValue =
-                !FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA,
+                Flags::getFledgeAuctionServerEnableAdFilterInGetAdSelectionData);
     }
 
     @Test
     public void testFledgeAuctionServerMediaTypeChangeEnabled() {
-        enableAuctionServerBaseFlag();
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerMediaTypeChangeEnabled())
-                .isEqualTo(phOverridingValue);
-    }
-
-    private void disableAuctionServerBaseFlag() {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_AUCTION_SERVER_ENABLED,
-                Boolean.toString(false),
-                /* makeDefault */ false);
-    }
-
-    private void enableAuctionServerBaseFlag() {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_AUCTION_SERVER_ENABLED,
-                Boolean.toString(true),
-                /* makeDefault */ false);
+                FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED,
+                Flags::getFledgeAuctionServerMediaTypeChangeEnabled);
     }
 
     @Test
     public void testFledgeAuctionServerJoinKeyFetchUri() {
-        assertThat(mPhFlags.getFledgeAuctionServerJoinKeyFetchUri())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI);
-
-        String phOverridingValue = FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI + "http://test/uri";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerJoinKeyFetchUri()).isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI,
+                Flags::getFledgeAuctionServerJoinKeyFetchUri);
     }
 
     @Test
     public void testFledgeAuctionServerAuctionKeySharding() {
-        assertThat(mPhFlags.getFledgeAuctionServerAuctionKeySharding())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING);
-
-        int phOverridingValue = FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING,
-                String.valueOf(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerAuctionKeySharding())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING,
+                Flags::getFledgeAuctionServerAuctionKeySharding);
     }
 
     @Test
     public void testFledgeAuctionServerEncryptionKeyAgeMaxSeconds() {
-        assertThat(mPhFlags.getFledgeAuctionServerEncryptionKeyMaxAgeSeconds())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS);
-
-        long phOverridingValue = FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS + 1000;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS,
-                String.valueOf(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEncryptionKeyMaxAgeSeconds())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS,
+                Flags::getFledgeAuctionServerEncryptionKeyMaxAgeSeconds);
     }
 
     @Test
     public void testFledgeAuctionServerEncryptionKemId() {
-        assertThat(mPhFlags.getFledgeAuctionServerEncryptionAlgorithmKemId())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID);
-
-        int phOverridingValue = FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID + 42;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID,
-                String.valueOf(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEncryptionAlgorithmKemId())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID,
+                Flags::getFledgeAuctionServerEncryptionAlgorithmKemId);
     }
 
     @Test
     public void testFledgeAuctionServerEncryptionKdfId() {
-        assertThat(mPhFlags.getFledgeAuctionServerEncryptionAlgorithmKdfId())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID);
-
-        int phOverridingValue = FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID + 42;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID,
-                String.valueOf(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEncryptionAlgorithmKdfId())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID,
+                Flags::getFledgeAuctionServerEncryptionAlgorithmKdfId);
     }
 
     @Test
     public void testFledgeAuctionServerEncryptionAeadId() {
-        assertThat(mPhFlags.getFledgeAuctionServerEncryptionAlgorithmAeadId())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID);
-
-        int phOverridingValue = FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID + 42;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID,
-                String.valueOf(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerEncryptionAlgorithmAeadId())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID,
+                Flags::getFledgeAuctionServerEncryptionAlgorithmAeadId);
     }
 
     @Test
-    public void testGetAdServicesConsentMigrationDisabled() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getAdservicesConsentMigrationLoggingEnabled())
-                .isEqualTo(DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED);
-
-        boolean phOverridingValue = !DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAdservicesConsentMigrationLoggingEnabled())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetAdServicesConsentMigrationEnabled() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getAdservicesConsentMigrationLoggingEnabled())
-                .isEqualTo(DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED);
-
-        boolean phOverridingValue = !DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ true);
-
-        assertThat(mPhFlags.getAdservicesConsentMigrationLoggingEnabled())
-                .isEqualTo(phOverridingValue);
+    public void testGetAdServicesConsentMigration() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
+                DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
+                Flags::getAdservicesConsentMigrationLoggingEnabled);
     }
 
     @Test
     public void testEnableFledgeAuctionServerKeyFetch() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchJobEnabled())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ true);
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchJobEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED,
+                Flags::getFledgeAuctionServerBackgroundKeyFetchJobEnabled);
     }
 
     @Test
     public void testEnableFledgeAuctionServerAuctionKeyFetch() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ true);
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED,
+                Flags::getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled);
     }
 
     @Test
     public void testEnableFledgeAuctionServerJoinKeyFetch() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundJoinKeyFetchEnabled())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ true);
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundJoinKeyFetchEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED,
+                Flags::getFledgeAuctionServerBackgroundJoinKeyFetchEnabled);
     }
 
     @Test
     public void testFledgeAuctionServerKeyFetchNetworkConnectTimeoutMs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeBackgroundFetchNetworkConnectTimeoutMs())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS);
-
-        long phOverridingValue = FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS + 1000;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeBackgroundFetchNetworkConnectTimeoutMs())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS,
+                Flags::getFledgeBackgroundFetchNetworkConnectTimeoutMs);
     }
 
     @Test
     public void testFledgeAuctionServerKeyFetchNetworkReadTimeoutMs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeBackgroundFetchNetworkReadTimeoutMs())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS);
-
-        long phOverridingValue =
-                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS + 1000;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeBackgroundFetchNetworkReadTimeoutMs())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS,
+                Flags::getFledgeBackgroundFetchNetworkReadTimeoutMs);
     }
 
     @Test
     public void testFledgeAuctionServerKeyFetchMaxResponseSize() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(
-                        FlagsFactory.getFlags()
-                                .getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B);
-
-        long phOverridingValue =
-                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B + 1000;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B,
+                Flags::getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB);
     }
 
     @Test
     public void testFledgeAuctionServerKeyFetchMaxRuntimeMs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(
-                        FlagsFactory.getFlags()
-                                .getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS);
-
-        long phOverridingValue = FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS + 1000;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS,
+                Flags::getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs);
     }
 
     @Test
     public void testFledgeAuctionServerKeyFetchJobFlexMs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchJobFlexMs())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS);
-
-        long phOverridingValue = FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS + 1000;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchJobFlexMs())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS,
+                Flags::getFledgeAuctionServerBackgroundKeyFetchJobFlexMs);
     }
 
     @Test
     public void testFledgeAuctionServerKeyFetchJobPeriodMs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchJobPeriodMs())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS);
-
-        long phOverridingValue = FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS + 1000;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchJobPeriodMs())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS,
+                Flags::getFledgeAuctionServerBackgroundKeyFetchJobPeriodMs);
     }
 
     @Test
     public void testFledgeAuctionServerAuctionKeyFetchTimeoutMs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS);
-
-        long phOverridingValue = FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS + 1000;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS,
+                Flags::getFledgeAuctionServerAuctionKeyFetchTimeoutMs);
     }
 
     @Test
     public void testEnableFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled() {
-        // Without any overriding, the value is the hard coded constant.
-        boolean hardcodedConstant =
-                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled())
-                .isEqualTo(hardcodedConstant);
-
-        boolean phOverridingValue = !hardcodedConstant;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ true);
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED,
+                Flags::getFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled);
     }
 
     @Test
     public void testFledgeAuctionServerBackgroundKeyFetchInAdvanceIntervalMs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchInAdvanceIntervalMs())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS);
-
-        long phOverridingValue =
-                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS + 1000;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchInAdvanceIntervalMs())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS,
+                Flags::getFledgeAuctionServerBackgroundKeyFetchInAdvanceIntervalMs);
     }
 
     @Test
     public void testFledgeAuctionServerOverallTimeoutMs() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerOverallTimeoutMs())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS);
-
-        long phOverridingValue = FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS + 1000;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerOverallTimeoutMs()).isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS,
+                Flags::getFledgeAuctionServerOverallTimeoutMs);
     }
 
     @Test
     public void testGetFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
-        assertThat(mPhFlags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED);
-
-        boolean phOverridingValue =
-                !FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED,
-                String.valueOf(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED,
+                Flags::getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled);
     }
 
     @Test
     public void testConsentAlreadyInteractedFix() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getConsentAlreadyInteractedEnableMode())
-                .isEqualTo(CONSENT_ALREADY_INTERACTED_FIX_ENABLE);
-
-        boolean phOverridingValue = !CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getConsentAlreadyInteractedEnableMode()).isEqualTo(phOverridingValue);
+                CONSENT_ALREADY_INTERACTED_FIX_ENABLE,
+                Flags::getConsentAlreadyInteractedEnableMode);
     }
 
     @Test
     public void testU18UxDetentionChannel() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.isU18UxDetentionChannelEnabled())
-                .isEqualTo(IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT);
-
-        boolean phOverridingValue = !IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ !IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT);
-
-        assertThat(mPhFlags.isU18UxDetentionChannelEnabled()).isEqualTo(phOverridingValue);
+                IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT,
+                Flags::isU18UxDetentionChannelEnabled);
     }
 
     @Test
     public void testConsentNotificationResetToken() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getConsentNotificationResetToken())
-                .isEqualTo(CONSENT_NOTIFICATION_RESET_TOKEN);
-
-        String phOverridingValue = CONSENT_NOTIFICATION_RESET_TOKEN + UUID.randomUUID().toString();
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_CONSENT_NOTIFICATION_RESET_TOKEN,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getConsentNotificationResetToken()).isEqualTo(phOverridingValue);
+                CONSENT_NOTIFICATION_RESET_TOKEN,
+                Flags::getConsentNotificationResetToken);
     }
 
     @Test
     public void testGetEnableLoggedTopic() {
-        assertThat(mPhFlags.getEnableLoggedTopic()).isEqualTo(ENABLE_LOGGED_TOPIC);
-
-        boolean phOverridingValue = !ENABLE_LOGGED_TOPIC;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_LOGGED_TOPIC,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getEnableLoggedTopic()).isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ENABLE_LOGGED_TOPIC, ENABLE_LOGGED_TOPIC, Flags::getEnableLoggedTopic);
     }
 
     @Test
     public void testGetEnableDatabaseSchemaVersion8() {
-        assertThat(mPhFlags.getEnableDatabaseSchemaVersion8())
-                .isEqualTo(ENABLE_DATABASE_SCHEMA_VERSION_8);
-
-        boolean phOverridingValue = !ENABLE_DATABASE_SCHEMA_VERSION_8;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_ENABLE_DATABASE_SCHEMA_VERSION_8,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getEnableDatabaseSchemaVersion8()).isEqualTo(phOverridingValue);
+                ENABLE_DATABASE_SCHEMA_VERSION_8,
+                Flags::getEnableDatabaseSchemaVersion8);
     }
 
     @Test
     public void testGetEnableDatabaseSchemaVersion9() {
-        assertThat(mPhFlags.getEnableDatabaseSchemaVersion9())
-                .isEqualTo(ENABLE_DATABASE_SCHEMA_VERSION_9);
-
-        boolean phOverridingValue = !ENABLE_DATABASE_SCHEMA_VERSION_9;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_ENABLE_DATABASE_SCHEMA_VERSION_9,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getEnableDatabaseSchemaVersion9()).isEqualTo(phOverridingValue);
+                ENABLE_DATABASE_SCHEMA_VERSION_9,
+                Flags::getEnableDatabaseSchemaVersion9);
     }
 
     @Test
     public void testGetMsmtEnableApiStatusAllowListCheck() {
-        assertThat(mPhFlags.getMsmtEnableApiStatusAllowListCheck())
-                .isEqualTo(MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK);
-
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMsmtEnableApiStatusAllowListCheck()).isEqualTo(phOverridingValue);
+                MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK,
+                Flags::getMsmtEnableApiStatusAllowListCheck);
     }
 
     @Test
@@ -6970,70 +5035,23 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementRegisterInteractionApiEnabled() {
-        assertThat(mPhFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled())
-                .isEqualTo(FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED);
-        boolean phOverridingValue = !FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
+                Flags::getFledgeMeasurementReportAndRegisterEventApiEnabled);
     }
 
     @Test
-    public void testGetMeasurementRegisterInteractionApiFallbackEnabled_featureDisabled() {
-        // Disable the feature.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
-                Boolean.toString(false),
-                /* makeDefault */ false);
-        assertThat(mPhFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled())
-                .isEqualTo(false);
-
-        // Assert fallback is disabled.
-        assertThat(mPhFlags.getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled())
-                .isEqualTo(false);
-
-        // Assert overriding Ph value has no effect, as long as the feature is disabled.
-        boolean phOverridingValue =
-                !FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+    public void testGetMeasurementRegisterInteractionApiFallbackEnabled() {
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-        assertThat(mPhFlags.getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled())
-                .isEqualTo(false);
-    }
-
-    @Test
-    public void testGetMeasurementRegisterInteractionApiFallbackEnabled_featureEnabled() {
-        // Enable the feature.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-        assertThat(mPhFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled()).isEqualTo(true);
-
-        // Assert fallback is set to default behavior.
-        assertThat(mPhFlags.getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled())
-                .isEqualTo(FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED);
-
-        // Assert overriding Ph value has an effect, since the feature is enabled.
-        boolean phOverridingValue =
-                !FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-        assertThat(mPhFlags.getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value ->
+                        mockGetAdServicesFlag(
+                                KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
+                                value),
+                Flags::getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled);
     }
 
     @Test
@@ -7045,112 +5063,8 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetMeasurementJobDebugReportingKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobDebugReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementJobDebugReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobDebugReportingKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobDebugReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementJobDebugReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobDebugReportingKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobDebugReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementJobDebugReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobVerboseDebugReportingKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobVerboseDebugReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getMeasurementJobVerboseDebugReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobVerboseDebugReportingKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobVerboseDebugReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementJobVerboseDebugReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementJobVerboseDebugReportingKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overriding, the value is hard coded constant
-        assertThat(mPhFlags.getMeasurementJobVerboseDebugReportingKillSwitch())
-                .isEqualTo(MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH);
-
-        boolean phOverridingValue = !MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementJobVerboseDebugReportingKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
     public void testGetMeasurementAppPackageNameLoggingAllowlist() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST,
                 MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST,
                 Flags::getMeasurementAppPackageNameLoggingAllowlist);
@@ -7236,101 +5150,36 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementEnableAttributionScope() {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
-                Boolean.toString(false),
-                /* makeDefault */ false);
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled()).isFalse();
-        assertThat(mPhFlags.getMeasurementEnableAttributionScope()).isFalse();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
-                Boolean.toString(false),
-                /* makeDefault */ false);
-        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled()).isFalse();
-        assertThat(mPhFlags.getMeasurementEnableAttributionScope()).isFalse();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled()).isTrue();
-        assertThat(mPhFlags.getMeasurementEnableAttributionScope()).isTrue();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
-                Boolean.toString(false),
-                /* makeDefault */ false);
-        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled()).isTrue();
-        assertThat(mPhFlags.getMeasurementEnableAttributionScope()).isFalse();
+                MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> mockGetAdServicesFlag(KEY_MEASUREMENT_FLEX_LITE_API_ENABLED, value),
+                Flags::getMeasurementEnableAttributionScope);
     }
 
     @Test
     public void testGetMeasurementEnableNavigationReportingOriginCheck() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableNavigationReportingOriginCheck())
-                .isEqualTo(MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK);
-
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableNavigationReportingOriginCheck())
-                .isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK,
+                MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK,
+                Flags::getMeasurementEnableNavigationReportingOriginCheck);
     }
 
     @Test
     public void testGetMeasurementMaxAttributionScopesPerSource() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementMaxAttributionScopesPerSource())
-                .isEqualTo(MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE);
-
-        int phOverridingValue = MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMaxAttributionScopesPerSource())
-                .isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE,
+                MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE,
+                Flags::getMeasurementMaxAttributionScopesPerSource);
     }
 
     @Test
     public void testGetMeasurementMaxAttributionScopeLength() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementMaxAttributionScopeLength())
-                .isEqualTo(MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH);
-
-        int phOverridingValue = MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH + 1;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH,
-                Integer.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementMaxAttributionScopeLength()).isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH,
+                MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH,
+                Flags::getMeasurementMaxAttributionScopeLength);
     }
 
     @Test
@@ -7351,35 +5200,18 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetMeasurementEnableOdpRegistration() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableOdpWebTriggerRegistration())
-                .isEqualTo(MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION);
-
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableOdpWebTriggerRegistration())
-                .isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION,
+                MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION,
+                Flags::getMeasurementEnableOdpWebTriggerRegistration);
     }
 
     @Test
     public void testGetMeasurementPrivacyEpsilon() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementPrivacyEpsilon())
-                .isEqualTo(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
-
-        float phOverridingValue = .5f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON,
-                Double.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementPrivacyEpsilon()).isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON,
+                DEFAULT_MEASUREMENT_PRIVACY_EPSILON,
+                Flags::getMeasurementPrivacyEpsilon);
     }
 
     @Test
@@ -7428,23 +5260,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Flags::getAppSearchReadTimeout);
     }
 
-    private void overrideGlobalKillSwitch(boolean phOverridingValue) {
-        if (SdkLevel.isAtLeastT()) {
-            DeviceConfig.setProperty(
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    KEY_GLOBAL_KILL_SWITCH,
-                    Boolean.toString(phOverridingValue),
-                    false);
-        } else {
-            // For S minus use enable_back_compat as global kill switch
-            DeviceConfig.setProperty(
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    KEY_ENABLE_BACK_COMPAT,
-                    Boolean.toString(!phOverridingValue),
-                    true);
-        }
-    }
-
     @Test
     public void testIsGetAdServicesCommonStatesApiEnabled() {
         mFlagsTestHelper.testConfigFlag(
@@ -7455,83 +5270,43 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testKAnonSignJoinFeatureFlag() {
-        setFledgeAuctionServerEnabled(true);
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureEnabled())
-                .isEqualTo(FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
-        overrideKAnonFlags(
-                Boolean.toString(phOverridingValue), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
-
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureEnabled()).isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testGuardedFeatureFlag(
+                KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE,
+                FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> setFledgeAuctionServerEnabled(value),
+                Flags::getFledgeKAnonSignJoinFeatureEnabled);
     }
 
     @Test
     public void testKAnonSignJoinOnDeviceFlag() {
-        // set kanon sign join feature flag to true
-        setFledgeAuctionServerEnabled(true);
-        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled())
-                .isEqualTo(FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED;
-        overrideKAnonFlags(
-                Boolean.toString(phOverridingValue),
-                KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE);
-
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled())
-                .isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testGuardedFeatureFlag(
+                KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE,
+                FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> {
+                    setFledgeAuctionServerEnabled(value);
+                    mockGetAdServicesFlag(KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE, value);
+                },
+                Flags::getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled);
     }
 
     @Test
     public void testKAnonSignJoinAuctionServerFlag() {
-        // set kanon sign join feature flag to true
-        setFledgeAuctionServerEnabled(true);
-        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled())
-                .isEqualTo(FLEDGE_DEFAULT_KANON_FEATURE_AUCTION_SERVER_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_DEFAULT_KANON_FEATURE_AUCTION_SERVER_ENABLED;
-        overrideKAnonFlags(
-                Boolean.toString(phOverridingValue),
-                KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE);
-
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testKAnonSignJoinAuctionServerFlag_isOverwrittenByKAnonSignJoinFeatureFlag() {
-        // set kanon sign join feature flag to true
-        setFledgeAuctionServerEnabled(true);
-        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE);
-        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled())
-                .isEqualTo(true);
-
-        overrideKAnonFlags(
-                Boolean.toString(false),
-                KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
-
-        //Assert that KAnon_Sign_Join_Feature overwrites the KAnon_Sign_Join_Auction_Server flag
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled())
-                .isEqualTo(false);
-    }
-
-    @Test
-    public void test_disabledAuctionServerFlag_overwritesKAnonSignJoinFeatureFlag() {
-        setFledgeAuctionServerEnabled(true);
-        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureEnabled()).isEqualTo(true);
-
-        setFledgeAuctionServerEnabled(false);
-
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureEnabled()).isEqualTo(false);
+        mFlagsTestHelper.testGuardedFeatureFlag(
+                KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE,
+                FLEDGE_DEFAULT_KANON_FEATURE_AUCTION_SERVER_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> {
+                    setFledgeAuctionServerEnabled(value);
+                    mockGetAdServicesFlag(KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE, value);
+                },
+                Flags::getFledgeKAnonSignJoinFeatureAuctionServerEnabled);
     }
 
     @Test
     public void testKAnonFetchServerParameterUrlFlag() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_KANON_FETCH_PARAMETERS_URL,
                 FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL,
                 Flags::getFledgeKAnonFetchServerParamsUrl);
@@ -7539,7 +5314,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testKAnonRegisterClientParametersParameterUrlFlag() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL,
                 FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL,
                 Flags::getFledgeKAnonRegisterClientParametersUrl);
@@ -7547,7 +5322,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testKAnonGetTokensUrl() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_KANON_GET_TOKENS_URL,
                 FLEDGE_DEFAULT_KANON_GET_TOKENS_URL,
                 Flags::getFledgeKAnonGetTokensUrl);
@@ -7555,7 +5330,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testKAnonJoinUrl() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_KANON_JOIN_URL,
                 FLEDGE_DEFAULT_KANON_JOIN_URL,
                 Flags::getFledgeKAnonJoinUrl);
@@ -7578,22 +5353,8 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void test_disableKAnonSignJoinFeatureFlag_overwritesKAnonBackgroundProcessFlag() {
-        setFledgeAuctionServerEnabled(true);
-        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
-        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED);
-        assertThat(mPhFlags.getFledgeKAnonBackgroundProcessEnabled()).isEqualTo(true);
-
-        boolean phOverridingValue = false;
-        overrideKAnonFlags(
-                Boolean.toString(phOverridingValue), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
-
-        assertThat(mPhFlags.getFledgeKAnonBackgroundProcessEnabled()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
     public void testFledgeKAnonSetTypeToSignJoinFlag() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN,
                 FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN,
                 Flags::getFledgeKAnonSetTypeToSignJoin);
@@ -7601,7 +5362,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testFledgeKAnonUrlAuthorityToJoin() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY,
                 FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN,
                 Flags::getFledgeKAnonUrlAuthorityToJoin);
@@ -7641,50 +5402,41 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testKAnonBackgroundProcessEnabled() {
-        // Set KAnon feature flag to true.
-        setFledgeAuctionServerEnabled(true);
-        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureEnabled()).isTrue();
-        assertThat(mPhFlags.getFledgeKAnonBackgroundProcessEnabled())
-                .isEqualTo(FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
-
-        boolean phOverridingValue = true;
-        overrideKAnonFlags(
-                Boolean.toString(phOverridingValue), KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED);
-
-        assertThat(mPhFlags.getFledgeKAnonBackgroundProcessEnabled()).isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testGuardedFeatureFlag(
+                KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED,
+                FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> {
+                    setFledgeAuctionServerEnabled(value);
+                    mockGetAdServicesFlag(KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE, value);
+                },
+                Flags::getFledgeKAnonBackgroundProcessEnabled);
     }
 
     @Test
     public void testKAnonSignJoinLoggingEnabled() {
-        // Set KAnon feature flag to true.
-        setFledgeAuctionServerEnabled(true);
-        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureEnabled()).isTrue();
-        assertThat(mPhFlags.getFledgeKAnonLoggingEnabled())
-                .isEqualTo(FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
-
-        boolean phOverridingValue = true;
-        overrideKAnonFlags(
-                Boolean.toString(phOverridingValue), KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED);
-
-        assertThat(mPhFlags.getFledgeKAnonLoggingEnabled()).isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testGuardedFeatureFlag(
+                KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED,
+                FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> {
+                    setFledgeAuctionServerEnabled(value);
+                    mockGetAdServicesFlag(KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE, value);
+                },
+                Flags::getFledgeKAnonLoggingEnabled);
     }
 
     @Test
     public void testKAnonKeyAttestationEnabled() {
-        // Set KAnon feature flag to true.
-        setFledgeAuctionServerEnabled(true);
-        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
-        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureEnabled()).isTrue();
-        assertThat(mPhFlags.getFledgeKAnonKeyAttestationEnabled())
-                .isEqualTo(FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED);
-
-        boolean phOverridingValue = true;
-        overrideKAnonFlags(
-                Boolean.toString(phOverridingValue), KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED);
-
-        assertThat(mPhFlags.getFledgeKAnonKeyAttestationEnabled()).isEqualTo(phOverridingValue);
+        mFlagsTestHelper.testGuardedFeatureFlag(
+                KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED,
+                FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> {
+                    setFledgeAuctionServerEnabled(value);
+                    mockGetAdServicesFlag(KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE, value);
+                },
+                Flags::getFledgeKAnonKeyAttestationEnabled);
     }
 
     @Test
@@ -7769,7 +5521,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetAdServicesCommonStatesAllowList() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST,
                 GET_ADSERVICES_COMMON_STATES_ALLOW_LIST,
                 Flags::getAdServicesCommonStatesAllowList);
@@ -7810,7 +5562,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetAdServicesModuleJobPolicy() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_AD_SERVICES_MODULE_JOB_POLICY,
                 AD_SERVICES_MODULE_JOB_POLICY,
                 Flags::getAdServicesModuleJobPolicy);
@@ -7898,7 +5650,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetEncodedErrorCodeListPerSampleInterval() {
-        mFlagsTestHelper.testFeatureFlag(
+        mFlagsTestHelper.testConfigFlag(
                 KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL,
                 ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL,
                 Flags::getEncodedErrorCodeListPerSampleInterval);
@@ -7951,5 +5703,49 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     private void verifyGetBooleanNotCalled(String name) {
         ExtendedMockitoExpectations.verifyGetBooleanDeviceConfigFlagNotCalled(
                 DeviceConfig.NAMESPACE_ADSERVICES, name);
+    }
+
+    private void overrideGlobalKillSwitch(boolean phOverridingValue) {
+        if (SdkLevel.isAtLeastT()) {
+            mockGetAdServicesFlag(KEY_GLOBAL_KILL_SWITCH, phOverridingValue);
+        } else {
+            mockGetAdServicesFlag(KEY_ENABLE_BACK_COMPAT, !phOverridingValue);
+        }
+    }
+
+    private void setAuctionServerBaseFlag(boolean value) {
+        mockGetAdServicesFlag(KEY_FLEDGE_AUCTION_SERVER_ENABLED, value);
+    }
+
+    private void setErrorCodeLoggingDenyList(String errorCodeLoggingDenyList) {
+        mockGetAdServicesFlag(KEY_ERROR_CODE_LOGGING_DENY_LIST, errorCodeLoggingDenyList);
+    }
+
+    private void disableGlobalKillSwitch() {
+        overrideGlobalKillSwitch(false);
+    }
+
+    private void enableGlobalKillSwitch() {
+        overrideGlobalKillSwitch(true);
+    }
+
+    private void overrideSelectAdsKillSwitch(boolean value) {
+        mockGetAdServicesFlag(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, value);
+    }
+
+    private void disableSelectAdsKillSwitch() {
+        overrideSelectAdsKillSwitch(false);
+    }
+
+    private void enableSelectAdsKillSwitch() {
+        overrideSelectAdsKillSwitch(true);
+    }
+
+    private void setEnrollmentBlocklist(String blocklistFlag) {
+        mockGetAdServicesFlag(KEY_ENROLLMENT_BLOCKLIST_IDS, blocklistFlag);
+    }
+
+    private void setGlobalBlockedTopicIds(String blockedTopicIds) {
+        mockGetAdServicesFlag(KEY_GLOBAL_BLOCKED_TOPIC_IDS, blockedTopicIds);
     }
 }
