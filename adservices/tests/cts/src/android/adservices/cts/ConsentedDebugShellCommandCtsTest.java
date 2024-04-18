@@ -25,7 +25,7 @@ import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import com.google.common.truth.Truth;
@@ -37,7 +37,7 @@ import java.util.UUID;
 
 @SetFlagEnabled(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED)
-@RequiresSdkLevelAtLeastT
+@RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
 public final class ConsentedDebugShellCommandCtsTest extends AdServicesCtsTestCase {
 
     private static final String TAG = "AdServicesShellCmd";
