@@ -272,6 +272,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 0,
                                 "",
                                 0,
+                                false,
                                 false)
                         .setAdTechDomain(null)
                         .build();
@@ -324,6 +325,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 0,
                                 "",
                                 0,
+                                false,
                                 false)
                         .setAdTechDomain(null)
                         .build();
@@ -4965,6 +4967,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 0,
                                 "",
                                 0,
+                                false,
                                 false)
                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                         .build();
