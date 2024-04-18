@@ -240,6 +240,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .thenReturn(MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES);
         when(mFlags.getMeasurementMaxLengthOfTriggerContextId())
                 .thenReturn(MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
     }
 
     @Test
@@ -6278,7 +6280,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     public void fetchTrigger_attributionScopeEnabled_parsesAttributionScopeFields()
             throws Exception {
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -6286,7 +6287,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{\"attribution_scope\": \"5\"}")));
+                                List.of("{\"attribution_scopes\": [\"5\", \"6\"]}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
@@ -6298,14 +6299,13 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertThat(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
         assertThat(fetch.isPresent()).isTrue();
-        assertThat(fetch.get().getAttributionScope()).isEqualTo("5");
+        assertThat(fetch.get().getAttributionScopes()).containsExactly("5", "6");
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
     public void fetchTrigger_attributionScopeTooLong_fails() throws Exception {
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -6313,7 +6313,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{\"attribution_scope\": \"long_attribution_scope\"}")));
+                                List.of("{\"attribution_scopes\": [\"long_attribution_scope\"]}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
@@ -6333,7 +6333,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Test
     public void fetchTrigger_attributionScopeNotAString_fails() throws Exception {
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -6341,7 +6340,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{\"attribution_scope\": 1}")));
+                                List.of("{\"attribution_scopes\": [1]}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
@@ -6361,7 +6360,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Test
     public void fetchTrigger_attributionScopeEmpty_pass() throws Exception {
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -6369,7 +6367,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{\"attribution_scope\": \"\"}")));
+                                List.of("{\"attribution_scopes\": [\"\"]}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
@@ -6381,7 +6379,34 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertThat(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
         assertThat(fetch.isPresent()).isTrue();
-        assertThat(fetch.get().getAttributionScope()).isEqualTo("");
+        assertThat(fetch.get().getAttributionScopes()).containsExactly("");
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_zeroAttributionScope_fail() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"attribution_scopes\": []}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Execution
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isFalse();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -6396,7 +6421,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of("{\"attribution_scope\": 5}")));
+                                List.of("{\"attribution_scopes\": 5}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
@@ -6408,7 +6433,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertThat(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
         assertThat(fetch.isPresent()).isTrue();
-        assertThat(fetch.get().getAttributionScope()).isNull();
+        assertThat(fetch.get().getAttributionScopes()).isNull();
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
