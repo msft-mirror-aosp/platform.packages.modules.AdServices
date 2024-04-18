@@ -15,16 +15,20 @@
   ~ limitations under the License.
   -->
 <configuration description="Config for Ad Services Service-core unit test cases">
-  <option name="test-tag" value="AdServicesSharedLibrariesUnitTests" />
+    <option name="test-tag" value="AdServicesSharedLibrariesUnitTests"/>
 
-  <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
-    <option name="cleanup-apks" value="true"/>
-    <option name="test-file-name" value="AdServicesSharedLibrariesUnitTests.apk"/>
-  </target_preparer>
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true"/>
+        <option name="test-file-name" value="AdServicesSharedLibrariesUnitTests.apk"/>
+    </target_preparer>
 
-  <test class="com.android.tradefed.testtype.AndroidJUnitTest">
-      <option name="hidden-api-checks" value="false" />
-      <option name="package" value="com.android.adservices.shared.tests"/>
-  </test>
+    <test class="com.android.tradefed.testtype.AndroidJUnitTest">
+        <option name="hidden-api-checks" value="false"/>
+        <option name="package" value="com.android.adservices.shared.tests"/>
+    </test>
+
+    <!-- For this test suite to get picked up in mainline presubmit -->
+    <option name="config-descriptor:metadata" key="mainline-param"
+            value="com.google.android.adservices.apex"/>
 
 </configuration>
