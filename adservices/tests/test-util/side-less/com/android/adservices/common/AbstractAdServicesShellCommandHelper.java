@@ -40,6 +40,10 @@ public abstract class AbstractAdServicesShellCommandHelper {
 
     private static final String INVALID_COMMAND_OUTPUT = "Unknown command:";
 
+    private static final String SHELL_COMMAND_ACTIVITY_DUMP_STR = "-- ShellCommandActivity dump --";
+    private static final String COMMAND_OUT = "CommandOut:";
+    private static final String COMMAND_ERR = "CommandErr:";
+
     private static final String CMD_ARGS = "cmd-args";
     private static final String GET_RESULT_ARG = "get-result";
 
@@ -87,7 +91,8 @@ public abstract class AbstractAdServicesShellCommandHelper {
             mLog.d("Output for command %s: %s", cmd, res);
             return res;
         }
-        return runShellCommandRS(String.format(cmdFmt, cmdArgs));
+        CommandResult commandResult = runShellCommandRS(String.format(cmdFmt, cmdArgs));
+        return commandResult.getOut();
     }
 
     /**
@@ -125,8 +130,7 @@ public abstract class AbstractAdServicesShellCommandHelper {
             return res;
         }
 
-        String res = runShellCommandRS(String.format(cmdFmt, cmdArgs));
-        return new CommandResult(res, "");
+        return runShellCommandRS(String.format(cmdFmt, cmdArgs));
     }
 
     /** Executes a shell command and returns the standard output. */
@@ -143,8 +147,8 @@ public abstract class AbstractAdServicesShellCommandHelper {
     /** Gets the device API level. */
     protected abstract int getDeviceApiLevel();
 
-    private String runShellCommandRS(String cmd) {
-        String[] argsList = cmd.split(" ");
+    private CommandResult runShellCommandRS(String cmd) {
+        String[] argsList = cmd.split("\\s+");
         String args = String.join(",", argsList);
         String res = runShellCommand(startShellActivity(args));
         mLog.d("Output for command %s: %s", startShellActivity(args), res);
@@ -154,10 +158,10 @@ public abstract class AbstractAdServicesShellCommandHelper {
                         "%s/%s", mAdServicesHelper.getAdServicesPackageName(), SHELL_ACTIVITY_NAME);
         res = runShellCommand(runDumpsysShellCommand(componentName));
         mLog.d("Output for command %s: %s", runDumpsysShellCommand(componentName), res);
-        String out = parseResultFromDumpsys(res);
+        CommandResult commandRes = parseResultFromDumpsys(res);
 
         checkShellCommandActivityFinished(componentName);
-        return out;
+        return commandRes;
     }
 
     /* Parses the output from dumpsys.
@@ -165,23 +169,60 @@ public abstract class AbstractAdServicesShellCommandHelper {
        Sample dumpsys output:
         TASK 10145:com.google.android.ext.services id=13 userId=0
         ACTIVITY com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity
-        hello
-
-       parsed Output: hello
+        -- ShellCommandActivity dump --
+        CommandStatus: FINISHED
+        CommandRes: 0
+        CommandOut:
+          hello
+       parsed Output: CommandResult(hello,"")
     */
+
     @VisibleForTesting
-    String parseResultFromDumpsys(String res) {
+    CommandResult parseResultFromDumpsys(String res) {
         String separator = "\n";
         String[] splitStr = res.split(separator);
-        if (splitStr.length < 3) {
-            return res;
+        int len = splitStr.length;
+
+        boolean activityDumpPresent = false;
+        String out = "";
+        String err = "";
+        for (int i = 0; i < len; i++) {
+            if (splitStr[i].equals(SHELL_COMMAND_ACTIVITY_DUMP_STR)) {
+                activityDumpPresent = true;
+            }
+
+            if (activityDumpPresent && splitStr[i].equals(COMMAND_OUT)) {
+                i++;
+                StringBuilder outBuilder = new StringBuilder();
+                for (; i < len && splitStr[i].startsWith("  "); i++) {
+                    if (splitStr[i].length() > 2) {
+                        outBuilder.append(splitStr[i].substring(2));
+                    }
+                    outBuilder.append('\n');
+                }
+                out = outBuilder.toString().strip();
+            }
+
+            if (i < len && activityDumpPresent && splitStr[i].equals(COMMAND_ERR)) {
+                i++;
+                StringBuilder errBuilder = new StringBuilder();
+                for (; i < len && splitStr[i].startsWith("  "); i++) {
+                    if (splitStr[i].length() > 2) {
+                        errBuilder.append(splitStr[i].substring(2));
+                    }
+                    errBuilder.append("\n");
+                }
+                err = errBuilder.toString().strip();
+            }
+            // TODO(b/308009734): Perform check for commandStatus field when we support long
+            //  running commands.
         }
 
-        StringBuilder sb = new StringBuilder();
-        for (int i = 2; i < splitStr.length; i++) {
-            sb = i > 2 ? sb.append("\n" + splitStr[i]) : sb.append(splitStr[i]);
+        // Return original input if activity dump string not present.
+        if (!activityDumpPresent) {
+            return new CommandResult(res, "");
         }
-        return sb.toString();
+        return new CommandResult(out, err);
     }
 
     @VisibleForTesting
