@@ -88,7 +88,7 @@ public class SandboxedSdkContextUnitTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .strictness(Strictness.LENIENT)
-                        .mockStatic(Process.class)
+                        .spyStatic(Process.class)
                         .mockStatic(StrictMode.class)
                         .startMocking();
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
