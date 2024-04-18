@@ -1,0 +1,4 @@
+# Bug component: 1328768
+set noparent
+
+include platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
