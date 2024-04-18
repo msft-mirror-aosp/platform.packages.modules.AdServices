@@ -184,6 +184,16 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats) {
+        mStatsdAdServicesLogger.logMeasurementOdpRegistrations(stats);
+    }
+
+    @Override
+    public void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats) {
+        mStatsdAdServicesLogger.logMeasurementOdpApiCall(stats);
+    }
+
+    @Override
     public void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId) {
         mStatsdAdServicesLogger.logEnrollmentDataStats(mType, mIsSuccessful, mBuildId);
     }

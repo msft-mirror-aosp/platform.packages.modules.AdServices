@@ -37,7 +37,6 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -288,7 +287,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertThat(getDevice().isDirectory(dePath)).isFalse();
     }
 
-    @Ignore("b/260659816")
     @Test
     @LargeTest
     public void testSdkDataPackageDirectory_IsDestroyedOnUninstall_DeviceLocked() throws Exception {
@@ -875,7 +873,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false)).isNotNull();
     }
 
-    @Ignore("b/260659816")
     @Test
     @LargeTest
     public void testSdkDataSubDirectory_IsCreatedOnInstall_DeviceLocked() throws Exception {
@@ -1109,7 +1106,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         runPhase("testSdkDataIsAttributedToApp");
     }
 
-    @Ignore("b/261429833")
     @Test
     public void testSdkData_IsAttributedToApp_DisableQuota() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);

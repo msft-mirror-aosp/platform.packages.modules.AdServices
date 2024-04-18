@@ -756,10 +756,29 @@ class AttributionJobHandler {
                 (Source source) ->
                         source.isInstallAttributed()
                                 && isWithinInstallCooldownWindow(source, trigger);
-        matchingSources.sort(
-                Comparator.comparing(installAttributionComparator, Comparator.reverseOrder())
+        Comparator<Source> comparator =
+                Comparator.comparing(installAttributionComparator, Comparator.reverseOrder());
+        if (mFlags.getMeasurementEnableAttributionScope()
+                && trigger.getAttributionScope() != null) {
+            // Filter based on whether trigger attribution scope is in the source attribution
+            // scopes.
+            Function<Source, Boolean> attributionScopeFilter =
+                    (Source source) ->
+                            source.getAttributionScopes() != null
+                                    && source.getAttributionScopes()
+                                            .contains(trigger.getAttributionScope());
+            if (!matchingSources.stream().anyMatch(attributionScopeFilter::apply)) {
+                return Optional.empty();
+            }
+            comparator =
+                    Comparator.comparing(attributionScopeFilter, Comparator.reverseOrder())
+                            .thenComparing(installAttributionComparator, Comparator.reverseOrder());
+        }
+        comparator =
+                comparator
                         .thenComparing(Source::getPriority, Comparator.reverseOrder())
-                        .thenComparing(Source::getEventTime, Comparator.reverseOrder()));
+                        .thenComparing(Source::getEventTime, Comparator.reverseOrder());
+        matchingSources.sort(comparator);
 
         Source selectedSource = matchingSources.remove(0);
 

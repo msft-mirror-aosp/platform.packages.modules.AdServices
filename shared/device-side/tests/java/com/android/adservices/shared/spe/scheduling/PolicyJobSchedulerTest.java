@@ -21,6 +21,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_NONE;
+import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_FAILED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
@@ -28,6 +30,7 @@ import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_
 import static com.android.adservices.shared.spe.framework.TestJobServiceFactory.JOB_ID_1;
 import static com.android.adservices.shared.spe.framework.TestJobServiceFactory.JOB_NAME_1;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
@@ -38,6 +41,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
@@ -128,6 +132,15 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
         assertThrows(
                 IllegalStateException.class,
                 () -> mPolicyJobScheduler.scheduleJob(sContext, jobSpec));
+    }
+
+    @Test
+    public void testScheduleJob_skipForNotEnabled() {
+        when(mMockJobWorker.getJobSchedulingEnablementStatus())
+                .thenReturn(JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON);
+
+        assertThat(mPolicyJobScheduler.scheduleJob(sContext, sJobSpec))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
     }
 
     @Test
@@ -326,6 +339,8 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
     }
 
     private void scheduleOneTimeJobWithDefaultConstraints() {
+        when(mMockJobWorker.getJobEnablementStatus()).thenReturn(JOB_ENABLED_STATUS_ENABLED);
+
         expect.withMessage("Pending job with id=%s in JobScheduler", JOB_ID_1)
                 .that(mJobScheduler.getPendingJob(JOB_ID_1))
                 .isNull();

@@ -107,6 +107,22 @@ public interface JobWorker {
     }
 
     /**
+     * Determines if the job scheduling is enabled.
+     *
+     * <p>By default, it returns the same value as {@link #getJobEnablementStatus()}. Override this
+     * method when the condition of enablement in job execution and scheduling are different.
+     *
+     * @return {@link JobEnablementStatus#JOB_ENABLED_STATUS_ENABLED} if the scheduling is enabled.
+     *     Return other values in {@link JobEnablementStatus} if the scheduling needs to be
+     *     disabled. Please add a skip reason to {@link AdServicesStatsLog} and {@link
+     *     JobEnablementStatus} if needed.
+     */
+    @JobEnablementStatus
+    default int getJobSchedulingEnablementStatus() {
+        return getJobEnablementStatus();
+    }
+
+    /**
      * A default method to get the backoff policy for failed executions. By default, the failed
      * execution doesn't retry.
      *

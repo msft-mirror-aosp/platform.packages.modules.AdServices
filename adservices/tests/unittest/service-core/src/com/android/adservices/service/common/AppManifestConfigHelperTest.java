@@ -47,7 +47,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.PackageManager.Property;
@@ -88,9 +87,20 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     // Constants for generic allowed / disallowed calls - the "type" doesn't matter
     private static final int RESULT_ALLOWED = RESULT_ALLOWED_APP_ALLOWS_ALL;
 
+    // Constants used mostly on executeIsAllowedTopicAccessTest
+    private static final boolean R_MINUS = true;
+    private static final boolean S_PLUS = false;
+    private static final boolean USE_SANDBOX_CHECK = true;
+    private static final boolean DOESNT_USE_SANDBOX_CHECK = false;
+    private static final boolean CONTAINS_SDK = true;
+    private static final boolean DOESNT_CONTAIN_SDK = false;
+    private static final boolean TOPICS_ALLOWED = true;
+    private static final boolean TOPICS_DISALLOWED = false;
+    private static final boolean EXPECTED_ALLOWED = true;
+    private static final boolean EXPECTED_DISALLOWED = false;
+
     @Mock private AppManifestConfig mMockAppManifestConfig;
     @Mock private AppManifestIncludesSdkLibraryConfig mMockSdkLibraryConfig;
-    @Mock private Context mMockContext;
     @Mock private PackageManager mMockPackageManager;
     @Mock private AssetManager mMockAssetManager;
     @Mock private Resources mMockResources;
@@ -243,44 +253,36 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedTopicsAccessFromSandbox_allowed_sPlus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                /* isRMinus= */ false,
-                /* useSandboxCheck= */ true,
-                /* containsSdk= */ false,
-                /* topicsAllowed= */ true,
-                /* expectedAllowed= */ true);
+                S_PLUS, USE_SANDBOX_CHECK, DOESNT_CONTAIN_SDK, TOPICS_ALLOWED, EXPECTED_ALLOWED);
     }
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedTopicsAccessFromSandbox_notAllowed_sPlus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                /* isRMinus= */ false,
-                /* useSandboxCheck= */ true,
-                /* containsSdk= */ false,
-                /* topicsAllowed= */ false,
-                /* expectedAllowed= */ false);
+                S_PLUS,
+                USE_SANDBOX_CHECK,
+                DOESNT_CONTAIN_SDK,
+                TOPICS_DISALLOWED,
+                EXPECTED_DISALLOWED);
     }
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedTopicsAccessFromApp_allowed_sPlus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                /* isRMinus= */ false,
-                /* useSandboxCheck= */ false,
-                /* containsSdk= */ true,
-                /* topicsAllowed= */ true,
-                /* expectedAllowed= */ true);
+                S_PLUS, DOESNT_USE_SANDBOX_CHECK, CONTAINS_SDK, TOPICS_ALLOWED, EXPECTED_ALLOWED);
     }
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedTopicsAccessFromApp_notAllowedBecauseOfSdk_sPlus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                /* isRMinus= */ false,
-                /* useSandboxCheck= */ false,
-                /* containsSdk= */ false,
-                /* topicsAllowed= */ true,
-                /* expectedAllowed= */ false);
+                S_PLUS,
+                DOESNT_USE_SANDBOX_CHECK,
+                DOESNT_CONTAIN_SDK,
+                TOPICS_ALLOWED,
+                EXPECTED_DISALLOWED);
     }
 
     @Test
@@ -288,62 +290,54 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     public void testIsAllowedTopicsAccessFromApp_notAllowedBecauseOfTopics_sPlus()
             throws Exception {
         executeIsAllowedTopicAccessTest(
-                /* isRMinus= */ false,
-                /* useSandboxCheck= */ false,
-                /* containsSdk= */ true,
-                /* topicsAllowed= */ false,
-                /* expectedAllowed= */ false);
+                S_PLUS,
+                DOESNT_USE_SANDBOX_CHECK,
+                CONTAINS_SDK,
+                TOPICS_DISALLOWED,
+                EXPECTED_DISALLOWED);
     }
 
     @Test
     public void testIsAllowedTopicsAccessFromSandbox_allowed_rMinus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                /* isRMinus= */ true,
-                /* useSandboxCheck= */ true,
-                /* containsSdk= */ false,
-                /* topicsAllowed= */ true,
-                /* expectedAllowed= */ true);
+                R_MINUS, USE_SANDBOX_CHECK, DOESNT_CONTAIN_SDK, TOPICS_ALLOWED, EXPECTED_ALLOWED);
     }
 
     @Test
     public void testIsAllowedTopicsAccessFromSandbox_notAllowed_rMinus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                /* isRMinus= */ true,
-                /* useSandboxCheck= */ true,
-                /* containsSdk= */ false,
-                /* topicsAllowed= */ false,
-                /* expectedAllowed= */ false);
+                R_MINUS,
+                USE_SANDBOX_CHECK,
+                DOESNT_CONTAIN_SDK,
+                TOPICS_DISALLOWED,
+                EXPECTED_DISALLOWED);
     }
 
     @Test
     public void testIsAllowedTopicsAccessFromApp_allowed_rMinus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                /* isRMinus= */ true,
-                /* useSandboxCheck= */ false,
-                /* containsSdk= */ true,
-                /* topicsAllowed= */ true,
-                /* expectedAllowed= */ true);
+                R_MINUS, DOESNT_USE_SANDBOX_CHECK, CONTAINS_SDK, TOPICS_ALLOWED, EXPECTED_ALLOWED);
     }
 
     @Test
     public void testIsAllowedTopicsAccessFromApp_notAllowedBecauseOfSdk_rMinus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                /* isRMinus= */ true,
-                /* useSandboxCheck= */ false,
-                /* containsSdk= */ false,
-                /* topicsAllowed= */ true,
-                /* expectedAllowed= */ false);
+                R_MINUS,
+                DOESNT_USE_SANDBOX_CHECK,
+                DOESNT_CONTAIN_SDK,
+                TOPICS_ALLOWED,
+                EXPECTED_DISALLOWED);
     }
 
     @Test
     public void testIsAllowedTopicsAccessFromApp_notAllowedBecauseOfTopics_rMinus()
             throws Exception {
         executeIsAllowedTopicAccessTest(
-                /* isRMinus= */ true,
-                /* useSandboxCheck= */ false,
-                /* containsSdk= */ true,
-                /* topicsAllowed= */ false,
-                /* expectedAllowed= */ false);
+                R_MINUS,
+                DOESNT_USE_SANDBOX_CHECK,
+                CONTAINS_SDK,
+                TOPICS_DISALLOWED,
+                EXPECTED_DISALLOWED);
     }
 
     private void executeIsAllowedTopicAccessTest(
@@ -361,18 +355,17 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         }
         mockAppManifestConfigParserGetConfigSucceeds();
         mockContainsSdk(ENROLLMENT_ID, containsSdk);
-        int result =
+        int expectedResult =
                 expectedAllowed ? RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID : RESULT_DISALLOWED_BY_APP;
-        mockIsAllowedTopicsAccess(ENROLLMENT_ID, result);
+        mockIsAllowedTopicsAccess(ENROLLMENT_ID, expectedResult);
+        boolean actualAllowed =
+                AppManifestConfigHelper.isAllowedTopicsAccess(
+                        useSandboxCheck, PACKAGE_NAME, ENROLLMENT_ID);
         assertWithMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
-                .that(
-                        AppManifestConfigHelper.isAllowedTopicsAccess(
-                                /* useSandboxCheck= */ useSandboxCheck,
-                                PACKAGE_NAME,
-                                ENROLLMENT_ID))
+                .that(actualAllowed)
                 .isEqualTo(expectedAllowed);
 
-        verifyLogUsage(API_TOPICS, result);
+        verifyLogUsage(API_TOPICS, expectedResult);
     }
 
     @Test
@@ -546,14 +539,12 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                /* useSandboxCheck= */ true, PACKAGE_NAME, ENROLLMENT_ID))
+                                USE_SANDBOX_CHECK, PACKAGE_NAME, ENROLLMENT_ID))
                 .isFalse();
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                /* useSandboxCheck= */ false,
-                                PACKAGE_NAME,
-                                ENROLLMENT_ID))
+                                DOESNT_USE_SANDBOX_CHECK, PACKAGE_NAME, ENROLLMENT_ID))
                 .isFalse();
     }
 
@@ -583,12 +574,12 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                /* useSandboxCheck= */ true, PACKAGE_NAME, ENROLLMENT_ID))
+                                USE_SANDBOX_CHECK, PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                /* useSandboxCheck= */ false, PACKAGE_NAME, ENROLLMENT_ID))
+                                DOESNT_USE_SANDBOX_CHECK, PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
         verifyErrorLogUtilErrorLogged(any(), never());

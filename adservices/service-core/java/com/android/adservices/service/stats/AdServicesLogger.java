@@ -28,7 +28,6 @@ import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
-import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 
 /** Interface for Adservices logger. */
 public interface AdServicesLogger {
@@ -125,6 +124,12 @@ public interface AdServicesLogger {
     /** Logs measurement click verification stats. */
     void logMeasurementClickVerificationStats(
             MeasurementClickVerificationStats measurementClickVerificationStats);
+
+    /** Logs measurement ODP registrations. */
+    void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats);
+
+    /** Logs measurement ODP API calls. */
+    void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats);
 
     /** Logs enrollment data stats. */
     void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId);

@@ -188,7 +188,7 @@ public final class PhFlagsTestHelper {
      *     "COBALT_LOGGING_ENABLED"} defining the default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testFeatureFlagGuardedByGlobalKs(
+    public void testFeatureFlagBackedBySystemPropertyGuardedByGlobalKs(
             String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
         testGuardedFeatureFlagBackedBySystemProperty(
                 flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
@@ -222,7 +222,7 @@ public final class PhFlagsTestHelper {
      * Tests the behavior of a feature flag and verifies default value, overridden value are
      * fetched.
      */
-    public void testFeatureFlag(
+    public void testConfigFlag(
             String flagName, String defaultConstantValue, Flaginator<Flags, String> flaginator) {
         testFeatureFlagDefaultOverriddenAndIllegalValue(
                 flagName,
