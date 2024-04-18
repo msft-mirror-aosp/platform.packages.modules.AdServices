@@ -31,6 +31,9 @@ import java.util.regex.Pattern;
 
 /** A helper class consists helper methods to collect Ad ID API hot/code start-up latencies. */
 public final class AdIdLatencyHelper {
+    /** The tag used in {@link LatencyHelper} to collect stats from specific labels. */
+    public static final String TAG = "GetAdIdApiCall";
+
     /** A tag used to measure Ad ID API hot start-up latency. */
     public static final String AD_ID_HOT_START_LATENCY_METRIC = "AD_ID_HOT_START_LATENCY_METRIC";
 
@@ -53,7 +56,7 @@ public final class AdIdLatencyHelper {
             implements LatencyHelper.ProcessInputForLatencyMetrics {
         @Override
         public String getTestLabel() {
-            return "GetAdIdApiCall";
+            return TAG;
         }
 
         @Override
