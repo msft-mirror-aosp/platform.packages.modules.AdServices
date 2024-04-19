@@ -51,6 +51,8 @@ public final class ConsentManager {
 
     static final String PAS_NOTIFICATION_DISPLAYED_ONCE = "PAS_NOTIFICATION_DISPLAYED_ONCE";
 
+    static final String PAS_NOTIFICATION_OPENED = "PAS_NOTIFICATION_OPENED";
+
     static final String TOPICS_CONSENT_PAGE_DISPLAYED = "TOPICS-CONSENT-PAGE-DISPLAYED";
 
     static final String FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED =
@@ -244,6 +246,24 @@ public final class ConsentManager {
      */
     public boolean wasPasNotificationDisplayed() {
         return getValueWithLock(PAS_NOTIFICATION_DISPLAYED_ONCE);
+    }
+
+    /**
+     * Saves information to the storage that PAS notification was opened for the first time to the
+     * user.
+     */
+    public void recordPasNotificationOpened(boolean wasNotificationOpened) {
+        setValueWithLock(
+                PAS_NOTIFICATION_OPENED, wasNotificationOpened, "recordPasNotificationOpened");
+    }
+
+    /**
+     * Returns information whether PAS Consent Notification was opened or not.
+     *
+     * @return true if PAS Consent Notification was opened, otherwise false.
+     */
+    public boolean wasPasNotificationOpened() {
+        return getValueWithLock(PAS_NOTIFICATION_OPENED);
     }
 
     /** Saves the default consent of a user. */

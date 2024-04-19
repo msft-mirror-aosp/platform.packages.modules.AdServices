@@ -1430,6 +1430,9 @@ public class ConsentManager {
                     == null) {
                 booleanFileDatastore.put(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, false);
             }
+            if (booleanFileDatastore.get(ConsentConstants.PAS_NOTIFICATION_OPENED) == null) {
+                booleanFileDatastore.put(ConsentConstants.PAS_NOTIFICATION_OPENED, false);
+            }
         } catch (IOException | IllegalArgumentException | NullPointerException e) {
             throw new RuntimeException("Failed to initialize the File Datastore!", e);
         }
@@ -2229,12 +2232,17 @@ public class ConsentManager {
     }
 
     /**
-     * get pas conset for fledge, pasUxEnable flag has checked iseea, thus we don't need to check
+     * get pas consent for fledge, pasUxEnable flag has checked iseea, thus we don't need to check
      * this again
      */
     public boolean isPasFledgeConsentGiven() {
         if (mFlags.getConsentManagerDebugMode()) {
             return true;
+        }
+        if (mFlags.getEeaPasUxEnabled()) {
+            if (DeviceRegionProvider.isEuDevice(ApplicationContextSingleton.get())) {
+                return wasPasNotificationOpened() && getConsent(AdServicesApiType.FLEDGE).isGiven();
+            }
         }
 
         return mFlags.getPasUxEnabled()
@@ -2247,7 +2255,12 @@ public class ConsentManager {
         if (mFlags.getConsentManagerDebugMode()) {
             return true;
         }
-
+        if (mFlags.getEeaPasUxEnabled()) {
+            if (DeviceRegionProvider.isEuDevice(ApplicationContextSingleton.get())) {
+                return wasPasNotificationOpened()
+                        && getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+            }
+        }
         return mFlags.getPasUxEnabled()
                 && wasPasNotificationDisplayed()
                 && getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
@@ -2302,6 +2315,43 @@ public class ConsentManager {
                 () -> mAppSearchConsentManager.setPaDataReset(isPaDataReset),
                 () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
                 mDatastore.put(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
+                /* errorLogger= */ null);
+    }
+
+    /**
+     * Returns whether the PAS notification was opened and the detailed PAS notification activity
+     * was displayed.
+     */
+    public Boolean wasPasNotificationOpened() {
+        return executeGettersByConsentSourceOfTruth(
+                /* defaultReturn= */ false,
+                () -> mDatastore.get(ConsentConstants.PAS_NOTIFICATION_OPENED),
+                () -> mAdServicesManager.wasPasNotificationOpened(),
+                () -> false,
+                () -> false,
+                /* errorLogger= */ null);
+    }
+
+    /** Set the isPaDataReset bit to storage based on consent_source_of_truth. */
+    public void recordPasNotificationOpened(boolean wasPasNotificationOpened) {
+        executeSettersByConsentSourceOfTruth(
+                () ->
+                        mDatastore.put(
+                                ConsentConstants.PAS_NOTIFICATION_OPENED, wasPasNotificationOpened),
+                () -> mAdServicesManager.recordPasNotificationOpened(wasPasNotificationOpened),
+                // APPSEARCH_ONLY is only set on S which has not implemented PAS updates.
+                () -> {
+                    throw new IllegalStateException(
+                            getAppSearchExceptionMessage(
+                                    /* illegalAction */ "store if PAS notification was displayed"));
+                },
+                () -> {
+                    // PPAPI_AND_ADEXT_SERVICE is only set on R which has not implemented PAS
+                    // updates.
+                    throw new IllegalStateException(
+                            getAdExtExceptionMessage(
+                                    /* illegalAction */ "store if PAS notification was displayed"));
+                },
                 /* errorLogger= */ null);
     }
 
