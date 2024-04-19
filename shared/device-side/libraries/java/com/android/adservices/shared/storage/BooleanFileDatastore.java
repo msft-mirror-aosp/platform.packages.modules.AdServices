@@ -37,6 +37,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -283,7 +284,7 @@ public class BooleanFileDatastore {
     public final Set<String> keySet() {
         mReadLock.lock();
         try {
-            return Set.copyOf(mLocalMap.keySet());
+            return new HashSet<>(mLocalMap.keySet());
         } finally {
             mReadLock.unlock();
         }
@@ -292,7 +293,8 @@ public class BooleanFileDatastore {
     private Set<String> keySetFilter(boolean filter) {
         mReadLock.lock();
         try {
-            return Set.copyOf(
+            // TODO(b/335869310): Decide if we can use guava to use ImmutableList.copyOf();
+            return new HashSet<>(
                     mLocalMap.entrySet().stream()
                             .filter(entry -> entry.getValue().equals(filter))
                             .map(Map.Entry::getKey)
