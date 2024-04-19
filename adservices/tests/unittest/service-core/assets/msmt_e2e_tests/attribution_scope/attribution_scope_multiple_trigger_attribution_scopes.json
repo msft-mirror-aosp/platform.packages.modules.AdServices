@@ -1,5 +1,5 @@
 {
-  "description": "Test the attribution scope feature: select sources with the same attribution scope and last-touch highest-priority.",
+  "description": "Test the attribution scope feature: the source should be selected if the source attribution scopes match any one of the attribution scopes.",
   "phflags_override": {
     "measurement_enable_attribution_scope": "true"
   },
@@ -42,7 +42,7 @@
         ],
         "timestamp": "800000000001"
       },
-      // S2: attribution scopes -> ["1"], destinations -> [D1], priority -> 102
+      // S2: attribution scopes -> ["2"], destinations -> [D1], priority -> 102
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.test",
@@ -68,7 +68,7 @@
               },
               "attribution_scope_limit": 3,
               "attribution_scopes": [
-                "1"
+                "2"
               ],
               "max_event_states": 10
             },
@@ -79,7 +79,7 @@
         ],
         "timestamp": "800000000002"
       },
-      // S3: attribution scopes -> ["1"], destinations -> [D1], priority -> 101
+      // S3: attribution scopes -> ["2", "3"], destinations -> [D1], priority -> 102
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.test",
@@ -92,7 +92,7 @@
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "3",
               "destination": "android-app://example.2d1.test",
-              "priority": "101",
+              "priority": "102",
               "filter_data": {
                 "top_key_1": [
                   "top_value_1",
@@ -105,7 +105,7 @@
               },
               "attribution_scope_limit": 3,
               "attribution_scopes": [
-                "1"
+                "2", "3"
               ],
               "max_event_states": 10
             },
@@ -115,11 +115,49 @@
         }
         ],
         "timestamp": "800000000003"
+      },
+      // S4: attribution scopes -> ["3"], destinations -> [D1], priority -> 102
+      {
+        "registration_request": {
+          "attribution_src_url": "https://www.ad-tech1.test",
+          "source_type": "navigation",
+          "registrant": "example.1s1.test"
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.test",
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "source_event_id": "4",
+              "destination": "android-app://example.2d1.test",
+              "priority": "102",
+              "filter_data": {
+                "top_key_1": [
+                  "top_value_1",
+                  "top_value_2"
+                ],
+                "event_key_1": [
+                  "event_value_1",
+                  "event_value_2"
+                ]
+              },
+              "attribution_scope_limit": 3,
+              "attribution_scopes": [
+                "3"
+              ],
+              "max_event_states": 10
+            },
+            "Location": null,
+            "Attribution-Reporting-Redirect": null
+          }
+        }
+        ],
+        "timestamp": "800000000004"
       }
     ],
     "triggers": [
-      // T1: attribution scope -> "1", destination -> D1
-      // S2 should be selected to match the attribution scope and has the highest priority.
+      // T1: attribution scopes -> ["1", "2"], destination -> D1
+      // S3 should be selected as it's the last touch source that matches the one of the attribution
+      // scopes ("2").
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.test",
@@ -130,7 +168,10 @@
             "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
-                "attribution_scopes": ["1"],
+                "attribution_scopes": [
+                  "1",
+                  "2"
+                ],
                 "event_trigger_data": [
                   {
                     "trigger_data": "0",
@@ -195,12 +236,12 @@
   "output": {
     "event_level_results": [
       {
-        "report_time": "800172800002",
+        "report_time": "800172800003",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
           "scheduled_report_time": "800172800",
-          "source_event_id": "2",
+          "source_event_id": "3",
           "trigger_data": "1",
           "source_type": "navigation",
           "randomized_trigger_rate": 0.0024263
