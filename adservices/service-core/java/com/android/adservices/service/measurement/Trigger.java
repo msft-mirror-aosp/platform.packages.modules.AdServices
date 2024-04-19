@@ -78,7 +78,7 @@ public class Trigger {
     @Nullable private Uri mAggregationCoordinatorOrigin;
     private SourceRegistrationTimeConfig mAggregatableSourceRegistrationTimeConfig;
     @Nullable private String mTriggerContextId;
-    @Nullable private String mAttributionScope;
+    @Nullable private String mAttributionScopesString;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -135,7 +135,7 @@ public class Trigger {
                 && Objects.equals(mDebugAdId, trigger.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, trigger.mRegistrationOrigin)
                 && Objects.equals(mTriggerContextId, trigger.mTriggerContextId)
-                && Objects.equals(mAttributionScope, trigger.mAttributionScope);
+                && Objects.equals(mAttributionScopesString, trigger.mAttributionScopesString);
     }
 
     @Override
@@ -165,7 +165,7 @@ public class Trigger {
                 mRegistrationOrigin,
                 mAggregatableSourceRegistrationTimeConfig,
                 mTriggerContextId,
-                mAttributionScope);
+                mAttributionScopesString);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -573,10 +573,24 @@ public class Trigger {
         }
     }
 
-    /** Returns attribution scope for the trigger. */
+    /** Returns attribution scope string for the trigger. */
     @Nullable
-    public String getAttributionScope() {
-        return mAttributionScope;
+    public String getAttributionScopesString() {
+        return mAttributionScopesString;
+    }
+
+    /** Returns attribution scopes for the trigger. */
+    @Nullable
+    public List<String> getAttributionScopes() throws JSONException {
+        if (mAttributionScopesString == null) {
+            return null;
+        }
+        JSONArray jsonArray = new JSONArray(mAttributionScopesString);
+        List<String> attributionScopes = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); ++i) {
+            attributionScopes.add(jsonArray.getString(i));
+        }
+        return attributionScopes;
     }
 
     /** Builder for {@link Trigger}. */
@@ -774,10 +788,10 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAttributionScope()}. */
+        /** See {@link Trigger#getAttributionScopesString()}. */
         @NonNull
-        public Builder setAttributionScope(@Nullable String attributionScope) {
-            mBuilding.mAttributionScope = attributionScope;
+        public Builder setAttributionScopesString(@Nullable String attributionScopesString) {
+            mBuilding.mAttributionScopesString = attributionScopesString;
             return this;
         }
 
