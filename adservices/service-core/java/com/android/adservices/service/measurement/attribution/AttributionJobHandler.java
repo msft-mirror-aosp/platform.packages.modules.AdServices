@@ -756,10 +756,43 @@ class AttributionJobHandler {
                 (Source source) ->
                         source.isInstallAttributed()
                                 && isWithinInstallCooldownWindow(source, trigger);
-        matchingSources.sort(
-                Comparator.comparing(installAttributionComparator, Comparator.reverseOrder())
+        Comparator<Source> comparator =
+                Comparator.comparing(installAttributionComparator, Comparator.reverseOrder());
+        if (mFlags.getMeasurementEnableAttributionScope()) {
+            List<String> triggerAttributionScopes;
+            try {
+                triggerAttributionScopes = trigger.getAttributionScopes();
+            } catch (JSONException e) {
+                throw new IllegalArgumentException("Failed to parse trigger attribution scopes.");
+            }
+            if (triggerAttributionScopes != null) {
+                Set<String> triggerAttributionScopesSet = new HashSet<>(triggerAttributionScopes);
+                // Filter based on whether any of the trigger attribution scope is in the source
+                // attribution scopes.
+                Function<Source, Boolean> attributionScopeFilter =
+                        (Source source) -> {
+                            if (source.getAttributionScopes() == null) {
+                                return false;
+                            }
+                            Set<String> sourceAttributionScopes =
+                                    new HashSet<>(source.getAttributionScopes());
+                            sourceAttributionScopes.retainAll(triggerAttributionScopesSet);
+                            return !sourceAttributionScopes.isEmpty();
+                        };
+                if (!matchingSources.stream().anyMatch(attributionScopeFilter::apply)) {
+                    return Optional.empty();
+                }
+                comparator =
+                        Comparator.comparing(attributionScopeFilter, Comparator.reverseOrder())
+                                .thenComparing(
+                                        installAttributionComparator, Comparator.reverseOrder());
+            }
+        }
+        comparator =
+                comparator
                         .thenComparing(Source::getPriority, Comparator.reverseOrder())
-                        .thenComparing(Source::getEventTime, Comparator.reverseOrder()));
+                        .thenComparing(Source::getEventTime, Comparator.reverseOrder());
+        matchingSources.sort(comparator);
 
         Source selectedSource = matchingSources.remove(0);
 

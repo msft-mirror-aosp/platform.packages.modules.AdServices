@@ -161,7 +161,8 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.TRIGGER_CONTEXT_ID,
                 trigger.getTriggerContextId());
         values.put(
-                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPE, trigger.getAttributionScope());
+                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
+                trigger.getAttributionScopesString());
 
         long rowId =
                 mSQLTransaction
@@ -811,6 +812,57 @@ class MeasurementDao implements IMeasurementDao {
         return sourceId;
     }
 
+    private List<Source> populateAttributionScopes(List<Source> sources) throws DatastoreException {
+        Map<String, Source.Builder> sourceIdToSource =
+                sources.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        Source::getId, source -> Source.Builder.from(source)));
+        String attributionScopesWhereStatement =
+                SourceAttributionScopeContract.SOURCE_ID
+                        + " IN ("
+                        + sources.stream()
+                                .map(Source::getId)
+                                .map(DatabaseUtils::sqlEscapeString)
+                                .collect(Collectors.joining(","))
+                        + ")";
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                SourceAttributionScopeContract.TABLE,
+                                new String[] {
+                                    SourceAttributionScopeContract.SOURCE_ID,
+                                    SourceAttributionScopeContract.ATTRIBUTION_SCOPE
+                                },
+                                attributionScopesWhereStatement,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            Map<String, List<String>> sourceIdToAttributionScopes = new HashMap<>();
+            while (cursor.moveToNext()) {
+                String sourceId =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        SourceAttributionScopeContract.SOURCE_ID));
+                String attributionScope =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        SourceAttributionScopeContract.ATTRIBUTION_SCOPE));
+                sourceIdToAttributionScopes.putIfAbsent(sourceId, new ArrayList<>());
+                sourceIdToAttributionScopes.get(sourceId).add(attributionScope);
+            }
+            sourceIdToAttributionScopes.forEach(
+                    (sourceId, attributionScopes) -> {
+                        sourceIdToSource.get(sourceId).setAttributionScopes(attributionScopes);
+                    });
+        }
+        return sourceIdToSource.values().stream()
+                .map(Source.Builder::build)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
     @Override
     public List<Source> getMatchingActiveSources(@NonNull Trigger trigger)
             throws DatastoreException {
@@ -835,23 +887,6 @@ class MeasurementDao implements IMeasurementDao {
                         SourceContract.EVENT_TIME,
                         SourceContract.EXPIRY_TIME,
                         SourceContract.STATUS);
-        if (FlagsFactory.getFlags().getMeasurementEnableAttributionScope()
-                && trigger.getAttributionScope() != null) {
-            String attributionScopeWhereStatement =
-                    SourceContract.ID
-                            + " IN (SELECT "
-                            + SourceAttributionScopeContract.SOURCE_ID
-                            + " FROM "
-                            + SourceAttributionScopeContract.TABLE
-                            + " WHERE "
-                            + SourceAttributionScopeContract.ATTRIBUTION_SCOPE
-                            + " = "
-                            + trigger.getAttributionScope()
-                            + ")";
-            sourceWhereStatement =
-                    mergeConditions(" AND ", attributionScopeWhereStatement, sourceWhereStatement);
-        }
-
         try (Cursor cursor =
                 mSQLTransaction
                         .getDatabase()
@@ -869,7 +904,10 @@ class MeasurementDao implements IMeasurementDao {
             while (cursor.moveToNext()) {
                 sources.add(SqliteObjectMapper.constructSourceFromCursor(cursor));
             }
-            return sources;
+            return FlagsFactory.getFlags().getMeasurementEnableAttributionScope()
+                            && trigger.getAttributionScopesString() != null
+                    ? populateAttributionScopes(sources)
+                    : sources;
         }
     }
 

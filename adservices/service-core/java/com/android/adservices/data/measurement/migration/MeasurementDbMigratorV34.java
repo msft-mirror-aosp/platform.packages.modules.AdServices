@@ -82,7 +82,7 @@ public class MeasurementDbMigratorV34 extends AbstractMeasurementDbMigrator {
         MigrationHelpers.addTextColumnIfAbsent(
                 db,
                 MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPE);
+                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES);
 
         db.execSQL(MeasurementTables.CREATE_TABLE_SOURCE_ATTRIBUTION_SCOPE_LATEST);
 
