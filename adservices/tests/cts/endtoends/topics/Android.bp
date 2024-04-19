@@ -39,6 +39,7 @@ java_defaults {
 
 android_test {
     name: "CtsAdServicesEndToEndTests",
+    team: "trendy_team_android_rubidium",
     defaults: ["cts-adservices-endtoend-defaults"],
     test_suites: [
         "cts",
