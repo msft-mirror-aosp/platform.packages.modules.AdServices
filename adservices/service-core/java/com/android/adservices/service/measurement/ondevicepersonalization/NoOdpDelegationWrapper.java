@@ -16,18 +16,48 @@
 
 package com.android.adservices.service.measurement.ondevicepersonalization;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementOdpRegistrationStats;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.List;
 import java.util.Map;
 
 public class NoOdpDelegationWrapper implements IOdpDelegationWrapper {
+    private static final String HEADER_ODP_REGISTER_TRIGGER = "Odp-Register-Trigger";
+    private final AdServicesLogger mLogger;
+
+    public NoOdpDelegationWrapper() {
+        this(AdServicesLoggerImpl.getInstance());
+    }
+
+    @VisibleForTesting
+    public NoOdpDelegationWrapper(AdServicesLogger logger) {
+        mLogger = logger;
+    }
+
     @Override
-    public boolean registerOdpTrigger(
+    public void registerOdpTrigger(
             AsyncRegistration asyncRegistration, Map<String, List<String>> headers) {
-        // TODO implement ODP metrics (b/330784221)
         LoggerFactory.getMeasurementLogger().d("registerOdpTrigger: ODP is not available");
-        return false;
+        if (headers.containsKey(HEADER_ODP_REGISTER_TRIGGER)) {
+            logOdpRegistrationMetrics();
+        }
+    }
+
+    private void logOdpRegistrationMetrics() {
+        mLogger.logMeasurementOdpRegistrations(
+                new MeasurementOdpRegistrationStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION)
+                        .setRegistrationType(
+                                OdpRegistrationStatus.RegistrationType.TRIGGER.getValue())
+                        .setRegistrationStatus(
+                                OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE.getValue())
+                        .build());
     }
 }

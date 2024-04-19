@@ -18,6 +18,15 @@ package com.android.adservices.service.measurement.ondevicepersonalization;
 
 import static android.adservices.ondevicepersonalization.OnDevicePersonalizationPermissions.NOTIFY_MEASUREMENT_EVENT;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_INVALID_HEADER_FIELD_VALUE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_INVALID_HEADER_FORMAT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_JSON_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_MISSING_REQUIRED_HEADER_FIELD_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_PARSING_UNKNOWN_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION;
+
 import android.adservices.ondevicepersonalization.MeasurementWebTriggerEventParams;
 import android.adservices.ondevicepersonalization.OnDevicePersonalizationSystemEventManager;
 import android.annotation.RequiresPermission;
@@ -29,7 +38,13 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementOdpApiCallStats;
+import com.android.adservices.service.stats.MeasurementOdpRegistrationStats;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -43,63 +58,74 @@ import java.util.Objects;
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
     private OnDevicePersonalizationSystemEventManager mOdpSystemEventManager;
-    private boolean mDisableApiCallForTesting;
+    private final AdServicesLogger mLogger;
+    private final Clock mClock;
 
     public OdpDelegationWrapperImpl(OnDevicePersonalizationSystemEventManager manager) {
-        this(manager, /* disableApiCallForTesting */ false);
+        this(manager, AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
     public OdpDelegationWrapperImpl(
-            OnDevicePersonalizationSystemEventManager manager, boolean disableApiCallForTesting) {
-        if (!disableApiCallForTesting) {
-            Objects.requireNonNull(manager);
-        }
+            OnDevicePersonalizationSystemEventManager manager,
+            AdServicesLogger logger) {
+        Objects.requireNonNull(manager);
         mOdpSystemEventManager = manager;
-        mDisableApiCallForTesting = disableApiCallForTesting;
+        mLogger = logger;
+        mClock = Clock.getInstance();
     }
 
     /** Calls the notifyMeasurementEvent API. */
     @Override
     @RequiresPermission(NOTIFY_MEASUREMENT_EVENT)
-    public boolean registerOdpTrigger(
+    public void registerOdpTrigger(
             AsyncRegistration asyncRegistration, Map<String, List<String>> headers) {
         Objects.requireNonNull(asyncRegistration);
         Objects.requireNonNull(headers);
 
-        if (!isOdpTriggerHeaderPresent(headers)) {
-            return false;
+        if (!headers.containsKey(OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER)) {
+            return;
         }
 
+        OdpRegistrationStatus odpRegistrationStatus = new OdpRegistrationStatus();
+        odpRegistrationStatus.setRegistrationType(OdpRegistrationStatus.RegistrationType.TRIGGER);
         List<String> field = headers.get(OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER);
         if (field == null || field.size() != 1) {
-            // TODO Add WW & CEL logging for exceptions (b/330784221)
             LoggerFactory.getMeasurementLogger().d("registerOdpTrigger: Invalid header format");
-            return false;
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_INVALID_HEADER_FORMAT_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            odpRegistrationStatus.setRegistrationStatus(
+                    OdpRegistrationStatus.RegistrationStatus.INVALID_HEADER_FORMAT);
+            logOdpRegistrationMetrics(odpRegistrationStatus);
+            return;
         }
 
         try {
             JSONObject json = new JSONObject(field.get(0));
             if (json.isNull(OdpTriggerHeaderContract.ODP_SERVICE)) {
-                // TODO Add WW & CEL logging for exceptions (b/330784221)
                 LoggerFactory.getMeasurementLogger()
                         .d("registerOdpTrigger: Missing required field: Service");
-                return false;
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_MISSING_REQUIRED_HEADER_FIELD_ERROR,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+                odpRegistrationStatus.setRegistrationStatus(
+                        OdpRegistrationStatus.RegistrationStatus.MISSING_REQUIRED_HEADER_FIELD);
+                return;
             }
 
             ComponentName componentName =
                     ComponentName.unflattenFromString(
                             json.getString(OdpTriggerHeaderContract.ODP_SERVICE));
             if (componentName == null) {
-                // TODO Add WW & CEL logging for exceptions (b/330784221)
                 LoggerFactory.getMeasurementLogger()
                         .d("registerOdpTrigger: Invalid field format: Service");
-                return false;
-            }
-
-            // Prevent usage of classes from the OnDevicePersonalization module in unit tests
-            if (mDisableApiCallForTesting) {
-                return true;
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_INVALID_HEADER_FIELD_VALUE_ERROR,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+                odpRegistrationStatus.setRegistrationStatus(
+                        OdpRegistrationStatus.RegistrationStatus.INVALID_HEADER_FIELD_VALUE);
+                return;
             }
 
             MeasurementWebTriggerEventParams.Builder builder =
@@ -117,6 +143,7 @@ public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
                                 .getBytes(StandardCharsets.UTF_8));
             }
 
+            final long startServiceTime = mClock.elapsedRealtime();
             mOdpSystemEventManager.notifyMeasurementEvent(
                     builder.build(),
                     AdServicesExecutors.getLightWeightExecutor(),
@@ -125,27 +152,56 @@ public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
                         public void onResult(Void result) {
                             LoggerFactory.getMeasurementLogger()
                                     .d("Trigger successful sent to ODP module");
+                            long latency = mClock.elapsedRealtime() - startServiceTime;
+                            logOdpApiCallMetrics(
+                                    latency, OdpApiCallStatus.ApiCallStatus.SUCCESS.getValue());
                         }
 
                         @Override
                         public void onError(Exception exception) {
                             LoggerFactory.getMeasurementLogger()
                                     .e(exception, "Trigger failed to be sent to ODP module");
+                            long latency = mClock.elapsedRealtime() - startServiceTime;
+                            logOdpApiCallMetrics(
+                                    latency, OdpApiCallStatus.ApiCallStatus.FAILURE.getValue());
                         }
                     });
-            return true;
+            odpRegistrationStatus.setRegistrationStatus(
+                    OdpRegistrationStatus.RegistrationStatus.SUCCESS);
         } catch (JSONException e) {
-            // TODO Add WW & CEL logging for exceptions (b/330784221)
+            // TODO: Expanding ODP WW metric failure types b/335418853
             LoggerFactory.getMeasurementLogger().d(e, "registerOdpTrigger: JSONException");
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_JSON_PARSING_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         } catch (Exception e) {
-            // TODO Add WW & CEL logging for exceptions (b/330784221)
+            // TODO: Expanding ODP WW metric failure types b/335418853
             LoggerFactory.getMeasurementLogger().d(e, "registerOdpTrigger: Unknown Exception");
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_PARSING_UNKNOWN_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+        } finally {
+            logOdpRegistrationMetrics(odpRegistrationStatus);
         }
-        return false;
     }
 
-    private boolean isOdpTriggerHeaderPresent(Map<String, List<String>> headers) {
-        return headers.containsKey(OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER);
+    private void logOdpRegistrationMetrics(OdpRegistrationStatus odpRegistrationStatus) {
+        mLogger.logMeasurementOdpRegistrations(
+                new MeasurementOdpRegistrationStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION)
+                        .setRegistrationType(odpRegistrationStatus.getRegistrationType().getValue())
+                        .setRegistrationStatus(
+                                odpRegistrationStatus.getRegistrationStatus().getValue())
+                        .build());
+    }
+
+    private void logOdpApiCallMetrics(long latency, int status) {
+        mLogger.logMeasurementOdpApiCall(
+                new MeasurementOdpApiCallStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP)
+                        .setLatency(latency)
+                        .setApiCallStatus(status)
+                        .build());
     }
 
     private interface OdpTriggerHeaderContract {
