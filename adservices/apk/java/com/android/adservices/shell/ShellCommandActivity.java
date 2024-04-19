@@ -130,23 +130,25 @@ public final class ShellCommandActivity extends Activity {
         runShellCommand(FlagsFactory.getFlags(), AdServicesExecutors.getLightWeightExecutor());
     }
 
-    private void waitAndGetResult(PrintWriter writer) {
+    private @Status int waitAndGetResult(PrintWriter writer) {
         try {
             if (mLatch.await(MAX_COMMAND_DURATION_MILLIS, TimeUnit.MILLISECONDS)) {
                 formatAndPrintResult(STATUS_FINISHED, mOutSw.toString(), mErrSw.toString(), writer);
-            } else {
-                String errMsg =
-                        String.format(
-                                "Elapsed time: %d Millisecond. Timeout occurred , failed to"
-                                        + " complete shell command\n",
-                                MAX_COMMAND_DURATION_MILLIS);
-
-                formatAndPrintResult(STATUS_TIMEOUT, mOutSw.toString(), errMsg, writer);
+                return STATUS_FINISHED;
             }
+            Log.e(
+                    TAG,
+                    String.format(
+                            "Elapsed time: %d Millisecond. Command is still running. Please"
+                                    + " retry by calling get-result shell command\n",
+                            MAX_COMMAND_DURATION_MILLIS));
+            formatAndPrintResult(STATUS_RUNNING, mOutSw.toString(), mErrSw.toString(), writer);
+            return STATUS_RUNNING;
         } catch (InterruptedException e) {
             writer.println("Thread interrupted, failed to complete shell command");
             Thread.currentThread().interrupt();
         }
+        return STATUS_FINISHED;
     }
 
     @Override
@@ -177,13 +179,16 @@ public final class ShellCommandActivity extends Activity {
         }
 
         if (args.length == 2 && args[1].equals(GET_RESULT_ARG)) {
-            waitAndGetResult(writer);
+            @Status int status = waitAndGetResult(writer);
+            if (status != STATUS_RUNNING) {
+                finishSelf();
+            }
         } else {
             writer.printf(
                     "Invalid args %s. Supported args are 'cmd get-result'\n",
                     Arrays.toString(args));
+            finishSelf();
         }
-        finishSelf();
     }
 
     /*
@@ -203,12 +208,12 @@ public final class ShellCommandActivity extends Activity {
 
         if (status == STATUS_FINISHED || status == STATUS_TIMEOUT) {
             writer.printf("%s: %d\n", COMMAND_RES, mRes);
-            if (!out.isEmpty()) {
-                indentAndPrefixStringWithSpace(out, COMMAND_OUT, writer);
-            }
-            if (!err.isEmpty()) {
-                indentAndPrefixStringWithSpace(err, COMMAND_ERR, writer);
-            }
+        }
+        if (!out.isEmpty()) {
+            indentAndPrefixStringWithSpace(out, COMMAND_OUT, writer);
+        }
+        if (!err.isEmpty()) {
+            indentAndPrefixStringWithSpace(err, COMMAND_ERR, writer);
         }
     }
 
