@@ -5559,9 +5559,23 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getPasUxEnabled() {
+        if (getEeaPasUxEnabled()) {
+            // EEA devices (if EEA device feature is not enabled, assume EEA to be safe)
+            if (!isEeaDeviceFeatureEnabled() || isEeaDevice()) {
+                return true;
+            }
+            // ROW devices
+            return getDeviceConfigFlag(FlagsConstants.KEY_PAS_UX_ENABLED, DEFAULT_PAS_UX_ENABLED);
+        }
         return isEeaDeviceFeatureEnabled()
                 && !isEeaDevice()
                 && getDeviceConfigFlag(FlagsConstants.KEY_PAS_UX_ENABLED, DEFAULT_PAS_UX_ENABLED);
+    }
+
+    @Override
+    public boolean getEeaPasUxEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_EEA_PAS_UX_ENABLED, DEFAULT_EEA_PAS_UX_ENABLED);
     }
 
     @Override
@@ -5611,6 +5625,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED,
                 isGetAdServicesCommonStatesApiEnabled());
         uxMap.put(FlagsConstants.KEY_PAS_UX_ENABLED, getPasUxEnabled());
+        uxMap.put(FlagsConstants.KEY_EEA_PAS_UX_ENABLED, getEeaPasUxEnabled());
         return uxMap;
     }
 

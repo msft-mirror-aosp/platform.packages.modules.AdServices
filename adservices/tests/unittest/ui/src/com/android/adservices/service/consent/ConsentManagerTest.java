@@ -23,6 +23,7 @@ import static com.android.adservices.service.consent.ConsentConstants.GA_UX_NOTI
 import static com.android.adservices.service.consent.ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED;
 import static com.android.adservices.service.consent.ConsentConstants.NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.adservices.service.consent.ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE;
+import static com.android.adservices.service.consent.ConsentConstants.PAS_NOTIFICATION_OPENED;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_CONSENT;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED;
@@ -3760,6 +3761,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doNothing().when(mMockIAdServicesManager).recordUserManualInteractionWithConsent(anyInt());
         doReturn(isGiven).when(mAppSearchConsentManagerMock).getConsent(CONSENT_KEY_FOR_ALL);
         return consentManager;
+
     }
 
     private ConsentManager getSpiedConsentManagerForConsentPerApiTesting(
@@ -5081,5 +5083,72 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         verify(mAppSearchConsentManagerMock, times(2)).isPaDataReset();
         verify(mAppSearchConsentManagerMock).setPaDataReset(anyBoolean());
+    }
+
+    @Test
+    public void testPasNotificationOpenedRecorded_PpApiOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.wasPasNotificationOpened()).isFalse();
+
+        verify(mMockIAdServicesManager, never()).wasPasNotificationOpened();
+
+        spyConsentManager.recordPasNotificationOpened(true);
+
+        assertThat(spyConsentManager.wasPasNotificationOpened()).isTrue();
+
+        verify(mMockIAdServicesManager, never()).wasPasNotificationOpened();
+        verify(mMockIAdServicesManager, never()).recordPasNotificationOpened(true);
+    }
+
+    @Test
+    public void testPasNotificationOpenedRecorded_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.wasPasNotificationOpened()).isFalse();
+
+        verify(mMockIAdServicesManager).wasPasNotificationOpened();
+
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationOpened();
+        spyConsentManager.recordPasNotificationOpened(true);
+
+        assertThat(spyConsentManager.wasPasNotificationOpened()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).wasPasNotificationOpened();
+        verify(mMockIAdServicesManager).recordPasNotificationOpened(true);
+
+        // Verify notificationOpened is not set in PPAPI
+        assertThat(mConsentDatastore.get(PAS_NOTIFICATION_OPENED)).isFalse();
+    }
+
+    @Test
+    public void testPasNotificationOpenedRecorded_PpApiAndSystemServer() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        Boolean wasPasNotificationOpened = spyConsentManager.wasPasNotificationOpened();
+
+        assertThat(wasPasNotificationOpened).isFalse();
+
+        verify(mMockIAdServicesManager).wasPasNotificationOpened();
+
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationOpened();
+        spyConsentManager.recordPasNotificationOpened(true);
+
+        assertThat(spyConsentManager.wasPasNotificationOpened()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).wasPasNotificationOpened();
+        verify(mMockIAdServicesManager).recordPasNotificationOpened(true);
+
+        // Verify notificationOpened is also set in PPAPI
+        assertThat(mConsentDatastore.get(PAS_NOTIFICATION_OPENED)).isTrue();
     }
 }
