@@ -75,6 +75,7 @@ import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.Until;
 
+import com.android.compatibility.common.util.SystemUtil;
 import com.android.ctssdkprovider.IActivityActionExecutor;
 import com.android.ctssdkprovider.IActivityStarter;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
@@ -1012,6 +1013,19 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
                 sUiDevice.wait(Until.hasObject(By.text("DEFAULT_SHOW_TEXT")), WAIT_FOR_TEXT_IN_MS));
         assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
         assertThat(sandboxActivityStarter.isActivityResumed()).isFalse();
+    }
+
+    // Verifies that the test allowlists in {@link SdkSandboxManagerService#LocalImpl} are initially
+    // empty.
+    @Test
+    public void testInitialSandboxTestAllowlistsAreEmpty() {
+        assumeTrue(SdkLevel.isAtLeastV());
+        assertThat(
+                        SystemUtil.runShellCommand(
+                                "cmd sdk_sandbox get-test-allowlist content-provider"))
+                .isEqualTo("\n");
+        assertThat(SystemUtil.runShellCommand("cmd sdk_sandbox get-test-allowlist send-broadcast"))
+                .isEqualTo("\n");
     }
 
     // Helper method to load SDK_NAME_1
