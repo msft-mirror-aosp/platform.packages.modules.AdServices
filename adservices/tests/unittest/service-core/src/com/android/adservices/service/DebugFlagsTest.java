@@ -17,7 +17,15 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
+import static com.android.adservices.service.Flags.CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -42,6 +50,38 @@ public final class DebugFlagsTest extends AdServicesExtendedMockitoTestCase {
         return newDefaultAdServicesExtendedMockitoRuleBuilder()
                 .addStaticMockFixtures(TestableSystemProperties::new)
                 .build();
+    }
+
+    @Test
+    public void testConsentNotificationDebugMode() {
+        testDebugFlag(
+                KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
+                CONSENT_NOTIFICATION_DEBUG_MODE,
+                DebugFlags::getConsentNotificationDebugMode);
+    }
+
+    @Test
+    public void testConsentNotifiedDebugMode() {
+        testDebugFlag(
+                KEY_CONSENT_NOTIFIED_DEBUG_MODE,
+                CONSENT_NOTIFIED_DEBUG_MODE,
+                DebugFlags::getConsentNotifiedDebugMode);
+    }
+
+    @Test
+    public void testConsentNotificationActivityDebugMode() {
+        testDebugFlag(
+                KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                DebugFlags::getConsentNotificationActivityDebugMode);
+    }
+
+    @Test
+    public void testConsentManagerDebugMode() {
+        testDebugFlag(
+                KEY_CONSENT_MANAGER_DEBUG_MODE,
+                CONSENT_MANAGER_DEBUG_MODE,
+                DebugFlags::getConsentManagerDebugMode);
     }
 
     @Test
