@@ -24,6 +24,5 @@ import java.util.Map;
 public interface IOdpDelegationWrapper {
 
     /** attempt to register a trigger using the ODP module. Returns true of API call was made */
-    boolean registerOdpTrigger(
-            AsyncRegistration asyncRegistration, Map<String, List<String>> headers);
+    void registerOdpTrigger(AsyncRegistration asyncRegistration, Map<String, List<String>> headers);
 }

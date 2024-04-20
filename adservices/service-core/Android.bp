@@ -85,6 +85,7 @@ filegroup {
     srcs: [
         "java/com/android/adservices/cobalt/CobaltConstants.java",
         "java/com/android/adservices/service/FlagsConstants.java",
+        "java/com/android/adservices/service/DebugFlagsConstants.java",
     ],
     path: "java",
     visibility: [
@@ -117,6 +118,7 @@ filegroup {
         "java/com/android/adservices/service/Flags.java",
         "java/com/android/adservices/service/FlagsFactory.java",
         "java/com/android/adservices/service/PhFlags.java",
+        "java/com/android/adservices/service/DebugFlags.java",
     ],
     path: "java",
     visibility: [
