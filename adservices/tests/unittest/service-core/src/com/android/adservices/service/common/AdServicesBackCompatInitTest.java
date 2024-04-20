@@ -16,13 +16,27 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_ACTIVITY_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_SERVICE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_ENABLE_RECEIVER_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_DISABLE_RECEIVER_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__JOB_SCHEDULER_IS_UNAVAILABLE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyListOf;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -34,10 +48,12 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
@@ -48,6 +64,7 @@ import org.mockito.Mock;
 
 import java.util.List;
 
+@MockStatic(ErrorLogUtil.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(SdkLevel.class)
 @SpyStatic(PackageChangedReceiver.class)
@@ -174,6 +191,96 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
 
         verifyEnablingComponents(SUPPORTED_SERVICES_ON_R);
         verifyNoMoreInteractions(mPackageManager, mJobScheduler);
+    }
+
+    @Test
+    public void testInitializeComponents_disableScheduledBackgroundJobsException_celLogged()
+            throws Exception {
+        // Mock NullPointerException when getSystemService is called before the system is ready
+        when(mMockContext.getSystemService(JobScheduler.class))
+                .thenThrow(NullPointerException.class);
+        doNothingOnErrorLogUtilError();
+        mockAdServicesFlags(true);
+        extendedMockito.mockIsAtLeastT(true);
+        mockPackageName(TEST_PACKAGE_NAME);
+
+        // No exception expected, so no need to explicitly handle any exceptions here
+        mSpyCompatInit.initializeComponents();
+
+        verifyErrorLogUtilErrorWithAnyException(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+    }
+
+    @Test
+    public void testInitializeComponents_jobSchedulerIsNull_celLogged() throws Exception {
+        when(mMockContext.getSystemService(JobScheduler.class)).thenReturn(null);
+        doNothingOnErrorLogUtilError();
+        extendedMockito.mockIsAtLeastT(true);
+        mockAdServicesFlags(true);
+        mockPackageName(TEST_PACKAGE_NAME);
+
+        // No exception expected, so no need to explicitly handle any exceptions here
+        mSpyCompatInit.initializeComponents();
+
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__JOB_SCHEDULER_IS_UNAVAILABLE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+    }
+
+    @Test
+    public void testInitializeComponents_updateCompomemtsThrowsException_celLogged()
+            throws Exception {
+        doThrow(IllegalArgumentException.class)
+                .when(mSpyCompatInit)
+                .updateComponents(anyListOf(String.class), anyBoolean());
+        doNothingOnErrorLogUtilError();
+        extendedMockito.mockIsAtLeastT(false);
+        mockAdServicesFlags(true);
+        mockPackageName(TEST_PACKAGE_NAME);
+
+        // No exception expected, so no need to explicitly handle any exceptions here
+        mSpyCompatInit.initializeComponents();
+
+        verifyErrorLogUtilErrorWithAnyException(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_SERVICE_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+
+        verifyErrorLogUtilErrorWithAnyException(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_ACTIVITY_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+    }
+
+    @Test
+    public void testInitializeComponents_disableReceiverFailure_celLogged() throws Exception {
+        doReturn(false).when(() -> PackageChangedReceiver.disableReceiver(any(), any()));
+        extendedMockito.mockIsAtLeastT(true);
+        doNothingOnErrorLogUtilError();
+        mockAdServicesFlags(true);
+        mockPackageName(TEST_PACKAGE_NAME);
+
+        // No exception expected, so no need to explicitly handle any exceptions here
+        mSpyCompatInit.initializeComponents();
+
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_DISABLE_RECEIVER_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+    }
+
+    @Test
+    public void testInitializeComponents_enableReceiverFailure_celLogged() throws Exception {
+        doReturn(false).when(() -> PackageChangedReceiver.enableReceiver(any(), any()));
+        doNothingOnErrorLogUtilError();
+        extendedMockito.mockIsAtLeastT(false);
+        mockAdServicesFlags(true);
+        mockPackageName(TEST_PACKAGE_NAME);
+
+        // No exception expected, so no need to explicitly handle any exceptions here
+        mSpyCompatInit.initializeComponents();
+
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_ENABLE_RECEIVER_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     private void verifyDisablingComponents() {

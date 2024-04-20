@@ -18,6 +18,7 @@ package android.adservices.test.scenario.adservices.iapc;
 
 import static com.android.adservices.helpers.AdIdLatencyHelper.AD_ID_COLD_START_LATENCY_METRIC;
 import static com.android.adservices.helpers.AdIdLatencyHelper.AD_ID_HOT_START_LATENCY_METRIC;
+import static com.android.adservices.helpers.AdIdLatencyHelper.TAG;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
@@ -66,7 +67,7 @@ abstract class GetAdIdApiCallBase extends AdServicesUnitTestCase {
     }
 
     private void callGetAdId(String label) throws Exception {
-        Log.i(mTag, "Calling getAdId()");
+        Log.i(TAG, "Calling getAdId()");
         long start = System.currentTimeMillis();
 
         AdServicesOutcomeReceiverForTests<AdId> callback =
@@ -79,7 +80,7 @@ abstract class GetAdIdApiCallBase extends AdServicesUnitTestCase {
 
         long duration = System.currentTimeMillis() - start;
         // TODO(b/234452723): In the future, we will want to use either statsd or perfetto instead.
-        Log.i(mTag, "(" + label + ": " + duration + ")");
+        Log.i(TAG, "(" + label + ": " + duration + ")");
 
         expect.withMessage("resultAdId").that(resultAdId).isNotNull();
         expect.withMessage("getAdId()").that(resultAdId.getAdId()).isNotNull();

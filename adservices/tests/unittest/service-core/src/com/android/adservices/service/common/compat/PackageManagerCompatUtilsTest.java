@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.common.compat;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
@@ -36,6 +40,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -46,6 +51,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@MockStatic(ErrorLogUtil.class)
 public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMockitoTestCase {
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
     private static final String EXTSERVICES_PACKAGE_NAME = "com.android.ext.services";
@@ -256,5 +262,26 @@ public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMocki
 
         assertThat(isActivityEnabled).isFalse();
         verify(mPackageManagerMock).getComponentEnabledSetting(any(ComponentName.class));
+    }
+
+    @Test
+    public void testIsAdServicesActivityEnabled_exception_disabled() throws Exception {
+        when(mMockContext.getPackageManager()).thenReturn(mPackageManagerMock);
+        when(mMockContext.getPackageName()).thenReturn(EXTSERVICES_PACKAGE_NAME);
+        doNothingOnErrorLogUtilError();
+
+        PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
+        packageInfo.packageName = EXTSERVICES_PACKAGE_NAME;
+        when(mPackageManagerMock.getPackageInfo(eq(packageInfo.packageName), eq(0)))
+                .thenThrow(new PackageManager.NameNotFoundException());
+
+        boolean isActivityEnabled =
+                PackageManagerCompatUtils.isAdServicesActivityEnabled(mMockContext);
+
+        assertThat(isActivityEnabled).isFalse();
+
+        verifyErrorLogUtilErrorWithAnyException(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 }
