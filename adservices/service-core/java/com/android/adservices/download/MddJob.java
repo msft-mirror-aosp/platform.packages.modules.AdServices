@@ -142,9 +142,13 @@ public final class MddJob implements JobWorker {
                         ignoredVoid -> {
                             // TODO(b/331285831): Handle unused return value.
                             // To suppress the lint error of future returning value is unused.
-                            ListenableFuture<DownloadStatus> unusedFuture =
+                            ListenableFuture<DownloadStatus> unusedFutureEnrollment =
                                     EnrollmentDataDownloadManager.getInstance()
                                             .readAndInsertEnrollmentDataFromMdd();
+                            ListenableFuture<EncryptionDataDownloadManager.DownloadStatus>
+                                    unusedFutureEncryption =
+                                            EncryptionDataDownloadManager.getInstance()
+                                                    .readAndInsertEncryptionDataFromMdd();
                             return SUCCESS;
                         },
                         AdServicesExecutors.getBlockingExecutor());

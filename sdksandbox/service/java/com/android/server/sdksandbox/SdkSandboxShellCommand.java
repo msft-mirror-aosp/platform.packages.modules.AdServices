@@ -25,6 +25,7 @@ import android.os.Binder;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.UserHandle;
+import android.util.ArraySet;
 import android.util.Log;
 
 import com.android.internal.annotations.VisibleForTesting;
@@ -112,6 +113,9 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
                     case "clear-test-allowlists":
                         result = runClearTestAllowlists();
                         break;
+                    case "get-test-allowlist":
+                        result = getTestAllowlist();
+                        break;
                     default:
                         result = handleDefaultCommands(cmd);
                 }
@@ -127,11 +131,30 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         String allowlistType = getNextArgRequired();
         if (allowlistType.equals("content-provider")) {
             localManager.appendTestContentProviderAllowlist(peekRemainingArgs());
+        } else if (allowlistType.equals("send-broadcast")) {
+            localManager.appendTestSendBroadcastAllowlist(peekRemainingArgs());
         } else {
             throw new IllegalArgumentException(
                     "Unknown argument provided to SDK sandbox shell command");
         }
 
+        return 0;
+    }
+
+    private int getTestAllowlist() {
+        LocalImpl localManager = (LocalImpl) mService.getLocalManager();
+        String allowlistType = getNextArgRequired();
+        ArraySet<String> allowlist;
+        if (allowlistType.equals("content-provider")) {
+            allowlist = localManager.getTestContentProviderAllowlist();
+        } else if (allowlistType.equals("send-broadcast")) {
+            allowlist = localManager.getTestSendBroadcastAllowlist();
+        } else {
+            throw new IllegalArgumentException(
+                    "Unknown argument provided to SDK sandbox shell command");
+        }
+
+        getOutPrintWriter().println(String.join(" ", allowlist));
         return 0;
     }
 

@@ -32,9 +32,10 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.utils.CustomAudienceTestFixture;
 
+import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
@@ -54,9 +55,9 @@ import java.util.List;
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
 @SetFlagEnabled(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
-@RequiresSdkLevelAtLeastT
+@RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
 public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsTest {
-    private static final String OWNER = "android.adservices.debuggablects";
+    private static final String OWNER = sPackageName;
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
 
     private final AdServicesShellCommandHelper mShellCommandHelper =
@@ -69,7 +70,9 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     @Before
     public void setUp() throws Exception {
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        assertForegroundActivityStarted();
+        if (sdkLevel.isAtLeastT()) {
+            assertForegroundActivityStarted();
+        }
 
         mCustomAudienceTestFixture = new CustomAudienceTestFixture(sContext);
         mShirtsCustomAudience =
@@ -147,13 +150,13 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
 
     @Test
     public void testRun_refreshCustomAudiences_verifyNoCustomAudienceChanged() {
-        String output =
-                mShellCommandHelper.runCommand(
+        CommandResult commandResult =
+                mShellCommandHelper.runCommandRwe(
                         "custom-audience refresh --owner %s --buyer %s --name %s",
                         OWNER, BUYER, mShirtsCustomAudience.getName());
 
-        // Shell command output would be printed to stderr instead, so cannot be captured here.
-        assertThat(output).isEmpty();
+        assertThat(commandResult.getOut()).isEmpty();
+        assertThat(commandResult.getErr()).contains("No custom audience found");
     }
 
     @FormatMethod

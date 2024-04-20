@@ -339,7 +339,8 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
     }
 
     private void scheduleOneTimeJobWithDefaultConstraints() {
-        when(mMockJobWorker.getJobEnablementStatus()).thenReturn(JOB_ENABLED_STATUS_ENABLED);
+        when(mMockJobWorker.getJobSchedulingEnablementStatus())
+                .thenReturn(JOB_ENABLED_STATUS_ENABLED);
 
         expect.withMessage("Pending job with id=%s in JobScheduler", JOB_ID_1)
                 .that(mJobScheduler.getPendingJob(JOB_ID_1))

@@ -224,6 +224,28 @@ public final class FetcherUtilTest {
     }
 
     @Test
+    public void extractStringArray_stringArray_passes() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, new JSONArray("[\"1\", \"2\"]"));
+        Optional<List<String>> result = FetcherUtil.extractStringArray(obj, KEY, 5, 10);
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get()).containsExactly("1", "2");
+    }
+
+    @Test
+    public void extractStringArray_sizeTooBig_fails() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, new JSONArray("[\"1\", \"2\"]"));
+        Optional<List<String>> result = FetcherUtil.extractStringArray(obj, KEY, 1, 10);
+        assertThat(result.isPresent()).isFalse();
+    }
+
+    @Test
+    public void extractStringArray_stringTooLong_fails() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, new JSONArray("[\"1\", \"2345\"]"));
+        Optional<List<String>> result = FetcherUtil.extractStringArray(obj, KEY, 5, 1);
+        assertThat(result.isPresent()).isFalse();
+    }
+
+    @Test
     public void extractLongString_maxValue_success() throws JSONException {
         String longString = "9223372036854775807";
         JSONObject obj = new JSONObject().put(KEY, longString);

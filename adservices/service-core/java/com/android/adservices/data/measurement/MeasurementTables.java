@@ -191,7 +191,7 @@ public final class MeasurementTables {
         String AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG =
                 "aggregatable_source_registration_time_config";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
-        String ATTRIBUTION_SCOPE = "attribution_scope";
+        String ATTRIBUTION_SCOPES = "attribution_scope";
     }
 
     /** Contract for EventReport. */
@@ -679,7 +679,7 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + TriggerContract.TRIGGER_CONTEXT_ID
                     + " TEXT, "
-                    + TriggerContract.ATTRIBUTION_SCOPE
+                    + TriggerContract.ATTRIBUTION_SCOPES
                     + " TEXT"
                     + ")";
 

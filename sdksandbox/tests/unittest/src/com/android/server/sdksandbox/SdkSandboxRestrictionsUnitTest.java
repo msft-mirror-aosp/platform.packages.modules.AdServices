@@ -1039,6 +1039,45 @@ public class SdkSandboxRestrictionsUnitTest {
                 .isFalse();
     }
 
+    @Test
+    public void setTestSendBroadcastAllowlist() {
+        Intent broadcastIntent = new Intent(Intent.ACTION_SCREEN_ON);
+        assertThat(mSdkSandboxManagerLocal.canSendBroadcast(broadcastIntent)).isFalse();
+
+        SdkSandboxShellCommand cmd =
+                new SdkSandboxShellCommand(
+                        mService,
+                        InstrumentationRegistry.getInstrumentation().getContext(),
+                        true,
+                        new ShellInjector());
+
+        assertThat(
+                        cmd.exec(
+                                mService,
+                                FileDescriptor.in,
+                                FileDescriptor.out,
+                                FileDescriptor.err,
+                                new String[] {
+                                    "append-test-allowlist",
+                                    "send-broadcast",
+                                    broadcastIntent.getAction()
+                                }))
+                .isEqualTo(0);
+
+        assertThat(mSdkSandboxManagerLocal.canSendBroadcast(broadcastIntent)).isTrue();
+
+        assertThat(
+                        cmd.exec(
+                                mService,
+                                FileDescriptor.in,
+                                FileDescriptor.out,
+                                FileDescriptor.err,
+                                new String[] {"clear-test-allowlists"}))
+                .isEqualTo(0);
+
+        assertThat(mSdkSandboxManagerLocal.canSendBroadcast(broadcastIntent)).isFalse();
+    }
+
     private void testServiceRestriction(
             @Nullable String action,
             @Nullable String packageName,

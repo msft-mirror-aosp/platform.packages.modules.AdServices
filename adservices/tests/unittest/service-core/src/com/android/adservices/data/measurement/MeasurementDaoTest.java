@@ -477,7 +477,9 @@ public class MeasurementDaoTest {
                     validTrigger.getAggregatableSourceRegistrationTimeConfig(),
                     trigger.getAggregatableSourceRegistrationTimeConfig());
             assertEquals(validTrigger.getTriggerContextId(), trigger.getTriggerContextId());
-            assertEquals(validTrigger.getAttributionScope(), trigger.getAttributionScope());
+            assertEquals(
+                    validTrigger.getAttributionScopesString(),
+                    trigger.getAttributionScopesString());
         }
     }
 
@@ -4404,7 +4406,7 @@ public class MeasurementDaoTest {
         Trigger trigger1 =
                 TriggerFixture.getValidTriggerBuilder()
                         .setTriggerTime(SOURCE_EVENT_TIME + 4)
-                        .setAttributionScope("1")
+                        .setAttributionScopesString("1")
                         .setAttributionDestination(APP_ONE_DESTINATION)
                         .setDestinationType(EventSurfaceType.APP)
                         .build();
@@ -4422,7 +4424,7 @@ public class MeasurementDaoTest {
         Trigger trigger2 =
                 TriggerFixture.getValidTriggerBuilder()
                         .setTriggerTime(SOURCE_EVENT_TIME + 5)
-                        .setAttributionScope("2")
+                        .setAttributionScopesString("2")
                         .setAttributionDestination(WEB_ONE_DESTINATION)
                         .setDestinationType(EventSurfaceType.WEB)
                         .build();

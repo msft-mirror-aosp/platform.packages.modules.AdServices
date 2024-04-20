@@ -171,7 +171,7 @@
             "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
-                "attribution_scope": "1",
+                "attribution_scopes": ["1"],
                 "event_trigger_data": [
                   {
                     "trigger_data": "0",
@@ -244,7 +244,7 @@
             "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
-                "attribution_scope": "2",
+                "attribution_scopes": ["2"],
                 "event_trigger_data": [
                   {
                     "trigger_data": "1",
@@ -388,7 +388,7 @@
             "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
-                "attribution_scope": "3",
+                "attribution_scopes": ["3"],
                 "event_trigger_data": [
                   {
                   "trigger_data": "3",
@@ -452,7 +452,7 @@
             "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
-                "attribution_scope": "4",
+                "attribution_scopes": ["4"],
                 "event_trigger_data": [
                   {
                     "trigger_data": "4",

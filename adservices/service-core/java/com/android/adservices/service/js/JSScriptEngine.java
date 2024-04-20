@@ -619,20 +619,15 @@ public class JSScriptEngine {
                 javaScriptIsolate = jsSandbox.createIsolate();
             }
             return javaScriptIsolate;
-        } catch (IllegalStateException isolateMemoryLimitUnsupported) {
+        } catch (RuntimeException jsSandboxPossiblyDisconnected) {
             mLogger.e(
-                    "JavaScriptIsolate does not support setting max heap size, cannot create an"
-                            + " isolate to run JS code into.");
-            throw new JSScriptEngineConnectionException(
-                    JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, isolateMemoryLimitUnsupported);
-        } catch (RuntimeException jsSandboxIsDisconnected) {
-            mLogger.e(
-                    "JavaScriptSandboxProcess is disconnected, cannot create an isolate to run JS"
-                            + " code into. Resetting connection with AwJavaScriptSandbox to enable"
-                            + " future calls.");
+                    jsSandboxPossiblyDisconnected,
+                    "JavaScriptSandboxProcess is threw exception, cannot create an isolate to run"
+                            + " JS code into (Disconnected?). Resetting connection with"
+                            + " AwJavaScriptSandbox to enable future calls.");
             mJsSandboxProvider.destroyIfCurrentInstance(jsSandbox);
             throw new JSScriptEngineConnectionException(
-                    JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, jsSandboxIsDisconnected);
+                    JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, jsSandboxPossiblyDisconnected);
         } finally {
             isolateStopWatch.stop();
             Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE, traceCookie);

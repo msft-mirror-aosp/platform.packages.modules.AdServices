@@ -149,7 +149,7 @@ public class FetcherUtil {
         }
     }
 
-    /** Extract non-empty string from an obj. */
+    /** Extract string from an obj with max length. */
     public static Optional<String> extractString(Object obj, int maxLength) {
         if (!(obj instanceof String)) {
             LoggerFactory.getMeasurementLogger().e("obj should be a string.");
@@ -162,6 +162,27 @@ public class FetcherUtil {
             return Optional.empty();
         }
         return Optional.of(stringValue);
+    }
+
+    /** Extract list of strings from an obj with max array size and max string length. */
+    public static Optional<List<String>> extractStringArray(
+            JSONObject json, String key, int maxArraySize, int maxStringLength)
+            throws JSONException {
+        JSONArray jsonArray = json.getJSONArray(key);
+        if (jsonArray.length() > maxArraySize) {
+            LoggerFactory.getMeasurementLogger()
+                    .e("Json array size should not be greater " + "than " + maxArraySize);
+            return Optional.empty();
+        }
+        List<String> strings = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); ++i) {
+            Optional<String> string = FetcherUtil.extractString(jsonArray.get(i), maxStringLength);
+            if (string.isEmpty()) {
+                return Optional.empty();
+            }
+            strings.add(string.get());
+        }
+        return Optional.of(strings);
     }
 
     /**

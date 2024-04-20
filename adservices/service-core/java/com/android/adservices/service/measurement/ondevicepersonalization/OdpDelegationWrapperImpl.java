@@ -58,24 +58,19 @@ import java.util.Objects;
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
     private OnDevicePersonalizationSystemEventManager mOdpSystemEventManager;
-    private boolean mDisableApiCallForTesting;
     private final AdServicesLogger mLogger;
     private final Clock mClock;
 
     public OdpDelegationWrapperImpl(OnDevicePersonalizationSystemEventManager manager) {
-        this(manager, /* disableApiCallForTesting */ false, AdServicesLoggerImpl.getInstance());
+        this(manager, AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
     public OdpDelegationWrapperImpl(
             OnDevicePersonalizationSystemEventManager manager,
-            boolean disableApiCallForTesting,
             AdServicesLogger logger) {
-        if (!disableApiCallForTesting) {
-            Objects.requireNonNull(manager);
-        }
+        Objects.requireNonNull(manager);
         mOdpSystemEventManager = manager;
-        mDisableApiCallForTesting = disableApiCallForTesting;
         mLogger = logger;
         mClock = Clock.getInstance();
     }
@@ -130,11 +125,6 @@ public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
                 odpRegistrationStatus.setRegistrationStatus(
                         OdpRegistrationStatus.RegistrationStatus.INVALID_HEADER_FIELD_VALUE);
-                return;
-            }
-
-            // Prevent usage of classes from the OnDevicePersonalization module in unit tests
-            if (mDisableApiCallForTesting) {
                 return;
             }
 

@@ -16,6 +16,7 @@
 
 package com.android.adservices.shell;
 
+import android.annotation.IntDef;
 import android.annotation.Nullable;
 import android.app.Activity;
 import android.content.Intent;
@@ -35,9 +36,12 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Activity to run shell command for Android R/S.
@@ -60,20 +64,32 @@ public final class ShellCommandActivity extends Activity {
     // millisecond. Otherwise dumpsys will throw timeout exception.
     private static final long MAX_COMMAND_DURATION_MILLIS = 3000L;
 
-    private ListeningExecutorService mExecutorService;
-    private Flags mFlags;
+    private static final String SHELL_COMMAND_ACTIVITY_DUMP = "-- ShellCommandActivity dump --";
 
-    private final StringWriter mStringWriter = new StringWriter();
-    private final PrintWriter mPrintWriter = new PrintWriter(mStringWriter);
+    private static final String COMMAND_STATUS = "CommandStatus";
+    private static final String COMMAND_RES = "CommandRes";
+    private static final String COMMAND_OUT = "CommandOut";
+    private static final String COMMAND_ERR = "CommandErr";
+
+    private static final int STATUS_RUNNING = 1;
+    private static final int STATUS_FINISHED = 2;
+    private static final int STATUS_TIMEOUT = 3;
+
+    @IntDef(value = {STATUS_RUNNING, STATUS_FINISHED, STATUS_TIMEOUT})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface Status {}
+
+    private final StringWriter mOutSw = new StringWriter();
+    private final PrintWriter mOutPw = new PrintWriter(mOutSw);
+
+    private final StringWriter mErrSw = new StringWriter();
+    private final PrintWriter mErrPw = new PrintWriter(mErrSw);
+
     private final CountDownLatch mLatch = new CountDownLatch(1);
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.shell_command_activity);
-
-        runShellCommand(FlagsFactory.getFlags(), AdServicesExecutors.getLightWeightExecutor());
-    }
+    private int mRes = -1;
+    private ListeningExecutorService mExecutorService;
+    private Flags mFlags;
 
     private void runShellCommand(Flags flags, ListeningExecutorService executorService) {
         mFlags = flags;
@@ -93,16 +109,44 @@ public final class ShellCommandActivity extends Activity {
         }
         AdServicesShellCommandHandler handler =
                 new AdServicesShellCommandHandler(
-                        mPrintWriter,
+                        mOutPw,
+                        mErrPw,
                         new AdservicesShellCommandFactorySupplier(),
                         AdServicesLoggerImpl.getInstance());
         var unused =
                 mExecutorService.submit(
                         () -> {
-                            int res = handler.run(args);
-                            Log.d(TAG, "Shell command completed with status: " + res);
+                            mRes = handler.run(args);
+                            Log.d(TAG, "Shell command completed with status: " + mRes);
                             mLatch.countDown();
                         });
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.shell_command_activity);
+
+        runShellCommand(FlagsFactory.getFlags(), AdServicesExecutors.getLightWeightExecutor());
+    }
+
+    private void waitAndGetResult(PrintWriter writer) {
+        try {
+            if (mLatch.await(MAX_COMMAND_DURATION_MILLIS, TimeUnit.MILLISECONDS)) {
+                formatAndPrintResult(STATUS_FINISHED, mOutSw.toString(), mErrSw.toString(), writer);
+            } else {
+                String errMsg =
+                        String.format(
+                                "Elapsed time: %d Millisecond. Timeout occurred , failed to"
+                                        + " complete shell command\n",
+                                MAX_COMMAND_DURATION_MILLIS);
+
+                formatAndPrintResult(STATUS_TIMEOUT, mOutSw.toString(), errMsg, writer);
+            }
+        } catch (InterruptedException e) {
+            writer.println("Thread interrupted, failed to complete shell command");
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
@@ -142,24 +186,54 @@ public final class ShellCommandActivity extends Activity {
         finishSelf();
     }
 
-    private void waitAndGetResult(PrintWriter writer) {
-        try {
-            if (mLatch.await(MAX_COMMAND_DURATION_MILLIS, TimeUnit.MILLISECONDS)) {
-                writer.printf("%s", mStringWriter.toString());
-            } else {
-                writer.printf(
-                        "Elapsed time: %d Millisecond. Timeout occurred , failed to complete "
-                                + "shell command\n",
-                        MAX_COMMAND_DURATION_MILLIS);
+    /*
+    Example formatted result:
+      -- ShellCommandActivity dump --
+      CommandStatus: FINISHED
+      CommandRes: 0
+      CommandOut:
+        hello
+      CommandErr:
+        Something went wrong
+     */
+    private void formatAndPrintResult(
+            @Status int status, String out, String err, PrintWriter writer) {
+        writer.println(SHELL_COMMAND_ACTIVITY_DUMP);
+        writer.printf("%s: %s\n", COMMAND_STATUS, statusToString(status));
+
+        if (status == STATUS_FINISHED || status == STATUS_TIMEOUT) {
+            writer.printf("%s: %d\n", COMMAND_RES, mRes);
+            if (!out.isEmpty()) {
+                indentAndPrefixStringWithSpace(out, COMMAND_OUT, writer);
             }
-        } catch (InterruptedException e) {
-            writer.println("Thread interrupted, failed to complete shell command");
-            Thread.currentThread().interrupt();
+            if (!err.isEmpty()) {
+                indentAndPrefixStringWithSpace(err, COMMAND_ERR, writer);
+            }
+        }
+    }
+
+    private void indentAndPrefixStringWithSpace(String input, String name, PrintWriter writer) {
+        String formattedOut =
+                Arrays.stream(input.strip().split("\n"))
+                        .collect(Collectors.joining("\n  ", "  ", ""));
+        writer.printf("%s:\n%s\n", name, formattedOut);
+    }
+
+    private String statusToString(int status) {
+        switch (status) {
+            case STATUS_RUNNING:
+                return "RUNNING";
+            case STATUS_FINISHED:
+                return "FINISHED";
+            case STATUS_TIMEOUT:
+                return "TIMEOUT";
+            default:
+                return "UNKNOWN-" + status;
         }
     }
 
     private void finishSelf() {
-        mPrintWriter.close();
+        mOutPw.close();
         finish();
     }
 }

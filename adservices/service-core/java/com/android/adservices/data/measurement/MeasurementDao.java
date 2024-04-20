@@ -161,7 +161,8 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.TRIGGER_CONTEXT_ID,
                 trigger.getTriggerContextId());
         values.put(
-                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPE, trigger.getAttributionScope());
+                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
+                trigger.getAttributionScopesString());
 
         long rowId =
                 mSQLTransaction
@@ -904,7 +905,7 @@ class MeasurementDao implements IMeasurementDao {
                 sources.add(SqliteObjectMapper.constructSourceFromCursor(cursor));
             }
             return FlagsFactory.getFlags().getMeasurementEnableAttributionScope()
-                            && trigger.getAttributionScope() != null
+                            && trigger.getAttributionScopesString() != null
                     ? populateAttributionScopes(sources)
                     : sources;
         }

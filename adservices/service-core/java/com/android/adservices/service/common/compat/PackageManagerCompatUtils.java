@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.common.compat;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -28,6 +31,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -216,6 +220,10 @@ public final class PackageManagerCompatUtils {
             }
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e("Error when checking if activities are enabled: " + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             return false;
         }
         return true;

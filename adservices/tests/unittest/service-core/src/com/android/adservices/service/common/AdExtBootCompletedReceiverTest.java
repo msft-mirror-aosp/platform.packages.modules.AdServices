@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_BOOT_COMPLETED_RECEIVER_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -27,6 +31,8 @@ import android.content.Intent;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
@@ -35,6 +41,7 @@ import org.mockito.Spy;
 
 @SmallTest
 @SpyStatic(AdServicesBackCompatInit.class)
+@MockStatic(ErrorLogUtil.class)
 public class AdExtBootCompletedReceiverTest extends AdServicesExtendedMockitoTestCase {
     @Mock private AdServicesBackCompatInit mMockBackCompatInit;
     @Spy private AdExtBootCompletedReceiver mSpyReceiver;
@@ -52,9 +59,14 @@ public class AdExtBootCompletedReceiverTest extends AdServicesExtendedMockitoTes
     public void testOnReceive_withExceptionThrown_handlesGracefully() {
         doReturn(mMockBackCompatInit).when(AdServicesBackCompatInit::getInstance);
         doThrow(IllegalArgumentException.class).when(mMockBackCompatInit).initializeComponents();
+        doNothingOnErrorLogUtilError();
 
         // No exception expected, so no need to explicitly handle any exceptions here.
         mSpyReceiver.onReceive(mContext, new Intent());
+
+        verifyErrorLogUtilErrorWithAnyException(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_BOOT_COMPLETED_RECEIVER_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test

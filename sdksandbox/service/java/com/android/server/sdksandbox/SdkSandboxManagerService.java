@@ -103,7 +103,6 @@ import com.android.server.sdksandbox.helpers.StringHelper;
 import com.android.server.sdksandbox.proto.Services.AllowedService;
 import com.android.server.sdksandbox.proto.Services.AllowedServices;
 import com.android.server.wm.ActivityInterceptorCallback;
-import com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import java.io.FileDescriptor;
@@ -2273,9 +2272,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     class LocalImpl implements SdkSandboxManagerLocal {
-        // This allowlist is used to temporarily allow test ContentProviders to be accessed during
-        // testing. This is not combined with the existing allowlist and is checked independently.
+        // The following test allowlists are used to temporarily allow test components
+        // (ContentProviders, BroadcastReceivers etc.) to be accessed during testing. This is not
+        // combined with the existing allowlist and is checked independently.
         private ArraySet<String> mTestCpAllowlist = new ArraySet<>();
+        private ArraySet<String> mTestSendBroadcastAllowlist = new ArraySet<>();
 
         @Override
         public void registerAdServicesManagerService(IBinder iBinder, boolean published) {
@@ -2341,7 +2342,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public boolean canSendBroadcast(@NonNull Intent intent) {
-            return false;
+            return StringHelper.doesInputMatchAnyWildcardPattern(
+                    mTestSendBroadcastAllowlist, intent.getAction());
         }
 
         @Override
@@ -2540,8 +2542,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             mTestCpAllowlist.addAll(Arrays.asList(testCpAllowlist));
         }
 
+        void appendTestSendBroadcastAllowlist(@NonNull String[] testSendBroadcastAllowlist) {
+            mTestSendBroadcastAllowlist.addAll(Arrays.asList(testSendBroadcastAllowlist));
+        }
+
         void clearTestAllowlists() {
             mTestCpAllowlist = new ArraySet<>();
+            mTestSendBroadcastAllowlist = new ArraySet<>();
+        }
+
+        ArraySet<String> getTestContentProviderAllowlist() {
+            return mTestCpAllowlist;
+        }
+
+        ArraySet<String> getTestSendBroadcastAllowlist() {
+            return mTestSendBroadcastAllowlist;
         }
     }
 }

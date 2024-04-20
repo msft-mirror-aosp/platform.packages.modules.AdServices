@@ -35,6 +35,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaDrm;
 import android.media.UnsupportedSchemeException;
+import android.media.session.MediaSession;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -295,5 +296,14 @@ public class SdkSandboxRestrictionsTest {
                 mContext.checkCallingOrSelfUriPermission(
                         uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
         assertThat(ret).isEqualTo(PackageManager.PERMISSION_DENIED);
+    }
+
+    // The sandbox could previously not create an instance of MediaSession due to a check that did
+    // not take into account the difference between sandbox package uid and sandbox process uid.
+    // This test verifies a fix for that issue.
+    @Test
+    public void testSandboxCanCreateMediaSession() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastV());
+        new MediaSession(mContext, "test tag");
     }
 }

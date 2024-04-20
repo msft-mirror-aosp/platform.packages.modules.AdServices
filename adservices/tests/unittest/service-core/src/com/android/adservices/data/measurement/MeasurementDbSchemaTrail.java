@@ -1507,7 +1507,7 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT, "
                     + TriggerContract.TRIGGER_CONTEXT_ID
                     + " TEXT, "
-                    + TriggerContract.ATTRIBUTION_SCOPE
+                    + TriggerContract.ATTRIBUTION_SCOPES
                     + " TEXT"
                     + ")";
 

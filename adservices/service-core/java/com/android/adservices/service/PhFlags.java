@@ -2761,34 +2761,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getConsentNotificationDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE),
-                CONSENT_NOTIFICATION_DEBUG_MODE);
-    }
-
-    @Override
-    public boolean getConsentNotificationActivityDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE),
-                CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
-    }
-
-    @Override
-    public boolean getConsentNotifiedDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE),
-                CONSENT_NOTIFIED_DEBUG_MODE);
-    }
-
-    @Override
-    public boolean getConsentManagerDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE),
-                CONSENT_MANAGER_DEBUG_MODE);
-    }
-
-    @Override
     public boolean getRvcPostOtaNotifAgeCheck() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,

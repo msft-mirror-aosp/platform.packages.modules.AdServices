@@ -1037,7 +1037,7 @@ public class ContentValueFixtures {
     public static ContentValues generateTriggerContentValuesV34() {
         ContentValues values = generateTriggerContentValuesV33();
         values.put(
-                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPE,
+                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
                 TriggerValues.ATTRIBUTION_SCOPE);
         return values;
     }

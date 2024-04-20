@@ -16,6 +16,14 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_ACTIVITY_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_SERVICE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_ENABLE_RECEIVER_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_DISABLE_RECEIVER_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__JOB_SCHEDULER_IS_UNAVAILABLE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
@@ -25,6 +33,7 @@ import android.os.Build;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -97,6 +106,9 @@ public final class AdServicesBackCompatInit {
             JobScheduler scheduler = mContext.getSystemService(JobScheduler.class);
             if (scheduler == null) {
                 LogUtil.e("Could not retrieve JobScheduler instance, so not cancelling jobs");
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__JOB_SCHEDULER_IS_UNAVAILABLE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
                 return;
             }
             for (JobInfo jobInfo : scheduler.getAllPendingJobs()) {
@@ -113,6 +125,10 @@ public final class AdServicesBackCompatInit {
                     mContext.getPackageName());
         } catch (Exception e) {
             LogUtil.e(e, "Error when cancelling scheduled jobs");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
     }
 
@@ -127,6 +143,11 @@ public final class AdServicesBackCompatInit {
         LogUtil.d(
                 "Package Change Receiver registration: Success=%s, Package=%s",
                 result, mContext.getPackageName());
+        if (!result) {
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_ENABLE_RECEIVER_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        }
     }
 
     @SuppressWarnings("NewApi")
@@ -135,6 +156,11 @@ public final class AdServicesBackCompatInit {
         LogUtil.d(
                 "Package Change Receiver unregistration: Success=%s, Package=%s",
                 result, mContext.getPackageName());
+        if (!result) {
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_DISABLE_RECEIVER_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        }
     }
 
     /**
@@ -147,6 +173,10 @@ public final class AdServicesBackCompatInit {
             LogUtil.d("Updated state of AdExtServices activities: [enabled=%s]", shouldEnable);
         } catch (IllegalArgumentException e) {
             LogUtil.e("Error when updating activities: %s", e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_ACTIVITY_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
     }
 
@@ -167,10 +197,15 @@ public final class AdServicesBackCompatInit {
             LogUtil.d("Updated state of AdExtServices services: [enable=%s]", shouldEnable);
         } catch (IllegalArgumentException e) {
             LogUtil.e("Error when updating services: %s", e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_SERVICE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
     }
 
-    private void updateComponents(List<String> components, boolean shouldEnable) {
+    @VisibleForTesting
+    void updateComponents(List<String> components, boolean shouldEnable) {
         PackageManager packageManager = mContext.getPackageManager();
         String packageName = mContext.getPackageName();
         for (String component : components) {

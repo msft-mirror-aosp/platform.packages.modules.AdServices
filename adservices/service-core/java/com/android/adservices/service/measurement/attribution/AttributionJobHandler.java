@@ -758,21 +758,35 @@ class AttributionJobHandler {
                                 && isWithinInstallCooldownWindow(source, trigger);
         Comparator<Source> comparator =
                 Comparator.comparing(installAttributionComparator, Comparator.reverseOrder());
-        if (mFlags.getMeasurementEnableAttributionScope()
-                && trigger.getAttributionScope() != null) {
-            // Filter based on whether trigger attribution scope is in the source attribution
-            // scopes.
-            Function<Source, Boolean> attributionScopeFilter =
-                    (Source source) ->
-                            source.getAttributionScopes() != null
-                                    && source.getAttributionScopes()
-                                            .contains(trigger.getAttributionScope());
-            if (!matchingSources.stream().anyMatch(attributionScopeFilter::apply)) {
-                return Optional.empty();
+        if (mFlags.getMeasurementEnableAttributionScope()) {
+            List<String> triggerAttributionScopes;
+            try {
+                triggerAttributionScopes = trigger.getAttributionScopes();
+            } catch (JSONException e) {
+                throw new IllegalArgumentException("Failed to parse trigger attribution scopes.");
             }
-            comparator =
-                    Comparator.comparing(attributionScopeFilter, Comparator.reverseOrder())
-                            .thenComparing(installAttributionComparator, Comparator.reverseOrder());
+            if (triggerAttributionScopes != null) {
+                Set<String> triggerAttributionScopesSet = new HashSet<>(triggerAttributionScopes);
+                // Filter based on whether any of the trigger attribution scope is in the source
+                // attribution scopes.
+                Function<Source, Boolean> attributionScopeFilter =
+                        (Source source) -> {
+                            if (source.getAttributionScopes() == null) {
+                                return false;
+                            }
+                            Set<String> sourceAttributionScopes =
+                                    new HashSet<>(source.getAttributionScopes());
+                            sourceAttributionScopes.retainAll(triggerAttributionScopesSet);
+                            return !sourceAttributionScopes.isEmpty();
+                        };
+                if (!matchingSources.stream().anyMatch(attributionScopeFilter::apply)) {
+                    return Optional.empty();
+                }
+                comparator =
+                        Comparator.comparing(attributionScopeFilter, Comparator.reverseOrder())
+                                .thenComparing(
+                                        installAttributionComparator, Comparator.reverseOrder());
+            }
         }
         comparator =
                 comparator

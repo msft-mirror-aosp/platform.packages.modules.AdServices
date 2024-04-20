@@ -16,6 +16,7 @@
 
 package android.adservices.cts;
 
+import static com.android.adservices.AdServicesCommon.BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
@@ -46,6 +47,7 @@ import android.os.Process;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -102,6 +104,16 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
 
     private TestAdSelectionClient mTestAdSelectionClient;
     private boolean mIsDebugMode;
+
+    @Override
+    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
+        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
+                .setCompatModeFlags()
+                .setPpapiAppAllowList(mPackageName)
+                // TODO (b/330324133): Short-term solution to allow test to extend binder timeout to
+                // resolve the test flakiness.
+                .setSystemProperty(BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME, 10_000);
+    }
 
     @Before
     public void setup() {
