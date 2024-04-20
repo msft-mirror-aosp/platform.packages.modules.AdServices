@@ -21,6 +21,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_POLICY_JOB_SCHEDULER_INVALID_JOB_INFO;
+import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_FAILED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
@@ -125,6 +126,11 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
                     "Failed to schedule job because it's not configured in JobInfo or JobConfig!"
                             + " Please check the setup. Requested job ID = "
                             + jobId);
+        }
+
+        if (!shouldSchedule(worker)) {
+            LogUtil.v("The job scheduling for %s is skipped due to job is not enabled.", jobName);
+            return SCHEDULING_RESULT_CODE_SKIPPED;
         }
 
         // Get the jobInfo to schedule.
@@ -281,5 +287,10 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
                     "Job %s is scheduled with jobInfo %s. The old jobInfo is %s",
                     jobName, jobInfoToString(jobInfoToSchedule), jobInfoToString(existingJobInfo));
         }
+    }
+
+    // TODO(b/335461255): add more result code for scheduling logging.
+    private boolean shouldSchedule(JobWorker worker) {
+        return worker.getJobSchedulingEnablementStatus() == JOB_ENABLED_STATUS_ENABLED;
     }
 }

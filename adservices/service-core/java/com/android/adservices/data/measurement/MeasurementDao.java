@@ -161,7 +161,8 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.TRIGGER_CONTEXT_ID,
                 trigger.getTriggerContextId());
         values.put(
-                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPE, trigger.getAttributionScope());
+                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
+                trigger.getAttributionScopesString());
 
         long rowId =
                 mSQLTransaction
@@ -342,22 +343,42 @@ class MeasurementDao implements IMeasurementDao {
         return selectSourceIdsByDestinations(destinations, sourceWhereStatement);
     }
 
-    private void ignoreSourcesForAttributionScope(
-            @NonNull Source pendingSource, @NonNull String sourceWhereStatement)
+    private void ignoreSourcesAndDeleteFakeReportsForAttributionScope(
+            @NonNull Source pendingSource, @NonNull String attributionScopeWhereStatement)
             throws DatastoreException {
+        String selectSourceIdStatement =
+                selectSourceIdsByOriginAndDestination(
+                        pendingSource.getRegistrationOrigin().toString(),
+                        pendingSource.getAllAttributionDestinations(),
+                        attributionScopeWhereStatement);
         final SQLiteDatabase db = mSQLTransaction.getDatabase();
-        ContentValues values = new ContentValues();
-        values.put(SourceContract.STATUS, Source.Status.IGNORED);
+        // Delete any pending reports which have trigger_time >= new source’s registration time.
+        // Note selectSourceIdStatement will only select ACTIVE sources, which means we need to
+        // delete pending reports before deactivating the sources (before they are de-activated).
+        ContentValues eventReportValues = new ContentValues();
+        eventReportValues.put(
+                MeasurementTables.EventReportContract.STATUS, EventReport.Status.MARKED_TO_DELETE);
+        db.update(
+                MeasurementTables.EventReportContract.TABLE,
+                eventReportValues,
+                mergeConditions(
+                        " AND ",
+                        MeasurementTables.EventReportContract.SOURCE_ID
+                                + " IN ("
+                                + selectSourceIdStatement
+                                + ")",
+                        MeasurementTables.EventReportContract.TRIGGER_TIME
+                                + " >= "
+                                + pendingSource.getEventTime()),
+                new String[] {});
+
+        // Delete any pending reports which have trigger_time >= new source’s registration time.
+        ContentValues sourceValues = new ContentValues();
+        sourceValues.put(SourceContract.STATUS, Source.Status.IGNORED);
         db.update(
                 SourceContract.TABLE,
-                values,
-                SourceContract.ID
-                        + " IN ("
-                        + selectSourceIdsByOriginAndDestination(
-                                pendingSource.getRegistrationOrigin().toString(),
-                                pendingSource.getAllAttributionDestinations(),
-                                sourceWhereStatement)
-                        + ")",
+                sourceValues,
+                SourceContract.ID + " IN (" + selectSourceIdStatement + ")",
                 new String[] {});
     }
 
@@ -374,7 +395,7 @@ class MeasurementDao implements IMeasurementDao {
                         SourceContract.MAX_EVENT_STATES
                                 + " != "
                                 + pendingSource.getMaxEventStates());
-        ignoreSourcesForAttributionScope(pendingSource, sourceWhereStatement);
+        ignoreSourcesAndDeleteFakeReportsForAttributionScope(pendingSource, sourceWhereStatement);
     }
 
     private void deactivateSourcesWithSmallerAttributionScopeLimit(@NonNull Source pendingSource)
@@ -386,7 +407,7 @@ class MeasurementDao implements IMeasurementDao {
                         SourceContract.ATTRIBUTION_SCOPE_LIMIT
                                 + " < "
                                 + pendingSource.getAttributionScopeLimit());
-        ignoreSourcesForAttributionScope(pendingSource, sourceWhereStatement);
+        ignoreSourcesAndDeleteFakeReportsForAttributionScope(pendingSource, sourceWhereStatement);
     }
 
     private String getDeleteAttributionScopesWhereStatement(
@@ -791,6 +812,57 @@ class MeasurementDao implements IMeasurementDao {
         return sourceId;
     }
 
+    private List<Source> populateAttributionScopes(List<Source> sources) throws DatastoreException {
+        Map<String, Source.Builder> sourceIdToSource =
+                sources.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        Source::getId, source -> Source.Builder.from(source)));
+        String attributionScopesWhereStatement =
+                SourceAttributionScopeContract.SOURCE_ID
+                        + " IN ("
+                        + sources.stream()
+                                .map(Source::getId)
+                                .map(DatabaseUtils::sqlEscapeString)
+                                .collect(Collectors.joining(","))
+                        + ")";
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                SourceAttributionScopeContract.TABLE,
+                                new String[] {
+                                    SourceAttributionScopeContract.SOURCE_ID,
+                                    SourceAttributionScopeContract.ATTRIBUTION_SCOPE
+                                },
+                                attributionScopesWhereStatement,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            Map<String, List<String>> sourceIdToAttributionScopes = new HashMap<>();
+            while (cursor.moveToNext()) {
+                String sourceId =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        SourceAttributionScopeContract.SOURCE_ID));
+                String attributionScope =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        SourceAttributionScopeContract.ATTRIBUTION_SCOPE));
+                sourceIdToAttributionScopes.putIfAbsent(sourceId, new ArrayList<>());
+                sourceIdToAttributionScopes.get(sourceId).add(attributionScope);
+            }
+            sourceIdToAttributionScopes.forEach(
+                    (sourceId, attributionScopes) -> {
+                        sourceIdToSource.get(sourceId).setAttributionScopes(attributionScopes);
+                    });
+        }
+        return sourceIdToSource.values().stream()
+                .map(Source.Builder::build)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
     @Override
     public List<Source> getMatchingActiveSources(@NonNull Trigger trigger)
             throws DatastoreException {
@@ -815,23 +887,6 @@ class MeasurementDao implements IMeasurementDao {
                         SourceContract.EVENT_TIME,
                         SourceContract.EXPIRY_TIME,
                         SourceContract.STATUS);
-        if (FlagsFactory.getFlags().getMeasurementEnableAttributionScope()
-                && trigger.getAttributionScope() != null) {
-            String attributionScopeWhereStatement =
-                    SourceContract.ID
-                            + " IN (SELECT "
-                            + SourceAttributionScopeContract.SOURCE_ID
-                            + " FROM "
-                            + SourceAttributionScopeContract.TABLE
-                            + " WHERE "
-                            + SourceAttributionScopeContract.ATTRIBUTION_SCOPE
-                            + " = "
-                            + trigger.getAttributionScope()
-                            + ")";
-            sourceWhereStatement =
-                    mergeConditions(" AND ", attributionScopeWhereStatement, sourceWhereStatement);
-        }
-
         try (Cursor cursor =
                 mSQLTransaction
                         .getDatabase()
@@ -849,7 +904,10 @@ class MeasurementDao implements IMeasurementDao {
             while (cursor.moveToNext()) {
                 sources.add(SqliteObjectMapper.constructSourceFromCursor(cursor));
             }
-            return sources;
+            return FlagsFactory.getFlags().getMeasurementEnableAttributionScope()
+                            && trigger.getAttributionScopesString() != null
+                    ? populateAttributionScopes(sources)
+                    : sources;
         }
     }
 
@@ -1872,8 +1930,7 @@ class MeasurementDao implements IMeasurementDao {
         String sourceId = eventReports.get(0).getSourceId();
 
         Map<String, List<String>> triggerIdToEventReportIdsMap =
-                eventReports
-                        .stream()
+                eventReports.stream()
                         .collect(
                                 Collectors.groupingBy(
                                         EventReport::getTriggerId,
@@ -1886,8 +1943,11 @@ class MeasurementDao implements IMeasurementDao {
             String triggerId = entry.getKey();
             List<String> eventReportIds = entry.getValue();
 
-            String eventReportsWhereStatement = MeasurementTables.EventReportContract.ID
-                    + " IN ('" + String.join("','", eventReportIds) + "')";
+            String eventReportsWhereStatement =
+                    MeasurementTables.EventReportContract.ID
+                            + " IN ('"
+                            + String.join("','", eventReportIds)
+                            + "')";
 
             db.delete(
                     MeasurementTables.EventReportContract.TABLE,

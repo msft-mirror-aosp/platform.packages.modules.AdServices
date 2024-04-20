@@ -354,7 +354,7 @@ public abstract class FledgeScenarioTest {
                 .setRenderUri(
                         Uri.parse(
                                 String.format(
-                                        "%s/render/%s/%s",
+                                        "%srender/%s/%s",
                                         mServerBaseAddress, customAudienceName, adNumber)))
                 .build();
     }

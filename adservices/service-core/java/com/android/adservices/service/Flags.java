@@ -1944,7 +1944,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
 
     default boolean getConsentNotificationDebugMode() {
-        return CONSENT_NOTIFICATION_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
 
     /** The consent notification activity debug mode is off by default. */
@@ -1953,7 +1953,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns the consent notification activity debug mode. */
     default boolean getConsentNotificationActivityDebugMode() {
-        return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
     }
 
     @FeatureFlag(DEBUG)
@@ -1961,14 +1961,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns whether to suppress consent notified state. */
     default boolean getConsentNotifiedDebugMode() {
-        return CONSENT_NOTIFIED_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotifiedDebugMode();
     }
 
     @FeatureFlag(DEBUG)
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
 
     default boolean getConsentManagerDebugMode() {
-        return CONSENT_MANAGER_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentManagerDebugMode();
     }
 
     @FeatureFlag(DEBUG)
@@ -1976,7 +1976,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** When enabled, the device is treated as OTA device. */
     default boolean getConsentManagerOTADebugMode() {
-        return DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentManagerOTADebugMode();
     }
 
     boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
