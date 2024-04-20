@@ -202,7 +202,7 @@
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="6054936530818477354">"Android, ऐप्लिकेशन के साथ सीमित जानकारी शेयर करता है, ताकि विज्ञापनों की परफ़ॉर्मेंस का आकलन करने में, ऐप्लिकेशन की मदद की जा सके."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="7432170540914883206">"क्या विज्ञापन की परफ़ॉर्मेंस का आकलन करने की सुविधा को बंद करना है?"</string>
     <string name="settingsUI_dialog_measurement_opt_out_message" msgid="2185287342979898515">"विज्ञापन की परफ़ॉर्मेंस का आकलन करने से जुड़ी सभी पेंडिंग रिपोर्ट मिटा दी जाएंगी. साथ ही, किसी नई रिपोर्ट को जनरेट या शेयर नहीं किया जाएगा."</string>
-    <string name="settingsUI_main_view_ga_title" msgid="628993290364476040">"विज्ञापन देखने वालों की निजता बनाए रखने की सुविधा"</string>
+    <string name="settingsUI_main_view_ga_title" msgid="628993290364476040">"विज्ञापन देखने वाले की निजता बनाए रखने की सुविधा"</string>
     <string name="settingsUI_topics_ga_title" msgid="4815364317504405264">"विज्ञापन के विषय"</string>
     <string name="settingsUI_apps_ga_title" msgid="6646343832670673768">"ऐप्लिकेशन के सुझाए गए विज्ञापन"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="5758770045787568091">"Android आपकी पसंद के विषयों को सेव करता है. ऐसा इस आधार पर किया जाता है कि आपने हाल ही में कौनसे ऐप्लिकेशन इस्तेमाल किए गए हैं और उनका कितनी बार इस्तेमाल किया है."</string>
