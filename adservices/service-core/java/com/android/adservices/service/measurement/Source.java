@@ -440,12 +440,18 @@ public class Source {
     public static class FakeReport {
         private final UnsignedLong mTriggerData;
         private final long mReportingTime;
+        private final long mTriggerTime;
         private final List<Uri> mDestinations;
 
-        public FakeReport(UnsignedLong triggerData, long reportingTime, List<Uri> destinations) {
+        public FakeReport(
+                UnsignedLong triggerData,
+                long reportingTime,
+                long triggerTime,
+                List<Uri> destinations) {
             mTriggerData = triggerData;
             mReportingTime = reportingTime;
             mDestinations = destinations;
+            mTriggerTime = triggerTime;
         }
 
         @Override
@@ -455,16 +461,21 @@ public class Source {
             FakeReport that = (FakeReport) o;
             return Objects.equals(mTriggerData, that.mTriggerData)
                     && mReportingTime == that.mReportingTime
+                    && mTriggerTime == that.mTriggerTime
                     && Objects.equals(mDestinations, that.mDestinations);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(mTriggerData, mReportingTime, mDestinations);
+            return Objects.hash(mTriggerData, mReportingTime, mTriggerTime, mDestinations);
         }
 
         public long getReportingTime() {
             return mReportingTime;
+        }
+
+        public long getTriggerTime() {
+            return mTriggerTime;
         }
 
         public UnsignedLong getTriggerData() {

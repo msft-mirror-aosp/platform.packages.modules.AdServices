@@ -477,7 +477,9 @@ public class MeasurementDaoTest {
                     validTrigger.getAggregatableSourceRegistrationTimeConfig(),
                     trigger.getAggregatableSourceRegistrationTimeConfig());
             assertEquals(validTrigger.getTriggerContextId(), trigger.getTriggerContextId());
-            assertEquals(validTrigger.getAttributionScope(), trigger.getAttributionScope());
+            assertEquals(
+                    validTrigger.getAttributionScopesString(),
+                    trigger.getAttributionScopesString());
         }
     }
 
@@ -4349,222 +4351,93 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testGetMatchingActiveSources_attributionScopeEnabled_filterScopes() {
+    public void testGetMatchingActiveSources_attributionScopeEnabled_populateScopes() {
         mFlags = mock(Flags.class);
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
         doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
 
-        // Below are the sources registered with attribution scopes and destinations for
-        // reporting origin 1.
-        // S0: attribution scopes -> [], destinations -> [D1, D2, D3]
-        // S1: attribution scopes -> [0], destinations -> [D1]
-        // S2: attribution scopes -> [0, 1], destinations -> [D2]
-        // S3: attribution scopes -> [0, 1, 2], destinations -> [D1, D2, D3]
-
-        // Below are the sources registered with attribution scopes and destinations for
-        // reporting origin 2.
-        // S4: attribution scopes -> [0], destinations -> [D1, D2, D3]
-        // S5: attribution scopes -> [1, 2], destinations -> [D1, D2, D3]
-
-        // S0: attribution scopes -> [], destinations -> [D1, D2, D3]
+        // S0: attribution scopes -> [], destinations -> [D1, D2]
         Source source0 =
                 insertSourceForAttributionScope(
                         /* attributionScopes= */ null,
                         /* attributionScopeLimit= */ null,
                         /* maxEventStates= */ null,
                         SOURCE_EVENT_TIME,
-                        List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION),
-                        List.of(APP_ONE_DESTINATION));
-        // S1: attribution scopes -> [0], destinations -> [D1]
-        Source source1 =
-                insertSourceForAttributionScope(
-                        List.of("0"),
-                        ATTRIBUTION_SCOPE_LIMIT,
-                        MAX_EVENT_STATES,
-                        SOURCE_EVENT_TIME,
-                        null,
-                        List.of(APP_ONE_DESTINATION));
-        // S2: attribution scopes -> [0, 1], destinations -> [D2]
-        Source source2 =
-                insertSourceForAttributionScope(
-                        List.of("1"),
-                        ATTRIBUTION_SCOPE_LIMIT,
-                        MAX_EVENT_STATES,
-                        SOURCE_EVENT_TIME + 1,
                         List.of(WEB_ONE_DESTINATION),
-                        null);
-        // S3: attribution scopes -> [0, 1, 2], destinations -> [D1, D2, D3]
-        Source source3 =
-                insertSourceForAttributionScope(
-                        List.of("0", "1", "2"),
-                        ATTRIBUTION_SCOPE_LIMIT,
-                        MAX_EVENT_STATES,
-                        SOURCE_EVENT_TIME + 2,
-                        List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION),
                         List.of(APP_ONE_DESTINATION));
-
-        // S4: attribution scopes -> [0], destinations -> [D1, D2, D3]
-        Source source4 =
-                insertSourceForAttributionScope(
-                        List.of("0", "1"),
-                        ATTRIBUTION_SCOPE_LIMIT,
-                        MAX_EVENT_STATES,
-                        SOURCE_EVENT_TIME,
-                        List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION),
-                        List.of(APP_ONE_DESTINATION),
-                        REGISTRATION_ORIGIN_2);
-
-        // S5: attribution scopes -> [1, 2], destinations -> [D1, D2, D3]
-        Source source5 =
+        // S1: attribution scopes -> ["1", "2"], destinations -> [D1]
+        Source source1 =
                 insertSourceForAttributionScope(
                         List.of("1", "2"),
                         ATTRIBUTION_SCOPE_LIMIT,
                         MAX_EVENT_STATES,
                         SOURCE_EVENT_TIME + 1,
-                        List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION),
-                        List.of(APP_ONE_DESTINATION),
-                        REGISTRATION_ORIGIN_2);
-
-        Trigger trigger1 =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(SOURCE_EVENT_TIME + 3)
-                        .setAttributionScope("0")
-                        .setAttributionDestination(APP_ONE_DESTINATION)
-                        .setDestinationType(EventSurfaceType.APP)
-                        .build();
-        assertThat(getMatchingSourceIds(trigger1))
-                .containsExactly(source1.getId(), source3.getId());
-        Trigger trigger2 =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(SOURCE_EVENT_TIME + 3)
-                        .setAttributionScope("3")
-                        .setAttributionDestination(APP_ONE_DESTINATION)
-                        .setDestinationType(EventSurfaceType.APP)
-                        .build();
-        assertThat(getMatchingSourceIds(trigger2)).isEmpty();
-        Trigger trigger3 =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(SOURCE_EVENT_TIME + 3)
-                        .setAttributionScope("1")
-                        .setAttributionDestination(WEB_ONE_DESTINATION)
-                        .setDestinationType(EventSurfaceType.WEB)
-                        .build();
-        assertThat(getMatchingSourceIds(trigger3))
-                .containsExactly(source2.getId(), source3.getId());
-        Trigger trigger4 =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(SOURCE_EVENT_TIME + 3)
-                        .setAttributionScope("3")
-                        .setAttributionDestination(WEB_ONE_DESTINATION)
-                        .setDestinationType(EventSurfaceType.WEB)
-                        .build();
-        assertThat(getMatchingSourceIds(trigger4)).isEmpty();
-        Trigger trigger5 =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(SOURCE_EVENT_TIME + 3)
-                        .setAttributionScope("2")
-                        .setAttributionDestination(WEB_TWO_DESTINATION)
-                        .setDestinationType(EventSurfaceType.WEB)
-                        .build();
-        assertThat(getMatchingSourceIds(trigger5)).containsExactly(source3.getId());
-        Trigger trigger6 =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(SOURCE_EVENT_TIME + 3)
-                        .setAttributionScope("3")
-                        .setAttributionDestination(WEB_TWO_DESTINATION)
-                        .setDestinationType(EventSurfaceType.WEB)
-                        .build();
-        assertThat(getMatchingSourceIds(trigger6)).isEmpty();
-
-        Trigger trigger7 =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(SOURCE_EVENT_TIME + 3)
-                        .setAttributionDestination(WEB_TWO_DESTINATION)
-                        .setDestinationType(EventSurfaceType.WEB)
-                        .build();
-        assertThat(getMatchingSourceIds(trigger7))
-                .containsExactly(source0.getId(), source3.getId());
-
-        Trigger trigger8 =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(SOURCE_EVENT_TIME + 3)
-                        .setAttributionDestination(APP_ONE_DESTINATION)
-                        .setDestinationType(EventSurfaceType.APP)
-                        .setAttributionScope("1")
-                        .build();
-        assertThat(getMatchingSourceIds(trigger8))
-                .containsNoneIn(List.of(source4.getId(), source5.getId()));
-    }
-
-    @Test
-    public void testGetMatchingActiveSources_attributionScopeDisabled_doNotFilterScopes() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(false).when(mFlags).getMeasurementEnableAttributionScope();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
-
-        // Below are the sources registered with attribution scopes and destinations.
-        // S0: attribution scopes -> [], destinations -> [D1, D2, D3]
-        // S1: attribution scopes -> [0], destinations -> [D1]
-        // S2: attribution scopes -> [0, 1], destinations -> [D2]
-        // S3: attribution scopes -> [0, 1, 2], destinations -> [D1, D2, D3]
-
-        // S0: attribution scopes -> [], destinations -> [D1, D2, D3]
-        Source source0 =
-                insertSourceForAttributionScope(
-                        null,
-                        ATTRIBUTION_SCOPE_LIMIT,
-                        MAX_EVENT_STATES,
-                        SOURCE_EVENT_TIME,
-                        List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION),
-                        List.of(APP_ONE_DESTINATION));
-        // S1: attribution scopes -> [0], destinations -> [D1]
-        Source source1 =
-                insertSourceForAttributionScope(
-                        List.of("0"),
-                        ATTRIBUTION_SCOPE_LIMIT,
-                        MAX_EVENT_STATES,
-                        SOURCE_EVENT_TIME,
                         null,
                         List.of(APP_ONE_DESTINATION));
-        // S2: attribution scopes -> [0, 1], destinations -> [D2]
+        // S2: attribution scopes -> ["2", "3"], destinations -> [D2]
         Source source2 =
                 insertSourceForAttributionScope(
-                        List.of("1"),
-                        ATTRIBUTION_SCOPE_LIMIT,
-                        MAX_EVENT_STATES,
-                        SOURCE_EVENT_TIME + 1,
-                        List.of(WEB_ONE_DESTINATION),
-                        null);
-        // S3: attribution scopes -> [0, 1, 2], destinations -> [D1, D2, D3]
-        Source source3 =
-                insertSourceForAttributionScope(
-                        List.of("0", "1", "2"),
+                        List.of("2", "3"),
                         ATTRIBUTION_SCOPE_LIMIT,
                         MAX_EVENT_STATES,
                         SOURCE_EVENT_TIME + 2,
-                        List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION),
-                        List.of(APP_ONE_DESTINATION));
+                        List.of(WEB_ONE_DESTINATION),
+                        null);
+
+        Trigger trigger0 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(SOURCE_EVENT_TIME + 3)
+                        .setAttributionDestination(APP_ONE_DESTINATION)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .build();
+        List<Source> matchingSources0 = getMatchingSources(trigger0);
+        assertThat(matchingSources0.size()).isEqualTo(2);
+        List<String> matchingSourceIds0 =
+                matchingSources0.stream().map(Source::getId).collect(Collectors.toList());
+        List<List<String>> matchingSourceAttributionScopes0 =
+                matchingSources0.stream()
+                        .map(Source::getAttributionScopes)
+                        .collect(Collectors.toList());
+        assertThat(matchingSourceIds0).containsExactly(source0.getId(), source1.getId());
+        // Source attribution scopes won't be populated if trigger doesn't have attribution scope.
+        assertThat(matchingSourceAttributionScopes0).containsExactly(null, null);
+
+        Trigger trigger1 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(SOURCE_EVENT_TIME + 4)
+                        .setAttributionScopesString("1")
+                        .setAttributionDestination(APP_ONE_DESTINATION)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .build();
+        List<Source> matchingSources1 = getMatchingSources(trigger1);
+        List<String> matchingSourceIds1 =
+                matchingSources1.stream().map(Source::getId).collect(Collectors.toList());
+        List<List<String>> matchingSourceAttributionScopes1 =
+                matchingSources1.stream()
+                        .map(Source::getAttributionScopes)
+                        .collect(Collectors.toList());
+        assertThat(matchingSourceIds1).containsExactly(source0.getId(), source1.getId());
+        assertThat(matchingSourceAttributionScopes1)
+                .containsExactly(source0.getAttributionScopes(), source1.getAttributionScopes());
 
         Trigger trigger2 =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(SOURCE_EVENT_TIME + 3)
-                        .setAttributionScope("0")
+                        .setTriggerTime(SOURCE_EVENT_TIME + 5)
+                        .setAttributionScopesString("2")
                         .setAttributionDestination(WEB_ONE_DESTINATION)
                         .setDestinationType(EventSurfaceType.WEB)
                         .build();
-        assertThat(getMatchingSourceIds(trigger2))
-                .containsExactly(source0.getId(), source2.getId(), source3.getId());
-        Trigger trigger3 =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(SOURCE_EVENT_TIME + 3)
-                        .setAttributionScope("0")
-                        .setAttributionDestination(WEB_TWO_DESTINATION)
-                        .setDestinationType(EventSurfaceType.WEB)
-                        .build();
-        assertThat(getMatchingSourceIds(trigger3))
-                .containsExactly(source0.getId(), source3.getId());
+        List<Source> matchingSources2 = getMatchingSources(trigger2);
+        List<String> matchingSourceIds2 =
+                matchingSources2.stream().map(Source::getId).collect(Collectors.toList());
+        List<List<String>> matchingSourceAttributionScopes2 =
+                matchingSources2.stream()
+                        .map(Source::getAttributionScopes)
+                        .collect(Collectors.toList());
+        assertThat(matchingSourceIds2).containsExactly(source0.getId(), source2.getId());
+        assertThat(matchingSourceAttributionScopes2)
+                .containsExactly(source0.getAttributionScopes(), source2.getAttributionScopes());
     }
 
     @Test
@@ -9432,7 +9305,8 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testUpdateSourcesForAttributionScope_differentMaxViewStates_ignoresSources() {
+    public void
+            testUpdateSourcesForAttributionScope_diffMaxViewStates_ignoresSourcesDeletesReports() {
         mFlags = mock(Flags.class);
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
@@ -9457,9 +9331,55 @@ public class MeasurementDaoTest {
                         SOURCE_EVENT_TIME,
                         List.of(WEB_ONE_DESTINATION),
                         null);
-        mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source1));
+        EventReport pastFakeEventReport =
+                new EventReport.Builder()
+                        .setSourceId(source1.getId())
+                        .setSourceEventId(source1.getEventId())
+                        .setReportTime(SOURCE_EVENT_TIME)
+                        .setAttributionDestinations(List.of(WEB_ONE_DESTINATION))
+                        .setTriggerTime(SOURCE_EVENT_TIME)
+                        .setSourceType(source1.getSourceType())
+                        .setStatus(EventReport.Status.PENDING)
+                        .setRegistrationOrigin(source1.getRegistrationOrigin())
+                        .build();
+        EventReport fakeEventReport1 =
+                new EventReport.Builder()
+                        .setSourceId(source1.getId())
+                        .setSourceEventId(source1.getEventId())
+                        .setReportTime(SOURCE_EVENT_TIME + 1000)
+                        .setAttributionDestinations(List.of(WEB_ONE_DESTINATION))
+                        .setTriggerTime(SOURCE_EVENT_TIME + 1000)
+                        .setSourceType(source1.getSourceType())
+                        .setStatus(EventReport.Status.PENDING)
+                        .setRegistrationOrigin(source1.getRegistrationOrigin())
+                        .build();
+        // Deleted fake event report for comparison.
+        EventReport deletedFakeEventReport1 =
+                new EventReport.Builder()
+                        .setSourceId(source1.getId())
+                        .setSourceEventId(source1.getEventId())
+                        .setReportTime(SOURCE_EVENT_TIME + 1000)
+                        .setAttributionDestinations(List.of(WEB_ONE_DESTINATION))
+                        .setTriggerTime(SOURCE_EVENT_TIME + 1000)
+                        .setSourceType(source1.getSourceType())
+                        .setStatus(EventReport.Status.MARKED_TO_DELETE)
+                        .setRegistrationOrigin(source1.getRegistrationOrigin())
+                        .build();
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertEventReport(pastFakeEventReport);
+                    dao.insertEventReport(fakeEventReport1);
+                    dao.updateSourcesForAttributionScope(source1);
+                });
         Arrays.asList(source0, source1).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
+        assertThat(
+                        mDatastoreManager
+                                .runInTransactionWithResult(
+                                        measurementDao ->
+                                                measurementDao.getSourceEventReports(source1))
+                                .get())
+                .containsExactly(pastFakeEventReport, fakeEventReport1);
 
         Source source2 =
                 insertSourceForAttributionScope(
@@ -9474,6 +9394,13 @@ public class MeasurementDaoTest {
                 .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
         Arrays.asList(source0, source2).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
+        assertThat(
+                        mDatastoreManager
+                                .runInTransactionWithResult(
+                                        measurementDao ->
+                                                measurementDao.getSourceEventReports(source1))
+                                .get())
+                .containsExactly(pastFakeEventReport, deletedFakeEventReport1);
 
         Source source3 =
                 insertSourceForAttributionScope(
@@ -9565,7 +9492,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testUpdateSourcesForAttributionScope_smallerLimit_ignoresSources() {
+    public void testUpdateSourcesForAttributionScope_smallerLimit_ignoresSourcesDeletesReports() {
         mFlags = mock(Flags.class);
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
@@ -9578,9 +9505,55 @@ public class MeasurementDaoTest {
                         SOURCE_EVENT_TIME,
                         List.of(WEB_ONE_DESTINATION),
                         null);
-        mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source1));
+        EventReport pastFakeEventReport =
+                new EventReport.Builder()
+                        .setSourceId(source1.getId())
+                        .setSourceEventId(source1.getEventId())
+                        .setReportTime(SOURCE_EVENT_TIME)
+                        .setAttributionDestinations(List.of(WEB_ONE_DESTINATION))
+                        .setTriggerTime(SOURCE_EVENT_TIME)
+                        .setSourceType(source1.getSourceType())
+                        .setStatus(EventReport.Status.PENDING)
+                        .setRegistrationOrigin(source1.getRegistrationOrigin())
+                        .build();
+        EventReport fakeEventReport1 =
+                new EventReport.Builder()
+                        .setSourceId(source1.getId())
+                        .setSourceEventId(source1.getEventId())
+                        .setReportTime(SOURCE_EVENT_TIME + 1000)
+                        .setAttributionDestinations(List.of(WEB_ONE_DESTINATION))
+                        .setTriggerTime(SOURCE_EVENT_TIME + 1000)
+                        .setSourceType(source1.getSourceType())
+                        .setStatus(EventReport.Status.PENDING)
+                        .setRegistrationOrigin(source1.getRegistrationOrigin())
+                        .build();
+        // Delete fake event report for comparison.
+        EventReport deletedFakeEventReport1 =
+                new EventReport.Builder()
+                        .setSourceId(source1.getId())
+                        .setSourceEventId(source1.getEventId())
+                        .setReportTime(SOURCE_EVENT_TIME + 1000)
+                        .setAttributionDestinations(List.of(WEB_ONE_DESTINATION))
+                        .setTriggerTime(SOURCE_EVENT_TIME + 1000)
+                        .setSourceType(source1.getSourceType())
+                        .setStatus(EventReport.Status.MARKED_TO_DELETE)
+                        .setRegistrationOrigin(source1.getRegistrationOrigin())
+                        .build();
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertEventReport(pastFakeEventReport);
+                    dao.insertEventReport(fakeEventReport1);
+                    dao.updateSourcesForAttributionScope(source1);
+                });
         Arrays.asList(source1).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
+        assertThat(
+                        mDatastoreManager
+                                .runInTransactionWithResult(
+                                        measurementDao ->
+                                                measurementDao.getSourceEventReports(source1))
+                                .get())
+                .containsExactly(pastFakeEventReport, fakeEventReport1);
 
         Source source2 =
                 insertSourceForAttributionScope(
@@ -9595,6 +9568,13 @@ public class MeasurementDaoTest {
                 .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
         Arrays.asList(source2).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
+        assertThat(
+                        mDatastoreManager
+                                .runInTransactionWithResult(
+                                        measurementDao ->
+                                                measurementDao.getSourceEventReports(source1))
+                                .get())
+                .containsExactly(pastFakeEventReport, deletedFakeEventReport1);
 
         Source source3 =
                 insertSourceForAttributionScope(
@@ -10575,9 +10555,7 @@ public class MeasurementDaoTest {
                 .setSourceSite(source.getPublisher().toString())
                 .setRegistrant(source.getRegistrant().toString())
                 .setTriggerTime(
-                        trigger.getTriggerTime()
-                                - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
-                                + 1)
+                        trigger.getTriggerTime() - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS + 1)
                 .setRegistrationOrigin(trigger.getRegistrationOrigin());
     }
 
@@ -10703,5 +10681,12 @@ public class MeasurementDaoTest {
                                 measurementDao -> measurementDao.getMatchingActiveSources(trigger))
                         .orElseThrow();
         return result.stream().map(Source::getId).collect(Collectors.toList());
+    }
+
+    private List<Source> getMatchingSources(Trigger trigger) {
+        return mDatastoreManager
+                .runInTransactionWithResult(
+                        measurementDao -> measurementDao.getMatchingActiveSources(trigger))
+                .orElseThrow();
     }
 }

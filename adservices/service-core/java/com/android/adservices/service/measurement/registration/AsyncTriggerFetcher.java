@@ -16,6 +16,7 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_GET_MANAGER_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import android.adservices.ondevicepersonalization.OnDevicePersonalizationSystemEventManager;
@@ -318,17 +319,22 @@ public class AsyncTriggerFetcher {
             }
 
             if (mFlags.getMeasurementEnableAttributionScope()
-                    && !json.isNull(TriggerHeaderContract.ATTRIBUTION_SCOPE)) {
-                Optional<String> attributionScope =
-                        FetcherUtil.extractString(
-                                json.get(TriggerHeaderContract.ATTRIBUTION_SCOPE),
+                    && !json.isNull(TriggerHeaderContract.ATTRIBUTION_SCOPES)) {
+                Optional<List<String>> attributionScopes =
+                        FetcherUtil.extractStringArray(
+                                json,
+                                TriggerHeaderContract.ATTRIBUTION_SCOPES,
+                                mFlags.getMeasurementMaxAttributionScopesPerSource(),
                                 mFlags.getMeasurementMaxAttributionScopeLength());
-                if (attributionScope.isEmpty()) {
+                if (attributionScopes.isEmpty() || attributionScopes.get().isEmpty()) {
+                    LoggerFactory.getMeasurementLogger()
+                            .e("parseTrigger: attribution_scopes is invalid.");
                     asyncFetchStatus.setEntityStatus(
                             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
                     return Optional.empty();
                 }
-                builder.setAttributionScope(attributionScope.get());
+                builder.setAttributionScopesString(
+                        json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_SCOPES).toString());
             }
 
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
@@ -817,8 +823,10 @@ public class AsyncTriggerFetcher {
             odpSystemEventManager =
                     context.getSystemService(OnDevicePersonalizationSystemEventManager.class);
         } catch (Exception e) {
-            // TODO Add CEL logging for exceptions (b/330784221)
             LoggerFactory.getMeasurementLogger().d(e, "getOdpDelegationManager: Unknown Exception");
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_GET_MANAGER_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         }
         return (odpSystemEventManager != null)
                 ? new OdpDelegationWrapperImpl(odpSystemEventManager)
@@ -843,6 +851,6 @@ public class AsyncTriggerFetcher {
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
         String AGGREGATABLE_SOURCE_REGISTRATION_TIME = "aggregatable_source_registration_time";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
-        String ATTRIBUTION_SCOPE = "attribution_scope";
+        String ATTRIBUTION_SCOPES = "attribution_scopes";
     }
 }

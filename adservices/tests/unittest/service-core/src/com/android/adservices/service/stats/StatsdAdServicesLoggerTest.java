@@ -19,12 +19,6 @@ package com.android.adservices.service.stats;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JOB_RUN;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
-
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
@@ -51,9 +45,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JOB_RUN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JS_EXECUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JS_FETCH;
 import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_API_CALLED;
@@ -66,10 +63,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOI
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_API_CALLED;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
@@ -77,6 +70,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIG
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_NO_OP;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_TOO_BIG;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
@@ -110,6 +104,8 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
+import com.android.adservices.service.measurement.ondevicepersonalization.OdpApiCallStatus;
+import com.android.adservices.service.measurement.ondevicepersonalization.OdpRegistrationStatus;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
@@ -780,6 +776,63 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(UnknownEnumValue),
                                 eq(registrationDelay),
                                 eq(SOURCE_REGISTRANT));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementOdpRegistrations_success() {
+        MeasurementOdpRegistrationStats stats =
+                new MeasurementOdpRegistrationStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION)
+                        .setRegistrationType(
+                                OdpRegistrationStatus.RegistrationType.TRIGGER.getValue())
+                        .setRegistrationStatus(
+                                OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE.getValue())
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logMeasurementOdpRegistrations(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION),
+                                eq(OdpRegistrationStatus.RegistrationType.TRIGGER.getValue()),
+                                eq(
+                                        OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE
+                                                .getValue()));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementOdpApiCallStats_success() {
+        long latency = 5L;
+        MeasurementOdpApiCallStats stats =
+                new MeasurementOdpApiCallStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP)
+                        .setLatency(latency)
+                        .setApiCallStatus(OdpApiCallStatus.ApiCallStatus.SUCCESS.getValue())
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyLong(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logMeasurementOdpApiCall(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP),
+                                eq(latency),
+                                eq(OdpApiCallStatus.ApiCallStatus.SUCCESS.getValue()));
 
         verify(writeInvocation);
 
