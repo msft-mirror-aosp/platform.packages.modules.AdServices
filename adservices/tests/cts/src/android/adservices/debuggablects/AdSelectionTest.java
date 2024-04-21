@@ -38,8 +38,6 @@ import android.adservices.utils.Scenarios;
 import android.net.Uri;
 import android.util.Log;
 
-import androidx.test.filters.FlakyTest;
-
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -139,7 +137,6 @@ public class AdSelectionTest extends FledgeScenarioTest {
      * reporting URI (Remarketing CUJ 160).
      */
     @Test
-    @FlakyTest(bugId = 325344134)
     public void testAdSelection_withAdCostInUrl_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
@@ -168,7 +165,6 @@ public class AdSelectionTest extends FledgeScenarioTest {
     /**
      * Test that buyers can specify an adCost in generateBid that reported (Remarketing CUJ 161).
      */
-    @FlakyTest(bugId = 299871209)
     @Test
     @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     public void testAdSelection_withAdCostInUrl_adCostIsReported() throws Exception {

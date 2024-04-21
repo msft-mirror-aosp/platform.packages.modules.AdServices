@@ -28,6 +28,7 @@ import static com.android.adservices.download.MddJob.createJobSpec;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
@@ -37,6 +38,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.android.libraries.mobiledatadownload.TaskScheduler.WIFI_CHARGING_PERIODIC_TASK;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -75,6 +77,7 @@ import org.mockito.Mock;
 @RequiresSdkLevelAtLeastS
 @SpyStatic(AdServicesJobScheduler.class)
 @SpyStatic(AdServicesJobServiceFactory.class)
+@SpyStatic(EncryptionDataDownloadManager.class)
 @SpyStatic(EnrollmentDataDownloadManager.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MddFlags.class)
@@ -90,6 +93,7 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
     @Mock private AdServicesJobServiceFactory mMockFactory;
     @Mock private MobileDataDownload mMockMobileDataDownload;
     @Mock private EnrollmentDataDownloadManager mMockEnrollmentDataDownloadManager;
+    @Mock private EncryptionDataDownloadManager mMockEncryptionDataDownloadManager;
     @Mock private ExecutionRuntimeParameters mMockParams;
     @Mock private Flags mMockFlags;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
@@ -107,6 +111,8 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
         doReturn(mMockMobileDataDownload).when(() -> MobileDataDownloadFactory.getMdd(any()));
         doReturn(mMockEnrollmentDataDownloadManager)
                 .when(EnrollmentDataDownloadManager::getInstance);
+        doReturn(mMockEncryptionDataDownloadManager)
+                .when(EncryptionDataDownloadManager::getInstance);
 
         // Assign a MDD task tag for general cases.
         PersistableBundle bundle = new PersistableBundle();
@@ -140,14 +146,16 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
     public void testGetExecutionFuture() throws Exception {
         FutureSyncCallback<Void> mddHandleTaskCallBack = mockMddHandleTask();
         FutureSyncCallback<Void> enrollmentCallBack = mockEnrollmentReadFromMdd();
+        FutureSyncCallback<Void> encryptionCallBack = mockEncryptionReadFromMdd();
 
         ListenableFuture<ExecutionResult> unusedFuture =
                 mMddJob.getExecutionFuture(sContext, mMockParams);
         // Call it to suppress the linter.
-        unusedFuture.get();
+        assertThat(unusedFuture.get()).isEqualTo(SUCCESS);
 
         mddHandleTaskCallBack.assertResultReceived();
         enrollmentCallBack.assertResultReceived();
+        encryptionCallBack.assertResultReceived();
     }
 
     @Test
@@ -262,6 +270,21 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
                         })
                 .when(mMockEnrollmentDataDownloadManager)
                 .readAndInsertEnrollmentDataFromMdd();
+
+        return futureCallback;
+    }
+
+    private FutureSyncCallback<Void> mockEncryptionReadFromMdd() {
+        FutureSyncCallback<Void> futureCallback = new FutureSyncCallback<>();
+
+        doAnswer(
+                        invocation -> {
+                            futureCallback.onSuccess(null);
+                            return Futures.immediateFuture(
+                                    EncryptionDataDownloadManager.DownloadStatus.SUCCESS);
+                        })
+                .when(mMockEncryptionDataDownloadManager)
+                .readAndInsertEncryptionDataFromMdd();
 
         return futureCallback;
     }

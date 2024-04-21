@@ -469,27 +469,16 @@ public class AsyncSourceFetcher {
         // Parses attribution scopes.
         List<String> attributionScopes = new ArrayList<>();
         if (!json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES)) {
-            JSONArray attributionScopesJsonArray =
-                    json.getJSONArray(SourceHeaderContract.ATTRIBUTION_SCOPES);
-            if (attributionScopesJsonArray.length()
-                    > mFlags.getMeasurementMaxAttributionScopesPerSource()) {
-                LoggerFactory.getMeasurementLogger()
-                        .e(
-                                "Number of attribution scopes should be smaller "
-                                        + "than "
-                                        + mFlags.getMeasurementMaxAttributionScopesPerSource());
+            Optional<List<String>> maybeAttributionScopes =
+                    FetcherUtil.extractStringArray(
+                            json,
+                            SourceHeaderContract.ATTRIBUTION_SCOPES,
+                            mFlags.getMeasurementMaxAttributionScopesPerSource(),
+                            mFlags.getMeasurementMaxAttributionScopeLength());
+            if (maybeAttributionScopes.isEmpty()) {
                 return false;
             }
-            for (int i = 0; i < attributionScopesJsonArray.length(); ++i) {
-                Optional<String> attributionScope =
-                        FetcherUtil.extractString(
-                                attributionScopesJsonArray.get(i),
-                                mFlags.getMeasurementMaxAttributionScopeLength());
-                if (attributionScope.isEmpty()) {
-                    return false;
-                }
-                attributionScopes.add(attributionScope.get());
-            }
+            attributionScopes = maybeAttributionScopes.get();
             builder.setAttributionScopes(attributionScopes);
         }
 
@@ -870,6 +859,7 @@ public class AsyncSourceFetcher {
             urlConnection.setInstanceFollowRedirects(false);
             String body = asyncRegistration.getPostBody();
             if (mFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled() && body != null) {
+                asyncFetchStatus.setPARequestStatus(true);
                 urlConnection.setRequestProperty("Content-Type", "text/plain");
                 urlConnection.setDoOutput(true);
                 OutputStream os = urlConnection.getOutputStream();
