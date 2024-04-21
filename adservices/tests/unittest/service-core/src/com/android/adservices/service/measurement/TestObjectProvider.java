@@ -119,6 +119,7 @@ class TestObjectProvider {
                                 new Source.FakeReport(
                                         new UnsignedLong(0L),
                                         source.getExpiryTime(),
+                                        source.getEventTime(),
                                         source.getAppDestinations()));
                     };
             doAnswer(answerSourceEventReports)

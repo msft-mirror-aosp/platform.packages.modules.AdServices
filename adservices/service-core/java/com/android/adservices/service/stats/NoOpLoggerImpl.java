@@ -24,8 +24,8 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
-import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 
 /** No-op version of {@link AdServicesLogger}. */
@@ -99,6 +99,12 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     @Override
     public void logMeasurementClickVerificationStats(
             MeasurementClickVerificationStats measurementClickVerificationStats) {}
+
+    @Override
+    public void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats) {}
+
+    @Override
+    public void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats) {}
 
     @Override
     public void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId) {}

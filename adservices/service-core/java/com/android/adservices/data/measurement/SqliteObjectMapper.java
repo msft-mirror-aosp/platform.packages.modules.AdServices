@@ -319,8 +319,8 @@ public class SqliteObjectMapper {
                 builder::setTriggerContextId);
         setTextColumn(
                 cursor,
-                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPE,
-                builder::setAttributionScope);
+                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
+                builder::setAttributionScopesString);
         return builder.build();
     }
 
