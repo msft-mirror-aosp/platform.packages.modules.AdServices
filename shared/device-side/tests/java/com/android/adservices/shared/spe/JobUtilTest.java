@@ -17,7 +17,6 @@
 package com.android.adservices.shared.spe;
 
 import static android.app.job.JobInfo.NETWORK_TYPE_NONE;
-import static android.app.job.JobInfo.PRIORITY_MIN;
 import static android.app.job.JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -28,15 +27,13 @@ import android.net.Uri;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.junit.Test;
 
 /** Unit tests for {@link JobUtil}. */
 public final class JobUtilTest extends AdServicesUnitTestCase {
     @Test
-    public void testJobInfoToString_noExpeditedAndPriorityAndUri() {
+    public void testJobInfoToString_noUri() {
         JobInfo.Builder builder = getBaseJobInfoBuilder();
         PersistableBundle extras = new PersistableBundle();
         extras.putString("ExtraString", "extra");
@@ -57,8 +54,7 @@ public final class JobUtilTest extends AdServicesUnitTestCase {
                             + " RequiresStorageNotLow=true, TriggerContentMaxDelayMs=-1,"
                             + " TriggerContentUpdateDelayMs=-1, PeriodicIntervalMs=1000000,"
                             + " FlexIntervalMs=500000, MinimumLatencyMs=0, OverrideDeadlineMs=0,"
-                            + " Extras=PersistableBundle[{ExtraString=extra}], IsPersisted=true,"
-                            + " IsExpedited=false, Priority=300}");
+                            + " Extras=PersistableBundle[{ExtraString=extra}], IsPersisted=true}");
     }
 
     @Test
@@ -81,43 +77,7 @@ public final class JobUtilTest extends AdServicesUnitTestCase {
                                 + " TriggerContentMaxDelayMs=200, TriggerContentUpdateDelayMs=100,"
                                 + " PeriodicIntervalMs=0, FlexIntervalMs=0, MinimumLatencyMs=0,"
                                 + " OverrideDeadlineMs=0, Extras=PersistableBundle[{}],"
-                                + " IsPersisted=false, IsExpedited=false, Priority=300}");
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS(reason = "Expedited is only available in S+")
-    public void testJobInfoToString_expedited() {
-        JobInfo.Builder builder = getBaseJobInfoBuilder();
-
-        builder.setExpedited(true);
-
-        assertThat(JobUtil.jobInfoToString(builder.build()))
-                .isEqualTo(
-                        "JobInfo:{JobId=1, Network=0, RequiresCharging=false,"
-                            + " RequiresBatteryNotLow=false, RequiresDeviceIdle=false,"
-                            + " RequiresStorageNotLow=false, TriggerContentMaxDelayMs=-1,"
-                            + " TriggerContentUpdateDelayMs=-1, PeriodicIntervalMs=0,"
-                            + " FlexIntervalMs=0, MinimumLatencyMs=0, OverrideDeadlineMs=0,"
-                            + " Extras=PersistableBundle[{}], IsPersisted=false, IsExpedited=true,"
-                            + " Priority=500}");
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastT(reason = "Priority is only available in T+")
-    public void testJobInfoToString_priority() {
-        JobInfo.Builder builder = getBaseJobInfoBuilder();
-
-        builder.setPriority(PRIORITY_MIN);
-
-        assertThat(JobUtil.jobInfoToString(builder.build()))
-                .isEqualTo(
-                        "JobInfo:{JobId=1, Network=0, RequiresCharging=false,"
-                            + " RequiresBatteryNotLow=false, RequiresDeviceIdle=false,"
-                            + " RequiresStorageNotLow=false, TriggerContentMaxDelayMs=-1,"
-                            + " TriggerContentUpdateDelayMs=-1, PeriodicIntervalMs=0,"
-                            + " FlexIntervalMs=0, MinimumLatencyMs=0, OverrideDeadlineMs=0,"
-                            + " Extras=PersistableBundle[{}], IsPersisted=false, IsExpedited=false,"
-                            + " Priority=100}");
+                                + " IsPersisted=false}");
     }
 
     private JobInfo.Builder getBaseJobInfoBuilder() {
