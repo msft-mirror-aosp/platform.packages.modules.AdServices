@@ -216,10 +216,14 @@ class LoadSdkSession {
         }
 
         if (service == null) {
+            sandboxLatencyInfo.setSandboxStatus(
+                    SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
+            sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
             handleLoadFailure(
                     new LoadSdkException(
                             SDK_SANDBOX_PROCESS_NOT_AVAILABLE, "Sandbox is not available"),
                     sandboxLatencyInfo);
+            return;
         }
 
         sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
@@ -234,6 +238,8 @@ class LoadSdkSession {
                     mRemoteSdkLink,
                     sandboxLatencyInfo);
         } catch (DeadObjectException e) {
+            sandboxLatencyInfo.setSandboxStatus(
+                    SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
             handleLoadFailure(
                     new LoadSdkException(
                             SDK_SANDBOX_PROCESS_NOT_AVAILABLE,

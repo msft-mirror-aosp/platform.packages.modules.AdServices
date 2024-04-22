@@ -197,7 +197,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final SdkSandboxPulledAtoms mSdkSandboxPulledAtoms;
 
-    private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
+    private final SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
 
@@ -641,6 +641,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             if (isSdkSandboxDisabled()) {
                 Log.i(TAG, "Not loading an SDK as the SDK sandbox is disabled");
+                sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
+                sandboxLatencyInfo.setSandboxStatus(
+                        SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                 sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
                 callback.onLoadSdkFailure(
                         new LoadSdkException(LOAD_SDK_SDK_SANDBOX_DISABLED, SANDBOX_DISABLED_MSG),
@@ -662,6 +665,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         } catch (Throwable e) {
             try {
                 Log.e(TAG, "Failed to load SDK " + sdkName, e);
+                sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
+                sandboxLatencyInfo.setSandboxStatus(
+                        SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                 sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
                 callback.onLoadSdkFailure(
                         new LoadSdkException(LOAD_SDK_INTERNAL_ERROR, e.getMessage(), e),
@@ -1516,13 +1522,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     SdkSandboxSettingsListener getSdkSandboxSettingsListener() {
         synchronized (mLock) {
             return mSdkSandboxSettingsListener;
-        }
-    }
-
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    void setSdkSandboxSettingsListener(SdkSandboxSettingsListener listener) {
-        synchronized (mLock) {
-            mSdkSandboxSettingsListener = listener;
         }
     }
 
