@@ -148,7 +148,7 @@
     <string name="settingsUI_blocked_topics_title" msgid="84411550241312692">"ನೀವು ನಿರ್ಬಂಧಿಸಿದ ಆಸಕ್ತಿಗಳು"</string>
     <string name="settingsUI_reset_topics_title" msgid="4659272636850648155">"ಎಲ್ಲಾ ಆಸಕ್ತಿಗಳನ್ನು ರೀಸೆಟ್ ಮಾಡಿ"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="8337078176142128219">"ಇದೀಗ ತೋರಿಸಲು ಯಾವುದೇ ಆಸಕ್ತಿಗಳಿಲ್ಲ."</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="4232374024129407829">"ಈಗ ತೋರಿಸಲು ಯಾವುದೇ ವಿಷಯಗಳು ಇಲ್ಲ.\n"<a href="https://support.google.com/android?p=ad_privacy">"ಆ್ಯಡ್ ವಿಷಯಗಳು"</a>"ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="4232374024129407829">"ಈಗ ತೋರಿಸಲು ಯಾವುದೇ ವಿಷಯಗಳಿಲ್ಲ.\n"<a href="https://support.google.com/android?p=ad_privacy">"ಆ್ಯಡ್ ವಿಷಯಗಳು"</a>" ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="1837427989556474858">"ಗೌಪ್ಯತೆ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="3814232857139974524">"Android ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆಯ ಬೀಟಾ ಹೊಸ ಫೀಚರ್‌ಗಳನ್ನು ಒದಗಿಸುತ್ತಿದ್ದು ಅವುಗಳನ್ನು ಬಳಸಿಕೊಂಡು ಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಇಷ್ಟವಾಗಬಹುದಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಬಹುದು. ಈ ತಂತ್ರಜ್ಞಾನಗಳು ಸಾಧನ ಗುರುತಿಸುವಿಕೆಗಳನ್ನು ಬಳಸುವುದಿಲ್ಲ.\n\nAndroid ನಿಮಗೆ ಯಾವ ಪ್ರಕಾರದ ಜಾಹೀರಾತುಗಳು ಇಷ್ಟವಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಅಂದಾಜು ಮಾಡಬಲ್ಲದು ಮತ್ತು ಈ ಆಸಕ್ತಿಗಳನ್ನು ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ತಾತ್ಕಾಲಿಕವಾಗಿ ಉಳಿಸಬಲ್ಲದು. ಇತರ ಡೆವಲಪರ್‌ಗಳ ವೆಬ್‌ಸೈಟ್‌ಗಳು ಮತ್ತು ಆ್ಯಪ್‌ಗಳಾದ್ಯಂತ ನಿಮ್ಮ ಚಟುವಟಿಕೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡದೇ ನಿಮಗೆ ಸೂಕ್ತವಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಇದು ಆ್ಯಪ್‌ಗಳಿಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="2592506251182454751">"ನೀವು ಯಾವುದೇ ನಿರ್ಬಂಧಿತ ಆಸಕ್ತಿಗಳನ್ನು ಹೊಂದಿಲ್ಲ"</string>
