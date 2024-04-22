@@ -15,6 +15,7 @@
  */
 package android.app.sdksandbox.sdkprovider;
 
+import static android.app.sdksandbox.SdkSandboxManager.getResultCodeForLoadSdkException;
 import static android.app.sdksandbox.sdkprovider.SdkSandboxController.SDK_SANDBOX_CONTROLLER_SERVICE;
 
 import android.annotation.CallbackExecutor;
@@ -409,6 +410,7 @@ public class SdkSandboxController {
         @Override
         public void onLoadSdkFailure(
                 LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
+            sandboxLatencyInfo.setResultCode(getResultCodeForLoadSdkException(exception));
             SdkSandboxController.this.logLatenciesFromSandbox(sandboxLatencyInfo);
             mExecutor.execute(() -> mCallback.onError(exception));
         }

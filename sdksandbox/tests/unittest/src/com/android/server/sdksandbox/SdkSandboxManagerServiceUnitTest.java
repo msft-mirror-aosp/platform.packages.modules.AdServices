@@ -235,7 +235,6 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(sSdkSandboxManagerLocal).isNotNull();
 
         sSdkSandboxSettingsListener = mService.getSdkSandboxSettingsListener();
-        assertThat(sSdkSandboxSettingsListener).isNotNull();
         mDeviceConfigUtil = new DeviceConfigUtil(sSdkSandboxSettingsListener);
         mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
 

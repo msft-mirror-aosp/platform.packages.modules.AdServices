@@ -113,7 +113,7 @@ public abstract class FledgeScenarioTest {
 
     @Rule(order = 2)
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+            AdServicesFlagsSetterRule.forAllApisEnabledTests()
                     .setCompatModeFlags()
                     .setPpapiAppAllowList(sContext.getPackageName())
                     .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);

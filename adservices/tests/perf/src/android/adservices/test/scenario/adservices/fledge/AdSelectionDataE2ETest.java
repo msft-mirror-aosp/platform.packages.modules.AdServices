@@ -26,21 +26,17 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
 import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.PersistAdSelectionResultRequest;
-import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.test.scenario.adservices.fledge.utils.CustomAudienceTestFixture;
 import android.adservices.test.scenario.adservices.fledge.utils.FakeAdExchangeServer;
 import android.adservices.test.scenario.adservices.fledge.utils.SelectAdResponse;
 import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
-import android.content.Context;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
 import android.provider.DeviceConfig;
-import android.util.Log;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -57,21 +53,13 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Scenario
 @RunWith(JUnit4.class)
-public class AdSelectionDataE2ETest {
-    private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String TAG = "AdSelectionDataE2ETest";
+public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
     private static final String CONTEXTUAL_SIGNALS_ONE_BUYER = "ContextualSignalsOneBuyer.json";
     private static final String CONTEXTUAL_SIGNALS_CONTEXTUAL_WINNER =
             "ContextualSignalsContextualWinner.json";
@@ -92,13 +80,6 @@ public class AdSelectionDataE2ETest {
     private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = true;
 
     private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
-
-    private static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
-    private static final AdSelectionClient AD_SELECTION_CLIENT =
-            new AdSelectionClient.Builder()
-                    .setContext(CONTEXT)
-                    .setExecutor(CALLBACK_EXECUTOR)
-                    .build();
 
     @Rule
     public RuleChain rules =
@@ -135,52 +116,23 @@ public class AdSelectionDataE2ETest {
         makeWarmUpNetworkCall(TEST_COORDINATOR);
 
         // The first warm up call brings ups the sfe
-        List<CustomAudience> customAudiences =
-                CustomAudienceTestFixture.readCustomAudiences(
-                        CUSTOM_AUDIENCE_TWO_BUYERS_MULTIPLE_CA);
-        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
-
-        GetAdSelectionDataRequest request =
-                new GetAdSelectionDataRequest.Builder()
-                        .setSeller(AdTechIdentifier.fromString(SELLER))
-                        .build();
-        GetAdSelectionDataOutcome outcome =
-                AD_SELECTION_CLIENT
-                        .getAdSelectionData(request)
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        try {
-            FakeAdExchangeServer.runServerAuction(
-                    CONTEXTUAL_SIGNALS_TWO_BUYERS,
-                    outcome.getAdSelectionData(),
-                    SFE_ADDRESS,
-                    SERVER_RESPONSE_LOGGING_ENABLED);
-        } catch (Exception e) {
-            Log.w(
-                    TAG,
-                    "Exception encountered during first runServerAuction warmup: "
-                            + e.getMessage()
-                            + ". Continuing execution.");
-        }
+        byte[] getAdSelectionData =
+                warmupBiddingAuctionServer(
+                        CUSTOM_AUDIENCE_TWO_BUYERS_MULTIPLE_CA,
+                        SELLER,
+                        CONTEXTUAL_SIGNALS_TWO_BUYERS,
+                        SFE_ADDRESS,
+                        SERVER_RESPONSE_LOGGING_ENABLED);
 
         // Wait for a couple of seconds before test execution
         Thread.sleep(2000L);
 
         // The second warm up call will bring up both the BFEs
-        try {
-            FakeAdExchangeServer.runServerAuction(
-                    CONTEXTUAL_SIGNALS_TWO_BUYERS,
-                    outcome.getAdSelectionData(),
-                    SFE_ADDRESS,
-                    SERVER_RESPONSE_LOGGING_ENABLED);
-        } catch (Exception e) {
-            Log.w(
-                    TAG,
-                    "Exception encountered during second runServerAuction warmup: "
-                            + e.getMessage()
-                            + ". Continuing execution.");
-        }
-        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        runServerAuction(
+                CONTEXTUAL_SIGNALS_TWO_BUYERS,
+                getAdSelectionData,
+                SFE_ADDRESS,
+                SERVER_RESPONSE_LOGGING_ENABLED);
 
         // Wait for a couple of seconds before test execution
         Thread.sleep(2000L);
@@ -473,26 +425,6 @@ public class AdSelectionDataE2ETest {
             }
         }
         return "";
-    }
-
-    private static void makeWarmUpNetworkCall(String endpointUrl) {
-        try {
-            URL url = new URL(endpointUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(5000); // Adjust timeout as needed
-            connection.setReadTimeout(5000); // Adjust timeout as needed
-
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                Log.w(TAG, "Warm-up call successful.");
-            } else {
-                Log.w(TAG, "Failed to make warm-up call. Response code: " + responseCode);
-            }
-            connection.disconnect();
-        } catch (IOException e) {
-            Log.w(TAG, "Error while trying to warm up encryption key server : " + e);
-        }
     }
 }
 
