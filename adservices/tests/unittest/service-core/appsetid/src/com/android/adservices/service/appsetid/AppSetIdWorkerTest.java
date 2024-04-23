@@ -33,6 +33,7 @@ import android.util.Log;
 
 import com.android.adservices.FakeServiceBinder;
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.common.SingletonTester;
 
 import org.junit.Test;
 
@@ -44,6 +45,11 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
     private static final String PGK_NAME = "testPackageName";
     private static final int UID = 42;
     private static final String DEFAULT_APP_SET_ID = "00000000-0000-0000-0000-000000000000";
+
+    @Test
+    public void testGetSingleton() throws Exception {
+        new SingletonTester(expect).assertAllInstancesAreTheSame(AppSetIdWorker::getInstance);
+    }
 
     @Test
     public void testGetAppSetIdOnResult() throws Exception {
