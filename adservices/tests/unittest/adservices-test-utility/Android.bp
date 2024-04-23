@@ -24,6 +24,9 @@ android_test {
         "src/**/*.java",
         "side-less/**/*.java",
     ],
+    libs: [
+        "framework-adservices-lib", // Needed to test fake ServiceBinder implementations
+    ],
     static_libs: [
         "adservices-test-utility",
         "auto_value_annotations",
