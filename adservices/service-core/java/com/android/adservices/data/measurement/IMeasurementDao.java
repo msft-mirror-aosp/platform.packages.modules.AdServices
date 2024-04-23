@@ -766,4 +766,37 @@ public interface IMeasurementDao {
      */
     long countNavigationSourcesPerReportingOrigin(
             @NonNull Uri reportingOrigin, @NonNull String registrationId) throws DatastoreException;
+
+    /**
+     * Let matchingSources be unexpired sources that match the provided publisher, publisher type
+     * destination surface type and enrollmentId. Pick and return the sources that have the least
+     * recently used destination excluding the provided list of destinations.
+     *
+     * @param publisher publisher to match
+     * @param publisherType publisher surface type, i.e. app/web to match
+     * @param enrollmentId matching enrollment
+     * @param excludedDestinations destinations to exclude while matching
+     * @param destinationType destination type app/web
+     * @param windowEndTime selected sources' expiry needs to be greater than this time
+     * @return sources with least recently used destination
+     * @throws DatastoreException when accessing the DB fails
+     */
+    List<String> fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+            Uri publisher,
+            int publisherType,
+            String enrollmentId,
+            List<Uri> excludedDestinations,
+            int destinationType,
+            long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Deletes pending aggregate reports for the provided sources. Also delete the attributions that
+     * are associated to those reports.
+     *
+     * @param sourceIds sources to consider to query the pending reports
+     * @throws DatastoreException when accessing the DB fails
+     */
+    void deletePendingAggregateReportsAndAttributionsForSources(List<String> sourceIds)
+            throws DatastoreException;
 }
