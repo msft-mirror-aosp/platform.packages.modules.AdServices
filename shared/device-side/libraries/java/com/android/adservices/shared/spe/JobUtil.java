@@ -19,13 +19,12 @@ package com.android.adservices.shared.spe;
 import android.app.job.JobInfo;
 
 import com.android.adservices.shared.proto.JobPolicy;
-import com.android.modules.utils.build.SdkLevel;
 
 /** A class for job utility methods. */
 public final class JobUtil {
     private JobUtil() {
         throw new AssertionError(
-                "The class only contains static method and should be noninstantiability.");
+                "The class only contains static method and should be not instantiable.");
     }
 
     /**
@@ -69,16 +68,6 @@ public final class JobUtil {
                 .append(jobInfo.getExtras().toString())
                 .append(", IsPersisted=")
                 .append(jobInfo.isPersisted());
-
-        // Expedited is only available in S+.
-        if (SdkLevel.isAtLeastS()) {
-            builder.append(", IsExpedited=").append(jobInfo.isExpedited());
-        }
-
-        // Priority is only available in T+.
-        if (SdkLevel.isAtLeastT()) {
-            builder.append(", Priority=").append(jobInfo.getPriority());
-        }
 
         builder.append("}");
 

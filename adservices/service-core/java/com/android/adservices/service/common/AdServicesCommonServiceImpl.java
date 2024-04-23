@@ -38,7 +38,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADSERVICES_COMMON_STATES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_ENTRY_POINT_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_UPDATE_AD_ID_API_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.service.ui.constants.DebugMessages.BACK_COMPAT_FEATURE_ENABLED_MESSAGE;
 import static com.android.adservices.service.ui.constants.DebugMessages.CALLER_NOT_ALLOWED_MESSAGE;
@@ -398,6 +400,16 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         callback.onResult("Success");
                     } catch (Exception e) {
                         LogUtil.e(e, "updateAdIdCache() failed to complete.");
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_UPDATE_AD_ID_API_ERROR,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
+
+                        try {
+                            callback.onFailure(STATUS_INTERNAL_ERROR);
+                        } catch (RemoteException ex) {
+                            LogUtil.e("Unable to send result to the callback " + ex.getMessage());
+                        }
                     }
                 });
     }
