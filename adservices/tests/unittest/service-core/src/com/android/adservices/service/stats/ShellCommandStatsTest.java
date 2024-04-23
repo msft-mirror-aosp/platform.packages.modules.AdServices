@@ -17,6 +17,7 @@
 package com.android.adservices.service.stats;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
@@ -36,6 +37,7 @@ public final class ShellCommandStatsTest extends AdServicesUnitTestCase {
 
     @Test
     public void testEqualsHashCode() {
+        EqualsTester et = new EqualsTester(expect);
         ShellCommandStats stats1 =
                 new ShellCommandStats(
                         ShellCommandStats.COMMAND_ECHO, ShellCommandStats.RESULT_SUCCESS, 1000);
@@ -43,7 +45,7 @@ public final class ShellCommandStatsTest extends AdServicesUnitTestCase {
                 new ShellCommandStats(
                         ShellCommandStats.COMMAND_ECHO, ShellCommandStats.RESULT_SUCCESS, 1000);
 
-        expectObjectsAreEqual(stats1, stats2);
+        et.expectObjectsAreEqual(stats1, stats2);
 
         ShellCommandStats stats3 =
                 new ShellCommandStats(
@@ -51,7 +53,7 @@ public final class ShellCommandStatsTest extends AdServicesUnitTestCase {
                         ShellCommandStats.RESULT_SUCCESS,
                         1000);
 
-        expectObjectsAreNotEqual(stats1, stats3);
-        expectObjectsAreNotEqual(stats2, stats3);
+        et.expectObjectsAreNotEqual(stats1, stats3);
+        et.expectObjectsAreNotEqual(stats2, stats3);
     }
 }

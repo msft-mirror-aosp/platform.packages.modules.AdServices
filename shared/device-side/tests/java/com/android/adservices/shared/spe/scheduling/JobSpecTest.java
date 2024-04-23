@@ -22,6 +22,7 @@ import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.proto.JobPolicy;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
@@ -76,6 +77,7 @@ public final class JobSpecTest extends AdServicesUnitTestCase {
 
     @Test
     public void testEqualsAndHashCode() {
+        EqualsTester et = new EqualsTester(expect);
         int jobId1 = 1;
         int jobId2 = 2;
         JobPolicy jobPolicy1 = JobPolicy.newBuilder().setJobId(jobId1).build();
@@ -128,16 +130,16 @@ public final class JobSpecTest extends AdServicesUnitTestCase {
                         .setShouldForceSchedule(!shouldForceSchedule)
                         .build();
 
-        expectObjectsAreEqual(equals1, equals1);
-        expectObjectsAreEqual(equals1, equals2);
-        expectObjectsAreEqual(equals1, equals3);
+        et.expectObjectsAreEqual(equals1, equals1);
+        et.expectObjectsAreEqual(equals1, equals2);
+        et.expectObjectsAreEqual(equals1, equals3);
 
-        expectObjectsAreNotEqual(equals1, null);
+        et.expectObjectsAreNotEqual(equals1, null);
 
-        expectObjectsAreNotEqual(equals1, differentInId);
-        expectObjectsAreNotEqual(equals1, differentInJobPolicy);
-        expectObjectsAreNotEqual(equals1, differentInBackoffPolicy);
-        expectObjectsAreNotEqual(equals1, differentInShouldForceSchedule);
+        et.expectObjectsAreNotEqual(equals1, differentInId);
+        et.expectObjectsAreNotEqual(equals1, differentInJobPolicy);
+        et.expectObjectsAreNotEqual(equals1, differentInBackoffPolicy);
+        et.expectObjectsAreNotEqual(equals1, differentInShouldForceSchedule);
     }
 
     @Test

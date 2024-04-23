@@ -30,6 +30,7 @@ import androidx.appsearch.app.AppSearchSession;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.shared.testing.EqualsTester;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -64,6 +65,7 @@ public final class AppSearchMeasurementRollbackDaoTest extends AdServicesExtende
 
     @Test
     public void testEqualsAndHashcode() {
+        EqualsTester et = new EqualsTester(expect);
         String id = ID;
         String namespace = NAMESPACE;
         String userId = USER_ID;
@@ -82,15 +84,15 @@ public final class AppSearchMeasurementRollbackDaoTest extends AdServicesExtende
         AppSearchMeasurementRollbackDao different4 =
                 new AppSearchMeasurementRollbackDao(id, namespace, userId, apexVersion + 42);
 
-        expectObjectsAreEqual(equals1, equals1);
-        expectObjectsAreEqual(equals1, equals2);
+        et.expectObjectsAreEqual(equals1, equals1);
+        et.expectObjectsAreEqual(equals1, equals2);
 
-        expectObjectsAreNotEqual(equals1, null);
-        expectObjectsAreNotEqual(equals1, "DAO, Y U NO STRING?");
-        expectObjectsAreNotEqual(equals1, different1);
-        expectObjectsAreNotEqual(equals1, different2);
-        expectObjectsAreNotEqual(equals1, different3);
-        expectObjectsAreNotEqual(equals1, different4);
+        et.expectObjectsAreNotEqual(equals1, null);
+        et.expectObjectsAreNotEqual(equals1, "DAO, Y U NO STRING?");
+        et.expectObjectsAreNotEqual(equals1, different1);
+        et.expectObjectsAreNotEqual(equals1, different2);
+        et.expectObjectsAreNotEqual(equals1, different3);
+        et.expectObjectsAreNotEqual(equals1, different4);
     }
 
     @Test
