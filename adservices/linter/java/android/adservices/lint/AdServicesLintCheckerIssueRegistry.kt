@@ -31,7 +31,8 @@ class AdServicesLintCheckerIssueRegistry : IssueRegistry() {
             BackCompatNewFileDetector.ISSUE,
             DeviceConfigUsageDetector.ISSUE,
             PreconditionsCheckStateDetector.ISSUE,
-            RoomDatabaseMigrationDetector.ISSUE,
+            RoomDatabaseMigrationDetector.ISSUE_ERROR,
+            RoomDatabaseMigrationDetector.ISSUE_WARNING,
         )
 
     override val api: Int
