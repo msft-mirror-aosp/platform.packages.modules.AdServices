@@ -23,8 +23,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 
 import android.adservices.appsetid.GetAppSetIdResult;
 import android.adservices.appsetid.IAppSetIdProviderService;
@@ -33,6 +31,7 @@ import android.adservices.appsetid.IGetAppSetIdProviderCallback;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.android.adservices.FakeServiceBinder;
 import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
@@ -49,9 +48,9 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
     @Test
     public void testGetAppSetIdOnResult() throws Exception {
         CompletableFuture<GetAppSetIdResult> future = new CompletableFuture<>();
-        AppSetIdWorker spyWorker = newAppSetIdWorkerSpy(/* forSuccess= */ true);
+        AppSetIdWorker worker = newAppSetIdWorker(/* forSuccess= */ true);
 
-        spyWorker.getAppSetId(
+        worker.getAppSetId(
                 PGK_NAME,
                 UID,
                 new IGetAppSetIdCallback.Stub() {
@@ -82,9 +81,9 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
     @Test
     public void testGetAppSetIdOnError() throws Exception {
         CompletableFuture<Integer> future = new CompletableFuture<>();
-        AppSetIdWorker spyWorker = newAppSetIdWorkerSpy(/* forSuccess= */ false);
+        AppSetIdWorker worker = newAppSetIdWorker(/* forSuccess= */ false);
 
-        spyWorker.getAppSetId(
+        worker.getAppSetId(
                 PGK_NAME,
                 UID,
                 new IGetAppSetIdCallback.Stub() {
@@ -106,8 +105,7 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
         expect.withMessage("result of getAppSetId()").that(result).isEqualTo(STATUS_INTERNAL_ERROR);
     }
 
-    private AppSetIdWorker newAppSetIdWorkerSpy(boolean forSuccess) {
-        AppSetIdWorker spyWorker = spy(AppSetIdWorker.getInstance());
+    private AppSetIdWorker newAppSetIdWorker(boolean forSuccess) {
         IAppSetIdProviderService service =
                 new IAppSetIdProviderService.Stub() {
                     @Override
@@ -130,7 +128,6 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
                         }
                     }
                 };
-        doReturn(service).when(spyWorker).getService();
-        return spyWorker;
+        return new AppSetIdWorker(new FakeServiceBinder<>(service));
     }
 }
