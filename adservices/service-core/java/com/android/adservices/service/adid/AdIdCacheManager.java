@@ -21,6 +21,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_AD_ID_PROVIDER_NOT_AVAILABLE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
 
 import android.adservices.adid.AdId;
@@ -176,7 +177,12 @@ public final class AdIdCacheManager {
                         public void onError(String errorMessage) {
                             try {
                                 callback.onError(STATUS_INTERNAL_ERROR);
+
                                 LogUtil.e("Get AdId Error Message from Provider: %s", errorMessage);
+                                ErrorLogUtil.e(
+                                        new RuntimeException(errorMessage),
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_AD_ID_PROVIDER_NOT_AVAILABLE,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
                             } catch (RemoteException e) {
                                 logRemoteException(e);
                             } finally {
