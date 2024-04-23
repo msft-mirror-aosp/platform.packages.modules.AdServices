@@ -78,6 +78,7 @@ public class Trigger {
     @Nullable private Uri mAggregationCoordinatorOrigin;
     private SourceRegistrationTimeConfig mAggregatableSourceRegistrationTimeConfig;
     @Nullable private String mTriggerContextId;
+    @Nullable private String mAttributionScopesString;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -133,7 +134,8 @@ public class Trigger {
                 && Objects.equals(mPlatformAdId, trigger.mPlatformAdId)
                 && Objects.equals(mDebugAdId, trigger.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, trigger.mRegistrationOrigin)
-                && Objects.equals(mTriggerContextId, trigger.mTriggerContextId);
+                && Objects.equals(mTriggerContextId, trigger.mTriggerContextId)
+                && Objects.equals(mAttributionScopesString, trigger.mAttributionScopesString);
     }
 
     @Override
@@ -162,7 +164,8 @@ public class Trigger {
                 mDebugAdId,
                 mRegistrationOrigin,
                 mAggregatableSourceRegistrationTimeConfig,
-                mTriggerContextId);
+                mTriggerContextId,
+                mAttributionScopesString);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -570,6 +573,26 @@ public class Trigger {
         }
     }
 
+    /** Returns attribution scope string for the trigger. */
+    @Nullable
+    public String getAttributionScopesString() {
+        return mAttributionScopesString;
+    }
+
+    /** Returns attribution scopes for the trigger. */
+    @Nullable
+    public List<String> getAttributionScopes() throws JSONException {
+        if (mAttributionScopesString == null) {
+            return null;
+        }
+        JSONArray jsonArray = new JSONArray(mAttributionScopesString);
+        List<String> attributionScopes = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); ++i) {
+            attributionScopes.add(jsonArray.getString(i));
+        }
+        return attributionScopes;
+    }
+
     /** Builder for {@link Trigger}. */
     public static final class Builder {
 
@@ -759,10 +782,16 @@ public class Trigger {
             mBuilding.mAggregatableSourceRegistrationTimeConfig = config;
             return this;
         }
-
         /** See {@link Trigger#getTriggerContextId()}. */
         public Builder setTriggerContextId(@Nullable String triggerContextId) {
             mBuilding.mTriggerContextId = triggerContextId;
+            return this;
+        }
+
+        /** See {@link Trigger#getAttributionScopesString()}. */
+        @NonNull
+        public Builder setAttributionScopesString(@Nullable String attributionScopesString) {
+            mBuilding.mAttributionScopesString = attributionScopesString;
             return this;
         }
 

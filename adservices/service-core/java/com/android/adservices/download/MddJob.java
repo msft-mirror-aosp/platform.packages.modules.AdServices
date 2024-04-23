@@ -22,6 +22,7 @@ import static com.android.adservices.download.MddJob.NetworkState.NETWORK_STATE_
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
@@ -42,6 +43,7 @@ import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.JobPolicy.NetworkType;
 import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
+import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.framework.JobWorker;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
@@ -123,7 +125,7 @@ public final class MddJob implements JobWorker {
     }
 
     @Override
-    public ListenableFuture<Void> getExecutionFuture(
+    public ListenableFuture<ExecutionResult> getExecutionFuture(
             Context context, ExecutionRuntimeParameters params) {
         ListenableFuture<Void> handleTaskFuture =
                 PropagatedFutures.submitAsync(
@@ -140,10 +142,14 @@ public final class MddJob implements JobWorker {
                         ignoredVoid -> {
                             // TODO(b/331285831): Handle unused return value.
                             // To suppress the lint error of future returning value is unused.
-                            ListenableFuture<DownloadStatus> unusedFuture =
+                            ListenableFuture<DownloadStatus> unusedFutureEnrollment =
                                     EnrollmentDataDownloadManager.getInstance()
                                             .readAndInsertEnrollmentDataFromMdd();
-                            return null;
+                            ListenableFuture<EncryptionDataDownloadManager.DownloadStatus>
+                                    unusedFutureEncryption =
+                                            EncryptionDataDownloadManager.getInstance()
+                                                    .readAndInsertEncryptionDataFromMdd();
+                            return SUCCESS;
                         },
                         AdServicesExecutors.getBlockingExecutor());
     }

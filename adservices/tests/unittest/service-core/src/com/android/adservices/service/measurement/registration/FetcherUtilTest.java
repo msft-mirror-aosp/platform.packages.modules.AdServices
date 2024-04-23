@@ -17,6 +17,8 @@ package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -30,6 +32,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -85,7 +88,7 @@ public final class FetcherUtilTest {
 
     @Before
     public void setup() {
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
     }
 
     @Test
@@ -209,6 +212,37 @@ public final class FetcherUtilTest {
         assertFalse(FetcherUtil.is64BitInteger(Float.valueOf(-456.335F)));
         assertFalse(FetcherUtil.is64BitInteger("4567"));
         assertFalse(FetcherUtil.is64BitInteger(new JSONObject()));
+    }
+
+    @Test
+    public void extractString_various() {
+        assertThat(FetcherUtil.extractString(Integer.valueOf(64), 10).isEmpty()).isTrue();
+        assertThat(FetcherUtil.extractString(Long.valueOf(64L), 10).isEmpty()).isTrue();
+        assertThat(FetcherUtil.extractString("", 10).isPresent()).isTrue();
+        assertThat(FetcherUtil.extractString("a", 10).isPresent()).isTrue();
+        assertThat(FetcherUtil.extractString("abcd", 3).isEmpty()).isTrue();
+    }
+
+    @Test
+    public void extractStringArray_stringArray_passes() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, new JSONArray("[\"1\", \"2\"]"));
+        Optional<List<String>> result = FetcherUtil.extractStringArray(obj, KEY, 5, 10);
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get()).containsExactly("1", "2");
+    }
+
+    @Test
+    public void extractStringArray_sizeTooBig_fails() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, new JSONArray("[\"1\", \"2\"]"));
+        Optional<List<String>> result = FetcherUtil.extractStringArray(obj, KEY, 1, 10);
+        assertThat(result.isPresent()).isFalse();
+    }
+
+    @Test
+    public void extractStringArray_stringTooLong_fails() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, new JSONArray("[\"1\", \"2345\"]"));
+        Optional<List<String>> result = FetcherUtil.extractStringArray(obj, KEY, 5, 1);
+        assertThat(result.isPresent()).isFalse();
     }
 
     @Test
@@ -1001,6 +1035,7 @@ public final class FetcherUtilTest {
                                                 0,
                                                 REGISTRANT_URI.toString(),
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(null)
                                         .build()));
@@ -1045,6 +1080,7 @@ public final class FetcherUtilTest {
                                                 0,
                                                 REGISTRANT_URI.toString(),
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(REGISTRATION_URI.toString())
                                         .build()));
@@ -1092,6 +1128,7 @@ public final class FetcherUtilTest {
                                                 0,
                                                 REGISTRANT_URI.toString(),
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(null)
                                         .build()));

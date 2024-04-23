@@ -36,7 +36,7 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
@@ -60,11 +60,11 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
+                    .setSystemProperty(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
+                    .setSystemProperty(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, true)
                     .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_U18_UX_ENABLED, true)
-                    .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
-                    .setFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, true)
                     .setFlag(KEY_DEBUG_UX, "GA_UX")
                     .setFlag(KEY_PAS_UX_ENABLED, true)
                     .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, true)

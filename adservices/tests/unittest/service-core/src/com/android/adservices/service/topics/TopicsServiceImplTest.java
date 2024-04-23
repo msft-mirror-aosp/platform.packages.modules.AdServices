@@ -78,9 +78,6 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.cobalt.TopicsCobaltLogger;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.IntFailureSyncCallback;
-import com.android.adservices.common.NoFailureSyncCallback;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -105,17 +102,18 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.shared.testing.IntFailureSyncCallback;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -162,7 +160,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     private BlockedTopicsManager mBlockedTopicsManager;
     private TopicsDao mTopicsDao;
     private GetTopicsParam mRequest;
-    private MockitoSession mStaticMockitoSession;
     private TopicsServiceImpl mTopicsServiceImpl;
 
     @Mock private EpochManager mMockEpochManager;
@@ -208,7 +205,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         mBlockedTopicsManager,
                         new GlobalBlockedTopicsManager(
                                 /* globalBlockedTopicIds= */ new HashSet<>()),
-                        mTopicsCobaltLogger);
+                        mTopicsCobaltLogger,
+                        mClock);
 
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);
@@ -284,7 +282,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // Topics must call AppManifestConfigHelper to check if topics is enabled, whose behavior is
         // currently guarded by a flag
         extendedMockito.mockGetFlags(mMockFlags);
-        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(false);
+
         // Similarly, AppManifestConfigHelper.isAllowedTopicsAccess() is failing to parse the XML
         // (which returns false), but logging the error on ErrorLogUtil, so we need to ignored that.
         doNothingOnErrorLogUtilError();
@@ -406,11 +404,10 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                 FAILURE_REASON_UNSET);
     }
 
+    @RequiresSdkLevelAtLeastT(reason = "R/S can't enforce foreground checks.")
     @Test
     public void testEnforceForeground_backgroundCaller() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastT()); // R/S can't enforce foreground checks.
-
-        final int uid = MY_UID;
+        int uid = MY_UID;
         // Mock AppImportanceFilter to throw WrongCallingApplicationStateException
         doThrow(new WrongCallingApplicationStateException())
                 .when(mMockAppImportanceFilter)
@@ -426,10 +423,9 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                 mSpyContext, STATUS_BACKGROUND_CALLER, /* checkLoggingStatus */ true);
     }
 
+    @RequiresSdkLevelAtLeastT(reason = "Only applicable for T+")
     @Test
     public void testEnforceForeground_sandboxCaller() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Only applicable for T+
-
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getTopics()
         // doesn't throw if caller is via Sandbox.
         doThrow(new WrongCallingApplicationStateException())
@@ -445,7 +441,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
         // Mock to grant required permissions
         // Copied UID calculation from Process.getAppUidForSdkSandboxUid().
-        final int appCallingUid = SANDBOX_UID - 10000;
+        int appCallingUid = SANDBOX_UID - 10000;
         when(mPackageManager.checkPermission(ACCESS_ADSERVICES_TOPICS, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
         when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(appCallingUid);
@@ -462,7 +458,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
     @Test
     public void testEnforceForeground_disableEnforcing() throws Exception {
-        final int uid = MY_UID;
+        int uid = MY_UID;
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getTopics()
         // doesn't throw if enforcing foreground is disabled
         doThrow(new WrongCallingApplicationStateException())
@@ -506,9 +502,9 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                 mSpyContext, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
     }
 
+    @RequiresSdkLevelAtLeastT(reason = "Sdk Sandbox only exists in T+")
     @Test
     public void checkSdkNoPermission() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Sdk Sandbox only exists in T+
         when(mPackageManager.checkPermission(eq(ACCESS_ADSERVICES_TOPICS), any()))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         extendedMockito.mockGetCallingUidOrThrow(SANDBOX_UID);
@@ -629,12 +625,26 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                 mSpyContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
         when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
                 .thenReturn(resources);
-        invokeGetTopicsAndVerifyError(
-                mMockAppContext,
-                STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
-                mRequest,
-                /* checkLoggingStatus */ true,
-                FAILURE_REASON_UNSET);
+
+        TopicsServiceImpl topicsServiceImpl = createTestTopicsServiceImplInstance();
+        GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
+
+        // No topics (empty list) were returned.
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(STATUS_SUCCESS)
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
+                        .build();
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
     }
 
     @Test
@@ -672,8 +682,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @Test
     public void getTopics_oneTopicBlocked() throws Exception {
         mockAppContextForAppManifestConfigHelperCall();
-        final long currentEpochId = 4L;
-        final int numberOfLookBackEpochs = 3;
+        long currentEpochId = 4L;
+        int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
         List<TopicParcel> topicParcels =
                 topics.stream().map(Topic::convertTopicToTopicParcel).collect(Collectors.toList());
@@ -726,8 +736,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     public void getTopics_allTopicsBlocked() throws Exception {
         mockAppContextForAppManifestConfigHelperCall();
 
-        final long currentEpochId = 4L;
-        final int numberOfLookBackEpochs = 3;
+        long currentEpochId = 4L;
+        int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
         List<TopicParcel> topicParcels =
                 topics.stream().map(Topic::convertTopicToTopicParcel).collect(Collectors.toList());
@@ -774,8 +784,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     public void testGetTopics_emptyTopicsReturned() throws Exception {
         mockAppContextForAppManifestConfigHelperCall();
 
-        final long currentEpochId = 4L;
-        final int numberOfLookBackEpochs = 3;
+        long currentEpochId = 4L;
+        int numberOfLookBackEpochs = 3;
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
@@ -816,8 +826,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @Test
     public void testGetTopics_LatencyCalculateVerify() throws Exception {
         mockAppContextForAppManifestConfigHelperCall();
-        final long currentEpochId = 4L;
-        final int numberOfLookBackEpochs = 3;
+        long currentEpochId = 4L;
+        int numberOfLookBackEpochs = 3;
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
@@ -881,8 +891,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @Test
     public void testGetTopics_enforceCallingPackage_invalidPackage() throws Exception {
         doNothingOnErrorLogUtilError();
-        final long currentEpochId = 4L;
-        final int numberOfLookBackEpochs = 3;
+        long currentEpochId = 4L;
+        int numberOfLookBackEpochs = 3;
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
@@ -948,8 +958,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     public void testGetTopics_recordObservation() throws Exception {
         mockAppContextForAppManifestConfigHelperCall();
 
-        final long currentEpochId = 4L;
-        final int numberOfLookBackEpochs = 3;
+        long currentEpochId = 4L;
+        int numberOfLookBackEpochs = 3;
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
@@ -983,8 +993,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     public void testGetTopics_notRecordObservation() throws Exception {
         mockAppContextForAppManifestConfigHelperCall();
 
-        final long currentEpochId = 4L;
-        final int numberOfLookBackEpochs = 3;
+        long currentEpochId = 4L;
+        int numberOfLookBackEpochs = 3;
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
@@ -1088,8 +1098,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     }
 
     private void runGetTopics(TopicsServiceImpl topicsServiceImpl) throws Exception {
-        final long currentEpochId = 4L;
-        final int numberOfLookBackEpochs = 3;
+        long currentEpochId = 4L;
+        int numberOfLookBackEpochs = 3;
         prepareAndPersistTopics(numberOfLookBackEpochs);
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
@@ -1136,7 +1146,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
     @NonNull
     private List<Topic> prepareAndPersistTopics(int numberOfLookBackEpochs) {
-        final Pair<String, String> appSdkKey = Pair.create(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME);
+        Pair<String, String> appSdkKey = Pair.create(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME);
         Topic topic1 =
                 Topic.create(/* topic */ 1, /* taxonomyVersion= */ 1L, /* modelVersion= */ 4L);
         Topic topic2 =

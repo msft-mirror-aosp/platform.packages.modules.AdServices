@@ -448,6 +448,17 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED =
             "measurement_aggregate_fallback_reporting_job_persisted";
 
+    public static final String
+            KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+                    "measurement_immediate_aggregate_reporting_job_required_battery_not_low";
+
+    public static final String
+            KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+                    "measurement_immediate_aggregate_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED =
+            "measurement_immediate_aggregate_reporting_job_persisted";
+
     public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
             "measurement_enable_aggregatable_report_payload_padding";
 
@@ -456,6 +467,9 @@ public final class FlagsConstants {
 
     public static final String KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED =
             "fledge_app_package_name_logging_enabled";
+
+    public static final String KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION =
+            "measurement_enable_odp_web_trigger_registration";
 
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
@@ -556,8 +570,6 @@ public final class FlagsConstants {
             "fledge_ad_selection_from_outcomes_overall_timeout_ms";
     public static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
             "fledge_ad_selection_expiration_window_s";
-    public static final String KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
-            "fledge_ad_selection_filtering_enabled";
     public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED =
             "fledge_app_install_filtering_enabled";
     public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED =
@@ -708,6 +720,13 @@ public final class FlagsConstants {
 
     public static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS =
             "fledge_auction_server_background_key_fetch_job_flex_ms";
+
+    public static final String
+            KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED =
+                    "fledge_auction_server_background_key_fetch_on_empty_db_and_in_advance_enabled";
+    public static final String
+            KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS =
+                    "fledge_auction_server_background_key_fetch_in_advance_interval_ms";
     public static final String KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION =
             "fledge_auction_server_compression_algorithm_version";
     public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION =
@@ -807,6 +826,8 @@ public final class FlagsConstants {
             "measurement_job_aggregate_fallback_reporting_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH =
             "measurement_job_aggregate_reporting_kill_switch";
+    public static final String KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH =
+            "measurement_job_immediate_aggregate_reporting_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH =
             "measurement_job_attribution_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH =
@@ -966,10 +987,6 @@ public final class FlagsConstants {
     // Consent Manager debug mode keys.
     public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
-    // Consent Manager ota debug mode keys.
-    public static final String KEY_CONSENT_MANAGER_OTA_DEBUG_MODE =
-            "consent_manager_ota_debug_mode";
-
     // Rvc post ota notification age check keys.
     public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
             "rvc_post_ota_notification_age_check";
@@ -1048,7 +1065,7 @@ public final class FlagsConstants {
     // Back-compat keys
     public static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
 
-    public static final String ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED =
+    public static final String KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED =
             "adservices_consent_migration_logging_enabled";
 
     public static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
@@ -1248,6 +1265,18 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE =
             "measurement_enable_attribution_scope";
 
+    public static final String KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK =
+            "measurement_enable_navigation_reporting_origin_check";
+
+    public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE =
+            "measurement_max_attribution_scopes_per_source";
+
+    public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH =
+            "measurement_max_attribution_scope_length";
+
+    public static final String KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON =
+            "measurement_event_api_default_epsilon";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
@@ -1278,8 +1307,10 @@ public final class FlagsConstants {
 
     public static final String KEY_AD_ID_FETCHER_TIMEOUT_MS = "ad_id_fetcher_timeout_ms";
 
-    public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
-            "app_config_returns_enabled_by_detault";
+    // NOTE: retired (it's on by default) - constant is here to keep track (for example, if we move
+    // to a metadata-driven flag management, we could still list this one as "retired").
+    //    public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
+    //            "app_config_returns_enabled_by_detault";
 
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
             "adext_data_service_apis_enabled";
@@ -1422,4 +1453,35 @@ public final class FlagsConstants {
 
     /** Key for enabling tablet region fix. */
     public static final String KEY_ENABLE_TABLET_REGION_FIX = "enable_tablet_region_fix";
+
+    /**
+     * Key for getting base64 encoded String which describes a map of sampling interval to a list of
+     * error codes.
+     */
+    public static final String KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL =
+            "encoded_error_code_list_per_sample_interval";
+
+    /** Key for enabling custom error code sampling. */
+    public static final String KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED =
+            "custom_error_code_sampling_enabled";
+
+    /** Key for PAS script download read timeout flag */
+    public static final String KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS =
+            "pas_script_download_read_timeout_ms";
+
+    /** Key for PAS script download connection timeout flag */
+    public static final String KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS =
+            "pas_script_download_connection_timeout_ms";
+
+    /** Key for PAS signals download read timeout flag */
+    public static final String KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS =
+            "pas_signals_download_read_timeout_ms";
+
+    /** Key for PAS signals download connection timeout flag */
+    public static final String KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS =
+            "pas_signals_download_connection_timeout_ms";
+
+    /** Key for PAS script execution timeout flag */
+    public static final String KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS =
+            "pas_script_execution_timeout_ms";
 }

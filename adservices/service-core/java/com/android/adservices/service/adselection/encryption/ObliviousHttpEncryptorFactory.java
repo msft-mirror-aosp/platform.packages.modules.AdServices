@@ -23,6 +23,7 @@ import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 /** A factory class used to create an instance of {@link KAnonObliviousHttpEncryptorImpl}. */
 public class ObliviousHttpEncryptorFactory {
@@ -42,7 +43,8 @@ public class ObliviousHttpEncryptorFactory {
                         AdSelectionServerDatabase.getInstance(mContext).encryptionKeyDao(),
                         FlagsFactory.getFlags(),
                         adServicesHttpsClient,
-                        AdServicesExecutors.getLightWeightExecutor());
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesLoggerImpl.getInstance());
         return new KAnonObliviousHttpEncryptorImpl(
                 encryptionKeyManager, AdServicesExecutors.getLightWeightExecutor());
     }

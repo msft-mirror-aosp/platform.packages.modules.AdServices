@@ -37,10 +37,11 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.common.SyncCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.SyncCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -151,12 +152,12 @@ public final class ExtendedMockitoExpectations {
     // TODO(b/314969513): remove once there is no more usage
     /**
      * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
-     * FlagsFactory#getFlagsForTest()}
+     * FakeFlagsFactory#getFlagsForTest()}
      *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlagsForTesting(Flags)} instead
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlagsForTesting()} instead
      */
     public static void mockGetFlagsForTest() {
-        mockGetFlags(FlagsFactory.getFlagsForTest());
+        mockGetFlags(FakeFlagsFactory.getFlagsForTest());
     }
 
     // TODO(b/314969513): remove once there is no more usage

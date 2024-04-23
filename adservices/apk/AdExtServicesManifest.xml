@@ -116,6 +116,9 @@
     <!-- Allows JobScheduler to persist jobs across reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- Required for sending measurement events -->
+    <uses-permission android:name="android.permission.ondevicepersonalization.NOTIFY_MEASUREMENT_EVENT"/>
+
     <application
         android:name=".ExtServicesApplication"
         android:label="@string/app_name"
@@ -384,6 +387,13 @@
         <!-- Measurement aggregate fallback report upload job. -->
         <service android:name=
                      "com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
+        <!-- Measurement immediate aggregate  report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE"
                  android:process=".adservices">
         </service>

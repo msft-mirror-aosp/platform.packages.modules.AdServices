@@ -24,9 +24,9 @@ import static org.mockito.Mockito.doAnswer;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 
-import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
+import com.android.adservices.shared.testing.JobServiceCallback;
 
 /** A class contains common mocking methods used in unit tests. */
 // TODO(b/324919960): Move it to the test-util package.
@@ -35,19 +35,12 @@ public final class MockitoExpectations {
     /**
      * Mock {@link JobService}'s execution to wait until {@link
      * JobService#jobFinished(JobParameters, boolean)} is called.
+     *
+     * @deprecated Use {@code new JobServiceCallback().expectJobFinished(JobService)}
      */
+    @Deprecated
     public static JobServiceCallback syncJobServiceOnJobFinished(JobService jobService) {
-        JobServiceCallback callback = new JobServiceCallback();
-
-        doAnswer(
-                        unusedInvocation -> {
-                            callback.onJobFinished();
-                            return null;
-                        })
-                .when(jobService)
-                .jobFinished(any(), anyBoolean());
-
-        return callback;
+        return new JobServiceCallback().expectJobFinished(jobService);
     }
 
     /**

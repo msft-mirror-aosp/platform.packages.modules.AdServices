@@ -40,11 +40,16 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceRefreshCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceViewCommand;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.collect.Sets;
 import com.google.common.truth.Expect;
 
 import org.junit.Before;
@@ -57,6 +62,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -175,19 +181,21 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         }
     }
     private void assertHelpContents(String help) {
+        HashSet<String> actualHelp = Sets.newHashSet(help.split("\n\n"));
         expect.withMessage("help")
-                .that(help.split("\n\n"))
-                .asList()
-                .containsExactly(
-                        HELP_ECHO,
-                        HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
-                        HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                        HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                        HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
-                        HELP_IS_ALLOWED_TOPICS_ACCESS,
-                        CustomAudienceListCommand.HELP,
-                        CustomAudienceViewCommand.HELP,
-                        CustomAudienceRefreshCommand.HELP);
+                .that(actualHelp)
+                .containsExactlyElementsIn(
+                        Sets.newHashSet(
+                                HELP_ECHO,
+                                HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
+                                HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
+                                HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
+                                HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
+                                HELP_IS_ALLOWED_TOPICS_ACCESS,
+                                CustomAudienceListCommand.HELP,
+                                CustomAudienceViewCommand.HELP,
+                                CustomAudienceRefreshCommand.HELP,
+                                ConsentedDebugShellCommand.HELP));
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {

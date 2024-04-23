@@ -107,6 +107,7 @@ public final class MeasurementImpl {
     @VisibleForTesting
     public MeasurementImpl(
             Context context,
+            Flags flags,
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
             MeasurementDataDeleter measurementDataDeleter,
@@ -115,7 +116,7 @@ public final class MeasurementImpl {
         mDatastoreManager = datastoreManager;
         mClickVerifier = clickVerifier;
         mMeasurementDataDeleter = measurementDataDeleter;
-        mFlags = FlagsFactory.getFlagsForTest();
+        mFlags = flags;
         mContentResolver = contentResolver;
     }
 

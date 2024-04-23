@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
@@ -53,7 +52,6 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -63,6 +61,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.testing.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -184,13 +183,14 @@ public class AsyncRegistrationFallbackJobServiceTest {
                                             AsyncRegistrationFallbackJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
                     callback.assertJobFinished();
 
-                    callback = createJobFinishedCallback(mSpyService);
+                    callback = new JobServiceCallback().expectJobFinished(mSpyService);
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
 
                     callback.assertJobFinished();
@@ -429,7 +429,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
                                 ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                         any(Context.class)));
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
 
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -447,7 +447,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
         // Setup
         enableKillSwitch();
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
 
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -470,7 +470,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
                                 AsyncRegistrationFallbackJobService.scheduleIfNeeded(
                                         any(), anyBoolean()));
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
 
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));

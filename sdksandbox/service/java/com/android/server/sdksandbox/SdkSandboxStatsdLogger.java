@@ -16,8 +16,24 @@
 
 package com.android.server.sdksandbox;
 
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_ALREADY_LOADED;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_INTERNAL_ERROR;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_NOT_FOUND;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_SDK_DEFINED_ERROR;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_SDK_SANDBOX_DISABLED;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
+
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__RESULT_CODE__LOAD_SDK_ALREADY_LOADED;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__RESULT_CODE__LOAD_SDK_INTERNAL_ERROR;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__RESULT_CODE__LOAD_SDK_NOT_FOUND;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__RESULT_CODE__LOAD_SDK_SDK_DEFINED_ERROR;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__RESULT_CODE__LOAD_SDK_SDK_SANDBOX_DISABLED;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__RESULT_CODE__RESULT_CODE_UNSPECIFIED;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__RESULT_CODE__SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
+
 import android.app.sdksandbox.SandboxLatencyInfo;
 import android.os.Binder;
+import android.util.Log;
 
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 
@@ -35,8 +51,10 @@ class SdkSandboxStatsdLogger {
     public void logSandboxApiLatency(SandboxLatencyInfo sandboxLatencyInfo) {
         int method = convertToStatsLogMethodCode(sandboxLatencyInfo.getMethod());
         if (method == SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED) {
+            Log.w(TAG, "Not logging sandbox API latency for unspecified method");
             return;
         }
+        int resultCode = convertToStatsLogResultCode(sandboxLatencyInfo.getResultCode());
         int callingUid = Binder.getCallingUid();
 
         logSandboxApiLatencyForStage(
@@ -44,55 +62,64 @@ class SdkSandboxStatsdLogger {
                 sandboxLatencyInfo.getAppToSystemServerLatency(),
                 sandboxLatencyInfo.isSuccessfulAtAppToSystemServer(),
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                callingUid);
+                callingUid,
+                resultCode);
         logSandboxApiLatencyForStage(
                 method,
                 sandboxLatencyInfo.getSystemServerAppToSandboxLatency(),
                 sandboxLatencyInfo.isSuccessfulAtSystemServerAppToSandbox(),
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                callingUid);
+                callingUid,
+                resultCode);
         logSandboxApiLatencyForStage(
                 method,
                 sandboxLatencyInfo.getLoadSandboxLatency(),
                 sandboxLatencyInfo.isSuccessfulAtLoadSandbox(),
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX,
-                callingUid);
+                callingUid,
+                resultCode);
         logSandboxApiLatencyForStage(
                 method,
                 sandboxLatencyInfo.getSystemServerToSandboxLatency(),
                 sandboxLatencyInfo.isSuccessfulAtSystemServerToSandbox(),
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX,
-                callingUid);
+                callingUid,
+                resultCode);
         logSandboxApiLatencyForStage(
                 method,
                 sandboxLatencyInfo.getSandboxLatency(),
                 sandboxLatencyInfo.isSuccessfulAtSandbox(),
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX,
-                callingUid);
+                callingUid,
+                resultCode);
         logSandboxApiLatencyForStage(
                 method,
                 sandboxLatencyInfo.getSdkLatency(),
                 sandboxLatencyInfo.isSuccessfulAtSdk(),
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SDK,
-                callingUid);
+                callingUid,
+                resultCode);
         logSandboxApiLatencyForStage(
                 method,
                 sandboxLatencyInfo.getSandboxToSystemServerLatency(),
                 sandboxLatencyInfo.isSuccessfulAtSandboxToSystemServer(),
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER,
-                callingUid);
+                callingUid,
+                resultCode);
         logSandboxApiLatencyForStage(
                 method,
                 sandboxLatencyInfo.getSystemServerSandboxToAppLatency(),
                 sandboxLatencyInfo.isSuccessfulAtSystemServerSandboxToApp(),
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP,
-                callingUid);
+                callingUid,
+                resultCode);
         logSandboxApiLatencyForStage(
                 method,
                 sandboxLatencyInfo.getSystemServerToAppLatency(),
                 sandboxLatencyInfo.isSuccessfulAtSystemServerToApp(),
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP,
-                callingUid);
+                callingUid,
+                resultCode);
 
         int totalCallStage = SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__TOTAL;
         if (method == SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK
@@ -104,7 +131,8 @@ class SdkSandboxStatsdLogger {
                 sandboxLatencyInfo.getTotalCallLatency(),
                 sandboxLatencyInfo.isTotalCallSuccessful(),
                 totalCallStage,
-                callingUid);
+                callingUid,
+                resultCode);
     }
 
     private int convertToStatsLogMethodCode(int method) {
@@ -143,8 +171,26 @@ class SdkSandboxStatsdLogger {
         };
     }
 
+    private int convertToStatsLogResultCode(@SandboxLatencyInfo.ResultCode int resultCode) {
+        return switch (resultCode) {
+            case RESULT_CODE_LOAD_SDK_NOT_FOUND ->
+                    SANDBOX_API_CALLED__RESULT_CODE__LOAD_SDK_NOT_FOUND;
+            case RESULT_CODE_LOAD_SDK_ALREADY_LOADED ->
+                    SANDBOX_API_CALLED__RESULT_CODE__LOAD_SDK_ALREADY_LOADED;
+            case RESULT_CODE_LOAD_SDK_SDK_DEFINED_ERROR ->
+                    SANDBOX_API_CALLED__RESULT_CODE__LOAD_SDK_SDK_DEFINED_ERROR;
+            case RESULT_CODE_LOAD_SDK_SDK_SANDBOX_DISABLED ->
+                    SANDBOX_API_CALLED__RESULT_CODE__LOAD_SDK_SDK_SANDBOX_DISABLED;
+            case RESULT_CODE_LOAD_SDK_INTERNAL_ERROR ->
+                    SANDBOX_API_CALLED__RESULT_CODE__LOAD_SDK_INTERNAL_ERROR;
+            case RESULT_CODE_SDK_SANDBOX_PROCESS_NOT_AVAILABLE ->
+                    SANDBOX_API_CALLED__RESULT_CODE__SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
+            default -> SANDBOX_API_CALLED__RESULT_CODE__RESULT_CODE_UNSPECIFIED;
+        };
+    }
+
     private void logSandboxApiLatencyForStage(
-            int method, int latency, boolean success, int stage, int callingUid) {
+            int method, int latency, boolean success, int stage, int callingUid, int resultCode) {
         if (latency != -1) {
             SdkSandboxStatsLog.write(
                     SdkSandboxStatsLog.SANDBOX_API_CALLED,
@@ -152,7 +198,8 @@ class SdkSandboxStatsdLogger {
                     latency,
                     success,
                     stage,
-                    callingUid);
+                    callingUid,
+                    resultCode);
         }
     }
 

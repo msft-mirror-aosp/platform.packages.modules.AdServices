@@ -61,6 +61,7 @@
                 "priority": "101"
               }
             ],
+            "debug_key": "8971346783", // should not be present in any agg report
             "aggregatable_trigger_data": [
               {
                 "key_piece": "0x400",

@@ -17,12 +17,16 @@
 package com.android.adservices.shared.spe.framework;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_ON_STOP_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.mockito.MockitoExpectations.syncJobServiceOnJobFinished;
 import static com.android.adservices.shared.mockito.MockitoExpectations.syncRecordOnStopJob;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SKIP_REASON_JOB_NOT_CONFIGURED;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITHOUT_RETRY;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITH_RETRY;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
 import static com.android.adservices.shared.spe.framework.TestJobServiceFactory.JOB_ID_1;
 import static com.android.adservices.shared.spe.framework.TestJobServiceFactory.JOB_NAME_1;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -31,10 +35,12 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,13 +50,13 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
+import com.android.adservices.shared.testing.JobServiceCallback;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -61,6 +67,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -69,6 +76,7 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
     // This is used to schedule a job with a latency before its execution. Use a large value so that
     // the job can NOT execute.
     private static final int EXECUTION_CANNOT_START_LATENCY_MS = 24 * 60 * 60 * 1000;
+    private static final int FUTURE_TIMEOUT_MS = 5_000;
     private static final ModuleJobPolicy MODULE_JOB_POLICY = ModuleJobPolicy.getDefaultInstance();
 
     private final JobScheduler mJobScheduler = sContext.getSystemService(JobScheduler.class);
@@ -80,6 +88,7 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
     @Mock private JobParameters mMockParameters;
     @Mock private AdServicesErrorLogger mMockErrorLogger;
     @Mock private JobSchedulingLogger mMockJobSchedulingLogger;
+    @Mock private BackoffPolicy mMockBackoffPolicy;
 
     @Before
     public void setup() {
@@ -138,7 +147,7 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
 
     @Test
     public void testOnStartJob_success() throws Exception {
-        doReturn(Futures.immediateVoidFuture())
+        doReturn(Futures.immediateFuture(SUCCESS))
                 .when(mMockJobWorker)
                 .getExecutionFuture(
                         eq(mSpyJobService), any()); // PersistableBundle doesn't implement equals.
@@ -151,8 +160,7 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
 
         callback.assertJobFinished();
         verify(mMockLogger).recordOnStartJob(JOB_ID_1);
-        verify(mMockLogger)
-                .recordJobFinished(JOB_ID_1, /* isSuccessful= */ true, /* shouldRetry= */ false);
+        verify(mMockLogger).recordJobFinished(JOB_ID_1, SUCCESS);
     }
 
     @Test
@@ -251,6 +259,89 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
                 .skipAndCancelBackgroundJob(mMockParameters, SKIP_REASON_JOB_NOT_CONFIGURED);
     }
 
+    @Test
+    public void testOnJobPostExecution_cancelled() throws Exception {
+        doNothing().when(mSpyJobService).jobFinished(any(), anyBoolean());
+
+        // TODO(b/331285831): Decide how to use future in test. Also for below methods calling
+        // onJobPostExecution().
+        ListenableFuture<Void> unusedFuture =
+                mSpyJobService.onJobPostExecution(
+                        Futures.immediateFailedFuture(new CancellationException()),
+                        JOB_ID_1,
+                        JOB_NAME_1,
+                        mMockParameters,
+                        mMockBackoffPolicy);
+        unusedFuture.get(FUTURE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        // Verify both logging and retry doesn't happen.
+        verify(mMockLogger, never()).recordJobFinished(anyInt(), any());
+        verify(mSpyJobService).jobFinished(mMockParameters, /* wantsReschedule= */ false);
+    }
+
+    @Test
+    public void testOnJobPostExecution_onException_WithRetry() throws Exception {
+        doNothing().when(mSpyJobService).jobFinished(any(), anyBoolean());
+        RuntimeException exception = new RuntimeException("The execution is failed!");
+        when(mMockBackoffPolicy.shouldRetryOnExecutionFailure()).thenReturn(true);
+
+        ListenableFuture<Void> unusedFuture =
+                mSpyJobService.onJobPostExecution(
+                        Futures.immediateFailedFuture(exception),
+                        JOB_ID_1,
+                        JOB_NAME_1,
+                        mMockParameters,
+                        mMockBackoffPolicy);
+        unusedFuture.get(FUTURE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        verify(mMockErrorLogger)
+                .logErrorWithExceptionInfo(
+                        exception,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        verify(mMockLogger).recordJobFinished(JOB_ID_1, FAILURE_WITH_RETRY);
+        verify(mSpyJobService).jobFinished(mMockParameters, /* wantsReschedule= */ true);
+    }
+
+    @Test
+    public void testOnJobPostExecution_onException_WithoutRetry() throws Exception {
+        doNothing().when(mSpyJobService).jobFinished(any(), anyBoolean());
+        RuntimeException exception = new RuntimeException("The execution is failed!");
+        when(mMockBackoffPolicy.shouldRetryOnExecutionFailure()).thenReturn(false);
+
+        ListenableFuture<Void> unusedFuture =
+                mSpyJobService.onJobPostExecution(
+                        Futures.immediateFailedFuture(exception),
+                        JOB_ID_1,
+                        JOB_NAME_1,
+                        mMockParameters,
+                        mMockBackoffPolicy);
+        unusedFuture.get(FUTURE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        verify(mMockErrorLogger)
+                .logErrorWithExceptionInfo(
+                        exception,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        verify(mMockLogger).recordJobFinished(JOB_ID_1, FAILURE_WITHOUT_RETRY);
+        verify(mSpyJobService).jobFinished(mMockParameters, /* wantsReschedule= */ false);
+    }
+
+    @Test
+    public void testOnJobPostExecution_notOnException_success() throws Exception {
+        testOnJobPostExecution_notOnException(SUCCESS);
+    }
+
+    @Test
+    public void testOnJobPostExecution_notOnException_failureWithRetry() throws Exception {
+        testOnJobPostExecution_notOnException(FAILURE_WITH_RETRY);
+    }
+
+    @Test
+    public void testOnJobPostExecution_notOnException_failureWithoutRetry() throws Exception {
+        testOnJobPostExecution_notOnException(FAILURE_WITHOUT_RETRY);
+    }
+
     private void testOnStartJob_failure(boolean shouldRetry) throws Exception {
         RuntimeException exception = new RuntimeException("The execution is failed!");
         doReturn(Futures.immediateFailedFuture(exception))
@@ -269,7 +360,9 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
 
         callback.assertJobFinished();
         verify(mMockLogger).recordOnStartJob(JOB_ID_1);
-        verify(mMockLogger).recordJobFinished(JOB_ID_1, /* isSuccessful= */ false, shouldRetry);
+        verify(mMockLogger)
+                .recordJobFinished(
+                        JOB_ID_1, shouldRetry ? FAILURE_WITH_RETRY : FAILURE_WITHOUT_RETRY);
         verify(mMockErrorLogger)
                 .logErrorWithExceptionInfo(
                         exception,
@@ -306,7 +399,7 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
                 .when(mMockErrorLogger)
                 .logErrorWithExceptionInfo(
                         exception,
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_ON_STOP_EXECUTION_FAILURE,
                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         doReturn(stopFuture)
                 .when(mMockJobWorker)
@@ -314,14 +407,16 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
                         eq(mSpyJobService), any()); // PersistableBundle doesn't implement equals.
 
         // Mock the execution future created from onStartJob() and keep it running for a while.
-        ListenableFuture<Void> mockRunningFuture =
+        ListenableFuture<ExecutionResult> mockRunningFuture =
                 Futures.submit(
-                        () ->
-                                sleep(
-                                        60000,
-                                        "Set a comparable long waiting time so that the future"
+                        () -> {
+                            sleep(
+                                    60000,
+                                    "Set a comparable long waiting time so that the future"
                                             + " won't finish, but it should still stop in case of"
-                                            + " any issue."),
+                                            + " any issue.");
+                            return SUCCESS;
+                        },
                         mFactory.getBackgroundExecutor());
         mSpyJobService.mRunningFuturesMap.put(JOB_ID_1, mockRunningFuture);
         JobServiceLoggingCallback callback = syncRecordOnStopJob(mMockLogger);
@@ -343,8 +438,24 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
             verify(mMockErrorLogger)
                     .logErrorWithExceptionInfo(
                             exception,
-                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE,
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_ON_STOP_EXECUTION_FAILURE,
                             AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
+    }
+
+    private void testOnJobPostExecution_notOnException(ExecutionResult result) throws Exception {
+        doNothing().when(mSpyJobService).jobFinished(any(), anyBoolean());
+
+        ListenableFuture<Void> unusedFuture =
+                mSpyJobService.onJobPostExecution(
+                        Futures.immediateFuture(result),
+                        JOB_ID_1,
+                        JOB_NAME_1,
+                        mMockParameters,
+                        mMockBackoffPolicy);
+        unusedFuture.get(FUTURE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        verify(mMockLogger).recordJobFinished(JOB_ID_1, result);
+        verify(mSpyJobService).jobFinished(mMockParameters, result.equals(FAILURE_WITH_RETRY));
     }
 }

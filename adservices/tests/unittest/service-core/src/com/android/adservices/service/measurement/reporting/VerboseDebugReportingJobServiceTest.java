@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.service.measurement.reporting.VerboseDebugReportingJobService.VERBOSE_DEBUG_REPORT_JOB_ID;
@@ -48,7 +47,6 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -57,6 +55,7 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.shared.testing.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -118,7 +117,8 @@ public class VerboseDebugReportingJobServiceTest {
                     // Setup
                     enableKillSwitch();
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -150,7 +150,8 @@ public class VerboseDebugReportingJobServiceTest {
                             .when(mSpyLogger)
                             .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -182,7 +183,8 @@ public class VerboseDebugReportingJobServiceTest {
                             .when(mSpyLogger)
                             .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
@@ -190,7 +192,8 @@ public class VerboseDebugReportingJobServiceTest {
 
                     assertTrue(result);
 
-                    JobServiceCallback secondCallback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback secondCallback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
                     verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
                             .jobFinished(any(), anyBoolean());
 
@@ -220,7 +223,8 @@ public class VerboseDebugReportingJobServiceTest {
                                             ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                                     any(Context.class)));
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mock(JobParameters.class));

@@ -112,14 +112,15 @@ public final class ScheduledUpdatesHandlerTest {
                     .setBuyer(BUYER)
                     .build();
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
 
     private final AdRenderIdValidator mAdRenderIdValidator =
             AdRenderIdValidator.createEnabledInstance(100);
     @Rule public MockitoRule rule = MockitoJUnit.rule();
     @Captor ArgumentCaptor<AdServicesHttpClientRequest> mRequestCaptor;
     @Captor ArgumentCaptor<DBCustomAudience> mInsertCustomAudienceCaptor;
-    private boolean mFledgeAdSelectionFilteringEnabled;
+    private boolean mFledgeFrequencyCapFilteringEnabled;
+    private boolean mFledgeAppInstallFilteringEnabled;
     private boolean mFledgeAuctionServerAdRenderIdEnabled;
     private boolean mAuctionServerRequestFlags;
     private long mFledgeAuctionServerAdRenderIdMaxLength;
@@ -151,7 +152,8 @@ public final class ScheduledUpdatesHandlerTest {
                         AD_DATA_CONVERSION_STRATEGY,
                         mCustomAudienceImplMock);
 
-        mFledgeAdSelectionFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
+        mFledgeFrequencyCapFilteringEnabled = mFlags.getFledgeFrequencyCapFilteringEnabled();
+        mFledgeAppInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
         mFledgeAuctionServerAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
         mFledgeAuctionServerAdRenderIdMaxLength =
                 mFlags.getFledgeAuctionServerAdRenderIdMaxLength();
@@ -882,7 +884,8 @@ public final class ScheduledUpdatesHandlerTest {
         for (DBPartialCustomAudience partialCustomAudience : partialCustomAudienceList) {
             CustomAudienceBlob blob =
                     new CustomAudienceBlob(
-                            mFledgeAdSelectionFilteringEnabled,
+                            mFledgeFrequencyCapFilteringEnabled,
+                            mFledgeAppInstallFilteringEnabled,
                             mFledgeAuctionServerAdRenderIdEnabled,
                             mFledgeAuctionServerAdRenderIdMaxLength,
                             mAuctionServerRequestFlags);
@@ -908,21 +911,11 @@ public final class ScheduledUpdatesHandlerTest {
         public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
             return true;
         }
-
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return true;
-        }
     }
 
     private static class FlagsWithSmallSizeLimits implements Flags {
         @Override
         public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
             return true;
         }
 

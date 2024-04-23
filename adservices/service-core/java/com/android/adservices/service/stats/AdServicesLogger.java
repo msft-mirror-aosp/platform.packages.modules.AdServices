@@ -25,6 +25,9 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 
 /** Interface for Adservices logger. */
 public interface AdServicesLogger {
@@ -121,6 +124,12 @@ public interface AdServicesLogger {
     /** Logs measurement click verification stats. */
     void logMeasurementClickVerificationStats(
             MeasurementClickVerificationStats measurementClickVerificationStats);
+
+    /** Logs measurement ODP registrations. */
+    void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats);
+
+    /** Logs measurement ODP API calls. */
+    void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats);
 
     /** Logs enrollment data stats. */
     void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId);
@@ -226,4 +235,20 @@ public interface AdServicesLogger {
 
     /** Logs stats for EncodingFetchStats */
     void logEncodingJsFetchStats(EncodingFetchStats stats);
+
+    /** Logs stats for UpdateSignalsApiCalledStats */
+    void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats);
+
+    /** Logs stats for ServerAuctionBackgroundKeyFetchScheduled */
+    void logServerAuctionBackgroundKeyFetchScheduledStats(
+            ServerAuctionBackgroundKeyFetchScheduledStats stats);
+
+    /** Logs stats for UpdateSignalsApiCalledStats */
+    void logEncodingJsExecutionStats(EncodingJsExecutionStats stats);
+
+    /** Logs stats for ServerAuctionKeyFetchCalled */
+    void logServerAuctionKeyFetchCalledStats(ServerAuctionKeyFetchCalledStats stats);
+
+    /** Logs stats for EncodingJobRunStats */
+    void logEncodingJobRunStats(EncodingJobRunStats stats);
 }

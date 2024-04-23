@@ -32,7 +32,6 @@ import androidx.annotation.Nullable;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -47,9 +46,12 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.ShellCommandStats;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
 import com.android.adservices.shared.testing.common.BlockingCallableWrapper;
 
 import com.google.common.collect.ImmutableList;
@@ -59,6 +61,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.List;
 
 public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase {
 
@@ -72,7 +76,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     public void setup() {
         CustomAudienceDao customAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         AppInstallDao appInstallDao =
@@ -201,6 +205,11 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                     public int getMetricsLoggerCommand() {
                         return 0;
                     }
+
+                    @Override
+                    public String getCommandHelp() {
+                        return null;
+                    }
                 };
 
         ShellCommandServiceImpl shellCommandService =
@@ -257,6 +266,11 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                     public int getMetricsLoggerCommand() {
                         return 0;
                     }
+
+                    @Override
+                    public String getCommandHelp() {
+                        return null;
+                    }
                 };
 
         ShellCommandServiceImpl shellCommandService =
@@ -302,6 +316,11 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                     public int getMetricsLoggerCommand() {
                         return 0;
                     }
+
+                    @Override
+                    public String getCommandHelp() {
+                        return null;
+                    }
                 };
 
         ShellCommandServiceImpl shellCommandService =
@@ -332,6 +351,11 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                     @Override
                     public String getCommandPrefix() {
                         return commandPrefix;
+                    }
+
+                    @Override
+                    public List<String> getAllCommandsHelp() {
+                        return Collections.emptyList();
                     }
                 };
 

@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.hosttestutils.AwaitUtils;
 import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 
@@ -190,7 +191,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testAppAndSdkSandboxAreKilledOnLoadedSdkUpdate() throws Exception {
+    public void testSdkSandboxIsKilledOnLoadedSdkUpdate() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
 
         // Should see app/sdk sandbox running
@@ -200,16 +201,13 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         // Update package loaded by app
         installPackage(CODE_APK, "-d");
-        waitForProcessDeath(SANDBOX_1_PROCESS_NAME);
 
-        // Should no longer see app/sdk sandbox running
-        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-        assertThat(processDump).doesNotContain(APP_PACKAGE + '\n');
-        assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
+        // SDK sandbox should be killed
+        waitForProcessDeath(SANDBOX_1_PROCESS_NAME);
     }
 
     @Test
-    public void testAppAndSdkSandboxAreKilledForNonLoadedSdkUpdate() throws Exception {
+    public void testSdkSandboxIsKilledForNonLoadedSdkUpdate() throws Exception {
         // Have the app load the first SDK.
         startActivity(APP_2_PACKAGE, APP_2_ACTIVITY);
 
@@ -220,12 +218,9 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         // Update package consumed by the app, but not loaded into the sandbox.
         installPackage(CODE_APK_2, "-d");
-        waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
 
-        // Should no longer see app/sdk sandbox running
-        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-        assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME + '\n');
-        assertThat(processDump).doesNotContain(SANDBOX_2_PROCESS_NAME);
+        // SDK sandbox should be killed
+        waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
     }
 
     @Test
@@ -537,16 +532,11 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     private void waitForProcessDeath(String processName) throws Exception {
-        int timeElapsed = 0;
-        while (timeElapsed <= 30000) {
-            final String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-            if (processDump.contains(processName)) {
-                Thread.sleep(1000);
-                timeElapsed += 1000;
-                continue;
-            }
-            return;
-        }
-        throw new AssertionError("Process " + processName + " has not died.");
+        AwaitUtils.waitFor(
+                () -> {
+                    String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+                    return !processDump.contains(processName);
+                },
+                "Process " + processName + " has not died.");
     }
 }

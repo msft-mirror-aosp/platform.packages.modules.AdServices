@@ -16,13 +16,18 @@
 
 package com.android.adservices.shared.spe.framework;
 
+import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+
 import android.content.Context;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.shared.spe.JobServiceConstants.JobEnablementStatus;
 import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
 
@@ -30,14 +35,13 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 
 /** Unit tests for default methods in {@link JobWorker}. */
-public final class JobWorkerTest extends AdServicesUnitTestCase {
+public final class JobWorkerTest extends AdServicesMockitoTestCase {
     private static final JobWorker sJobWorker =
             new JobWorker() {
                 @Override
-                public ListenableFuture<Void> getExecutionFuture(
+                public ListenableFuture<ExecutionResult> getExecutionFuture(
                         Context context, ExecutionRuntimeParameters executionRuntimeParameters) {
                     return null;
                 }
@@ -58,8 +62,23 @@ public final class JobWorkerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetExecutionStopFuture() {
-        ExecutionRuntimeParameters mockParams = Mockito.mock(ExecutionRuntimeParameters.class);
+        ExecutionRuntimeParameters mockParams = mock(ExecutionRuntimeParameters.class);
         assertThat(sJobWorker.getExecutionStopFuture(sContext, mockParams))
                 .isEqualTo(Futures.immediateVoidFuture());
+    }
+
+    @Test
+    public void testsGetJobSchedulingEnablementStatus() {
+        JobWorker spyJobWorker = spy(sJobWorker);
+
+        doReturn(JOB_ENABLED_STATUS_ENABLED).when(spyJobWorker).getJobEnablementStatus();
+        expect.that(spyJobWorker.getJobSchedulingEnablementStatus())
+                .isEqualTo(JOB_ENABLED_STATUS_ENABLED);
+
+        doReturn(JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON)
+                .when(spyJobWorker)
+                .getJobEnablementStatus();
+        expect.that(spyJobWorker.getJobSchedulingEnablementStatus())
+                .isEqualTo(JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON);
     }
 }

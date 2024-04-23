@@ -244,9 +244,6 @@ public class SdkSandboxActivityRegistry {
             if (handlerInfo == null) {
                 return null;
             }
-            if (!handlerInfo.getSdkContext().isCustomizedSdkContextEnabled()) {
-                throw new IllegalStateException("Customized SDK flag is disabled.");
-            }
             return handlerInfo.getContextInfo();
         }
     }

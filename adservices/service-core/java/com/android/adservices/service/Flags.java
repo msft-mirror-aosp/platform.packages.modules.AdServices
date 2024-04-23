@@ -23,7 +23,6 @@ import static com.android.adservices.shared.common.flags.FeatureFlag.Type.DEBUG;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
-import static com.android.adservices.shared.common.flags.FeatureFlag.Type.RAMPED_UP;
 
 import android.annotation.IntDef;
 import android.app.job.JobInfo;
@@ -1333,14 +1332,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     // Filtering feature flag disabled by default
-    boolean FLEDGE_AD_SELECTION_FILTERING_ENABLED = false;
-
-    /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
-    default boolean getFledgeAdSelectionFilteringEnabled() {
-        return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
-    }
-
-    // Filtering feature flag disabled by default
     boolean FLEDGE_APP_INSTALL_FILTERING_ENABLED = false;
 
     /** Returns {@code true} if app install filtering of ads during ad selection is enabled. */
@@ -1745,6 +1736,29 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED = false;
+
+    /**
+     * Returns whether that the periodic job to fetch encryption keys should force refresh if the
+     * database is empty or if the keys are within
+     * FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS to expire.
+     */
+    default boolean getFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled() {
+        return getFledgeAuctionServerBackgroundKeyFetchJobEnabled()
+                && FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
+    }
+
+    long FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS =
+            TimeUnit.HOURS.toMillis(24);
+
+    /**
+     * Returns the interval at which a key is considered to be almost expired and preventive
+     * refreshed
+     */
+    default long getFledgeAuctionServerBackgroundKeyFetchInAdvanceIntervalMs() {
+        return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS;
+    }
+
     boolean FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING = true;
 
     default boolean getFledgeAuctionServerEnableDebugReporting() {
@@ -1766,7 +1780,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default value for feature flag for PAS unlimited egress in Server auctions. */
-    boolean DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS = true;
+    boolean DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS = false;
 
     /**
      * @return feature flag to enable PAS unlimited egress in Server auctions
@@ -1930,7 +1944,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
 
     default boolean getConsentNotificationDebugMode() {
-        return CONSENT_NOTIFICATION_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
 
     /** The consent notification activity debug mode is off by default. */
@@ -1939,7 +1953,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns the consent notification activity debug mode. */
     default boolean getConsentNotificationActivityDebugMode() {
-        return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
     }
 
     @FeatureFlag(DEBUG)
@@ -1947,14 +1961,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns whether to suppress consent notified state. */
     default boolean getConsentNotifiedDebugMode() {
-        return CONSENT_NOTIFIED_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotifiedDebugMode();
     }
 
     @FeatureFlag(DEBUG)
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
 
     default boolean getConsentManagerDebugMode() {
-        return CONSENT_MANAGER_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentManagerDebugMode();
     }
 
     @FeatureFlag(DEBUG)
@@ -1962,7 +1976,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** When enabled, the device is treated as OTA device. */
     default boolean getConsentManagerOTADebugMode() {
-        return DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentManagerOTADebugMode();
     }
 
     boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
@@ -2242,6 +2256,23 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getMeasurementJobAggregateReportingKillSwitch() {
         return getLegacyMeasurementKillSwitch() || MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Immediate Aggregate Reporting Job Kill Switch. The default value is true which
+     * means Immediate Aggregate Reporting Job is disabled. This flag is used for emergency turning
+     * off of the Immediate Aggregate Reporting Job.
+     */
+    boolean MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH = true;
+
+    /**
+     * Returns the kill switch value for Measurement Immediate Aggregate Reporting Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Immediate Aggregate Reporting Kill Switch value is true.
+     */
+    default boolean getMeasurementJobImmediateAggregateReportingKillSwitch() {
+        return !getMeasurementEnabled()
+                || MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -4141,6 +4172,28 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
     }
 
+    boolean MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for immediate aggregate reporting job. */
+    default boolean getMeasurementImmediateAggregateReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for immediate aggregate reporting job. */
+    default int getMeasurementImmediateAggregateReportingJobRequiredNetworkType() {
+        return MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED = true;
+
+    /** Returns whether to persist immediate aggregate reporting job across device reboots. */
+    default boolean getMeasurementImmediateAggregateReportingJobPersisted() {
+        return MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED;
+    }
+
     /** Default value for Null Aggregate Report feature flag. */
     boolean MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED = false;
 
@@ -4336,7 +4389,31 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns true when attribution scope is enabled. */
     default boolean getMeasurementEnableAttributionScope() {
-        return MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+        return getMeasurementFlexLiteApiEnabled() && MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+    }
+
+    boolean MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK = false;
+
+    /**
+     * Returns true if validation is enabled for one navigation per reporting origin per
+     * registration.
+     */
+    default boolean getMeasurementEnableNavigationReportingOriginCheck() {
+        return MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
+    }
+
+    int MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE = 20;
+
+    /** Returns max number of attribution scopes per source. */
+    default int getMeasurementMaxAttributionScopesPerSource() {
+        return MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
+    }
+
+    int MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH = 50;
+
+    /** Returns max length of attribution scope. */
+    default int getMeasurementMaxAttributionScopeLength() {
+        return MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
     }
 
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
@@ -4487,6 +4564,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID;
     }
 
+    /** Flag for enabling measurement registrations using ODP */
+    boolean MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION = false;
+
+    /** Return true if measurement registrations through ODP is enabled */
+    default boolean getMeasurementEnableOdpWebTriggerRegistration() {
+        return MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
+    }
+
+    float DEFAULT_MEASUREMENT_PRIVACY_EPSILON = 14f;
+
+    default float getMeasurementPrivacyEpsilon() {
+        return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
@@ -4625,25 +4716,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default long getAdIdFetcherTimeoutMs() {
         return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
-    }
-
-    /**
-     * @deprecated TODO(b/314962688): remove (will always be true)
-     */
-    @FeatureFlag(RAMPED_UP)
-    @Deprecated
-    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = true;
-
-    /**
-     * Returns whether the API access checked by the AdServices XML config returns {@code true} by
-     * default (i.e., when the app doesn't define the config XML file or if the given API access is
-     * missing from that file).
-     *
-     * @deprecated TODO(b/314962688): remove
-     */
-    @Deprecated
-    default boolean getAppConfigReturnsEnabledByDefault() {
-        return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
     }
 
     /**
@@ -5140,5 +5212,63 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getEnableTabletRegionFix() {
         return DEFAULT_ENABLE_TABLET_REGION_FIX;
+    }
+
+    /** Default value for custom error code sampling enabled. */
+    @FeatureFlag boolean DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED = false;
+
+    /** Returns {@code boolean} determining whether custom error code sampling is enabled. */
+    default boolean getCustomErrorCodeSamplingEnabled() {
+        return DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
+    }
+
+    /** Read timeout for downloading PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Read timeout for downloading PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptDownloadReadTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
+    }
+
+    /** Connection timeout for downloading PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Connection timeout for downloading PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptDownloadConnectionTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Read timeout for downloading PAS signals in milliseconds */
+    int DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Read timeout for downloading PAS signals in milliseconds
+     */
+    default int getPasSignalsDownloadReadTimeoutMs() {
+        return DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
+    }
+
+    /** Connection timeout for downloading PAS encoding signals in milliseconds */
+    int DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Connection timeout for downloading PAS signals in milliseconds
+     */
+    default int getPasSignalsDownloadConnectionTimeoutMs() {
+        return DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Timeout for executing PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Timeout for executing PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptExecutionTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
     }
 }

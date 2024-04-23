@@ -16,15 +16,14 @@
 
 package com.android.adservices.data.signals;
 
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_OTHER_FAILURE;
-
 import static com.android.adservices.data.signals.EncoderLogicHandler.EMPTY_ADTECH_ID;
 import static com.android.adservices.data.signals.EncoderLogicHandler.ENCODER_VERSION_RESPONSE_HEADER;
 import static com.android.adservices.data.signals.EncoderLogicHandler.FALLBACK_VERSION;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
-import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_AD_TECH_ID;
-import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_END_TIMESTAMP;
-import static com.android.adservices.service.stats.FetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_OTHER_FAILURE;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_AD_TECH_ID;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_END_TIMESTAMP;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_START_TIMESTAMP;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -39,7 +38,6 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
@@ -47,9 +45,10 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
-import com.android.adservices.service.stats.pas.FetchProcessLogger;
-import com.android.adservices.service.stats.pas.FetchProcessLoggerImpl;
+import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -161,7 +160,7 @@ public class EncoderLogicHandlerTest {
         ListenableFuture<AdServicesHttpClientResponse> responseFuture =
                 Futures.immediateFuture(response);
         when(mAdServicesHttpsClient.fetchPayloadWithLogging(
-                any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class)))
+                        any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class)))
                 .thenReturn(responseFuture);
         when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
 
@@ -177,11 +176,10 @@ public class EncoderLogicHandlerTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         ArgumentCaptor<EncodingFetchStats> argumentCaptor =
                 ArgumentCaptor.forClass(EncodingFetchStats.class);
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(TEST_JS_DOWNLOAD_END_TIMESTAMP);
+        when(mMockClock.currentTimeMillis()).thenReturn(TEST_JS_DOWNLOAD_END_TIMESTAMP);
         EncodingFetchStats.Builder encodingJsFetchStatsBuilder = EncodingFetchStats.builder();
         FetchProcessLogger fetchProcessLogger =
-                new FetchProcessLoggerImpl(
+                new EncodingJsFetchProcessLoggerImpl(
                         mAdServicesLoggerSpy, mMockClock, encodingJsFetchStatsBuilder);
         fetchProcessLogger.setJsDownloadStartTimestamp(TEST_JS_DOWNLOAD_START_TIMESTAMP);
         fetchProcessLogger.setAdTechId(TEST_AD_TECH_ID);
@@ -199,7 +197,6 @@ public class EncoderLogicHandlerTest {
 
         verifyZeroInteractions(
                 mAdServicesHttpsClient, mEncoderPersistenceDao, mEncoderLogicMetadataDao);
-
 
         // Verify the logging of EncodingFetchStats
         verify(mAdServicesLoggerSpy).logEncodingJsFetchStats(argumentCaptor.capture());

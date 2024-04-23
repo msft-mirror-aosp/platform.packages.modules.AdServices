@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.attribution;
 
-import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
@@ -52,7 +51,6 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -61,6 +59,7 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.shared.testing.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -188,13 +187,14 @@ public class AttributionFallbackJobServiceTest {
                                             AttributionFallbackJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
                     callback.assertJobFinished();
 
-                    callback = createJobFinishedCallback(mSpyService);
+                    callback = new JobServiceCallback().expectJobFinished(mSpyService);
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
 
                     callback.assertJobFinished();

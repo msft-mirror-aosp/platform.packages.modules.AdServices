@@ -453,6 +453,79 @@ public class AsyncSourceFetcher {
                         .e(e, "parseCommonSourceParams: parsing shared debug key failed");
             }
         }
+
+        if (mFlags.getMeasurementEnableAttributionScope()
+                && !populateAttributionScopeFields(json, builder)) {
+            return false;
+        }
+        return true;
+    }
+
+    // Populates attribution scope fields if they are available.
+    // Returns false if the json fields are invalid.
+    // Note returning true doesn't indicate whether the fields are populated or not.
+    private boolean populateAttributionScopeFields(JSONObject json, Source.Builder builder)
+            throws JSONException {
+        // Parses attribution scopes.
+        List<String> attributionScopes = new ArrayList<>();
+        if (!json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES)) {
+            Optional<List<String>> maybeAttributionScopes =
+                    FetcherUtil.extractStringArray(
+                            json,
+                            SourceHeaderContract.ATTRIBUTION_SCOPES,
+                            mFlags.getMeasurementMaxAttributionScopesPerSource(),
+                            mFlags.getMeasurementMaxAttributionScopeLength());
+            if (maybeAttributionScopes.isEmpty()) {
+                return false;
+            }
+            attributionScopes = maybeAttributionScopes.get();
+            builder.setAttributionScopes(attributionScopes);
+        }
+
+        if (json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT)) {
+            if (!attributionScopes.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                "Attribution scope limit should be set if attribution scopes are "
+                                        + "not empty.");
+                return false;
+            }
+            if (!json.isNull(SourceHeaderContract.MAX_EVENT_STATES)) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                "Attribution scope limit should be set if max event states is "
+                                        + "set.");
+                return false;
+            }
+            return true;
+        }
+        // Parses attribution scope limit, can be optional.
+        long attributionScopeLimit =
+                Long.parseLong(json.optString(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT));
+        if (attributionScopeLimit <= 0 || attributionScopes.size() > attributionScopeLimit) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            "Attribution scope limit should be positive and not be smaller "
+                                    + "than the number of attribution scopes.");
+            return false;
+        }
+        builder.setAttributionScopeLimit(attributionScopeLimit);
+
+        // Parsing max event states, can be optional.
+        if (!json.isNull(SourceHeaderContract.MAX_EVENT_STATES)) {
+            long maxEventStates =
+                    Long.parseLong(json.optString(SourceHeaderContract.MAX_EVENT_STATES));
+            if (maxEventStates <= 0
+                    || maxEventStates
+                            > mFlags.getMeasurementMaxReportStatesPerSourceRegistration()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                "Max event states should be a positive integer and smaller than max"
+                                        + " report states per source registration.");
+                return false;
+            }
+            builder.setMaxEventStates(maxEventStates);
+        }
         return true;
     }
 
@@ -786,6 +859,7 @@ public class AsyncSourceFetcher {
             urlConnection.setInstanceFollowRedirects(false);
             String body = asyncRegistration.getPostBody();
             if (mFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled() && body != null) {
+                asyncFetchStatus.setPARequestStatus(true);
                 urlConnection.setRequestProperty("Content-Type", "text/plain");
                 urlConnection.setDoOutput(true);
                 OutputStream os = urlConnection.getOutputStream();
@@ -941,6 +1015,9 @@ public class AsyncSourceFetcher {
         String DROP_SOURCE_IF_INSTALLED = "drop_source_if_installed";
         String TRIGGER_DATA_MATCHING = "trigger_data_matching";
         String TRIGGER_DATA = "trigger_data";
+        String ATTRIBUTION_SCOPES = "attribution_scopes";
+        String ATTRIBUTION_SCOPE_LIMIT = "attribution_scope_limit";
+        String MAX_EVENT_STATES = "max_event_states";
     }
 
     private interface SourceRequestContract {

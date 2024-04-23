@@ -32,9 +32,10 @@ import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
-import com.android.adservices.common.annotations.SetFlagEnabled;
-import com.android.adservices.common.annotations.SetIntegerFlag;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.common.AdServicesShellCommandHelper;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,8 +47,12 @@ import java.util.List;
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
 @SetFlagEnabled(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
-public class CustomAudienceShellCommandsScenarioTest extends FledgeScenarioTest {
-    private static final String OWNER = "android.adservices.debuggablects";
+@RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
+public final class CustomAudienceShellCommandsScenarioTest extends FledgeScenarioTest {
+    private static final String OWNER = sContext.getPackageName();
+
+    private final AdServicesShellCommandHelper mShellCommandHelper =
+            new AdServicesShellCommandHelper();
 
     @Test
     public void testRun_refreshCustomAudiences_verifyCustomAudienceChanged() throws Exception {
@@ -58,8 +63,9 @@ public class CustomAudienceShellCommandsScenarioTest extends FledgeScenarioTest 
         joinCustomAudience(SHOES_CA);
 
         CustomAudience customAudienceBefore = getCustomAudience();
-        runAndParseShellCommand(
-                "custom-audience", "refresh", OWNER, mAdTechIdentifier.toString(), SHOES_CA);
+        mShellCommandHelper.runCommand(
+                "custom-audience refresh --owner %s --buyer %s --name %s",
+                OWNER, mAdTechIdentifier, SHOES_CA);
         CustomAudience customAudienceAfter = getCustomAudience();
 
         assertThat(customAudienceBefore).isNotEqualTo(customAudienceAfter);
@@ -96,17 +102,8 @@ public class CustomAudienceShellCommandsScenarioTest extends FledgeScenarioTest 
     private CustomAudience getCustomAudience() throws JSONException {
         return CustomAudienceShellCommandHelper.fromJson(
                 new JSONObject(
-                        runAndParseShellCommand(
-                                "custom-audience",
-                                "view",
-                                OWNER,
-                                mAdTechIdentifier.toString(),
-                                SHOES_CA)));
-    }
-
-    private static String runAndParseShellCommand(String... commandArgs) {
-        return ShellUtils.runShellCommand(
-                "cmd adservices_manager %s %s --owner %s --buyer %s --name %s",
-                (Object[]) commandArgs);
+                        mShellCommandHelper.runCommand(
+                                "custom-audience view --owner %s --buyer %s --name %s",
+                                OWNER, mAdTechIdentifier, SHOES_CA)));
     }
 }

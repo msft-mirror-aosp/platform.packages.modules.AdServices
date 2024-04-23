@@ -26,6 +26,9 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -81,7 +84,6 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs) {
         mStatsdAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, latencyMs);
-        // TODO(b/324155747): Add Cobalt app name api error logging.
     }
 
     @Override
@@ -89,7 +91,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
             int apiName, String appPackageName, int resultCode, int latencyMs) {
         mStatsdAdServicesLogger.logFledgeApiCallStats(
                 apiName, appPackageName, resultCode, latencyMs);
-        // TODO(b/324155747): Add Cobalt app name api error logging.
+
+        cobaltLogAppNameApiError(appPackageName, apiName, resultCode);
     }
 
     @Override
@@ -178,6 +181,16 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
             MeasurementClickVerificationStats measurementClickVerificationStats) {
         mStatsdAdServicesLogger.logMeasurementClickVerificationStats(
                 measurementClickVerificationStats);
+    }
+
+    @Override
+    public void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats) {
+        mStatsdAdServicesLogger.logMeasurementOdpRegistrations(stats);
+    }
+
+    @Override
+    public void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats) {
+        mStatsdAdServicesLogger.logMeasurementOdpApiCall(stats);
     }
 
     @Override
@@ -292,6 +305,17 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logServerAuctionBackgroundKeyFetchScheduledStats(
+            ServerAuctionBackgroundKeyFetchScheduledStats stats) {
+        mStatsdAdServicesLogger.logServerAuctionBackgroundKeyFetchScheduledStats(stats);
+    }
+
+    @Override
+    public void logServerAuctionKeyFetchCalledStats(ServerAuctionKeyFetchCalledStats stats) {
+        mStatsdAdServicesLogger.logServerAuctionKeyFetchCalledStats(stats);
+    }
+
+    @Override
     public void logGetAdSelectionDataBuyerInputGeneratedStats(
             GetAdSelectionDataBuyerInputGeneratedStats stats) {
         mStatsdAdServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
@@ -340,6 +364,21 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logEncodingJsFetchStats(EncodingFetchStats stats) {
         mStatsdAdServicesLogger.logEncodingJsFetchStats(stats);
+    }
+
+    @Override
+    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
+        mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
+    }
+
+    @Override
+    public void logEncodingJsExecutionStats(EncodingJsExecutionStats stats) {
+        mStatsdAdServicesLogger.logEncodingJsExecutionStats(stats);
+    }
+
+    @Override
+    public void logEncodingJobRunStats(EncodingJobRunStats stats) {
+        mStatsdAdServicesLogger.logEncodingJobRunStats(stats);
     }
 
     /** Logs api call error status using {@code CobaltLogger}. */

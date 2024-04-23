@@ -31,7 +31,7 @@ import android.os.IBinder;
 
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.ExceptionFailureSyncCallback;
+import com.android.adservices.shared.testing.ExceptionFailureSyncCallback;
 
 import org.junit.Assert;
 import org.junit.Test;

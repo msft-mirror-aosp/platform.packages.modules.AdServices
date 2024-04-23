@@ -17,7 +17,6 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus.SUCCESS;
-import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -34,13 +33,13 @@ import android.os.SystemClock;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.shared.SharedDbHelper;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -49,6 +48,8 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -116,13 +117,13 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private static final String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1986/9e98784bcdb26a3eb2ab3f65ee811f43177c761f";
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2998/b35ed340576e8a72385af87b95f1f526abdb7f5f";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/4004/112af649e6414df68a02df500859b23d3a2e643d";
     private static final String PRODUCTION_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/3210/0c19c2a06422c21070192580a136d433ba3ae7f8";
 
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1281/a245b0927ba27b3d954b0ca2775651ccfc9a5e84";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/3548/206afe932d6db2a87cad70421454a0c258297d77";
     private static final String OEM_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1760/1460e6aea598fe7a153100d6e2749f45313ef905";
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
@@ -131,8 +132,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private static final String UI_OTA_RESOURCES_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/3150/672c83fa4aad630a360dc3b7ce43d94ab75852cd";
 
-    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 64;
-    private static final int PTB_ENROLLMENT_ENTRIES = 1;
+    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 79;
+    private static final int PTB_ENROLLMENT_ENTRIES = 6;
     private static final int OEM_ENROLLMENT_ENTRIES = 114;
 
     private static final int PRODUCTION_FILEGROUP_VERSION = 0;
@@ -151,6 +152,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
     @Mock UxStatesManager mUxStatesManager;
+    @Mock Clock mMockClock;
 
     @Before
     public void setUp() throws Exception {
@@ -189,7 +191,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         mMdd =
                 getMddForTesting(
                         mContext,
-                        FlagsFactory.getFlagsForTest(),
+                        FakeFlagsFactory.getFlagsForTest(),
                         // Pass in an empty list of FileGroupPopulator. Add ad hoc DataFileGroup
                         // to MDD manually below.
                         ImmutableList.of());
@@ -254,11 +256,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             throws ExecutionException, InterruptedException, TimeoutException {
         // Set the bundled build_id to 1 so the server side build_id will be bigger. This will
         // trigger MDD download.
-        doReturn(1L)
-                .when(
-                        () ->
-                                CommonClassifierHelper.getBundledModelBuildId(
-                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
+        doReturn(1L).when(() -> CommonClassifierHelper.getBundledModelBuildId(any(), any()));
 
         createMddForTopics(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
 
@@ -286,6 +284,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testEncryptionKeysDataDownload_production_featureEnabled() throws Exception {
         doReturn(true).when(mMockFlags).getEnableMddEncryptionKeys();
+        // All keys have greater expiration time than this timestamp. (Sep 2, 1996)
+        when(mMockClock.currentTimeMillis()).thenReturn(841622400000L);
         createMddForEncryptionKeys(PRODUCTION_ENCRYPTION_KEYS_MANIFEST_FILE_URL);
 
         ClientFileGroup clientFileGroup =
@@ -448,11 +448,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testMddTopicsOnConsentGiven_gaUxEnabled()
             throws ExecutionException, InterruptedException, TimeoutException {
-        doReturn(1L)
-                .when(
-                        () ->
-                                CommonClassifierHelper.getBundledModelBuildId(
-                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
+        doReturn(1L).when(() -> CommonClassifierHelper.getBundledModelBuildId(any(), any()));
 
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
@@ -819,10 +815,9 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         doReturn(mMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
 
-        EncryptionDataDownloadManager encryptionDataDownloadManager =
-                new EncryptionDataDownloadManager(mContext, mMockFlags);
         EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);
-        doReturn(encryptionKeyDao).when(() -> EncryptionKeyDao.getInstance(any(Context.class)));
+        EncryptionDataDownloadManager encryptionDataDownloadManager =
+                new EncryptionDataDownloadManager(mMockFlags, encryptionKeyDao, mMockClock);
 
         // Verify encryption keys data file read from MDD and insert the data into the encryption
         // keys database.
