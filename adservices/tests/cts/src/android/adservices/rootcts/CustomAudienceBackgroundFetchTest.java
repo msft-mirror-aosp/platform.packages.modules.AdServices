@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -54,9 +55,9 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     public void testAdSelection_withInvalidFields_backgroundJobUpdatesSuccessfully()
             throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-020.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-020.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
@@ -80,9 +81,9 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withInvalidAds_backgroundJobUpdateFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-034.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-034.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
@@ -107,9 +108,9 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withHighLatencyBackend_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-030-032.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-030-032.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
@@ -137,9 +138,9 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withOverlyLargeDailyUpdate_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-033.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-033.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
@@ -164,9 +165,9 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withLongRunningJob_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-020.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-020.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
         int startBackgroundFetchTimeoutMs = getBackgroundFetchJobTimeout();
         int overrideBackgroundFetchTimeoutMs = 50;

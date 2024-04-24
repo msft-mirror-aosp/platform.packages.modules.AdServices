@@ -29,6 +29,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
@@ -57,9 +58,10 @@ public final class CustomAudienceShellCommandsScenarioTest extends FledgeScenari
     @Test
     public void testRun_refreshCustomAudiences_verifyCustomAudienceChanged() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-refresh-ca.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-refresh-ca.json",
+                                getCacheBusterPrefix()));
         joinCustomAudience(SHOES_CA);
 
         CustomAudience customAudienceBefore = getCustomAudience();
