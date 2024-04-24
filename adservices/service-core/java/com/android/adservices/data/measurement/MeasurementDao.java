@@ -1552,7 +1552,7 @@ class MeasurementDao implements IMeasurementDao {
             throws DatastoreException {
         final List<Uri> uninstallAppNames = new ArrayList<>();
 
-        final String installedAppsFormatted = getUriValueList(installedApps);
+        final String installedAppsFormatted = flattenAsSqlQueryList(installedApps);
         final String query =
                 String.format(
                         Locale.ENGLISH,
@@ -1633,7 +1633,7 @@ class MeasurementDao implements IMeasurementDao {
                                 + "SELECT COUNT(DISTINCT %7$s) FROM %8$s "
                                 + "WHERE %9$s IN source_ids AND %10$s = ? "
                                 + "AND %7$s NOT IN "
-                                + getUriValueList(excludedDestinations),
+                                + flattenAsSqlQueryList(excludedDestinations),
                         SourceContract.ID,
                         SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
@@ -1677,7 +1677,7 @@ class MeasurementDao implements IMeasurementDao {
                                 + "SELECT COUNT(DISTINCT %6$s) FROM %7$s "
                                 + "WHERE %8$s IN source_ids AND %9$s = ? "
                                 + "AND %6$s NOT IN "
-                                + getUriValueList(excludedDestinations),
+                                + flattenAsSqlQueryList(excludedDestinations),
                         SourceContract.ID,
                         SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
@@ -1718,7 +1718,7 @@ class MeasurementDao implements IMeasurementDao {
                                 + "SELECT COUNT(DISTINCT %6$s) FROM %7$s "
                                 + "WHERE %8$s IN source_ids AND %9$s = ? "
                                 + "AND %6$s NOT IN "
-                                + getUriValueList(excludedDestinations),
+                                + flattenAsSqlQueryList(excludedDestinations),
                         SourceContract.ID,
                         SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
@@ -1826,7 +1826,7 @@ class MeasurementDao implements IMeasurementDao {
                                 + " MAX(distinct_registration_origin) FROM"
                                 + " distinct_registration_origins",
                         getPublisherWhereStatement(publisher, publisherType),
-                        getUriValueList(destinations));
+                        flattenAsSqlQueryList(destinations));
 
         return (int)
                 DatabaseUtils.longForQuery(
@@ -1985,15 +1985,13 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
-    private String getUriValueList(List<Uri> uriList) {
+    private String flattenAsSqlQueryList(List<?> valueList) {
         // Construct query, as list of all packages present on the device
-        StringBuilder valueList = new StringBuilder("(");
-        valueList.append(
-                uriList.stream()
-                        .map((uri) -> DatabaseUtils.sqlEscapeString(uri.toString()))
-                        .collect(Collectors.joining(", ")));
-        valueList.append(")");
-        return valueList.toString();
+        return "("
+                + valueList.stream()
+                        .map((value) -> DatabaseUtils.sqlEscapeString(value.toString()))
+                        .collect(Collectors.joining(", "))
+                + ")";
     }
 
     @Override
@@ -3285,6 +3283,139 @@ class MeasurementDao implements IMeasurementDao {
                     registrationId,
                     String.valueOf(Source.SourceType.NAVIGATION)
                 });
+    }
+
+    @Override
+    public List<String> fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+            Uri publisher,
+            int publisherType,
+            String enrollmentId,
+            List<Uri> excludedDestinations,
+            int destinationType,
+            long windowEndTime)
+            throws DatastoreException {
+        String unexpiredSources =
+                String.format(
+                        Locale.ENGLISH,
+                        // Unexpired sources, excludes MARKED_TO_DELETE sources
+                        "WITH source_ids AS ( "
+                                + "SELECT %1$s FROM %2$s "
+                                + "WHERE %3$s "
+                                + "AND %4$s = %5$s "
+                                + "AND %6$s > %7$s "
+                                + "AND %8$s != %9$s "
+                                + ")",
+                        MeasurementTables.SourceContract.ID, // 1
+                        MeasurementTables.SourceContract.TABLE, // 2
+                        getPublisherWhereStatement(publisher, publisherType), // 3
+                        MeasurementTables.SourceContract.ENROLLMENT_ID, // 4
+                        DatabaseUtils.sqlEscapeString(enrollmentId), // 5
+                        MeasurementTables.SourceContract.EXPIRY_TIME, // 6
+                        windowEndTime, // 7
+                        MeasurementTables.SourceContract.STATUS, // 8
+                        Source.Status.MARKED_TO_DELETE // 9
+                        );
+
+        String oldestDestination =
+                String.join(
+                        ", ",
+                        unexpiredSources,
+                        String.format(
+                                "oldest_destination AS ( "
+                                        + "SELECT d.%1$s, "
+                                        + "MAX(s.%2$s) AS source_event_time FROM %3$s AS d "
+                                        + "INNER JOIN %4$s AS s ON (d.%5$s = s.%6$s) "
+                                        + "WHERE d.%5$s IN source_ids "
+                                        + "AND d.%7$s = %8$s "
+                                        + "AND %1$s NOT IN "
+                                        + flattenAsSqlQueryList(excludedDestinations)
+                                        + " GROUP BY d.%1$s "
+                                        + "ORDER BY source_event_time ASC LIMIT 1) ",
+                                MeasurementTables.SourceDestination.DESTINATION, // 1
+                                MeasurementTables.SourceContract.EVENT_TIME, // 2
+                                MeasurementTables.SourceDestination.TABLE, // 3
+                                MeasurementTables.SourceContract.TABLE, // 4
+                                MeasurementTables.SourceDestination.SOURCE_ID, // 5
+                                MeasurementTables.SourceContract.ID, // 6
+                                MeasurementTables.SourceDestination.DESTINATION_TYPE, // 7
+                                destinationType // 8
+                                ));
+
+        String sourcesAssociatedToOldestDestination =
+                oldestDestination
+                        + String.format(
+                                "SELECT DISTINCT(%1$s) FROM %2$s "
+                                        + "WHERE %3$s IN "
+                                        + "(SELECT %3$s FROM oldest_destination)"
+                                        + " AND %1$s IN source_ids",
+                                MeasurementTables.SourceDestination.SOURCE_ID,
+                                MeasurementTables.SourceDestination.TABLE,
+                                MeasurementTables.SourceDestination.DESTINATION);
+
+        List<String> sourceIds = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.SourceContract.TABLE,
+                                new String[] {MeasurementTables.SourceContract.ID},
+                                MeasurementTables.SourceContract.ID
+                                        + " IN "
+                                        + "("
+                                        + sourcesAssociatedToOldestDestination
+                                        + ")",
+                                null,
+                                null,
+                                null,
+                                null)) {
+            while (cursor.moveToNext()) {
+                sourceIds.add(cursor.getString(0));
+            }
+        }
+        return sourceIds;
+    }
+
+    @Override
+    public void deletePendingAggregateReportsAndAttributionsForSources(List<String> sourceIds)
+            throws DatastoreException {
+        String aggregateReportsWhereClause =
+                mergeConditions(
+                        " AND ",
+                        MeasurementTables.AggregateReport.SOURCE_ID
+                                + " IN "
+                                + flattenAsSqlQueryList(sourceIds),
+                        MeasurementTables.AggregateReport.STATUS
+                                + " = "
+                                + AggregateReport.Status.PENDING);
+        String selectPendingAggregateReports =
+                String.format(
+                        "( SELECT %1$s FROM %2$s WHERE %3$s )",
+                        MeasurementTables.AggregateReport.ID,
+                        MeasurementTables.AggregateReport.TABLE,
+                        aggregateReportsWhereClause);
+
+        if (mSQLTransaction
+                        .getDatabase()
+                        .delete(
+                                MeasurementTables.AttributionContract.TABLE,
+                                String.format(
+                                        "%1$s IN %2$s",
+                                        MeasurementTables.AttributionContract.REPORT_ID,
+                                        selectPendingAggregateReports),
+                                null)
+                < 0) {
+            throw new DatastoreException("Attribution deletion failed.");
+        }
+
+        if (mSQLTransaction
+                        .getDatabase()
+                        .delete(
+                                MeasurementTables.AggregateReport.TABLE,
+                                aggregateReportsWhereClause,
+                                null)
+                < 0) {
+            throw new DatastoreException("Aggregate Reports deletion failed.");
+        }
     }
 
     private int getNumReportsPerDestination(

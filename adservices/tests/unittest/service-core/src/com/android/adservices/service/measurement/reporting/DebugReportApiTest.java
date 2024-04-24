@@ -58,6 +58,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
+import java.util.Map;
 
 /** Unit tests for {@link DebugReport} */
 @RunWith(MockitoJUnitRunner.class)
@@ -118,7 +119,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
@@ -127,7 +128,7 @@ public final class DebugReportApiTest {
                 DebugReportApi.Type.SOURCE_SUCCESS,
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
-                null);
+                Map.of());
     }
 
     @Test
@@ -145,7 +146,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
@@ -154,7 +155,7 @@ public final class DebugReportApiTest {
                 DebugReportApi.Type.SOURCE_SUCCESS,
                 SourceFixture.ValidSourceParams.WEB_PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0).toString(),
-                null);
+                Map.of());
     }
 
     @Test
@@ -172,7 +173,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport actualReport = captor.getValue();
@@ -182,7 +183,7 @@ public final class DebugReportApiTest {
                 DebugReportApi.Type.SOURCE_SUCCESS,
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0).toString(),
-                null);
+                Map.of());
     }
 
     @Test
@@ -201,7 +202,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport actualReport = captor.getValue();
@@ -211,7 +212,7 @@ public final class DebugReportApiTest {
                 DebugReportApi.Type.SOURCE_SUCCESS,
                 SourceFixture.ValidSourceParams.WEB_PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
-                null);
+                Map.of());
     }
 
     @Test
@@ -230,7 +231,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport actualReport = captor.getValue();
@@ -248,7 +249,7 @@ public final class DebugReportApiTest {
                                                 .get(0)
                                                 .toString()))
                         .toString(),
-                null);
+                Map.of());
     }
 
     @Test
@@ -267,7 +268,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport actualReport = captor.getValue();
@@ -285,7 +286,7 @@ public final class DebugReportApiTest {
                                                 .get(0)
                                                 .toString()))
                         .toString(),
-                null);
+                Map.of());
     }
 
     @Test
@@ -304,7 +305,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -324,7 +325,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -341,7 +342,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -357,7 +358,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -376,7 +377,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -394,7 +395,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -423,7 +424,7 @@ public final class DebugReportApiTest {
                 DebugReportApi.Type.SOURCE_DESTINATION_LIMIT,
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
-                LIMIT);
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT));
     }
 
     @Test
@@ -452,7 +453,7 @@ public final class DebugReportApiTest {
                 DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT,
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
-                LIMIT);
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT));
     }
 
     @Test
@@ -584,7 +585,8 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
+        Map<String, String> additionalParam = Map.of("paramKey", "paramValue");
+        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, additionalParam);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
 
@@ -594,7 +596,7 @@ public final class DebugReportApiTest {
                 DebugReportApi.Type.SOURCE_NOISED,
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
-                null);
+                additionalParam);
     }
 
     @Test
@@ -613,7 +615,8 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
+        Map<String, String> additionalParam = Map.of("paramKey", "paramValue");
+        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, additionalParam);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
@@ -630,7 +633,7 @@ public final class DebugReportApiTest {
                                                 .get(0)
                                                 .toString()))
                         .toString(),
-                null);
+                additionalParam);
     }
 
     @Test
@@ -646,7 +649,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, null);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -663,7 +666,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, null);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -680,7 +683,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, null);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -696,7 +699,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, null);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -711,7 +714,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
+        mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, null);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -735,7 +738,7 @@ public final class DebugReportApiTest {
                 DebugReportApi.Type.SOURCE_STORAGE_LIMIT,
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
-                LIMIT);
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT));
     }
 
     @Test
@@ -828,7 +831,7 @@ public final class DebugReportApiTest {
                 DebugReportApi.Type.SOURCE_UNKNOWN_ERROR,
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
-                null);
+                Map.of());
     }
 
     @Test
@@ -864,7 +867,7 @@ public final class DebugReportApiTest {
                                                 .get(0)
                                                 .toString()))
                         .toString(),
-                null);
+                Map.of());
     }
 
     @Test
@@ -4041,7 +4044,7 @@ public final class DebugReportApiTest {
             String expectedReportType,
             String expectedSourcePublisher,
             String expectedSerializedDestinations,
-            String limit)
+            Map<String, String> expectedAdditionalParams)
             throws JSONException {
         JSONObject actualReportBody = actualReport.getBody();
         assertEquals(SourceFixture.ValidSourceParams.ENROLLMENT_ID, actualReport.getEnrollmentId());
@@ -4058,10 +4061,12 @@ public final class DebugReportApiTest {
         assertEquals(
                 expectedSourcePublisher,
                 actualReportBody.getString(DebugReportApi.Body.SOURCE_SITE));
-        assertEquals(
-                limit,
-                actualReportBody.isNull(DebugReportApi.Body.LIMIT)
-                        ? null
-                        : actualReportBody.getString(DebugReportApi.Body.LIMIT));
+        for (Map.Entry<String, String> entry : expectedAdditionalParams.entrySet()) {
+            assertEquals(
+                    entry.getValue(),
+                    actualReportBody.isNull(entry.getKey())
+                            ? null
+                            : actualReportBody.getString(entry.getKey()));
+        }
     }
 }
