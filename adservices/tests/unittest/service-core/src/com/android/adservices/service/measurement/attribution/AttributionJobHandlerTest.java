@@ -4456,7 +4456,7 @@ public class AttributionJobHandlerTest {
                 .scheduleTriggerDebugReport(
                         any(),
                         any(),
-                        eq("21"),
+                        eq("20"),
                         any(),
                         eq(DebugReportApi.Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS));
         verify(mMeasurementDao).insertEventReport(any());
