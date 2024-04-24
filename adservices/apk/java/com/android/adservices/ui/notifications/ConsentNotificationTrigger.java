@@ -40,10 +40,8 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.android.adservices.api.R;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.OTAResourcesManager;
@@ -76,14 +74,9 @@ public class ConsentNotificationTrigger {
                 UxStatesManager.getInstance().getFlag(KEY_GA_UX_FEATURE_ENABLED);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-
+        ConsentManager consentManager = ConsentManager.getInstance();
         if (!notificationManager.areNotificationsEnabled()) {
-            if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-                recordNotificationDisplayedV2(context, gaUxFeatureEnabled);
-            } else {
-                recordNotificationDisplayed(
-                        context, gaUxFeatureEnabled, ConsentManager.getInstance());
-            }
+            recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
             UiStatsLogger.logNotificationDisabled();
             return;
         }
@@ -95,30 +88,15 @@ public class ConsentNotificationTrigger {
         }
 
         createNotificationChannel(context);
-        Notification notification;
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            notification = getNotificationV2(context, isEuDevice, gaUxFeatureEnabled);
-
-        } else {
-            notification =
-                    getNotification(
-                            context, isEuDevice, gaUxFeatureEnabled, ConsentManager.getInstance());
-        }
+        Notification notification =
+                getNotification(context, isEuDevice, gaUxFeatureEnabled, consentManager);
 
         notificationManager.notify(NOTIFICATION_ID, notification);
 
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            setupConsentsV2(context, isEuDevice, gaUxFeatureEnabled);
-        } else {
-            setupConsents(context, isEuDevice, gaUxFeatureEnabled, ConsentManager.getInstance());
-        }
+        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
 
         UiStatsLogger.logNotificationDisplayed();
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            recordNotificationDisplayedV2(context, gaUxFeatureEnabled);
-        } else {
-            recordNotificationDisplayed(context, gaUxFeatureEnabled, ConsentManager.getInstance());
-        }
+        recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
     }
 
     private static void recordNotificationDisplayed(
@@ -157,45 +135,6 @@ public class ConsentNotificationTrigger {
         }
     }
 
-    private static void recordNotificationDisplayedV2(
-            @NonNull Context context, boolean gaUxFeatureEnabled) {
-
-        ConsentManagerV2 consentManager = ConsentManagerV2.getInstance();
-        if (UxStatesManager.getInstance().getFlag(KEY_RECORD_MANUAL_INTERACTION_ENABLED)
-                && consentManager.getUserManualInteractionWithConsent()
-                        != ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED) {
-            consentManager.recordUserManualInteractionWithConsent(
-                    ConsentManagerV2.NO_MANUAL_INTERACTIONS_RECORDED);
-        }
-
-        if (isUxStatesReady(context)) {
-            switch (UxUtil.getUx(context)) {
-                case GA_UX:
-                    if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)) {
-                        consentManager.recordPasNotificationDisplayed(true);
-                        break;
-                    }
-                    consentManager.recordGaUxNotificationDisplayed(true);
-                    break;
-                    // Both U18_UX and RVC_UX are showing U18 Notification
-                case U18_UX:
-                case RVC_UX:
-                    consentManager.setU18NotificationDisplayed(true);
-                    break;
-                case BETA_UX:
-                    consentManager.recordNotificationDisplayed(true);
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            if (gaUxFeatureEnabled) {
-                consentManager.recordGaUxNotificationDisplayed(true);
-            }
-            consentManager.recordNotificationDisplayed(true);
-        }
-    }
-
     @NonNull
     private static Notification getNotification(
             @NonNull Context context,
@@ -213,45 +152,6 @@ public class ConsentNotificationTrigger {
                     notification = getGaV2ConsentNotification(context, isEuDevice);
                     break;
                 // Both U18_UX and RVC_UX are showing U18 Notification
-                case U18_UX:
-                case RVC_UX:
-                    notification = getU18ConsentNotification(context);
-                    break;
-                case BETA_UX:
-                    notification = getConsentNotification(context, isEuDevice);
-                    break;
-                default:
-                    notification = getGaV2ConsentNotification(context, isEuDevice);
-            }
-        } else {
-            if (gaUxFeatureEnabled) {
-                notification = getGaV2ConsentNotification(context, isEuDevice);
-            } else {
-                notification = getConsentNotification(context, isEuDevice);
-            }
-        }
-
-        // make notification sticky (non-dismissible) for EuDevices when the GA UX feature is on
-        if (gaUxFeatureEnabled && isEuDevice) {
-            notification.flags |= Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
-        }
-        return notification;
-    }
-
-    @NonNull
-    private static Notification getNotificationV2(
-            @NonNull Context context, boolean isEuDevice, boolean gaUxFeatureEnabled) {
-        Notification notification;
-        if (isUxStatesReady(context)) {
-            switch (UxUtil.getUx(context)) {
-                case GA_UX:
-                    if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)) {
-                        notification = getPasConsentNotificationV2(context);
-                        break;
-                    }
-                    notification = getGaV2ConsentNotification(context, isEuDevice);
-                    break;
-                    // Both U18_UX and RVC_UX are showing U18 Notification
                 case U18_UX:
                 case RVC_UX:
                     notification = getU18ConsentNotification(context);
@@ -333,62 +233,6 @@ public class ConsentNotificationTrigger {
                     consentManager.enable(context);
                 } else {
                     consentManager.disable(context);
-                }
-            }
-        }
-    }
-
-    // setup default consents based on information whether the device is EU or non-EU device and
-    // GA UX feature flag is enabled.
-    private static void setupConsentsV2(
-            @NonNull Context context, boolean isEuDevice, boolean gaUxFeatureEnabled) {
-        ConsentManagerV2 consentManagerV2 = ConsentManagerV2.getInstance();
-        if (isUxStatesReady(context)) {
-            switch (UxUtil.getUx(context)) {
-                case GA_UX:
-                    if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)
-                            && (isFledgeOrMsmtEnabledV2(consentManagerV2)
-                                    || consentManagerV2.getUserManualInteractionWithConsent()
-                                            == ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED)) {
-                        // Not first time user, respect previous consents
-                        break;
-                    }
-                    setUpGaConsentV2(context, isEuDevice);
-                    break;
-                case U18_UX:
-                    consentManagerV2.enable(context, AdServicesApiType.MEASUREMENTS);
-                    break;
-                case RVC_UX:
-                    if (isEuDevice) {
-                        consentManagerV2.disable(context, AdServicesApiType.MEASUREMENTS);
-                    } else {
-                        consentManagerV2.enable(context, AdServicesApiType.MEASUREMENTS);
-                    }
-                    break;
-                case BETA_UX:
-                    if (!isEuDevice) {
-                        consentManagerV2.enable(context);
-                    } else {
-                        consentManagerV2.disable(context);
-                    }
-                    break;
-                default:
-                    // Default behavior is GA UX.
-                    setUpGaConsentV2(context, isEuDevice);
-                    break;
-            }
-        } else {
-            // Keep the feature flag at the upper level to make it easier to cleanup the code once
-            // the beta functionality is fully deprecated and abandoned.
-            if (gaUxFeatureEnabled) {
-                setUpGaConsentV2(context, isEuDevice);
-            } else {
-                // For the ROW devices, set the consent to GIVEN (enabled).
-                // For the EU devices, set the consent to REVOKED (disabled)
-                if (!isEuDevice) {
-                    consentManagerV2.enable(context);
-                } else {
-                    consentManagerV2.disable(context);
                 }
             }
         }
@@ -542,50 +386,7 @@ public class ConsentNotificationTrigger {
         return notification.build();
     }
 
-    private static Notification getPasConsentNotificationV2(@NonNull Context context) {
-        boolean isRenotify = isFledgeOrMsmtEnabledV2(ConsentManagerV2.getInstance());
-        Intent intent = new Intent(context, ConsentNotificationActivity.class);
-
-        PendingIntent pendingIntent =
-                PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
-
-        String bigText =
-                isRenotify
-                        ? context.getString(R.string.notificationUI_pas_re_notification_content)
-                        : context.getString(R.string.notificationUI_pas_notification_content);
-
-        NotificationCompat.BigTextStyle textStyle =
-                new NotificationCompat.BigTextStyle().bigText(bigText);
-
-        String contentTitle =
-                context.getString(
-                        isRenotify
-                                ? R.string.notificationUI_pas_re_notification_title
-                                : R.string.notificationUI_pas_notification_title);
-        String contentText =
-                context.getString(
-                        isRenotify
-                                ? R.string.notificationUI_pas_re_notification_content
-                                : R.string.notificationUI_pas_notification_content);
-
-        NotificationCompat.Builder notification =
-                new NotificationCompat.Builder(context, CHANNEL_ID)
-                        .setSmallIcon(R.drawable.ic_info_icon)
-                        .setContentTitle(contentTitle)
-                        .setContentText(contentText)
-                        .setStyle(textStyle)
-                        .setPriority(NOTIFICATION_PRIORITY)
-                        .setAutoCancel(true)
-                        .setContentIntent(pendingIntent);
-        return notification.build();
-    }
-
     private static boolean isFledgeOrMsmtEnabled(ConsentManager consentManager) {
-        return consentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()
-                || consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
-    }
-
-    private static boolean isFledgeOrMsmtEnabledV2(ConsentManagerV2 consentManager) {
         return consentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()
                 || consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
     }
@@ -619,21 +420,6 @@ public class ConsentNotificationTrigger {
             consentManager.recordFledgeDefaultConsent(true);
             consentManager.recordMeasurementDefaultConsent(true);
 
-            consentManager.enable(context, AdServicesApiType.TOPICS);
-            consentManager.enable(context, AdServicesApiType.FLEDGE);
-            consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
-        }
-    }
-
-    // Remove v1 after V2 turn on
-    private static void setUpGaConsentV2(@NonNull Context context, boolean isEuDevice) {
-        ConsentManagerV2 consentManager = ConsentManagerV2.getInstance();
-        if (isEuDevice) {
-
-            consentManager.disable(context, AdServicesApiType.TOPICS);
-            consentManager.disable(context, AdServicesApiType.FLEDGE);
-            consentManager.disable(context, AdServicesApiType.MEASUREMENTS);
-        } else {
             consentManager.enable(context, AdServicesApiType.TOPICS);
             consentManager.enable(context, AdServicesApiType.FLEDGE);
             consentManager.enable(context, AdServicesApiType.MEASUREMENTS);

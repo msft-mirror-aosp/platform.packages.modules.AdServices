@@ -631,6 +631,19 @@ public class AdServicesManagerServiceTest {
     }
 
     @Test
+    public void testRecordPasNotificationOpened() {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // First, the notification opened is false.
+        assertThat(service.wasPasNotificationOpened()).isFalse();
+        service.recordPasNotificationOpened(true);
+        assertThat(service.wasPasNotificationOpened()).isTrue();
+    }
+
+    @Test
     public void recordUserManualInteractionWithConsent() throws IOException {
         AdServicesManagerService service =
                 spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));

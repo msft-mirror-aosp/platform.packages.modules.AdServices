@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.ganotifications;
 
+import static com.android.adservices.service.FlagsConstants.KEY_EEA_PAS_UX_ENABLED;
+import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISMISSED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED;
@@ -41,11 +43,10 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.ConsentManagerV2;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
-
 
 /**
  * Fragment for the confirmation view after accepting or rejecting to be part of Privacy Sandbox
@@ -93,7 +94,17 @@ public class ConsentNotificationPasFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupListeners(savedInstanceState);
-
+        ConsentManager consentManager = ConsentManager.getInstance();
+        if (UxStatesManager.getInstance().getFlag(KEY_EEA_PAS_UX_ENABLED)) {
+            consentManager.recordPasNotificationOpened(true);
+            if (mIsEUDevice
+                    && !mIsRenotify
+                    && consentManager.getUserManualInteractionWithConsent()
+                            != MANUAL_INTERACTIONS_RECORDED) {
+                consentManager.enable(requireContext(), AdServicesApiType.FLEDGE);
+                consentManager.enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+            }
+        }
         ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
     }
 
@@ -202,17 +213,6 @@ public class ConsentNotificationPasFragment extends Fragment {
                 .commit();
     }
 
-    private static boolean isFledgeOrMsmtEnabled() {
-        ConsentManager consentManager = ConsentManager.getInstance();
-        return consentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()
-                || consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
-    }
-
-    private static boolean isFledgeOrMsmtEnabledV2() {
-        ConsentManagerV2 consentManagerV2 = ConsentManagerV2.getInstance();
-        return consentManagerV2.getConsent(AdServicesApiType.FLEDGE).isGiven()
-                || consentManagerV2.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
-    }
     /**
      * Allows the positive, acceptance button to scroll the view.
      *
