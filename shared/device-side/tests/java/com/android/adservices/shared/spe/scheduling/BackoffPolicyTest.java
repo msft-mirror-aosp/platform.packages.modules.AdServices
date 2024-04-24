@@ -17,6 +17,7 @@
 package com.android.adservices.shared.spe.scheduling;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
@@ -44,6 +45,7 @@ public final class BackoffPolicyTest extends AdServicesUnitTestCase {
 
     @Test
     public void testEqualsAndHashCode() {
+        EqualsTester et = new EqualsTester(expect);
         BackoffPolicy equals1 = new BackoffPolicy.Builder().build();
         BackoffPolicy equals2 = new BackoffPolicy.Builder().build();
 
@@ -52,13 +54,13 @@ public final class BackoffPolicyTest extends AdServicesUnitTestCase {
         BackoffPolicy different2 =
                 new BackoffPolicy.Builder().setShouldRetryOnExecutionStop(true).build();
 
-        expectObjectsAreEqual(equals1, equals1);
-        expectObjectsAreEqual(equals1, equals2);
+        et.expectObjectsAreEqual(equals1, equals1);
+        et.expectObjectsAreEqual(equals1, equals2);
 
-        expectObjectsAreNotEqual(equals1, null);
+        et.expectObjectsAreNotEqual(equals1, null);
 
-        expectObjectsAreNotEqual(equals1, different1);
-        expectObjectsAreNotEqual(equals2, different2);
+        et.expectObjectsAreNotEqual(equals1, different1);
+        et.expectObjectsAreNotEqual(equals2, different2);
     }
 
     @Test

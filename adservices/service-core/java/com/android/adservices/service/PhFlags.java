@@ -105,6 +105,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_EXECU
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.MAX_PERCENTAGE;
 
@@ -3732,8 +3733,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementFlexApiMaxInformationGainDualDestinationNavigation());
         writer.println(
                 "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION
+                        + FlagsConstants.KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION
                         + " = "
                         + getMeasurementMaxReportStatesPerSourceRegistration());
         writer.println(
@@ -6481,6 +6481,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public int getPasScriptExecutionTimeoutMs() {
         return getDeviceConfigFlag(
                 KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS, DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS);
+    }
+
+    @Override
+    public boolean getSpeOnPilotJobsBatch2Enabled() {
+        return getDeviceConfigFlag(
+                KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED, DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers

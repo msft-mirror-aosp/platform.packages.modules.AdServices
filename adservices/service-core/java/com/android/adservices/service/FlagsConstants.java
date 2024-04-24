@@ -1484,4 +1484,8 @@ public final class FlagsConstants {
     /** Key for PAS script execution timeout flag */
     public static final String KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS =
             "pas_script_execution_timeout_ms";
+
+    /** Key for enabling SPE on pilot background jobs. */
+    public static final String KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED =
+            "spe_on_pilot_jobs_batch_2_enabled";
 }
