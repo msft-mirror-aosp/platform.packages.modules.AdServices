@@ -802,7 +802,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     private static boolean isShellCmdEnabled() {
-        return FlagsFactory.getFlags().getAdServicesShellCommandEnabled();
+        return DebugFlags.getInstance().getAdServicesShellCommandEnabled();
     }
 
     @Override

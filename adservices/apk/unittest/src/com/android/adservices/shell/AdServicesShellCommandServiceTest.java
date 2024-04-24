@@ -16,8 +16,6 @@
 
 package com.android.adservices.shell;
 
-import static org.mockito.Mockito.when;
-
 import android.content.Intent;
 import android.os.IBinder;
 
@@ -33,8 +31,6 @@ import org.mockito.Mock;
 @SpyStatic(FlagsFactory.class)
 public final class AdServicesShellCommandServiceTest extends AdServicesExtendedMockitoTestCase {
 
-    private final AdServicesShellCommandService mShellService = new AdServicesShellCommandService();
-
     @Mock private Flags mMockFlags;
 
     // TODO(b/308009734): Move this to separate constants class as this will also be used by the
@@ -45,31 +41,29 @@ public final class AdServicesShellCommandServiceTest extends AdServicesExtendedM
     @Before
     public void setup() {
         mocker.mockGetFlags(mMockFlags);
-        mockGetAdServicesShellCommandEnabled(/* enabled= */ true);
     }
 
     @Test
     public void testOnBindShellCommandService_flagEnabled() {
-        mShellService.onCreate();
-        IBinder binder = mShellService.onBind(getIntentForShellCommandService());
+        AdServicesShellCommandService shellService =
+                new AdServicesShellCommandService(/* shellCommandEnabled= */ true);
+        shellService.onCreate();
+        IBinder binder = shellService.onBind(getIntentForShellCommandService());
 
         expect.withMessage("onBind()").that(binder).isNotNull();
     }
 
     @Test
     public void testOnBindShellCommandService_flagDisabled() {
-        mockGetAdServicesShellCommandEnabled(/* enabled= */ false);
-        mShellService.onCreate();
-        IBinder binder = mShellService.onBind(getIntentForShellCommandService());
+        AdServicesShellCommandService shellService =
+                new AdServicesShellCommandService(/* shellCommandEnabled= */ false);
+        shellService.onCreate();
+        IBinder binder = shellService.onBind(getIntentForShellCommandService());
 
         expect.withMessage("onBind()").that(binder).isNull();
     }
 
     private Intent getIntentForShellCommandService() {
         return new Intent(ACTION_SHELL_COMMAND_SERVICE);
-    }
-
-    private void mockGetAdServicesShellCommandEnabled(boolean enabled) {
-        when(mMockFlags.getAdServicesShellCommandEnabled()).thenReturn(enabled);
     }
 }

@@ -40,7 +40,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED
 public final class DebugFlags extends CommonDebugFlags {
     private static final DebugFlags sInstance = new DebugFlags();
 
-    static DebugFlags getInstance() {
+    public static DebugFlags getInstance() {
         return sInstance;
     }
 

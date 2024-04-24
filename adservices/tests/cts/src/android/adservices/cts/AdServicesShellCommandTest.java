@@ -33,7 +33,7 @@ public final class AdServicesShellCommandTest extends CtsAdServicesDeviceTestCas
 
     @Before
     public void setup() {
-        flags.setFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true);
+        flags.setDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true);
     }
 
     @Test

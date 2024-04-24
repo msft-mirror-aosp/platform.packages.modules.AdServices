@@ -28,6 +28,8 @@ import android.annotation.IntDef;
 import android.app.job.JobInfo;
 import android.os.Build;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.cobalt.CobaltConstants;
 import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
@@ -37,6 +39,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
+import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
@@ -51,7 +54,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
  */
-public interface Flags extends CommonFlags, ModuleSharedFlags {
+public interface Flags extends ModuleSharedFlags {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
@@ -5318,4 +5321,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getSpeOnPilotJobsBatch2Enabled() {
         return DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
     }
+
+    /** Dump some debug info for the flags */
+    default void dump(PrintWriter writer, @Nullable String[] args) {}
 }
