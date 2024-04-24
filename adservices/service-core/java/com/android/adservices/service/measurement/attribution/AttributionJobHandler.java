@@ -87,6 +87,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -340,29 +341,14 @@ class AttributionJobHandler {
                                     trigger.getEnrollmentId());
                         }
                         attributeTrigger(trigger, measurementDao);
-                        if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
-                            // Non-flex source, insert a single attribution record. (For flex
-                            // sources, we insert a variable number of attribution rate-limit
-                            // records during processing.)
-                            if (source.getTriggerSpecs() == null
-                                    && isEventTriggeringStatusAttributed) {
-                                insertAttribution(
-                                        Attribution.Scope.EVENT, source, trigger, measurementDao);
-                            }
-                            if (isAggregateTriggeringStatusAttributed) {
-                                insertAttribution(
-                                        Attribution.Scope.AGGREGATE,
-                                        source,
-                                        trigger,
-                                        measurementDao);
-                            }
-                            // Non-scoped attribution rate-limiting: insert attribution if aggregate
-                            // report was created or if an event report was created and the source
-                            // is
-                            // non-flex.
-                        } else if (isAggregateTriggeringStatusAttributed
-                                || (isEventTriggeringStatusAttributed
-                                        && source.getTriggerSpecs() == null)) {
+                        // Non-scoped attribution rate-limiting: insert attribution if aggregate
+                        // report was created or (if an event report was created and the source
+                        // is non-flex). Attribution insertion for flex and scoped attribution rate
+                        // limiting are already handled where the reports are generated.
+                        if (!mFlags.getMeasurementEnableScopedAttributionRateLimit()
+                                && ((isEventTriggeringStatusAttributed
+                                                && source.getTriggerSpecs() == null)
+                                        || isAggregateTriggeringStatusAttributed)) {
                             insertAttribution(source, trigger, measurementDao);
                         }
                         attributionStatus.setAttributionResult(
@@ -544,6 +530,7 @@ class AttributionJobHandler {
             }
             AggregateReport.Builder aggregateReportBuilder =
                     new AggregateReport.Builder()
+                            .setId(UUID.randomUUID().toString())
                             // TODO: b/254855494 unused field, incorrect value; cleanup
                             .setPublisher(source.getRegistrant())
                             .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
@@ -596,7 +583,15 @@ class AttributionJobHandler {
                     == AggregateReport.DebugReportStatus.PENDING) {
                 incrementAggregateDebugReportCountBy(attributionStatus, 1);
             }
-            // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
+
+            if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
+                insertAttribution(
+                        measurementDao,
+                        source,
+                        trigger,
+                        Attribution.Scope.AGGREGATE,
+                        aggregateReport.getId());
+            }
             return TriggeringStatus.ATTRIBUTED;
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
@@ -1018,6 +1013,14 @@ class AttributionJobHandler {
             if (newEventReport.getDebugReportStatus() == EventReport.DebugReportStatus.PENDING) {
                 incrementEventDebugReportCountBy(attributionStatus, 1);
             }
+            if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
+                insertAttribution(
+                        measurementDao,
+                        source,
+                        trigger,
+                        Attribution.Scope.EVENT,
+                        newEventReport.getId());
+            }
         // The source is using flexible event API
         } else if (!generateFlexEventReports(
                 source,
@@ -1378,7 +1381,8 @@ class AttributionJobHandler {
                         .build();
         measurementDao.insertEventReport(eventReport);
         if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
-            insertAttribution(Attribution.Scope.EVENT, source, trigger, measurementDao);
+            insertAttribution(
+                    measurementDao, source, trigger, Attribution.Scope.EVENT, eventReport.getId());
         } else {
             insertAttribution(source, trigger, measurementDao);
         }
@@ -1423,11 +1427,17 @@ class AttributionJobHandler {
         measurementDao.insertAttribution(createAttributionBuilder(source, trigger).build());
     }
 
-    private static void insertAttribution(@Attribution.Scope int scope, Source source,
-            Trigger trigger, IMeasurementDao measurementDao) throws DatastoreException {
+    private static void insertAttribution(
+            IMeasurementDao measurementDao,
+            Source source,
+            Trigger trigger,
+            @Attribution.Scope int scope,
+            String reportId)
+            throws DatastoreException {
         measurementDao.insertAttribution(
                 createAttributionBuilder(source, trigger)
                         .setScope(scope)
+                        .setReportId(reportId)
                         .build());
     }
 

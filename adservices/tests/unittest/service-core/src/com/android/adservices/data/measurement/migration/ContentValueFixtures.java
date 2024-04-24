@@ -253,6 +253,9 @@ public class ContentValueFixtures {
 
         // Added in V29
         public static final int SCOPE = 0;
+
+        // Added in V34
+        public static final String REPORT_ID = "report_id";
     }
 
     public static class EventReportValues {
@@ -1161,6 +1164,13 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.AttributionContract.SCOPE,
                 AttributionValues.SCOPE);
+        return values;
+    }
+
+    /** Get ContentValues for V34 */
+    public static ContentValues generateAttributionContentValuesV35() {
+        ContentValues values = generateAttributionContentValuesV29();
+        values.put(MeasurementTables.AttributionContract.REPORT_ID, AttributionValues.REPORT_ID);
         return values;
     }
 

@@ -4866,6 +4866,7 @@ public class MeasurementDaoTest {
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(trigger.getTriggerTime())
                         .setRegistrationOrigin(trigger.getRegistrationOrigin())
+                        .setReportId(UUID.randomUUID().toString())
                         .build();
 
         // Execution
@@ -4922,6 +4923,9 @@ public class MeasurementDaoTest {
                                     cursor.getColumnIndex(
                                             MeasurementTables.AttributionContract
                                                     .REGISTRATION_ORIGIN))));
+            assertEquals(
+                    attribution.getReportId(),
+                    cursor.getString(cursor.getColumnIndex(AttributionContract.REPORT_ID)));
         }
     }
 
@@ -9333,6 +9337,7 @@ public class MeasurementDaoTest {
                         null);
         EventReport pastFakeEventReport =
                 new EventReport.Builder()
+                        .setId("1")
                         .setSourceId(source1.getId())
                         .setSourceEventId(source1.getEventId())
                         .setReportTime(SOURCE_EVENT_TIME)
@@ -9344,6 +9349,7 @@ public class MeasurementDaoTest {
                         .build();
         EventReport fakeEventReport1 =
                 new EventReport.Builder()
+                        .setId("2")
                         .setSourceId(source1.getId())
                         .setSourceEventId(source1.getEventId())
                         .setReportTime(SOURCE_EVENT_TIME + 1000)
@@ -9356,6 +9362,7 @@ public class MeasurementDaoTest {
         // Deleted fake event report for comparison.
         EventReport deletedFakeEventReport1 =
                 new EventReport.Builder()
+                        .setId("3")
                         .setSourceId(source1.getId())
                         .setSourceEventId(source1.getEventId())
                         .setReportTime(SOURCE_EVENT_TIME + 1000)
@@ -9507,6 +9514,7 @@ public class MeasurementDaoTest {
                         null);
         EventReport pastFakeEventReport =
                 new EventReport.Builder()
+                        .setId("1")
                         .setSourceId(source1.getId())
                         .setSourceEventId(source1.getEventId())
                         .setReportTime(SOURCE_EVENT_TIME)
@@ -9518,6 +9526,7 @@ public class MeasurementDaoTest {
                         .build();
         EventReport fakeEventReport1 =
                 new EventReport.Builder()
+                        .setId("2")
                         .setSourceId(source1.getId())
                         .setSourceEventId(source1.getEventId())
                         .setReportTime(SOURCE_EVENT_TIME + 1000)
@@ -9530,6 +9539,7 @@ public class MeasurementDaoTest {
         // Delete fake event report for comparison.
         EventReport deletedFakeEventReport1 =
                 new EventReport.Builder()
+                        .setId("3")
                         .setSourceId(source1.getId())
                         .setSourceEventId(source1.getEventId())
                         .setReportTime(SOURCE_EVENT_TIME + 1000)
@@ -10049,7 +10059,6 @@ public class MeasurementDaoTest {
             String reportId, Source source, Trigger trigger) throws JSONException {
 
         return new EventReport.Builder()
-                .setId(reportId)
                 .populateFromSourceAndTrigger(
                         source,
                         trigger,
@@ -10058,6 +10067,7 @@ public class MeasurementDaoTest {
                         new EventReportWindowCalcDelegate(mFlags),
                         new SourceNoiseHandler(mFlags),
                         source.getAttributionDestinations(trigger.getDestinationType()))
+                .setId(reportId)
                 .setSourceEventId(source.getEventId())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())

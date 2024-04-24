@@ -41,6 +41,7 @@ public class AttributionTest {
     private static final long SOME_OTHER_LONG = 1L;
     private static final String SOURCE_ID = UUID.randomUUID().toString();
     private static final String TRIGGER_ID = UUID.randomUUID().toString();
+    private static final String REPORT_ID = UUID.randomUUID().toString();
     private static final Uri REGISTRATION_ORIGIN =
             WebUtil.validUri("https://subdomain.example.test");
     private static final Uri OTHER_REGISTRATION_ORIGIN =
@@ -100,6 +101,9 @@ public class AttributionTest {
                 createExampleAttributionBuilder()
                         .setRegistrationOrigin(OTHER_REGISTRATION_ORIGIN)
                         .build(),
+                createExampleAttributionBuilder().build());
+        assertNotEquals(
+                createExampleAttributionBuilder().setReportId(SOME_OTHER_STRING).build(),
                 createExampleAttributionBuilder().build());
     }
 
@@ -175,6 +179,9 @@ public class AttributionTest {
                         .build()
                         .hashCode(),
                 createExampleAttributionBuilder().build().hashCode());
+        assertNotEquals(
+                createExampleAttributionBuilder().setReportId(SOME_OTHER_STRING).build().hashCode(),
+                createExampleAttributionBuilder().build().hashCode());
     }
 
     @Test
@@ -205,6 +212,7 @@ public class AttributionTest {
         assertEquals(
                 REGISTRATION_ORIGIN,
                 createExampleAttributionBuilder().build().getRegistrationOrigin());
+        assertEquals(REPORT_ID, createExampleAttributionBuilder().build().getReportId());
     }
 
     @Test
@@ -245,6 +253,7 @@ public class AttributionTest {
                 .setSourceSite(PUBLISHER_SITE)
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
-                .setRegistrationOrigin(REGISTRATION_ORIGIN);
+                .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                .setReportId(REPORT_ID);
     }
 }

@@ -369,8 +369,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetEnableBackCompatInit() {
-        testFeatureFlag(
-                "DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
+        testFeatureFlag("DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
     }
 
     @Test
@@ -378,6 +377,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag(
                 "DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED",
                 Flags::getCustomErrorCodeSamplingEnabled);
+    }
+
+    @Test
+    public void testGetSpeOnPilotJobsBatch2Enabled() {
+        testFeatureFlag(
+                "DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED", Flags::getSpeOnPilotJobsBatch2Enabled);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

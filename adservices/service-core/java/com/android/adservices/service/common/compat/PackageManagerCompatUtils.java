@@ -50,6 +50,7 @@ public final class PackageManagerCompatUtils {
     // activities need need to be enabled/disabled based on flag settings and SDK version.
     // TODO(b/263904312): Remove after max_sdk_version is implemented.
     // TODO(b/272737642) scan activities instead of hardcode
+    // LINT.IfChange(activities_and_services)
     public static final ImmutableList<String> CONSENT_ACTIVITIES_CLASSES =
             ImmutableList.of(
                     "com.android.adservices.ui.settings.activities."
@@ -94,6 +95,8 @@ public final class PackageManagerCompatUtils {
                             new Pair<>(
                                     /* service= */ "com.android.adservices.appsetid.AppSetIdService",
                                     /* minSdkSupport= */ Build.VERSION_CODES.S));
+
+    // LINT.ThenChange()
 
     /**
      * Invokes the appropriate overload of {@code getInstalledPackages} on {@link PackageManager}

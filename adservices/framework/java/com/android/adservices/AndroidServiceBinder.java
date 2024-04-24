@@ -113,6 +113,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                         DEFAULT_BINDER_CONNECTION_TIMEOUT_MS);
     }
 
+    @Override
     public T getService() {
         if (mSimulatingLowRamDevice) {
             throw new ServiceUnavailableException(

@@ -36,8 +36,10 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +54,7 @@ import android.os.Process;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.NoOpServiceBinder;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
@@ -71,7 +74,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
@@ -91,11 +93,10 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
     private static final String APPSETID_API_ALLOW_LIST =
             "com.android.adservices.servicecoreappsetidtest";
     private static final int SANDBOX_UID = 25000;
-    private final AdServicesLogger mAdServicesLogger =
-            Mockito.spy(AdServicesLoggerImpl.getInstance());
+    private final AdServicesLogger mAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
+    private final AppSetIdWorker mAppSetIdWorker = new AppSetIdWorker(new NoOpServiceBinder<>());
 
     private CallerMetadata mCallerMetadata;
-    private AppSetIdWorker mAppSetIdWorker;
     private GetAppSetIdParam mRequest;
 
     @Mock private PackageManager mPackageManager;
@@ -108,9 +109,6 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
 
     @Before
     public void setup() throws Exception {
-        mAppSetIdWorker = Mockito.spy(AppSetIdWorker.getInstance());
-        doReturn(null).when(mAppSetIdWorker).getService();
-
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =
@@ -312,7 +310,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                 new SyncIGetAppSetIdCallback(BACKGROUND_THREAD_TIMEOUT_MS);
 
         CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(
+        doAnswer(
                         (Answer<Object>)
                                 invocation -> {
                                     // The method logAPiCallStats is called.

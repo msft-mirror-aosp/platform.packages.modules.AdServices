@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
+import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.ATTRIBUTION_FAKE_REPORT_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
@@ -2562,6 +2563,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(source.getEventTime())
                         .setRegistrationOrigin(source.getRegistrationOrigin())
+                        .setReportId(ATTRIBUTION_FAKE_REPORT_ID)
                         .build(),
                 attributionRateLimitArgCaptor.getValue());
     }
@@ -2613,6 +2615,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(source.getEventTime())
                         .setRegistrationOrigin(source.getRegistrationOrigin())
+                        .setReportId(ATTRIBUTION_FAKE_REPORT_ID)
                         .build(),
                 attributionRateLimitArgCaptor.getValue());
     }
@@ -2671,6 +2674,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(source.getEventTime())
                         .setRegistrationOrigin(source.getRegistrationOrigin())
+                        .setReportId(ATTRIBUTION_FAKE_REPORT_ID)
                         .build(),
                 attributionRateLimitArgCaptor.getAllValues().get(0));
 
@@ -2685,6 +2689,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(source.getEventTime())
                         .setRegistrationOrigin(source.getRegistrationOrigin())
+                        .setReportId(ATTRIBUTION_FAKE_REPORT_ID)
                         .build(),
                 attributionRateLimitArgCaptor.getAllValues().get(1));
         fakeEventReportCaptor
@@ -2816,6 +2821,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(source.getEventTime())
                         .setRegistrationOrigin(source.getRegistrationOrigin())
+                        .setReportId(ATTRIBUTION_FAKE_REPORT_ID)
                         .build(),
                 attributionRateLimitArgCaptor.getValue());
     }

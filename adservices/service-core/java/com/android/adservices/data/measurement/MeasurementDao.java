@@ -1291,7 +1291,7 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void insertEventReport(EventReport eventReport) throws DatastoreException {
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.EventReportContract.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.EventReportContract.ID, eventReport.getId());
         values.put(
                 MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
                 eventReport.getSourceEventId().getValue());
@@ -1418,6 +1418,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AttributionContract.REGISTRATION_ORIGIN,
                 attribution.getRegistrationOrigin().toString());
+        values.put(MeasurementTables.AttributionContract.REPORT_ID, attribution.getReportId());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -2592,7 +2593,7 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void insertAggregateReport(AggregateReport aggregateReport) throws DatastoreException {
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.AggregateReport.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
         values.put(
                 MeasurementTables.AggregateReport.PUBLISHER,
                 aggregateReport.getPublisher().toString());

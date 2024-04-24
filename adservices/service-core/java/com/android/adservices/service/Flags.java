@@ -4918,6 +4918,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled() {
         return FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED;
     }
+
     /**
      * This is a feature flag for KAnon Sign/Join feature on the server auction path.
      *
@@ -5270,5 +5271,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default int getPasScriptExecutionTimeoutMs() {
         return DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
+    }
+
+    /** Default enablement for applying SPE (Scheduling Policy Engine) to the second pilot jobs. */
+    @FeatureFlag boolean DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to the second pilot
+     * jobs.
+     */
+    default boolean getSpeOnPilotJobsBatch2Enabled() {
+        return DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
     }
 }

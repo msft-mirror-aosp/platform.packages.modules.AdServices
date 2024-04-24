@@ -59,6 +59,13 @@ import java.util.stream.Collectors;
 
 /** Runner for servicing queued registration requests */
 public class AsyncRegistrationQueueRunner {
+    /**
+     * Single attribution entry is created for possibly multiple fake reports generated per source.
+     * Setting a value to such attributions will help identify them that they are associated to fake
+     * reports.
+     */
+    @VisibleForTesting static final String ATTRIBUTION_FAKE_REPORT_ID = "-1";
+
     private static AsyncRegistrationQueueRunner sAsyncRegistrationQueueRunner;
     private final DatastoreManager mDatastoreManager;
     private final AsyncSourceFetcher mAsyncSourceFetcher;
@@ -645,6 +652,7 @@ public class AsyncRegistrationQueueRunner {
                 .map(
                         fakeReport ->
                                 new EventReport.Builder()
+                                        .setId(UUID.randomUUID().toString())
                                         .setSourceId(sourceId)
                                         .setSourceEventId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
@@ -800,7 +808,7 @@ public class AsyncRegistrationQueueRunner {
         Optional<Uri> topLevelPublisher =
                 getTopLevelPublisher(source.getPublisher(), source.getPublisherType());
 
-        if (!topLevelPublisher.isPresent()) {
+        if (topLevelPublisher.isEmpty()) {
             throw new IllegalArgumentException(
                     String.format(
                             "insertAttributionRateLimit: getSourceAndDestinationTopPrivateDomains"
@@ -821,6 +829,7 @@ public class AsyncRegistrationQueueRunner {
                 .setTriggerId(null)
                 // Intentionally using source here since trigger is not available
                 .setRegistrationOrigin(source.getRegistrationOrigin())
+                .setReportId(ATTRIBUTION_FAKE_REPORT_ID)
                 .build();
     }
 

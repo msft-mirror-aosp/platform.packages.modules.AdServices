@@ -57,6 +57,7 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
     private static final String SAMPLE_DUMPSYS_WITH_ERR = SAMPLE_DUMPSYS + SAMPLE_COMMAND_ERR;
     private static final String SAMPLE_DUMPSYS_WITH_OUT_AND_ERR =
             SAMPLE_DUMPSYS + SAMPLE_COMMAND_OUT + "\n" + SAMPLE_COMMAND_ERR;
+    private static final String STATUS_FINISHED = "FINISHED";
 
     private static final String ADEXTSERVICES_PACKAGE_NAME = "com.google.android.ext.services";
 
@@ -87,6 +88,9 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
 
         expect.withMessage("out").that(commandResult.getOut()).isEqualTo(CMD_ECHO_OUT);
         expect.withMessage("err").that(commandResult.getErr()).isEmpty();
+        expect.withMessage("commandStatus")
+                .that(commandResult.getCommandStatus())
+                .isEqualTo(STATUS_FINISHED);
     }
 
     @Test
@@ -96,6 +100,9 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
 
         expect.withMessage("out").that(commandResult.getOut()).isEmpty();
         expect.withMessage("err").that(commandResult.getErr()).isEqualTo(ERR);
+        expect.withMessage("commandStatus")
+                .that(commandResult.getCommandStatus())
+                .isEqualTo(STATUS_FINISHED);
     }
 
     @Test
@@ -106,6 +113,9 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
 
         expect.withMessage("out").that(commandResult.getOut()).isEqualTo(CMD_ECHO_OUT);
         expect.withMessage("err").that(commandResult.getErr()).isEqualTo(ERR);
+        expect.withMessage("commandStatus")
+                .that(commandResult.getCommandStatus())
+                .isEqualTo(STATUS_FINISHED);
     }
 
     @Test
@@ -119,6 +129,9 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
         CommandResult commandResult = mAdServicesShellCommandHelper.parseResultFromDumpsys(input);
 
         expect.that(commandResult.getOut()).isEqualTo(input);
+        expect.withMessage("commandStatus")
+                .that(commandResult.getCommandStatus())
+                .isEqualTo(STATUS_FINISHED);
     }
 
     @Test
@@ -240,7 +253,7 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
             } else if (cmd.equals(ADSERVICES_MANAGER_SERVICE_CHECK)) {
                 return mUsesSdkSandbox ? " not found" : "found";
             } else if (cmd.equals(
-                    runDumpsysShellCommand(
+                    getDumpsysGetResultShellCommand(
                             String.format(
                                     "%s/%s", ADEXTSERVICES_PACKAGE_NAME, SHELL_ACTIVITY_NAME)))) {
                 String out =

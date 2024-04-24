@@ -1882,6 +1882,52 @@ public class MeasurementDbSchemaTrail {
                     + ") ON DELETE CASCADE"
                     + ")";
 
+    private static final String CREATE_TABLE_ATTRIBUTION_V35 =
+            "CREATE TABLE "
+                    + AttributionContract.TABLE
+                    + " ("
+                    + AttributionContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AttributionContract.SOURCE_SITE
+                    + " TEXT, "
+                    + AttributionContract.SOURCE_ORIGIN
+                    + " TEXT, "
+                    + AttributionContract.DESTINATION_SITE
+                    + " TEXT, "
+                    + AttributionContract.DESTINATION_ORIGIN
+                    + " TEXT, "
+                    + AttributionContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + AttributionContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + AttributionContract.REGISTRANT
+                    + " TEXT, "
+                    + AttributionContract.SOURCE_ID
+                    + " TEXT, "
+                    + AttributionContract.TRIGGER_ID
+                    + " TEXT, "
+                    + AttributionContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + AttributionContract.SCOPE
+                    + " INTEGER, "
+                    + AttributionContract.REPORT_ID
+                    + " TEXT, "
+                    + "FOREIGN KEY ("
+                    + AttributionContract.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE, "
+                    + "FOREIGN KEY ("
+                    + AttributionContract.TRIGGER_ID
+                    + ") REFERENCES "
+                    + TriggerContract.TABLE
+                    + "("
+                    + TriggerContract.ID
+                    + ") ON DELETE CASCADE"
+                    + ")";
+
     private static final String CREATE_TABLE_AGGREGATE_REPORT_V6 =
             "CREATE TABLE "
                     + AggregateReport.TABLE
@@ -2944,6 +2990,12 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV35() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV34());
+        createStatements.put(AttributionContract.TABLE, CREATE_TABLE_ATTRIBUTION_V35);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -3068,6 +3120,10 @@ public class MeasurementDbSchemaTrail {
         return createIndexes;
     }
 
+    private static Map<String, String> getCreateIndexesV35() {
+        return getCreateIndexesV34();
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -3099,6 +3155,7 @@ public class MeasurementDbSchemaTrail {
                     .put(32, getCreateStatementByTableV32().values())
                     .put(33, getCreateStatementByTableV33().values())
                     .put(34, getCreateStatementByTableV34().values())
+                    .put(35, getCreateStatementByTableV35().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -3132,6 +3189,7 @@ public class MeasurementDbSchemaTrail {
                     .put(32, getCreateIndexesV32().values())
                     .put(33, getCreateIndexesV33().values())
                     .put(34, getCreateIndexesV34().values())
+                    .put(35, getCreateIndexesV35().values())
                     .build();
 
     /**

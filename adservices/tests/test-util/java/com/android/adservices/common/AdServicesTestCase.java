@@ -34,8 +34,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 
-import java.util.Objects;
-
 // TODO(b/285014040): need to add unit tests for this class itself, as it's now providing logic.
 
 // Superclass for all other "base classes"
@@ -144,43 +142,6 @@ abstract class AdServicesTestCase {
                         },
                         threadName)
                 .start();
-    }
-
-    // TODO(b/285014040): refactor to take Object... instead (once it's unit tested)
-    /**
-     * Helper method that uses {@code expect} to assert the class properly implement {@code
-     * equals()} and {@code hashCode()}.
-     *
-     * @param obj1 object that is equals to {@code obj2}
-     * @param obj2 object that is equals to {@code obj1}
-     */
-    protected final void expectObjectsAreEqual(Object obj1, Object obj2) {
-        Objects.requireNonNull(obj1, "1st arg cannot be null");
-        Objects.requireNonNull(obj2, "2nd arg cannot be null");
-
-        expect.withMessage("1st obj (%s)", obj1).that(obj1).isEqualTo(obj2);
-        expect.withMessage("2nd obj (%s)", obj2).that(obj2).isEqualTo(obj1);
-        expect.withMessage("hashCode of %s", obj1).that(obj1.hashCode()).isEqualTo(obj2.hashCode());
-    }
-
-    // TODO(b/285014040): refactor to take Object... instead (once it's unit tested)
-    /**
-     * Helper method that uses {@code expect} to assert the class properly implement {@code
-     * equals()} and {@code hashCode()}.
-     *
-     * @param obj1 object that is not equal to {@code obj2}
-     * @param obj2 object that is not equal to {@code obj1}
-     */
-    protected final void expectObjectsAreNotEqual(Object obj1, @Nullable Object obj2) {
-        Objects.requireNonNull(obj1, "1st arg cannot be null");
-
-        expect.withMessage("1st obj (%s)", obj1).that(obj1).isNotEqualTo(obj2);
-        expect.withMessage("2nd obj (%s)", obj2).that(obj2).isNotEqualTo(obj1);
-        if (obj2 != null) {
-            expect.withMessage("hashCode of %s", obj1)
-                    .that(obj1.hashCode())
-                    .isNotEqualTo(obj2.hashCode());
-        }
     }
 
     private void sleepAfterTest() {

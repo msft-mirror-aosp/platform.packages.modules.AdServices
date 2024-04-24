@@ -22,6 +22,7 @@ import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILUR
 import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
@@ -29,16 +30,18 @@ import org.junit.Test;
 public final class ExecutionResultTest extends AdServicesUnitTestCase {
     @Test
     public void testEqualsAndHashcode() {
-        expectObjectsAreEqual(SUCCESS, SUCCESS);
-        expectObjectsAreEqual(FAILURE_WITH_RETRY, FAILURE_WITH_RETRY);
-        expectObjectsAreEqual(FAILURE_WITHOUT_RETRY, FAILURE_WITHOUT_RETRY);
-        expectObjectsAreEqual(CANCELLED_BY_SCHEDULER, CANCELLED_BY_SCHEDULER);
+        EqualsTester et = new EqualsTester(expect);
 
-        expectObjectsAreNotEqual(SUCCESS, FAILURE_WITH_RETRY);
-        expectObjectsAreNotEqual(SUCCESS, FAILURE_WITHOUT_RETRY);
-        expectObjectsAreNotEqual(SUCCESS, CANCELLED_BY_SCHEDULER);
-        expectObjectsAreNotEqual(FAILURE_WITH_RETRY, FAILURE_WITHOUT_RETRY);
-        expectObjectsAreNotEqual(FAILURE_WITH_RETRY, CANCELLED_BY_SCHEDULER);
-        expectObjectsAreNotEqual(FAILURE_WITHOUT_RETRY, CANCELLED_BY_SCHEDULER);
+        et.expectObjectsAreEqual(SUCCESS, SUCCESS);
+        et.expectObjectsAreEqual(FAILURE_WITH_RETRY, FAILURE_WITH_RETRY);
+        et.expectObjectsAreEqual(FAILURE_WITHOUT_RETRY, FAILURE_WITHOUT_RETRY);
+        et.expectObjectsAreEqual(CANCELLED_BY_SCHEDULER, CANCELLED_BY_SCHEDULER);
+
+        et.expectObjectsAreNotEqual(SUCCESS, FAILURE_WITH_RETRY);
+        et.expectObjectsAreNotEqual(SUCCESS, FAILURE_WITHOUT_RETRY);
+        et.expectObjectsAreNotEqual(SUCCESS, CANCELLED_BY_SCHEDULER);
+        et.expectObjectsAreNotEqual(FAILURE_WITH_RETRY, FAILURE_WITHOUT_RETRY);
+        et.expectObjectsAreNotEqual(FAILURE_WITH_RETRY, CANCELLED_BY_SCHEDULER);
+        et.expectObjectsAreNotEqual(FAILURE_WITHOUT_RETRY, CANCELLED_BY_SCHEDULER);
     }
 }

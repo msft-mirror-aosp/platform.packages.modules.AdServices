@@ -43,6 +43,9 @@ public abstract class AbstractAdServicesShellCommandHelper {
     private static final String SHELL_COMMAND_ACTIVITY_DUMP_STR = "-- ShellCommandActivity dump --";
     private static final String COMMAND_OUT = "CommandOut:";
     private static final String COMMAND_ERR = "CommandErr:";
+    private static final String COMMAND_STATUS = "CommandStatus:";
+    private static final String STATUS_RUNNING = "RUNNING";
+    private static final String STATUS_FINISHED = "FINISHED";
 
     private static final String CMD_ARGS = "cmd-args";
     private static final String GET_RESULT_ARG = "get-result";
@@ -52,6 +55,9 @@ public abstract class AbstractAdServicesShellCommandHelper {
 
     private static final long WAIT_SAMPLE_INTERVAL_MILLIS = 1000;
     private static final long TIMEOUT_ACTIVITY_FINISH_MILLIS = 3000;
+
+    // Max number of times we run the get-result shell command if the command is still running.
+    private static final long GET_RESULT_COMMAND_RETRY = 4;
 
     private final Logger mLog;
     private final AbstractDeviceSupportHelper mAdServicesHelper;
@@ -156,9 +162,7 @@ public abstract class AbstractAdServicesShellCommandHelper {
         String componentName =
                 String.format(
                         "%s/%s", mAdServicesHelper.getAdServicesPackageName(), SHELL_ACTIVITY_NAME);
-        res = runShellCommand(runDumpsysShellCommand(componentName));
-        mLog.d("Output for command %s: %s", runDumpsysShellCommand(componentName), res);
-        CommandResult commandRes = parseResultFromDumpsys(res);
+        CommandResult commandRes = runGetResultShellCommand(componentName);
 
         checkShellCommandActivityFinished(componentName);
         return commandRes;
@@ -186,48 +190,64 @@ public abstract class AbstractAdServicesShellCommandHelper {
         boolean activityDumpPresent = false;
         String out = "";
         String err = "";
+        String commandStatus = STATUS_FINISHED;
         for (int i = 0; i < len; i++) {
             if (splitStr[i].equals(SHELL_COMMAND_ACTIVITY_DUMP_STR)) {
                 activityDumpPresent = true;
-            }
-
-            if (activityDumpPresent && splitStr[i].equals(COMMAND_OUT)) {
-                i++;
-                StringBuilder outBuilder = new StringBuilder();
-                for (; i < len && splitStr[i].startsWith("  "); i++) {
-                    if (splitStr[i].length() > 2) {
-                        outBuilder.append(splitStr[i].substring(2));
+            } else if (activityDumpPresent && splitStr[i].startsWith(COMMAND_STATUS)) {
+                commandStatus = splitStr[i].substring(COMMAND_STATUS.length()).strip();
+            } else {
+                if (activityDumpPresent && splitStr[i].equals(COMMAND_OUT)) {
+                    i++;
+                    StringBuilder outBuilder = new StringBuilder();
+                    for (; i < len && splitStr[i].startsWith("  "); i++) {
+                        if (splitStr[i].length() > 2) {
+                            outBuilder.append(splitStr[i].substring(2));
+                        }
+                        outBuilder.append('\n');
                     }
-                    outBuilder.append('\n');
+                    out = outBuilder.toString().strip();
                 }
-                out = outBuilder.toString().strip();
-            }
 
-            if (i < len && activityDumpPresent && splitStr[i].equals(COMMAND_ERR)) {
-                i++;
-                StringBuilder errBuilder = new StringBuilder();
-                for (; i < len && splitStr[i].startsWith("  "); i++) {
-                    if (splitStr[i].length() > 2) {
-                        errBuilder.append(splitStr[i].substring(2));
+                if (i < len && activityDumpPresent && splitStr[i].equals(COMMAND_ERR)) {
+                    i++;
+                    StringBuilder errBuilder = new StringBuilder();
+                    for (; i < len && splitStr[i].startsWith("  "); i++) {
+                        if (splitStr[i].length() > 2) {
+                            errBuilder.append(splitStr[i].substring(2));
+                        }
+                        errBuilder.append("\n");
                     }
-                    errBuilder.append("\n");
+                    err = errBuilder.toString().strip();
                 }
-                err = errBuilder.toString().strip();
             }
-            // TODO(b/308009734): Perform check for commandStatus field when we support long
-            //  running commands.
         }
 
         // Return original input if activity dump string not present.
         if (!activityDumpPresent) {
-            return new CommandResult(res, "");
+            return new CommandResult(res, "", commandStatus);
         }
-        return new CommandResult(out, err);
+        return new CommandResult(out, err, commandStatus);
     }
 
     @VisibleForTesting
-    String runDumpsysShellCommand(String componentName) {
+    String getDumpsysGetResultShellCommand(String componentName) {
         return String.format("dumpsys activity %s cmd %s", componentName, GET_RESULT_ARG);
+    }
+
+    private CommandResult runGetResultShellCommand(String componentName) {
+        CommandResult commandRes = new CommandResult("", "");
+        for (int i = 0; i < GET_RESULT_COMMAND_RETRY; i++) {
+            String res = runShellCommand(getDumpsysGetResultShellCommand(componentName));
+            mLog.d(
+                    "Output for command %s running %d times: %s ",
+                    getDumpsysGetResultShellCommand(componentName), i + 1, res);
+            commandRes = parseResultFromDumpsys(res);
+            if (!commandRes.isCommandRunning()) {
+                return commandRes;
+            }
+        }
+        return commandRes;
     }
 
     private String startShellActivity(String args) {
@@ -244,8 +264,10 @@ public abstract class AbstractAdServicesShellCommandHelper {
         mLog.d("Checking if ShellCommandActivity is finished");
         tryWaitForSuccess(
                 () -> {
-                    String res = runShellCommand(runDumpsysShellCommand(componentName));
-                    mLog.d("Output for command %s: %s", runDumpsysShellCommand(componentName), res);
+                    String res = runShellCommand(getDumpsysGetResultShellCommand(componentName));
+                    mLog.d(
+                            "Output for command %s: %s",
+                            getDumpsysGetResultShellCommand(componentName), res);
                     return res.contains(INVALID_COMMAND_OUTPUT);
                 },
                 "Failed to finish ShellCommandActivity",
@@ -276,10 +298,16 @@ public abstract class AbstractAdServicesShellCommandHelper {
     public static final class CommandResult {
         private final String mOut;
         private final String mErr;
+        private final String mCommandStatus;
 
-        public CommandResult(String out, String err) {
+        CommandResult(String out, String err, String commandStatus) {
             mOut = Objects.requireNonNull(out);
             mErr = Objects.requireNonNull(err);
+            mCommandStatus = commandStatus;
+        }
+
+        public CommandResult(String out, String err) {
+            this(out, err, STATUS_FINISHED);
         }
 
         public String getOut() {
@@ -290,9 +318,18 @@ public abstract class AbstractAdServicesShellCommandHelper {
             return mErr;
         }
 
+        public String getCommandStatus() {
+            return mCommandStatus;
+        }
+
         @Override
         public String toString() {
-            return String.format("CommandResult [out=%s, err=%s]", mOut, mErr);
+            return String.format(
+                    "CommandResult [out=%s, err=%s, status=%s]", mOut, mErr, mCommandStatus);
+        }
+
+        private boolean isCommandRunning() {
+            return mCommandStatus.equals(STATUS_RUNNING);
         }
     }
 }
