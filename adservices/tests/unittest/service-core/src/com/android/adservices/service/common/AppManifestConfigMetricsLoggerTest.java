@@ -244,7 +244,6 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     @Test
     public void testDump_empty() throws Exception {
-        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(true);
         when(mMockContext.getDataDir()).thenReturn(new File("/la/la/land"));
 
         String dump = DumpHelper.dump(pw -> AppManifestConfigMetricsLogger.dump(mMockContext, pw));
@@ -256,9 +255,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                                 ".*file:.*/la/la/land/shared_prefs/"
                                         + PREFS_NAME
                                         + "\\.xml.*\n"
-                                        + ".*enabled by default: "
-                                        + true
-                                        + ".*\n"
+                                        + ".*\\(Always\\) enabled by default.*\n"
                                         + ".*0 entries:.*",
                                 Pattern.DOTALL));
     }

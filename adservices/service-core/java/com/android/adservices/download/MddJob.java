@@ -22,6 +22,7 @@ import static com.android.adservices.download.MddJob.NetworkState.NETWORK_STATE_
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
@@ -41,10 +42,14 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.JobPolicy.NetworkType;
+import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
+import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.framework.JobWorker;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.scheduling.JobSpec;
 import com.android.adservices.spe.AdServicesJobScheduler;
+import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.Flags;
@@ -97,8 +102,6 @@ public final class MddJob implements JobWorker {
 
     @VisibleForTesting static final String KEY_MDD_TASK_TAG = "mdd_task_tag";
 
-    private static final MddJob sSingleton = new MddJob();
-
     @VisibleForTesting
     // Required network state of the device when to run the task.
     enum NetworkState {
@@ -112,11 +115,6 @@ public final class MddJob implements JobWorker {
         NETWORK_STATE_ANY,
     }
 
-    /** Gets a singleton instance of {@link MddJob}. */
-    public static MddJob getInstance() {
-        return sSingleton;
-    }
-
     @Override
     public int getJobEnablementStatus() {
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
@@ -127,7 +125,7 @@ public final class MddJob implements JobWorker {
     }
 
     @Override
-    public ListenableFuture<Void> getExecutionFuture(
+    public ListenableFuture<ExecutionResult> getExecutionFuture(
             Context context, ExecutionRuntimeParameters params) {
         ListenableFuture<Void> handleTaskFuture =
                 PropagatedFutures.submitAsync(
@@ -144,10 +142,14 @@ public final class MddJob implements JobWorker {
                         ignoredVoid -> {
                             // TODO(b/331285831): Handle unused return value.
                             // To suppress the lint error of future returning value is unused.
-                            ListenableFuture<DownloadStatus> unusedFuture =
+                            ListenableFuture<DownloadStatus> unusedFutureEnrollment =
                                     EnrollmentDataDownloadManager.getInstance()
                                             .readAndInsertEnrollmentDataFromMdd();
-                            return null;
+                            ListenableFuture<EncryptionDataDownloadManager.DownloadStatus>
+                                    unusedFutureEncryption =
+                                            EncryptionDataDownloadManager.getInstance()
+                                                    .readAndInsertEncryptionDataFromMdd();
+                            return SUCCESS;
                         },
                         AdServicesExecutors.getBlockingExecutor());
     }
@@ -155,8 +157,11 @@ public final class MddJob implements JobWorker {
     /** Scheduled all MDD background jobs. */
     public static void scheduleAllMddJobs() {
         if (!FlagsFactory.getFlags().getSpeOnPilotJobsEnabled()) {
-            MddJobService.scheduleIfNeeded(
-                    ApplicationContextSingleton.get(), /* forceSchedule= */ true);
+            int resultCode =
+                    MddJobService.scheduleIfNeeded(
+                            ApplicationContextSingleton.get(), /* forceSchedule= */ true);
+
+            logJobSchedulingLegacy(resultCode);
             return;
         }
 
@@ -207,6 +212,18 @@ public final class MddJob implements JobWorker {
                         .build();
 
         return new JobSpec.Builder(getMddTaskJobId(mddTag), jobPolicy).setExtras(extras).build();
+    }
+
+    @VisibleForTesting
+    static void logJobSchedulingLegacy(@JobSchedulingResultCode int resultCode) {
+        JobSchedulingLogger logger =
+                AdServicesJobServiceFactory.getInstance().getJobSchedulingLogger();
+
+        logger.recordOnSchedulingLegacy(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId(), resultCode);
+        logger.recordOnSchedulingLegacy(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId(), resultCode);
+        logger.recordOnSchedulingLegacy(
+                MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId(), resultCode);
+        logger.recordOnSchedulingLegacy(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId(), resultCode);
     }
 
     private static void scheduleMaintenanceJob(AdServicesJobScheduler scheduler, Flags flags) {

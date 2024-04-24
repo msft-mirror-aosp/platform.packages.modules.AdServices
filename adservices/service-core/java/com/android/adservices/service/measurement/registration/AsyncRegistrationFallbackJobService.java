@@ -59,7 +59,7 @@ public class AsyncRegistrationFallbackJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID);
 
         if (FlagsFactory.getFlags().getAsyncRegistrationFallbackJobKillSwitch()) {
@@ -84,8 +84,7 @@ public class AsyncRegistrationFallbackJobService extends JobService {
                                     processAsyncRecords();
 
                                     boolean shouldRetry = false;
-                                    AdServicesJobServiceLogger.getInstance(
-                                                    AsyncRegistrationFallbackJobService.this)
+                                    AdServicesJobServiceLogger.getInstance()
                                             .recordJobFinished(
                                                     MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,
                                                     /* isSuccessful */ true,
@@ -119,7 +118,7 @@ public class AsyncRegistrationFallbackJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(
                         params, MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -185,7 +184,7 @@ public class AsyncRegistrationFallbackJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID, skipReason);
         }
 

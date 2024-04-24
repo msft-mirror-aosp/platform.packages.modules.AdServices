@@ -29,10 +29,10 @@ import android.adservices.common.UpdateAdIdRequest;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -44,10 +44,14 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    private final AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(sContext);
+    private AdServicesCommonManager mCommonManager;
 
     @Before
-    public void printRelevantFlags() {
+    public void setup() {
+        // Initialize the manager before tests instead of in class member to allow overriding the
+        // binder timeout.
+        mCommonManager = AdServicesCommonManager.get(sContext);
+
         Log.d(
                 mTag,
                 "Relevant flags @Before: "

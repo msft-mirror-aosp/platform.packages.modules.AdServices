@@ -51,7 +51,6 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -61,6 +60,7 @@ import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.shared.testing.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -537,12 +537,6 @@ public class AggregateReportingJobServiceTest {
         ExtendedMockito.doReturn(value)
                 .when(mMockFlags)
                 .getMeasurementJobAggregateReportingKillSwitch();
-    }
-
-    private CountDownLatch createCountDownLatch() {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
-        return countDownLatch;
     }
 
     private Object countDown(CountDownLatch countDownLatch) {

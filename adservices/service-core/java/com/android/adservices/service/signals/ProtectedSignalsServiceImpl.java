@@ -21,6 +21,9 @@ import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNS
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_OTHER_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_UNSET;
 
 import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
@@ -40,6 +43,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -55,6 +59,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
@@ -65,6 +70,7 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -76,7 +82,6 @@ import java.util.concurrent.ExecutorService;
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
 
-    public static final int TIMEOUT_MS = 5000;
     public static final long MAX_SIZE_BYTES = 10000;
     public static final String ADTECH_CALLER_NAME = "caller";
     public static final String CLASS_NAME = "ProtectedSignalsServiceImpl";
@@ -94,8 +99,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
-
     @NonNull private final ProtectedSignalsServiceFilter mProtectedSignalsServiceFilter;
+    @NonNull private final EnrollmentDao mEnrollmentDao;
 
     private ProtectedSignalsServiceImpl(@NonNull Context context) {
         this(
@@ -106,8 +111,10 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                 AdServicesExecutors.getLightWeightExecutor(),
                                 new AdServicesHttpsClient(
                                         AdServicesExecutors.getBlockingExecutor(),
-                                        TIMEOUT_MS,
-                                        TIMEOUT_MS,
+                                        FlagsFactory.getFlags()
+                                                .getPasSignalsDownloadConnectionTimeoutMs(),
+                                        FlagsFactory.getFlags()
+                                                .getPasSignalsDownloadReadTimeoutMs(),
                                         FlagsFactory.getFlags()
                                                 .getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())),
                         new UpdateProcessingOrchestrator(
@@ -138,7 +145,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
-                        Throttler.getInstance(FlagsFactory.getFlags())));
+                        Throttler.getInstance(FlagsFactory.getFlags())),
+                EnrollmentDao.getInstance(context));
     }
 
     @VisibleForTesting
@@ -152,7 +160,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
-            @NonNull ProtectedSignalsServiceFilter protectedSignalsServiceFilter) {
+            @NonNull ProtectedSignalsServiceFilter protectedSignalsServiceFilter,
+            @NonNull EnrollmentDao enrollmentDao) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(updateSignalsOrchestrator);
         Objects.requireNonNull(fledgeAuthorizationFilter);
@@ -160,6 +169,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         Objects.requireNonNull(executorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(protectedSignalsServiceFilter);
+        Objects.requireNonNull(enrollmentDao);
 
         mContext = context;
         mUpdateSignalsOrchestrator = updateSignalsOrchestrator;
@@ -171,6 +181,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         mFlags = flags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mProtectedSignalsServiceFilter = protectedSignalsServiceFilter;
+        mEnrollmentDao = enrollmentDao;
     }
 
     /** Creates a new instance of {@link ProtectedSignalsServiceImpl}. */
@@ -253,6 +264,14 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
 
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
+
+        // Stats to log
+        UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder = null;
+        if (mFlags.getPasExtendedMetricsEnabled()) {
+            // Stats to log
+            jsonProcessingStatsBuilder = UpdateSignalsApiCalledStats.builder();
+        }
+
         // The filters log internally, so don't accidentally log again
         boolean shouldLog = false;
         try {
@@ -276,6 +295,25 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                     throw new FilterException(t);
                 }
 
+                if (jsonProcessingStatsBuilder != null) {
+                    /* You could save a DB call by building this into the filter, but it would
+                     * make the code pretty complicated and be difficult to flag.
+                     */
+
+                    try {
+                        EnrollmentData data =
+                                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(buyer);
+                        if (data != null) {
+                            jsonProcessingStatsBuilder.setAdTechId(data.getEnrollmentId());
+                        }
+                    } catch (Exception e) {
+                        /* We blanket catch and ignore all exceptions here because
+                         * we'd rather skip the logging than get a crash
+                         */
+                        sLogger.e(e, "Failed to get enrollment data for %s", buyer);
+                    }
+                }
+
                 // Fail silently for revoked user consent
                 if (mConsentManager.isPasFledgeConsentGiven()
                         && !mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
@@ -286,7 +324,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                     input.getUpdateUri(),
                                     buyer,
                                     input.getCallerPackageName(),
-                                    devContext)
+                                    devContext,
+                                    UpdateSignalsApiCalledStats.builder())
                             .get();
                     PeriodicEncodingJobService.scheduleIfNeeded(mContext, mFlags, false);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
@@ -313,6 +352,30 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         } finally {
             if (shouldLog) {
                 adsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
+            }
+            if (jsonProcessingStatsBuilder != null) {
+                if (jsonProcessingStatsBuilder.build().getJsonProcessingStatus()
+                        == JSON_PROCESSING_STATUS_UNSET) {
+                    if (resultCode == AdServicesStatusUtils.STATUS_SUCCESS) {
+                        jsonProcessingStatsBuilder.setJsonProcessingStatus(
+                                JSON_PROCESSING_STATUS_SUCCESS);
+                    } else {
+                        jsonProcessingStatsBuilder.setJsonProcessingStatus(
+                                JSON_PROCESSING_STATUS_OTHER_ERROR);
+                    }
+                }
+
+                /* Include adtech and package name only if the status is not success.
+                 * Adtech name is added early if it was extracted successfully.
+                 */
+                if (jsonProcessingStatsBuilder.build().getJsonProcessingStatus()
+                        == JSON_PROCESSING_STATUS_SUCCESS) {
+                    jsonProcessingStatsBuilder.setAdTechId("");
+                } else {
+                    jsonProcessingStatsBuilder.setPackageUid(callerUid);
+                }
+                mAdServicesLogger.logUpdateSignalsApiCalledStats(
+                        jsonProcessingStatsBuilder.build());
             }
         }
     }

@@ -41,7 +41,6 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.HpkeJni;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.EncryptedTopic;
@@ -51,6 +50,7 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.primitives.Bytes;
 
@@ -68,8 +68,8 @@ import java.util.Optional;
 
 /** Unit tests for {@link EncryptionManager}. */
 public final class EncryptionManagerTest {
-    static final String PUBLIC_KEY_BASE64 = "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=";
-    static final String PRIVATE_KEY_BASE64 = "f86EzLmGaVmc+PwjJk5ADPE4ijQvliWf0CQyY/Zyy7I=";
+    static final String PUBLIC_KEY_BASE64 = "YqYc6zOFQFFu3eRg4nkjqN9nSbw44nsQAc1bi5EC5Ew=";
+    static final String PRIVATE_KEY_BASE64 = "2ZEyJDoJwkp0l/PahgjwuoCMIaV10zZ59LJGA+ltJ60=";
     static final byte[] DECODED_PUBLIC_KEY = Base64.getDecoder().decode(PUBLIC_KEY_BASE64);
     static final byte[] DECODED_PRIVATE_KEY = Base64.getDecoder().decode(PRIVATE_KEY_BASE64);
     static final byte[] EMPTY_CONTEXT_INFO = new byte[] {};

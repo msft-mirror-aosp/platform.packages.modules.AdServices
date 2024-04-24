@@ -214,20 +214,6 @@ class AttributionJobHandler {
                         logDelayedSourceRegistrationStats(matchingDelayedSource.get(), trigger);
                     }
 
-                    boolean triggerHasAggregatableData;
-                    try {
-                        triggerHasAggregatableData =
-                                trigger.getAggregatableAttributionTrigger(mFlags).isPresent();
-                    } catch (JSONException e) {
-                        LoggerFactory.getMeasurementLogger()
-                                .e(
-                                        e,
-                                        "AttributionJobHandler::performAttribution JSONException"
-                                                + " when parse aggregate fields.");
-                        ignoreTrigger(trigger, measurementDao);
-                        return;
-                    }
-
                     if (sourceOpt.isEmpty()) {
                         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                                 trigger, measurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
@@ -235,8 +221,8 @@ class AttributionJobHandler {
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.NO_MATCHING_SOURCE);
-                        maybeGenerateNullAggregateReportForNonAttributedTrigger(
-                                measurementDao, trigger, triggerHasAggregatableData);
+                        generateNullAggregateReportForNonAttributedTrigger(
+                                measurementDao, trigger, attributionStatus);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -276,8 +262,8 @@ class AttributionJobHandler {
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.TOP_LEVEL_FILTER_MATCH_FAILURE);
-                        maybeGenerateNullAggregateReportForNonAttributedTrigger(
-                                measurementDao, trigger, triggerHasAggregatableData);
+                        generateNullAggregateReportForNonAttributedTrigger(
+                                measurementDao, trigger, attributionStatus);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -337,8 +323,8 @@ class AttributionJobHandler {
                                     attributionStatus);
 
                     if (aggregateTriggeringStatus == TriggeringStatus.DROPPED) {
-                        maybeGenerateNullAggregateReportForNonAttributedTrigger(
-                                measurementDao, trigger, triggerHasAggregatableData);
+                        generateNullAggregateReportForNonAttributedTrigger(
+                                measurementDao, trigger, attributionStatus);
                     }
 
                     boolean isEventTriggeringStatusAttributed =
@@ -394,15 +380,18 @@ class AttributionJobHandler {
                 });
     }
 
-    private void maybeGenerateNullAggregateReportForNonAttributedTrigger(
-            IMeasurementDao measurementDao, Trigger trigger, boolean triggerHasAggregatableData)
-            throws DatastoreException {
-        if (mFlags.getMeasurementNullAggregateReportEnabled()
-                && Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
-                        trigger.getAggregatableSourceRegistrationTimeConfig())
-                && triggerHasAggregatableData) {
-            generateNullAggregateReportForNonAttributedTrigger(measurementDao, trigger);
+    private boolean getTriggerHasAggregatableData(Trigger trigger) throws JSONException {
+        Optional<AggregatableAttributionTrigger> aggregatableAttributionTriggerOpt =
+                trigger.getAggregatableAttributionTrigger(mFlags);
+        if (aggregatableAttributionTriggerOpt.isEmpty()) {
+            return false;
         }
+
+        AggregatableAttributionTrigger aggregatableAttributionTrigger =
+                aggregatableAttributionTriggerOpt.get();
+
+        return !aggregatableAttributionTrigger.getTriggerData().isEmpty()
+                || !aggregatableAttributionTrigger.getValues().isEmpty();
     }
 
     private boolean shouldAttributionBeBlockedByRateLimits(
@@ -596,7 +585,8 @@ class AttributionJobHandler {
             if (mFlags.getMeasurementNullAggregateReportEnabled()
                     && Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
                             trigger.getAggregatableSourceRegistrationTimeConfig())) {
-                generateNullAggregateReports(trigger, aggregateReport, measurementDao);
+                generateNullAggregateReportsIncludingSourceRegistrationTime(
+                        trigger, aggregateReport, measurementDao, attributionStatus);
             }
 
             finalizeAggregateReportCreation(
@@ -632,54 +622,80 @@ class AttributionJobHandler {
     }
 
     private void generateNullAggregateReportForNonAttributedTrigger(
-            IMeasurementDao measurementDao, Trigger trigger) throws DatastoreException {
+            IMeasurementDao measurementDao, Trigger trigger, AttributionStatus attributionStatus)
+            throws DatastoreException {
+        try {
+            if (!mFlags.getMeasurementNullAggregateReportEnabled()
+                    || !getTriggerHasAggregatableData(trigger)) {
+                return;
+            }
+
+            if (Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
+                    trigger.getAggregatableSourceRegistrationTimeConfig())) {
+                generateNullAggregateReportExcludingSourceRegistrationTime(
+                        measurementDao, trigger, attributionStatus);
+            } else {
+                generateNullAggregateReportsIncludingSourceRegistrationTime(
+                        trigger, null, measurementDao, attributionStatus);
+            }
+        } catch (JSONException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            e,
+                            "JSONException when building null aggregate report for"
+                                    + " trigger with ID: "
+                                    + trigger.getId());
+        }
+    }
+
+    private void generateNullAggregateReportExcludingSourceRegistrationTime(
+            IMeasurementDao measurementDao, Trigger trigger, AttributionStatus attributionStatus)
+            throws DatastoreException, JSONException {
         float nullRate =
                 trigger.getTriggerContextId() == null
                         ? mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime()
                         : 1;
 
         if (Math.random() < nullRate) {
-            try {
                 AggregateReport nullReport =
                         // Although the WICG spec states the trigger time should be used here, we
                         // pass null because the source_registration_time is intended for exclusion
                         // anyway.
                         getNullAggregateReport(trigger, /* sourceTime = */ null);
                 measurementDao.insertAggregateReport(nullReport);
-            } catch (JSONException e) {
-                LoggerFactory.getMeasurementLogger()
-                        .e(
-                                e,
-                                "JSONException when building null aggregate report for"
-                                        + " non-attributed trigger with ID: "
-                                        + trigger.getId());
-            }
+            incrementNullAggregateReportCountBy(attributionStatus, 1);
         }
     }
 
-    private void generateNullAggregateReports(
-            Trigger trigger, AggregateReport aggregateReport, IMeasurementDao measurementDao)
+    private void generateNullAggregateReportsIncludingSourceRegistrationTime(
+            Trigger trigger,
+            @Nullable AggregateReport aggregateReport,
+            IMeasurementDao measurementDao,
+            AttributionStatus attributionStatus)
             throws DatastoreException, JSONException {
-        long maxSourceExpiry =
-                mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds()
-                        * TimeUnit.SECONDS.toMillis(1);
-        maxSourceExpiry = roundDownToDay(maxSourceExpiry);
-        long roundedAttributedSourceTime =
-                roundDownToDay(aggregateReport.getSourceRegistrationTime());
+        long maxSourceExpiry = getRoundedMaxSourceExpiry();
+        Long roundedAttributedSourceTime =
+                aggregateReport == null ? null : aggregateReport.getSourceRegistrationTime();
         float nullRate = mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime();
         for (long daysInMillis = 0L;
                 daysInMillis <= maxSourceExpiry;
                 daysInMillis += TimeUnit.DAYS.toMillis(1)) {
             long fakeSourceTime = trigger.getTriggerTime() - daysInMillis;
-            if (roundDownToDay(fakeSourceTime) == roundedAttributedSourceTime) {
+            if (Objects.equals(roundDownToDay(fakeSourceTime), roundedAttributedSourceTime)) {
                 continue;
             }
-
             if (Math.random() < nullRate) {
                 AggregateReport nullReport = getNullAggregateReport(trigger, fakeSourceTime);
                 measurementDao.insertAggregateReport(nullReport);
+                incrementNullAggregateReportCountBy(attributionStatus, 1);
             }
         }
+    }
+
+    private long getRoundedMaxSourceExpiry() {
+        return roundDownToDay(
+                TimeUnit.SECONDS.toMillis(
+                        mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds()));
     }
 
     private AggregateReport getNullAggregateReport(Trigger trigger, @Nullable Long sourceTime)
@@ -740,10 +756,43 @@ class AttributionJobHandler {
                 (Source source) ->
                         source.isInstallAttributed()
                                 && isWithinInstallCooldownWindow(source, trigger);
-        matchingSources.sort(
-                Comparator.comparing(installAttributionComparator, Comparator.reverseOrder())
+        Comparator<Source> comparator =
+                Comparator.comparing(installAttributionComparator, Comparator.reverseOrder());
+        if (mFlags.getMeasurementEnableAttributionScope()) {
+            List<String> triggerAttributionScopes;
+            try {
+                triggerAttributionScopes = trigger.getAttributionScopes();
+            } catch (JSONException e) {
+                throw new IllegalArgumentException("Failed to parse trigger attribution scopes.");
+            }
+            if (triggerAttributionScopes != null) {
+                Set<String> triggerAttributionScopesSet = new HashSet<>(triggerAttributionScopes);
+                // Filter based on whether any of the trigger attribution scope is in the source
+                // attribution scopes.
+                Function<Source, Boolean> attributionScopeFilter =
+                        (Source source) -> {
+                            if (source.getAttributionScopes() == null) {
+                                return false;
+                            }
+                            Set<String> sourceAttributionScopes =
+                                    new HashSet<>(source.getAttributionScopes());
+                            sourceAttributionScopes.retainAll(triggerAttributionScopesSet);
+                            return !sourceAttributionScopes.isEmpty();
+                        };
+                if (!matchingSources.stream().anyMatch(attributionScopeFilter::apply)) {
+                    return Optional.empty();
+                }
+                comparator =
+                        Comparator.comparing(attributionScopeFilter, Comparator.reverseOrder())
+                                .thenComparing(
+                                        installAttributionComparator, Comparator.reverseOrder());
+            }
+        }
+        comparator =
+                comparator
                         .thenComparing(Source::getPriority, Comparator.reverseOrder())
-                        .thenComparing(Source::getEventTime, Comparator.reverseOrder()));
+                        .thenComparing(Source::getEventTime, Comparator.reverseOrder());
+        matchingSources.sort(comparator);
 
         Source selectedSource = matchingSources.remove(0);
 
@@ -1772,6 +1821,8 @@ class AttributionJobHandler {
                                 attributionStatus.getAggregateDebugReportCount())
                         .setEventReportCount(attributionStatus.getEventReportCount())
                         .setEventDebugReportCount(attributionStatus.getEventDebugReportCount())
+                        .setNullAggregateReportCount(
+                                attributionStatus.getNullAggregateReportCount())
                         .build());
     }
 
@@ -1844,6 +1895,12 @@ class AttributionJobHandler {
             AttributionStatus attributionStatus, int count) {
         attributionStatus.setAggregateDebugReportCount(
                 attributionStatus.getAggregateDebugReportCount() + count);
+    }
+
+    private void incrementNullAggregateReportCountBy(
+            AttributionStatus attributionStatus, int count) {
+        attributionStatus.setNullAggregateReportCount(
+                attributionStatus.getNullAggregateReportCount() + count);
     }
 
     private boolean isTriggerFallsWithinWindow(

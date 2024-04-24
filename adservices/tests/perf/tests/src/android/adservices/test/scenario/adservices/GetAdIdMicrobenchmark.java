@@ -24,6 +24,7 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
 @RunWith(Microbenchmark.class)
+// TODO(b/333900177): Remove this test once the new Ad ID CB test is stable.
 public class GetAdIdMicrobenchmark extends GetAdId {
     @Rule public RuleChain rules = RuleChain.outerRule(new DropCachesRule());
 }

@@ -22,6 +22,7 @@ import android.annotation.IntDef;
 
 import java.lang.annotation.Retention;
 import java.util.Locale;
+import java.util.Objects;
 
 /** Class for {@code ADSERVICES_SHELL_COMMAND_CALLED} atom */
 public final class ShellCommandStats {
@@ -128,14 +129,28 @@ public final class ShellCommandStats {
     @Retention(SOURCE)
     public @interface CommandResult {}
 
-    @Command public final int command;
-    @CommandResult public final int result;
-    public final int latencyMillis;
+    private final int mCommand;
+    private final int mResult;
+    public final int mLatencyMillis;
 
     public ShellCommandStats(@Command int command, @CommandResult int result, int latencyMillis) {
-        this.command = command;
-        this.result = result;
-        this.latencyMillis = latencyMillis;
+        this.mCommand = command;
+        this.mResult = result;
+        this.mLatencyMillis = latencyMillis;
+    }
+
+    @Command
+    public int getCommand() {
+        return mCommand;
+    }
+
+    @CommandResult
+    public int getResult() {
+        return mResult;
+    }
+
+    public int getLatencyMillis() {
+        return mLatencyMillis;
     }
 
     @Override
@@ -143,8 +158,30 @@ public final class ShellCommandStats {
         return String.format(
                 Locale.ROOT,
                 "ShellCommandStats[command=%d, result=%d, latencyMillis=%d]",
-                command,
-                result,
-                latencyMillis);
+                mCommand,
+                mResult,
+                mLatencyMillis);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        ShellCommandStats other = (ShellCommandStats) obj;
+        return mCommand == other.getCommand()
+                && mResult == other.mResult
+                && mLatencyMillis == other.getLatencyMillis();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mCommand, mResult, mLatencyMillis);
     }
 }

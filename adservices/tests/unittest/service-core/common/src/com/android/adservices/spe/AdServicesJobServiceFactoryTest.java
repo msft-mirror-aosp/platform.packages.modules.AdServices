@@ -35,6 +35,7 @@ import com.android.adservices.download.MddJob;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -56,19 +57,20 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
     private AdServicesJobServiceFactory mFactory;
 
     @Mock private JobServiceLogger mMockJobServiceLogger;
+    @Mock private JobSchedulingLogger mMockJobSchedulingLogger;
 
     @Mock private ModuleJobPolicy mMockModuleJobPolicy;
 
     @Mock private AdServicesErrorLogger mMockErrorLogger;
 
     @Mock private Flags mMockFlags;
-    @Mock private MddJob mMockMddJob;
 
     @Before
     public void setup() {
         mFactory =
                 new AdServicesJobServiceFactory(
                         mMockJobServiceLogger,
+                        mMockJobSchedulingLogger,
                         mMockModuleJobPolicy,
                         mMockErrorLogger,
                         sJobIdToNameMap,
@@ -91,22 +93,20 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
 
     @Test
     public void testGetJobInstance() {
-        doReturn(mMockMddJob).when(MddJob::getInstance);
-
         expect.withMessage("getJobWorkerInstance()")
                 .that(mFactory.getJobWorkerInstance(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId()))
-                .isSameInstanceAs(mMockMddJob);
+                .isInstanceOf(MddJob.class);
         expect.withMessage("getJobWorkerInstance()")
                 .that(mFactory.getJobWorkerInstance(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId()))
-                .isSameInstanceAs(mMockMddJob);
+                .isInstanceOf(MddJob.class);
         expect.withMessage("getJobWorkerInstance()")
                 .that(
                         mFactory.getJobWorkerInstance(
                                 MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId()))
-                .isSameInstanceAs(mMockMddJob);
+                .isInstanceOf(MddJob.class);
         expect.withMessage("getJobWorkerInstance()")
                 .that(mFactory.getJobWorkerInstance(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()))
-                .isSameInstanceAs(mMockMddJob);
+                .isInstanceOf(MddJob.class);
     }
 
     @Test
@@ -144,6 +144,11 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
     @Test
     public void testGetJobServiceLogger() {
         assertThat(mFactory.getJobServiceLogger()).isSameInstanceAs(mMockJobServiceLogger);
+    }
+
+    @Test
+    public void testGetJobSchedulingLogger() {
+        assertThat(mFactory.getJobSchedulingLogger()).isSameInstanceAs(mMockJobSchedulingLogger);
     }
 
     @Test

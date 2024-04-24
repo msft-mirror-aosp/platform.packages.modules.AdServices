@@ -16,7 +16,6 @@
 
 package com.android.adservices.ui.notifications;
 
-import static com.android.adservices.common.ScreenSize.SMALL_SCREEN;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
@@ -70,14 +69,11 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresScreenSizeDevice;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -86,6 +82,7 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.RvcUxEnrollmentChannelCollection;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -103,7 +100,6 @@ import org.mockito.Mock;
 import java.io.IOException;
 
 @SpyStatic(ConsentManager.class)
-@SpyStatic(ConsentManagerV2.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(NotificationManagerCompat.class)
 @SpyStatic(AdServicesLoggerImpl.class)
@@ -124,8 +120,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
     @Mock private AdServicesLogger mAdServicesLogger;
     @Mock private NotificationManagerCompat mNotificationManagerCompat;
     @Mock private ConsentManager mConsentManager;
-
-    @Mock private ConsentManagerV2 mConsentManagerV2;
     @Mock private UxStatesManager mMockUxStatesManager;
     @Mock private Flags mMockFlags;
 
@@ -140,7 +134,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(mMockUxStatesManager).when(() -> UxStatesManager.getInstance());
         doReturn(mAdServicesManager).when(mSpyContext).getSystemService(AdServicesManager.class);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
-        doReturn(mConsentManagerV2).when(() -> ConsentManagerV2.getInstance());
         doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(false).when(mMockUxStatesManager).isEeaDevice();
@@ -473,7 +466,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
     }
 
     @Test
-    @RequiresScreenSizeDevice(SMALL_SCREEN)
     public void testRowNotification_rvcUxFlagEnabled()
             throws InterruptedException, UiObjectNotFoundException {
         testRvcUxNotification(false);
@@ -494,6 +486,8 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(RvcUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL)
                 .when(mMockUxStatesManager)
                 .getEnrollmentChannel();
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(true).when(mMockFlags).getEnableTabletRegionFix();
 
         final String expectedTitle =
                 mSpyContext.getString(R.string.notificationUI_u18_notification_title);
@@ -578,7 +572,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
     }
 
     @Test
-    @RequiresScreenSizeDevice(SMALL_SCREEN)
     public void testRvcPostOtaRowNotification()
             throws InterruptedException, UiObjectNotFoundException {
         testRvcPostOtaNotification(false);
@@ -594,7 +587,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
             throws InterruptedException, UiObjectNotFoundException {
         doReturn(isEeaDevice).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
-        doReturn(true).when(mMockFlags).getEnableConsentManagerV2();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         // Rvc users have GA Ux on S+ after OTA
@@ -603,6 +595,8 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(GaUxEnrollmentChannelCollection.RVC_POST_OTA_CHANNEL)
                 .when(mMockUxStatesManager)
                 .getEnrollmentChannel();
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(true).when(mMockFlags).getEnableTabletRegionFix();
 
         final String expectedTitle =
                 mSpyContext.getString(
@@ -644,16 +638,24 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .isEqualTo(
                         AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RVC_POST_OTA_NOTIFICATION_CHANNEL);
 
+        verify(mConsentManager, times(2)).getDefaultConsent();
+        verify(mConsentManager, times(2)).getDefaultAdIdState();
         if (isEeaDevice) {
-            verify(mConsentManagerV2).disable(mSpyContext, AdServicesApiType.FLEDGE);
-            verify(mConsentManagerV2).disable(mSpyContext, AdServicesApiType.TOPICS);
-            verify(mConsentManagerV2).disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
+            verify(mConsentManager).recordTopicsDefaultConsent(false);
+            verify(mConsentManager).recordFledgeDefaultConsent(false);
+            verify(mConsentManager).recordMeasurementDefaultConsent(false);
+            verify(mConsentManager).disable(mSpyContext, AdServicesApiType.FLEDGE);
+            verify(mConsentManager).disable(mSpyContext, AdServicesApiType.TOPICS);
+            verify(mConsentManager).disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         } else {
-            verify(mConsentManagerV2).enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
-            verify(mConsentManagerV2).enable(mSpyContext, AdServicesApiType.TOPICS);
-            verify(mConsentManagerV2).enable(mSpyContext, AdServicesApiType.FLEDGE);
+            verify(mConsentManager).recordTopicsDefaultConsent(true);
+            verify(mConsentManager).recordFledgeDefaultConsent(true);
+            verify(mConsentManager).recordMeasurementDefaultConsent(true);
+            verify(mConsentManager).enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
+            verify(mConsentManager).enable(mSpyContext, AdServicesApiType.TOPICS);
+            verify(mConsentManager).enable(mSpyContext, AdServicesApiType.FLEDGE);
         }
-        verify(mConsentManagerV2).recordGaUxNotificationDisplayed(true);
+        verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
         final Notification notification =

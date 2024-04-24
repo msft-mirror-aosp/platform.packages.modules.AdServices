@@ -54,7 +54,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.RetryStrategyImpl;
@@ -62,6 +61,7 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -452,7 +452,7 @@ public class JSScriptEngineTest {
                 .hasMessageThat()
                 .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
-        verify(mMockSandboxProvider, never()).destroyIfCurrentInstance(mMockedSandbox);
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
     }
 
     @Test

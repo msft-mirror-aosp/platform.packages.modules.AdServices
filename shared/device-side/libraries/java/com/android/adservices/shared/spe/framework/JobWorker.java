@@ -64,10 +64,12 @@ public interface JobWorker {
      * @param executionRuntimeParameters the jobParameters passed in from {@link
      *     JobService#onStartJob(JobParameters)} and extract useful info into a {@link
      *     ExecutionRuntimeParameters}.
-     * @return a {@link Future} that will be executed by {@link JobScheduler} in {@link
-     *     JobService#onStartJob(JobParameters)}.
+     * @return a {@link ListenableFuture} that will be executed by {@link JobScheduler} in {@link
+     *     JobService#onStartJob(JobParameters)}. For {@link ExecutionResult}, please use {@link
+     *     ExecutionResult#SUCCESS}. Check {@link ExecutionResult} for more details if you configure
+     *     the job that needs to compute the execution result dynamically.
      */
-    ListenableFuture<Void> getExecutionFuture(
+    ListenableFuture<ExecutionResult> getExecutionFuture(
             Context context, ExecutionRuntimeParameters executionRuntimeParameters);
 
     /**
@@ -102,6 +104,22 @@ public interface JobWorker {
     default ListenableFuture<Void> getExecutionStopFuture(
             Context context, ExecutionRuntimeParameters executionRuntimeParameters) {
         return Futures.immediateVoidFuture();
+    }
+
+    /**
+     * Determines if the job scheduling is enabled.
+     *
+     * <p>By default, it returns the same value as {@link #getJobEnablementStatus()}. Override this
+     * method when the condition of enablement in job execution and scheduling are different.
+     *
+     * @return {@link JobEnablementStatus#JOB_ENABLED_STATUS_ENABLED} if the scheduling is enabled.
+     *     Return other values in {@link JobEnablementStatus} if the scheduling needs to be
+     *     disabled. Please add a skip reason to {@link AdServicesStatsLog} and {@link
+     *     JobEnablementStatus} if needed.
+     */
+    @JobEnablementStatus
+    default int getJobSchedulingEnablementStatus() {
+        return getJobEnablementStatus();
     }
 
     /**

@@ -16,7 +16,10 @@
 
 package com.android.adservices.common;
 
-import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.shared.testing.AndroidSdk;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Supplier;
@@ -74,15 +77,16 @@ public abstract class AbstractAdServicesShellCommandHelper {
         if (level >= AndroidSdk.TM) {
             // For Android T, Check if the service adservices_manager is published or not. If
             // it's not published, use sdk_sandbox to run the shell command.
-            if (level == AndroidSdk.TM && !isAdServicesManagerServicePublished()) {
-                return runShellCommand(
-                        String.format(
-                                "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs)));
-            }
-            return runShellCommand(
-                    String.format("cmd adservices_manager %s", String.format(cmdFmt, cmdArgs)));
+            String cmd =
+                    (level == AndroidSdk.TM && !isAdServicesManagerServicePublished())
+                            ? String.format(
+                                    "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs))
+                            : String.format(
+                                    "cmd adservices_manager %s", String.format(cmdFmt, cmdArgs));
+            String res = runShellCommand(cmd);
+            mLog.d("Output for command %s: %s", cmd, res);
+            return res;
         }
-
         return runShellCommandRS(String.format(cmdFmt, cmdArgs));
     }
 
@@ -108,13 +112,17 @@ public abstract class AbstractAdServicesShellCommandHelper {
         if (level >= AndroidSdk.TM) {
             // For Android T, Check if the service adservices_manager is published or not. If
             // it's not published, use sdk_sandbox to run the shell command.
-            if (level == AndroidSdk.TM && !isAdServicesManagerServicePublished()) {
-                return runShellCommandRwe(
-                        String.format(
-                                "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs)));
-            }
-            return runShellCommandRwe(
-                    String.format("cmd adservices_manager %s", String.format(cmdFmt, cmdArgs)));
+            // For Android T, Check if the service adservices_manager is published or not. If
+            // it's not published, use sdk_sandbox to run the shell command.
+            String cmd =
+                    (level == AndroidSdk.TM && !isAdServicesManagerServicePublished())
+                            ? String.format(
+                                    "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs))
+                            : String.format(
+                                    "cmd adservices_manager %s", String.format(cmdFmt, cmdArgs));
+            CommandResult res = runShellCommandRwe(cmd);
+            mLog.d("Output for command %s: %s", cmd, res);
+            return res;
         }
 
         String res = runShellCommandRS(String.format(cmdFmt, cmdArgs));

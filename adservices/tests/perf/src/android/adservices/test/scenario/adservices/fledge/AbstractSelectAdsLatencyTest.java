@@ -114,7 +114,7 @@ public class AbstractSelectAdsLatencyTest {
 
     @Rule
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+            AdServicesFlagsSetterRule.forAllApisEnabledTests().setCompatModeFlags();
 
     @BeforeClass
     public static void setupBeforeClass() {

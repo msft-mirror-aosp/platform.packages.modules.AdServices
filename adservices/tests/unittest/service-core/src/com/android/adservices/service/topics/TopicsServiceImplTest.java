@@ -78,9 +78,6 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.cobalt.TopicsCobaltLogger;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.IntFailureSyncCallback;
-import com.android.adservices.common.NoFailureSyncCallback;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -105,6 +102,9 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.shared.testing.IntFailureSyncCallback;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
@@ -208,7 +208,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         mBlockedTopicsManager,
                         new GlobalBlockedTopicsManager(
                                 /* globalBlockedTopicIds= */ new HashSet<>()),
-                        mTopicsCobaltLogger);
+                        mTopicsCobaltLogger,
+                        mClock);
 
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);
@@ -284,7 +285,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // Topics must call AppManifestConfigHelper to check if topics is enabled, whose behavior is
         // currently guarded by a flag
         extendedMockito.mockGetFlags(mMockFlags);
-        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(false);
+
         // Similarly, AppManifestConfigHelper.isAllowedTopicsAccess() is failing to parse the XML
         // (which returns false), but logging the error on ErrorLogUtil, so we need to ignored that.
         doNothingOnErrorLogUtilError();
@@ -629,12 +630,26 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                 mSpyContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
         when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
                 .thenReturn(resources);
-        invokeGetTopicsAndVerifyError(
-                mMockAppContext,
-                STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
-                mRequest,
-                /* checkLoggingStatus */ true,
-                FAILURE_REASON_UNSET);
+
+        TopicsServiceImpl topicsServiceImpl = createTestTopicsServiceImplInstance();
+        GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
+
+        // No topics (empty list) were returned.
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(STATUS_SUCCESS)
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
+                        .build();
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
     }
 
     @Test

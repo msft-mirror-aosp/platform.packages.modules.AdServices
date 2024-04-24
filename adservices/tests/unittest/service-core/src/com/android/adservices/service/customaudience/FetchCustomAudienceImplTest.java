@@ -107,7 +107,6 @@ import android.os.RemoteException;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -131,6 +130,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -168,7 +168,7 @@ public class FetchCustomAudienceImplTest {
             AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
     private static final Clock CLOCK = CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -1387,7 +1387,12 @@ public class FetchCustomAudienceImplTest {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAppInstallFilteringEnabled() {
             return true;
         }
     }

@@ -24,7 +24,6 @@ import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
 import com.android.adservices.flags.Flags;
-import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,9 +39,9 @@ import java.util.Objects;
  */
 public final class AdFilters implements Parcelable {
     /** @hide */
-    @VisibleForTesting public static final String FREQUENCY_CAP_FIELD_NAME = "frequency_cap";
+    public static final String FREQUENCY_CAP_FIELD_NAME = "frequency_cap";
     /** @hide */
-    @VisibleForTesting public static final String APP_INSTALL_FIELD_NAME = "app_install";
+    public static final String APP_INSTALL_FIELD_NAME = "app_install";
     /** @hide */
     @Nullable private final FrequencyCapFilters mFrequencyCapFilters;
 
@@ -193,10 +192,14 @@ public final class AdFilters implements Parcelable {
         return Objects.hash(mFrequencyCapFilters, mAppInstallFilters);
     }
 
-    // TODO(b/266837113) Add app install once it is unhidden
     @Override
     public String toString() {
-        return "AdFilters{mFrequencyCapFilters=" + mFrequencyCapFilters + '}';
+        return "AdFilters{"
+                + "mFrequencyCapFilters="
+                + mFrequencyCapFilters
+                + ", mAppInstallFilters="
+                + mAppInstallFilters
+                + '}';
     }
 
     /** Builder for creating {@link AdFilters} objects. */

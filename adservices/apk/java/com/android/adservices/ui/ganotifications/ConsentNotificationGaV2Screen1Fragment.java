@@ -15,6 +15,7 @@
  */
 package com.android.adservices.ui.ganotifications;
 
+import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISMISSED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED;
@@ -38,10 +39,8 @@ import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
@@ -79,11 +78,8 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
         setupListeners(savedInstanceState);
 
         ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
-        boolean isConsentManagerV2 = FlagsFactory.getFlags().getEnableConsentManagerV2();
-        if (isConsentManagerV2) {
-            ConsentManagerV2.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
-            ConsentManagerV2.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
-        } else {
+        if (ConsentManager.getInstance().getUserManualInteractionWithConsent()
+                != MANUAL_INTERACTIONS_RECORDED) {
             ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
             ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
         }

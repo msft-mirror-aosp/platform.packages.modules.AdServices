@@ -17,16 +17,13 @@ package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.AbstractShellCommand.RESULT_GENERIC_ERROR;
 import static com.android.adservices.service.shell.AbstractShellCommand.RESULT_OK;
-import static com.android.adservices.service.shell.common.EchoCommand.HELP_ECHO;
-import static com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand.HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
-import static com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
-import static com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
-import static com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand.HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
-import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
 
 import android.annotation.Nullable;
 import android.util.Log;
 
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ShellCommandStats;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -61,25 +58,43 @@ public final class AdServicesShellCommandHandler {
     private final PrintWriter mOut;
     private final PrintWriter mErr;
     private final ImmutableMap<String, ShellCommandFactory> mShellCommandFactories;
+    private final AdServicesLogger mAdServicesLogger;
+    private final Clock mClock;
     private String[] mArgs;
     private int mArgPos;
     private String mCurArgData;
 
     /** If PrintWriter {@code err} is not provided, we use {@code out} for the {@code err}. */
     public AdServicesShellCommandHandler(
-            PrintWriter out, ShellCommandFactorySupplier shellCommandFactorySupplier) {
-        this(out, /* err= */ out, shellCommandFactorySupplier);
+            PrintWriter out,
+            ShellCommandFactorySupplier shellCommandFactorySupplier,
+            AdServicesLogger adServicesLogger) {
+        this(out, /* err= */ out, shellCommandFactorySupplier, adServicesLogger);
     }
 
     public AdServicesShellCommandHandler(
             PrintWriter out,
             PrintWriter err,
-            ShellCommandFactorySupplier shellCommandFactorySupplier) {
+            ShellCommandFactorySupplier shellCommandFactorySupplier,
+            AdServicesLogger adServicesLogger) {
+        this(out, err, shellCommandFactorySupplier, adServicesLogger, Clock.getInstance());
+    }
+
+    @VisibleForTesting
+    public AdServicesShellCommandHandler(
+            PrintWriter out,
+            PrintWriter err,
+            ShellCommandFactorySupplier shellCommandFactorySupplier,
+            AdServicesLogger adServicesLogger,
+            Clock clock) {
         mOut = Objects.requireNonNull(out, "out cannot be null");
         mErr = Objects.requireNonNull(err, "err cannot be null");
         Objects.requireNonNull(
                 shellCommandFactorySupplier, "shellCommandFactorySupplier cannot be null");
         mShellCommandFactories = shellCommandFactorySupplier.getShellCommandFactories();
+        mAdServicesLogger =
+                Objects.requireNonNull(adServicesLogger, "adServicesLogger cannot be null");
+        mClock = Objects.requireNonNull(clock, "clock cannot be null");
     }
 
     /** Runs the given command ({@code args[0]}) and optional arguments */
@@ -139,16 +154,23 @@ public final class AdServicesShellCommandHandler {
      * Commands - for each new one, add onHelp(), onCommand(), and runCommand() *
      ****************************************************************************/
 
-    private static void onHelp(PrintWriter pw) {
-        pw.printf("%s\n\n", HELP_ECHO);
-        pw.printf("%s\n\n", HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
-        pw.printf("%s\n\n", HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
-        pw.printf("%s\n\n", HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
-        pw.printf("%s\n\n", HELP_IS_ALLOWED_AD_SELECTION_ACCESS);
-        pw.printf("%s\n\n", HELP_IS_ALLOWED_TOPICS_ACCESS);
-        pw.printf("%s\n\n", CustomAudienceListCommand.HELP);
-        pw.printf("%s\n\n", CustomAudienceViewCommand.HELP);
-        pw.printf("%s\n\n", CustomAudienceRefreshCommand.HELP);
+    private void onHelp(PrintWriter pw) {
+        StringBuilder stringBuilder = new StringBuilder();
+        COMMON_SHELL_COMMAND_FACTORY
+                .getAllCommandsHelp()
+                .forEach(
+                        help -> {
+                            stringBuilder.append(help);
+                            stringBuilder.append("\n\n");
+                        });
+        mShellCommandFactories.values().stream()
+                .flatMap(shellCommandFactory -> shellCommandFactory.getAllCommandsHelp().stream())
+                .forEach(
+                        help -> {
+                            stringBuilder.append(help);
+                            stringBuilder.append("\n\n");
+                        });
+        pw.printf(stringBuilder.toString());
     }
 
     private int onCommand(String cmd) {
@@ -161,7 +183,6 @@ public final class AdServicesShellCommandHandler {
                 mErr.println(ERROR_EMPTY_COMMAND);
                 return RESULT_GENERIC_ERROR;
             default:
-                // TODO (b/308009734): Move other shell commands implement ICommand interface.
                 ShellCommand shellCommand;
                 if (mShellCommandFactories.containsKey(cmd)) {
                     ShellCommandFactory shellCommandFactory = mShellCommandFactories.get(cmd);
@@ -176,7 +197,20 @@ public final class AdServicesShellCommandHandler {
                     mErr.println("Use -h for help.");
                     return RESULT_GENERIC_ERROR;
                 }
-                return shellCommand.run(mOut, mErr, mArgs);
+                long startTime = mClock.currentTimeMillis();
+                ShellCommandResult shellCommandResult = shellCommand.run(mOut, mErr, mArgs);
+                int latency = (int) (mClock.currentTimeMillis() - startTime);
+                ShellCommandStats stats =
+                        new ShellCommandStats(
+                                shellCommandResult.getCommand(),
+                                shellCommandResult.getResultCode(),
+                                latency);
+                mAdServicesLogger.logShellCommandStats(stats);
+                return convertToExternalResultCode(shellCommandResult.getResultCode());
         }
+    }
+
+    private int convertToExternalResultCode(@ShellCommandStats.CommandResult int commandResult) {
+        return commandResult == ShellCommandStats.RESULT_SUCCESS ? RESULT_OK : RESULT_GENERIC_ERROR;
     }
 }

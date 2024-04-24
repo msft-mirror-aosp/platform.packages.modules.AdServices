@@ -18,8 +18,6 @@ package android.adservices.cts;
 
 import static android.adservices.adselection.SignedContextualAdsFixture.AD_WITH_BID_1;
 
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -32,8 +30,7 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,7 +38,6 @@ import org.junit.Test;
 import java.util.Collections;
 
 @SmallTest
-@SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public class SignedContextualAdsTest {
     public static final byte[] TEST_SIGNATURE = new byte[] {0, 1, 2};
 

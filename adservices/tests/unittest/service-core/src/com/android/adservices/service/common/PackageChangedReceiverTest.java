@@ -47,12 +47,12 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -64,6 +64,7 @@ import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -124,7 +125,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                                 mMockCacheManager,
                                 mBlockedTopicsManager,
                                 mMockAppUpdateManager,
-                                FlagsFactory.getFlagsForTest()));
+                                FakeFlagsFactory.getFlagsForTest()));
         doReturn(true).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         PackageChangedReceiver.enableReceiver(sContext, mMockFlags);

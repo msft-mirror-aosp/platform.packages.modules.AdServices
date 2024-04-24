@@ -116,6 +116,7 @@ public class AttributionStatus {
     private long mAttributionDelay;
     private String mSourceRegistrant;
     private int mAggregateReportCount;
+    private int mNullAggregateReportCount;
     private int mAggregateDebugReportCount;
     private int mEventReportCount;
     private int mEventDebugReportCount;
@@ -269,6 +270,16 @@ public class AttributionStatus {
     /** Set aggregate report count. */
     public void setAggregateReportCount(int aggregateReportCount) {
         mAggregateReportCount = aggregateReportCount;
+    }
+
+    /** Get null aggregate report count. */
+    public int getNullAggregateReportCount() {
+        return mNullAggregateReportCount;
+    }
+
+    /** Set null aggregate report count. */
+    public void setNullAggregateReportCount(int nullAggregateReportCount) {
+        mNullAggregateReportCount = nullAggregateReportCount;
     }
 
     /** Get aggregate debug report count. */

@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.signals;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_OTHER_FAILURE;
+
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
 
@@ -24,11 +26,19 @@ import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.service.stats.FetchProcessLoggerNoLoggingImpl;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
+import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FluentFuture;
@@ -55,8 +65,12 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class EncoderLogicHandler {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private static final Clock mClock = Clock.getInstance();
 
-    @VisibleForTesting static final String ENCODER_VERSION_RESPONSE_HEADER = "X_ENCODER_VERSION";
+    @VisibleForTesting
+    public static final String ENCODER_VERSION_RESPONSE_HEADER = "X_ENCODER_VERSION";
+
+    @VisibleForTesting public static final String EMPTY_ADTECH_ID = "";
     @VisibleForTesting static final int FALLBACK_VERSION = 0;
     @NonNull private final EncoderPersistenceDao mEncoderPersistenceDao;
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
@@ -64,6 +78,8 @@ public class EncoderLogicHandler {
     @NonNull private final ProtectedSignalsDao mProtectedSignalsDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
+    @NonNull private final AdServicesLogger mAdServicesLogger;
+    @NonNull private final Flags mFlags;
 
     @NonNull
     private static final Map<AdTechIdentifier, ReentrantLock> BUYER_REENTRANT_LOCK_HASH_MAP =
@@ -80,19 +96,25 @@ public class EncoderLogicHandler {
             @NonNull EncoderLogicMetadataDao encoderLogicMetadataDao,
             @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull AdServicesHttpsClient httpsClient,
-            @NonNull ListeningExecutorService backgroundExecutorService) {
+            @NonNull ListeningExecutorService backgroundExecutorService,
+            @NonNull AdServicesLogger adServicesLogger,
+            @NonNull Flags flags) {
         Objects.requireNonNull(encoderPersistenceDao);
         Objects.requireNonNull(encoderEndpointsDao);
         Objects.requireNonNull(encoderLogicMetadataDao);
         Objects.requireNonNull(protectedSignalsDao);
         Objects.requireNonNull(httpsClient);
         Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(flags);
         mEncoderPersistenceDao = encoderPersistenceDao;
         mEncoderEndpointsDao = encoderEndpointsDao;
         mEncoderLogicMetadataDao = encoderLogicMetadataDao;
         mProtectedSignalsDao = protectedSignalsDao;
         mAdServicesHttpsClient = httpsClient;
         mBackgroundExecutorService = backgroundExecutorService;
+        mAdServicesLogger = adServicesLogger;
+        mFlags = flags;
     }
 
     public EncoderLogicHandler(@NonNull Context context) {
@@ -103,8 +125,12 @@ public class EncoderLogicHandler {
                 ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBackgroundExecutor(),
-                        CacheProviderFactory.createNoOpCache()),
-                AdServicesExecutors.getBackgroundExecutor());
+                        FlagsFactory.getFlags().getPasSignalsDownloadConnectionTimeoutMs(),
+                        FlagsFactory.getFlags().getPasSignalsDownloadReadTimeoutMs(),
+                        AdServicesHttpsClient.DEFAULT_MAX_BYTES),
+                AdServicesExecutors.getBackgroundExecutor(),
+                AdServicesLoggerImpl.getInstance(),
+                FlagsFactory.getFlags());
     }
 
     /**
@@ -129,6 +155,12 @@ public class EncoderLogicHandler {
     public FluentFuture<Boolean> downloadAndUpdate(
             @NonNull AdTechIdentifier buyer, @NonNull DevContext devContext) {
         Objects.requireNonNull(buyer);
+        EncodingFetchStats.Builder encodingJsFetchStatsBuilder = EncodingFetchStats.builder();
+        FetchProcessLogger fetchProcessLogger =
+                getEncodingJsFetchStatsLogger(mFlags, encodingJsFetchStatsBuilder);
+        fetchProcessLogger.setJsDownloadStartTimestamp(mClock.currentTimeMillis());
+        // TODO(b/331682839): Logs enrollment id in AdTech ID field.
+        fetchProcessLogger.setAdTechId(EMPTY_ADTECH_ID);
 
         DBEncoderEndpoint encoderEndpoint = mEncoderEndpointsDao.getEndpoint(buyer);
         if (encoderEndpoint == null) {
@@ -136,6 +168,9 @@ public class EncoderLogicHandler {
                     String.format(
                             "No encoder endpoint found for buyer: %s, skipping download and update",
                             buyer));
+
+            fetchProcessLogger.logEncodingJsFetchStats(ENCODING_FETCH_STATUS_OTHER_FAILURE);
+
             return FluentFuture.from(Futures.immediateFuture(false));
         }
 
@@ -150,7 +185,9 @@ public class EncoderLogicHandler {
                 "Initiating encoder download request for buyer: %s, uri: %s",
                 buyer, encoderEndpoint.getDownloadUri());
         FluentFuture<AdServicesHttpClientResponse> response =
-                FluentFuture.from(mAdServicesHttpsClient.fetchPayload(downloadRequest));
+                FluentFuture.from(
+                        mAdServicesHttpsClient.fetchPayloadWithLogging(
+                                downloadRequest, fetchProcessLogger));
 
         return response.transform(
                 r -> extractAndPersistEncoder(buyer, r), mBackgroundExecutorService);
@@ -272,6 +309,15 @@ public class EncoderLogicHandler {
             mEncoderEndpointsDao.deleteEncoderEndpoint(buyer);
             mProtectedSignalsDao.deleteSignalsUpdateMetadata(buyer);
             buyerLock.unlock();
+        }
+    }
+
+    private FetchProcessLogger getEncodingJsFetchStatsLogger(
+            Flags flags, EncodingFetchStats.Builder builder) {
+        if (flags.getPasExtendedMetricsEnabled()) {
+            return new EncodingJsFetchProcessLoggerImpl(mAdServicesLogger, mClock, builder);
+        } else {
+            return new FetchProcessLoggerNoLoggingImpl();
         }
     }
 }

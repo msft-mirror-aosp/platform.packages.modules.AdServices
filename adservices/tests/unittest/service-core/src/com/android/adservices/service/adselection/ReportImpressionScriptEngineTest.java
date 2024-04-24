@@ -34,12 +34,10 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.BuyerReportingResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.ReportingScriptResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.SellerReportingResult;
@@ -47,6 +45,8 @@ import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -69,7 +69,7 @@ public class ReportImpressionScriptEngineTest {
     private static final String TAG = "ReportImpressionScriptEngineTest";
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
     private static final Flags FLAGS_WITH_SMALLER_MAX_ARRAY_SIZE =
             new Flags() {
                 @Override

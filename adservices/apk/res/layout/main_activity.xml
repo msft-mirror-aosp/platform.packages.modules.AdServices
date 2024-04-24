@@ -131,7 +131,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
-                    android:layout_marginStart="2dp"
+                    android:layout_marginStart="@dimen/adservices_content_one_twelfths_padding"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />
                 <TextView

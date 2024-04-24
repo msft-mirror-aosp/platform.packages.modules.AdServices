@@ -20,28 +20,50 @@ import static com.android.adservices.service.shell.common.EchoCommand.CMD_ECHO;
 import static com.android.adservices.service.shell.common.EchoCommand.HELP_ECHO;
 
 import com.android.adservices.service.shell.ShellCommandTestCase;
+import com.android.adservices.service.stats.ShellCommandStats;
 
 import org.junit.Test;
 
 public final class EchoCommandTest extends ShellCommandTestCase<EchoCommand> {
 
     @Test
-    public void testRun_invalid() throws Exception {
+    public void testRun_invalid() {
         EchoCommand echoCommand = new EchoCommand();
 
         // no args
-        runAndExpectInvalidArgument(echoCommand, HELP_ECHO, CMD_ECHO);
+        runAndExpectInvalidArgument(
+                echoCommand, HELP_ECHO, ShellCommandStats.COMMAND_ECHO, CMD_ECHO);
         // empty message
-        runAndExpectInvalidArgument(echoCommand, HELP_ECHO, CMD_ECHO, "");
+        runAndExpectInvalidArgument(
+                echoCommand, HELP_ECHO, ShellCommandStats.COMMAND_ECHO, CMD_ECHO, "");
         // more than 1 arg
         runAndExpectInvalidArgument(
-                echoCommand, HELP_ECHO, CMD_ECHO, "4", "8", "15", "16", "23", "42");
+                echoCommand,
+                HELP_ECHO,
+                ShellCommandStats.COMMAND_ECHO,
+                CMD_ECHO,
+                "4",
+                "8",
+                "15",
+                "16",
+                "23",
+                "42");
     }
 
     @Test
     public void testRun_valid() {
         Result actualResult = run(new EchoCommand(), CMD_ECHO, "108");
 
-        expectSuccess(actualResult, "108\n");
+        expectSuccess(actualResult, "108\n", ShellCommandStats.COMMAND_ECHO);
+    }
+
+    @Test
+    public void testGetCommandName_valid() {
+        expect.that(new EchoCommand().getCommandName()).isEqualTo(CMD_ECHO);
+    }
+
+    @Test
+    public void testGetCommandHelp_valid() {
+        expect.that(new EchoCommand().getCommandHelp()).isEqualTo(HELP_ECHO);
     }
 }

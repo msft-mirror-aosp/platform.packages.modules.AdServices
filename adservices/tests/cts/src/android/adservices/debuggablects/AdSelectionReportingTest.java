@@ -29,8 +29,8 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Test;
 

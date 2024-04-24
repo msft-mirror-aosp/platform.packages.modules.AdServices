@@ -16,7 +16,10 @@
 
 package com.android.adservices.service.stats.pas;
 
-import android.adservices.common.AdsRelevanceStatusUtils;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
+
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 
 import com.google.auto.value.AutoValue;
 
@@ -41,7 +44,12 @@ public abstract class EncodingJsExecutionStats {
 
     /** Returns generic builder. */
     public static Builder builder() {
-        return new AutoValue_EncodingJsExecutionStats.Builder();
+        return new AutoValue_EncodingJsExecutionStats.Builder()
+                .setJsLatency(SIZE_UNSET)
+                .setEncodedSignalsSize(SIZE_UNSET)
+                .setRunStatus(JS_RUN_STATUS_UNSET)
+                .setJsMemoryUsed(0)
+                .setAdTechId("");
     }
 
     /** Builder class for EncodingJsExecutionStats. */

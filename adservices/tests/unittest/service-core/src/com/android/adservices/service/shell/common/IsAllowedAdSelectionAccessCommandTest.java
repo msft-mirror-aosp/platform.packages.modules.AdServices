@@ -22,6 +22,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.shell.ShellCommandTestCase;
+import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
@@ -38,11 +39,15 @@ public final class IsAllowedAdSelectionAccessCommandTest
 
         // no args
         runAndExpectInvalidArgument(
-                cmd, HELP_IS_ALLOWED_AD_SELECTION_ACCESS, CMD_IS_ALLOWED_AD_SELECTION_ACCESS);
+                cmd,
+                HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
+                ShellCommandStats.COMMAND_IS_ALLOWED_AD_SELECTION_ACCESS,
+                CMD_IS_ALLOWED_AD_SELECTION_ACCESS);
         // missing id
         runAndExpectInvalidArgument(
                 cmd,
                 HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
+                ShellCommandStats.COMMAND_IS_ALLOWED_AD_SELECTION_ACCESS,
                 CMD_IS_ALLOWED_AD_SELECTION_ACCESS,
                 PKG_NAME);
     }
@@ -58,6 +63,19 @@ public final class IsAllowedAdSelectionAccessCommandTest
 
         Result actualResult = run(cmd, CMD_IS_ALLOWED_AD_SELECTION_ACCESS, PKG_NAME, ENROLLMENT_ID);
 
-        expectSuccess(actualResult, "true\n");
+        expectSuccess(
+                actualResult, "true\n", ShellCommandStats.COMMAND_IS_ALLOWED_AD_SELECTION_ACCESS);
+    }
+
+    @Test
+    public void testGetCommandName_valid() {
+        expect.that(new IsAllowedAdSelectionAccessCommand().getCommandName())
+                .isEqualTo(CMD_IS_ALLOWED_AD_SELECTION_ACCESS);
+    }
+
+    @Test
+    public void testGetCommandHelp_valid() {
+        expect.that(new IsAllowedAdSelectionAccessCommand().getCommandHelp())
+                .isEqualTo(HELP_IS_ALLOWED_AD_SELECTION_ACCESS);
     }
 }

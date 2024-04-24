@@ -190,12 +190,21 @@ public abstract class EventReporter {
                                                             adSelectionId,
                                                             interactionKey,
                                                             destination)) {
+                                                sLogger.v(
+                                                        "Found registered ad beacons for"
+                                                                + " id:%s, key:%s and dest:%s",
+                                                        adSelectionId, interactionKey, destination);
                                                 resultingReportingUris.add(
                                                         mAdSelectionEntryDao
                                                                 .getRegisteredAdInteractionUri(
                                                                         adSelectionId,
                                                                         interactionKey,
                                                                         destination));
+                                            } else {
+                                                sLogger.w(
+                                                        "Registered ad beacon URIs not found for"
+                                                                + " id:%s, key:%s and dest:%s",
+                                                        adSelectionId, interactionKey, destination);
                                             }
                                         }
                                     }
@@ -229,6 +238,7 @@ public abstract class EventReporter {
                                                         uri));
                                     }
                                 }
+                                sLogger.v("Validated uris: %s", validatedUris);
                                 return validatedUris;
                             }
                         }));

@@ -22,6 +22,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.shell.ShellCommandTestCase;
+import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
@@ -40,11 +41,13 @@ public final class IsAllowedCustomAudiencesAccessCommandTest
         runAndExpectInvalidArgument(
                 cmd,
                 HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
+                ShellCommandStats.COMMAND_IS_ALLOWED_CUSTOM_AUDIENCE_ACCESS,
                 CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
         // missing id
         runAndExpectInvalidArgument(
                 cmd,
                 HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
+                ShellCommandStats.COMMAND_IS_ALLOWED_CUSTOM_AUDIENCE_ACCESS,
                 CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
                 PKG_NAME);
     }
@@ -61,6 +64,21 @@ public final class IsAllowedCustomAudiencesAccessCommandTest
         Result actualResult =
                 run(cmd, CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS, PKG_NAME, ENROLLMENT_ID);
 
-        expectSuccess(actualResult, "true\n");
+        expectSuccess(
+                actualResult,
+                "true\n",
+                ShellCommandStats.COMMAND_IS_ALLOWED_CUSTOM_AUDIENCE_ACCESS);
+    }
+
+    @Test
+    public void testGetCommandName_valid() {
+        expect.that(new IsAllowedCustomAudiencesAccessCommand().getCommandName())
+                .isEqualTo(CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
+    }
+
+    @Test
+    public void testGetCommandHelp_valid() {
+        expect.that(new IsAllowedCustomAudiencesAccessCommand().getCommandHelp())
+                .isEqualTo(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
     }
 }

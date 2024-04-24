@@ -17,11 +17,14 @@
 package com.android.adservices.service.shell.common;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
 import android.util.Log;
 
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.shell.AbstractShellCommand;
+import com.android.adservices.service.shell.ShellCommandResult;
 
 import java.io.PrintWriter;
 
@@ -38,10 +41,11 @@ public final class IsAllowedTopicsAccessCommand extends AbstractShellCommand {
                     + " the given app, when using SDK sandbox or not.";
 
     @Override
-    public int run(PrintWriter out, PrintWriter err, String[] args) {
+    public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
         // Command name followed by 3 args: package name, enrollment id, uses sdksandbox.
         if (args.length != 4) {
-            return invalidArgsError(HELP_IS_ALLOWED_TOPICS_ACCESS, err, args);
+            return invalidArgsError(
+                    HELP_IS_ALLOWED_TOPICS_ACCESS, err, COMMAND_IS_ALLOWED_TOPICS_ACCESS, args);
         }
         String pkgName = args[1];
         String enrollmentId = args[2];
@@ -49,7 +53,8 @@ public final class IsAllowedTopicsAccessCommand extends AbstractShellCommand {
         Boolean usesSdkSandbox = toBoolean(usesSdkSandboxStr);
 
         if (usesSdkSandbox == null) {
-            return invalidArgsError(HELP_IS_ALLOWED_TOPICS_ACCESS, err, args);
+            return invalidArgsError(
+                    HELP_IS_ALLOWED_TOPICS_ACCESS, err, COMMAND_IS_ALLOWED_TOPICS_ACCESS, args);
         }
         boolean isValid =
                 AppManifestConfigHelper.isAllowedTopicsAccess(
@@ -60,11 +65,21 @@ public final class IsAllowedTopicsAccessCommand extends AbstractShellCommand {
                         "isAllowedTopicAccess(%s, %b, %s: %b)",
                         pkgName, usesSdkSandbox, enrollmentId, isValid));
         out.println(isValid);
-        return RESULT_OK;
+        return toShellCommandResult(RESULT_SUCCESS, COMMAND_IS_ALLOWED_TOPICS_ACCESS);
     }
 
     @Override
     public String getCommandName() {
         return CMD_IS_ALLOWED_TOPICS_ACCESS;
+    }
+
+    @Override
+    public int getMetricsLoggerCommand() {
+        return COMMAND_IS_ALLOWED_TOPICS_ACCESS;
+    }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP_IS_ALLOWED_TOPICS_ACCESS;
     }
 }

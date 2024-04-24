@@ -22,6 +22,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.shell.ShellCommandTestCase;
+import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
@@ -39,15 +40,23 @@ public final class IsAllowedTopicsAccessCommandTest
 
         // no args
         runAndExpectInvalidArgument(
-                cmd, HELP_IS_ALLOWED_TOPICS_ACCESS, CMD_IS_ALLOWED_TOPICS_ACCESS);
+                cmd,
+                HELP_IS_ALLOWED_TOPICS_ACCESS,
+                ShellCommandStats.COMMAND_IS_ALLOWED_TOPICS_ACCESS,
+                CMD_IS_ALLOWED_TOPICS_ACCESS);
         // missing id
         runAndExpectInvalidArgument(
-                cmd, HELP_IS_ALLOWED_TOPICS_ACCESS, CMD_IS_ALLOWED_TOPICS_ACCESS, PKG_NAME);
+                cmd,
+                HELP_IS_ALLOWED_TOPICS_ACCESS,
+                ShellCommandStats.COMMAND_IS_ALLOWED_TOPICS_ACCESS,
+                CMD_IS_ALLOWED_TOPICS_ACCESS,
+                PKG_NAME);
 
         // missing sdk
         runAndExpectInvalidArgument(
                 cmd,
                 HELP_IS_ALLOWED_TOPICS_ACCESS,
+                ShellCommandStats.COMMAND_IS_ALLOWED_TOPICS_ACCESS,
                 CMD_IS_ALLOWED_TOPICS_ACCESS,
                 PKG_NAME,
                 ENROLLMENT_ID);
@@ -56,6 +65,7 @@ public final class IsAllowedTopicsAccessCommandTest
         runAndExpectInvalidArgument(
                 cmd,
                 HELP_IS_ALLOWED_TOPICS_ACCESS,
+                ShellCommandStats.COMMAND_IS_ALLOWED_TOPICS_ACCESS,
                 CMD_IS_ALLOWED_TOPICS_ACCESS,
                 PKG_NAME,
                 ENROLLMENT_ID,
@@ -74,6 +84,18 @@ public final class IsAllowedTopicsAccessCommandTest
         Result actualResult =
                 run(cmd, CMD_IS_ALLOWED_TOPICS_ACCESS, PKG_NAME, ENROLLMENT_ID, USES_SDK);
 
-        expectSuccess(actualResult, "true\n");
+        expectSuccess(actualResult, "true\n", ShellCommandStats.COMMAND_IS_ALLOWED_TOPICS_ACCESS);
+    }
+
+    @Test
+    public void testGetCommandName_valid() {
+        expect.that(new IsAllowedTopicsAccessCommand().getCommandName())
+                .isEqualTo(CMD_IS_ALLOWED_TOPICS_ACCESS);
+    }
+
+    @Test
+    public void testGetCommandHelp_valid() {
+        expect.that(new IsAllowedTopicsAccessCommand().getCommandHelp())
+                .isEqualTo(HELP_IS_ALLOWED_TOPICS_ACCESS);
     }
 }

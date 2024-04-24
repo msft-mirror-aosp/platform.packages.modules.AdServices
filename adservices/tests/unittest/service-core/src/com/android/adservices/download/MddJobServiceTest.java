@@ -27,6 +27,8 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroun
 import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
@@ -57,14 +59,15 @@ import android.content.Context;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.BooleanSyncCallback;
-import com.android.adservices.common.JobServiceCallback;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
+import com.android.adservices.shared.testing.JobServiceCallback;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -89,6 +92,7 @@ import java.util.concurrent.Executors;
 @SpyStatic(MddFlags.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @SpyStatic(EnrollmentDataDownloadManager.class)
+@SpyStatic(EncryptionDataDownloadManager.class)
 @MockStatic(ServiceCompatUtils.class)
 public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
@@ -121,6 +125,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     @Mock private StatsdAdServicesLogger mMockStatsdLogger;
     @Mock private MobileDataDownload mSpyMobileDataDownload;
     @Mock private EnrollmentDataDownloadManager mSpyEnrollmentDataDownloadManager;
+    @Mock private EncryptionDataDownloadManager mSpyEncryptionDataDownloadManager;
 
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
     private AdServicesJobServiceLogger mLogger;
@@ -138,6 +143,8 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         doReturn(mSpyMobileDataDownload).when(() -> MobileDataDownloadFactory.getMdd(any()));
         doReturn(mSpyEnrollmentDataDownloadManager)
                 .when(() -> EnrollmentDataDownloadManager.getInstance());
+        doReturn(mSpyEncryptionDataDownloadManager)
+                .when(() -> EncryptionDataDownloadManager.getInstance());
 
         doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
 
@@ -206,14 +213,14 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testSchedule_killswitchOff() throws Exception {
-
         mockGetMddFlags();
         // Killswitch is off.
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
 
-        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        NoFailureSyncCallback<Integer> callBack =
+                scheduleJobInBackground(/* forceSchedule */ false);
         assertJobScheduled(
-                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, SCHEDULING_RESULT_CODE_SUCCESSFUL);
     }
 
     @Test
@@ -221,11 +228,12 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         // Killswitch is off.
         mockMddBackgroundTaskKillSwitch(/* toBeReturned */ true);
 
-        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        NoFailureSyncCallback<Integer> callBack =
+                scheduleJobInBackground(/* forceSchedule */ false);
 
         verifyZeroInteractions(staticMockMarker(MobileDataDownloadFactory.class));
         assertJobScheduled(
-                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ false);
+                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, SCHEDULING_RESULT_CODE_SKIPPED);
     }
 
     @Test
@@ -255,14 +263,20 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     public void testScheduleIfNeeded_Success() throws Exception {
         mockGetMddFlags();
 
-        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        NoFailureSyncCallback<Integer> callBack =
+                scheduleJobInBackground(/* forceSchedule */ false);
         assertJobScheduled(
-                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
-        assertJobScheduled(callBack, MDD_CHARGING_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, SCHEDULING_RESULT_CODE_SUCCESSFUL);
         assertJobScheduled(
-                callBack, MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+                callBack, MDD_CHARGING_PERIODIC_TASK_JOB_ID, SCHEDULING_RESULT_CODE_SUCCESSFUL);
         assertJobScheduled(
-                callBack, MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+                callBack,
+                MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID,
+                SCHEDULING_RESULT_CODE_SUCCESSFUL);
+        assertJobScheduled(
+                callBack,
+                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
+                SCHEDULING_RESULT_CODE_SUCCESSFUL);
     }
 
     @Test
@@ -274,9 +288,10 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         scheduleJobsDirectly();
 
         // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
-        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        NoFailureSyncCallback<Integer> callBack =
+                scheduleJobInBackground(/* forceSchedule */ false);
         assertJobScheduled(
-                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ false);
+                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, SCHEDULING_RESULT_CODE_SKIPPED);
     }
 
     @Test
@@ -290,9 +305,10 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         mockMddPeriodicFlagsValue(TASK_PERIOD_SEC + 1);
         // The second invocation of scheduleIfNeeded() with different parameters should schedule new
         // jobs.
-        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        NoFailureSyncCallback<Integer> callBack =
+                scheduleJobInBackground(/* forceSchedule */ false);
         assertJobScheduled(
-                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, SCHEDULING_RESULT_CODE_SUCCESSFUL);
     }
 
     @Test
@@ -304,31 +320,37 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         scheduleJobsDirectly();
 
         // The third invocation of scheduleIfNeeded() is forced and re-schedules the job.
-        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ true);
+        NoFailureSyncCallback<Integer> callBack = scheduleJobInBackground(/* forceSchedule */ true);
         assertJobScheduled(
-                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
-        assertJobScheduled(callBack, MDD_CHARGING_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, SCHEDULING_RESULT_CODE_SUCCESSFUL);
         assertJobScheduled(
-                callBack, MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+                callBack, MDD_CHARGING_PERIODIC_TASK_JOB_ID, SCHEDULING_RESULT_CODE_SUCCESSFUL);
         assertJobScheduled(
-                callBack, MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+                callBack,
+                MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID,
+                SCHEDULING_RESULT_CODE_SUCCESSFUL);
+        assertJobScheduled(
+                callBack,
+                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
+                SCHEDULING_RESULT_CODE_SUCCESSFUL);
     }
 
     @Test
     public void testScheduleIfNeededMddSingleTask_mddMaintenancePeriodicTask() throws Exception {
         mockGetMddFlags();
         mockMddPeriodicFlagsValue(TASK_PERIOD_MS);
-        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
-        assertJobScheduled(
-                callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+        NoFailureSyncCallback<Integer> callBack =
+                scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduledSingleTask(callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID);
     }
 
     @Test
     public void testScheduleIfNeededMddSingleTask_mddChargingPeriodicTask() throws Exception {
         mockGetMddFlags();
         mockMddPeriodicFlagsValue(TASK_PERIOD_MS);
-        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
-        assertJobScheduled(callBack, MDD_CHARGING_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+        NoFailureSyncCallback<Integer> callBack =
+                scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduledSingleTask(callBack, MDD_CHARGING_PERIODIC_TASK_JOB_ID);
     }
 
     @Test
@@ -336,18 +358,18 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
             throws Exception {
         mockGetMddFlags();
         mockMddPeriodicFlagsValue(TASK_PERIOD_MS);
-        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
-        assertJobScheduled(
-                callBack, MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+        NoFailureSyncCallback<Integer> callBack =
+                scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduledSingleTask(callBack, MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID);
     }
 
     @Test
     public void testScheduleIfNeededMddSingleTask_mddWifiChargingPeriodicTask() throws Exception {
         mockGetMddFlags();
         mockMddPeriodicFlagsValue(TASK_PERIOD_MS);
-        BooleanSyncCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
-        assertJobScheduled(
-                callBack, MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID, /* shouldSchedule */ true);
+        NoFailureSyncCallback<Integer> callBack =
+                scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduledSingleTask(callBack, MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
     }
 
     @Test
@@ -431,7 +453,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         // Verify nothing throws
         mSpyMddJobService.onStopJob(mMockJobParameters);
 
-        callback.assertJobFinished();
+        callback.assertJobStopped();
     }
 
     private void testOnStartJob_shouldDisableJobTrue() {
@@ -484,9 +506,9 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         doReturn(toBeReturned).when(mMockFlags).getMddBackgroundTaskKillSwitch();
     }
 
-    private BooleanSyncCallback scheduleJobInBackground(boolean forceSchedule) {
+    private NoFailureSyncCallback<Integer> scheduleJobInBackground(boolean forceSchedule) {
         doNothing().when(() -> MddJobService.schedule(any(), any(), anyLong(), any(), any()));
-        BooleanSyncCallback callback = new BooleanSyncCallback();
+        NoFailureSyncCallback<Integer> callback = new NoFailureSyncCallback<>();
 
         mExecutorService.execute(
                 () ->
@@ -496,13 +518,23 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         return callback;
     }
 
-    private void assertJobScheduled(BooleanSyncCallback callback, int jobId, boolean shouldSchedule)
+    private void assertJobScheduledSingleTask(NoFailureSyncCallback<Integer> callback, int jobId)
+            throws InterruptedException {
+        assertWithMessage("Check callback received result. jobId: %s", jobId)
+                .that(callback.assertResultReceived())
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+    }
+
+    private void assertJobScheduled(
+            NoFailureSyncCallback<Integer> callback,
+            int jobId,
+            @JobSchedulingResultCode int resultCode)
             throws InterruptedException {
         assertWithMessage(
-                        "Check callback received result. jobId: %s, shouldSchedule: %s",
-                        jobId, shouldSchedule)
+                        "Check callback received result. jobId: %s, resultCode: %s",
+                        jobId, resultCode)
                 .that(callback.assertResultReceived())
-                .isEqualTo(shouldSchedule);
+                .isEqualTo(resultCode);
     }
 
     private void scheduleJobsDirectly() {

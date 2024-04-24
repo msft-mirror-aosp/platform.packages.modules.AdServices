@@ -65,8 +65,6 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
@@ -104,9 +102,12 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.mockwebserver.Dispatcher;
@@ -237,6 +238,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
     private ConsentedDebugConfigurationGeneratorFactory
             mConsentedDebugConfigurationGeneratorFactory;
+    private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
     @Before
     public void setUp() throws Exception {
@@ -262,7 +264,7 @@ public class AdSelectionFromOutcomesE2ETest {
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
@@ -293,6 +295,12 @@ public class AdSelectionFromOutcomesE2ETest {
         mConsentedDebugConfigurationGeneratorFactory =
                 new ConsentedDebugConfigurationGeneratorFactory(
                         false, mConsentedDebugConfigurationDao);
+        mEgressConfigurationGenerator =
+                EgressConfigurationGenerator.createInstance(
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        mAdIdFetcher,
+                        Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        mLightweightExecutorService);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -327,7 +335,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -458,7 +467,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);
@@ -516,7 +526,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mUnusedKAnonSignJoinFactory,
                         true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
@@ -911,10 +922,6 @@ public class AdSelectionFromOutcomesE2ETest {
             return -1;
         }
 
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return false;
-        }
 
         @Override
         public boolean getFledgeAdSelectionPrebuiltUriEnabled() {

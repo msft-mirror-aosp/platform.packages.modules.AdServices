@@ -17,11 +17,14 @@
 package com.android.adservices.service.shell.common;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_ECHO;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.android.adservices.service.shell.AbstractShellCommand;
+import com.android.adservices.service.shell.ShellCommandResult;
 
 import java.io.PrintWriter;
 
@@ -37,22 +40,32 @@ public final class EchoCommand extends AbstractShellCommand {
             CMD_ECHO + " <message>\n    Prints the given message (useful to check cmd is working).";
 
     @Override
-    public int run(PrintWriter out, PrintWriter err, String[] args) {
+    public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
         if (args.length != 2) {
-            return invalidArgsError(HELP_ECHO, err, args);
+            return invalidArgsError(HELP_ECHO, err, COMMAND_ECHO, args);
         }
         String message = args[1];
         if (TextUtils.isEmpty(message)) {
-            return invalidArgsError(HELP_ECHO, err, args);
+            return invalidArgsError(HELP_ECHO, err, COMMAND_ECHO, args);
         }
 
         Log.i(TAG, CMD_ECHO + " message='" + message + "'");
         out.println(message);
-        return RESULT_OK;
+        return toShellCommandResult(RESULT_SUCCESS, COMMAND_ECHO);
     }
 
     @Override
     public String getCommandName() {
         return CMD_ECHO;
+    }
+
+    @Override
+    public int getMetricsLoggerCommand() {
+        return COMMAND_ECHO;
+    }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP_ECHO;
     }
 }

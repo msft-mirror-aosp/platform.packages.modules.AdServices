@@ -28,13 +28,13 @@ import com.android.adservices.download.MddJob;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
 import com.android.adservices.shared.proto.ProtoParser;
 import com.android.adservices.shared.spe.framework.JobServiceFactory;
 import com.android.adservices.shared.spe.framework.JobWorker;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.GuardedBy;
@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 /** The AdServices' implementation of {@link JobServiceFactory}. */
+// TODO(b/331610744): Do null check for constructor members.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesJobServiceFactory implements JobServiceFactory {
     private static final String PROTO_PROPERTY_FOR_LOGCAT = "AdServicesModuleJobPolicy";
@@ -57,17 +58,20 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
     private final AdServicesErrorLogger mErrorLogger;
     private final Executor mExecutor;
     private final JobServiceLogger mJobServiceLogger;
+    private final JobSchedulingLogger mJobSchedulingLogger;
     private final Map<Integer, String> mJobIdTojobNameMap;
 
     @VisibleForTesting
     public AdServicesJobServiceFactory(
             JobServiceLogger jobServiceLogger,
+            JobSchedulingLogger jobSchedulingLogger,
             ModuleJobPolicy moduleJobPolicy,
             AdServicesErrorLogger errorLogger,
             Map<Integer, String> jobIdTojobNameMap,
             Executor executor,
             Flags flags) {
         mJobServiceLogger = jobServiceLogger;
+        mJobSchedulingLogger = jobSchedulingLogger;
         mModuleJobPolicy = moduleJobPolicy;
         mErrorLogger = errorLogger;
         mJobIdTojobNameMap = jobIdTojobNameMap;
@@ -88,8 +92,11 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
                                 flags.getAdServicesModuleJobPolicy());
                 sSingleton =
                         new AdServicesJobServiceFactory(
-                                AdServicesJobServiceLogger.getInstance(
-                                        ApplicationContextSingleton.get()),
+                                AdServicesJobServiceLogger.getInstance(),
+                                new JobSchedulingLogger(
+                                        new AdServicesStatsdJobServiceLogger(),
+                                        AdServicesExecutors.getBackgroundExecutor(),
+                                        FlagsFactory.getFlags()),
                                 policy,
                                 AdServicesErrorLoggerImpl.getInstance(),
                                 AdServicesJobInfo.getJobIdToJobNameMap(),
@@ -110,7 +117,7 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
                 case MDD_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
-                    return MddJob.getInstance();
+                    return new MddJob();
                 default:
                     throw new RuntimeException(
                             "The job isn't configured for jobWorker creation. Requested Job ID: "
@@ -154,6 +161,11 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
     @Override
     public ModuleSharedFlags getFlags() {
         return mFlags;
+    }
+
+    @Override
+    public JobSchedulingLogger getJobSchedulingLogger() {
+        return mJobSchedulingLogger;
     }
 
     /**

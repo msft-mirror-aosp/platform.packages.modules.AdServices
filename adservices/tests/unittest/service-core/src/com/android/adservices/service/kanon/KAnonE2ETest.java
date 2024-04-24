@@ -68,7 +68,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.DBAdDataFixture;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -142,6 +141,7 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls.ReportingUrls;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
@@ -150,6 +150,7 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -175,18 +176,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
-import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
-import private_join_and_compute.anonymous_counting_tokens.GetKeyAttestationChallengeResponse;
-import private_join_and_compute.anonymous_counting_tokens.GetServerPublicParamsResponse;
-import private_join_and_compute.anonymous_counting_tokens.GetTokensRequest;
-import private_join_and_compute.anonymous_counting_tokens.GetTokensResponse;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
-import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
-import private_join_and_compute.anonymous_counting_tokens.TokensSet;
-import private_join_and_compute.anonymous_counting_tokens.Transcript;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -206,6 +195,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
+import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
+import private_join_and_compute.anonymous_counting_tokens.GetKeyAttestationChallengeResponse;
+import private_join_and_compute.anonymous_counting_tokens.GetServerPublicParamsResponse;
+import private_join_and_compute.anonymous_counting_tokens.GetTokensRequest;
+import private_join_and_compute.anonymous_counting_tokens.GetTokensResponse;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
+import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.TokensSet;
+import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
 @SuppressWarnings("UnusedVariable")
 public class KAnonE2ETest {
@@ -348,6 +349,7 @@ public class KAnonE2ETest {
     private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
     private ConsentedDebugConfigurationGeneratorFactory
             mConsentedDebugConfigurationGeneratorFactory;
+    private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
     @Before
     public void setUp() throws IOException {
@@ -369,7 +371,7 @@ public class KAnonE2ETest {
         mCustomAudienceDaoSpy =
                 spy(
                         Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
-                                .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                                .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                                 .build()
                                 .customAudienceDao());
         mEncodedPayloadDaoSpy =
@@ -454,6 +456,12 @@ public class KAnonE2ETest {
         mConsentedDebugConfigurationGeneratorFactory =
                 new ConsentedDebugConfigurationGeneratorFactory(
                         false, mConsentedDebugConfigurationDao);
+        mEgressConfigurationGenerator =
+                EgressConfigurationGenerator.createInstance(
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        mAdIdFetcher,
+                        Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        mLightweightExecutorService);
     }
 
     @After
@@ -2087,7 +2095,8 @@ public class KAnonE2ETest {
                 mKAnonSignJoinFactoryMock,
                 false,
                 mRetryStrategyFactory,
-                mConsentedDebugConfigurationGeneratorFactory);
+                mConsentedDebugConfigurationGeneratorFactory,
+                mEgressConfigurationGenerator);
     }
 
     public PersistAdSelectionResultTestCallback invokePersistAdSelectionResult(
@@ -2260,7 +2269,8 @@ public class KAnonE2ETest {
                         mAdSelectionEncryptionKeyDao,
                         mFlags,
                         mAdServicesHttpsClientSpy,
-                        AdServicesExecutors.getLightWeightExecutor());
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdServicesLoggerMock);
         KAnonObliviousHttpEncryptorImpl kAnonObliviousHttpEncryptor =
                 new KAnonObliviousHttpEncryptorImpl(
                         encryptionKeyManager, AdServicesExecutors.getLightWeightExecutor());
@@ -2385,11 +2395,6 @@ public class KAnonE2ETest {
         @Override
         public boolean getFledgeAuctionServerKillSwitch() {
             return mFledgeAuctionServerKillSwitch;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return true;
         }
 
         @Override

@@ -19,9 +19,12 @@ import static com.android.adservices.common.AbstractAdServicesSystemPropertiesDu
 import static com.android.adservices.service.FlagsConstants.ARRAY_SPLITTER_COMMA;
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 
-import com.android.adservices.common.Logger.RealLogger;
-import com.android.adservices.common.NameValuePair.Matcher;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
+import com.android.adservices.shared.testing.DeviceConfigHelper;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.NameValuePair.Matcher;
+import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
 import java.util.Objects;
 
@@ -37,7 +40,8 @@ import java.util.Objects;
 // test call setFlags(flagName) (statically import FlagsConstant.flagName), which will make it    //
 // easier to transition the test to an annotated-base approach.                                   //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFlagsSetterRule<T>>
+public abstract class AbstractAdServicesFlagsSetterRule<
+                T extends AbstractAdServicesFlagsSetterRule<T>>
         extends AbstractFlagsSetterRule<T> {
 
     private static final String ALLOWLIST_SEPARATOR = ARRAY_SPLITTER_COMMA;
@@ -214,7 +218,8 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 "setDebugUxFlagsForRvcUx()",
                 () -> {
                     if (!isAtLeastS() && isAtLeastR()) {
-                        setFlag(FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
+                        setSystemProperty(
+                                FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
                         setFlag(FlagsConstants.KEY_DEBUG_UX, "RVC_UX");
                         return;
                     }

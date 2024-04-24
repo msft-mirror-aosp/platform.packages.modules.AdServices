@@ -29,8 +29,29 @@ public final class ShellCommandStatsTest extends AdServicesUnitTestCase {
         int latency = 1000;
         ShellCommandStats stats = new ShellCommandStats(command, result, latency);
 
-        expect.withMessage("command").that(stats.command).isEqualTo(command);
-        expect.withMessage("result").that(stats.result).isEqualTo(result);
-        expect.withMessage("latency").that(stats.latencyMillis).isEqualTo(latency);
+        expect.withMessage("command").that(stats.getCommand()).isEqualTo(command);
+        expect.withMessage("result").that(stats.getResult()).isEqualTo(result);
+        expect.withMessage("latency").that(stats.getLatencyMillis()).isEqualTo(latency);
+    }
+
+    @Test
+    public void testEqualsHashCode() {
+        ShellCommandStats stats1 =
+                new ShellCommandStats(
+                        ShellCommandStats.COMMAND_ECHO, ShellCommandStats.RESULT_SUCCESS, 1000);
+        ShellCommandStats stats2 =
+                new ShellCommandStats(
+                        ShellCommandStats.COMMAND_ECHO, ShellCommandStats.RESULT_SUCCESS, 1000);
+
+        expectObjectsAreEqual(stats1, stats2);
+
+        ShellCommandStats stats3 =
+                new ShellCommandStats(
+                        ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_LIST,
+                        ShellCommandStats.RESULT_SUCCESS,
+                        1000);
+
+        expectObjectsAreNotEqual(stats1, stats3);
+        expectObjectsAreNotEqual(stats2, stats3);
     }
 }
