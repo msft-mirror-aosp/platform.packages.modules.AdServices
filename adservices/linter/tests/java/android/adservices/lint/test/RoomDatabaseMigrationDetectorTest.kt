@@ -30,7 +30,11 @@ import org.junit.runners.JUnit4
 class RoomDatabaseMigrationDetectorTest : LintDetectorTest() {
     override fun getDetector(): Detector = RoomDatabaseMigrationDetector()
 
-    override fun getIssues(): List<Issue> = listOf(RoomDatabaseMigrationDetector.ISSUE)
+    override fun getIssues(): List<Issue> =
+        listOf(
+            RoomDatabaseMigrationDetector.ISSUE_ERROR,
+            RoomDatabaseMigrationDetector.ISSUE_WARNING
+        )
 
     override fun lint(): TestLintTask = super.lint().allowMissingSdk(true)
 
@@ -73,7 +77,7 @@ class RoomDatabaseRegistration {
                 ),
                 *stubs
             )
-            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .issues(RoomDatabaseMigrationDetector.ISSUE_ERROR)
             .run()
             .expectClean()
     }
@@ -110,7 +114,7 @@ class RoomDatabaseRegistration {
                 ),
                 *stubs
             )
-            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .issues(RoomDatabaseMigrationDetector.ISSUE_ERROR)
             .run()
             .expectContains(RoomDatabaseMigrationDetector.MISSING_DATABASE_ANNOTATION_ERROR)
             .expectContains(createErrorCountString(1, 0))
@@ -152,7 +156,7 @@ class RoomDatabaseRegistration {
                 ),
                 *stubs
             )
-            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .issues(RoomDatabaseMigrationDetector.ISSUE_ERROR)
             .run()
             .expectContains(RoomDatabaseMigrationDetector.MISSING_AUTO_MIGRATION_ATTRIBUTE_ERROR)
             .expectContains(createErrorCountString(1, 0))
@@ -196,10 +200,10 @@ class RoomDatabaseRegistration {
                 ),
                 *stubs
             )
-            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .issues(RoomDatabaseMigrationDetector.ISSUE_ERROR)
             .run()
             .expectContains(RoomDatabaseMigrationDetector.INCOMPLETE_MIGRATION_PATH_ERROR)
-            .expectContains(createErrorCountString(1, 0))
+            .expectContains(createErrorCountString(0, 1))
     }
 
     @Test
@@ -240,7 +244,7 @@ class RoomDatabaseRegistration {
                 ),
                 *stubs
             )
-            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .issues(RoomDatabaseMigrationDetector.ISSUE_ERROR)
             .run()
             .expectContains(RoomDatabaseMigrationDetector.MISSING_DATABASE_VERSION_FIELD_ERROR)
             .expectContains(createErrorCountString(1, 0))
@@ -283,7 +287,7 @@ class RoomDatabaseRegistration {
                 ),
                 *stubs
             )
-            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .issues(RoomDatabaseMigrationDetector.ISSUE_ERROR)
             .run()
             .expectContains(
                 RoomDatabaseMigrationDetector.MISSING_DATABASE_VERSION_ANNOTATION_ATTRIBUTE_ERROR
@@ -331,7 +335,7 @@ class RoomDatabaseRegistration {
                 ),
                 *stubs
             )
-            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .issues(RoomDatabaseMigrationDetector.ISSUE_ERROR)
             .run()
             .expectContains(
                 RoomDatabaseMigrationDetector.FAILED_REF_VERSION_FIELD_IN_ANNOTATION_ERROR
@@ -379,7 +383,7 @@ class RoomDatabaseRegistration {
                 ),
                 *stubs
             )
-            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .issues(RoomDatabaseMigrationDetector.ISSUE_ERROR)
             .run()
             .expectContains(RoomDatabaseMigrationDetector.SCHEMA_EXPORT_FALSE_ERROR)
             .expectContains(createErrorCountString(1, 0))
@@ -425,7 +429,7 @@ class RoomDatabaseRegistration {
                 ),
                 *stubs
             )
-            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .issues(RoomDatabaseMigrationDetector.ISSUE_ERROR)
             .run()
             .expectClean()
     }
@@ -468,7 +472,7 @@ class RoomDatabaseRegistration {
                 ),
                 *stubs
             )
-            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .issues(RoomDatabaseMigrationDetector.ISSUE_ERROR)
             .run()
             .expectContains(
                 RoomDatabaseMigrationDetector.DATABASE_NOT_REGISTERED_ERROR.format(
@@ -506,7 +510,7 @@ public class FakeDatabase extends RoomDatabase {
                 ),
                 *stubs
             )
-            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .issues(RoomDatabaseMigrationDetector.ISSUE_ERROR)
             .run()
             .expectContains(RoomDatabaseMigrationDetector.DATABASE_REGISTRATION_CLASS_MISSING_ERROR)
             .expectContains(createErrorCountString(1, 0))
@@ -514,7 +518,7 @@ public class FakeDatabase extends RoomDatabase {
 
     @Test
     fun testMigrationPath_noDatabaseClass_happyCase() {
-        lint().files(*stubs).issues(RoomDatabaseMigrationDetector.ISSUE).run().expectClean()
+        lint().files(*stubs).issues(RoomDatabaseMigrationDetector.ISSUE_ERROR).run().expectClean()
     }
 
     private val database: TestFile =
