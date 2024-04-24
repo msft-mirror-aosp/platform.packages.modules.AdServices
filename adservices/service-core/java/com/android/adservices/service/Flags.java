@@ -4821,9 +4821,21 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value to determine whether ux related to the PAS Ux are enabled. */
     boolean DEFAULT_PAS_UX_ENABLED = false;
 
-    /** Returns whether features related to the PAS Ux are enabled */
+    /**
+     * Returns whether features related to the PAS Ux are enabled. This flag has dependencies on
+     * {@link #getEeaPasUxEnabled}. This method is the master control for PAS UX. If either EEA or
+     * original PAS UX flag is on, then this method will return true.
+     */
     default boolean getPasUxEnabled() {
         return DEFAULT_PAS_UX_ENABLED;
+    }
+
+    /** Default value to determine whether ux related to EEA PAS Ux are enabled. */
+    boolean DEFAULT_EEA_PAS_UX_ENABLED = false;
+
+    /** Returns whether features related to EEA PAS Ux are enabled. */
+    default boolean getEeaPasUxEnabled() {
+        return DEFAULT_EEA_PAS_UX_ENABLED;
     }
 
     /** Default value of the KAnon Sign/join feature flag */
