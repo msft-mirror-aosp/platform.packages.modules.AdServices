@@ -169,6 +169,9 @@
     },
     {
       "name": "CtsOsTestCases"
+    },
+    {
+      "name": "CtsMediaCodecTestCases"
     }
   ]
 }
