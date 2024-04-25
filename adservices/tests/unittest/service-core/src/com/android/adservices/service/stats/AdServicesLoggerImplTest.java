@@ -47,6 +47,7 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVE
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_SMALL;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.NUM_OF_ELIGIBLE_TO_UPDATE_CAS;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.RESULT_CODE;
@@ -123,6 +124,7 @@ import com.android.adservices.service.measurement.ondevicepersonalization.OdpReg
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 
 import org.junit.Test;
@@ -1101,6 +1103,18 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         adServicesLogger.logEncodingJobRunStats(stats);
 
         verify(mStatsdLoggerMock).logEncodingJobRunStats(eq(stats));
+    }
+
+    @Test
+    public void testLogPersistAdSelectionResultCalledStats() {
+        PersistAdSelectionResultCalledStats stats =
+                PersistAdSelectionResultCalledStats.builder()
+                        .setWinnerType(WINNER_TYPE_PAS_WINNER)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logPersistAdSelectionResultCalledStats(stats);
+
+        verify(mStatsdLoggerMock).logPersistAdSelectionResultCalledStats(eq(stats));
     }
 
     private void mockAppNameApiErrorLogger() {
