@@ -144,7 +144,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         mAdCounterKeyCopier,
                         debugReporting.getScriptStrategy(),
                         cpcBillingEnabled,
-                        retryStrategy);
+                        retryStrategy,
+                        mDevContext);
         mJsFetcher =
                 new JsFetcher(
                         backgroundExecutorService,

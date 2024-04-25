@@ -394,7 +394,10 @@ public class AdBidGeneratorImplTest {
                 CustomAudienceBiddingInfo.create(
                         mDecisionLogicUri, BUYER_DECISION_LOGIC_JS, mCustomAudienceSignals, null);
 
-        mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+        boolean isolateConsoleMessageInLogsEnabled = true; // Enabling console messages for tests.
+        mIsolateSettings =
+                IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+                        isolateConsoleMessageInLogsEnabled);
 
         mRequestMatcherExactMatch =
                 (actualRequest, expectedRequest) -> actualRequest.equals(expectedRequest);
