@@ -88,6 +88,15 @@ public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testIsReceived_initialValue() throws Exception {
+        SyncCallback<String, Exception> callback = new SyncCallback<>(TIMEOUT_MS * 3);
+
+        expect.withMessage("isReceived()").that(callback.isReceived()).isFalse();
+
+        // Don't need to check when it's true - that's done in other places
+    }
+
+    @Test
     public void testInjectResult_null() throws Exception {
         SyncCallback<String, Exception> callback = new SyncCallback<>(TIMEOUT_MS * 3);
 
@@ -150,6 +159,7 @@ public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
     public void testInjectResult_calledOnMainThread_pass() throws Exception {
         SyncCallback<String, Exception> callback =
                 new SyncCallback<>(TIMEOUT_MS, /* failIfCalledOnMainThread= */ false);
+
 
         runOnMainThread(() -> callback.injectResult(RESULT));
 
@@ -308,6 +318,7 @@ public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
             SyncCallback<String, Exception> callback, @Nullable String expectedResult)
             throws InterruptedException {
         String actualResult = callback.assertResultReceived();
+        expect.withMessage("isReceived()").that(callback.isReceived()).isTrue();
         if (expectedResult == null) {
             expect.withMessage("assertResultReceived()").that(actualResult).isNull();
             expect.withMessage("getResultReceived()").that(callback.getResultReceived()).isNull();
@@ -330,6 +341,7 @@ public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
             SyncCallback<String, Exception> callback, Exception expectedError)
             throws InterruptedException {
         Exception actualError = callback.assertErrorReceived();
+        expect.withMessage("isReceived()").that(callback.isReceived()).isTrue();
         expect.withMessage("assertErrorReceived()")
                 .that(actualError)
                 .isSameInstanceAs(expectedError);
