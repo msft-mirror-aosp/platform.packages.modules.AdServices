@@ -303,6 +303,9 @@ public class AsyncSourceFetcher {
                         .d("Source registration exceeded the number of allowed destinations.");
                 return false;
             }
+            if (jsonDestinations.length() == 0 && appUri == null) {
+                throw new JSONException("Expected a destination");
+            }
             for (int i = 0; i < jsonDestinations.length(); i++) {
                 Uri destination = Uri.parse(jsonDestinations.getString(i));
                 if (shouldMatchAtLeastOneWebDestination
@@ -322,7 +325,9 @@ public class AsyncSourceFetcher {
                 }
             }
             List<Uri> destinationList = new ArrayList<>(destinationSet);
-            builder.setWebDestinations(destinationList);
+            if (!destinationList.isEmpty()) {
+                builder.setWebDestinations(destinationList);
+            }
         }
 
         if (mFlags.getMeasurementEnableCoarseEventReportDestinations()
@@ -835,6 +840,7 @@ public class AsyncSourceFetcher {
      *
      * @param asyncRegistration a {@link AsyncRegistration}, a request the record.
      * @param asyncFetchStatus a {@link AsyncFetchStatus}, stores Ad Tech server status.
+     * @param asyncRedirects a {@link AsyncRedirects}, stores redirects.
      */
     public Optional<Source> fetchSource(
             AsyncRegistration asyncRegistration,
