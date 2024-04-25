@@ -62,6 +62,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INI
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.PERSIST_AD_SELECTION_RESULT_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
@@ -76,6 +77,7 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVE
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_SMALL;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.PrecomputedClassifierStatus;
@@ -115,6 +117,7 @@ import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
 import com.android.modules.utils.build.SdkLevel;
@@ -2139,6 +2142,28 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         AdServicesStatsLog.write(
                                 ADSERVICES_SHELL_COMMAND_CALLED, command, result, latency);
         verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogPersistAdSelectionResultCalledStats() {
+        PersistAdSelectionResultCalledStats stats =
+                PersistAdSelectionResultCalledStats.builder()
+                        .setWinnerType(WINNER_TYPE_PAS_WINNER)
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logPersistAdSelectionResultCalledStats(stats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(PERSIST_AD_SELECTION_RESULT_CALLED),
+                                eq(WINNER_TYPE_PAS_WINNER));
+
+        verify(writeInvocation);
+
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 }
