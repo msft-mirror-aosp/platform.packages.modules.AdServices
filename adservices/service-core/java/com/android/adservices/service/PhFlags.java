@@ -2795,6 +2795,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public long getMaxOdpTriggerRegistrationHeaderSizeBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES,
+                MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES);
+    }
+
+    @Override
     public boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,

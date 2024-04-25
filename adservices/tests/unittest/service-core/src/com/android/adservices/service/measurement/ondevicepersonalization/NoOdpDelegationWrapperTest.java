@@ -52,7 +52,7 @@ public class NoOdpDelegationWrapperTest {
     }
 
     @Test
-    public void registerOdpTrigger_headerPresent_logMetrics() {
+    public void registerOdpTrigger_logMetrics() {
         NoOdpDelegationWrapper noOdpDelegationWrapper = new NoOdpDelegationWrapper(mLogger);
         AsyncRegistration asyncRegistration =
                 new AsyncRegistration.Builder()
@@ -90,36 +90,5 @@ public class NoOdpDelegationWrapperTest {
         assertEquals(
                 measurementOdpRegistrationStats.getRegistrationStatus(),
                 OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE.getValue());
-    }
-
-    @Test
-    public void registerOdpTrigger_headerNotPresent_noLogging() {
-        NoOdpDelegationWrapper noOdpDelegationWrapper = new NoOdpDelegationWrapper(mLogger);
-        AsyncRegistration asyncRegistration =
-                new AsyncRegistration.Builder()
-                        .setRegistrationId("1")
-                        .setTopOrigin(Uri.parse("android-app://com.somePackageName"))
-                        .setRegistrant(Uri.parse("android-app://com.somePackageName"))
-                        .build();
-        Map<String, List<String>> header = new HashMap<>();
-        header.put(
-                "Not-Odp-Register-Trigger",
-                List.of(
-                        "{"
-                                + "\"service\":\""
-                                + ODP_PACKAGE_NAME
-                                + "/"
-                                + ODP_CLASS_NAME
-                                + "\","
-                                + "\"certDigest\":\""
-                                + ODP_CERT_DIGEST
-                                + "\","
-                                + "\"data\":\""
-                                + ODP_EVENT_DATA
-                                + "\""
-                                + "}"));
-        noOdpDelegationWrapper.registerOdpTrigger(asyncRegistration, header);
-        verify(mLogger, never()).logMeasurementOdpRegistrations(any());
-        verify(mLogger, never()).logMeasurementOdpApiCall(any());
     }
 }

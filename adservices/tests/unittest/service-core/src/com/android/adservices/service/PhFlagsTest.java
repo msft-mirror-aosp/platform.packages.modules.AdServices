@@ -297,6 +297,7 @@ import static com.android.adservices.service.Flags.IS_EEA_DEVICE;
 import static com.android.adservices.service.Flags.IS_EEA_DEVICE_FEATURE_ENABLED;
 import static com.android.adservices.service.Flags.IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
 import static com.android.adservices.service.Flags.IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
+import static com.android.adservices.service.Flags.MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MDD_BACKGROUND_TASK_KILL_SWITCH;
@@ -760,6 +761,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_L
 import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINLINE_TRAIN_VERSION;
+import static com.android.adservices.service.FlagsConstants.KEY_MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
@@ -4620,6 +4622,23 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 false);
 
         assertThat(mPhFlags.getMaxTriggerRegistrationHeaderSizeBytes())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMaxOdpTriggerRegistrationHeaderSizeBytes_measurementOverride() {
+        // without any overriding, the value is hard coded constant
+        assertThat(mPhFlags.getMaxOdpTriggerRegistrationHeaderSizeBytes())
+                .isEqualTo(MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES);
+
+        long phOverridingValue = MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES + 5L;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES,
+                Long.toString(phOverridingValue),
+                false);
+
+        assertThat(mPhFlags.getMaxOdpTriggerRegistrationHeaderSizeBytes())
                 .isEqualTo(phOverridingValue);
     }
 
