@@ -42,6 +42,7 @@ import com.android.adservices.service.adselection.DebugReportingScriptDisabledSt
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.SingletonRunner;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -164,6 +165,8 @@ public class PeriodicEncodingJobWorker {
                                         AdServicesExecutors.getLightWeightExecutor())
                                 .createRetryStrategy(
                                         flags.getAdServicesJsScriptEngineMaxRetryAttempts());
+                // since this is a background process, dev context is disabled
+                DevContext devContext = DevContext.createForDevOptionsDisabled();
                 sPeriodicEncodingJobWorker =
                         new PeriodicEncodingJobWorker(
                                 new EncoderLogicHandler(context),
@@ -178,7 +181,8 @@ public class PeriodicEncodingJobWorker {
                                         new AdCounterKeyCopierNoOpImpl(),
                                         new DebugReportingScriptDisabledStrategy(),
                                         false, // not used in encoding
-                                        retryStrategy),
+                                        retryStrategy,
+                                        devContext),
                                 AdServicesExecutors.getBackgroundExecutor(),
                                 AdServicesExecutors.getLightWeightExecutor(),
                                 DevContextFilter.create(context),

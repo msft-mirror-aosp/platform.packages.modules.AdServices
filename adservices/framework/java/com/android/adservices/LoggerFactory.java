@@ -33,6 +33,7 @@ public class LoggerFactory {
     public static final String TAG = "adservices";
     public static final String TOPICS_TAG = "adservices.topics";
     public static final String FLEDGE_TAG = "adservices.fledge";
+    public static final String KANON_TAG = "adservices.kanon";
     public static final String MEASUREMENT_TAG = "adservices.measurement";
     public static final String UI_TAG = "adservices.ui";
     public static final String ADID_TAG = "adservices.adid";
@@ -41,6 +42,7 @@ public class LoggerFactory {
     private static final Logger sLogger = new Logger(TAG);
     private static final Logger sTopicsLogger = new Logger(TOPICS_TAG);
     private static final Logger sFledgeLogger = new Logger(FLEDGE_TAG);
+    private static final Logger sKAnonLogger = new Logger(KANON_TAG);
     private static final Logger sMeasurementLogger = new Logger(MEASUREMENT_TAG);
     private static final Logger sUILogger = new Logger(UI_TAG);
     private static final Logger sAdIDLogger = new Logger(ADID_TAG);
@@ -56,6 +58,10 @@ public class LoggerFactory {
 
     public static Logger getFledgeLogger() {
         return sFledgeLogger;
+    }
+
+    public static Logger getKAnonLogger() {
+        return sKAnonLogger;
     }
 
     public static Logger getMeasurementLogger() {

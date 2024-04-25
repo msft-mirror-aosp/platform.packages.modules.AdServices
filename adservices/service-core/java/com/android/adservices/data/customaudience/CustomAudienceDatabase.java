@@ -50,8 +50,7 @@ import java.util.Objects;
             @AutoMigration(from = 3, to = 4),
             @AutoMigration(from = 4, to = 5),
             @AutoMigration(from = 5, to = 6),
-            @AutoMigration(from = 6, to = 7),
-            @AutoMigration(from = 7, to = 8, spec = CustomAudienceDatabase.AutoMigration7To8.class),
+            @AutoMigration(from = 7, to = 8),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
@@ -75,8 +74,6 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
             fromColumnName = "daily_update_url",
             toColumnName = "daily_update_uri")
     static class AutoMigration1To2 implements AutoMigrationSpec {}
-
-    static class AutoMigration7To8 implements AutoMigrationSpec {}
 
     private static volatile CustomAudienceDatabase sSingleton;
 
@@ -109,7 +106,7 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, CustomAudienceDatabase.class, DATABASE_NAME)
-                                .fallbackToDestructiveMigration()
+                                .fallbackToDestructiveMigration(true)
                                 .addTypeConverter(converters)
                                 .build();
             }

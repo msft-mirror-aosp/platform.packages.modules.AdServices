@@ -3839,6 +3839,23 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
     }
 
+    boolean MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO = false;
+
+    /** Enable FIFO destinations based deletion of sources to accommodate an incoming source. */
+    default boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
+        return MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO;
+    }
+
+    boolean MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS = false;
+
+    /**
+     * Enable deletion of reports along with FIFO destinations. In practice it's a sub flag to
+     * {@link #getMeasurementEnableDestinationXPublisherXEnrollmentFifo}
+     */
+    default boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
+        return MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
+    }
+
     /** Default Measurement ARA parsing alignment v1 feature flag. */
     boolean MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 = true;
 
@@ -4821,9 +4838,21 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value to determine whether ux related to the PAS Ux are enabled. */
     boolean DEFAULT_PAS_UX_ENABLED = false;
 
-    /** Returns whether features related to the PAS Ux are enabled */
+    /**
+     * Returns whether features related to the PAS Ux are enabled. This flag has dependencies on
+     * {@link #getEeaPasUxEnabled}. This method is the master control for PAS UX. If either EEA or
+     * original PAS UX flag is on, then this method will return true.
+     */
     default boolean getPasUxEnabled() {
         return DEFAULT_PAS_UX_ENABLED;
+    }
+
+    /** Default value to determine whether ux related to EEA PAS Ux are enabled. */
+    boolean DEFAULT_EEA_PAS_UX_ENABLED = false;
+
+    /** Returns whether features related to EEA PAS Ux are enabled. */
+    default boolean getEeaPasUxEnabled() {
+        return DEFAULT_EEA_PAS_UX_ENABLED;
     }
 
     /** Default value of the KAnon Sign/join feature flag */

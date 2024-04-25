@@ -84,6 +84,7 @@ public class ConsentNotificationResetChannel implements PrivacySandboxEnrollment
         if (SdkLevel.isAtLeastT()) {
             LogUtil.d("Reset pas notification bit.");
             consentManager.recordPasNotificationDisplayed(false);
+            consentManager.recordPasNotificationOpened(false);
         }
 
         consentManager.setU18NotificationDisplayed(false);

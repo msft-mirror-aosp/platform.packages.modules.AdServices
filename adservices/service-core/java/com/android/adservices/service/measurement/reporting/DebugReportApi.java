@@ -42,6 +42,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -97,6 +98,7 @@ public class DebugReportApi {
         String SOURCE_TYPE = "source_type";
         String TRIGGER_DATA = "trigger_data";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
+        String SOURCE_DESTINATION_LIMIT = "source_destination_limit";
     }
 
     private enum PermissionState {
@@ -148,7 +150,10 @@ public class DebugReportApi {
     }
 
     /** Schedules the Source Success Debug Report */
-    public void scheduleSourceSuccessDebugReport(Source source, IMeasurementDao dao) {
+    public void scheduleSourceSuccessDebugReport(
+            Source source,
+            IMeasurementDao dao,
+            @Nullable Map<String, String> additionalBodyParams) {
         if (isSourceDebugFlagDisabled(Type.SOURCE_SUCCESS)) {
             return;
         }
@@ -161,7 +166,7 @@ public class DebugReportApi {
         }
         scheduleReport(
                 Type.SOURCE_SUCCESS,
-                generateSourceDebugReportBody(source, null),
+                generateSourceDebugReportBody(source, additionalBodyParams),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
                 source.getRegistrant(),
@@ -183,7 +188,10 @@ public class DebugReportApi {
     }
 
     /** Schedules the Source Noised Debug Report */
-    public void scheduleSourceNoisedDebugReport(Source source, IMeasurementDao dao) {
+    public void scheduleSourceNoisedDebugReport(
+            Source source,
+            IMeasurementDao dao,
+            @Nullable Map<String, String> additionalDebugReportParams) {
         if (isSourceDebugFlagDisabled(Type.SOURCE_NOISED)) {
             return;
         }
@@ -196,7 +204,7 @@ public class DebugReportApi {
         }
         scheduleReport(
                 Type.SOURCE_NOISED,
-                generateSourceDebugReportBody(source, null),
+                generateSourceDebugReportBody(source, additionalDebugReportParams),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
                 source.getRegistrant(),
@@ -219,7 +227,7 @@ public class DebugReportApi {
         }
         scheduleReport(
                 Type.SOURCE_STORAGE_LIMIT,
-                generateSourceDebugReportBody(source, limit),
+                generateSourceDebugReportBody(source, Map.of(Body.LIMIT, String.valueOf(limit))),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
                 source.getRegistrant(),
@@ -520,14 +528,19 @@ public class DebugReportApi {
 
     /** Generates source debug report body */
     private JSONObject generateSourceDebugReportBody(
-            @NonNull Source source, @Nullable String limit) {
+            Source source, @Nullable Map<String, String> additionalBodyParams) {
         JSONObject body = new JSONObject();
         try {
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
             body.put(Body.ATTRIBUTION_DESTINATION, generateSourceDestinations(source));
             body.put(Body.SOURCE_SITE, generateSourceSite(source));
-            body.put(Body.LIMIT, limit);
             body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
+            if (additionalBodyParams != null) {
+                for (Map.Entry<String, String> entry : additionalBodyParams.entrySet()) {
+                    body.put(entry.getKey(), entry.getValue());
+                }
+            }
+
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Json error while generating source debug report body.");

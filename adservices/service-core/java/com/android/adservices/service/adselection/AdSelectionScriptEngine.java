@@ -44,6 +44,7 @@ import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBid
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.common.RetryStrategy;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -343,6 +344,7 @@ public class AdSelectionScriptEngine {
     private final DebugReportingScriptStrategy mDebugReportingScript;
     private final boolean mCpcBillingEnabled;
     private final RetryStrategy mRetryStrategy;
+    private final DevContext mDevContext;
 
     public AdSelectionScriptEngine(
             Context context,
@@ -351,7 +353,8 @@ public class AdSelectionScriptEngine {
             AdCounterKeyCopier adCounterKeyCopier,
             DebugReportingScriptStrategy debugReportingScript,
             boolean cpcBillingEnabled,
-            RetryStrategy retryStrategy) {
+            RetryStrategy retryStrategy,
+            DevContext devContext) {
         mJsEngine = JSScriptEngine.getInstance(context, sLogger);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
@@ -360,6 +363,7 @@ public class AdSelectionScriptEngine {
         mDebugReportingScript = debugReportingScript;
         mCpcBillingEnabled = cpcBillingEnabled;
         mRetryStrategy = retryStrategy;
+        mDevContext = devContext;
     }
 
     /**
@@ -589,18 +593,12 @@ public class AdSelectionScriptEngine {
             throw new IllegalStateException("Exception processing JSON version of signals");
         }
 
-        IsolateSettings isolateSettings =
-                mEnforceMaxHeapSizeFeatureSupplier.get()
-                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                                mMaxHeapSizeBytesSupplier.get())
-                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-
         return FluentFuture.from(
                         mJsEngine.evaluate(
                                 combinedDriverAndEncodingLogic,
                                 args,
                                 ENCODE_SIGNALS_DRIVER_FUNCTION_NAME,
-                                isolateSettings,
+                                buildIsolateSettings(),
                                 mRetryStrategy))
                 .transform(
                         encodingResult -> handleEncodingOutput(encodingResult, logHelper),
@@ -950,17 +948,12 @@ public class AdSelectionScriptEngine {
      */
     ListenableFuture<Boolean> validateAuctionScript(
             String jsScript, List<String> expectedFunctionsNames) {
-        IsolateSettings isolateSettings =
-                mEnforceMaxHeapSizeFeatureSupplier.get()
-                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                                mMaxHeapSizeBytesSupplier.get())
-                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
         return transform(
                 mJsEngine.evaluate(
                         jsScript + "\n" + CHECK_FUNCTIONS_EXIST_JS,
                         ImmutableList.of(
                                 stringArrayArg(FUNCTION_NAMES_ARG_NAME, expectedFunctionsNames)),
-                        isolateSettings,
+                        buildIsolateSettings(),
                         mRetryStrategy),
                 Boolean::parseBoolean,
                 mExecutor);
@@ -999,18 +992,13 @@ public class AdSelectionScriptEngine {
      */
     @VisibleForTesting
     ListenableFuture<Integer> getAuctionScriptArgCount(String jsScript, String functionName) {
-        IsolateSettings isolateSettings =
-                mEnforceMaxHeapSizeFeatureSupplier.get()
-                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                                mMaxHeapSizeBytesSupplier.get())
-                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
         return transform(
                 mJsEngine.evaluate(
                         jsScript + "\n" + GET_FUNCTION_ARGUMENT_COUNT,
                         ImmutableList.of(
                                 stringArrayArg(
                                         FUNCTION_NAMES_ARG_NAME, ImmutableList.of(functionName))),
-                        isolateSettings,
+                        buildIsolateSettings(),
                         mRetryStrategy),
                 Integer::parseInt,
                 mExecutor);
@@ -1101,12 +1089,6 @@ public class AdSelectionScriptEngine {
                         .map(JSScriptArgument::name)
                         .collect(Collectors.joining(ARG_PASSING_SEPARATOR));
 
-        IsolateSettings isolateSettings =
-                mEnforceMaxHeapSizeFeatureSupplier.get()
-                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                                mMaxHeapSizeBytesSupplier.get())
-                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-
         return mJsEngine.evaluate(
                 jsScript
                         + "\n"
@@ -1115,7 +1097,7 @@ public class AdSelectionScriptEngine {
                                 argPassing,
                                 auctionFunctionCallGenerator.apply(args)),
                 args,
-                isolateSettings,
+                buildIsolateSettings(),
                 mRetryStrategy);
     }
 
@@ -1158,12 +1140,6 @@ public class AdSelectionScriptEngine {
                         .map(JSScriptArgument::name)
                         .collect(Collectors.joining(ARG_PASSING_SEPARATOR));
 
-        IsolateSettings isolateSettings =
-                mEnforceMaxHeapSizeFeatureSupplier.get()
-                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                                mMaxHeapSizeBytesSupplier.get())
-                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-
         return mJsEngine.evaluate(
                 jsScript
                         + "\n"
@@ -1172,7 +1148,7 @@ public class AdSelectionScriptEngine {
                                 argPassing,
                                 auctionFunctionCallGenerator.apply(otherArgs)),
                 allArgs,
-                isolateSettings,
+                buildIsolateSettings(),
                 mRetryStrategy);
     }
 
@@ -1245,5 +1221,13 @@ public class AdSelectionScriptEngine {
             return Uri.EMPTY;
         }
         return Uri.parse(uriString);
+    }
+
+    private IsolateSettings buildIsolateSettings() {
+        return IsolateSettings.builder()
+                .setEnforceMaxHeapSizeFeature(mEnforceMaxHeapSizeFeatureSupplier.get())
+                .setMaxHeapSizeBytes(mMaxHeapSizeBytesSupplier.get())
+                .setIsolateConsoleMessageInLogsEnabled(mDevContext.getDevOptionsEnabled())
+                .build();
     }
 }

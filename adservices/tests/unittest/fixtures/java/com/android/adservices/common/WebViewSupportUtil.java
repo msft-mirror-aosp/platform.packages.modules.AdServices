@@ -62,6 +62,17 @@ public final class WebViewSupportUtil {
     }
 
     /**
+     * @return a boolean to indicate if Console callback for Javascript isolate is available.
+     */
+    public static boolean isJSIsolateConsoleCallbackAvailable(Context context)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        return isJSSandboxAvailable(context)
+                && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                        .isConsoleCallbackSupported()
+                        .get(2, TimeUnit.SECONDS);
+    }
+
+    /**
      * @return a boolean to indicate if Javascript sandbox supports WASM.
      */
     public static boolean isWasmSupportAvailable(Context context)

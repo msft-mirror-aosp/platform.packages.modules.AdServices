@@ -96,7 +96,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
 
         if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
                 || isUxStatesReady(this)) {
-            initWithUx(this, context);
+            initWithUx(context, /* beforePasUxActive */ true);
         } else {
             initFragment();
         }

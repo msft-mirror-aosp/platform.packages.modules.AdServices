@@ -20,24 +20,11 @@ import androidx.javascriptengine.JavaScriptIsolate;
 
 import com.android.internal.util.Preconditions;
 
+import com.google.auto.value.AutoValue;
+
 /** Class used to set startup parameters for {@link JavaScriptIsolate}. */
-public final class IsolateSettings {
-    private final long mMaxHeapSizeBytes;
-    private final boolean mEnforceMaxHeapSizeFeature;
-
-    /**
-     * Constructor to set the initial values of isolate settings
-     *
-     * @param enforceMaxHeapSizeFeature boolean value if the max heap size restriction should be
-     *     enforced
-     * @param maxHeapSizeBytes value of the max heap memory size
-     */
-    private IsolateSettings(boolean enforceMaxHeapSizeFeature, long maxHeapSizeBytes) {
-        Preconditions.checkArgument(maxHeapSizeBytes >= 0, "maxHeapSizeBytes should be >= 0");
-        this.mEnforceMaxHeapSizeFeature = enforceMaxHeapSizeFeature;
-        this.mMaxHeapSizeBytes = maxHeapSizeBytes;
-    }
-
+@AutoValue
+public abstract class IsolateSettings {
     /**
      * Gets the max heap size used by the {@link JavaScriptIsolate}.
      *
@@ -45,9 +32,7 @@ public final class IsolateSettings {
      *
      * @return heap size in bytes
      */
-    public long getMaxHeapSizeBytes() {
-        return mMaxHeapSizeBytes;
-    }
+    public abstract long getMaxHeapSizeBytes();
 
     /**
      * Gets the condition if the Max Heap feature is enforced for JS Isolate
@@ -56,17 +41,62 @@ public final class IsolateSettings {
      *
      * @return boolean value stating if the feature is enforced
      */
-    public boolean getEnforceMaxHeapSizeFeature() {
-        return mEnforceMaxHeapSizeFeature;
-    }
+    public abstract boolean getEnforceMaxHeapSizeFeature();
+
+    /**
+     * Gets the condition if the console message in logs is enabled for JS Isolate.
+     *
+     * <p>The default value is false
+     *
+     * @return boolean value stating if the feature is enabled.
+     */
+    public abstract boolean getIsolateConsoleMessageInLogsEnabled();
 
     /** Creates setting for which memory restrictions are not enforced */
-    public static IsolateSettings forMaxHeapSizeEnforcementDisabled() {
-        return new IsolateSettings(false, 0);
+    public static IsolateSettings forMaxHeapSizeEnforcementDisabled(
+            boolean isolateConsoleMessageInLogsEnabled) {
+        return IsolateSettings.builder()
+                .setEnforceMaxHeapSizeFeature(false)
+                .setMaxHeapSizeBytes(0)
+                .setIsolateConsoleMessageInLogsEnabled(isolateConsoleMessageInLogsEnabled)
+                .build();
     }
 
-    /** Creates setting for which memory restrictions are enforced and sets the max heap memory */
-    public static IsolateSettings forMaxHeapSizeEnforcementEnabled(long maxHeapSizeBytes) {
-        return new IsolateSettings(true, maxHeapSizeBytes);
+    /**
+     * @return {@link Builder} for {@link IsolateSettings}
+     */
+    public static IsolateSettings.Builder builder() {
+        return new AutoValue_IsolateSettings.Builder();
+    }
+
+    /** Builder clsas for {@link IsolateSettings} */
+    @AutoValue.Builder
+    public abstract static class Builder {
+        abstract Builder maxHeapSizeBytes(long maxHeapSizeBytes);
+
+        abstract Builder enforceMaxHeapSizeFeature(boolean value);
+
+        abstract Builder isolateConsoleMessageInLogsEnabled(boolean value);
+
+        /** Sets the max heap size used by the {@link JavaScriptIsolate}. */
+        public Builder setMaxHeapSizeBytes(long maxHeapSizeBytes) {
+            Preconditions.checkArgument(maxHeapSizeBytes >= 0, "maxHeapSizeBytes should be >= 0");
+            return maxHeapSizeBytes(maxHeapSizeBytes);
+        }
+
+        /** Sets the condition if the max heap size is enforced for JS Isolate. */
+        public Builder setEnforceMaxHeapSizeFeature(boolean value) {
+            return enforceMaxHeapSizeFeature(value);
+        }
+
+        /** Sets the condition if the console message in logs is enabled for JS Isolate. */
+        public Builder setIsolateConsoleMessageInLogsEnabled(boolean value) {
+            return isolateConsoleMessageInLogsEnabled(value);
+        }
+
+        /**
+         * @return {@link IsolateSettings}
+         */
+        public abstract IsolateSettings build();
     }
 }

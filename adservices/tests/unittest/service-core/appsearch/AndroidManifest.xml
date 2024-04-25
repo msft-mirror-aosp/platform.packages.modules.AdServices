@@ -20,6 +20,11 @@
     <!-- android:debuggable="true" is needed. See b/228384531 -->
     <application android:debuggable="true">
         <uses-library android:name="android.ext.adservices" android:required="false" />
+        <provider
+            android:name="com.android.adservices.common.AdServicesTestingProvider"
+            android:authorities="com.android.adservices.provider.testing"
+            android:exported="false"
+        />
     </application>
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"

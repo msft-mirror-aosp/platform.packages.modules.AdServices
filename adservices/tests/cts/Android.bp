@@ -153,6 +153,7 @@ android_test {
 
 android_test {
     name: "CtsAdServicesDebuggableDeviceTestCases",
+    team: "trendy_team_android_rubidium",
     defaults: ["cts_defaults"],
     libs: [
         "android.test.runner",
@@ -242,4 +243,3 @@ android_test {
     test_config: "AndroidTestDebuggable.ExtServices.xml",
     manifest: "AndroidManifestDebuggableExtServices.xml",
 }
-

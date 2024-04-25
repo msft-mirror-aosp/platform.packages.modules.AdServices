@@ -74,7 +74,6 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
@@ -170,6 +169,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private Flags mFlags;
     private EnrollmentDao mEnrollmentDao;
     private Clock mClock;
+    private DevContext mDevContext;
 
     @Before
     public void setup() {
@@ -273,19 +273,17 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
 
         mSignalStorageManager = new SignalsProviderImpl(mSignalsDao);
         RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
+        mDevContext = DevContext.builder().setDevOptionsEnabled(true).build();
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
                         mContextSpy,
-                        () ->
-                                IsolateSettings.forMaxHeapSizeEnforcementDisabled()
-                                        .getEnforceMaxHeapSizeFeature(),
-                        () ->
-                                IsolateSettings.forMaxHeapSizeEnforcementDisabled()
-                                        .getMaxHeapSizeBytes(),
+                        () -> Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE,
+                        () -> Flags.ISOLATE_MAX_HEAP_SIZE_BYTES,
                         new AdCounterKeyCopierNoOpImpl(),
                         new DebugReportingScriptDisabledStrategy(),
                         false,
-                        retryStrategy);
+                        retryStrategy,
+                        mDevContext);
         mClock = Clock.getInstance();
         mPeriodicEncodingJobWorker =
                 new PeriodicEncodingJobWorker(

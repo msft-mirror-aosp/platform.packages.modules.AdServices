@@ -101,8 +101,8 @@ public class JSScriptEngine {
     static class JavaScriptSandboxProvider {
         private final Object mSandboxLock = new Object();
         private StopWatch mSandboxInitStopWatch;
-        private Profiler mProfiler;
-        private LoggerFactory.Logger mLogger;
+        private final Profiler mProfiler;
+        private final LoggerFactory.Logger mLogger;
 
         @GuardedBy("mSandboxLock")
         private FluentFuture<JavaScriptSandbox> mFutureSandbox;
@@ -281,7 +281,6 @@ public class JSScriptEngine {
                         "Unable to initialize test JSScriptEngine multiple times using"
                                 + "the real JavaScriptSandboxProvider.");
             }
-
             sSingleton =
                     new JSScriptEngine(
                             context,
@@ -324,7 +323,15 @@ public class JSScriptEngine {
      * @return A future to be used by tests needing to know when the sandbox close call happened.
      */
     public ListenableFuture<Void> shutdown() {
-        return mJsSandboxProvider.destroyCurrentInstance();
+        return FluentFuture.from(mJsSandboxProvider.destroyCurrentInstance())
+                .transformAsync(
+                        ignored -> {
+                            synchronized (JSScriptEngine.class) {
+                                sSingleton = null;
+                            }
+                            return Futures.immediateVoidFuture();
+                        },
+                        mExecutorService);
     }
 
     @VisibleForTesting
@@ -480,6 +487,22 @@ public class JSScriptEngine {
             mLogger.d("Evaluating JS script on thread %s", Thread.currentThread().getName());
         }
 
+        if (isolateSettings.getIsolateConsoleMessageInLogsEnabled()) {
+            if (isConsoleCallbackSupported(jsSandbox)) {
+                mLogger.d("Logging console messages from Javascript Isolate.");
+                jsIsolate.setConsoleCallback(
+                        mExecutorService,
+                        consoleMessage ->
+                                mLogger.v(
+                                        "Javascript Console Message: %s",
+                                        consoleMessage.toString()));
+            } else {
+                mLogger.d("Logging console messages from Javascript Isolate is not available.");
+            }
+        } else {
+            mLogger.d("Logging console messages from Javascript Isolate is disabled.");
+        }
+
         String entryPointCall = callEntryPoint(args, entryFunctionName, hasWasmModule);
 
         String fullScript = jsScript + "\n" + entryPointCall;
@@ -553,6 +576,25 @@ public class JSScriptEngine {
         return wasmCompilationSupported
                 && provideConsumeArrayBufferSupported
                 && promiseReturnSupported;
+    }
+
+    /**
+     * @return a future value indicating if the JS Sandbox installed on the device supports console
+     *     message callback.
+     */
+    @VisibleForTesting
+    public ListenableFuture<Boolean> isConsoleCallbackSupported() {
+        return mJsSandboxProvider
+                .getFutureInstance(mContext)
+                .transform(this::isConsoleCallbackSupported, mExecutorService);
+    }
+
+    private boolean isConsoleCallbackSupported(JavaScriptSandbox javaScriptSandbox) {
+        boolean isConsoleCallbackSupported =
+                javaScriptSandbox.isFeatureSupported(
+                        JavaScriptSandbox.JS_FEATURE_CONSOLE_MESSAGING);
+        mLogger.v("isConsoleCallbackSupported: %b", isConsoleCallbackSupported);
+        return isConsoleCallbackSupported;
     }
 
     /**

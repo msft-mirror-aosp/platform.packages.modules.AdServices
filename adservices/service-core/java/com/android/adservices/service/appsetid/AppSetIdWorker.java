@@ -51,10 +51,11 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 @WorkerThread
 public final class AppSetIdWorker {
+
     private static final String APPSETID_DEFAULT = "00000000-0000-0000-0000-000000000000";
 
-    // Singleton instance of the AppSetIdWorker.
-    private static volatile AppSetIdWorker sAppSetIdWorker;
+    private static final AppSetIdWorker sInstance =
+            new AppSetIdWorker(ApplicationContextSingleton.get());
 
     private final ServiceBinder<IAppSetIdProviderService> mServiceBinder;
 
@@ -66,26 +67,14 @@ public final class AppSetIdWorker {
                         IAppSetIdProviderService.Stub::asInterface));
     }
 
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    @VisibleForTesting
     AppSetIdWorker(ServiceBinder<IAppSetIdProviderService> serviceBinder) {
         mServiceBinder = Objects.requireNonNull(serviceBinder, "serviceBinder cannot be null");
     }
 
-    /**
-     * Gets an instance of AppSetIdWorker to be used.
-     *
-     * <p>If no instance has been initialized yet, a new one will be created. Otherwise, the
-     * existing instance will be returned.
-     */
+    /** Gets the singleton instance of {@link AppSetIdWorker} to be used. */
     public static AppSetIdWorker getInstance() {
-        if (sAppSetIdWorker == null) {
-            synchronized (AppSetIdWorker.class) {
-                if (sAppSetIdWorker == null) {
-                    sAppSetIdWorker = new AppSetIdWorker(ApplicationContextSingleton.get());
-                }
-            }
-        }
-        return sAppSetIdWorker;
+        return sInstance;
     }
 
     private void unbindFromService() {
