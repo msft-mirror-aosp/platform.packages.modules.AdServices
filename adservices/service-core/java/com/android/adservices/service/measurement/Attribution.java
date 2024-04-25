@@ -45,6 +45,7 @@ public class Attribution {
     private final String mSourceId;
     private final String mTriggerId;
     private final Uri mRegistrationOrigin;
+    private final String mReportId;
 
     private Attribution(Builder builder) {
         this.mId = builder.mId;
@@ -59,6 +60,7 @@ public class Attribution {
         this.mSourceId = builder.mSourceId;
         this.mTriggerId = builder.mTriggerId;
         this.mRegistrationOrigin = builder.mRegistrationOrigin;
+        this.mReportId = builder.mReportId;
     }
 
     @IntDef(value = {Scope.EVENT, Scope.AGGREGATE})
@@ -84,7 +86,8 @@ public class Attribution {
                 && Objects.equals(mRegistrant, attr.mRegistrant)
                 && Objects.equals(mSourceId, attr.mSourceId)
                 && Objects.equals(mTriggerId, attr.mTriggerId)
-                && Objects.equals(mRegistrationOrigin, attr.mRegistrationOrigin);
+                && Objects.equals(mRegistrationOrigin, attr.mRegistrationOrigin)
+                && Objects.equals(mReportId, attr.mReportId);
     }
 
     @Override
@@ -100,7 +103,8 @@ public class Attribution {
                 mRegistrant,
                 mSourceId,
                 mTriggerId,
-                mRegistrationOrigin);
+                mRegistrationOrigin,
+                mReportId);
     }
 
     /** @return unique identifier for {@link Attribution} */
@@ -160,6 +164,13 @@ public class Attribution {
     }
 
     /**
+     * @return aggregate/event report ID for scoped attributions
+     */
+    public String getReportId() {
+        return mReportId;
+    }
+
+    /**
      * @return {@link Trigger} registration origin
      */
     public Uri getRegistrationOrigin() {
@@ -180,6 +191,7 @@ public class Attribution {
         private String mSourceId;
         private String mTriggerId;
         private Uri mRegistrationOrigin;
+        private String mReportId;
 
         /** See {@link Attribution#getId()}. */
         public Builder setId(String id) {
@@ -250,6 +262,12 @@ public class Attribution {
         /** See {@link Attribution#getRegistrationOrigin()} ()}. */
         public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
+        /** See {@link Attribution#getReportId()}. */
+        public Builder setReportId(String reportId) {
+            mReportId = reportId;
             return this;
         }
 
