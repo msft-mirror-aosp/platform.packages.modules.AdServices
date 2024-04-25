@@ -2172,55 +2172,74 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void testLogRunAdScoringProcessReportedStats_success() {
         // Setup
-        RunAdScoringProcessReportedStats stats = RunAdScoringProcessReportedStats.builder()
-                .setGetAdSelectionLogicLatencyInMillis(120)
-                .setGetAdSelectionLogicResultCode(200)
-                .setGetAdSelectionLogicScriptType(1)
-                .setFetchedAdSelectionLogicScriptSizeInBytes(500)
-                .setGetTrustedScoringSignalsLatencyInMillis(80)
-                .setGetTrustedScoringSignalsResultCode(200)
-                .setFetchedTrustedScoringSignalsDataSizeInBytes(250)
-                .setScoreAdsLatencyInMillis(210)
-                .setGetAdScoresLatencyInMillis(55)
-                .setGetAdScoresResultCode(200)
-                .setNumOfCasEnteringScoring(10)
-                .setNumOfRemarketingAdsEnteringScoring(3)
-                .setNumOfContextualAdsEnteringScoring(7)
-                .setRunAdScoringLatencyInMillis(400)
-                .setRunAdScoringResultCode(200)
-                .build();
+        RunAdScoringProcessReportedStats stats =
+                RunAdScoringProcessReportedStats.builder()
+                        .setGetAdSelectionLogicLatencyInMillis(120)
+                        .setGetAdSelectionLogicResultCode(200)
+                        .setGetAdSelectionLogicScriptType(1)
+                        .setFetchedAdSelectionLogicScriptSizeInBytes(500)
+                        .setGetTrustedScoringSignalsLatencyInMillis(80)
+                        .setGetTrustedScoringSignalsResultCode(200)
+                        .setFetchedTrustedScoringSignalsDataSizeInBytes(250)
+                        .setScoreAdsLatencyInMillis(210)
+                        .setGetAdScoresLatencyInMillis(55)
+                        .setGetAdScoresResultCode(200)
+                        .setNumOfCasEnteringScoring(10)
+                        .setNumOfRemarketingAdsEnteringScoring(3)
+                        .setNumOfContextualAdsEnteringScoring(7)
+                        .setRunAdScoringLatencyInMillis(400)
+                        .setRunAdScoringResultCode(200)
+                        .build();
 
-        doNothing().when(() -> AdServicesStatsLog.write(
-                anyInt(), anyInt(), anyInt(), anyInt(),
-                anyInt(), anyInt(), anyInt(), anyInt(),
-                anyInt(), anyInt(), anyInt(), anyInt(),
-                anyInt(), anyInt(), anyInt(), anyInt(),
-                anyBoolean(), anyInt()));
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyInt()));
 
         // Invocation
         mLogger.logRunAdScoringProcessReportedStats(stats);
 
         // Verification
-        MockedVoidMethod writeInvocation = () -> AdServicesStatsLog.write(
-                eq(RUN_AD_SCORING_PROCESS_REPORTED),
-                eq(120),
-                eq(200),
-                eq(1),
-                eq(500),
-                eq(80),
-                eq(200),
-                eq(250),
-                eq(210),
-                eq(55),
-                eq(200),
-                eq(10),
-                eq(3),
-                eq(7),
-                eq(400),
-                eq(200),
-                eq(false), // placeholder_bool
-                eq(FIELD_UNSET) // placeholder_int
-        );
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(RUN_AD_SCORING_PROCESS_REPORTED),
+                                eq(120),
+                                eq(200),
+                                eq(1),
+                                eq(500),
+                                eq(80),
+                                eq(200),
+                                eq(250),
+                                eq(210),
+                                eq(55),
+                                eq(200),
+                                eq(10),
+                                eq(3),
+                                eq(7),
+                                eq(400),
+                                eq(200),
+                                eq(false), // placeholder_bool
+                                eq(FIELD_UNSET) // placeholder_int
+                                );
 
         verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
@@ -2247,37 +2266,55 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setRunBiddingResultCode(200)
                         .build();
 
-        doNothing().when(() -> AdServicesStatsLog.write(
-                anyInt(), anyInt(), anyInt(), anyInt(),
-                anyInt(), anyInt(), anyInt(), anyInt(),
-                anyInt(), anyInt(), anyInt(), anyInt(),
-                anyInt(), anyInt(), anyInt(), anyBoolean(),
-                anyBoolean(), anyInt()));
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyInt()));
 
         // Invocation
         mLogger.logRunAdBiddingPerCAProcessReportedStats(stats);
 
         // Verification
-        MockedVoidMethod writeInvocation = () -> AdServicesStatsLog.write(
-                eq(RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED),
-                eq(25),
-                eq(300),
-                eq(200),
-                eq(60),
-                eq(200),
-                eq(1),
-                eq(800),
-                eq(10),
-                eq(350),
-                eq(50),
-                eq(200),
-                eq(105),
-                eq(150),
-                eq(200),
-                eq(false), // placeholder_bool
-                eq(false), // placeholder_bool
-                eq(FIELD_UNSET) // placeholder_int
-        );
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED),
+                                eq(25),
+                                eq(300),
+                                eq(200),
+                                eq(60),
+                                eq(200),
+                                eq(1),
+                                eq(800),
+                                eq(10),
+                                eq(350),
+                                eq(50),
+                                eq(200),
+                                eq(105),
+                                eq(150),
+                                eq(200),
+                                eq(false), // placeholder_bool
+                                eq(false), // placeholder_bool
+                                eq(FIELD_UNSET) // placeholder_int
+                                );
 
         verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
