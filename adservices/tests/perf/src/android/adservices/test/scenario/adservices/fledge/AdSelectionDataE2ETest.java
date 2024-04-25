@@ -16,7 +16,6 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
-import static android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule.TEST_COORDINATOR;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -32,6 +31,7 @@ import android.adservices.test.scenario.adservices.fledge.utils.CustomAudienceTe
 import android.adservices.test.scenario.adservices.fledge.utils.FakeAdExchangeServer;
 import android.adservices.test.scenario.adservices.fledge.utils.SelectAdResponse;
 import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
+import android.platform.test.option.StringOption;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
@@ -46,6 +46,7 @@ import com.google.common.io.BaseEncoding;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,6 +65,14 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
     private static final String CONTEXTUAL_SIGNALS_CONTEXTUAL_WINNER =
             "ContextualSignalsContextualWinner.json";
 
+    @ClassRule
+    public static StringOption serverUrlOption =
+            new StringOption("server-url").setRequired(true).setDefault("");
+
+    @ClassRule
+    public static StringOption coordinatorUrlOption =
+            new StringOption("coordinator-url").setRequired(true).setDefault("");
+
     private static final String CONTEXTUAL_SIGNALS_FIVE_BUYERS = "ContextualSignalsFiveBuyers.json";
     private static final String CONTEXTUAL_SIGNALS_TWO_BUYERS = "ContextualSignalsTwoBuyers.json";
     private static final String CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD =
@@ -75,8 +84,7 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
             "CustomAudienceServerAuctionTwoBuyersMultipleCa.json";
     private static final String CUSTOM_AUDIENCE_NO_AD_RENDER_ID = "CustomAudienceNoAdRenderId.json";
     private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
-    private static final String SFE_ADDRESS =
-            "https://seller1-patest.sfe.ppapi.gcp.pstest.dev/v1/selectAd";
+
     private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = true;
 
     private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
@@ -104,6 +112,14 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
     }
 
+    private String getCoordinator() {
+        return coordinatorUrlOption.get();
+    }
+
+    private String getServer() {
+        return serverUrlOption.get();
+    }
+
     /**
      * Warm up servers to reduce flakiness.
      *
@@ -112,8 +128,13 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
      */
     @Before
     public void warmup() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_auction_server_auction_key_fetch_uri",
+                getCoordinator(),
+                false);
 
-        makeWarmUpNetworkCall(TEST_COORDINATOR);
+        makeWarmUpNetworkCall(getCoordinator());
 
         // The first warm up call brings ups the sfe
         byte[] getAdSelectionData =
@@ -121,7 +142,7 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                         CUSTOM_AUDIENCE_TWO_BUYERS_MULTIPLE_CA,
                         SELLER,
                         CONTEXTUAL_SIGNALS_TWO_BUYERS,
-                        SFE_ADDRESS,
+                        getServer(),
                         SERVER_RESPONSE_LOGGING_ENABLED);
 
         // Wait for a couple of seconds before test execution
@@ -131,7 +152,7 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
         runServerAuction(
                 CONTEXTUAL_SIGNALS_TWO_BUYERS,
                 getAdSelectionData,
-                SFE_ADDRESS,
+                getServer(),
                 SERVER_RESPONSE_LOGGING_ENABLED);
 
         // Wait for a couple of seconds before test execution
@@ -159,7 +180,7 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                 FakeAdExchangeServer.runServerAuction(
                         CONTEXTUAL_SIGNALS_ONE_BUYER,
                         outcome.getAdSelectionData(),
-                        SFE_ADDRESS,
+                        getServer(),
                         SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
@@ -204,7 +225,7 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                 FakeAdExchangeServer.runServerAuction(
                         CONTEXTUAL_SIGNALS_TWO_BUYERS,
                         outcome.getAdSelectionData(),
-                        SFE_ADDRESS,
+                        getServer(),
                         SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
@@ -250,7 +271,7 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                 FakeAdExchangeServer.runServerAuction(
                         CONTEXTUAL_SIGNALS_FIVE_BUYERS,
                         outcome.getAdSelectionData(),
-                        SFE_ADDRESS,
+                        getServer(),
                         SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
@@ -294,7 +315,7 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                 FakeAdExchangeServer.runServerAuction(
                         CONTEXTUAL_SIGNALS_ONE_BUYER,
                         outcome.getAdSelectionData(),
-                        SFE_ADDRESS,
+                        getServer(),
                         SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
@@ -341,7 +362,7 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                 FakeAdExchangeServer.runServerAuction(
                         CONTEXTUAL_SIGNALS_CONTEXTUAL_WINNER,
                         outcome.getAdSelectionData(),
-                        SFE_ADDRESS,
+                        getServer(),
                         SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
@@ -392,7 +413,7 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                 FakeAdExchangeServer.runServerAuction(
                         CONTEXTUAL_SIGNALS_ONE_BUYER,
                         outcome.getAdSelectionData(),
-                        SFE_ADDRESS,
+                        getServer(),
                         SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
