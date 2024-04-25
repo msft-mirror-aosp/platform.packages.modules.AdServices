@@ -18,6 +18,7 @@ package {
 
 android_test {
     name: "CtsSandboxedAppSetIdManagerTests",
+    team: "trendy_team_android_rubidium",
     srcs: [
         "src/**/*.java",
     ],
