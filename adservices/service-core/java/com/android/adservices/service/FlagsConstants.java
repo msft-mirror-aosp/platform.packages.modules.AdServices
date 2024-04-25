@@ -1025,6 +1025,8 @@ public final class FlagsConstants {
     // UI keys
     public static final String KEY_PAS_UX_ENABLED = "pas_ux_enabled";
 
+    public static final String KEY_EEA_PAS_UX_ENABLED = "eea_pas_ux_enabled";
+
     public static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED =
             "ui_feature_type_logging_enabled";
 
