@@ -48,6 +48,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
+import com.android.adservices.shared.testing.BooleanSyncCallback;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
@@ -73,7 +74,6 @@ import org.mockito.junit.MockitoRule;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -363,38 +363,36 @@ public class EncoderLogicHandlerTest {
                         .build();
 
         ReentrantLock buyerLock = mEncoderLogicHandler.getBuyerLock(buyer);
-        CountDownLatch writeWhileLockedLatch = new CountDownLatch(1);
+        BooleanSyncCallback writeWhileLockedCallback = new BooleanSyncCallback();
+        Boolean writeWhileLockedResult = null;
         buyerLock.lock();
         try {
             mService.submit(
-                    () -> {
-                        assertFalse(
-                                "This encoder update should have failed",
-                                mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
-                        Mockito.verifyZeroInteractions(mEncoderLogicMetadataDao);
-                        Mockito.verifyZeroInteractions(mEncoderPersistenceDao);
-                        writeWhileLockedLatch.countDown();
-                    });
-            Assert.assertTrue(writeWhileLockedLatch.await(5, TimeUnit.SECONDS));
+                    () ->
+                            writeWhileLockedCallback.injectResult(
+                                    mEncoderLogicHandler.extractAndPersistEncoder(
+                                            buyer, response)));
+            writeWhileLockedResult = writeWhileLockedCallback.assertResultReceived();
         } finally {
             buyerLock.unlock();
         }
+        assertFalse("This encoder update should have failed", writeWhileLockedResult);
+        Mockito.verifyZeroInteractions(mEncoderLogicMetadataDao);
+        Mockito.verifyZeroInteractions(mEncoderPersistenceDao);
 
-        CountDownLatch writeWhileUnLockedLatch = new CountDownLatch(1);
+        BooleanSyncCallback writeWhileUnLockedCallback = new BooleanSyncCallback();
         mService.submit(
                 () -> {
                     when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
-                    assertTrue(
-                            "This encoder update should have succeeded",
+                    writeWhileUnLockedCallback.injectResult(
                             mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
-                    Mockito.verify(mEncoderLogicMetadataDao)
-                            .persistEncoderLogicMetadata(mDBEncoderLogicArgumentCaptor.capture());
-                    Assert.assertEquals(buyer, mDBEncoderLogicArgumentCaptor.getValue().getBuyer());
-                    Assert.assertEquals(
-                            version, mDBEncoderLogicArgumentCaptor.getValue().getVersion());
-                    writeWhileUnLockedLatch.countDown();
                 });
-        assertTrue(writeWhileUnLockedLatch.await(5, TimeUnit.SECONDS));
+        boolean writeWhileUnLockedResult = writeWhileUnLockedCallback.assertResultReceived();
+        assertTrue("This encoder update should have succeeded", writeWhileUnLockedResult);
+        Mockito.verify(mEncoderLogicMetadataDao)
+                .persistEncoderLogicMetadata(mDBEncoderLogicArgumentCaptor.capture());
+        Assert.assertEquals(buyer, mDBEncoderLogicArgumentCaptor.getValue().getBuyer());
+        Assert.assertEquals(version, mDBEncoderLogicArgumentCaptor.getValue().getVersion());
     }
 
     private static class EncoderLogicHandlerTestFlags implements Flags {
