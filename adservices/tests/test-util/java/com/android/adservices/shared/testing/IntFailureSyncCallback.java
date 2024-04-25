@@ -48,12 +48,12 @@ public abstract class IntFailureSyncCallback<T> extends SyncCallback<T, Integer>
     }
 
     /** Constructor with a custom timeout to wait for the outcome. */
-    public IntFailureSyncCallback(int timeoutMs) {
+    public IntFailureSyncCallback(long timeoutMs) {
         super(timeoutMs);
     }
 
     /** Constructor with custom settings. */
-    protected IntFailureSyncCallback(int timeoutMs, boolean failIfCalledOnMainThread) {
+    protected IntFailureSyncCallback(long timeoutMs, boolean failIfCalledOnMainThread) {
         super(timeoutMs, failIfCalledOnMainThread);
     }
 
@@ -81,7 +81,7 @@ public abstract class IntFailureSyncCallback<T> extends SyncCallback<T, Integer>
      * Returns the maximum time the {@code assert...} methods will wait for an outcome before
      * failing.
      */
-    public int getTimeoutMs() {
+    public long getTimeoutMs() {
         return getMaxTimeoutMs();
     }
 

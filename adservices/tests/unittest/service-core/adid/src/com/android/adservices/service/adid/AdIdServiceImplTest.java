@@ -468,7 +468,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
     private static final class SyncIGetAdIdCallback extends IntFailureSyncCallback<GetAdIdResult>
             implements IGetAdIdCallback {
 
-        private SyncIGetAdIdCallback(int timeout) {
+        private SyncIGetAdIdCallback(long timeout) {
             super(timeout);
         }
 
