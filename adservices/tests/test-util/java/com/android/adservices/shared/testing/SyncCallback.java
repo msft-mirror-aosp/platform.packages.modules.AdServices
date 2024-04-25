@@ -115,62 +115,66 @@ public class SyncCallback<T, E> implements Identifiable {
         return mTimeoutMs;
     }
 
+    // TODO(b/337014024): should be final once split into separate class
     /**
      * Sets a successful result as outcome.
      *
      * @throws IllegalStateException if {@link #injectResult(T)} or {@link #injectError(E)} was
      *     already called.
      */
-    public final void injectResult(@Nullable T result) {
+    public void injectResult(@Nullable T result) {
         mResult = Optional.fromNullable(result);
         setMethodCalled("injectResult", result);
     }
 
+    // TODO(b/337014024): should be final once split into separate class
     /**
      * Sets an error result as outcome.
      *
      * @throws IllegalStateException if {@link #injectResult(T)} or {@link #injectError(E)} was
      *     already called.
      */
-    public final void injectError(E error) {
+    public void injectError(E error) {
         mError = error;
         setMethodCalled("injectError", error);
     }
 
+    // TODO(b/337014024): should be final once split into separate class
     /**
      * Asserts that {@link #injectResult(Object)} was called, waiting up to {@link
      * #getMaxTimeoutMs()} milliseconds before failing (if not called).
      *
      * @return the result
      */
-    public final @Nullable T assertResultReceived() throws InterruptedException {
+    public @Nullable T assertResultReceived() throws InterruptedException {
         assertReceived();
 
         assertWithMessage("result received").that(mResult).isNotNull();
         return getResult();
     }
 
+    // TODO(b/337014024): should be final once split into separate class
     /**
      * Asserts that {@link #injectError(Exception)} was called, waiting up to {@link
      * #getMaxTimeoutMs()} milliseconds before failing (if not called).
      *
      * @return the error
      */
-    public final E assertErrorReceived() throws InterruptedException {
+    public E assertErrorReceived() throws InterruptedException {
         assertReceived();
 
         assertWithMessage("error").that(mError).isNotNull();
         return mError;
     }
 
+    // TODO(b/337014024): should be final once split into separate class
     /**
      * Asserts that {@link #injectError(Object)} was called with a class of type {@code S}, waiting
      * up to {@link #getMaxTimeoutMs()} milliseconds before failing (if not called).
      *
      * @return the error
      */
-    public final <S extends E> S assertErrorReceived(Class<S> expectedClass)
-            throws InterruptedException {
+    public <S extends E> S assertErrorReceived(Class<S> expectedClass) throws InterruptedException {
         checkArgument(expectedClass != null, "expectedClass cannot be null");
         E error = assertErrorReceived();
         checkState(expectedClass.isInstance(error), MSG_WRONG_ERROR_RECEIVED, expectedClass, error);
@@ -196,18 +200,28 @@ public class SyncCallback<T, E> implements Identifiable {
     }
 
     /**
+     * Returns {@code true} if either {@link #injectResult(Object)} or {@link
+     * #injectError(Exception)} was called (without blocking if it was not called yet)
+     */
+    public final boolean isReceived() {
+        return mMethodCalled != null;
+    }
+
+    // TODO(b/337014024): should be final once split into separate class
+    /**
      * Gets the error returned by {@link #injectError(E)} (or {@code null} if it was not called
      * yet).
      */
-    public final @Nullable E getErrorReceived() {
+    public @Nullable E getErrorReceived() {
         return mError;
     }
 
+    // TODO(b/337014024): should be final once split into separate class
     /**
      * Gets the result returned by {@link #injectResult(T)} (or {@code null} if it was not called
      * yet).
      */
-    public final @Nullable T getResultReceived() {
+    public @Nullable T getResultReceived() {
         return getResult();
     }
 

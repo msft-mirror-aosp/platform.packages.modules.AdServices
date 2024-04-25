@@ -33,6 +33,7 @@ import android.net.Uri;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.common.RetryStrategy;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
@@ -160,18 +161,21 @@ public class ReportImpressionScriptEngine {
     private final Supplier<Long> mMaxHeapSizeBytesSupplier;
     private final RegisterAdBeaconScriptEngineHelper mRegisterAdBeaconScriptEngineHelper;
     private final RetryStrategy mRetryStrategy;
+    private final DevContext mDevContext;
 
     public ReportImpressionScriptEngine(
             Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             RegisterAdBeaconScriptEngineHelper registerAdBeaconScriptEngineHelper,
-            RetryStrategy retryStrategy) {
+            RetryStrategy retryStrategy,
+            DevContext devContext) {
         mJsEngine = JSScriptEngine.getInstance(context, sLogger);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRegisterAdBeaconScriptEngineHelper = registerAdBeaconScriptEngineHelper;
         mRetryStrategy = retryStrategy;
+        mDevContext = devContext;
     }
 
     /**
@@ -302,10 +306,11 @@ public class ReportImpressionScriptEngine {
             String jsScript, String functionName, List<JSScriptArgument> args)
             throws JSONException {
         IsolateSettings isolateSettings =
-                mEnforceMaxHeapSizeFeatureSupplier.get()
-                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                                mMaxHeapSizeBytesSupplier.get())
-                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+                IsolateSettings.builder()
+                        .setEnforceMaxHeapSizeFeature(mEnforceMaxHeapSizeFeatureSupplier.get())
+                        .setMaxHeapSizeBytes(mMaxHeapSizeBytesSupplier.get())
+                        .setIsolateConsoleMessageInLogsEnabled(mDevContext.getDevOptionsEnabled())
+                        .build();
         return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings, mRetryStrategy);
     }
 

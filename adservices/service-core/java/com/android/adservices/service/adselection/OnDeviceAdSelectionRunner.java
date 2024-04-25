@@ -140,12 +140,13 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
                                 context,
-                                () -> flags.getEnforceIsolateMaxHeapSize(),
-                                () -> flags.getIsolateMaxHeapSizeBytes(),
+                                flags::getEnforceIsolateMaxHeapSize,
+                                flags::getIsolateMaxHeapSizeBytes,
                                 mAdCounterKeyCopier,
                                 mDebugReporting.getScriptStrategy(),
                                 cpcBillingEnabled,
-                                retryStrategy),
+                                retryStrategy,
+                                devContext),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,

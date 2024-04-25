@@ -32,7 +32,6 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 public class SelectAdsFlagRule implements TestRule {
-    private Boolean mUsePublicCoordinator = false;
     private String mCoordinatorToUse;
     public static final String PUBLIC_COORDINATOR =
             "https://publickeyservice.pa.gcp.privacysandboxservices.com/.well-known/protected-auction/v1/public-keys";
