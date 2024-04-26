@@ -27,6 +27,8 @@ import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -37,6 +39,7 @@ import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
@@ -78,20 +81,31 @@ public class AsyncSourceFetcher {
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final Context mContext;
+    private final DatastoreManager mDatastoreManager;
+    private final DebugReportApi mDebugReportApi;
 
     public AsyncSourceFetcher(Context context) {
         this(
                 context,
                 EnrollmentDao.getInstance(context),
-                FlagsFactory.getFlags());
+                FlagsFactory.getFlags(),
+                DatastoreManagerFactory.getDatastoreManager(context),
+                new DebugReportApi(context, FlagsFactory.getFlags()));
     }
 
     @VisibleForTesting
-    public AsyncSourceFetcher(Context context, EnrollmentDao enrollmentDao, Flags flags) {
+    public AsyncSourceFetcher(
+            Context context,
+            EnrollmentDao enrollmentDao,
+            Flags flags,
+            DatastoreManager datastoreManager,
+            DebugReportApi debugReportApi) {
         mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mNetworkConnection = new MeasurementHttpClient(context);
+        mDatastoreManager = datastoreManager;
+        mDebugReportApi = debugReportApi;
     }
 
     private boolean parseCommonSourceParams(
@@ -778,8 +792,13 @@ public class AsyncSourceFetcher {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_ERROR);
             return Optional.empty();
         }
+        String registrationHeaderStr = field.get(0);
+
+        boolean isHeaderErrorDebugReportEnabled =
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO));
         try {
-            JSONObject json = new JSONObject(field.get(0));
+            JSONObject json = new JSONObject(registrationHeaderStr);
             boolean isValid =
                     parseCommonSourceParams(json, asyncRegistration, builder, enrollmentId);
             if (!isValid) {
@@ -817,8 +836,23 @@ public class AsyncSourceFetcher {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
-            LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: invalid JSON");
+            String errMsg = "Source JSON parsing failed";
+            LoggerFactory.getMeasurementLogger().d(e, errMsg);
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
+            if (isHeaderErrorDebugReportEnabled) {
+                mDatastoreManager.runInTransaction(
+                        (dao) -> {
+                            mDebugReportApi.scheduleHeaderErrorReport(
+                                    asyncRegistration.getRegistrationUri(),
+                                    asyncRegistration.getRegistrant(),
+                                    SourceHeaderContract
+                                            .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
+                                    enrollmentId,
+                                    errMsg,
+                                    registrationHeaderStr,
+                                    dao);
+                        });
+            }
             return Optional.empty();
         } catch (IllegalArgumentException | ArithmeticException e) {
             LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: IllegalArgumentException"
@@ -996,6 +1030,8 @@ public class AsyncSourceFetcher {
     private interface SourceHeaderContract {
         String HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE =
                 "Attribution-Reporting-Register-Source";
+        // Header for enable header error verbose debug reports.
+        String HEADER_ATTRIBUTION_REPORTING_INFO = "Attribution-Reporting-Info";
         String SOURCE_EVENT_ID = "source_event_id";
         String DEBUG_KEY = "debug_key";
         String DESTINATION = "destination";
