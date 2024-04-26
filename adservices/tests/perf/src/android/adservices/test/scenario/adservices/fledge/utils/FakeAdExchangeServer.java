@@ -98,6 +98,7 @@ public class FakeAdExchangeServer {
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("Accept", "application/json");
         con.setDoOutput(true);
+        Log.d(TAG, "Call to url : " + address);
         try (OutputStream os = con.getOutputStream()) {
             byte[] input = jsonInputString.getBytes("utf-8");
             os.write(input, 0, input.length);

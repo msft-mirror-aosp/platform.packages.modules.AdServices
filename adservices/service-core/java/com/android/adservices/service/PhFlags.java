@@ -2761,41 +2761,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getConsentNotificationDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE),
-                CONSENT_NOTIFICATION_DEBUG_MODE);
-    }
-
-    @Override
-    public boolean getConsentNotificationActivityDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE),
-                CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
-    }
-
-    @Override
-    public boolean getConsentNotifiedDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE),
-                CONSENT_NOTIFIED_DEBUG_MODE);
-    }
-
-    @Override
-    public boolean getConsentManagerDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE),
-                CONSENT_MANAGER_DEBUG_MODE);
-    }
-
-    @Override
-    public boolean getConsentManagerOTADebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE),
-                DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
-    }
-
-    @Override
     public boolean getRvcPostOtaNotifAgeCheck() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
@@ -3042,6 +3007,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO,
+                MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO);
+    }
+
+    @Override
+    public boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,
+                MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS);
+    }
+
+    @Override
     public int getMeasurementMaxAggregateKeysPerSourceRegistration() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION,
@@ -3203,11 +3182,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + " = "
                         + getEnableAdServicesSystemApi());
         writer.println("\t" + FlagsConstants.KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE
-                        + " = "
-                        + getConsentManagerOTADebugMode());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK
@@ -4148,6 +4122,26 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 .KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH
                         + " = "
                         + getMeasurementJobImmediateAggregateReportingKillSwitch());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON
+                        + " = "
+                        + getMeasurementPrivacyEpsilon());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO
+                        + " = "
+                        + getMeasurementEnableDestinationXPublisherXEnrollmentFifo());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS
+                        + " = "
+                        + getMeasurementEnableFifoDestinationsDeleteAggregateReports());
+
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t"
@@ -6100,6 +6094,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 FlagsConstants
                                         .KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
                                 MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH));
+    }
+
+    @Override
+    public float getMeasurementPrivacyEpsilon() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON,
+                DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
     }
 
     @Override

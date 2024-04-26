@@ -1944,7 +1944,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
 
     default boolean getConsentNotificationDebugMode() {
-        return CONSENT_NOTIFICATION_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
 
     /** The consent notification activity debug mode is off by default. */
@@ -1953,7 +1953,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns the consent notification activity debug mode. */
     default boolean getConsentNotificationActivityDebugMode() {
-        return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
     }
 
     @FeatureFlag(DEBUG)
@@ -1961,14 +1961,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns whether to suppress consent notified state. */
     default boolean getConsentNotifiedDebugMode() {
-        return CONSENT_NOTIFIED_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotifiedDebugMode();
     }
 
     @FeatureFlag(DEBUG)
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
 
     default boolean getConsentManagerDebugMode() {
-        return CONSENT_MANAGER_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentManagerDebugMode();
     }
 
     @FeatureFlag(DEBUG)
@@ -1976,7 +1976,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** When enabled, the device is treated as OTA device. */
     default boolean getConsentManagerOTADebugMode() {
-        return DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentManagerOTADebugMode();
     }
 
     boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
@@ -3839,6 +3839,23 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
     }
 
+    boolean MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO = false;
+
+    /** Enable FIFO destinations based deletion of sources to accommodate an incoming source. */
+    default boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
+        return MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO;
+    }
+
+    boolean MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS = false;
+
+    /**
+     * Enable deletion of reports along with FIFO destinations. In practice it's a sub flag to
+     * {@link #getMeasurementEnableDestinationXPublisherXEnrollmentFifo}
+     */
+    default boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
+        return MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
+    }
+
     /** Default Measurement ARA parsing alignment v1 feature flag. */
     boolean MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 = true;
 
@@ -4570,6 +4587,12 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Return true if measurement registrations through ODP is enabled */
     default boolean getMeasurementEnableOdpWebTriggerRegistration() {
         return MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
+    }
+
+    float DEFAULT_MEASUREMENT_PRIVACY_EPSILON = 14f;
+
+    default float getMeasurementPrivacyEpsilon() {
+        return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
     }
 
     /**

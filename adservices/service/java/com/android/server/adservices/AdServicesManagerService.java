@@ -619,7 +619,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     @Override
-    @RequiresPermission
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public List<String> getKnownAppsWithConsent(@NonNull List<String> installedPackages) {
         return executeGetter(/* defaultReturn= */ List.of(),
                 (userId) -> mUserInstanceManager

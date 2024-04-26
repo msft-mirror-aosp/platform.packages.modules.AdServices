@@ -22,6 +22,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -219,6 +220,22 @@ public final class SourceFixture {
         return triggerSpecs;
     }
 
+    /** Provides a valid TriggerSpecs with hardcoded epsilon. */
+    public static TriggerSpecs getValidTriggerSpecsWithNonDefaultEpsilon() throws JSONException {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0, "
+                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1]}]";
+        Source source = getMinimalValidSourceBuilder().build();
+        double mockFlipProbability = Combinatorics.getFlipProbability(5, 3);
+        String jsonString = String.format("{\"flip_probability\": %f}", mockFlipProbability);
+        TriggerSpecs triggerSpecs = new TriggerSpecs(triggerSpecsString, "1", source, jsonString);
+        return triggerSpecs;
+    }
+
     /** Provides a value-sum-based valid TriggerSpecs. */
     public static TriggerSpecs getValidTriggerSpecsValueSum() throws JSONException {
         return getValidTriggerSpecsValueSum(3);
@@ -272,6 +289,20 @@ public final class SourceFixture {
             return getMinimalValidSourceBuilder()
                     .setAttributedTriggers(new ArrayList<>())
                     .setTriggerSpecs(getValidTriggerSpecsCountBasedWithFewerState())
+                    .setMaxEventLevelReports(
+                            getValidTriggerSpecsCountBasedWithFewerState().getMaxReports())
+                    .build();
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+    /** Provide a Source with hardcoded epsilon in TriggerSpecs. */
+    public static Source getValidFullFlexSourceWithNonDefaultEpsilon() {
+        try {
+            return getMinimalValidSourceBuilder()
+                    .setAttributedTriggers(new ArrayList<>())
+                    .setTriggerSpecs(getValidTriggerSpecsWithNonDefaultEpsilon())
                     .setMaxEventLevelReports(
                             getValidTriggerSpecsCountBasedWithFewerState().getMaxReports())
                     .build();
