@@ -191,6 +191,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     private AsyncSourceFetcher mAsyncSourceFetcher;
     private AsyncTriggerFetcher mAsyncTriggerFetcher;
     private Source mMockedSource;
+    private DatastoreManager mDatastoreManager;
 
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private Trigger mMockedTrigger;
@@ -241,7 +242,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     @Before
     public void before() throws Exception {
         extendedMockito.mockGetFlags(mFlags);
-
+        mDatastoreManager =
+                spy(
+                        new SQLDatastoreManager(
+                                DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
         mAsyncSourceFetcher = spy(new AsyncSourceFetcher(sContext));
         mAsyncTriggerFetcher = spy(new AsyncTriggerFetcher(sContext));
         mMockedSource = spy(SourceFixture.getValidSource());
@@ -3245,7 +3249,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException, IOException {
         // Setup
         doNothingOnErrorLogUtilError();
-        AsyncSourceFetcher mFetcher = spy(new AsyncSourceFetcher(sContext, mEnrollmentDao, mFlags));
+        AsyncSourceFetcher mFetcher =
+                spy(
+                        new AsyncSourceFetcher(
+                                sContext,
+                                mEnrollmentDao,
+                                mFlags,
+                                mDatastoreManager,
+                                mDebugReportApi));
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
                         Collections.singletonList(DEFAULT_REGISTRATION_PARAM_LIST),
@@ -3270,10 +3281,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                                 + ALT_WEB_DESTINATION
                                                 + "\""
                                                 + "}")));
-        DatastoreManager datastoreManager =
-                spy(
-                        new SQLDatastoreManager(
-                                DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
+
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 spy(
                         new AsyncRegistrationQueueRunner(
@@ -3281,7 +3289,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 mContentResolver,
                                 mFetcher,
                                 mAsyncTriggerFetcher,
-                                datastoreManager,
+                                mDatastoreManager,
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
                                 mFlags,
@@ -3294,7 +3302,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 APP_TOP_ORIGIN,
                 100,
                 Source.SourceType.NAVIGATION,
-                datastoreManager,
+                mDatastoreManager,
                 mContentResolver);
 
         // Execution
@@ -3302,7 +3310,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertions
         assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
-        verify(datastoreManager, times(2)).runInTransaction(consumerArgCaptor.capture());
+        verify(mDatastoreManager, times(2)).runInTransaction(consumerArgCaptor.capture());
         consumerArgCaptor.getValue().accept(mMeasurementDao);
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
