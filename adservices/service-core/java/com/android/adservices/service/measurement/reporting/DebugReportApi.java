@@ -67,6 +67,10 @@ public class DebugReportApi {
         String TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED = "trigger-aggregate-report-window-passed";
         String TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
                 "trigger-attributions-per-source-destination-limit";
+        String TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
+                "trigger-event-attributions-per-source-destination-limit";
+        String TRIGGER_AGGREGATE_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
+                "trigger-aggregate-attributions-per-source-destination-limit";
         String TRIGGER_EVENT_DEDUPLICATED = "trigger-event-deduplicated";
         String TRIGGER_EVENT_EXCESSIVE_REPORTS = "trigger-event-excessive-reports";
         String TRIGGER_EVENT_LOW_PRIORITY = "trigger-event-low-priority";
