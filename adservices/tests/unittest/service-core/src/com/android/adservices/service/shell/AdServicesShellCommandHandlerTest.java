@@ -39,7 +39,6 @@ import androidx.annotation.Nullable;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
@@ -73,7 +72,9 @@ import java.util.Map;
 
 @SpyStatic(AppManifestConfigHelper.class)
 public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedMockitoTestCase {
-    private final Flags mFlags = new ShellCommandFlags();
+    private static final boolean CUSTOM_AUDIENCE_CLI_ENABLED = true;
+    private static final boolean CONSENTED_DEBUG_CLI_ENABLED = true;
+    private static final boolean SIGNALS_CLI_ENABLED = true;
 
     // mCmd is used on most tests methods, excepted those that runs more than one command
     private OneTimeCommand mCmd;
@@ -89,7 +90,9 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         doNothing().when(mAdServicesLogger).logShellCommandStats(any());
         mShellCommandFactorySupplier =
                 new TestShellCommandFactorySupplier(
-                        mFlags,
+                        CUSTOM_AUDIENCE_CLI_ENABLED,
+                        CONSENTED_DEBUG_CLI_ENABLED,
+                        SIGNALS_CLI_ENABLED,
                         mBackgroundFetchRunner,
                         mCustomAudienceDao,
                         mConsentedDebugConfigurationDao);
@@ -329,18 +332,6 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
             pw.close();
             mOutCalled = true;
             return out;
-        }
-    }
-
-    private static final class ShellCommandFlags implements Flags {
-        @Override
-        public boolean getFledgeCustomAudienceCLIEnabledStatus() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeConsentedDebuggingCliEnabledStatus() {
-            return true;
         }
     }
 }

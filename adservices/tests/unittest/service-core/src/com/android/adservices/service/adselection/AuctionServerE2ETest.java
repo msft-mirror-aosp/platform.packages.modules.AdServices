@@ -290,6 +290,7 @@ public class AuctionServerE2ETest {
     private static final int NUM_BUYERS = 2;
 
     private static final long AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS = 20;
+    private static final boolean CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -1640,7 +1641,8 @@ public class AuctionServerE2ETest {
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
@@ -1873,7 +1875,8 @@ public class AuctionServerE2ETest {
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1967,10 +1970,11 @@ public class AuctionServerE2ETest {
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        /* shouldUseUnifiedTables =*/ false,
+                        /* shouldUseUnifiedTables= */ false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -2154,10 +2158,11 @@ public class AuctionServerE2ETest {
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        /* shouldUseUnifiedTables =*/ true,
+                        /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -2756,7 +2761,8 @@ public class AuctionServerE2ETest {
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -2865,7 +2871,8 @@ public class AuctionServerE2ETest {
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -3868,7 +3875,8 @@ public class AuctionServerE2ETest {
                 false,
                 mRetryStrategyFactory,
                 mConsentedDebugConfigurationGeneratorFactory,
-                mEgressConfigurationGenerator);
+                mEgressConfigurationGenerator,
+                CONSOLE_MESSAGE_IN_LOGS_ENABLED);
     }
 
     private ProtectedAuctionInput getProtectedAuctionInputFromCipherText(
@@ -3988,7 +3996,8 @@ public class AuctionServerE2ETest {
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -4055,7 +4064,8 @@ public class AuctionServerE2ETest {
                 false,
                 mRetryStrategyFactory,
                 mConsentedDebugConfigurationGeneratorFactory,
-                mEgressConfigurationGenerator);
+                mEgressConfigurationGenerator,
+                CONSOLE_MESSAGE_IN_LOGS_ENABLED);
     }
 
     private AdSelectionService createAdSelectionService(
@@ -4088,7 +4098,8 @@ public class AuctionServerE2ETest {
                 false,
                 mRetryStrategyFactory,
                 mConsentedDebugConfigurationGeneratorFactory,
-                mEgressConfigurationGenerator);
+                mEgressConfigurationGenerator,
+                CONSOLE_MESSAGE_IN_LOGS_ENABLED);
     }
 
     private Map<AdTechIdentifier, BuyerInput> getBuyerInputMapFromDecryptedBytes(

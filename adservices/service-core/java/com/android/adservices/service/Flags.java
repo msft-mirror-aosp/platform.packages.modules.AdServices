@@ -1849,13 +1849,6 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
     }
 
-    @FeatureFlag boolean FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED = false;
-
-    /** Returns whether Consented Debugging is enabled for server auctions. */
-    default boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
-        return FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
-    }
-
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 
@@ -5240,26 +5233,6 @@ public interface Flags extends ModuleSharedFlags {
      */
     default String getAdServicesCommonStatesAllowList() {
         return GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
-    }
-
-    /** Default value for status of custom audiences CLI feature */
-    boolean FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED = false;
-
-    /**
-     * @return the enabled status for custom audiences CLI feature.
-     */
-    default boolean getFledgeCustomAudienceCLIEnabledStatus() {
-        return FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
-    }
-
-    /** Default value for status of consented debugging CLI feature */
-    boolean FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED = false;
-
-    /**
-     * @return the enabled status for custom audiences CLI feature.
-     */
-    default boolean getFledgeConsentedDebuggingCliEnabledStatus() {
-        return FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED;
     }
 
     /** Default value for the base64 encoded Job Policy proto for AdServices. */
