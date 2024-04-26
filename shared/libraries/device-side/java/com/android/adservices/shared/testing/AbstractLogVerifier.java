@@ -20,7 +20,8 @@ import android.util.Log;
 
 import org.junit.runner.Description;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -30,15 +31,13 @@ import java.util.Set;
  *
  * @param <T> expected {@link LogCall} type to be verified
  */
-// TODO (b/323000746) - Add unit test coverage for this file after call comparison logic has been
-//  implemented.
 public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerifier {
     protected final String mTag = getClass().getSimpleName();
 
     // Key is the LogCall object, value is the source of truth for times; we do not keep track of
     // the times value in the LogCall object itself because we would like to group together all
     // identical log call invocations, irrespective of number of times they have been invoked.
-    private final Map<T, Integer> mActualCalls = new HashMap<>();
+    private final Map<T, Integer> mActualCalls = new LinkedHashMap<>();
 
     @Override
     public void setup() {
@@ -74,24 +73,59 @@ public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerif
      *
      * @param actualCall Actual call to be recorded
      */
-    protected void recordActualCall(T actualCall) {
+    public void recordActualCall(T actualCall) {
         mActualCalls.put(actualCall, mActualCalls.getOrDefault(actualCall, 0) + 1);
     }
 
     private void verifyCalls(Set<T> expectedCalls, Set<T> actualCalls) {
-        Log.d(mTag, "Total expected calls: " + expectedCalls.size());
-        Log.d(mTag, "Total actual calls: " + actualCalls.size());
+        Log.v(mTag, "Total expected calls: " + expectedCalls.size());
+        Log.v(mTag, "Total actual calls: " + actualCalls.size());
 
-        // TODO (b/323000746) - Provide detailed error message (e.g. Expected X calls, but Y
-        //  actual calls etc.).
-        if (!Objects.equals(expectedCalls, actualCalls)) {
-            throw new IllegalStateException("Mismatch in log verification calls!");
+        if (Objects.equals(expectedCalls, actualCalls)) {
+            Log.v(mTag, "No unexpected logging calls!");
+            return;
         }
+
+        StringBuilder sb = new StringBuilder();
+
+        // Check if there are any unverified expected calls, denoted via annotations.
+        Set<T> clonedExpectedCalls = new LinkedHashSet<>(expectedCalls);
+        clonedExpectedCalls.removeAll(actualCalls);
+
+        if (!clonedExpectedCalls.isEmpty()) {
+            sb.append("Detected logging calls that were expected but not actually made:\n");
+            sb.append("Unexpected Calls:")
+                    .append("\n[")
+                    .append(callsToStr(clonedExpectedCalls))
+                    .append("\n]\n");
+            sb.append("Actual Calls:\n[").append(callsToStr(actualCalls)).append("\n]\n");
+            throw new IllegalStateException(sb.toString());
+        }
+
+        // Check if there are any actual calls that were not expected via annotations.
+        Set<T> clonedActualCalls = new LinkedHashSet<>(actualCalls);
+        clonedActualCalls.removeAll(expectedCalls);
+        sb.append(
+                "Detected logging calls that were actually made but not expected via "
+                        + "annotations:\n");
+        sb.append("Unexpected Actual Calls:\n[")
+                .append(callsToStr(clonedActualCalls))
+                .append("\n]\n");
+        sb.append("Expected Calls:")
+                .append("\n[")
+                .append(callsToStr(expectedCalls))
+                .append("\n]\n");
+
+        throw new IllegalStateException(sb.toString());
+    }
+
+    private String callsToStr(Set<T> calls) {
+        return calls.stream().map(call -> "\n\t" + call).reduce("", (a, b) -> a + b);
     }
 
     private Set<T> getActualCalls() {
         // At this point, the map of actual calls will no longer be updated. Therefore, it's safe
-        // to alter the times field in the actual LogCall objects.
+        // // to alter the times field in the actual LogCall objects and retrieve all keys.
         mActualCalls
                 .keySet()
                 .forEach(actualLogCall -> actualLogCall.mTimes = mActualCalls.get(actualLogCall));

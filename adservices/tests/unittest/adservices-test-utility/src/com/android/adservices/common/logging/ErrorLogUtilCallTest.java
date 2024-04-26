@@ -17,6 +17,7 @@
 package com.android.adservices.common.logging;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.shared.testing.LogCall;
 
 import org.junit.Test;
@@ -53,6 +54,23 @@ public final class ErrorLogUtilCallTest extends AdServicesUnitTestCase {
         expect.that(errorLogUtilCall1.hashCode()).isEqualTo(errorLogUtilCall2.hashCode());
     }
 
+    @Test
+    public void testLogInvocationToString_withThrowable_returnsFormattedString() {
+        ErrorLogUtilCall errorLogUtilCall =
+                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5, 1);
+
+        expect.that(errorLogUtilCall.logInvocationToString())
+                .isEqualTo("ErrorLogUtil.e(IllegalArgumentException, 10, 5)");
+    }
+
+    @Test
+    public void testLogInvocationToString_withNoThrowable_returnsFormattedString() {
+        ErrorLogUtilCall errorLogUtilCall =
+                new ErrorLogUtilCall(ExpectErrorLogUtilCall.None.class, 10, 5, 1);
+
+        expect.that(errorLogUtilCall.logInvocationToString()).isEqualTo("ErrorLogUtil.e(10, 5)");
+    }
+
     private static final class TestLogCall extends LogCall {
         TestLogCall(int times) {
             super(times);
@@ -66,6 +84,11 @@ public final class ErrorLogUtilCallTest extends AdServicesUnitTestCase {
         @Override
         public int hashCode() {
             return 0;
+        }
+
+        @Override
+        public String logInvocationToString() {
+            return null;
         }
     }
 }

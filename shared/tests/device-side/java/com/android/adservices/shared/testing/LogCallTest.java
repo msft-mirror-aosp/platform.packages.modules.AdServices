@@ -70,6 +70,12 @@ public final class LogCallTest extends SharedUnitTestCase {
         mEqualsTester.expectObjectsAreEqual(logCall1, logCall2);
     }
 
+    @Test
+    public void testToString() {
+        String toStr = new TestLogCall(/* times= */ 2, /* val= */ true).toString();
+        expect.that(toStr).isEqualTo("TestLogCall.log(true), times = 2");
+    }
+
     // Test log call object that mocks a log call to log a boolean
     private static final class TestLogCall extends LogCall {
         private final boolean mVal;
@@ -91,6 +97,11 @@ public final class LogCallTest extends SharedUnitTestCase {
         @Override
         public int hashCode() {
             return Objects.hash(mVal);
+        }
+
+        @Override
+        public String logInvocationToString() {
+            return "TestLogCall.log(" + mVal + ")";
         }
     }
 }

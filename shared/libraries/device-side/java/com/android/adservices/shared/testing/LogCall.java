@@ -24,6 +24,11 @@ public abstract class LogCall {
         mTimes = times;
     }
 
+    @Override
+    public String toString() {
+        return logInvocationToString() + ", times = " + mTimes;
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -68,4 +73,13 @@ public abstract class LogCall {
      */
     @Override
     public abstract int hashCode();
+
+    /**
+     * Subclass must represent the log call invocation in readable format with any parameters, if
+     * appropriate. For example, "ErrorLogUtil.e(25, 26)", "ErrorLogUtil.e(IllegalStateException,
+     * 10, 20)". The parent class will handle formatting the invocation call string along with
+     * expected number of times. This will primarily help with providing helpful error messages in
+     * case of mismatches.
+     */
+    public abstract String logInvocationToString();
 }

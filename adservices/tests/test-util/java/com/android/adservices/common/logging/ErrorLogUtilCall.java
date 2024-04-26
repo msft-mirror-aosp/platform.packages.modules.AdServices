@@ -56,4 +56,19 @@ public final class ErrorLogUtilCall extends LogCall {
     public int hashCode() {
         return Objects.hash(mThrowable, mErrorCode, mPpapiName);
     }
+
+    @Override
+    public String logInvocationToString() {
+        if (Objects.equals(mThrowable, ExpectErrorLogUtilCall.None.class)) {
+            return "ErrorLogUtil.e(" + mErrorCode + ", " + mPpapiName + ")";
+        }
+
+        return "ErrorLogUtil.e("
+                + mThrowable.getSimpleName()
+                + ", "
+                + mErrorCode
+                + ", "
+                + mPpapiName
+                + ")";
+    }
 }
