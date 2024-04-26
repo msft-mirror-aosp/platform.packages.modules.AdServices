@@ -1672,21 +1672,23 @@ class MeasurementDao implements IMeasurementDao {
                         "WITH source_ids AS ("
                                 + "SELECT %1$s FROM %2$s "
                                 + "WHERE %3$s AND %4$s = ? "
-                                + "AND %5$s > ?"
+                                + "AND %5$s > ? "
+                                + "AND %6$s != ?"
                                 + ") "
-                                + "SELECT COUNT(DISTINCT %6$s) FROM %7$s "
-                                + "WHERE %8$s IN source_ids AND %9$s = ? "
-                                + "AND %6$s NOT IN "
+                                + "SELECT COUNT(DISTINCT %7$s) FROM %8$s "
+                                + "WHERE %9$s IN source_ids AND %10$s = ? "
+                                + "AND %7$s NOT IN "
                                 + flattenAsSqlQueryList(excludedDestinations),
-                        SourceContract.ID,
-                        SourceContract.TABLE,
-                        getPublisherWhereStatement(publisher, publisherType),
-                        SourceContract.ENROLLMENT_ID,
-                        SourceContract.EXPIRY_TIME,
-                        SourceDestination.DESTINATION,
-                        SourceDestination.TABLE,
-                        SourceDestination.SOURCE_ID,
-                        SourceDestination.DESTINATION_TYPE);
+                        SourceContract.ID, // 1
+                        SourceContract.TABLE, // 2
+                        getPublisherWhereStatement(publisher, publisherType), // 3
+                        SourceContract.ENROLLMENT_ID, // 4
+                        SourceContract.EXPIRY_TIME, // 5
+                        SourceContract.STATUS, // 6
+                        SourceDestination.DESTINATION, // 7
+                        SourceDestination.TABLE, // 8
+                        SourceDestination.SOURCE_ID, // 9
+                        SourceDestination.DESTINATION_TYPE); // 10
         return (int)
                 DatabaseUtils.longForQuery(
                         mSQLTransaction.getDatabase(),
@@ -1694,6 +1696,7 @@ class MeasurementDao implements IMeasurementDao {
                         new String[] {
                             enrollmentId,
                             String.valueOf(windowEndTime),
+                            String.valueOf(Source.Status.MARKED_TO_DELETE),
                             String.valueOf(destinationType)
                         });
     }
@@ -1713,17 +1716,21 @@ class MeasurementDao implements IMeasurementDao {
                         "WITH source_ids AS ("
                                 + "SELECT %1$s FROM %2$s "
                                 + "WHERE %3$s "
-                                + "AND %4$s > ? AND %4$s <= ? AND %5$s > ?"
+                                + "AND %4$s > ? "
+                                + "AND %4$s <= ? "
+                                + "AND %5$s > ?"
+                                + "AND %6$s != ?"
                                 + ") "
-                                + "SELECT COUNT(DISTINCT %6$s) FROM %7$s "
-                                + "WHERE %8$s IN source_ids AND %9$s = ? "
-                                + "AND %6$s NOT IN "
+                                + "SELECT COUNT(DISTINCT %7$s) FROM %8$s "
+                                + "WHERE %9$s IN source_ids AND %10$s = ? "
+                                + "AND %7$s NOT IN "
                                 + flattenAsSqlQueryList(excludedDestinations),
                         SourceContract.ID,
                         SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
                         SourceContract.EVENT_TIME,
                         SourceContract.EXPIRY_TIME,
+                        SourceContract.STATUS,
                         SourceDestination.DESTINATION,
                         SourceDestination.TABLE,
                         SourceDestination.SOURCE_ID,
@@ -1736,6 +1743,7 @@ class MeasurementDao implements IMeasurementDao {
                             String.valueOf(windowStartTime),
                             String.valueOf(windowEndTime),
                             String.valueOf(windowEndTime),
+                            String.valueOf(Source.Status.MARKED_TO_DELETE),
                             String.valueOf(destinationType)
                         });
     }
