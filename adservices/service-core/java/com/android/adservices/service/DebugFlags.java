@@ -30,7 +30,16 @@ import static com.android.adservices.service.PhFlags.getSystemPropertyName;
 
 import android.os.SystemProperties;
 
-/** Debug Flags Implementation that delegates to System Properties. */
+/**
+ * Flags that are only used for development / testing purposes.
+ *
+ * <p>They're never pushed to devices (through `DeviceConfig`) and must be manually set by the
+ * developer (or automatically set by the test), so they're implemented using System Properties.
+ *
+ * <p><b>NOTE: </b> the value of these flags should be such that the behavior they're changing is not
+ * changed or the feature they're guarding is disabled, so usually their default value should be
+ * {@code false}.
+ */
 public final class DebugFlags {
     private static final DebugFlags sInstance = new DebugFlags();
 
