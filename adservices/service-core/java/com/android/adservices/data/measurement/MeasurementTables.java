@@ -235,6 +235,7 @@ public final class MeasurementTables {
         String TRIGGER_ID = "trigger_id";
         String REGISTRATION_ORIGIN = "registration_origin";
         String SCOPE = "scope";
+        String REPORT_ID = "report_id";
     }
 
     /** Contract for Unencrypted aggregate payload. */
@@ -866,6 +867,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AttributionContract.SCOPE
                     + " INTEGER, "
+                    + AttributionContract.REPORT_ID
+                    + " TEXT, "
                     + "FOREIGN KEY ("
                     + AttributionContract.SOURCE_ID
                     + ") REFERENCES "

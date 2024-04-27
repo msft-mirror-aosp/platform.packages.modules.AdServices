@@ -16,6 +16,8 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
+import static android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule.PUBLIC_COORDINATOR;
+
 import android.Manifest;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
@@ -108,7 +110,7 @@ public class ServerAuctionOneBuyerLargeCaLatency {
                                     AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
                                     /* clearOnStarting = */ true,
                                     /* clearOnFinished = */ false))
-                    .around(new SelectAdsFlagRule(/* useServerAuctionPublicCoordinator = */ true));
+                    .around(new SelectAdsFlagRule(PUBLIC_COORDINATOR));
 
     /** Give the required permissions to the APK */
     @BeforeClass
