@@ -179,17 +179,6 @@ public abstract class E2EMockTest extends E2ETest {
                         /* enable seed */ true,
                         new NoOpLoggerImpl(),
                         EnrollmentUtil.getInstance());
-
-        mAsyncSourceFetcher =
-                spy(
-                        new AsyncSourceFetcher(
-                                sContext,
-                                mEnrollmentDao,
-                                mFlags));
-        mAsyncTriggerFetcher =
-                spy(
-                        new AsyncTriggerFetcher(
-                                sContext, mEnrollmentDao, mFlags, new NoOdpDelegationWrapper()));
         mDebugReportApi =
                 new DebugReportApi(
                         sContext,
@@ -198,6 +187,24 @@ public abstract class E2EMockTest extends E2ETest {
                         new SourceNoiseHandler(mFlags),
                         new SQLDatastoreManager(
                                 DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
+
+        mAsyncSourceFetcher =
+                spy(
+                        new AsyncSourceFetcher(
+                                sContext,
+                                mEnrollmentDao,
+                                mFlags,
+                                mDatastoreManager,
+                                mDebugReportApi));
+        mAsyncTriggerFetcher =
+                spy(
+                        new AsyncTriggerFetcher(
+                                sContext,
+                                mEnrollmentDao,
+                                mFlags,
+                                new NoOdpDelegationWrapper(),
+                                mDatastoreManager,
+                                mDebugReportApi));
         mMockContentResolver = mock(ContentResolver.class);
         mMockContentProviderClient = mock(ContentProviderClient.class);
         when(mMockContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI))

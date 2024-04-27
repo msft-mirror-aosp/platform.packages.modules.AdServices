@@ -29,7 +29,7 @@ public final class SimpleSyncCallback extends NoFailureSyncCallback<Object> {
     public SimpleSyncCallback() {}
 
     /** Constructor with a custom timeout to wait for the outcome. */
-    public SimpleSyncCallback(int timeoutMs) {
+    public SimpleSyncCallback(long timeoutMs) {
         super(timeoutMs);
     }
 

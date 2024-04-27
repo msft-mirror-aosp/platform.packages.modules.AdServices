@@ -584,14 +584,24 @@ public class AsyncRegistrationQueueRunner {
                 // If destination limit exceeds, the oldest destination deletion should be
                 // successful. This is an unexpected state.
                 throw new IllegalStateException(
-                        "Incoming destinations: "
+                        "No sources were deleted; incoming destinations: "
                                 + destinations.size()
                                 + "; FIFO limit:"
                                 + fifoLimit);
             }
             dao.updateSourceStatus(sourceIdsToDelete, Source.Status.MARKED_TO_DELETE);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Deleted "
+                                    + sourceIdsToDelete.size()
+                                    + " sources to insert the new source.");
             if (flags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()) {
                 dao.deletePendingAggregateReportsAndAttributionsForSources(sourceIdsToDelete);
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "Deleted pending aggregate reports of"
+                                        + sourceIdsToDelete.size()
+                                        + " sources to insert the new source.");
             }
             distinctDestinations =
                     dao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(

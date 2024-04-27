@@ -33,6 +33,7 @@ import java.lang.annotation.Target;
 public @interface SetStringFlag {
     /** Name of the flag. */
     String name();
+
     /** Value the flag will be set to when the test is running */
-    int value();
+    String value();
 }

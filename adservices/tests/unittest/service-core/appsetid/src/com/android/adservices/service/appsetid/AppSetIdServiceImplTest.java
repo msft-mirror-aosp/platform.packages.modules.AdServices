@@ -412,7 +412,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
     private static final class SyncIGetAppSetIdCallback
             extends IntFailureSyncCallback<GetAppSetIdResult> implements IGetAppSetIdCallback {
 
-        private SyncIGetAppSetIdCallback(int timeout) {
+        private SyncIGetAppSetIdCallback(long timeout) {
             super(timeout);
         }
 

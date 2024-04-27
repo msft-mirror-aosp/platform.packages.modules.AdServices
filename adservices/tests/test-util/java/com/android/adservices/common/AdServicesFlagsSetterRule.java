@@ -21,6 +21,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
@@ -58,6 +65,19 @@ public final class AdServicesFlagsSetterRule
     /** Factory method that only {@link #setDefaultLogcatTags() sets the default logcat tags}. */
     public static AdServicesFlagsSetterRule withDefaultLogcatTags() {
         return new AdServicesFlagsSetterRule().setDefaultLogcatTags();
+    }
+
+    /** Factory method that sets default flags required to enable K-Anon functionality. */
+    public static AdServicesFlagsSetterRule forKAnonEnabledTests() {
+        return new AdServicesFlagsSetterRule()
+                .setLogcatTag(LOGCAT_TAG_KANON, LOGCAT_LEVEL_VERBOSE)
+                .setFlag(KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE, true)
+                .setFlag(KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE, true)
+                .setFlag(KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN, "android")
+                .setFlag(KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, 100)
+                .setFlag(KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT, 10000)
+                .setFlag(KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED, true)
+                .setFlag(KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED, true);
     }
 
     /** Factory method that only {@link #setAllLogcatTags() sets all relevant logcat tags}. */

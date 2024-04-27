@@ -238,17 +238,23 @@ public class ReportAndRegisterEventE2ETest {
 
     AdSelectionServiceImpl mAdSelectionService;
     private AsyncRegistrationQueueRunner mAsyncRegistrationQueueRunnerSpy;
+    @Mock private DebugReportApi mDebugReportApiMock;
 
     @Spy
     private AsyncSourceFetcher mAsyncSourceFetcherSpy =
-            new AsyncSourceFetcher(CONTEXT, mEnrollmentDaoMock, mFlags);
+            new AsyncSourceFetcher(
+                    CONTEXT, mEnrollmentDaoMock, mFlags, mDatastoreManagerSpy, mDebugReportApiMock);
 
     @Spy
     private AsyncTriggerFetcher mAsyncTriggerFetcherSpy =
             new AsyncTriggerFetcher(
-                    CONTEXT, mEnrollmentDaoMock, mFlags, mIOdpDelegationWrapperMock);
+                    CONTEXT,
+                    mEnrollmentDaoMock,
+                    mFlags,
+                    mIOdpDelegationWrapperMock,
+                    mDatastoreManagerSpy,
+                    mDebugReportApiMock);
 
-    @Mock private DebugReportApi mDebugReportApiMock;
     @Mock private SourceNoiseHandler mSourceNoiseHandlerMock;
     private RetryStrategyFactory mRetryStrategyFactory;
     private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;

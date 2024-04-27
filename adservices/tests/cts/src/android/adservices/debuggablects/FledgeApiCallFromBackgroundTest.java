@@ -24,6 +24,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FOREGROUND_STATU
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import com.google.common.truth.Truth;
@@ -36,6 +37,7 @@ import org.junit.Test;
 import java.util.concurrent.ExecutionException;
 
 @SetIntegerFlag(name = KEY_FOREGROUND_STATUS_LEVEL, value = IMPORTANCE_FOREGROUND)
+@RequiresSdkLevelAtLeastT(reason = "No foreground check in S-")
 public class FledgeApiCallFromBackgroundTest extends FledgeScenarioTest {
     private ScenarioDispatcher mDispatcher;
 

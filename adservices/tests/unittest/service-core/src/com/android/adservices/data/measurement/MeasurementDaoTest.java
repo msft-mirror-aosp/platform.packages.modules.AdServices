@@ -1664,7 +1664,7 @@ public class MeasurementDaoTest {
                         publisherAsSuffix,
                         SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                         Source.Status.ACTIVE);
-        List<Source> ignoredSources =
+        List<Source> markedAsDeletedSources =
                 getSourcesWithDifferentDestinations(
                         5,
                         true,
@@ -1688,7 +1688,7 @@ public class MeasurementDaoTest {
         for (Source source : activeSourcesOutOfWindow) {
             insertSource(source);
         }
-        for (Source source : ignoredSources) {
+        for (Source source : markedAsDeletedSources) {
             insertSource(source);
         }
         List<Uri> excludedDestinations =
@@ -1710,7 +1710,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(4),
+                            Integer.valueOf(3),
                             measurementDao
                                     .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
@@ -1721,18 +1721,17 @@ public class MeasurementDaoTest {
                                             6000000000L));
                 });
         mDatastoreManager.runInTransaction(
-                measurementDao -> {
-                    assertEquals(
-                            Integer.valueOf(4),
-                            measurementDao
-                                    .countDistinctDestinationsPerPublisherPerRateLimitWindow(
-                                            publisher,
-                                            EventSurfaceType.WEB,
-                                            excludedDestinations,
-                                            EventSurfaceType.WEB,
-                                            4000000000L,
-                                            6000000000L));
-                });
+                measurementDao ->
+                        assertEquals(
+                                Integer.valueOf(3),
+                                measurementDao
+                                        .countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                                                publisher,
+                                                EventSurfaceType.WEB,
+                                                excludedDestinations,
+                                                EventSurfaceType.WEB,
+                                                4000000000L,
+                                                6000000000L)));
     }
 
     @Test

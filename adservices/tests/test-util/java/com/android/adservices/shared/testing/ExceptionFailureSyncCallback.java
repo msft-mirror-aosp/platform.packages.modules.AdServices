@@ -38,12 +38,12 @@ public abstract class ExceptionFailureSyncCallback<T> extends SyncCallback<T, Ex
     }
 
     /** Constructor with a custom timeout to wait for the outcome. */
-    public ExceptionFailureSyncCallback(int timeoutMs) {
+    public ExceptionFailureSyncCallback(long timeoutMs) {
         super(timeoutMs);
     }
 
     /** Constructor with custom settings. */
-    protected ExceptionFailureSyncCallback(int timeoutMs, boolean failIfCalledOnMainThread) {
+    protected ExceptionFailureSyncCallback(long timeoutMs, boolean failIfCalledOnMainThread) {
         super(timeoutMs, failIfCalledOnMainThread);
     }
 
@@ -71,7 +71,7 @@ public abstract class ExceptionFailureSyncCallback<T> extends SyncCallback<T, Ex
      * Returns the maximum time the {@code assert...} methods will wait for an outcome before
      * failing.
      */
-    public int getTimeoutMs() {
+    public long getTimeoutMs() {
         return getMaxTimeoutMs();
     }
 

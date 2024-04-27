@@ -1007,14 +1007,14 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     private static final class SyncIAdServicesCommonCallback
             extends IntFailureSyncCallback<IsAdServicesEnabledResult>
             implements IAdServicesCommonCallback {
-        private SyncIAdServicesCommonCallback(int timeoutMs) {
+        private SyncIAdServicesCommonCallback(long timeoutMs) {
             super(timeoutMs);
         }
     }
 
     private static final class SyncIUpdateAdIdCallback extends IntFailureSyncCallback<String>
             implements IUpdateAdIdCallback {
-        private SyncIUpdateAdIdCallback(int timeoutMs) {
+        private SyncIUpdateAdIdCallback(long timeoutMs) {
             super(timeoutMs);
         }
     }
@@ -1022,7 +1022,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     private static final class SyncIEnableAdServicesCallback
             extends IntFailureSyncCallback<EnableAdServicesResponse>
             implements IEnableAdServicesCallback {
-        private SyncIEnableAdServicesCallback(int timeoutMs) {
+        private SyncIEnableAdServicesCallback(long timeoutMs) {
             super(timeoutMs);
         }
     }
@@ -1030,7 +1030,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     private static final class SyncIAdServicesCommonStatesCallback
             extends IntFailureSyncCallback<AdServicesCommonStatesResponse>
             implements IAdServicesCommonStatesCallback {
-        private SyncIAdServicesCommonStatesCallback(int timeoutMs) {
+        private SyncIAdServicesCommonStatesCallback(long timeoutMs) {
             super(timeoutMs);
         }
     }

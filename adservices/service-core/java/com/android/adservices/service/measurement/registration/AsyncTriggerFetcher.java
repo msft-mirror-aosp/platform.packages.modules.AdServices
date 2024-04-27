@@ -26,6 +26,8 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -40,6 +42,7 @@ import com.android.adservices.service.measurement.XNetworkData;
 import com.android.adservices.service.measurement.ondevicepersonalization.IOdpDelegationWrapper;
 import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
 import com.android.adservices.service.measurement.ondevicepersonalization.OdpDelegationWrapperImpl;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Filter;
@@ -76,13 +79,17 @@ public class AsyncTriggerFetcher {
     private final Flags mFlags;
     private final Context mContext;
     private final IOdpDelegationWrapper mOdpWrapper;
+    private final DatastoreManager mDatastoreManager;
+    private final DebugReportApi mDebugReportApi;
 
     public AsyncTriggerFetcher(Context context) {
         this(
                 context,
                 EnrollmentDao.getInstance(context),
                 FlagsFactory.getFlags(),
-                getOdpDelegationManager(context, FlagsFactory.getFlags()));
+                getOdpDelegationManager(context, FlagsFactory.getFlags()),
+                DatastoreManagerFactory.getDatastoreManager(context),
+                new DebugReportApi(context, FlagsFactory.getFlags()));
     }
 
     @VisibleForTesting
@@ -90,11 +97,15 @@ public class AsyncTriggerFetcher {
             Context context,
             EnrollmentDao enrollmentDao,
             Flags flags,
-            IOdpDelegationWrapper odpWrapper) {
+            IOdpDelegationWrapper odpWrapper,
+            DatastoreManager datastoreManager,
+            DebugReportApi debugReportApi) {
         mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mNetworkConnection = new MeasurementHttpClient(context);
+        mDatastoreManager = datastoreManager;
+        mDebugReportApi = debugReportApi;
         mOdpWrapper = odpWrapper;
     }
 
@@ -148,9 +159,14 @@ public class AsyncTriggerFetcher {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_ERROR);
             return Optional.empty();
         }
+        String registrationHeaderStr = field.get(0);
+
+        boolean isHeaderErrorDebugReportEnabled =
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO));
         try {
             String eventTriggerData = new JSONArray().toString();
-            JSONObject json = new JSONObject(field.get(0));
+            JSONObject json = new JSONObject(registrationHeaderStr);
             if (!json.isNull(TriggerHeaderContract.EVENT_TRIGGER_DATA)) {
                 Optional<String> validEventTriggerData =
                         getValidEventTriggerData(
@@ -340,8 +356,23 @@ public class AsyncTriggerFetcher {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
-            LoggerFactory.getMeasurementLogger().e(e, "Trigger Parsing failed");
+            String errMsg = "Trigger JSON parsing failed";
+            LoggerFactory.getMeasurementLogger().e(e, errMsg);
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
+            if (isHeaderErrorDebugReportEnabled) {
+                mDatastoreManager.runInTransaction(
+                        (dao) -> {
+                            mDebugReportApi.scheduleHeaderErrorReport(
+                                    asyncRegistration.getRegistrationUri(),
+                                    asyncRegistration.getRegistrant(),
+                                    TriggerHeaderContract
+                                            .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER,
+                                    enrollmentId,
+                                    errMsg,
+                                    registrationHeaderStr,
+                                    dao);
+                        });
+            }
             return Optional.empty();
         } catch (IllegalArgumentException e) {
             LoggerFactory.getMeasurementLogger()
@@ -423,6 +454,7 @@ public class AsyncTriggerFetcher {
      *
      * @param asyncRegistration a {@link AsyncRegistration}, a request the record.
      * @param asyncFetchStatus a {@link AsyncFetchStatus}, stores Ad Tech server status.
+     * @param asyncRedirects a {@link AsyncRedirects}, stores redirections.
      */
     public Optional<Trigger> fetchTrigger(
             AsyncRegistration asyncRegistration,
@@ -836,6 +868,8 @@ public class AsyncTriggerFetcher {
     private interface TriggerHeaderContract {
         String HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER =
                 "Attribution-Reporting-Register-Trigger";
+        // Header for verbose debug reports.
+        String HEADER_ATTRIBUTION_REPORTING_INFO = "Attribution-Reporting-Info";
         String ATTRIBUTION_CONFIG = "attribution_config";
         String EVENT_TRIGGER_DATA = "event_trigger_data";
         String FILTERS = "filters";

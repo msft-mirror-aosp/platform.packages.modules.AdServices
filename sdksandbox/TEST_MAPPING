@@ -162,10 +162,13 @@
   ],
   "sdksandbox-postsubmit": [
     {
-      "name": "CtsViewTestCases"
+      "name": "CtsApacheHttpTestCases"
     },
     {
       "name": "CtsContentTestCases"
+    },
+    {
+      "name": "CtsMediaCodecTestCases"
     },
     {
       "name": "CtsOsTestCases"
@@ -174,7 +177,13 @@
       "name": "CtsUtilTestCases"
     },
     {
-      "name": "CtsMediaCodecTestCases"
+      "name": "CtsViewTestCases"
+    },
+    {
+      "name": "CtsWifiNonUpdatableTestCases"
+    },
+    {
+      "name": "CtsWifiTestCases"
     }
   ]
 }
