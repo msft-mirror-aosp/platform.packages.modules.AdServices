@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 public class NoOdpDelegationWrapper implements IOdpDelegationWrapper {
-    private static final String HEADER_ODP_REGISTER_TRIGGER = "Odp-Register-Trigger";
     private final AdServicesLogger mLogger;
 
     public NoOdpDelegationWrapper() {
@@ -45,9 +44,7 @@ public class NoOdpDelegationWrapper implements IOdpDelegationWrapper {
     public void registerOdpTrigger(
             AsyncRegistration asyncRegistration, Map<String, List<String>> headers) {
         LoggerFactory.getMeasurementLogger().d("registerOdpTrigger: ODP is not available");
-        if (headers.containsKey(HEADER_ODP_REGISTER_TRIGGER)) {
-            logOdpRegistrationMetrics();
-        }
+        logOdpRegistrationMetrics();
     }
 
     private void logOdpRegistrationMetrics() {

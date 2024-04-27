@@ -3265,10 +3265,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
     long MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 250 * 1024; // 250 kB
+    long MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 16 * 1024; // 16 kB
 
     /** Returns max allowed size in bytes for trigger registrations header. */
     default long getMaxTriggerRegistrationHeaderSizeBytes() {
         return MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+    }
+
+    /** Returns max allowed size in bytes for ODP trigger registrations header. */
+    default long getMaxOdpTriggerRegistrationHeaderSizeBytes() {
+        return MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
     }
 
     boolean MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT = false;
