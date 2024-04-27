@@ -23,7 +23,7 @@ public class NoFailureSyncCallback<T> extends SyncCallback<T, Void> {
     public NoFailureSyncCallback() {}
 
     /** Constructor with a custom timeout to wait for the outcome. */
-    public NoFailureSyncCallback(int timeoutMs) {
+    public NoFailureSyncCallback(long timeoutMs) {
         super(timeoutMs);
     }
 

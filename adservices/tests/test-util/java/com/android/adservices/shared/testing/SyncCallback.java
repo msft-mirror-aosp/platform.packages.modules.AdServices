@@ -69,7 +69,7 @@ public class SyncCallback<T, E> implements Identifiable {
     private final String mId = getClass().getSimpleName() + "#" + sNextId.incrementAndGet();
 
     private final CountDownLatch mLatch = new CountDownLatch(1);
-    private final int mTimeoutMs;
+    private final long mTimeoutMs;
     private final long mEpoch = SystemClock.elapsedRealtime();
 
     private @Nullable E mError;
@@ -87,12 +87,12 @@ public class SyncCallback<T, E> implements Identifiable {
     }
 
     /** Constructor with a custom timeout to wait for the outcome. */
-    protected SyncCallback(int timeoutMs) {
+    protected SyncCallback(long timeoutMs) {
         this(timeoutMs, DEFAULT_BEHAVIOR_FOR_FAIL_IF_CALLED_ON_MAIN_THREAD);
     }
 
     /** Constructor with custom settings. */
-    protected SyncCallback(int timeoutMs, boolean failIfCalledOnMainThread) {
+    protected SyncCallback(long timeoutMs, boolean failIfCalledOnMainThread) {
         mTimeoutMs = timeoutMs;
         mFailIfCalledOnMainThread = failIfCalledOnMainThread;
     }
@@ -111,7 +111,7 @@ public class SyncCallback<T, E> implements Identifiable {
      * Returns the maximum time the {@code assert...} methods will wait for an outcome before
      * failing.
      */
-    protected int getMaxTimeoutMs() {
+    protected long getMaxTimeoutMs() {
         return mTimeoutMs;
     }
 

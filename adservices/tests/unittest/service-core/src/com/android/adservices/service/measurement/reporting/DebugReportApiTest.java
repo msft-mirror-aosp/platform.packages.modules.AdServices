@@ -25,10 +25,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FakeFlagsFactory;
@@ -67,6 +69,15 @@ public final class DebugReportApiTest {
 
     private static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong("7213872");
     private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(1L);
+    private static final Uri TEST_REGISTRANT = Uri.parse("android-app://com.registrant");
+    private static final Uri TEST_REGISTRATION_ORIGIN =
+            WebUtil.validUri("https://subdomain.example.test");
+    private static final String HEADER_NAME_SOURCE_REGISTRATION =
+            "Attribution-Reporting-Register-Source";
+    private static final String TEST_ENROLLMENT_ID = "enrollment-id";
+    private static final String TEST_HEADER_CONTENT = "header-content";
+
+    private static final String TEST_ERROR_MESSAGE = "Invalid JSON";
     private static final String LIMIT = "100";
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private DebugReportApi mDebugReportApi;
@@ -4037,6 +4048,22 @@ public final class DebugReportApiTest {
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleHeaderErrorDebugReport_success() throws Exception {
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleHeaderErrorReport(
+                TEST_REGISTRATION_ORIGIN,
+                TEST_REGISTRANT,
+                HEADER_NAME_SOURCE_REGISTRATION,
+                TEST_ENROLLMENT_ID,
+                TEST_ERROR_MESSAGE,
+                TEST_HEADER_CONTENT,
+                mMeasurementDao);
+        verify(mMeasurementDao, times(1)).insertDebugReport(any());
     }
 
     private static void assertSourceDebugReportParameters(

@@ -36,7 +36,7 @@ public class FutureSyncCallback<T> extends SyncCallback<T, Throwable> implements
     }
 
     /** Constructor with a custom timeout to wait for the outcome. */
-    public FutureSyncCallback(int timeoutMs) {
+    public FutureSyncCallback(long timeoutMs) {
         super(timeoutMs);
     }
 
