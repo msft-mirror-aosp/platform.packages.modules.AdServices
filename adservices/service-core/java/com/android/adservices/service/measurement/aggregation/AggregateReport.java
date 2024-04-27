@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Class that contains all the real data needed after aggregation, it is not encrypted.
@@ -504,6 +505,7 @@ public class AggregateReport {
         public Builder getNullAggregateReportBuilder(
                 Trigger trigger, @Nullable Long fakeSourceTime, long delay, String apiVersion)
                 throws JSONException {
+            mAttributionReport.mId = UUID.randomUUID().toString();
             long reportTime = trigger.getTriggerTime();
             if (trigger.getTriggerContextId() == null) {
                 reportTime += delay;
