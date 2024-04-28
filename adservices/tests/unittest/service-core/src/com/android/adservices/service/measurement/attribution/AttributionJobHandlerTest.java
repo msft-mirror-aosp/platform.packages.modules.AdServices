@@ -22,6 +22,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REG
 import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -93,6 +94,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -4660,14 +4662,30 @@ public class AttributionJobHandlerTest {
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())),
                         eq(Trigger.Status.ATTRIBUTED));
-        verify(mMeasurementDao).insertAggregateReport(any());
         // Verify event report registration origin.
-        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
-        verify(mMeasurementDao).insertEventReport(reportArg.capture());
-        EventReport eventReport = reportArg.getValue();
+        ArgumentCaptor<EventReport> eventReportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(eventReportArg.capture());
+        ArgumentCaptor<AggregateReport> aggReportArg =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(aggReportArg.capture());
+        assertNotNull(aggReportArg.getValue().getId());
+
+        EventReport eventReport = eventReportArg.getValue();
+        assertNotNull(eventReport.getId());
         assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+
+        Set<String> expectedAttributionReportIds =
+                Set.of(eventReport.getId(), aggReportArg.getValue().getId());
+
+        ArgumentCaptor<Attribution> attributionArg = ArgumentCaptor.forClass(Attribution.class);
+        verify(mMeasurementDao, times(2)).insertAttribution(attributionArg.capture());
+        List<Attribution> attributions = attributionArg.getAllValues();
+        assertEquals(2, attributions.size());
+        Set<String> actualAttributionReportIds =
+                Set.of(attributions.get(0).getReportId(), attributions.get(1).getReportId());
+        assertEquals(expectedAttributionReportIds, actualAttributionReportIds);
     }
 
     @Test
