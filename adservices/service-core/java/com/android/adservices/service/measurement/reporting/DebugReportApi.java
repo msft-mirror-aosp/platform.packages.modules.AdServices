@@ -83,6 +83,7 @@ public class DebugReportApi {
         String TRIGGER_AGGREGATE_EXCESSIVE_REPORTS = "trigger-aggregate-excessive-reports";
         String TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED = "trigger-event-report-window-not-started";
         String TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA = "trigger-event-no-matching-trigger-data";
+        String HEADER_PARSING_ERROR = "header-parsing-error";
     }
 
     /** Defines different verbose debug report body parameters. */
@@ -99,6 +100,10 @@ public class DebugReportApi {
         String TRIGGER_DATA = "trigger_data";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
         String SOURCE_DESTINATION_LIMIT = "source_destination_limit";
+        String CONTEXT_SITE = "context_site";
+        String HEADER = "header";
+        String VALUE = "value";
+        String ERROR = "error";
     }
 
     private enum PermissionState {
@@ -397,6 +402,34 @@ public class DebugReportApi {
                     dao);
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger().e(e, "Json error in debug report %s", type);
+        }
+    }
+
+    /** Schedule header parsing and validation errors verbose debug reports. */
+    public void scheduleHeaderErrorReport(
+            Uri registrationUri,
+            Uri registrant,
+            String headerName,
+            String enrollmentId,
+            String errorMessage,
+            String originalHeader,
+            IMeasurementDao dao) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put(Body.CONTEXT_SITE, registrationUri);
+            body.put(Body.HEADER, headerName);
+            body.put(Body.VALUE, originalHeader);
+            body.put(Body.ERROR, errorMessage);
+            scheduleReport(
+                    Type.HEADER_PARSING_ERROR,
+                    body,
+                    enrollmentId,
+                    registrationUri,
+                    registrant,
+                    dao);
+        } catch (JSONException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Json error in debug report %s", Type.HEADER_PARSING_ERROR);
         }
     }
 
