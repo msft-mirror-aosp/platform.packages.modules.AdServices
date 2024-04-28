@@ -471,6 +471,12 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION =
             "measurement_enable_odp_web_trigger_registration";
 
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO =
+            "measurement_enable_destination_publisher_enrollment_fifo";
+
+    public static final String KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS =
+            "measurement_enable_fifo_destinations_delete_aggregate_reports";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -1012,12 +1018,16 @@ public final class FlagsConstants {
             "max_response_based_registration_size_bytes";
     public static final String KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES =
             "max_trigger_registration_header_size_bytes";
+    public static final String KEY_MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES =
+            "max_odp_trigger_registration_header_size_bytes";
 
     public static final String KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT =
             "enable_update_trigger_registration_header_limit";
 
     // UI keys
     public static final String KEY_PAS_UX_ENABLED = "pas_ux_enabled";
+
+    public static final String KEY_EEA_PAS_UX_ENABLED = "eea_pas_ux_enabled";
 
     public static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED =
             "ui_feature_type_logging_enabled";
