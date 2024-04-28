@@ -32,17 +32,22 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 public class SelectAdsFlagRule implements TestRule {
-    private Boolean mUsePublicCoordinator = false;
-    private static final String PUBLIC_COORDINATOR =
+    private String mCoordinatorToUse;
+    public static final String PUBLIC_COORDINATOR =
             "https://publickeyservice.pa.gcp.privacysandboxservices.com/.well-known/protected-auction/v1/public-keys";
 
     public static final String TEST_COORDINATOR =
             "https://ba-kv-service-5jyy5ulagq-uc.a.run.app/keys/2";
 
-    public SelectAdsFlagRule() {}
+    public static final String COORDINATOR_WITH_OLD_KEYS =
+            "https://key-test-5jyy5ulagq-uc.a.run.app/keys/3";
 
-    public SelectAdsFlagRule(Boolean useServerAuctionPublicCoordinator) {
-        this.mUsePublicCoordinator = useServerAuctionPublicCoordinator;
+    public SelectAdsFlagRule() {
+        this.mCoordinatorToUse = TEST_COORDINATOR;
+    }
+
+    public SelectAdsFlagRule(String coordinatorToUse) {
+        this.mCoordinatorToUse = coordinatorToUse;
     }
 
     @Rule
@@ -81,7 +86,7 @@ public class SelectAdsFlagRule implements TestRule {
                 "device_config put adservices fledge_auction_server_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_auction_server_enabled true");
-        String coordinatorUri = mUsePublicCoordinator ? PUBLIC_COORDINATOR : TEST_COORDINATOR;
+        String coordinatorUri = mCoordinatorToUse;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "fledge_auction_server_auction_key_fetch_uri",

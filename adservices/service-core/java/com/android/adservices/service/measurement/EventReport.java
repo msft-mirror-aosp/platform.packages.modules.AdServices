@@ -34,6 +34,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * POJO for EventReport.
@@ -460,6 +461,7 @@ public class EventReport {
                 @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
                 @NonNull SourceNoiseHandler sourceNoiseHandler,
                 List<Uri> eventReportDestinations) {
+            mBuilding.mId = UUID.randomUUID().toString();
             mBuilding.mTriggerDedupKey = eventTrigger.getDedupKey();
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceEventId = source.getEventId();
@@ -498,6 +500,7 @@ public class EventReport {
                 @NonNull List<UnsignedLong> debugKeys,
                 double flipProbability,
                 List<Uri> eventReportDestinations) {
+            mBuilding.mId = UUID.randomUUID().toString();
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceEventId = source.getEventId();
             mBuilding.mEnrollmentId = source.getEnrollmentId();

@@ -2795,6 +2795,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public long getMaxOdpTriggerRegistrationHeaderSizeBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES,
+                MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES);
+    }
+
+    @Override
     public boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
@@ -3004,6 +3011,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE,
                 MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE);
+    }
+
+    @Override
+    public boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO,
+                MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO);
+    }
+
+    @Override
+    public boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,
+                MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS);
     }
 
     @Override
@@ -4114,6 +4135,19 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON
                         + " = "
                         + getMeasurementPrivacyEpsilon());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO
+                        + " = "
+                        + getMeasurementEnableDestinationXPublisherXEnrollmentFifo());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS
+                        + " = "
+                        + getMeasurementEnableFifoDestinationsDeleteAggregateReports());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
@@ -5526,9 +5560,23 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getPasUxEnabled() {
+        if (getEeaPasUxEnabled()) {
+            // EEA devices (if EEA device feature is not enabled, assume EEA to be safe)
+            if (!isEeaDeviceFeatureEnabled() || isEeaDevice()) {
+                return true;
+            }
+            // ROW devices
+            return getDeviceConfigFlag(FlagsConstants.KEY_PAS_UX_ENABLED, DEFAULT_PAS_UX_ENABLED);
+        }
         return isEeaDeviceFeatureEnabled()
                 && !isEeaDevice()
                 && getDeviceConfigFlag(FlagsConstants.KEY_PAS_UX_ENABLED, DEFAULT_PAS_UX_ENABLED);
+    }
+
+    @Override
+    public boolean getEeaPasUxEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_EEA_PAS_UX_ENABLED, DEFAULT_EEA_PAS_UX_ENABLED);
     }
 
     @Override
@@ -5578,6 +5626,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED,
                 isGetAdServicesCommonStatesApiEnabled());
         uxMap.put(FlagsConstants.KEY_PAS_UX_ENABLED, getPasUxEnabled());
+        uxMap.put(FlagsConstants.KEY_EEA_PAS_UX_ENABLED, getEeaPasUxEnabled());
         return uxMap;
     }
 
