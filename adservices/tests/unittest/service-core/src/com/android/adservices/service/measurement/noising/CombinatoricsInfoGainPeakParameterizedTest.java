@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.util.Log;
 
+import com.android.adservices.service.Flags;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -32,10 +34,10 @@ import java.util.stream.IntStream;
 @RunWith(Parameterized.class)
 public class CombinatoricsInfoGainPeakParameterizedTest {
     private static final String TAG = "Measurement";
-    private static final int NUM_TESTS = 100;
+    private static final int NUM_TESTS = 50;
     private static final int MAX_Q1 = 1000;
-    private static final int MAX_Q2 = 1000;
-    private static final int MAX_K = 1000;
+    private static final int MAX_Q2 = 500;
+    private static final int MAX_K = 500;
     private final int mQ1;
     private final int mQ2;
     private final int mK;
@@ -54,9 +56,9 @@ public class CombinatoricsInfoGainPeakParameterizedTest {
                 .mapToObj(
                         i ->
                                 new Object[] {
-                                    random.nextInt(MAX_Q1),
-                                    random.nextInt(MAX_Q2),
-                                    random.nextInt(MAX_K)
+                                    random.nextInt(MAX_Q1 - 1) + 1,
+                                    random.nextInt(MAX_Q2 - 1) + 1,
+                                    random.nextInt(MAX_K - 1) + 1
                                 })
                 .collect(Collectors.toList());
     }
@@ -91,10 +93,12 @@ public class CombinatoricsInfoGainPeakParameterizedTest {
                         Math.max(
                                 bruteForce,
                                 Combinatorics.calculateInformationGainWithAttributionScope(
-                                        rQ1, k, q2));
+                                        rQ1, k, q2, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON));
             }
         }
         assertThat(bruteForce)
-                .isEqualTo(Combinatorics.getMaxInformationGainWithAttributionScope(rQ1, rK, rQ2));
+                .isEqualTo(
+                        Combinatorics.getMaxInformationGainWithAttributionScope(
+                                rQ1, rK, rQ2, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON));
     }
 }

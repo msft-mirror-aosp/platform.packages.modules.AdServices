@@ -63,6 +63,9 @@ public class SourceNoiseHandlerTest {
                 .when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
                 .when(mFlags).getMeasurementMaxReportStatesPerSourceRegistration();
+        doReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)
+                .when(mFlags)
+                .getMeasurementPrivacyEpsilon();
         mSourceNoiseHandler =
                 spy(new SourceNoiseHandler(mFlags, new EventReportWindowCalcDelegate(mFlags)));
         mEventReportWindowCalcDelegate = new EventReportWindowCalcDelegate(mFlags);
@@ -484,6 +487,27 @@ public class SourceNoiseHandlerTest {
                         /* destinationMultiplier */ 1),
                 mSourceNoiseHandler.getImpressionNoiseParams(
                         eventSourceWith2Destinations30dExpiry));
+    }
+
+    @Test
+    public void testGetRandomizedTriggerRateWithFlexSource() {
+        // Number of states: 5
+        // Epsilon: 14
+        // Flip probability: (5) / ((e^14) + 5 - 1) = .0000004157629766763622
+        Source source = SourceFixture.getValidSource();
+        assertEquals(
+                .000004157629766763622,
+                mSourceNoiseHandler.getRandomizedSourceResponsePickRate(source),
+                0);
+    }
+
+    @Test
+    public void testGetRandomizedTriggerRateWithFullFlexSource() {
+        // Number of states: 5
+        // Epsilon: 3
+        // Flip probability: (5) / ((e^3) + 5 - 1) = 0.207593
+        Source source = SourceFixture.getValidFullFlexSourceWithNonDefaultEpsilon();
+        assertEquals(0.207593, mSourceNoiseHandler.getRandomizedSourceResponsePickRate(source), 0);
     }
 
     @Test

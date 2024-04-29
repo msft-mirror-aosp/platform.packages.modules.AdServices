@@ -1944,7 +1944,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
 
     default boolean getConsentNotificationDebugMode() {
-        return CONSENT_NOTIFICATION_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
 
     /** The consent notification activity debug mode is off by default. */
@@ -1953,7 +1953,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns the consent notification activity debug mode. */
     default boolean getConsentNotificationActivityDebugMode() {
-        return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
     }
 
     @FeatureFlag(DEBUG)
@@ -1961,14 +1961,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns whether to suppress consent notified state. */
     default boolean getConsentNotifiedDebugMode() {
-        return CONSENT_NOTIFIED_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotifiedDebugMode();
     }
 
     @FeatureFlag(DEBUG)
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
 
     default boolean getConsentManagerDebugMode() {
-        return CONSENT_MANAGER_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentManagerDebugMode();
     }
 
     @FeatureFlag(DEBUG)
@@ -1976,7 +1976,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** When enabled, the device is treated as OTA device. */
     default boolean getConsentManagerOTADebugMode() {
-        return DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentManagerOTADebugMode();
     }
 
     boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
@@ -3839,6 +3839,23 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
     }
 
+    boolean MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO = false;
+
+    /** Enable FIFO destinations based deletion of sources to accommodate an incoming source. */
+    default boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
+        return MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO;
+    }
+
+    boolean MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS = false;
+
+    /**
+     * Enable deletion of reports along with FIFO destinations. In practice it's a sub flag to
+     * {@link #getMeasurementEnableDestinationXPublisherXEnrollmentFifo}
+     */
+    default boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
+        return MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
+    }
+
     /** Default Measurement ARA parsing alignment v1 feature flag. */
     boolean MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 = true;
 
@@ -4564,6 +4581,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID;
     }
 
+    /** Flag for enabling measurement registrations using ODP */
+    boolean MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION = false;
+
+    /** Return true if measurement registrations through ODP is enabled */
+    default boolean getMeasurementEnableOdpWebTriggerRegistration() {
+        return MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
+    }
+
+    float DEFAULT_MEASUREMENT_PRIVACY_EPSILON = 14f;
+
+    default float getMeasurementPrivacyEpsilon() {
+        return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
@@ -4807,9 +4838,21 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value to determine whether ux related to the PAS Ux are enabled. */
     boolean DEFAULT_PAS_UX_ENABLED = false;
 
-    /** Returns whether features related to the PAS Ux are enabled */
+    /**
+     * Returns whether features related to the PAS Ux are enabled. This flag has dependencies on
+     * {@link #getEeaPasUxEnabled}. This method is the master control for PAS UX. If either EEA or
+     * original PAS UX flag is on, then this method will return true.
+     */
     default boolean getPasUxEnabled() {
         return DEFAULT_PAS_UX_ENABLED;
+    }
+
+    /** Default value to determine whether ux related to EEA PAS Ux are enabled. */
+    boolean DEFAULT_EEA_PAS_UX_ENABLED = false;
+
+    /** Returns whether features related to EEA PAS Ux are enabled. */
+    default boolean getEeaPasUxEnabled() {
+        return DEFAULT_EEA_PAS_UX_ENABLED;
     }
 
     /** Default value of the KAnon Sign/join feature flag */
@@ -5206,5 +5249,55 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns {@code boolean} determining whether custom error code sampling is enabled. */
     default boolean getCustomErrorCodeSamplingEnabled() {
         return DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
+    }
+
+    /** Read timeout for downloading PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Read timeout for downloading PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptDownloadReadTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
+    }
+
+    /** Connection timeout for downloading PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Connection timeout for downloading PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptDownloadConnectionTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Read timeout for downloading PAS signals in milliseconds */
+    int DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Read timeout for downloading PAS signals in milliseconds
+     */
+    default int getPasSignalsDownloadReadTimeoutMs() {
+        return DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
+    }
+
+    /** Connection timeout for downloading PAS encoding signals in milliseconds */
+    int DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Connection timeout for downloading PAS signals in milliseconds
+     */
+    default int getPasSignalsDownloadConnectionTimeoutMs() {
+        return DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Timeout for executing PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Timeout for executing PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptExecutionTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
     }
 }

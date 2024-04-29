@@ -326,7 +326,10 @@ public class Source {
                     getAttributionScopeLimit() == null ? 1L : getAttributionScopeLimit();
             long maxEventStates = getMaxEventStates() == null ? 1L : getMaxEventStates();
             return Combinatorics.getMaxInformationGainWithAttributionScope(
-                    numTriggerStates, attributionScopeLimit, maxEventStates);
+                    numTriggerStates,
+                    attributionScopeLimit,
+                    maxEventStates,
+                    flags.getMeasurementPrivacyEpsilon());
         }
         return Combinatorics.getInformationGain(numTriggerStates, flipProbability);
     }
@@ -348,7 +351,8 @@ public class Source {
             setFlipProbability(mTriggerSpecs.getFlipProbability(this, flags));
             return;
         }
-        setFlipProbability(Combinatorics.getFlipProbability(getNumStates(flags)));
+        double epsilon = (double) flags.getMeasurementPrivacyEpsilon();
+        setFlipProbability(Combinatorics.getFlipProbability(getNumStates(flags), epsilon));
     }
 
     /** Should source report coarse destinations */

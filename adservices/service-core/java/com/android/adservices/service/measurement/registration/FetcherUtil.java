@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -253,6 +254,48 @@ public class FetcherUtil {
         return true;
     }
 
+    /**
+     * Parses header error debug report opt-in info from "Attribution-Reporting-Info" header. The
+     * header is a structured header and only supports dictionary format. Check HTTP [RFC8941]
+     * Section3.2 for details.
+     *
+     * <p>Examples of this type of header:
+     *
+     * <ul>
+     *   <li>"Attribution-Reporting-Info":“report-header-errors=?0"
+     *   <li>"Attribution-Reporting-Info": “report-header-errors,chrome-param=value"
+     *   <li>"Attribution-Reporting-Info": "report-header-errors=?1;chrome-param=value,
+     *       report-header-errors=?0"
+     * </ul>
+     *
+     * <p>The header may contain information that is only used in Chrome. Android will ignore it and
+     * be less strict in parsing in the current version. When "report-header-errors" value can't be
+     * extracted, Android will skip sending the debug report instead of dropping the whole
+     * registration.
+     */
+    public static boolean isHeaderErrorDebugReportEnabled(
+            @Nullable List<String> attributionInfoHeaders) {
+        if (attributionInfoHeaders == null || attributionInfoHeaders.size() == 0) {
+            return false;
+        }
+        // When there are multiple headers or the same key appears multiple times, find the last
+        // appearance and get the value.
+        for (int i = attributionInfoHeaders.size() - 1; i >= 0; i--) {
+            String[] parsed = attributionInfoHeaders.get(i).split("[,;]+");
+            for (int j = parsed.length - 1; j >= 0; j--) {
+                String parsedStr = parsed[j].trim();
+                if (parsedStr.equals("report-header-errors")
+                        || parsedStr.equals("report-header-errors=?1")) {
+                    return true;
+                } else if (parsedStr.equals("report-header-errors=?0")) {
+                    return false;
+                }
+            }
+        }
+        // Skip sending the debug report when the key is not found.
+        return false;
+    }
+
     /** Validate attribution filters JSONObject. */
     static boolean areValidAttributionFilters(
             JSONObject filtersObj,
@@ -347,7 +390,8 @@ public class FetcherUtil {
                                 asyncFetchStatus.getRegistrationDelay(),
                                 getSourceRegistrantToLog(asyncRegistration),
                                 asyncFetchStatus.getRetryCount(),
-                                asyncFetchStatus.isRedirectOnly())
+                                asyncFetchStatus.isRedirectOnly(),
+                                asyncFetchStatus.isPARequest())
                         .setAdTechDomain(adTechDomain)
                         .build());
     }

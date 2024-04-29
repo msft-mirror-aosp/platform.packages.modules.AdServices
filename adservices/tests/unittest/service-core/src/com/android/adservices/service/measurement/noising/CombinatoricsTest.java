@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.noising;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -246,9 +247,21 @@ public class CombinatoricsTest {
                 .forEach(
                         (testCase) -> {
                             double result =
-                                    100 * Combinatorics.getFlipProbability((int) testCase[0]);
+                                    100
+                                            * Combinatorics.getFlipProbability(
+                                                    (int) testCase[0],
+                                                    Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
                             assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
+    }
+
+    @Test
+    public void testFlipProbabilityWithNonDefaultEpsilon() {
+        double defaultProbability =
+                Combinatorics.getFlipProbability(
+                        (int) 2925.0, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+        double newProbability = Combinatorics.getFlipProbability((int) 2925.0, 0.89);
+        assertNotEquals(defaultProbability, newProbability, 0);
     }
 
     @Test
@@ -268,7 +281,9 @@ public class CombinatoricsTest {
                             double result =
                                     Combinatorics.getInformationGain(
                                             (int) testCase[0],
-                                            Combinatorics.getFlipProbability((int) testCase[0]));
+                                            Combinatorics.getFlipProbability(
+                                                    (int) testCase[0],
+                                                    Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON));
                             assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
     }
@@ -298,8 +313,21 @@ public class CombinatoricsTest {
                                     Combinatorics.getMaxInformationGainWithAttributionScope(
                                             (long) testCase[0],
                                             (long) testCase[1],
-                                            (long) testCase[2]);
+                                            (long) testCase[2],
+                                            Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
                             assertEquals(testCase[3], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    Combinatorics.getMaxInformationGainWithAttributionScope(
+                            0L, 2L, 3L, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+                });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    Combinatorics.getMaxInformationGainWithAttributionScope(
+                            3L, 2L, 0L, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+                });
     }
 }

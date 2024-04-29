@@ -47,6 +47,10 @@ java_defaults {
         "opencensus-java-api",
         "opencensus-java-contrib-grpc-metrics",
         "adservices_flags_lib", // Used by FlagsConstantsTest
+        // Tests may run on the platforms that don't have ODP module installed.
+        // Without static_lib dependency, the framework code from ODP won't be
+        // packaged with the test APK and throw NoClassDefFoundError.
+        "framework-ondevicepersonalization.impl",
     ],
     libs: [
         "android.test.base",
@@ -199,6 +203,10 @@ java_defaults {
         "tflite_support_classifiers_java",
         "truth",
         "adservices_flags_lib", // Used by FlagsConstantsTest
+        // Tests may run on the platforms that don't have ODP module installed.
+        // Without static_lib dependency, the framework code from ODP won't be
+        // packaged with the test APK and throw NoClassDefFoundError.
+        "framework-ondevicepersonalization.impl",
     ],
     libs: [
         "android.ext.adservices",

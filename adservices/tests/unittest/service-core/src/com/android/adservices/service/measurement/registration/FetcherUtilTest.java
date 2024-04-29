@@ -1035,6 +1035,7 @@ public final class FetcherUtilTest {
                                                 0,
                                                 REGISTRANT_URI.toString(),
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(null)
                                         .build()));
@@ -1079,6 +1080,7 @@ public final class FetcherUtilTest {
                                                 0,
                                                 REGISTRANT_URI.toString(),
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(REGISTRATION_URI.toString())
                                         .build()));
@@ -1126,6 +1128,7 @@ public final class FetcherUtilTest {
                                                 0,
                                                 REGISTRANT_URI.toString(),
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(null)
                                         .build()));
@@ -1155,6 +1158,63 @@ public final class FetcherUtilTest {
     @Test
     public void isValidAggregateDeduplicationKey_empty_returnsFalse() {
         assertFalse(FetcherUtil.isValidAggregateDeduplicationKey(""));
+    }
+
+    @Test
+    public void isHeaderErrorDebugReportEnabled_nullValue_returnsFalse() {
+        assertFalse(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(/* attributionInfoHeader = */ null));
+    }
+
+    @Test
+    public void isHeaderErrorDebugReportEnabled_noMatchingKey_returnsFalse() {
+        assertFalse(FetcherUtil.isHeaderErrorDebugReportEnabled(List.of("preferred-platform=web")));
+    }
+
+    @Test
+    public void isHeaderErrorDebugReportEnabled_matchingKeyWrongFormat_returnsFalse() {
+        assertFalse(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(List.of("report-header-errors=os")));
+    }
+
+    @Test
+    public void isHeaderErrorDebugReportEnabled_matchingKeyEnabled_returnsTrue() {
+        assertTrue(FetcherUtil.isHeaderErrorDebugReportEnabled(List.of("report-header-errors")));
+        assertTrue(FetcherUtil.isHeaderErrorDebugReportEnabled(List.of("report-header-errors=?1")));
+        assertTrue(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        List.of("preferred-platform=web, report-header-errors;")));
+    }
+
+    @Test
+    public void isHeaderErrorDebugReportEnabled_matchingKeyDisabled_returnsFalse() {
+        assertFalse(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        List.of("preferred-platform=web, report-header-errors=?0;")));
+    }
+
+    @Test
+    public void isHeaderErrorDebugReportEnabled_multipleKey_returnsLast() {
+        assertTrue(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        List.of(
+                                "preferred-platform=web,"
+                                        + " report-header-errors=?0;report-header-errors")));
+        assertFalse(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        List.of(
+                                "report-header-errors;report-header-errors=?0,"
+                                        + " preferred-platform=os;")));
+    }
+
+    @Test
+    public void isHeaderErrorDebugReportEnabled_multipleHeaders_returnsLast() {
+        assertTrue(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        Arrays.asList("report-header-errors=?0", "report-header-errors")));
+        assertFalse(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        Arrays.asList("report-header-errors", "report-header-errors=?0")));
     }
 
     private Map<String, List<String>> createHeadersMap() {

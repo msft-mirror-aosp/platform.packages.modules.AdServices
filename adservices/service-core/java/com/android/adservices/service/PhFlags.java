@@ -99,6 +99,11 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.MAX_PERCENTAGE;
@@ -2756,41 +2761,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getConsentNotificationDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE),
-                CONSENT_NOTIFICATION_DEBUG_MODE);
-    }
-
-    @Override
-    public boolean getConsentNotificationActivityDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE),
-                CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
-    }
-
-    @Override
-    public boolean getConsentNotifiedDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE),
-                CONSENT_NOTIFIED_DEBUG_MODE);
-    }
-
-    @Override
-    public boolean getConsentManagerDebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE),
-                CONSENT_MANAGER_DEBUG_MODE);
-    }
-
-    @Override
-    public boolean getConsentManagerOTADebugMode() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE),
-                DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
-    }
-
-    @Override
     public boolean getRvcPostOtaNotifAgeCheck() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
@@ -3037,6 +3007,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO,
+                MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO);
+    }
+
+    @Override
+    public boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,
+                MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS);
+    }
+
+    @Override
     public int getMeasurementMaxAggregateKeysPerSourceRegistration() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION,
@@ -3169,6 +3153,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableOdpWebTriggerRegistration() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION,
+                MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION);
+    }
+
+    @Override
     public String getAdServicesModuleJobPolicy() {
         return getDeviceConfigFlag(
                 KEY_AD_SERVICES_MODULE_JOB_POLICY, AD_SERVICES_MODULE_JOB_POLICY);
@@ -3191,11 +3182,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + " = "
                         + getEnableAdServicesSystemApi());
         writer.println("\t" + FlagsConstants.KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE
-                        + " = "
-                        + getConsentManagerOTADebugMode());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK
@@ -3696,6 +3682,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementMaxLengthOfTriggerContextId());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION
+                        + " = "
+                        + getMeasurementEnableOdpWebTriggerRegistration());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS
                         + " = "
                         + getAdIdFetcherTimeoutMs());
@@ -4131,6 +4122,26 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 .KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH
                         + " = "
                         + getMeasurementJobImmediateAggregateReportingKillSwitch());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON
+                        + " = "
+                        + getMeasurementPrivacyEpsilon());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO
+                        + " = "
+                        + getMeasurementEnableDestinationXPublisherXEnrollmentFifo());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS
+                        + " = "
+                        + getMeasurementEnableFifoDestinationsDeleteAggregateReports());
+
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t"
@@ -5327,6 +5338,31 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS
                         + " = "
                         + getAdServicesJsScriptEngineMaxRetryAttempts());
+        writer.println(
+                "\t"
+                        + KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS
+                        + " = "
+                        + getPasScriptDownloadReadTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS
+                        + " = "
+                        + getPasScriptDownloadConnectionTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS
+                        + " = "
+                        + getPasSignalsDownloadReadTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS
+                        + " = "
+                        + getPasSignalsDownloadConnectionTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS
+                        + " = "
+                        + getPasScriptExecutionTimeoutMs());
     }
 
     @VisibleForTesting
@@ -5517,9 +5553,23 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getPasUxEnabled() {
+        if (getEeaPasUxEnabled()) {
+            // EEA devices (if EEA device feature is not enabled, assume EEA to be safe)
+            if (!isEeaDeviceFeatureEnabled() || isEeaDevice()) {
+                return true;
+            }
+            // ROW devices
+            return getDeviceConfigFlag(FlagsConstants.KEY_PAS_UX_ENABLED, DEFAULT_PAS_UX_ENABLED);
+        }
         return isEeaDeviceFeatureEnabled()
                 && !isEeaDevice()
                 && getDeviceConfigFlag(FlagsConstants.KEY_PAS_UX_ENABLED, DEFAULT_PAS_UX_ENABLED);
+    }
+
+    @Override
+    public boolean getEeaPasUxEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_EEA_PAS_UX_ENABLED, DEFAULT_EEA_PAS_UX_ENABLED);
     }
 
     @Override
@@ -5569,6 +5619,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED,
                 isGetAdServicesCommonStatesApiEnabled());
         uxMap.put(FlagsConstants.KEY_PAS_UX_ENABLED, getPasUxEnabled());
+        uxMap.put(FlagsConstants.KEY_EEA_PAS_UX_ENABLED, getEeaPasUxEnabled());
         return uxMap;
     }
 
@@ -6046,6 +6097,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public float getMeasurementPrivacyEpsilon() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON,
+                DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+    }
+
+    @Override
     public String getMeasurementAppPackageNameLoggingAllowlist() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
@@ -6431,6 +6489,40 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getCustomErrorCodeSamplingEnabled() {
         return getDeviceConfigFlag(
                 KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED, DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED);
+    }
+
+    @Override
+    public int getPasScriptDownloadReadTimeoutMs() {
+        return getDeviceConfigFlag(
+                KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS,
+                DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getPasScriptDownloadConnectionTimeoutMs() {
+        return getDeviceConfigFlag(
+                KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getPasSignalsDownloadReadTimeoutMs() {
+        return getDeviceConfigFlag(
+                KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS,
+                DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getPasSignalsDownloadConnectionTimeoutMs() {
+        return getDeviceConfigFlag(
+                KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getPasScriptExecutionTimeoutMs() {
+        return getDeviceConfigFlag(
+                KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS, DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers

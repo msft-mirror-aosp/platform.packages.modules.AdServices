@@ -104,7 +104,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     @NonNull private final Flags mFlags;
 
     @VisibleForTesting
-    protected StatsdAdServicesLogger(@NonNull Flags flags) {
+    StatsdAdServicesLogger(@NonNull Flags flags) {
         this.mFlags = Objects.requireNonNull(flags);
     }
 
@@ -215,7 +215,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 getAllowlistedAppPackageName(stats.getSourceRegistrant()),
                 stats.getRetryCount(),
                 /* httpResponseCode */ 0,
-                stats.isRedirectOnly());
+                stats.isRedirectOnly(),
+                stats.isPARequest());
     }
 
     @Override
@@ -475,6 +476,17 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 measurementClickVerificationStats.getMaxSourcesPerClick(),
                 measurementClickVerificationStats
                         .isCurrentRegistrationUnderClickDeduplicationLimit());
+    }
+
+    /** Logs measurement ODP registrations. */
+    public void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats) {
+        AdServicesStatsLog.write(
+                stats.getCode(), stats.getRegistrationType(), stats.getRegistrationStatus());
+    }
+
+    /** Logs measurement ODP API calls. */
+    public void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats) {
+        AdServicesStatsLog.write(stats.getCode(), stats.getLatency(), stats.getApiCallStatus());
     }
 
     /** log method for consent migrations. */

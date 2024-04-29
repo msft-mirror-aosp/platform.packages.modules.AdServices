@@ -63,6 +63,7 @@ import com.android.adservices.service.measurement.attribution.AttributionJobHand
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
@@ -72,7 +73,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobHandlerWrapper;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONArray;
@@ -176,21 +177,8 @@ public abstract class E2EMockTest extends E2ETest {
                         DbTestUtil.getSharedDbHelperForTest(),
                         mFlags,
                         /* enable seed */ true,
-                        AdServicesLoggerImpl.getInstance(),
+                        new NoOpLoggerImpl(),
                         EnrollmentUtil.getInstance());
-
-        mAsyncSourceFetcher =
-                spy(
-                        new AsyncSourceFetcher(
-                                sContext,
-                                mEnrollmentDao,
-                                mFlags));
-        mAsyncTriggerFetcher =
-                spy(
-                        new AsyncTriggerFetcher(
-                                sContext,
-                                mEnrollmentDao,
-                                mFlags));
         mDebugReportApi =
                 new DebugReportApi(
                         sContext,
@@ -199,6 +187,24 @@ public abstract class E2EMockTest extends E2ETest {
                         new SourceNoiseHandler(mFlags),
                         new SQLDatastoreManager(
                                 DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
+
+        mAsyncSourceFetcher =
+                spy(
+                        new AsyncSourceFetcher(
+                                sContext,
+                                mEnrollmentDao,
+                                mFlags,
+                                mDatastoreManager,
+                                mDebugReportApi));
+        mAsyncTriggerFetcher =
+                spy(
+                        new AsyncTriggerFetcher(
+                                sContext,
+                                mEnrollmentDao,
+                                mFlags,
+                                new NoOdpDelegationWrapper(),
+                                mDatastoreManager,
+                                mDebugReportApi));
         mMockContentResolver = mock(ContentResolver.class);
         mMockContentProviderClient = mock(ContentProviderClient.class);
         when(mMockContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI))

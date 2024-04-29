@@ -468,6 +468,15 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED =
             "fledge_app_package_name_logging_enabled";
 
+    public static final String KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION =
+            "measurement_enable_odp_web_trigger_registration";
+
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO =
+            "measurement_enable_destination_publisher_enrollment_fifo";
+
+    public static final String KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS =
+            "measurement_enable_fifo_destinations_delete_aggregate_reports";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -984,10 +993,6 @@ public final class FlagsConstants {
     // Consent Manager debug mode keys.
     public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
-    // Consent Manager ota debug mode keys.
-    public static final String KEY_CONSENT_MANAGER_OTA_DEBUG_MODE =
-            "consent_manager_ota_debug_mode";
-
     // Rvc post ota notification age check keys.
     public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
             "rvc_post_ota_notification_age_check";
@@ -1019,6 +1024,8 @@ public final class FlagsConstants {
 
     // UI keys
     public static final String KEY_PAS_UX_ENABLED = "pas_ux_enabled";
+
+    public static final String KEY_EEA_PAS_UX_ENABLED = "eea_pas_ux_enabled";
 
     public static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED =
             "ui_feature_type_logging_enabled";
@@ -1275,6 +1282,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH =
             "measurement_max_attribution_scope_length";
 
+    public static final String KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON =
+            "measurement_event_api_default_epsilon";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
@@ -1462,4 +1472,24 @@ public final class FlagsConstants {
     /** Key for enabling custom error code sampling. */
     public static final String KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED =
             "custom_error_code_sampling_enabled";
+
+    /** Key for PAS script download read timeout flag */
+    public static final String KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS =
+            "pas_script_download_read_timeout_ms";
+
+    /** Key for PAS script download connection timeout flag */
+    public static final String KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS =
+            "pas_script_download_connection_timeout_ms";
+
+    /** Key for PAS signals download read timeout flag */
+    public static final String KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS =
+            "pas_signals_download_read_timeout_ms";
+
+    /** Key for PAS signals download connection timeout flag */
+    public static final String KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS =
+            "pas_signals_download_connection_timeout_ms";
+
+    /** Key for PAS script execution timeout flag */
+    public static final String KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS =
+            "pas_script_execution_timeout_ms";
 }
