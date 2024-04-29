@@ -26,9 +26,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
-import static com.android.adservices.service.PhFlags.getSystemPropertyName;
-
-import android.os.SystemProperties;
 
 /**
  * Flags that are only used for development / testing purposes.
@@ -36,11 +33,11 @@ import android.os.SystemProperties;
  * <p>They're never pushed to devices (through `DeviceConfig`) and must be manually set by the
  * developer (or automatically set by the test), so they're implemented using System Properties.
  *
- * <p><b>NOTE: </b> the value of these flags should be such that the behavior they're changing is not
- * changed or the feature they're guarding is disabled, so usually their default value should be
+ * <p><b>NOTE: </b> the value of these flags should be such that the behavior they're changing is
+ * not changed or the feature they're guarding is disabled, so usually their default value should be
  * {@code false}.
  */
-public final class DebugFlags {
+public final class DebugFlags extends CommonDebugFlags {
     private static final DebugFlags sInstance = new DebugFlags();
 
     static DebugFlags getInstance() {
@@ -70,9 +67,5 @@ public final class DebugFlags {
     public boolean getConsentManagerOTADebugMode() {
         return getDebugFlag(
                 KEY_CONSENT_MANAGER_OTA_DEBUG_MODE, DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
-    }
-
-    private boolean getDebugFlag(String name, boolean defaultValue) {
-        return SystemProperties.getBoolean(getSystemPropertyName(name), defaultValue);
     }
 }

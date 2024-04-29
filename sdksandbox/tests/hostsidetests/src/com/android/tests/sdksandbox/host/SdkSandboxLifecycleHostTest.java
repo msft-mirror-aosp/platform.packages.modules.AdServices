@@ -240,19 +240,10 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         // APP_SHARED_2_PACKAGE dies after running device-side tests.
         waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
-        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
-            // For U+, the other sandbox should still be alive.
-            String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-            assertThat(processDump).contains(SANDBOX_SHARED_1_PROCESS_NAME);
-        } else {
-            // For T, the sandbox for APP_SHARED_PACKAGE should also die since we kill by uid.
-            waitForProcessDeath(SANDBOX_SHARED_1_PROCESS_NAME);
 
-            // Neither of the sandboxes should be respawned later
-            Thread.sleep(5000);
-            waitForProcessDeath(SANDBOX_SHARED_1_PROCESS_NAME);
-            waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
-        }
+        // For U+, the other sandbox should still be alive.
+        String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(SANDBOX_SHARED_1_PROCESS_NAME);
     }
 
     @Test
@@ -288,17 +279,11 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
             getDevice()
                     .executeShellCommand("device_config put adservices disable_sdk_sandbox true");
             waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
-            if (mDeviceSdkLevel.isDeviceAtLeastU()) {
-                waitForProcessDeath(APP_2_PROCESS_NAME);
-            }
+            waitForProcessDeath(APP_2_PROCESS_NAME);
 
             processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
             // In U+ the app should be killed when the sandbox is killed.
-            if (mDeviceSdkLevel.isDeviceAtLeastU()) {
-                assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME + '\n');
-            } else {
-                assertThat(processDump).contains(APP_2_PROCESS_NAME + '\n');
-            }
+            assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME + '\n');
             assertThat(processDump).doesNotContain(SANDBOX_2_PROCESS_NAME);
         } finally {
             getDevice().executeShellCommand("cmd sdk_sandbox set-state --enabled");
@@ -307,8 +292,6 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSpecificAppProcessIsKilledOnSandboxDeath() throws Exception {
-        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
-
         try {
             getDevice()
                     .executeShellCommand("device_config put adservices disable_sdk_sandbox false");
@@ -416,34 +399,8 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).contains(APP_PACKAGE + '\n');
-        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
-            // The sandbox should not restart in U+.
-            assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
-        } else {
-            // The sandbox gets restarted, so it should still be running
-            assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
-
-            String finalSandboxPid = getDevice().getProcessPid(SANDBOX_1_PROCESS_NAME);
-            assertThat(initialSandboxPid).isNotEqualTo(finalSandboxPid);
-
-            int initialSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
-
-            // Navigate to home screen to send both apps to the background.
-            getDevice().executeShellCommand("input keyevent KEYCODE_HOME");
-
-            // Wait for app to be backgrounded and unbinding of sandbox to complete.
-            Thread.sleep(2000);
-
-            // Should see app/sdk sandbox running
-            processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-            assertThat(processDump).contains(APP_PACKAGE + '\n');
-            assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
-
-            // Verify that unbinding in the background still works for a restarted sandbox.
-            int finalSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
-            // The higher the oom adj score, the lower the priority of the process.
-            assertThat(finalSandboxOomScoreAdj).isGreaterThan(initialSandboxOomScoreAdj);
-        }
+        // The sandbox should not restart in U+.
+        assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
     }
 
     @Ignore("b/310160187")

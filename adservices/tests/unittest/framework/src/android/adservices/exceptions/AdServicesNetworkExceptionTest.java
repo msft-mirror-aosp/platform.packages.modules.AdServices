@@ -25,13 +25,12 @@ import static org.junit.Assert.assertThrows;
 
 import static java.util.Locale.ENGLISH;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
 // TODO(b/278016822): Move to CTS tests once public APIs are unhidden
-@SmallTest
-public class AdServicesNetworkExceptionTest {
+public class AdServicesNetworkExceptionTest extends AdServicesUnitTestCase {
     private static final int VALID_ERROR_CODE = ERROR_TOO_MANY_REQUESTS;
     private static final int INVALID_ERROR_CODE = 1000;
 
@@ -39,9 +38,9 @@ public class AdServicesNetworkExceptionTest {
     public void testExceptionWithErrorCode_valid() {
         AdServicesNetworkException exception = new AdServicesNetworkException(VALID_ERROR_CODE);
 
-        assertThat(exception.getErrorCode()).isEqualTo(VALID_ERROR_CODE);
-        assertThat(exception.getMessage()).isNull();
-        assertThat(exception.toString())
+        expect.that(exception.getErrorCode()).isEqualTo(VALID_ERROR_CODE);
+        expect.that(exception).hasMessageThat().isNull();
+        expect.that(exception.toString())
                 .isEqualTo(getHumanReadableAdServicesNetworkException(VALID_ERROR_CODE));
     }
 
@@ -51,7 +50,7 @@ public class AdServicesNetworkExceptionTest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> new AdServicesNetworkException(INVALID_ERROR_CODE));
-        assertThat(exception.getMessage()).isEqualTo(INVALID_ERROR_CODE_MESSAGE);
+        assertThat(exception).hasMessageThat().isEqualTo(INVALID_ERROR_CODE_MESSAGE);
     }
 
     private String getHumanReadableAdServicesNetworkException(int errorCode) {

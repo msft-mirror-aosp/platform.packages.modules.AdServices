@@ -109,13 +109,13 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
         ListenableFuture<Integer> schedulingFuture =
                 Futures.submit(() -> scheduleJob(context, jobSpec), mExecutor);
 
-        addCallbackToSchedulingFuture(schedulingFuture, jobSpec.getJobId());
+        addCallbackToSchedulingFuture(schedulingFuture, jobSpec.getJobPolicy().getJobId());
     }
 
     @VisibleForTesting
     @JobSchedulingResultCode
     int scheduleJob(Context context, JobSpec jobSpec) {
-        int jobId = jobSpec.getJobId();
+        int jobId = jobSpec.getJobPolicy().getJobId();
         String jobName = mJobIdToNameMap.get(jobId);
         boolean forceSchedule = jobSpec.getShouldForceSchedule();
         LogUtil.v("Start to schedule %s with jobId = %d.", jobName, jobId);
@@ -174,7 +174,7 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
     // scheduling and the synced JobPolicy from Mendel server.
     @VisibleForTesting
     JobInfo getJobInfoToSchedule(Context context, JobSpec jobSpec, String jobName) {
-        int jobId = jobSpec.getJobId();
+        int jobId = jobSpec.getJobPolicy().getJobId();
 
         JobPolicy defaultJobPolicy = jobSpec.getJobPolicy();
         JobPolicy serverJobPolicy = getPolicyFromFlagServer(jobId, jobName);

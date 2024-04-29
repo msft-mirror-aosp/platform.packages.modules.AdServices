@@ -33,28 +33,20 @@ import java.util.Objects;
  * {@link BackoffPolicy}.
  */
 public final class JobSpec {
-    private final int mJobId;
     private final JobPolicy mJobPolicy;
     private final BackoffPolicy mBackoffPolicy;
     private final PersistableBundle mExtras;
     private final boolean mShouldForceSchedule;
 
     private JobSpec(
-            int jobId,
             JobPolicy jobPolicy,
             @Nullable BackoffPolicy backoffPolicy,
             @Nullable PersistableBundle extras,
             boolean shouldForceSchedule) {
-        mJobId = jobId;
         mJobPolicy = Objects.requireNonNull(jobPolicy);
         mBackoffPolicy = backoffPolicy == null ? BackoffPolicy.DEFAULT : backoffPolicy;
         mExtras = extras;
         mShouldForceSchedule = shouldForceSchedule;
-    }
-
-    /** Returns a unique ID of your module to schedule a background job. */
-    public int getJobId() {
-        return mJobId;
     }
 
     /** Returns a {@link JobPolicy} used for the default constraints to schedule a job. */
@@ -99,23 +91,20 @@ public final class JobSpec {
         // There is no public method to compare to PersistableBundle. Ignore the difference on it
         // for the reasons 1) only a few jobs will use this extra field. 2) this equals() method for
         // JobSpec is not used in Production.
-        return mJobId == that.mJobId
-                && mJobPolicy.equals(that.mJobPolicy)
+        return mJobPolicy.equals(that.mJobPolicy)
                 && mBackoffPolicy.equals(that.mBackoffPolicy)
                 && mShouldForceSchedule == that.mShouldForceSchedule;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mJobId, mJobPolicy, mBackoffPolicy, mShouldForceSchedule);
+        return Objects.hash(mJobPolicy, mBackoffPolicy, mShouldForceSchedule);
     }
 
     @Override
     public String toString() {
         return "JobSpec{"
-                + "mJobId="
-                + mJobId
-                + ", mBackoffPolicy="
+                + "mBackoffPolicy="
                 + mBackoffPolicy
                 + ", mExtras="
                 + mExtras
@@ -126,7 +115,6 @@ public final class JobSpec {
 
     /** Builder class for {@link JobSpec}. */
     public static final class Builder {
-        private final int mJobId;
         private final JobPolicy mJobPolicy;
         @Nullable private BackoffPolicy mBackoffPolicy;
         @Nullable private PersistableBundle mExtras;
@@ -136,12 +124,15 @@ public final class JobSpec {
         /**
          * Constructor.
          *
-         * @param jobId the job ID of the job to schedule.
          * @param jobPolicy the {@link JobPolicy} of the job to schedule.
+         * @throws IllegalArgumentException if the {@code jobPolicy} doesn't configure a job ID.
          */
-        public Builder(int jobId, JobPolicy jobPolicy) {
-            mJobId = jobId;
+        public Builder(JobPolicy jobPolicy) {
             mJobPolicy = Objects.requireNonNull(jobPolicy);
+
+            if (!mJobPolicy.hasJobId()) {
+                throw new IllegalArgumentException("JobPolicy must configure the job ID!");
+            }
         }
 
         /**
@@ -169,7 +160,7 @@ public final class JobSpec {
 
         /** Build an instance of {@link JobSpec}. */
         public JobSpec build() {
-            return new JobSpec(mJobId, mJobPolicy, mBackoffPolicy, mExtras, mShouldForceSchedule);
+            return new JobSpec(mJobPolicy, mBackoffPolicy, mExtras, mShouldForceSchedule);
         }
     }
 }
