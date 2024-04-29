@@ -103,6 +103,7 @@ filegroup {
 filegroup {
     name: "adservices-service-common-flags-sources",
     srcs: [
+        "java/com/android/adservices/service/CommonDebugFlags.java",
         "java/com/android/adservices/service/CommonFlags.java",
         "java/com/android/adservices/service/CommonFlagsConstants.java",
         "java/com/android/adservices/service/CommonPhFlags.java",

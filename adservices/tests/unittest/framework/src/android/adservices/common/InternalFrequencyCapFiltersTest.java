@@ -21,15 +21,17 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
-public class InternalFrequencyCapFiltersTest {
+public class InternalFrequencyCapFiltersTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetSizeInBytes() {
-        final FrequencyCapFilters originalFilters =
+        FrequencyCapFilters originalFilters =
                 new FrequencyCapFilters.Builder()
                         .setKeyedFrequencyCapsForWinEvents(
                                 KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
@@ -40,22 +42,23 @@ public class InternalFrequencyCapFiltersTest {
                         .setKeyedFrequencyCapsForClickEvents(
                                 KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .build();
-        final int[] setSize = new int[1];
+        int[] setSize = new int[1];
         KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.forEach(
                 x -> setSize[0] += x.getSizeInBytes());
-        assertEquals(setSize[0] * 4L, originalFilters.getSizeInBytes());
+        assertThat(originalFilters.getSizeInBytes()).isEqualTo(setSize[0] * 4L);
     }
 
     @Test
     public void testJsonSerialization() throws JSONException {
-        final FrequencyCapFilters originalFilters =
+        FrequencyCapFilters originalFilters =
                 FrequencyCapFiltersFixture.getValidFrequencyCapFiltersBuilder().build();
-        assertEquals(originalFilters, FrequencyCapFilters.fromJson(originalFilters.toJson()));
+        assertThat(FrequencyCapFilters.fromJson(originalFilters.toJson()))
+                .isEqualTo(originalFilters);
     }
 
     @Test
     public void testJsonSerializationEmptyWins() throws JSONException {
-        final FrequencyCapFilters originalFilters =
+        FrequencyCapFilters originalFilters =
                 FrequencyCapFiltersFixture.getValidFrequencyCapFiltersBuilder().build();
         JSONObject json = originalFilters.toJson();
         json.remove(FrequencyCapFilters.WIN_EVENTS_FIELD_NAME);
@@ -65,7 +68,7 @@ public class InternalFrequencyCapFiltersTest {
 
     @Test
     public void testJsonSerializationEmptyImpressions() throws JSONException {
-        final FrequencyCapFilters originalFilters =
+        FrequencyCapFilters originalFilters =
                 FrequencyCapFiltersFixture.getValidFrequencyCapFiltersBuilder().build();
         JSONObject json = originalFilters.toJson();
         json.remove(FrequencyCapFilters.IMPRESSION_EVENTS_FIELD_NAME);
@@ -75,7 +78,7 @@ public class InternalFrequencyCapFiltersTest {
 
     @Test
     public void testJsonSerializationEmptyViews() throws JSONException {
-        final FrequencyCapFilters originalFilters =
+        FrequencyCapFilters originalFilters =
                 FrequencyCapFiltersFixture.getValidFrequencyCapFiltersBuilder().build();
         JSONObject json = originalFilters.toJson();
         json.remove(FrequencyCapFilters.VIEW_EVENTS_FIELD_NAME);
@@ -85,7 +88,7 @@ public class InternalFrequencyCapFiltersTest {
 
     @Test
     public void testJsonSerializationEmptyClicks() throws JSONException {
-        final FrequencyCapFilters originalFilters =
+        FrequencyCapFilters originalFilters =
                 FrequencyCapFiltersFixture.getValidFrequencyCapFiltersBuilder().build();
         JSONObject json = originalFilters.toJson();
         json.remove(FrequencyCapFilters.CLICK_EVENTS_FIELD_NAME);
@@ -95,7 +98,7 @@ public class InternalFrequencyCapFiltersTest {
 
     @Test
     public void testJsonSerializationNonStringKeyedFrequencyCap() throws JSONException {
-        final FrequencyCapFilters originalFilters =
+        FrequencyCapFilters originalFilters =
                 FrequencyCapFiltersFixture.getValidFrequencyCapFiltersBuilder().build();
         JSONObject json = originalFilters.toJson();
         json.put(
@@ -113,7 +116,7 @@ public class InternalFrequencyCapFiltersTest {
 
     @Test
     public void testJsonSerializationUnrelatedKey() throws JSONException {
-        final FrequencyCapFilters originalFilters =
+        FrequencyCapFilters originalFilters =
                 FrequencyCapFiltersFixture.getValidFrequencyCapFiltersBuilder().build();
         JSONObject json = originalFilters.toJson();
         json.put("key", "value");
