@@ -48,7 +48,6 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
@@ -118,22 +117,12 @@ public class ConsentNotificationFragment extends Fragment {
                                 LANDING_PAGE_OPT_OUT_CLICKED, getContext());
 
                         // opt-out confirmation activity
-                        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-                            ConsentManagerV2.getInstance().disable(requireContext());
-                            if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                                ConsentManagerV2.getInstance()
-                                        .recordUserManualInteractionWithConsent(
-                                                ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED);
-                            }
-                        } else {
-                            ConsentManager.getInstance().disable(requireContext());
-                            if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                                ConsentManager.getInstance()
-                                        .recordUserManualInteractionWithConsent(
-                                                ConsentManager.MANUAL_INTERACTIONS_RECORDED);
-                            }
+                        ConsentManager.getInstance().disable(requireContext());
+                        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                            ConsentManager.getInstance()
+                                    .recordUserManualInteractionWithConsent(
+                                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                         }
-
                         Bundle args = new Bundle();
                         args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, false);
                         startConfirmationFragment(args);
@@ -258,20 +247,11 @@ public class ConsentNotificationFragment extends Fragment {
                     ConsentNotificationActivity.handleAction(
                             LANDING_PAGE_OPT_IN_CLICKED, getContext());
 
-                    if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-                        ConsentManagerV2.getInstance().enable(requireContext());
-                        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                            ConsentManagerV2.getInstance()
-                                    .recordUserManualInteractionWithConsent(
-                                            ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED);
-                        }
-                    } else {
-                        ConsentManager.getInstance().enable(requireContext());
-                        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                            ConsentManager.getInstance()
-                                    .recordUserManualInteractionWithConsent(
-                                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
-                        }
+                    ConsentManager.getInstance().enable(requireContext());
+                    if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                        ConsentManager.getInstance()
+                                .recordUserManualInteractionWithConsent(
+                                        ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }
                     Bundle args = new Bundle();
                     args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, true);
