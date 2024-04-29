@@ -33,9 +33,8 @@ public final class JobSpecTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetters() {
-        JobSpec jobSpec = new JobSpec.Builder(JOB_ID, sJobPolicy).build();
+        JobSpec jobSpec = new JobSpec.Builder(sJobPolicy).build();
 
-        expect.that(jobSpec.getJobId()).isEqualTo(JOB_ID);
         expect.that(jobSpec.getJobPolicy()).isEqualTo(sJobPolicy);
         expect.that(jobSpec.getBackoffPolicy()).isEqualTo(new BackoffPolicy.Builder().build());
         expect.that(jobSpec.getExtras()).isNull();
@@ -46,7 +45,14 @@ public final class JobSpecTest extends AdServicesUnitTestCase {
     public void testGetters_nullCheck_jobPolicy() {
         assertThrows(
                 NullPointerException.class,
-                () -> new JobSpec.Builder(JOB_ID, /* jobPolicy= */ null).build());
+                () -> new JobSpec.Builder(/* jobPolicy= */ null).build());
+    }
+
+    @Test
+    public void testGetters_noJobIdInJobPolicy() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new JobSpec.Builder(JobPolicy.getDefaultInstance()).build());
     }
 
     @Test
@@ -60,13 +66,12 @@ public final class JobSpecTest extends AdServicesUnitTestCase {
         boolean shouldForceSchedule = true;
 
         JobSpec jobSpec =
-                new JobSpec.Builder(JOB_ID, sJobPolicy)
+                new JobSpec.Builder(sJobPolicy)
                         .setBackoffPolicy(backoffPolicy)
                         .setExtras(extras)
                         .setShouldForceSchedule(shouldForceSchedule)
                         .build();
 
-        expect.that(jobSpec.getJobId()).isEqualTo(JOB_ID);
         expect.that(jobSpec.getJobPolicy()).isEqualTo(sJobPolicy);
         expect.that(jobSpec.getBackoffPolicy()).isEqualTo(backoffPolicy);
         // PersistableBundle doesn't override equals().
@@ -93,39 +98,34 @@ public final class JobSpecTest extends AdServicesUnitTestCase {
         extras.putString("testKey", "testVal");
 
         JobSpec equals1 =
-                new JobSpec.Builder(jobId1, jobPolicy1)
+                new JobSpec.Builder(jobPolicy1)
                         .setBackoffPolicy(backoffPolicy1)
                         .setShouldForceSchedule(shouldForceSchedule)
                         .build();
         JobSpec equals2 =
-                new JobSpec.Builder(jobId1, jobPolicy1)
+                new JobSpec.Builder(jobPolicy1)
                         .setBackoffPolicy(backoffPolicy1)
                         .setShouldForceSchedule(shouldForceSchedule)
                         .build();
         JobSpec equals3 =
-                new JobSpec.Builder(jobId1, jobPolicy1)
+                new JobSpec.Builder(jobPolicy1)
                         .setBackoffPolicy(backoffPolicy1)
                         .setShouldForceSchedule(shouldForceSchedule)
                         .setExtras(extras)
                         .build();
 
-        JobSpec differentInId =
-                new JobSpec.Builder(jobId2, jobPolicy1)
-                        .setBackoffPolicy(backoffPolicy1)
-                        .setShouldForceSchedule(shouldForceSchedule)
-                        .build();
         JobSpec differentInJobPolicy =
-                new JobSpec.Builder(jobId1, jobPolicy2)
+                new JobSpec.Builder(jobPolicy2)
                         .setBackoffPolicy(backoffPolicy1)
                         .setShouldForceSchedule(shouldForceSchedule)
                         .build();
         JobSpec differentInBackoffPolicy =
-                new JobSpec.Builder(jobId1, jobPolicy1)
+                new JobSpec.Builder(jobPolicy1)
                         .setBackoffPolicy(backoffPolicy2)
                         .setShouldForceSchedule(shouldForceSchedule)
                         .build();
         JobSpec differentInShouldForceSchedule =
-                new JobSpec.Builder(jobId1, jobPolicy1)
+                new JobSpec.Builder(jobPolicy1)
                         .setBackoffPolicy(backoffPolicy1)
                         .setShouldForceSchedule(!shouldForceSchedule)
                         .build();
@@ -136,7 +136,6 @@ public final class JobSpecTest extends AdServicesUnitTestCase {
 
         et.expectObjectsAreNotEqual(equals1, null);
 
-        et.expectObjectsAreNotEqual(equals1, differentInId);
         et.expectObjectsAreNotEqual(equals1, differentInJobPolicy);
         et.expectObjectsAreNotEqual(equals1, differentInBackoffPolicy);
         et.expectObjectsAreNotEqual(equals1, differentInShouldForceSchedule);
@@ -144,13 +143,12 @@ public final class JobSpecTest extends AdServicesUnitTestCase {
 
     @Test
     public void testToString() {
-        JobSpec jobSpec = new JobSpec.Builder(JOB_ID, sJobPolicy).build();
+        JobSpec jobSpec = new JobSpec.Builder(sJobPolicy).build();
 
         expect.that(jobSpec.toString())
                 .isEqualTo(
-                        "JobSpec{mJobId=1,"
-                            + " mBackoffPolicy=BackoffPolicy{mShouldRetryOnExecutionFailure=false,"
-                            + " mShouldRetryOnExecutionStop=false}, mExtras=null,"
-                            + " mShouldForceSchedule=false}");
+                        "JobSpec{mBackoffPolicy=BackoffPolicy{mShouldRetryOnExecutionFailure=false,"
+                                + " mShouldRetryOnExecutionStop=false}, mExtras=null,"
+                                + " mShouldForceSchedule=false}");
     }
 }
