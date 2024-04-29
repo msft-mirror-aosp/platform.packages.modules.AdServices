@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.appsetid;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
@@ -141,8 +140,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
         invokeGetAppSetIdAndVerifyError(
                 mContext,
                 STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
-                /* checkLoggingStatus */ true,
-                FAILURE_REASON_UNSET);
+                /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -160,11 +158,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                 .thenReturn(false);
         // We don't log STATUS_RATE_LIMIT_REACHED for getAppSetId API.
         invokeGetAppSetIdAndVerifyError(
-                mContext,
-                STATUS_RATE_LIMIT_REACHED,
-                request, /* checkLoggingStatus */
-                false,
-                FAILURE_REASON_UNSET);
+                mContext, STATUS_RATE_LIMIT_REACHED, request, /* checkLoggingStatus */ false);
     }
 
     @Test
@@ -247,8 +241,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                 mContext,
                 STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
                 mRequest,
-                /* checkLoggingStatus */ true,
-                FAILURE_REASON_UNSET);
+                /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -265,11 +258,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .build();
 
         invokeGetAppSetIdAndVerifyError(
-                mSpyContext,
-                STATUS_UNAUTHORIZED,
-                mRequest, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_UNSET);
+                mSpyContext, STATUS_UNAUTHORIZED, mRequest, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -285,26 +274,20 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .build();
 
         invokeGetAppSetIdAndVerifyError(
-                mSpyContext,
-                STATUS_UNAUTHORIZED,
-                mRequest, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_UNSET);
+                mSpyContext, STATUS_UNAUTHORIZED, mRequest, /* checkLoggingStatus */ true);
     }
 
     private void invokeGetAppSetIdAndVerifyError(
-            Context context, int expectedResultCode, boolean checkLoggingStatus, int failureReason)
+            Context context, int expectedResultCode, boolean checkLoggingStatus)
             throws InterruptedException {
-        invokeGetAppSetIdAndVerifyError(
-                context, expectedResultCode, mRequest, checkLoggingStatus, failureReason);
+        invokeGetAppSetIdAndVerifyError(context, expectedResultCode, mRequest, checkLoggingStatus);
     }
 
     private void invokeGetAppSetIdAndVerifyError(
             Context context,
             int expectedResultCode,
             GetAppSetIdParam request,
-            boolean checkLoggingStatus,
-            int failureReason)
+            boolean checkLoggingStatus)
             throws InterruptedException {
         SyncIGetAppSetIdCallback callback =
                 new SyncIGetAppSetIdCallback(BACKGROUND_THREAD_TIMEOUT_MS);
@@ -350,7 +333,6 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                     .isEqualTo(request.getAppPackageName());
             assertThat(argument.getValue().getSdkPackageName())
                     .isEqualTo(request.getSdkPackageName());
-            assertThat(argument.getValue().getFailureReason()).isEqualTo(failureReason);
         }
     }
 

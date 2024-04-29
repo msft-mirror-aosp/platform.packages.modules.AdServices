@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.signals;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
@@ -210,9 +209,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                             .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
                             .setApiName(apiName)
                             .setLatencyMillisecond(0)
-                            .setResult(
-                                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
-                                    FAILURE_REASON_UNSET)
+                            .setResultCode(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT)
                             .setAppPackageName(callerPackageName)
                             .setSdkPackageName(EMPTY_SDK_NAME)
                             .build());

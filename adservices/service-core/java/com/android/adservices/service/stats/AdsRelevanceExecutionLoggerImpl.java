@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
@@ -115,7 +114,7 @@ public class AdsRelevanceExecutionLoggerImpl extends ApiServiceLatencyCalculator
                         .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
                         .setApiName(mApiNameCode)
                         .setLatencyMillisecond(overallAdsRelevanceApiLatency)
-                        .setResult(adsRelevanceApiResultCode, FAILURE_REASON_UNSET)
+                        .setResultCode(adsRelevanceApiResultCode)
                         .setAppPackageName(mCallerAppPackageName)
                         .setSdkPackageName("")
                         .build());
