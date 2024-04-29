@@ -23,12 +23,15 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_INVALID_HEADER_FORMAT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_JSON_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_MISSING_REQUIRED_HEADER_FIELD_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_PARSING_UNKNOWN_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -94,7 +97,7 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
                 new OdpDelegationWrapperImpl(mOdpSystemEventManager, mLogger, mFlags);
         assertThrows(
                 NullPointerException.class,
-                () -> odpDelegationWrapperImpl.registerOdpTrigger(null, null));
+                () -> odpDelegationWrapperImpl.registerOdpTrigger(null, null, true));
         verify(mLogger, never()).logMeasurementOdpRegistrations(any());
         verify(mLogger, never()).logMeasurementOdpApiCall(any());
     }
@@ -131,7 +134,7 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
                                 + ODP_EVENT_DATA
                                 + "\""
                                 + "}"));
-        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header);
+        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header, true);
 
         ArgumentCaptor<MeasurementWebTriggerEventParams> statsArg =
                 ArgumentCaptor.forClass(MeasurementWebTriggerEventParams.class);
@@ -158,6 +161,49 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
         assertEquals(
                 measurementOdpRegistrationStats.getRegistrationStatus(),
                 OdpRegistrationStatus.RegistrationStatus.SUCCESS.getValue());
+    }
+
+    @Test
+    public void registerOdpTrigger_invalidEnrollment_fail() {
+        OdpDelegationWrapperImpl odpDelegationWrapperImpl =
+                new OdpDelegationWrapperImpl(mOdpSystemEventManager, mLogger, mFlags);
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId("1")
+                        .setTopOrigin(Uri.parse("android-app://com.somePackageName"))
+                        .setRegistrant(Uri.parse("android-app://com.somePackageName"))
+                        .build();
+        Map<String, List<String>> header = new HashMap<>();
+        header.put(
+                "Odp-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"service\":\""
+                                + ODP_PACKAGE_NAME
+                                + "/"
+                                + ODP_CLASS_NAME
+                                + "\","
+                                + "\"certDigest\":\""
+                                + ODP_CERT_DIGEST
+                                + "\","
+                                + "\"data\":\""
+                                + ODP_EVENT_DATA
+                                + "\""
+                                + "}"));
+        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header, false);
+
+        ArgumentCaptor<MeasurementOdpRegistrationStats> odpRegistrationStatsArg =
+                ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
+        verify(mLogger, times(1)).logMeasurementOdpRegistrations(odpRegistrationStatsArg.capture());
+        verify(mLogger, never()).logMeasurementOdpApiCall(any());
+        MeasurementOdpRegistrationStats measurementOdpRegistrationStats =
+                odpRegistrationStatsArg.getValue();
+        assertEquals(
+                measurementOdpRegistrationStats.getRegistrationType(),
+                OdpRegistrationStatus.RegistrationType.TRIGGER.getValue());
+        assertEquals(
+                measurementOdpRegistrationStats.getRegistrationStatus(),
+                OdpRegistrationStatus.RegistrationStatus.INVALID_ENROLLMENT.getValue());
     }
 
     @Test
@@ -188,7 +234,7 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
                                 + ODP_EVENT_DATA
                                 + "\""
                                 + "}"));
-        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header);
+        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header, true);
 
         ArgumentCaptor<MeasurementOdpRegistrationStats> odpRegistrationStatsArg =
                 ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
@@ -201,7 +247,7 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
                 OdpRegistrationStatus.RegistrationType.TRIGGER.getValue());
         assertEquals(
                 measurementOdpRegistrationStats.getRegistrationStatus(),
-                OdpRegistrationStatus.RegistrationStatus.UNKNOWN.getValue());
+                OdpRegistrationStatus.RegistrationStatus.HEADER_SIZE_LIMIT_EXCEEDED.getValue());
     }
 
     @Test
@@ -234,7 +280,7 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
                                 + ODP_EVENT_DATA
                                 + "\""
                                 + "}"));
-        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header);
+        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header, true);
         ArgumentCaptor<MeasurementOdpRegistrationStats> odpRegistrationStatsArg =
                 ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
         verify(mLogger, times(1)).logMeasurementOdpRegistrations(odpRegistrationStatsArg.capture());
@@ -274,7 +320,7 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
                                 + ODP_EVENT_DATA
                                 + "\""
                                 + "}"));
-        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header);
+        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header, true);
         ArgumentCaptor<MeasurementOdpRegistrationStats> odpRegistrationStatsArg =
                 ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
         verify(mLogger, times(1)).logMeasurementOdpRegistrations(odpRegistrationStatsArg.capture());
@@ -317,7 +363,7 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
                                 + ODP_EVENT_DATA
                                 + "\""
                                 + "}"));
-        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header);
+        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header, true);
         ArgumentCaptor<MeasurementOdpRegistrationStats> odpRegistrationStatsArg =
                 ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
         verify(mLogger, times(1)).logMeasurementOdpRegistrations(odpRegistrationStatsArg.capture());
@@ -360,7 +406,7 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
                                 + ODP_EVENT_DATA
                                 + "\""
                                 + "}"));
-        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header);
+        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header, true);
         ArgumentCaptor<MeasurementOdpRegistrationStats> odpRegistrationStatsArg =
                 ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
         verify(mLogger, times(1)).logMeasurementOdpRegistrations(odpRegistrationStatsArg.capture());
@@ -403,7 +449,7 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
                                 + "\"data\":\""
                                 + ODP_EVENT_DATA
                                 + "\""));
-        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header);
+        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header, true);
 
         ArgumentCaptor<MeasurementOdpRegistrationStats> odpRegistrationStatsArg =
                 ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
@@ -416,9 +462,111 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
                 OdpRegistrationStatus.RegistrationType.TRIGGER.getValue());
         assertEquals(
                 measurementOdpRegistrationStats.getRegistrationStatus(),
-                OdpRegistrationStatus.RegistrationStatus.UNKNOWN.getValue());
+                OdpRegistrationStatus.RegistrationStatus.PARSING_EXCEPTION.getValue());
         verifyErrorLogUtilError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_JSON_PARSING_ERROR,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+    }
+
+    @Test
+    public void registerOdpTrigger_throwIllegalArgumentException_fail() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        doThrow(new IllegalArgumentException("Illegal Argument"))
+                .when(mOdpSystemEventManager)
+                .notifyMeasurementEvent(any(), any(), any());
+        OdpDelegationWrapperImpl odpDelegationWrapperImpl =
+                new OdpDelegationWrapperImpl(mOdpSystemEventManager, mLogger, mFlags);
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId("1")
+                        .setTopOrigin(Uri.parse("android-app://com.somePackageName"))
+                        .setRegistrant(Uri.parse("android-app://com.somePackageName"))
+                        .build();
+        Map<String, List<String>> header = new HashMap<>();
+        header.put(
+                "Odp-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"service\":\""
+                                + ODP_PACKAGE_NAME
+                                + "/"
+                                + ODP_CLASS_NAME
+                                + "\","
+                                + "\"certDigest\":\""
+                                + ODP_CERT_DIGEST
+                                + "\","
+                                + "\"data\":\""
+                                + ODP_EVENT_DATA
+                                + "\""
+                                + "}"));
+        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header, true);
+
+        ArgumentCaptor<MeasurementOdpRegistrationStats> odpRegistrationStatsArg =
+                ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
+        verify(mLogger, times(1)).logMeasurementOdpRegistrations(odpRegistrationStatsArg.capture());
+        verify(mLogger, never()).logMeasurementOdpApiCall(any());
+        MeasurementOdpRegistrationStats measurementOdpRegistrationStats =
+                odpRegistrationStatsArg.getValue();
+        assertEquals(
+                measurementOdpRegistrationStats.getRegistrationType(),
+                OdpRegistrationStatus.RegistrationType.TRIGGER.getValue());
+        assertEquals(
+                measurementOdpRegistrationStats.getRegistrationStatus(),
+                OdpRegistrationStatus.RegistrationStatus.PARSING_EXCEPTION.getValue());
+        verifyErrorLogUtilError(
+                any(IllegalArgumentException.class),
+                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_PARSING_UNKNOWN_ERROR),
+                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
+    }
+
+    @Test
+    public void registerOdpTrigger_throwNullPointerException_fail() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        doThrow(new NullPointerException("Null Error"))
+                .when(mOdpSystemEventManager)
+                .notifyMeasurementEvent(any(), any(), any());
+        OdpDelegationWrapperImpl odpDelegationWrapperImpl =
+                new OdpDelegationWrapperImpl(mOdpSystemEventManager, mLogger, mFlags);
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId("1")
+                        .setTopOrigin(Uri.parse("android-app://com.somePackageName"))
+                        .setRegistrant(Uri.parse("android-app://com.somePackageName"))
+                        .build();
+        Map<String, List<String>> header = new HashMap<>();
+        header.put(
+                "Odp-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"service\":\""
+                                + ODP_PACKAGE_NAME
+                                + "/"
+                                + ODP_CLASS_NAME
+                                + "\","
+                                + "\"certDigest\":\""
+                                + ODP_CERT_DIGEST
+                                + "\","
+                                + "\"data\":\""
+                                + ODP_EVENT_DATA
+                                + "\""
+                                + "}"));
+        odpDelegationWrapperImpl.registerOdpTrigger(asyncRegistration, header, true);
+
+        ArgumentCaptor<MeasurementOdpRegistrationStats> odpRegistrationStatsArg =
+                ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
+        verify(mLogger, times(1)).logMeasurementOdpRegistrations(odpRegistrationStatsArg.capture());
+        verify(mLogger, never()).logMeasurementOdpApiCall(any());
+        MeasurementOdpRegistrationStats measurementOdpRegistrationStats =
+                odpRegistrationStatsArg.getValue();
+        assertEquals(
+                measurementOdpRegistrationStats.getRegistrationType(),
+                OdpRegistrationStatus.RegistrationType.TRIGGER.getValue());
+        assertEquals(
+                measurementOdpRegistrationStats.getRegistrationStatus(),
+                OdpRegistrationStatus.RegistrationStatus.PARSING_EXCEPTION.getValue());
+        verifyErrorLogUtilError(
+                any(NullPointerException.class),
+                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_PARSING_UNKNOWN_ERROR),
+                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
     }
 }
