@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "bidding/daily/shoes"
+        "path": "/bidding/daily/shoes"
       },
       "response": {
         "body": "DailyUpdateResponse.json"

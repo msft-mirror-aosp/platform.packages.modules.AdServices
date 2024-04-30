@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "signals"
+        "path": "/signals"
       },
       "response": {
         "body": "ProtectedSignalsBad.json"

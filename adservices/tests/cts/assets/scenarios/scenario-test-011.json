@@ -2,10 +2,10 @@
   "mocks": [
     {
       "request": {
-        "path": "/hello/world"
+        "path": "bidding"
       },
       "response": {
-        "body": "DefaultResponse.txt"
+        "body": "BiddingLogicV2.js"
       }
     }
   ]

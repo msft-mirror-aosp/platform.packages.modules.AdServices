@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "bidding"
+        "path": "/bidding"
       },
       "response": {
         "body": "BiddingLogicV2ImpressionAdCost.js"
@@ -11,7 +11,7 @@
     },
     {
       "request": {
-        "path": "scoring"
+        "path": "/scoring"
       },
       "response": {
         "body": "ScoringLogicAdCost.js"
@@ -20,7 +20,7 @@
     },
     {
       "request": {
-        "path": "scoring/trusted"
+        "path": "/scoring/trusted"
       },
       "response": {
         "body": "ScoringSignals.json"
@@ -28,7 +28,7 @@
     },
     {
       "request": {
-        "path": "bidding/trusted"
+        "path": "/bidding/trusted"
       },
       "response": {
         "body": "BiddingSignals.json"
@@ -36,7 +36,7 @@
     },
     {
       "request": {
-        "path": "reportWin?ca=shoes?adCost=1"
+        "path": "/reportWin?ca=shoes?adCost=1"
       },
       "response": {
         "body": null
@@ -45,7 +45,7 @@
     },
     {
       "request": {
-        "path": "reportResult"
+        "path": "/reportResult"
       },
       "response": {
         "body": null

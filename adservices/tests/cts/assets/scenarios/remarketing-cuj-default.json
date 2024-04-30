@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "bidding"
+        "path": "/bidding"
       },
       "response": {
         "body": "BiddingLogicV2.js"
@@ -11,7 +11,7 @@
     },
     {
       "request": {
-        "path": "scoring"
+        "path": "/scoring"
       },
       "response": {
         "body": "ScoringLogic.js"
@@ -20,7 +20,7 @@
     },
     {
       "request": {
-        "path": "scoring/trusted"
+        "path": "/scoring/trusted"
       },
       "response": {
         "body": "ScoringSignals.json"
@@ -29,7 +29,7 @@
     },
     {
       "request": {
-        "path": "bidding/trusted"
+        "path": "/bidding/trusted"
       },
       "response": {
         "body": "BiddingSignals.json"

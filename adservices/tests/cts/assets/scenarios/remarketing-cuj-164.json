@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "bidding",
+        "path": "/bidding",
         "header": {
           "x_fledge_buyer_bidding_logic_version": "3"
         }
@@ -16,7 +16,7 @@
     },
     {
       "request": {
-        "path": "scoring"
+        "path": "/scoring"
       },
       "response": {
         "body": "ScoringLogicWithDebugReporting.js"
@@ -24,7 +24,7 @@
     },
     {
       "request": {
-        "path": "scoring/trusted"
+        "path": "/scoring/trusted"
       },
       "response": {
         "body": "ScoringSignals.json"
@@ -32,7 +32,7 @@
     },
     {
       "request": {
-        "path": "bidding/trusted"
+        "path": "/bidding/trusted"
       },
       "response": {
         "body": "BiddingSignals.json"
@@ -40,7 +40,7 @@
     },
     {
       "request": {
-        "path": "buyer/reportImpression"
+        "path": "/buyer/reportImpression"
       },
       "response": {
         "body": null
@@ -48,7 +48,7 @@
     },
     {
       "request": {
-        "path": "seller/reportImpression"
+        "path": "/seller/reportImpression"
       },
       "response": {
         "body": null
@@ -56,7 +56,7 @@
     },
     {
       "request": {
-        "path": "buyer/reportWin"
+        "path": "/buyer/reportWin"
       },
       "response": {
         "body": null
@@ -65,7 +65,7 @@
     },
     {
       "request": {
-        "path": "buyer/reportLoss"
+        "path": "/buyer/reportLoss"
       },
       "response": {
         "body": null
@@ -74,7 +74,7 @@
     },
     {
       "request": {
-        "path": "seller/reportWin"
+        "path": "/seller/reportWin"
       },
       "response": {
         "body": null
@@ -83,7 +83,7 @@
     },
     {
       "request": {
-        "path": "seller/reportLoss"
+        "path": "/seller/reportLoss"
       },
       "response": {
         "body": null

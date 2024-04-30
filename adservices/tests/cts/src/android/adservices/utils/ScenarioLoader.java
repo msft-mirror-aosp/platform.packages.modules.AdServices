@@ -109,7 +109,11 @@ public class ScenarioLoader {
     private static Scenario.Request parseRequest(JSONObject json, Map<String, String> variables) {
         Scenario.Request.Builder builder = Scenario.Request.newBuilder();
         try {
-            builder.setRelativePath(getStringWithSubstitutions(json.getString("path"), variables));
+            String rawPath = getStringWithSubstitutions(json.getString("path"), variables);
+            if (!rawPath.startsWith("/")) {
+                throw new IllegalStateException("path should start with '/' prefix: " + rawPath);
+            }
+            builder.setRelativePath(rawPath.substring(1));
         } catch (JSONException e) {
             throw new IllegalArgumentException("could not extract `path` from request", e);
         }
