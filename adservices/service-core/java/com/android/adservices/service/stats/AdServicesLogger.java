@@ -258,4 +258,7 @@ public interface AdServicesLogger {
 
     /** Logs stats for SelectAdsFromOutcomesApiCalledStats */
     void logSelectAdsFromOutcomesApiCalledStats(SelectAdsFromOutcomesApiCalledStats stats);
+
+    /** Logs stats for ReportImpressionApiCalledStats */
+    void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats);
 }
