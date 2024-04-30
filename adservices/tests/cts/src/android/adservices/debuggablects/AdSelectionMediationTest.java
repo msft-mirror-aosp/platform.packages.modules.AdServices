@@ -27,6 +27,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
@@ -48,9 +49,10 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
     @Test
     public void testSelectAds_withAdSelectionFromOutcomes_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-mediation.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-mediation.json",
+                                getCacheBusterPrefix()));
 
         try {
             joinCustomAudience(SHIRTS_CA);
@@ -78,9 +80,9 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
     @Test
     public void testSelectAds_withImpressionReporting_eventsAreReceived() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-075.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-075.json", getCacheBusterPrefix()));
         AdSelectionConfig config = makeAdSelectionConfig();
 
         try {
@@ -100,6 +102,7 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
     }
+
     /**
      * CUJ 198: Impressions are reported to winner buyer/seller after waterfall mediation while
      * using unified tables.
@@ -119,9 +122,10 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
     @Test
     public void testAdSelectionFromOutcome_buyerMustEnrolledToParticipate() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-mediation.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-mediation.json",
+                                getCacheBusterPrefix()));
 
         try {
             PhFlagsFixture.overrideFledgeEnrollmentCheck(false);

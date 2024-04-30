@@ -26,6 +26,7 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 
 import androidx.test.filters.FlakyTest;
 
@@ -47,9 +48,9 @@ public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_afterOneDay_adSelectionDataCleared() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
@@ -79,10 +80,10 @@ public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
     @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     public void testAdSelection_afterOneDay_adInteractionsIsCleared() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-beacon-no-interactions.json",
-                        getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-beacon-no-interactions.json",
+                                getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {

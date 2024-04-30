@@ -28,6 +28,7 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -36,6 +37,7 @@ import org.junit.runners.model.Statement;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
+import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.HashSet;
@@ -138,6 +140,35 @@ public class MockWebServerRule implements TestRule {
 
         mMockWebServer.play(mPort);
         return mMockWebServer;
+    }
+
+    /**
+     * Start a {@link MockWebServer} for a given scenario.
+     *
+     * @param scenarioDispatcherFactory dispatcher factory to use.
+     * @return newly constructed {@link ScenarioDispatcher}
+     * @throws IOException if the server cannot be started
+     * @throws GeneralSecurityException if HTTPS for testing does not work
+     * @throws JSONException if loading the scenario spec fails
+     */
+    public ScenarioDispatcher startMockWebServer(
+            ScenarioDispatcherFactory scenarioDispatcherFactory)
+            throws IOException, GeneralSecurityException, JSONException {
+        if (mPort == UNINITIALIZED) {
+            reserveServerListeningPort();
+        }
+
+        mMockWebServer = new MockWebServer();
+        if (useHttps()) {
+            mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
+        }
+        ScenarioDispatcher dispatcher =
+                scenarioDispatcherFactory.getDispatcher(
+                        new URL(String.format("https://localhost:%d", mPort)));
+        mMockWebServer.setDispatcher(dispatcher);
+
+        mMockWebServer.play(mPort);
+        return dispatcher;
     }
 
     public MockWebServer createMockWebServer() throws Exception {
