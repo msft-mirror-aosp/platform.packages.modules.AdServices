@@ -19,7 +19,11 @@ import static com.android.adservices.AdServicesCommon.BINDER_TIMEOUT_SYSTEM_PROP
 
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.shared.testing.annotations.SetLongDebugFlag;
 
+// TODO (b/330324133): Short-term solution to allow test to extend binder timeout to
+// resolve the test flakiness.
+@SetLongDebugFlag(name = BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME, value = 10_000)
 abstract class CtsAdServicesDeviceTestCase extends AdServicesCtsTestCase {
 
     @Override
@@ -29,9 +33,6 @@ abstract class CtsAdServicesDeviceTestCase extends AdServicesCtsTestCase {
         // we'd need to split this method
         return AdServicesFlagsSetterRule.withDefaultLogcatTags()
                 .setCompatModeFlags()
-                .setPpapiAppAllowList(mPackageName)
-                // TODO (b/330324133): Short-term solution to allow test to extend binder timeout to
-                // resolve the test flakiness.
-                .setDebugFlag(BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME, 10_000);
+                .setPpapiAppAllowList(mPackageName);
     }
 }

@@ -54,6 +54,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetLongDebugFlag;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -71,6 +72,9 @@ import java.util.concurrent.TimeUnit;
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
 @SetFlagDisabled(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE)
 @SetFlagDisabled(KEY_ISOLATE_MAX_HEAP_SIZE_BYTES)
+// TODO (b/330324133): Short-term solution to allow test to extend binder timeout to
+// resolve the test flakiness.
+@SetLongDebugFlag(name = BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME, value = 10_000)
 public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -109,10 +113,7 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
         return AdServicesFlagsSetterRule.forAllApisEnabledTests()
                 .setCompatModeFlags()
-                .setPpapiAppAllowList(mPackageName)
-                // TODO (b/330324133): Short-term solution to allow test to extend binder timeout to
-                // resolve the test flakiness.
-                .setDebugFlag(BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME, 10_000);
+                .setPpapiAppAllowList(mPackageName);
     }
 
     @Before
