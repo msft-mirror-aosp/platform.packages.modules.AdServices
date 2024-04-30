@@ -34,6 +34,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -43,12 +45,14 @@ import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceRefreshCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.shell.customaudience.CustomAudienceViewCommand;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.truth.Expect;
 
@@ -180,6 +184,43 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                     .hasSize(1);
         }
     }
+
+    @Test
+    public void testRun_catchesExceptionAndReturnsError() throws Exception {
+        Exception exception = new RuntimeException("something went wrong");
+        ShellCommandFactory factory =
+                new ShellCommandFactory() {
+                    @Nullable
+                    @Override
+                    public ShellCommand getShellCommand(String cmd) {
+                        throw new RuntimeException(exception);
+                    }
+
+                    @Override
+                    public String getCommandPrefix() {
+                        return CustomAudienceShellCommandFactory.COMMAND_PREFIX;
+                    }
+
+                    @Override
+                    public List<String> getAllCommandsHelp() {
+                        return null;
+                    }
+                };
+
+        mShellCommandFactorySupplier =
+                new ShellCommandFactorySupplier() {
+                    @Override
+                    public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {
+                        return ImmutableList.of(factory);
+                    }
+                };
+
+        mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
+        String result = mCmd.runInvalid(CustomAudienceShellCommandFactory.COMMAND_PREFIX);
+
+        expect.withMessage("err").that(result).contains(exception.getMessage());
+    }
+
     private void assertHelpContents(String help) {
         HashSet<String> actualHelp = Sets.newHashSet(help.split("\n\n"));
         expect.withMessage("help")
