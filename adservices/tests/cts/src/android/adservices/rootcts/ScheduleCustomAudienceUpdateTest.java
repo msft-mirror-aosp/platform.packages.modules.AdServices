@@ -31,6 +31,7 @@ import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
@@ -119,10 +120,10 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
     public void testScheduleCustomAudienceUpdate_DownloadedCaWinsAdSelection_success()
             throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json",
-                        getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json",
+                                getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         // Set min allowed delay in past for easier testing
@@ -167,10 +168,10 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
                 "device_config put adservices fledge_schedule_custom_audience_update_enabled"
                         + " false");
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json",
-                        getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json",
+                                getCacheBusterPrefix()));
         Uri updateUri = Uri.parse(getServerBaseAddress() + Scenarios.UPDATE_CA_PATH);
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(

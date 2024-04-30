@@ -59,6 +59,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -475,7 +476,7 @@ public class AsyncTriggerFetcher {
                             openUrl(new URL(asyncRegistration.getRegistrationUri().toString()));
             urlConnection.setRequestMethod("POST");
             urlConnection.setInstanceFollowRedirects(false);
-            headers = urlConnection.getHeaderFields();
+            headers = new HashMap<>(urlConnection.getHeaderFields());
             enrollmentId = getEnrollmentId(asyncRegistration);
 
             // remove ODP header from headers map and forward ODP header
@@ -553,11 +554,10 @@ public class AsyncTriggerFetcher {
     private Optional<Map<String, List<String>>> extractOdpTriggerHeader(
             Map<String, List<String>> headers) {
         return headers.containsKey(OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER)
-                ? Optional.of(
-                        Map.of(
-                                OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER,
-                                headers.remove(
-                                        OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER)))
+                ? Optional.of(Map.of(
+                        OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER,
+                        headers.remove(
+                                OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER)))
                 : Optional.empty();
     }
 

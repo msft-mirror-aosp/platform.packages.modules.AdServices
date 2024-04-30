@@ -28,6 +28,11 @@ public class Scenarios {
     public static final String MEDIATION_LOGIC_PATH = "mediation";
     public static final String AD_RENDER_1 = "render_ad/1";
     public static final String AD_RENDER_2 = "render_ad/2";
+    static final int TIMEOUT_SEC = 8;
+    static final String SCENARIOS_DATA_JARPATH = "scenarios/data/";
+    static final String DEFAULT_RESPONSE_BODY = "200 OK";
+    static final String FAKE_ADDRESS_1 = "https://localhost:38384";
+    static final String FAKE_ADDRESS_2 = "https://localhost:38385";
 
     public static String getDailyUpdatePath(String customAudienceName) {
         return "bidding/daily/" + customAudienceName;
