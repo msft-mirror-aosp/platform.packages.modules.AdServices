@@ -388,7 +388,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     // Set the annotated flags with the specified value for a particular test method.
     // NOTE: when adding an annotation here, you also need to add it on isFlagAnnotationPresent()
-    protected void setAnnotatedFlags(Description description) {
+    private void setAnnotatedFlags(Description description) {
         List<Annotation> annotations = getAllFlagAnnotations(description);
 
         // Apply the annotations in the reverse order. First apply from the super classes, test
@@ -439,6 +439,8 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                 setAnnotatedFlag((SetLogcatTag) annotation);
             } else if (annotation instanceof SetLogcatTags) {
                 setAnnotatedFlag((SetLogcatTags) annotation);
+            } else {
+                processAnnotation(description, annotation);
             }
         }
     }
@@ -573,25 +575,51 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     // TODO(b/294423183): improve logic used here and on setAnnotatedFlags()
     // NOTE: when adding an annotation here, you also need to add it on setAnnotatedFlags()
     private boolean isFlagAnnotationPresent(Annotation annotation) {
-        return (annotation instanceof SetFlagEnabled)
-                || (annotation instanceof SetFlagsEnabled)
-                || (annotation instanceof SetFlagDisabled)
-                || (annotation instanceof SetFlagsDisabled)
-                || (annotation instanceof SetIntegerFlag)
-                || (annotation instanceof SetIntegerFlags)
-                || (annotation instanceof SetLongFlag)
-                || (annotation instanceof SetLongFlags)
-                || (annotation instanceof SetFloatFlag)
-                || (annotation instanceof SetFloatFlags)
-                || (annotation instanceof SetDoubleFlag)
-                || (annotation instanceof SetDoubleFlags)
-                || (annotation instanceof SetStringFlag)
-                || (annotation instanceof SetStringFlags)
-                || (annotation instanceof EnableDebugFlags)
-                || (annotation instanceof SetLongDebugFlag)
-                || (annotation instanceof SetLongDebugFlags)
-                || (annotation instanceof SetLogcatTag)
-                || (annotation instanceof SetLogcatTags);
+        boolean processedHere =
+                (annotation instanceof SetFlagEnabled)
+                        || (annotation instanceof SetFlagsEnabled)
+                        || (annotation instanceof SetFlagDisabled)
+                        || (annotation instanceof SetFlagsDisabled)
+                        || (annotation instanceof SetIntegerFlag)
+                        || (annotation instanceof SetIntegerFlags)
+                        || (annotation instanceof SetLongFlag)
+                        || (annotation instanceof SetLongFlags)
+                        || (annotation instanceof SetFloatFlag)
+                        || (annotation instanceof SetFloatFlags)
+                        || (annotation instanceof SetDoubleFlag)
+                        || (annotation instanceof SetDoubleFlags)
+                        || (annotation instanceof SetStringFlag)
+                        || (annotation instanceof SetStringFlags)
+                        || (annotation instanceof EnableDebugFlags)
+                        || (annotation instanceof SetLongDebugFlag)
+                        || (annotation instanceof SetLongDebugFlags)
+                        || (annotation instanceof SetLogcatTag)
+                        || (annotation instanceof SetLogcatTags);
+        return processedHere || isAnnotationSupported(annotation);
+    }
+
+    /**
+     * By default returns {@code false}, but subclasses can override to support custom annotations.
+     *
+     * <p>Note: when overridden, {@link #processAnnotation(Description, Annotation)} should be
+     * overridden as well.
+     */
+    protected boolean isAnnotationSupported(Annotation annotation) {
+        return false;
+    }
+
+    /**
+     * Called to process custom annotations present in the test (when {@link
+     * #isAnnotationSupported(Annotation)} returns {@code true} for that annotation type).
+     */
+    protected void processAnnotation(Description description, Annotation annotation) {
+        throw new IllegalStateException(
+                "Rule subclass ("
+                        + this.getClass().getName()
+                        + ") supports annotation "
+                        + annotation.annotationType().getName()
+                        + ", but doesn't override processAnnotation(), which was called with "
+                        + annotation);
     }
 
     private List<Annotation> getAllFlagAnnotations(Description description) {
