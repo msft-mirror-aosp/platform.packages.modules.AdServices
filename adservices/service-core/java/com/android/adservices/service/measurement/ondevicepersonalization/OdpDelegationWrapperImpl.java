@@ -88,6 +88,7 @@ public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
             AsyncRegistration asyncRegistration, Map<String, List<String>> headers) {
         Objects.requireNonNull(asyncRegistration);
         Objects.requireNonNull(headers);
+        LoggerFactory.getMeasurementLogger().d("registerOdpTrigger: ODP is available");
 
         OdpRegistrationStatus odpRegistrationStatus = new OdpRegistrationStatus();
         odpRegistrationStatus.setRegistrationType(OdpRegistrationStatus.RegistrationType.TRIGGER);
