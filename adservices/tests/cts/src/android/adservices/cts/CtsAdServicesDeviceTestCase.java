@@ -32,6 +32,6 @@ abstract class CtsAdServicesDeviceTestCase extends AdServicesCtsTestCase {
                 .setPpapiAppAllowList(mPackageName)
                 // TODO (b/330324133): Short-term solution to allow test to extend binder timeout to
                 // resolve the test flakiness.
-                .setSystemProperty(BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME, 10_000);
+                .setDebugFlag(BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME, 10_000);
     }
 }

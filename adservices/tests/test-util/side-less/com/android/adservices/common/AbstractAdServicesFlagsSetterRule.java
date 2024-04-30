@@ -219,7 +219,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                 "setDebugUxFlagsForRvcUx()",
                 () -> {
                     if (!isAtLeastS() && isAtLeastR()) {
-                        setSystemProperty(
+                        setDebugFlag(
                                 FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
                         setFlag(FlagsConstants.KEY_DEBUG_UX, "RVC_UX");
                         return;
