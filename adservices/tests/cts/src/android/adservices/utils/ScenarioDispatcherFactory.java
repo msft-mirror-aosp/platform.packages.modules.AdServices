@@ -20,6 +20,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Random;
 
 /** Used to construct {@link ScenarioDispatcher} instances by loading required data. */
 public class ScenarioDispatcherFactory {
@@ -38,18 +39,20 @@ public class ScenarioDispatcherFactory {
      * @param filePath Path to scenario JSON.
      * @return Factory for constructing {@link ScenarioDispatcher} instances.
      */
-    public static ScenarioDispatcherFactory fromScenario(String filePath) {
+    public static ScenarioDispatcherFactory createFromScenarioFile(String filePath) {
         return new ScenarioDispatcherFactory(filePath, "");
     }
 
     /**
-     * Construct a factory for a given scenario file path and prefix.
+     * Construct a factory for a given scenario file path (and add a random prefix).
      *
      * @param filePath Path to scenario JSON.
-     * @param prefix Prefix that is applied to all mocked paths.
      * @return Factory for constructing {@link ScenarioDispatcher} instances.
      */
-    public static ScenarioDispatcherFactory fromScenarioWithPrefix(String filePath, String prefix) {
+    public static ScenarioDispatcherFactory createFromScenarioFileWithRandomPrefix(
+            String filePath) {
+        Random random = new Random();
+        String prefix = "/" + random.nextInt();
         return new ScenarioDispatcherFactory(filePath, prefix);
     }
 

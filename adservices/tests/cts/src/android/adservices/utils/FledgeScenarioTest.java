@@ -59,10 +59,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 
+import java.net.URL;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
-import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -82,7 +82,6 @@ public abstract class FledgeScenarioTest {
     private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final long AD_ID_FETCHER_TIMEOUT = 1000;
     private static final long AD_ID_FETCHER_TIMEOUT_DEFAULT = 50;
-    private final Random mCacheBusterRandom = new Random();
 
     protected AdvertisingCustomAudienceClient mCustomAudienceClient;
     protected AdSelectionClient mAdSelectionClient;
@@ -91,8 +90,6 @@ public abstract class FledgeScenarioTest {
     private AdTechIdentifier mSeller;
     private String mServerBaseAddress;
 
-    // Prefix added to all requests to bust cache.
-    private int mCacheBuster;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -152,7 +149,6 @@ public abstract class FledgeScenarioTest {
                         .build();
         mAdSelectionClient =
                 new AdSelectionClient.Builder().setContext(CONTEXT).setExecutor(executor).build();
-        mCacheBuster = mCacheBusterRandom.nextInt();
     }
 
     @After
@@ -228,6 +224,10 @@ public abstract class FledgeScenarioTest {
         Log.d(TAG, "Scheduled Custom Audience Update: " + request);
     }
 
+    protected String getServerBaseAddress() {
+        return mServerBaseAddress;
+    }
+
     protected void overrideCpcBillingEnabled(boolean enabled) {
         ShellUtils.runShellCommand(
                 String.format(
@@ -266,7 +266,7 @@ public abstract class FledgeScenarioTest {
                         enabled ? "true" : "false"));
     }
 
-    protected AdSelectionConfig makeAdSelectionConfig() {
+    protected AdSelectionConfig makeAdSelectionConfig(URL serverBaseAddressWithPrefix) {
         AdSelectionSignals signals = FledgeScenarioTest.makeAdSelectionSignals();
         Log.d(TAG, "Ad tech buyer: " + mBuyer);
         Log.d(TAG, "Ad tech seller: " + mSeller);
@@ -276,9 +276,10 @@ public abstract class FledgeScenarioTest {
                 .setCustomAudienceBuyers(ImmutableList.of(mBuyer))
                 .setAdSelectionSignals(signals)
                 .setSellerSignals(signals)
-                .setDecisionLogicUri(Uri.parse(mServerBaseAddress + Scenarios.SCORING_LOGIC_PATH))
+                .setDecisionLogicUri(
+                        Uri.parse(serverBaseAddressWithPrefix + Scenarios.SCORING_LOGIC_PATH))
                 .setTrustedScoringSignalsUri(
-                        Uri.parse(mServerBaseAddress + Scenarios.SCORING_SIGNALS_PATH))
+                        Uri.parse(serverBaseAddressWithPrefix + Scenarios.SCORING_SIGNALS_PATH))
                 .build();
     }
 
@@ -295,10 +296,6 @@ public abstract class FledgeScenarioTest {
                         scenarioDispatcher.getBaseAddressWithPrefix().getHost());
         Log.d(TAG, "Started default MockWebServer.");
         return scenarioDispatcher;
-    }
-
-    protected String getCacheBusterPrefix() {
-        return String.format("/%s", mCacheBuster);
     }
 
     private JoinCustomAudienceRequest makeJoinCustomAudienceRequest(String customAudienceName) {

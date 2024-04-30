@@ -17,7 +17,7 @@
 package android.adservices.utils;
 
 /** Default constants for CUJ scenarios. */
-public class Scenarios {
+public final class Scenarios {
 
     public static final String BIDDING_LOGIC_PATH = "/bidding";
     public static final String BIDDING_SIGNALS_PATH = "/bidding/trusted";
