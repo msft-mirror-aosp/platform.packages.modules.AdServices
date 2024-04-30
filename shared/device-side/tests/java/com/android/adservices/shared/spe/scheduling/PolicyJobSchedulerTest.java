@@ -89,7 +89,7 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
                                     ? BATTERY_TYPE_REQUIRE_CHARGING
                                     : BATTERY_TYPE_REQUIRE_NONE)
                     .build();
-    private static final JobSpec sJobSpec = new JobSpec.Builder(JOB_ID_1, sJobPolicy).build();
+    private static final JobSpec sJobSpec = new JobSpec.Builder(sJobPolicy).build();
 
     private final JobScheduler mJobScheduler = sContext.getSystemService(JobScheduler.class);
     private TestJobServiceFactory mFactory;
@@ -127,7 +127,9 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
     @Test
     public void testScheduleJob_jobNotConfigured() {
         int notConfiguredJobId = 10000;
-        JobSpec jobSpec = new JobSpec.Builder(notConfiguredJobId, sJobPolicy).build();
+        JobSpec jobSpec =
+                new JobSpec.Builder(JobPolicy.newBuilder().setJobId(notConfiguredJobId).build())
+                        .build();
 
         assertThrows(
                 IllegalStateException.class,
@@ -161,8 +163,7 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
     public void testScheduleJob_forceSchedule() {
         scheduleOneTimeJobWithDefaultConstraints();
 
-        JobSpec jobSpec =
-                new JobSpec.Builder(JOB_ID_1, sJobPolicy).setShouldForceSchedule(true).build();
+        JobSpec jobSpec = new JobSpec.Builder(sJobPolicy).setShouldForceSchedule(true).build();
         expect.withMessage("The forced scheduling for job with same JobInfo")
                 .that(mPolicyJobScheduler.scheduleJob(sContext, jobSpec))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
@@ -174,7 +175,7 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
 
         JobPolicy updatedJobPolicy =
                 sJobPolicy.toBuilder().setBatteryType(BATTERY_TYPE_REQUIRE_NONE).build();
-        JobSpec updatedJobSpec = new JobSpec.Builder(JOB_ID_1, updatedJobPolicy).build();
+        JobSpec updatedJobSpec = new JobSpec.Builder(updatedJobPolicy).build();
 
         // Call the scheduling method with an updated info.
         expect.withMessage("The scheduling for job with different jobInfo")
@@ -229,7 +230,7 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
         PersistableBundle extras = new PersistableBundle();
         extras.putBoolean("testKey", true);
 
-        JobSpec jobSpec = new JobSpec.Builder(JOB_ID_1, sJobPolicy).setExtras(extras).build();
+        JobSpec jobSpec = new JobSpec.Builder(sJobPolicy).setExtras(extras).build();
 
         JobInfo expectedJobInfo =
                 getBaseJobInfoBuilder()
@@ -248,7 +249,7 @@ public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
         JobPolicy serverJobPolicy = sJobPolicy.toBuilder().clearJobId().build();
         doReturn(Map.of(JOB_ID_1, serverJobPolicy)).when(mMockModuleJobPolicy).getJobPolicyMap();
 
-        JobSpec jobSpec = new JobSpec.Builder(JOB_ID_1, sJobPolicy).build();
+        JobSpec jobSpec = new JobSpec.Builder(sJobPolicy).build();
 
         assertWithMessage("getJobInfoToSchedule()")
                 .that(mPolicyJobScheduler.getJobInfoToSchedule(sContext, jobSpec, JOB_NAME_1))
