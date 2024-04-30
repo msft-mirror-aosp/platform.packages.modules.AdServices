@@ -33,6 +33,9 @@ import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerIm
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.sCallerMetadata;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_CA_WINNER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_NO_WINNER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
@@ -102,8 +105,10 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.shared.testing.NoFailureSyncCallback;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
@@ -379,6 +384,8 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
 
     private static final boolean FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED_IN_TEST = true;
 
+    private static final boolean PAS_EXTENDED_METRICS_ENABLED_IN_TEST = true;
+
     private static final int ADSERVICES_STATUS_UNSET = -1;
     private static final int SELLER_DESTINATION =
             ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
@@ -418,6 +425,9 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     private NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback;
 
     private AdServicesLogger mAdServicesLoggerSpy;
+
+    private ArgumentCaptor<PersistAdSelectionResultCalledStats>
+            mPersistAdSelectionResultCalledStatsArgumentCaptor;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -498,6 +508,7 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
+        setupPersistAdSelectionResultCalledLogging();
     }
 
     @After
@@ -616,6 +627,8 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
+
+        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
     }
 
     @Test
@@ -727,6 +740,8 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
+
+        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_PAS_WINNER);
     }
 
     @Test
@@ -832,6 +847,8 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
+
+        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
     }
 
     @Test
@@ -936,6 +953,8 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
+
+        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_PAS_WINNER);
     }
 
     @Test
@@ -1040,6 +1059,8 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
+
+        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
     }
 
     // TODO(b/291680065): Remove the test when owner field is returned from B&A
@@ -1134,6 +1155,8 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
+
+        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
     }
 
     // TODO(b/291680065): Remove the test when owner field is returned from B&A
@@ -1232,6 +1255,8 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
+
+        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
     }
 
     @Test
@@ -1281,6 +1306,8 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                         eq(ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER));
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
+
+        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
     }
 
     @Test
@@ -1312,6 +1339,8 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_INVALID_ARGUMENT);
+
+        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
     }
 
     @Test
@@ -1960,6 +1989,11 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
         public boolean getFledgeAuctionServerApiUsageMetricsEnabled() {
             return FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED_IN_TEST;
         }
+
+        @Override
+        public boolean getPasExtendedMetricsEnabled() {
+            return PAS_EXTENDED_METRICS_ENABLED_IN_TEST;
+        }
     }
 
     public static class PersistAdSelectionResultRunnerTestFlagsForKAnon
@@ -2016,5 +2050,20 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
         }
+    }
+
+    private void setupPersistAdSelectionResultCalledLogging() {
+        mPersistAdSelectionResultCalledStatsArgumentCaptor =
+                ArgumentCaptor.forClass(PersistAdSelectionResultCalledStats.class);
+    }
+
+    private void verifyPersistAdSelectionResultWinnerType(
+            @AdsRelevanceStatusUtils.WinnerType int winnerType) {
+        verify(mAdServicesLoggerSpy)
+                .logPersistAdSelectionResultCalledStats(
+                        mPersistAdSelectionResultCalledStatsArgumentCaptor.capture());
+        PersistAdSelectionResultCalledStats stats =
+                mPersistAdSelectionResultCalledStatsArgumentCaptor.getValue();
+        assertThat(stats.getWinnerType()).isEqualTo(winnerType);
     }
 }

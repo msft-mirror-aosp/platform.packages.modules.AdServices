@@ -279,7 +279,7 @@ public class ConsentNotificationGaFragment extends Fragment {
                                         ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }
                     // acknowledge and dismiss
-                    requireActivity().finish();
+                    requireActivity().finishAndRemoveTask();
                 }
             } else {
                 ConsentNotificationActivity.handleAction(

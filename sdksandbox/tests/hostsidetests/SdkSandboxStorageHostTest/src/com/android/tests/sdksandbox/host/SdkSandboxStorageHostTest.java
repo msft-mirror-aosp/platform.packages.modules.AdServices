@@ -31,6 +31,7 @@ import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 import android.platform.test.annotations.LargeTest;
 
+import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
@@ -71,6 +72,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     private final DeviceLockUtils mDeviceLockUtils = new DeviceLockUtils(this);
     private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
+    private DeviceSdkLevel mDeviceSdkLevel;
+
     /**
      * Runs the given phase of a test by calling into the device.
      * Throws an exception if the test phase fails.
@@ -90,6 +93,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void setUp() throws Exception {
         assumeTrue(mDeviceSupportUtils.isSdkSandboxSupported());
         uninstallPackage(TEST_APP_STORAGE_PACKAGE);
+        mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
     }
 
     @After
@@ -170,6 +174,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSdkSandboxDataMirrorAppDirectory_IsCreatedOnInstall() throws Exception {
+        // Sandbox data isolation fixes are in U+.
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+
         final String cePath = getSdkDataMirrorPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         final String dePath = getSdkDataMirrorPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
 
@@ -184,6 +191,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @Test
     @LargeTest // New volume created
     public void testSdkSandboxDataMirrorDirectory_IsVolumeSpecific() throws Exception {
+        // Sandbox data isolation fixes are in U+.
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 
         installPackage(TEST_APP_STORAGE_APK);

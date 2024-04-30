@@ -29,7 +29,6 @@ java_test_host {
         "SdkSandboxHostTestUtils",
     ],
     test_suites: [
-        "cts",
         "mts-adservices",
         "general-tests",
         "mcts-adservices",

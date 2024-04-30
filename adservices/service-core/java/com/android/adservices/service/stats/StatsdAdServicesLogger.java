@@ -52,6 +52,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INI
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.PERSIST_AD_SELECTION_RESULT_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
@@ -82,6 +83,7 @@ import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -879,6 +881,13 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getSignalEncodingSuccesses(),
                 stats.getSignalEncodingFailures(),
                 stats.getSignalEncodingSkips());
+    }
+
+    @Override
+    public void logPersistAdSelectionResultCalledStats(PersistAdSelectionResultCalledStats stats) {
+        AdServicesStatsLog.write(
+                PERSIST_AD_SELECTION_RESULT_CALLED,
+                stats.getWinnerType());
     }
 
     @NonNull

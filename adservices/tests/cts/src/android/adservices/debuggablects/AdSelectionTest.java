@@ -34,6 +34,7 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 import android.util.Log;
@@ -72,9 +73,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withBiddingAndScoringLogic_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
@@ -112,9 +113,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withBiddingLogicV3_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-119.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-119.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
@@ -139,9 +140,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withAdCostInUrl_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-160.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-160.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
         long adSelectionId;
 
@@ -169,9 +170,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     public void testAdSelection_withAdCostInUrl_adCostIsReported() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-161.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-161.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
         long adSelectionId;
 
@@ -199,9 +200,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
     public void testAdSelection_withFetchCustomAudience_fetchesAndReturnsSuccessfully()
             throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-fetchCA.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-fetchCA.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
         String customAudienceName = "hats";
 
@@ -240,9 +241,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
     public void testAdSelection_withShortlyExpiringCustomAudience_selectAdsThrowsException()
             throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix()));
         AdSelectionConfig config = makeAdSelectionConfig();
         CustomAudience customAudience =
                 makeCustomAudience(SHOES_CA)
@@ -269,9 +270,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @Test
     public void testAdSelectionOutcomes_withNoAdSelectionId_throwsException() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix()));
         AdSelectionFromOutcomesConfig config =
                 new AdSelectionFromOutcomesConfig.Builder()
                         .setSeller(mAdTechIdentifier)
@@ -300,9 +301,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
     public void testAdSelection_withDebugReporting_happyPath() throws Exception {
         assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-164.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-164.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
@@ -328,9 +329,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withDebugReportingDisabled_doesNotSend() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-165.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-165.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
@@ -355,9 +356,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
     public void testAdSelection_withDebugReportingAndRejectReason_happyPath() throws Exception {
         assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-170.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-170.json", getCacheBusterPrefix()));
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
@@ -379,9 +380,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withHighLatencyBackend_doesNotWinAuction() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-053.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-053.json", getCacheBusterPrefix()));
         AdSelectionConfig config = makeAdSelectionConfig();
 
         try {
@@ -407,10 +408,10 @@ public class AdSelectionTest extends FledgeScenarioTest {
         // ScenarioDispatcher returns 404 for all paths which are not setup from the json file and
         // we didn't configure a scoring logic url.
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-invalid-scoring-logic-url.json",
-                        getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
+                                "scenarios/remarketing-cuj-invalid-scoring-logic-url.json",
+                                getCacheBusterPrefix()));
         AdSelectionConfig config = makeAdSelectionConfig();
 
         try {

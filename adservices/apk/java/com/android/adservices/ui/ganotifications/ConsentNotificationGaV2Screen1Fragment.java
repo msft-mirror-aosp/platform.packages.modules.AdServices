@@ -237,7 +237,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
                 if (mIsEUDevice) {
                     startScreen2Fragment();
                 } else {
-                    requireActivity().finish();
+                    requireActivity().finishAndRemoveTask();
                 }
             } else {
                 mScrollContainer.smoothScrollTo(

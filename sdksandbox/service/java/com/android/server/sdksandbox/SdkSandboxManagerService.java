@@ -1484,10 +1484,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     boolean isSdkSandboxDisabled() {
-        if (!SdkLevel.isAtLeastU()) {
-            return true;
-        }
-
         synchronized (mLock) {
             if (!mInjector.isAdServiceApkPresent()) {
                 return true;
