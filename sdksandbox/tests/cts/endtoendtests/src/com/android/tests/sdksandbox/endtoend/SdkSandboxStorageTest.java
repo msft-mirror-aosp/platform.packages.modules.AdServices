@@ -26,6 +26,7 @@ import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
@@ -54,7 +55,11 @@ public class SdkSandboxStorageTest extends SandboxKillerBeforeTest {
     private static final String SDK_NAME_1 = "com.android.ctssdkprovider";
     private static final String FD_VALUE = "file-descriptor-value";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
 
     private SdkSandboxManager mSdkSandboxManager;
 
