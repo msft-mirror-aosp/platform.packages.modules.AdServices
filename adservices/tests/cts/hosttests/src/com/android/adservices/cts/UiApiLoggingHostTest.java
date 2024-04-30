@@ -261,6 +261,6 @@ public class UiApiLoggingHostTest implements IDeviceTest {
         return !DeviceUtils.hasFeature(device, FEATURE_WATCH)
                 && !DeviceUtils.hasFeature(device, FEATURE_AUTOMOTIVE)
                 && !DeviceUtils.hasFeature(device, FEATURE_LEANBACK)
-                && !device.getProperty(LOW_RAM_DEVICE_CONFIG).equals("true");
+                && !"true".equals(device.getProperty(LOW_RAM_DEVICE_CONFIG));
     }
 }
