@@ -39,7 +39,10 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
+import com.android.adservices.service.measurement.registration.FetcherUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementOdpApiCallStats;
@@ -60,19 +63,22 @@ public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
     private OnDevicePersonalizationSystemEventManager mOdpSystemEventManager;
     private final AdServicesLogger mLogger;
     private final Clock mClock;
+    private final Flags mFlags;
 
     public OdpDelegationWrapperImpl(OnDevicePersonalizationSystemEventManager manager) {
-        this(manager, AdServicesLoggerImpl.getInstance());
+        this(manager, AdServicesLoggerImpl.getInstance(), FlagsFactory.getFlags());
     }
 
     @VisibleForTesting
     public OdpDelegationWrapperImpl(
             OnDevicePersonalizationSystemEventManager manager,
-            AdServicesLogger logger) {
+            AdServicesLogger logger,
+            Flags flags) {
         Objects.requireNonNull(manager);
         mOdpSystemEventManager = manager;
         mLogger = logger;
         mClock = Clock.getInstance();
+        mFlags = flags;
     }
 
     /** Calls the notifyMeasurementEvent API. */
@@ -82,13 +88,19 @@ public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
             AsyncRegistration asyncRegistration, Map<String, List<String>> headers) {
         Objects.requireNonNull(asyncRegistration);
         Objects.requireNonNull(headers);
-
-        if (!headers.containsKey(OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER)) {
-            return;
-        }
+        LoggerFactory.getMeasurementLogger().d("registerOdpTrigger: ODP is available");
 
         OdpRegistrationStatus odpRegistrationStatus = new OdpRegistrationStatus();
         odpRegistrationStatus.setRegistrationType(OdpRegistrationStatus.RegistrationType.TRIGGER);
+
+        if (FetcherUtil.calculateHeadersCharactersLength(headers)
+                > mFlags.getMaxOdpTriggerRegistrationHeaderSizeBytes()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("registerOdpTrigger: Header size limit exceeded");
+            logOdpRegistrationMetrics(odpRegistrationStatus);
+            return;
+        }
+
         List<String> field = headers.get(OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER);
         if (field == null || field.size() != 1) {
             LoggerFactory.getMeasurementLogger().d("registerOdpTrigger: Invalid header format");
@@ -169,13 +181,11 @@ public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
             odpRegistrationStatus.setRegistrationStatus(
                     OdpRegistrationStatus.RegistrationStatus.SUCCESS);
         } catch (JSONException e) {
-            // TODO: Expanding ODP WW metric failure types b/335418853
             LoggerFactory.getMeasurementLogger().d(e, "registerOdpTrigger: JSONException");
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_JSON_PARSING_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         } catch (Exception e) {
-            // TODO: Expanding ODP WW metric failure types b/335418853
             LoggerFactory.getMeasurementLogger().d(e, "registerOdpTrigger: Unknown Exception");
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_PARSING_UNKNOWN_ERROR,

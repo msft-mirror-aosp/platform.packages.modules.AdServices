@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 /** KAnon sign join manager class */
 @RequiresApi(Build.VERSION_CODES.S)
 public class KAnonSignJoinManager {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getKAnonLogger();
     private final KAnonCaller mKAnonCaller;
     private final KAnonMessageManager mKAnonMessageManager;
     private final Flags mFlags;
@@ -103,7 +103,16 @@ public class KAnonSignJoinManager {
                 }
             }
         }
-        sLogger.v("shouldProcessRightNow field is : " + shouldProcessRightNow);
+        if (shouldProcessRightNow) {
+            sLogger.v(
+                    "The message will be either signed/joined immediately or persisted to the "
+                            + "database for delayed processing by background job");
+
+        } else {
+            sLogger.v(
+                    "This message has been ignored for processing because it already exists in the"
+                            + " database and the corresponding client params haven't expired");
+        }
         return shouldProcessRightNow;
     }
 
@@ -142,6 +151,7 @@ public class KAnonSignJoinManager {
             mKAnonCaller.signAndJoinMessages(
                     insertedMessages, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         } else {
+            sLogger.v("Message will be picked up later by the background process");
             // TODO(b/326903508): Remove unused loggers. Use callback instead of logger
             // for testing.
             mAdServicesLogger.logKAnonSignJoinStatus();

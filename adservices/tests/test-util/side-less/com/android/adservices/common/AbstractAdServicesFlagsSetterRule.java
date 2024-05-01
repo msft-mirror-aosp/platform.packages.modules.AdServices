@@ -53,6 +53,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     protected static final String LOGCAT_TAG_ADSERVICES_SERVICE = LOGCAT_TAG_ADSERVICES + "-system";
     protected static final String LOGCAT_TAG_TOPICS = LOGCAT_TAG_ADSERVICES + ".topics";
     protected static final String LOGCAT_TAG_FLEDGE = LOGCAT_TAG_ADSERVICES + ".fledge";
+    protected static final String LOGCAT_TAG_KANON = LOGCAT_TAG_ADSERVICES + ".kanon";
     protected static final String LOGCAT_TAG_MEASUREMENT = LOGCAT_TAG_ADSERVICES + ".measurement";
     protected static final String LOGCAT_TAG_UI = LOGCAT_TAG_ADSERVICES + ".ui";
     protected static final String LOGCAT_TAG_ADID = LOGCAT_TAG_ADSERVICES + ".adid";
@@ -258,6 +259,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
         setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE);
         setLogcatTag(LOGCAT_TAG_ADID, LOGCAT_LEVEL_VERBOSE);
         setLogcatTag(LOGCAT_TAG_APPSETID, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_KANON, LOGCAT_LEVEL_VERBOSE);
         return getThis();
     }
 

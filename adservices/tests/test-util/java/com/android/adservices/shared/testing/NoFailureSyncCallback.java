@@ -23,7 +23,24 @@ public class NoFailureSyncCallback<T> extends SyncCallback<T, Void> {
     public NoFailureSyncCallback() {}
 
     /** Constructor with a custom timeout to wait for the outcome. */
-    public NoFailureSyncCallback(int timeoutMs) {
+    public NoFailureSyncCallback(long timeoutMs) {
         super(timeoutMs);
+    }
+
+    // TODO(b/337014024): should not need to override methods below
+
+    @Override
+    public void injectError(Void error) {
+        throw new UnsupportedOperationException("this callback only handle result");
+    }
+
+    @Override
+    public Void assertErrorReceived() throws InterruptedException {
+        throw new UnsupportedOperationException("this callback only handle result");
+    }
+
+    @Override
+    public Void getErrorReceived() {
+        throw new UnsupportedOperationException("this callback only handle result");
     }
 }

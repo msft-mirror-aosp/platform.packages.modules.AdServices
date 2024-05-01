@@ -22,11 +22,9 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 
 /**
- * @deprecated TODO(b/314188692): currently it's only used to set the application context, which
- *     wouldn't be needed if all test classes extended {@code AdServicesUnitTestCase} or used {@code
- *     ApplicationContextSingletonRule}.
+ * Should be used by all unit test projects, as it's used to set the application context that is
+ * often used to initialize singletons.
  */
-@Deprecated
 public final class AdServicesTestingProvider extends ApplicationContextProvider {
 
     @Override

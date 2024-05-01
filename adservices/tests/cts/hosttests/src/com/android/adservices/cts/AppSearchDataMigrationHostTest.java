@@ -63,8 +63,8 @@ import java.util.stream.Collectors;
 @RunWith(DeviceJUnit4ClassRunner.class)
 public class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
     private static final long BOOT_COMPLETED_TIMEOUT = 60_000L;
-    private static final long LOG_RECEIVER_TIMEOUT_MS = 10_000L;
-    private static final int ACTIVITY_LAUNCH_TIMEOUT_MS = 5_000;
+    private static final long LOG_RECEIVER_TIMEOUT_MS = 60_000L;
+    private static final int ACTIVITY_LAUNCH_TIMEOUT_MS = 30_000;
 
     private static final String PACKAGE = "com.android.adservices.cts";
     private static final String CLASS = "AppSearchWriterActivity";

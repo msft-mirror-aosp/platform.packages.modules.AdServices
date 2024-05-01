@@ -38,6 +38,11 @@ import java.util.Objects;
  * <p>It also provide convenience methods to {@link #get() get} / {@link #set(Context) set} the
  * context during tests, so the test doesn't need to explicitly deal with {@link
  * ApplicationContextSingleton}.
+ *
+ * <p><b>NOTE: </b>if the test declares variables that access {@link ApplicationContextSingleton}
+ * when initialized, this rule will not be enough - the test should include a {@link
+ * com.android.adservices.shared.common.ApplicationContextProvider} instead (or as well), like
+ * {@link com.android.adservices.common.AdServicesTestingProvider}.
  */
 public final class ApplicationContextSingletonRule implements TestRule {
     private final Context mContext;

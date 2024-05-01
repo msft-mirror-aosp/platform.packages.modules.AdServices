@@ -41,6 +41,7 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Process;
 import android.os.SystemProperties;
 import android.text.TextUtils;
 
@@ -113,6 +114,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                         DEFAULT_BINDER_CONNECTION_TIMEOUT_MS);
     }
 
+    @Override
     public T getService() {
         if (mSimulatingLowRamDevice) {
             throw new ServiceUnavailableException(
@@ -156,7 +158,9 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                         mServiceConnection = null;
                         return null;
                     } else {
-                        LogUtil.d("bindService() started...");
+                        LogUtil.d(
+                                "bindService() started on user %d...",
+                                Process.myUserHandle().getIdentifier());
                     }
                 } catch (Exception e) {
                     LogUtil.e(

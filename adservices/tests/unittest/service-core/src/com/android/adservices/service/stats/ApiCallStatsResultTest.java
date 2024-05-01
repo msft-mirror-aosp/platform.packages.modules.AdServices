@@ -25,6 +25,7 @@ import static com.android.adservices.service.stats.ApiCallStats.successResult;
 import static com.android.adservices.service.stats.ApiCallStats.Result;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
@@ -74,19 +75,20 @@ public final class ApiCallStatsResultTest extends AdServicesUnitTestCase {
 
     @Test
     public void testEqualsHashCode() {
+        EqualsTester et = new EqualsTester(expect);
         Result equals1 = failureResult(CODE, FAILURE);
         Result equals2 = failureResult(CODE, FAILURE);
 
         Result different1 = failureResult(CODE + 1, FAILURE);
         Result different2 = failureResult(CODE, FAILURE + 1);
 
-        expectObjectsAreEqual(equals1, equals1);
-        expectObjectsAreEqual(equals1, equals2);
+        et.expectObjectsAreEqual(equals1, equals1);
+        et.expectObjectsAreEqual(equals1, equals2);
 
-        expectObjectsAreNotEqual(equals1, null);
-        expectObjectsAreNotEqual(equals1, "STATS, Y U NO STRING?");
+        et.expectObjectsAreNotEqual(equals1, null);
+        et.expectObjectsAreNotEqual(equals1, "STATS, Y U NO STRING?");
 
-        expectObjectsAreNotEqual(equals1, different1);
-        expectObjectsAreNotEqual(equals1, different2);
+        et.expectObjectsAreNotEqual(equals1, different1);
+        et.expectObjectsAreNotEqual(equals1, different2);
     }
 }

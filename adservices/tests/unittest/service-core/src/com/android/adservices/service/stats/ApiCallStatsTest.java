@@ -27,6 +27,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
@@ -149,6 +150,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
 
     @Test
     public void testEqualsHashCode() {
+        EqualsTester et = new EqualsTester(expect);
         int baseCode = AD_SERVICES_API_CALLED;
         int baseApiClass = AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
         int baseApiName = AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
@@ -268,20 +270,20 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setResult(failureResult(resultCode, failureReason + 42))
                         .build();
 
-        expectObjectsAreEqual(equals1, equals1);
-        expectObjectsAreEqual(equals1, equals2);
+        et.expectObjectsAreEqual(equals1, equals1);
+        et.expectObjectsAreEqual(equals1, equals2);
 
-        expectObjectsAreNotEqual(equals1, null);
-        expectObjectsAreNotEqual(equals1, "STATS, Y U NO STRING?");
+        et.expectObjectsAreNotEqual(equals1, null);
+        et.expectObjectsAreNotEqual(equals1, "STATS, Y U NO STRING?");
 
-        expectObjectsAreNotEqual(equals1, different1);
-        expectObjectsAreNotEqual(equals1, different2);
-        expectObjectsAreNotEqual(equals1, different3);
-        expectObjectsAreNotEqual(equals1, different4);
-        expectObjectsAreNotEqual(equals1, different5);
-        expectObjectsAreNotEqual(equals1, different6);
-        expectObjectsAreNotEqual(equals1, different7);
-        expectObjectsAreNotEqual(equals1, different8);
+        et.expectObjectsAreNotEqual(equals1, different1);
+        et.expectObjectsAreNotEqual(equals1, different2);
+        et.expectObjectsAreNotEqual(equals1, different3);
+        et.expectObjectsAreNotEqual(equals1, different4);
+        et.expectObjectsAreNotEqual(equals1, different5);
+        et.expectObjectsAreNotEqual(equals1, different6);
+        et.expectObjectsAreNotEqual(equals1, different7);
+        et.expectObjectsAreNotEqual(equals1, different8);
     }
 
     // Creates a builder with the bare minimum required state.

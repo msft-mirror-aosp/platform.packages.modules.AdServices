@@ -184,10 +184,11 @@ public class ImpressionReporterLegacy {
         mJsEngine =
                 new ReportImpressionScriptEngine(
                         context,
-                        () -> flags.getEnforceIsolateMaxHeapSize(),
-                        () -> flags.getIsolateMaxHeapSizeBytes(),
+                        flags::getEnforceIsolateMaxHeapSize,
+                        flags::getIsolateMaxHeapSizeBytes,
                         registerAdBeaconScriptEngineHelper,
-                        retryStrategy);
+                        retryStrategy,
+                        mDevContext);
 
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
