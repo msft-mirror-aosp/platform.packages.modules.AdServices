@@ -17,7 +17,6 @@
 package com.android.adservices.service.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
@@ -152,8 +151,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         invokeGetAdIdAndVerifyError(
                 mSpyContext,
                 STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
-                /* checkLoggingStatus */ true,
-                FAILURE_REASON_UNSET);
+                /* checkLoggingStatus= */ true);
     }
 
     @Test
@@ -170,11 +168,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                 .thenReturn(false);
         // We don't log STATUS_RATE_LIMIT_REACHED for getAdId API.
         invokeGetAdIdAndVerifyError(
-                mSpyContext,
-                STATUS_RATE_LIMIT_REACHED,
-                request, /* checkLoggingStatus */
-                false,
-                FAILURE_REASON_UNSET);
+                mSpyContext, STATUS_RATE_LIMIT_REACHED, request, /* checkLoggingStatus= */ false);
     }
 
     @Test
@@ -239,10 +233,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
     public void checkAppNoPermission() throws Exception {
         setupPermissions(TEST_APP_PACKAGE_NAME);
         invokeGetAdIdAndVerifyError(
-                mSpyContext,
-                STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_UNSET);
+                mSpyContext, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus= */ true);
     }
 
     @Test
@@ -255,10 +246,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                 .when(mMockPackageManager)
                 .checkPermission(eq(ACCESS_ADSERVICES_AD_ID), any());
         invokeGetAdIdAndVerifyError(
-                mMockSdkContext,
-                STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_UNSET);
+                mMockSdkContext, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus= */ true);
     }
 
     @Test
@@ -310,11 +298,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                         .build();
 
         invokeGetAdIdAndVerifyError(
-                mSpyContext,
-                STATUS_UNAUTHORIZED,
-                mRequest, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_UNSET);
+                mSpyContext, STATUS_UNAUTHORIZED, mRequest, /* checkLoggingStatus= */ true);
         verifyErrorLogUtilErrorWithAnyException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
@@ -332,26 +316,20 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                         .build();
 
         invokeGetAdIdAndVerifyError(
-                mSpyContext,
-                STATUS_UNAUTHORIZED,
-                mRequest, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_UNSET);
+                mSpyContext, STATUS_UNAUTHORIZED, mRequest, /* checkLoggingStatus= */ true);
     }
 
     private void invokeGetAdIdAndVerifyError(
-            Context context, int expectedResultCode, boolean checkLoggingStatus, int failureReason)
+            Context context, int expectedResultCode, boolean checkLoggingStatus)
             throws InterruptedException {
-        invokeGetAdIdAndVerifyError(
-                context, expectedResultCode, mRequest, checkLoggingStatus, failureReason);
+        invokeGetAdIdAndVerifyError(context, expectedResultCode, mRequest, checkLoggingStatus);
     }
 
     private void invokeGetAdIdAndVerifyError(
             Context context,
             int expectedResultCode,
             GetAdIdParam request,
-            boolean checkLoggingStatus,
-            int failureReason)
+            boolean checkLoggingStatus)
             throws InterruptedException {
         SyncIGetAdIdCallback callback = new SyncIGetAdIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
         CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
@@ -390,7 +368,6 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                     .isEqualTo(request.getAppPackageName());
             assertThat(argument.getValue().getSdkPackageName())
                     .isEqualTo(request.getSdkPackageName());
-            assertThat(argument.getValue().getFailureReason()).isEqualTo(failureReason);
         }
     }
 

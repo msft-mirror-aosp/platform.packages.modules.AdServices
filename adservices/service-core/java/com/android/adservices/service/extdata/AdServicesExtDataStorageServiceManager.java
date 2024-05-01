@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.extdata;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
@@ -457,7 +456,7 @@ public final class AdServicesExtDataStorageServiceManager {
                             .setAppPackageName(mPackageName)
                             .setSdkPackageName(UNKNOWN_PACKAGE_NAME)
                             .setLatencyMillisecond(apiLatency)
-                            .setResult(resultCode, FAILURE_REASON_UNSET)
+                            .setResultCode(resultCode)
                             .build());
         }
     }

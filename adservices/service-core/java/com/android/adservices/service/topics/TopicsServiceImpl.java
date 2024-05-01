@@ -15,7 +15,6 @@
  */
 package com.android.adservices.service.topics;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID;
@@ -30,6 +29,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+import static android.adservices.common.AdServicesStatusUtils.StatusCode;
+import static android.adservices.common.AdServicesStatusUtils.isSuccess;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
@@ -145,24 +146,22 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
         sBackgroundExecutor.execute(
                 () -> {
-                    ApiCallStats.Result result = null;
+                    @StatusCode int resultCode = STATUS_UNSET;
                     try {
                         if (mFlags.getTopicsDisableDirectAppCalls()) {
                             // Check if the request is valid.
                             if (!validateRequest(topicsParam, callback)) {
                                 // Return early if the request is invalid.
                                 sLogger.e("Invalid request %s", topicsParam);
-                                result =
-                                        ApiCallStats.failureResult(
-                                                STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET);
+                                resultCode = STATUS_INVALID_ARGUMENT;
                                 return;
                             }
                         }
 
-                        result =
+                        resultCode =
                                 canCallerInvokeTopicsService(
                                         hasTopicsPermission, topicsParam, callingUid, callback);
-                        if (!result.isSuccess()) {
+                        if (!isSuccess(resultCode)) {
                             return;
                         }
 
@@ -178,9 +177,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                 e,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
                                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
-                        result =
-                                ApiCallStats.failureResult(
-                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET);
+                        resultCode = STATUS_INTERNAL_ERROR;
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
                         long serviceLatency = mClock.elapsedRealtime() - startServiceTime;
@@ -200,7 +197,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                         .setAppPackageName(packageName)
                                         .setSdkPackageName(sdkName)
                                         .setLatencyMillisecond(apiLatency)
-                                        .setResult(result)
+                                        .setResultCode(resultCode)
                                         .build());
                     }
                 });
@@ -285,7 +282,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
      * @param callback {@link IGetTopicsCallback} to invoke when caller is not allowed.
      * @return ApiCallStats.Result containing API response status code and failure reason.
      */
-    private ApiCallStats.Result canCallerInvokeTopicsService(
+    private @StatusCode int canCallerInvokeTopicsService(
             boolean sufficientPermission,
             GetTopicsParam topicsParam,
             int callingUid,
@@ -297,7 +294,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             sLogger.v("STATUS_BACKGROUND_CALLER: Failed foreground check");
             invokeCallbackWithStatus(
                     callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
-            return ApiCallStats.failureResult(STATUS_BACKGROUND_CALLER, FAILURE_REASON_UNSET);
+            return STATUS_BACKGROUND_CALLER;
         }
 
         if (!sufficientPermission) {
@@ -306,8 +303,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     callback,
                     STATUS_PERMISSION_NOT_REQUESTED,
                     "Unauthorized caller. Permission not requested.");
-            return ApiCallStats.failureResult(
-                    STATUS_PERMISSION_NOT_REQUESTED, FAILURE_REASON_UNSET);
+            return STATUS_PERMISSION_NOT_REQUESTED;
         }
 
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
@@ -322,17 +318,17 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     callback,
                     STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
                     "Unauthorized caller. Signatures for calling package not allowed.");
-            return ApiCallStats.failureResult(
-                    STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST, FAILURE_REASON_UNSET);
+            return STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
         }
 
         // Check whether calling package belongs to the callingUid
-        ApiCallStats.Result result =
+        @StatusCode
+        int resultCode =
                 enforceCallingPackageBelongsToUid(topicsParam.getAppPackageName(), callingUid);
-        if (result.getResultCode() != STATUS_SUCCESS) {
+        if (!isSuccess(resultCode)) {
             sLogger.v("STATUS_UNAUTHORIZED: Caller UID mismatch");
-            invokeCallbackWithStatus(callback, result.getResultCode(), "Caller is not authorized.");
-            return ApiCallStats.failureResult(result.getResultCode(), result.getFailureReason());
+            invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
+            return resultCode;
         }
 
         AdServicesApiConsent userConsent = mConsentManager.getConsent(AdServicesApiType.TOPICS);
@@ -341,7 +337,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             sLogger.v("STATUS_USER_CONSENT_REVOKED: User consent revoked");
             invokeCallbackWithStatus(
                     callback, STATUS_USER_CONSENT_REVOKED, "User consent revoked.");
-            return ApiCallStats.failureResult(STATUS_USER_CONSENT_REVOKED, FAILURE_REASON_UNSET);
+            return STATUS_USER_CONSENT_REVOKED;
         }
 
         // The app developer declares which SDKs they would like to allow Topics
@@ -352,8 +348,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             EnrollmentData enrollmentData =
                     mEnrollmentDao.getEnrollmentDataFromSdkName(topicsParam.getSdkName());
             boolean permitted = true;
-            int resultCode = STATUS_UNSET;
-            int failureReason = FAILURE_REASON_UNSET;
+            resultCode = STATUS_UNSET;
 
             if (enrollmentData == null) {
                 errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment not found";
@@ -392,11 +387,11 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                         mEnrollmentDao.getEnrollmentRecordCountForLogging(),
                         topicsParam.getSdkName(),
                         EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue());
-                return ApiCallStats.failureResult(resultCode, failureReason);
+                return resultCode;
             }
         }
 
-        return ApiCallStats.successResult();
+        return STATUS_SUCCESS;
     }
 
     private static void invokeCallbackWithStatus(
@@ -416,7 +411,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     }
 
     // Enforce that the callingPackage has the callingUid.
-    private ApiCallStats.Result enforceCallingPackageBelongsToUid(
+    private @StatusCode int enforceCallingPackageBelongsToUid(
             String callingPackage, int callingUid) {
         int appCallingUid = SdkRuntimeUtil.getCallingAppUid(callingUid);
         int packageUid;
@@ -428,13 +423,13 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
-            return ApiCallStats.failureResult(STATUS_UNAUTHORIZED, FAILURE_REASON_UNSET);
+            return STATUS_UNAUTHORIZED;
         }
         if (packageUid != appCallingUid) {
             sLogger.e(callingPackage + " does not belong to uid " + callingUid);
-            return ApiCallStats.failureResult(STATUS_UNAUTHORIZED, FAILURE_REASON_UNSET);
+            return STATUS_UNAUTHORIZED;
         }
-        return ApiCallStats.successResult();
+        return STATUS_SUCCESS;
     }
 
     /** Init the Topics Service. */
