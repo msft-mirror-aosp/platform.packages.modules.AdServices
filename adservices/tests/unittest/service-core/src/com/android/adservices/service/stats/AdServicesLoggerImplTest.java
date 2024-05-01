@@ -447,7 +447,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         String sdkName = "com.android.container";
         int latency = 100;
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         mockAppNameApiErrorLogger();
 
         ApiCallStats stats =

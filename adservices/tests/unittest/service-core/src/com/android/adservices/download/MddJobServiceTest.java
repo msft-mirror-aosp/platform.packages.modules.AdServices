@@ -136,7 +136,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         doReturn(mSpyMobileDataDownload).when(() -> MobileDataDownloadFactory.getMdd(any()));
         doReturn(mSpyEnrollmentDataDownloadManager)

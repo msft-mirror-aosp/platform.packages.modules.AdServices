@@ -143,7 +143,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
                         mAdServicesLogger,
                         mClock);
         mLogApiCallStatsCallback = mockLogApiCallStats(mAdServicesLogger);
-        extendedMockito.mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
         doReturn(true).when(mFlags).getAdServicesEnabled();
 
         ExtendedMockito.doNothing()

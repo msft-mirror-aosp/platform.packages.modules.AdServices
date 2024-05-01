@@ -19,6 +19,7 @@ import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mo
 
 import android.content.Context;
 
+import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
@@ -58,6 +59,9 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
 
     @Rule(order = 10)
     public final AdServicesExtendedMockitoRule extendedMockito = getAdServicesExtendedMockitoRule();
+
+    // TODO(b/314969513): use the proper implementation (instead of the rule itself)
+    public final AdServicesExtendedMockitoMocker mocker = extendedMockito;
 
     /**
      * Gets the {@link AdServicesExtendedMockitoRule} that will be set as the {@code

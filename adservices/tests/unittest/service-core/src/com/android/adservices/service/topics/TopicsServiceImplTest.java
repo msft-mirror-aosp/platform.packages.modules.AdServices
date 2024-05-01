@@ -182,7 +182,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // TODO(b/310270746): Holly Hack, Batman! This class needs some serious refactoring :-(
         appContext.set(mMockAppContext);
 
-        extendedMockito.mockGetCallingUidOrThrow(); // expect to return test uid by default
+        mocker.mockGetCallingUidOrThrow(); // expect to return test uid by default
 
         // Clean DB before each test
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
@@ -280,7 +280,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
         // Topics must call AppManifestConfigHelper to check if topics is enabled, whose behavior is
         // currently guarded by a flag
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         // Similarly, AppManifestConfigHelper.isAllowedTopicsAccess() is failing to parse the XML
         // (which returns false), but logging the error on ErrorLogUtil, so we need to ignored that.
@@ -406,7 +406,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                 .assertCallerIsInForeground(
                         uid, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, SOME_SDK_NAME);
         // Mock UID with Non-SDK UID
-        extendedMockito.mockGetCallingUidOrThrow(uid);
+        mocker.mockGetCallingUidOrThrow(uid);
 
         // Mock Flags to true to enable enforcing foreground check.
         doReturn(true).when(mMockFlags).getEnforceForegroundStatusForTopics();
@@ -426,7 +426,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         SANDBOX_UID, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, SOME_SDK_NAME);
 
         // Mock UID with SDK UID
-        extendedMockito.mockGetCallingUidOrThrow(SANDBOX_UID);
+        mocker.mockGetCallingUidOrThrow(SANDBOX_UID);
 
         // Mock Flags with true to enable enforcing foreground check.
         doReturn(true).when(mMockFlags).getEnforceForegroundStatusForTopics();
@@ -459,7 +459,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         uid, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, SOME_SDK_NAME);
 
         // Mock UID with Non-SDK UI
-        extendedMockito.mockGetCallingUidOrThrow(uid);
+        mocker.mockGetCallingUidOrThrow(uid);
 
         // Mock! Mock! Mock!
         mockAppContextForAppManifestConfigHelperCall();
@@ -499,7 +499,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     public void checkSdkNoPermission() throws Exception {
         when(mPackageManager.checkPermission(eq(ACCESS_ADSERVICES_TOPICS), any()))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
-        extendedMockito.mockGetCallingUidOrThrow(SANDBOX_UID);
+        mocker.mockGetCallingUidOrThrow(SANDBOX_UID);
         invokeGetTopicsAndVerifyError(
                 mMockSdkContext, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
     }

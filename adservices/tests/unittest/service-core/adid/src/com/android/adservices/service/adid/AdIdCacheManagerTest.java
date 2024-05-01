@@ -73,7 +73,7 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         deleteIapcSharedPreference();
 

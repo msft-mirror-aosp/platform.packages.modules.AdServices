@@ -44,7 +44,7 @@ public final class AdServicesShellCommandServiceTest extends AdServicesExtendedM
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         mockGetAdServicesShellCommandEnabled(/* enabled= */ true);
     }
 
