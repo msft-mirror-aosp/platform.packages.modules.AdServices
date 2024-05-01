@@ -27,7 +27,6 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
 import static android.adservices.customaudience.CustomAudienceFixture.getValidFetchUriByBuyer;
 
-import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
@@ -69,6 +68,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
@@ -93,7 +93,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @RequiresSdkLevelAtLeastS // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
-@SetFlagDisabled(KEY_GLOBAL_KILL_SWITCH)
+@DisableGlobalKillSwitch
 @SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
