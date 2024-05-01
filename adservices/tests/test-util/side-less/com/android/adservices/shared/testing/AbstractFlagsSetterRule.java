@@ -481,22 +481,6 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         mDeviceConfig.reset();
     }
 
-    /**
-     * @deprecated - use {@code setDebugFlag(name, value)} instead.
-     */
-    @Deprecated
-    public final T setSystemProperty(String name, boolean value) {
-        return setDebugFlag(name, value);
-    }
-
-    /**
-     * @deprecated - use {@code setDebugFlag(name, value)} instead.
-     */
-    @Deprecated
-    public final T setSystemProperty(String name, int value) {
-        return setDebugFlag(name, Integer.toString(value));
-    }
-
     /** Sets the value of the given {@link com.android.adservices.service.DebugFlag}. */
     public final T setDebugFlag(String name, boolean value) {
         return setDebugFlag(name, Boolean.toString(value));
