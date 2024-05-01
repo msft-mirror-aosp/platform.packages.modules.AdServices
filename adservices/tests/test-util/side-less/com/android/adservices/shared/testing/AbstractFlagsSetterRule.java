@@ -18,6 +18,8 @@ package com.android.adservices.shared.testing;
 import com.android.adservices.shared.testing.DeviceConfigHelper.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlags;
 import com.android.adservices.shared.testing.annotations.SetDoubleFlag;
 import com.android.adservices.shared.testing.annotations.SetDoubleFlags;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
@@ -28,6 +30,10 @@ import com.android.adservices.shared.testing.annotations.SetFloatFlag;
 import com.android.adservices.shared.testing.annotations.SetFloatFlags;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlags;
+import com.android.adservices.shared.testing.annotations.SetLogcatTag;
+import com.android.adservices.shared.testing.annotations.SetLogcatTags;
+import com.android.adservices.shared.testing.annotations.SetLongDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetLongDebugFlags;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.shared.testing.annotations.SetLongFlags;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
@@ -62,8 +68,9 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     private final String mDeviceConfigNamespace;
     private final DeviceConfigHelper mDeviceConfig;
-    // TODO(b/328101177): move system properties to its own rule
-    private final String mSystemPropertiesPrefix;
+    // TODO(b/338067482): move system properties to its own rule?
+    // Prefix used on SystemProperties used for DebugFlags
+    private final String mDebugFlagPrefix;
     private final SystemPropertiesHelper mSystemProperties;
 
     // Cache methods that were called before the test started, so the rule can be
@@ -89,17 +96,17 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     protected AbstractFlagsSetterRule(
             RealLogger logger,
             String deviceConfigNamespace,
-            String systemPropertiesPrefix,
+            String debugFlagPrefix,
             DeviceConfigHelper.InterfaceFactory deviceConfigInterfaceFactory,
             SystemPropertiesHelper.Interface systemPropertiesInterface) {
         this(
                 logger,
                 deviceConfigNamespace,
-                systemPropertiesPrefix,
+                debugFlagPrefix,
                 // TODO(b/294423183, 328682831): should not be necessary, but integrated with
                 // setLogcatTag()
                 (prop) ->
-                        prop.name.startsWith(systemPropertiesPrefix)
+                        prop.name.startsWith(debugFlagPrefix)
                                 || prop.name.startsWith(SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX),
                 deviceConfigInterfaceFactory,
                 systemPropertiesInterface);
@@ -108,7 +115,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     protected AbstractFlagsSetterRule(
             RealLogger logger,
             String deviceConfigNamespace,
-            String systemPropertiesPrefix,
+            String debugFlagPrefix,
             Matcher systemPropertiesMatcher,
             DeviceConfigHelper.InterfaceFactory deviceConfigInterfaceFactory,
             SystemPropertiesHelper.Interface systemPropertiesInterface) {
@@ -116,7 +123,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         super(logger);
 
         mDeviceConfigNamespace = Objects.requireNonNull(deviceConfigNamespace);
-        mSystemPropertiesPrefix = Objects.requireNonNull(systemPropertiesPrefix);
+        mDebugFlagPrefix = Objects.requireNonNull(debugFlagPrefix);
         mSystemPropertiesMatcher = Objects.requireNonNull(systemPropertiesMatcher);
         mDeviceConfig =
                 new DeviceConfigHelper(deviceConfigInterfaceFactory, deviceConfigNamespace, logger);
@@ -136,10 +143,10 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
         mLog.v(
                 "Constructor: mDeviceConfigNamespace=%s,"
-                        + " mSystemPropertiesPrefix=%s,mDeviceConfig=%s, mSystemProperties=%s,"
+                        + " mDebugFlagPrefix=%s,mDeviceConfig=%s, mSystemProperties=%s,"
                         + " mPreviousSyncDisabledModeForTest=%s",
                 mDeviceConfigNamespace,
-                mSystemPropertiesPrefix,
+                mDebugFlagPrefix,
                 mDeviceConfig,
                 mSystemProperties,
                 mPreviousSyncDisabledModeForTest);
@@ -343,6 +350,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return setOrCacheFlag(name, value);
     }
 
+    // TODO(b/294423183): take LogLevel instead of string
     /** Sets a {@code logcat} tag. */
     public final T setLogcatTag(String tag, String level) {
         setOrCacheLogtagSystemProperty(tag, level);
@@ -379,7 +387,8 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     }
 
     // Set the annotated flags with the specified value for a particular test method.
-    protected void setAnnotatedFlags(Description description) {
+    // NOTE: when adding an annotation here, you also need to add it on isFlagAnnotationPresent()
+    private void setAnnotatedFlags(Description description) {
         List<Annotation> annotations = getAllFlagAnnotations(description);
 
         // Apply the annotations in the reverse order. First apply from the super classes, test
@@ -387,6 +396,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         // method, test method takes higher priority.
         for (int i = annotations.size() - 1; i >= 0; i--) {
             Annotation annotation = annotations.get(i);
+            // Device-config flags
             if (annotation instanceof SetFlagEnabled) {
                 setAnnotatedFlag((SetFlagEnabled) annotation);
             } else if (annotation instanceof SetFlagsEnabled) {
@@ -415,6 +425,22 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                 setAnnotatedFlag((SetStringFlag) annotation);
             } else if (annotation instanceof SetStringFlags) {
                 setAnnotatedFlag((SetStringFlags) annotation);
+                // Debug flags
+            } else if (annotation instanceof EnableDebugFlag) {
+                setAnnotatedFlag((EnableDebugFlag) annotation);
+            } else if (annotation instanceof EnableDebugFlags) {
+                setAnnotatedFlag((EnableDebugFlags) annotation);
+            } else if (annotation instanceof SetLongDebugFlag) {
+                setAnnotatedFlag((SetLongDebugFlag) annotation);
+            } else if (annotation instanceof SetLongDebugFlags) {
+                setAnnotatedFlag((SetLongDebugFlags) annotation);
+                // Logcat flags
+            } else if (annotation instanceof SetLogcatTag) {
+                setAnnotatedFlag((SetLogcatTag) annotation);
+            } else if (annotation instanceof SetLogcatTags) {
+                setAnnotatedFlag((SetLogcatTags) annotation);
+            } else {
+                processAnnotation(description, annotation);
             }
         }
     }
@@ -457,18 +483,33 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         mDeviceConfig.reset();
     }
 
-    /** Sets the given system property. */
-    public T setSystemProperty(String name, boolean value) {
-        return setOrCacheSystemProperty(mSystemPropertiesPrefix + name, Boolean.toString(value));
+    /**
+     * @deprecated - use {@code setDebugFlag(name, value)} instead.
+     */
+    @Deprecated
+    public final T setSystemProperty(String name, boolean value) {
+        return setDebugFlag(name, value);
     }
 
-    /** Sets the given system property. */
-    public T setSystemProperty(String name, int value) {
-        return setOrCacheSystemProperty(mSystemPropertiesPrefix + name, Integer.toString(value));
+    /**
+     * @deprecated - use {@code setDebugFlag(name, value)} instead.
+     */
+    @Deprecated
+    public final T setSystemProperty(String name, int value) {
+        return setDebugFlag(name, Integer.toString(value));
+    }
+
+    /** Sets the value of the given {@link com.android.adservices.service.DebugFlag}. */
+    public final T setDebugFlag(String name, boolean value) {
+        return setDebugFlag(name, Boolean.toString(value));
     }
 
     private T setOrCacheLogtagSystemProperty(String name, String value) {
         return setOrCacheSystemProperty(SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + name, value);
+    }
+
+    private T setDebugFlag(String name, String value) {
+        return setOrCacheSystemProperty(mDebugFlagPrefix + name, value);
     }
 
     private T setOrCacheSystemProperty(String name, String value) {
@@ -531,21 +572,54 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         }
     }
 
+    // TODO(b/294423183): improve logic used here and on setAnnotatedFlags()
+    // NOTE: when adding an annotation here, you also need to add it on setAnnotatedFlags()
     private boolean isFlagAnnotationPresent(Annotation annotation) {
-        return (annotation instanceof SetFlagEnabled)
-                || (annotation instanceof SetFlagsEnabled)
-                || (annotation instanceof SetFlagDisabled)
-                || (annotation instanceof SetFlagsDisabled)
-                || (annotation instanceof SetIntegerFlag)
-                || (annotation instanceof SetIntegerFlags)
-                || (annotation instanceof SetLongFlag)
-                || (annotation instanceof SetLongFlags)
-                || (annotation instanceof SetFloatFlag)
-                || (annotation instanceof SetFloatFlags)
-                || (annotation instanceof SetDoubleFlag)
-                || (annotation instanceof SetDoubleFlags)
-                || (annotation instanceof SetStringFlag)
-                || (annotation instanceof SetStringFlags);
+        boolean processedHere =
+                (annotation instanceof SetFlagEnabled)
+                        || (annotation instanceof SetFlagsEnabled)
+                        || (annotation instanceof SetFlagDisabled)
+                        || (annotation instanceof SetFlagsDisabled)
+                        || (annotation instanceof SetIntegerFlag)
+                        || (annotation instanceof SetIntegerFlags)
+                        || (annotation instanceof SetLongFlag)
+                        || (annotation instanceof SetLongFlags)
+                        || (annotation instanceof SetFloatFlag)
+                        || (annotation instanceof SetFloatFlags)
+                        || (annotation instanceof SetDoubleFlag)
+                        || (annotation instanceof SetDoubleFlags)
+                        || (annotation instanceof SetStringFlag)
+                        || (annotation instanceof SetStringFlags)
+                        || (annotation instanceof EnableDebugFlags)
+                        || (annotation instanceof SetLongDebugFlag)
+                        || (annotation instanceof SetLongDebugFlags)
+                        || (annotation instanceof SetLogcatTag)
+                        || (annotation instanceof SetLogcatTags);
+        return processedHere || isAnnotationSupported(annotation);
+    }
+
+    /**
+     * By default returns {@code false}, but subclasses can override to support custom annotations.
+     *
+     * <p>Note: when overridden, {@link #processAnnotation(Description, Annotation)} should be
+     * overridden as well.
+     */
+    protected boolean isAnnotationSupported(Annotation annotation) {
+        return false;
+    }
+
+    /**
+     * Called to process custom annotations present in the test (when {@link
+     * #isAnnotationSupported(Annotation)} returns {@code true} for that annotation type).
+     */
+    protected void processAnnotation(Description description, Annotation annotation) {
+        throw new IllegalStateException(
+                "Rule subclass ("
+                        + this.getClass().getName()
+                        + ") supports annotation "
+                        + annotation.annotationType().getName()
+                        + ", but doesn't override processAnnotation(), which was called with "
+                        + annotation);
     }
 
     private List<Annotation> getAllFlagAnnotations(Description description) {
@@ -555,6 +629,8 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         for (Annotation testMethodAnnotation : description.getAnnotations()) {
             if (isFlagAnnotationPresent(testMethodAnnotation)) {
                 result.add(testMethodAnnotation);
+            } else {
+                mLog.v("Ignoring annotation %s", testMethodAnnotation);
             }
         }
 
@@ -655,6 +731,43 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     // Multiple SetStringFlag annotations present
     private void setAnnotatedFlag(SetStringFlags repeatedAnnotation) {
         for (SetStringFlag annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetDebugFlagEnabled annotations present
+    private void setAnnotatedFlag(EnableDebugFlag annotation) {
+        setFlag(annotation.value(), true);
+    }
+
+    // Multiple SetDebugFlagEnabled annotations present
+    private void setAnnotatedFlag(EnableDebugFlags repeatedAnnotation) {
+        for (EnableDebugFlag annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetIntegerFlag annotations present
+    private void setAnnotatedFlag(SetLongDebugFlag annotation) {
+        setDebugFlag(annotation.name(), Long.toString(annotation.value()));
+    }
+
+    // Multiple SetIntegerFlag annotations present
+    private void setAnnotatedFlag(SetLongDebugFlags repeatedAnnotation) {
+        for (SetLongDebugFlag annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetIntegerFlag annotations present
+    private void setAnnotatedFlag(SetLogcatTag annotation) {
+        // TODO(b/294423183): pass LogLevel instead of string
+        setLogcatTag(annotation.tag(), annotation.level().name());
+    }
+
+    // Multiple SetIntegerFlag annotations present
+    private void setAnnotatedFlag(SetLogcatTags repeatedAnnotation) {
+        for (SetLogcatTag annotation : repeatedAnnotation.value()) {
             setAnnotatedFlag(annotation);
         }
     }

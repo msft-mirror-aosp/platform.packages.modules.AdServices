@@ -71,7 +71,8 @@ import java.util.function.Supplier;
  */
 public class AdServicesExtendedMockitoRule
         extends AbstractExtendedMockitoRule<
-                AdServicesExtendedMockitoRule, AdServicesExtendedMockitoRule.Builder> {
+                AdServicesExtendedMockitoRule, AdServicesExtendedMockitoRule.Builder>
+        implements AdServicesExtendedMockitoMocker {
 
     private static final String TAG = AdServicesExtendedMockitoRule.class.getSimpleName();
 
@@ -108,6 +109,7 @@ public class AdServicesExtendedMockitoRule
      * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
      *     equivalent annotations) on {@link FlagsFactory}.
      */
+    @Override
     public final void mockGetFlags(Flags mockedFlags) {
         logV("mockGetFlags(%s)", mockedFlags);
         assertSpiedOrMocked(FlagsFactory.class);
@@ -121,6 +123,7 @@ public class AdServicesExtendedMockitoRule
      * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
      *     equivalent annotations) on {@link FlagsFactory}.
      */
+    @Override
     public final void mockGetFlagsForTesting() {
         mockGetFlags(FakeFlagsFactory.getFlagsForTest());
     }
@@ -131,6 +134,7 @@ public class AdServicesExtendedMockitoRule
      * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
      *     equivalent annotations) on {@link Binder}.
      */
+    @Override
     public final void mockGetCallingUidOrThrow(int uid) {
         logV("mockGetCallingUidOrThrow(%d)", uid);
         mockBinderGetCallingUidOrThrow(uid);
@@ -144,6 +148,7 @@ public class AdServicesExtendedMockitoRule
      * test doesn't care about the result, but it needs to be mocked otherwise the real call would
      * fail (as the test is not running inside a binder transaction).
      */
+    @Override
     public final void mockGetCallingUidOrThrow() {
         int uid = Process.myUid();
         logV("mockGetCallingUidOrThrow(Process.myUid=%d)", uid);
@@ -151,6 +156,7 @@ public class AdServicesExtendedMockitoRule
     }
 
     /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
+    @Override
     public final void mockIsAtLeastR(boolean isIt) {
         logV("mockIsAtLeastR(%b)", isIt);
         assertSpiedOrMocked(SdkLevel.class);
@@ -158,6 +164,7 @@ public class AdServicesExtendedMockitoRule
     }
 
     /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
+    @Override
     public final void mockIsAtLeastS(boolean isIt) {
         logV("mockIsAtLeastS(%b)", isIt);
         assertSpiedOrMocked(SdkLevel.class);
@@ -165,6 +172,7 @@ public class AdServicesExtendedMockitoRule
     }
 
     /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
+    @Override
     public final void mockIsAtLeastT(boolean isIt) {
         logV("mockIsAtLeastT(%b)", isIt);
         assertSpiedOrMocked(SdkLevel.class);
@@ -172,6 +180,7 @@ public class AdServicesExtendedMockitoRule
     }
 
     /** Mocks a call to SDK level to return R */
+    @Override
     public final void mockSdkLevelR() {
         logV("mockSdkLevelR()");
         assertSpiedOrMocked(SdkLevel.class);
@@ -188,6 +197,7 @@ public class AdServicesExtendedMockitoRule
      * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
      *     equivalent annotations) on {@link ActivityManager}.
      */
+    @Override
     public final void mockGetCurrentUser(int user) {
         logV("mockGetCurrentUser(user=%d)", user);
         assertSpiedOrMocked(ActivityManager.class);
@@ -201,6 +211,7 @@ public class AdServicesExtendedMockitoRule
      * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
      *     equivalent annotations) on {@link Log}.
      */
+    @Override
     public final LogInterceptor interceptLogV(String tag) {
         logV("interceptLogV(%s)", tag);
         assertSpiedOrMocked(Log.class);
@@ -215,6 +226,7 @@ public class AdServicesExtendedMockitoRule
      * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
      *     equivalent annotations) on {@link Log}.
      */
+    @Override
     public final LogInterceptor interceptLogE(String tag) {
         logV("interceptLogE(%s)", tag);
         assertSpiedOrMocked(Log.class);

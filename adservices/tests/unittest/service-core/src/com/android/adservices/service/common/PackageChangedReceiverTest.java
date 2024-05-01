@@ -956,7 +956,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     @MockStatic(SdkLevel.class)
     public void testReceive_onT_onExtServices() {
-        extendedMockito.mockIsAtLeastT(true);
+        mocker.mockIsAtLeastT(true);
             Intent intent =
                     createIntentSentByAdServiceSystemService(Intent.ACTION_PACKAGE_FULLY_REMOVED);
             PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
@@ -974,7 +974,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     @MockStatic(SdkLevel.class)
     public void testReceive_onS_onExtServices() {
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
             Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
             PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
             Context spyContext = Mockito.spy(ApplicationProvider.getApplicationContext());
@@ -991,7 +991,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     @MockStatic(SdkLevel.class)
     public void testAppConsentDeletion_onR() throws Exception {
-        extendedMockito.mockIsAtLeastS(false);
+        mocker.mockIsAtLeastS(false);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
             Intent intent =

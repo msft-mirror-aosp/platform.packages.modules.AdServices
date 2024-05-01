@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
@@ -448,7 +447,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         String sdkName = "com.android.container";
         int latency = 100;
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         mockAppNameApiErrorLogger();
 
         ApiCallStats stats =
@@ -459,7 +458,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setAppPackageName(packageName)
                         .setSdkPackageName(sdkName)
                         .setLatencyMillisecond(latency)
-                        .setResult(ApiCallStats.failureResult(STATUS_SUCCESS, FAILURE_REASON_UNSET))
+                        .setResultCode(STATUS_SUCCESS)
                         .build();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         adServicesLogger.logApiCallStats(stats);
@@ -475,7 +474,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getSdkPackageName()).isEqualTo(sdkName);
         expect.that(loggedStats.getLatencyMillisecond()).isEqualTo(latency);
         expect.that(loggedStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
-        expect.that(loggedStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
 
         verify(mMockAppNameApiErrorLogger)
                 .logErrorOccurrence(

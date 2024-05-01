@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_SHELL_COMMAND_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_COUNTER_HISTOGRAM_UPDATER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_AD_SELECTION_REPORTED;
@@ -252,6 +253,9 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     @Override
     public void logRunAdScoringProcessReportedStats(RunAdScoringProcessReportedStats stats) {
+        boolean placeholder_bool = false;
+        int placeholder_int = FIELD_UNSET;
+
         AdServicesStatsLog.write(
                 RUN_AD_SCORING_PROCESS_REPORTED,
                 stats.getGetAdSelectionLogicLatencyInMillis(),
@@ -268,12 +272,18 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getNumOfRemarketingAdsEnteringScoring(),
                 stats.getNumOfContextualAdsEnteringScoring(),
                 stats.getRunAdScoringLatencyInMillis(),
-                stats.getRunAdScoringResultCode());
+                stats.getRunAdScoringResultCode(),
+                placeholder_bool,
+                placeholder_int);
+
     }
 
     @Override
     public void logRunAdBiddingPerCAProcessReportedStats(
             RunAdBiddingPerCAProcessReportedStats stats) {
+        boolean placeholder_bool = false;
+        int placeholder_int = FIELD_UNSET;
+
         AdServicesStatsLog.write(
                 RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED,
                 stats.getNumOfAdsForBidding(),
@@ -289,7 +299,10 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getGetTrustedBiddingSignalsResultCode(),
                 stats.getGenerateBidsLatencyInMillis(),
                 stats.getRunBiddingLatencyInMillis(),
-                stats.getRunBiddingResultCode());
+                stats.getRunBiddingResultCode(),
+                placeholder_bool,
+                placeholder_bool,
+                placeholder_int);
     }
 
     @Override

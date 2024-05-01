@@ -441,7 +441,7 @@ class AttributionJobHandler {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(numReportsPerDestination),
+                    String.valueOf(mFlags.getMeasurementMaxAggregateReportsPerDestination()),
                     measurementDao,
                     Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
             return TriggeringStatus.DROPPED;
@@ -462,7 +462,7 @@ class AttributionJobHandler {
                 mDebugReportApi.scheduleTriggerDebugReport(
                         source,
                         trigger,
-                        String.valueOf(numReportsPerSource),
+                        String.valueOf(mFlags.getMeasurementMaxAggregateReportsPerSource()),
                         measurementDao,
                         Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS);
                 return TriggeringStatus.DROPPED;

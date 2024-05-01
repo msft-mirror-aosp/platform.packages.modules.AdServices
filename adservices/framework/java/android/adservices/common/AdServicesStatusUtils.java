@@ -227,12 +227,6 @@ public final class AdServicesStatusUtils {
      */
     public static final int STATUS_ADSERVICES_ACTIVITY_DISABLED = 26;
 
-    /**
-     * The failure reason has not been set. Keep unset failure reason the lowest value of the
-     * failure reasons.
-     */
-    public static final int FAILURE_REASON_UNSET = 0;
-
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
 
@@ -394,17 +388,6 @@ public final class AdServicesStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}
-
-    /**
-     * Failure reason codes that are common across various APIs.
-     *
-     * @hide
-     */
-    @IntDef(
-            prefix = {"FAILURE_REASON_"},
-            value = {FAILURE_REASON_UNSET})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface FailureReason {}
 
     private AdServicesStatusUtils() {
         throw new UnsupportedOperationException();

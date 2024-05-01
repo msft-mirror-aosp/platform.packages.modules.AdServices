@@ -22,7 +22,6 @@ import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
@@ -434,7 +433,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         sBackgroundExecutor.execute(
                 () -> {
                     int resultCode = STATUS_SUCCESS;
-                    int failureReason = FAILURE_REASON_UNSET;
                     try {
                         // Check permissions
                         if (!hasAccessAdServicesCommonStatePermission) {
@@ -504,7 +502,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         .setSdkPackageName(sdkName)
                                         .setLatencyMillisecond(
                                                 getLatency(callerMetadata, serviceStartTime))
-                                        .setResult(resultCode, failureReason)
+                                        .setResultCode(resultCode)
                                         .build());
                     }
                 });
