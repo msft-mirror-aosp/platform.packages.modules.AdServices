@@ -20,6 +20,7 @@ import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mo
 import android.content.Context;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
+import com.android.adservices.mockito.AdServicesExtendedMockitoMockerImpl;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
@@ -58,10 +59,17 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
             new ExtendedMockitoInlineCleanerRule();
 
     @Rule(order = 10)
-    public final AdServicesExtendedMockitoRule extendedMockito = getAdServicesExtendedMockitoRule();
+    public final AdServicesExtendedMockitoRule _extendedMockito =
+            getAdServicesExtendedMockitoRule();
 
-    // TODO(b/314969513): use the proper implementation (instead of the rule itself)
-    public final AdServicesExtendedMockitoMocker mocker = extendedMockito;
+    public final AdServicesExtendedMockitoMocker mocker =
+            new AdServicesExtendedMockitoMockerImpl(
+                    clazz -> _extendedMockito.isSpiedOrMocked(clazz),
+                    () -> _extendedMockito.getTestName());
+
+    // TODO(b/314969513): merge with _extendedMockito (will be done in a separate CL to avoid build
+    // breakages on pending CLs)
+    public final AdServicesExtendedMockitoMocker extendedMockito = mocker;
 
     /**
      * Gets the {@link AdServicesExtendedMockitoRule} that will be set as the {@code
