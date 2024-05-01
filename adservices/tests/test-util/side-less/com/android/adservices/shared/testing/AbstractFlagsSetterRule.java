@@ -590,6 +590,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                         || (annotation instanceof SetDoubleFlags)
                         || (annotation instanceof SetStringFlag)
                         || (annotation instanceof SetStringFlags)
+                        || (annotation instanceof EnableDebugFlag)
                         || (annotation instanceof EnableDebugFlags)
                         || (annotation instanceof SetLongDebugFlag)
                         || (annotation instanceof SetLongDebugFlags)
@@ -737,7 +738,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     // Single SetDebugFlagEnabled annotations present
     private void setAnnotatedFlag(EnableDebugFlag annotation) {
-        setFlag(annotation.value(), true);
+        setDebugFlag(annotation.value(), true);
     }
 
     // Multiple SetDebugFlagEnabled annotations present
