@@ -88,7 +88,7 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
                     .setTopicsKillSwitch(false)
                     .setAdServicesEnabled(true)
                     .setMddBackgroundTaskKillSwitch(true)
-                    .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                     .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true);
 
     @Rule(order = 3)

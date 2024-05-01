@@ -30,6 +30,6 @@ abstract class AdServicesDebuggableTestCase extends AdServicesCtsTestCase {
         return AdServicesFlagsSetterRule.forAllApisEnabledTests()
                 .setCompatModeFlags()
                 .setPpapiAppAllowList(sPackageName)
-                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true);
+                .setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true);
     }
 }

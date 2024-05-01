@@ -34,7 +34,7 @@ abstract class CtsTopicsEndToEndTestCase extends AdServicesCtsTestCase {
                 .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)
                 .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true)
                 .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
-                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                .setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                 .setCompatModeFlags();
     }
 }

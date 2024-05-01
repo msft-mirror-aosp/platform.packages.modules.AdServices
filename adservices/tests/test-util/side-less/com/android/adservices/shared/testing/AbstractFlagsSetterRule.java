@@ -62,8 +62,9 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     private final String mDeviceConfigNamespace;
     private final DeviceConfigHelper mDeviceConfig;
-    // TODO(b/328101177): move system properties to its own rule
-    private final String mSystemPropertiesPrefix;
+    // TODO(b/338067482): move system properties to its own rule?
+    // Prefix used on SystemProperties used for DebugFlags
+    private final String mDebugFlagPrefix;
     private final SystemPropertiesHelper mSystemProperties;
 
     // Cache methods that were called before the test started, so the rule can be
@@ -89,17 +90,17 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     protected AbstractFlagsSetterRule(
             RealLogger logger,
             String deviceConfigNamespace,
-            String systemPropertiesPrefix,
+            String debugFlagPrefix,
             DeviceConfigHelper.InterfaceFactory deviceConfigInterfaceFactory,
             SystemPropertiesHelper.Interface systemPropertiesInterface) {
         this(
                 logger,
                 deviceConfigNamespace,
-                systemPropertiesPrefix,
+                debugFlagPrefix,
                 // TODO(b/294423183, 328682831): should not be necessary, but integrated with
                 // setLogcatTag()
                 (prop) ->
-                        prop.name.startsWith(systemPropertiesPrefix)
+                        prop.name.startsWith(debugFlagPrefix)
                                 || prop.name.startsWith(SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX),
                 deviceConfigInterfaceFactory,
                 systemPropertiesInterface);
@@ -108,7 +109,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     protected AbstractFlagsSetterRule(
             RealLogger logger,
             String deviceConfigNamespace,
-            String systemPropertiesPrefix,
+            String debugFlagPrefix,
             Matcher systemPropertiesMatcher,
             DeviceConfigHelper.InterfaceFactory deviceConfigInterfaceFactory,
             SystemPropertiesHelper.Interface systemPropertiesInterface) {
@@ -116,7 +117,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         super(logger);
 
         mDeviceConfigNamespace = Objects.requireNonNull(deviceConfigNamespace);
-        mSystemPropertiesPrefix = Objects.requireNonNull(systemPropertiesPrefix);
+        mDebugFlagPrefix = Objects.requireNonNull(debugFlagPrefix);
         mSystemPropertiesMatcher = Objects.requireNonNull(systemPropertiesMatcher);
         mDeviceConfig =
                 new DeviceConfigHelper(deviceConfigInterfaceFactory, deviceConfigNamespace, logger);
@@ -136,10 +137,10 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
         mLog.v(
                 "Constructor: mDeviceConfigNamespace=%s,"
-                        + " mSystemPropertiesPrefix=%s,mDeviceConfig=%s, mSystemProperties=%s,"
+                        + " mDebugFlagPrefix=%s,mDeviceConfig=%s, mSystemProperties=%s,"
                         + " mPreviousSyncDisabledModeForTest=%s",
                 mDeviceConfigNamespace,
-                mSystemPropertiesPrefix,
+                mDebugFlagPrefix,
                 mDeviceConfig,
                 mSystemProperties,
                 mPreviousSyncDisabledModeForTest);
@@ -457,14 +458,30 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         mDeviceConfig.reset();
     }
 
-    /** Sets the given system property. */
-    public T setSystemProperty(String name, boolean value) {
-        return setOrCacheSystemProperty(mSystemPropertiesPrefix + name, Boolean.toString(value));
+    /**
+     * @deprecated - use {@code setDebugFlag(name, value)} instead.
+     */
+    @Deprecated
+    public final T setSystemProperty(String name, boolean value) {
+        return setDebugFlag(name, value);
     }
 
-    /** Sets the given system property. */
-    public T setSystemProperty(String name, int value) {
-        return setOrCacheSystemProperty(mSystemPropertiesPrefix + name, Integer.toString(value));
+    /**
+     * @deprecated - use {@code setDebugFlag(name, value)} instead.
+     */
+    @Deprecated
+    public final T setSystemProperty(String name, int value) {
+        return setDebugFlag(name, value);
+    }
+
+    /** Sets the given {@link com.android.adservices.service.DebugFlag}. */
+    public final T setDebugFlag(String name, boolean value) {
+        return setOrCacheSystemProperty(mDebugFlagPrefix + name, Boolean.toString(value));
+    }
+
+    /** Sets the given {@link com.android.adservices.service.DebugFlag}. */
+    public final T setDebugFlag(String name, int value) {
+        return setOrCacheSystemProperty(mDebugFlagPrefix + name, Integer.toString(value));
     }
 
     private T setOrCacheLogtagSystemProperty(String name, String value) {
