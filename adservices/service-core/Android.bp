@@ -88,8 +88,9 @@ filegroup {
     name: "adservices-service-core-flags-constants-sources",
     srcs: [
         "java/com/android/adservices/cobalt/CobaltConstants.java",
-        "java/com/android/adservices/service/FlagsConstants.java",
+        "java/com/android/adservices/service/CommonFlagsConstants.java",
         "java/com/android/adservices/service/DebugFlagsConstants.java",
+        "java/com/android/adservices/service/FlagsConstants.java",
     ],
     path: "java",
     visibility: [
