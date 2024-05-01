@@ -41,6 +41,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
@@ -138,7 +139,7 @@ public abstract class E2EMockTest extends E2ETest {
     protected DebugReportApi mDebugReportApi;
 
     @Rule(order = 11)
-    public final E2EMockStatic.E2EMockStaticRule e2EMockStaticRule;
+    public final AdServicesExtendedMockitoRule extendedMockito;
 
     private static Map<String, String> sPhFlags =
             Map.ofEntries(
@@ -168,7 +169,7 @@ public abstract class E2EMockTest extends E2ETest {
         mErrorLogger = mock(AdServicesErrorLogger.class);
         mDatastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
-        e2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
+        extendedMockito = E2EMockStatic.newE2EMockStaticRule(paramsProvider);
         mMeasurementDataDeleter = spy(new MeasurementDataDeleter(mDatastoreManager, mFlags));
 
         mEnrollmentDao =
