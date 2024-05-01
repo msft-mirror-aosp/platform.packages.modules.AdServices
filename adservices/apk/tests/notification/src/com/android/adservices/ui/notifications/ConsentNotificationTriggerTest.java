@@ -129,7 +129,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         mNotificationManager = mSpyContext.getSystemService(NotificationManager.class);
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         doReturn(mAdServicesLogger).when(UiStatsLogger::getAdServicesLogger);
         doReturn(mMockUxStatesManager).when(() -> UxStatesManager.getInstance());
         doReturn(mAdServicesManager).when(mSpyContext).getSystemService(AdServicesManager.class);

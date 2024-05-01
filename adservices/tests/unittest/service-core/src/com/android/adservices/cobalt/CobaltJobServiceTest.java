@@ -366,7 +366,7 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
     }
 
     private void mockCobaltLoggingFlags() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         when(mMockFlags.getAdservicesReleaseStageForCobalt()).thenReturn(DEFAULT_RELEASE_STAGE);
         when(mMockFlags.getCobaltAdservicesApiKeyHex()).thenReturn(DEFAULT_API_KEY);

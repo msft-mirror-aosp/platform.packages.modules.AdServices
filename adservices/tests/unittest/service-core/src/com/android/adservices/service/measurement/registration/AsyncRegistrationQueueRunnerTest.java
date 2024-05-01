@@ -241,7 +241,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
     @Before
     public void before() throws Exception {
-        extendedMockito.mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
         mDatastoreManager =
                 spy(
                         new SQLDatastoreManager(

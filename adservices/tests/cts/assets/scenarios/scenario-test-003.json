@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "bidding"
+        "path": "/bidding"
       },
       "response": {
         "body": "BiddingLogicV2.js"
@@ -10,7 +10,7 @@
     },
     {
       "request": {
-        "path": "scoring"
+        "path": "/scoring"
       },
       "response": {
         "body": "ScoringLogic.js"

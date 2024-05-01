@@ -83,7 +83,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
 
     @Before
     public void setup() throws Exception {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mMockFlags).getUiOtaStringsFeatureEnabled();
         // UiDialogFragmentEnable flag should be on for this test

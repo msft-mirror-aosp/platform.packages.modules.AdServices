@@ -18,6 +18,8 @@ package android.adservices.debuggablects;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
 import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
@@ -196,6 +198,16 @@ public class ScenarioDispatcherTest {
         makeSimpleGetRequest(new URL(baseAddress + path));
 
         assertThat(dispatcher.getCalledPaths()).containsExactly(path);
+    }
+
+    @Test
+    public void testScenarioDispatcher_withMissingSlashPrefix_throwsException() throws Exception {
+        ScenarioDispatcherFactory scenarioDispatcherFactory =
+                ScenarioDispatcherFactory.fromScenario("scenarios/scenario-test-011.json");
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> scenarioDispatcherFactory.getDispatcher(new URL("http://localhost:8080")));
     }
 
     @SuppressWarnings("UnusedReturnValue")

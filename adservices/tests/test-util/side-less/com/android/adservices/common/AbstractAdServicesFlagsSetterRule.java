@@ -19,6 +19,8 @@ import static com.android.adservices.common.AbstractAdServicesSystemPropertiesDu
 import static com.android.adservices.service.FlagsConstants.ARRAY_SPLITTER_COMMA;
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
 import com.android.adservices.shared.testing.DeviceConfigHelper;
@@ -26,6 +28,9 @@ import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
 import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
+import org.junit.runner.Description;
+
+import java.lang.annotation.Annotation;
 import java.util.Objects;
 
 // TODO(b/294423183): add unit tests for the most relevant / less repetitive stuff (don't need to
@@ -79,6 +84,26 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                 PROPERTIES_PREFIX_MATCHER,
                 deviceConfigInterfaceFactory,
                 systemPropertiesInterface);
+    }
+
+    @Override
+    protected boolean isAnnotationSupported(Annotation annotation) {
+        return annotation instanceof DisableGlobalKillSwitch
+                || annotation instanceof SetCompatModeFlags;
+    }
+
+    @Override
+    protected void processAnnotation(Description description, Annotation annotation) {
+        if (annotation instanceof DisableGlobalKillSwitch) {
+            setGlobalKillSwitch(false);
+        } else if (annotation instanceof SetCompatModeFlags) {
+            setCompatModeFlags();
+        } else {
+            // should not happen
+            throw new IllegalStateException(
+                    "INTERNAL ERROR: processAnnotation() called with unsupported annotation: "
+                            + annotation);
+        }
     }
 
     // Helper methods to set more commonly used flags such as kill switches.
@@ -219,7 +244,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                 "setDebugUxFlagsForRvcUx()",
                 () -> {
                     if (!isAtLeastS() && isAtLeastR()) {
-                        setSystemProperty(
+                        setDebugFlag(
                                 FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
                         setFlag(FlagsConstants.KEY_DEBUG_UX, "RVC_UX");
                         return;

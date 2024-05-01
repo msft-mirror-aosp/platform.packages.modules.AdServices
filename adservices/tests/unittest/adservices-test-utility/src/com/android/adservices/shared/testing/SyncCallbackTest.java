@@ -285,7 +285,7 @@ public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
     public void testLogV() {
         SyncCallback<String, Exception> callback = new SyncCallback<>();
         String tag = SyncCallback.TAG;
-        LogInterceptor logInterceptor = extendedMockito.interceptLogV(tag);
+        LogInterceptor logInterceptor = mocker.interceptLogV(tag);
 
         callback.logV("Answer=%d", 42);
 
@@ -302,7 +302,7 @@ public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
     public void testLogE() {
         SyncCallback<String, Exception> callback = new SyncCallback<>();
         String tag = SyncCallback.TAG;
-        LogInterceptor logInterceptor = extendedMockito.interceptLogE(tag);
+        LogInterceptor logInterceptor = mocker.interceptLogE(tag);
 
         callback.logE("Answer=%d", 42);
 

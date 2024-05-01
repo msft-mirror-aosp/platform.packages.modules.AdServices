@@ -64,7 +64,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Before
     public void setUp() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test

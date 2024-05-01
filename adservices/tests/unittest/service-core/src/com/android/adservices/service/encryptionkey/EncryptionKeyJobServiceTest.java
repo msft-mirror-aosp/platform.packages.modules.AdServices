@@ -82,7 +82,7 @@ public final class EncryptionKeyJobServiceTest extends AdServicesExtendedMockito
 
     @Before
     public void setUp() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         mSpyService = spy(new EncryptionKeyJobService());
 
         mSpyLogger = getSpiedAdServicesJobServiceLogger(sContext, mMockFlags);

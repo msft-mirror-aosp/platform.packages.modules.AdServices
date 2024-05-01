@@ -86,7 +86,7 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
             // Killswitch is off.
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
-            extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
             ExtendedMockito.doReturn(mMockTopicsWorker)
                     .when(() -> TopicsWorker.getInstance(any(Context.class)));
@@ -131,7 +131,7 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doNothingOnErrorLogUtilError();
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         TopicsService topicsService = new TopicsService();
         topicsService.onCreate();
@@ -152,7 +152,7 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
             // Killswitch is off.
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
-            extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
             ExtendedMockito.doReturn(mMockTopicsWorker)
                     .when(() -> TopicsWorker.getInstance(any(Context.class)));

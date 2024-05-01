@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "hello/world"
+        "path": "/hello/world"
       },
       "response": {
         "body": "DefaultResponse.txt"

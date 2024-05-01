@@ -15,7 +15,6 @@
  */
 package com.android.adservices.service.measurement;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -589,7 +588,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                         .setAppPackageName(appPackageName)
                         .setSdkPackageName(sdkPackageName)
                         .setLatencyMillisecond(latency)
-                        .setResult(resultCode, FAILURE_REASON_UNSET)
+                        .setResultCode(resultCode)
                         .build());
     }
 

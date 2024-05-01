@@ -89,7 +89,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
         mAppSearchConsentManager =
                 new AppSearchConsentManager(mSpyContext, mAppSearchConsentWorker);
         ApplicationInfo app1 = new ApplicationInfo();

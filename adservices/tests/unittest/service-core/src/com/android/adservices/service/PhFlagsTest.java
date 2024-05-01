@@ -4010,7 +4010,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     private void testEnableBackCompat(
             boolean sdkAtleastT, boolean enableBackCompat, boolean expected) {
-        extendedMockito.mockIsAtLeastT(sdkAtleastT);
+        mocker.mockIsAtLeastT(sdkAtleastT);
         mockGetAdServicesFlag(KEY_ENABLE_BACK_COMPAT, enableBackCompat);
 
         assertThat(mPhFlags.getEnableBackCompat()).isEqualTo(expected);
@@ -4066,7 +4066,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testIsBackCompatActivityFeatureEnabled() {
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
         mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
                 IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,

@@ -857,7 +857,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     }
 
     private void mockMddFlags() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         doReturn(2).when(mMockFlags).getDownloaderMaxDownloadThreads();
         doReturn(false).when(mMockFlags).getEncryptionKeyNewEnrollmentFetchKillSwitch();

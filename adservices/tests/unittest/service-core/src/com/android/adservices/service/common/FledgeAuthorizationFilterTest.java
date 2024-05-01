@@ -103,7 +103,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
 
         mChecker =
                 new FledgeAuthorizationFilter(

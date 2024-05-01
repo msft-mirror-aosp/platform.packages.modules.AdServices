@@ -67,7 +67,7 @@ public class MeasurementDefaultProfileSuite {
     public static final AdServicesFlagsSetterRule sFlags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     // Override consent manager behavior to give user consent.
-                    .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setDebugFlag(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                     // Override adid kill switch.
                     .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false)
                     // Override the flag to allow current package to call APIs.

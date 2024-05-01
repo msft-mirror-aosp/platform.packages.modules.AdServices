@@ -138,7 +138,7 @@ public class ScenarioDispatcher extends Dispatcher {
         // Needs HTTPS for real tests and HTTP for ScenarioDispatcher tests.
         mSubstitutionVariables =
                 ImmutableMap.of(
-                        "{base_url}",
+                        "{base_url_with_prefix}",
                         getBaseAddressWithPrefix().toString(),
                         "{adtech1_url}",
                         getBaseAddressWithPrefix().toString(),

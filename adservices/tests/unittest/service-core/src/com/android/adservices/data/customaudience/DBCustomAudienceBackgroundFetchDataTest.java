@@ -197,7 +197,7 @@ public final class DBCustomAudienceBackgroundFetchDataTest
         // computeNextEligibleUpdateTimeAfterSuccessfulUpdate() method that calls
         // FlagsFactory.getInstance(), so we need to mock that method (otherwise it would call
         // DeviceConfig and fail due to lack of permissions)
-        extendedMockito.mockGetFlags(FakeFlagsFactory.getFlagsForTest());
+        mocker.mockGetFlags(FakeFlagsFactory.getFlagsForTest());
 
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(

@@ -50,7 +50,7 @@ public final class AlreadyEnrolledChannelTest extends AdServicesExtendedMockitoT
 
     @Before
     public void setup() throws IOException {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test

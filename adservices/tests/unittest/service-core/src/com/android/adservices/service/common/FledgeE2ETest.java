@@ -370,7 +370,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
     @Before
     public void setUp() throws Exception {
-        extendedMockito.mockGetFlags(DEFAULT_FLAGS);
+        mocker.mockGetFlags(DEFAULT_FLAGS);
 
         mFledgeAllowListsFilterSpy =
                 spy(new FledgeAllowListsFilter(DEFAULT_FLAGS, mAdServicesLoggerMock));

@@ -79,7 +79,7 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesUiTestC
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setSystemProperty(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
+                    .setDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true)
                     .setFlag(KEY_UI_FEATURE_TYPE_LOGGING_ENABLED, true)
                     .setFlag(KEY_RECORD_MANUAL_INTERACTION_ENABLED, true)

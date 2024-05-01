@@ -65,7 +65,7 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
     public void setup() {
         assertWithMessage("The JobScheduler").that(mJobScheduler).isNotNull();
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         // By default, enable SPE.
         when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(true);
 

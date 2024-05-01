@@ -44,12 +44,6 @@ public class PartialCustomAudienceTest extends AdServicesUnitTestCase {
 
     @Test
     public void testBuildValidPartialCARequest_AllSetters_Success() {
-        PartialCustomAudience partialCA =
-                new PartialCustomAudience.Builder(VALID_CA_NAME)
-                        .setExpirationTime(VALID_EXPIRATION_TIME)
-                        .setActivationTime(VALID_ACTIVATION_TIME)
-                        .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
-                        .build();
         expect.that(VALID_PARTIAL_CA.getActivationTime()).isEqualTo(VALID_ACTIVATION_TIME);
         expect.that(VALID_PARTIAL_CA.getExpirationTime()).isEqualTo(VALID_EXPIRATION_TIME);
         expect.that(VALID_PARTIAL_CA.getUserBiddingSignals()).isEqualTo(VALID_BIDDING_SIGNALS);

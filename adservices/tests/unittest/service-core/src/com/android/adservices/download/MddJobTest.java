@@ -102,7 +102,7 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         mockMddFlags();
 
         doReturn(mMockFactory).when(AdServicesJobServiceFactory::getInstance);

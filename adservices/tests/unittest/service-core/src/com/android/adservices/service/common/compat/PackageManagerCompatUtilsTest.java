@@ -90,7 +90,7 @@ public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMocki
     @Test
     @MockStatic(SdkLevel.class)
     public void testGetInstalledApplications_SMinus() {
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
         doReturn(ImmutableList.of(mApplicationInfo))
                 .when(mPackageManagerMock)
                 .getInstalledApplications(anyInt());
@@ -118,7 +118,7 @@ public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMocki
     @Test
     @MockStatic(SdkLevel.class)
     public void testGetInstalledPackages_SMinus() {
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
         doReturn(ImmutableList.of(mPackageInfo))
                 .when(mPackageManagerMock)
                 .getInstalledPackages(anyInt());
@@ -146,7 +146,7 @@ public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMocki
     @Test
     @MockStatic(SdkLevel.class)
     public void testGetUidForPackage_SMinus() throws Exception {
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
         final int packageUid = 100;
         doReturn(packageUid).when(mPackageManagerMock).getPackageUid(anyString(), anyInt());
 
@@ -176,7 +176,7 @@ public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMocki
     @Test
     @MockStatic(SdkLevel.class)
     public void testGetApplicationInfo_SMinus() throws Exception {
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
         doReturn(mApplicationInfo)
                 .when(mPackageManagerMock)
                 .getApplicationInfo(anyString(), anyInt());

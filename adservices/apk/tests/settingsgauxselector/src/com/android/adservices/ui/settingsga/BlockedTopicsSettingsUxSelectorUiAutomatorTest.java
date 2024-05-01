@@ -58,7 +58,7 @@ public final class BlockedTopicsSettingsUxSelectorUiAutomatorTest extends AdServ
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setTopicsKillSwitch(false)
-                    .setSystemProperty(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
+                    .setDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_CONSENT_SOURCE_OF_TRUTH, 2)
                     .setFlag(KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, 2)
                     .setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true)

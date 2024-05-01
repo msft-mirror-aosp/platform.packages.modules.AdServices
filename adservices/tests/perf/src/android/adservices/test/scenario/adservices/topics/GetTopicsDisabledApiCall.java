@@ -59,7 +59,7 @@ public class GetTopicsDisabledApiCall {
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setTopicsKillSwitch(false)
-                    .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setDebugFlag(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                     .setCompatModeFlags();
 
     private void measureGetTopics(String label) {
