@@ -127,7 +127,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         eq(Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         mockCobaltLoggingFlags(mMockFlags, false);
     }

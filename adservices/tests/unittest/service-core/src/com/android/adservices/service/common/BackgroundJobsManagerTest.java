@@ -109,7 +109,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Before
     public void setDefaultExpectations() throws Exception {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         doNothing().when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing()

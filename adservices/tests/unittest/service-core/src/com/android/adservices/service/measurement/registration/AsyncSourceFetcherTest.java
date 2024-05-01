@@ -183,7 +183,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(FakeFlagsFactory.getFlagsForTest());
+        mocker.mockGetFlags(FakeFlagsFactory.getFlagsForTest());
         mDatastoreManager =
                 spy(
                         new SQLDatastoreManager(

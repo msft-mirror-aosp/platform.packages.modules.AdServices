@@ -321,7 +321,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         .build();
 
         // Required stub for Custom Audience DB persistence
-        extendedMockito.mockGetFlags(flagsEnablingAdFiltering);
+        mocker.mockGetFlags(flagsEnablingAdFiltering);
 
         // Required stub for Ad Selection call
         doReturn(DevContext.createForDevOptionsDisabled())

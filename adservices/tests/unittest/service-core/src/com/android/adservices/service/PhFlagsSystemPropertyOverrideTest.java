@@ -113,7 +113,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
     @Test
     @SpyStatic(SdkLevel.class)
     public void testGetGlobalKillSwitch_TPlus() {
-        extendedMockito.mockIsAtLeastT(true);
+        mocker.mockIsAtLeastT(true);
 
         // This is the value hardcoded by a constant on Flags.java
         boolean constantValue = getConstantValue("GLOBAL_KILL_SWITCH");
@@ -137,7 +137,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
     @Test
     @SpyStatic(SdkLevel.class)
     public void testGetGlobalKillSwitch_TMinus() {
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
 
         // This is the value hardcoded by a constant on Flags.java
         boolean constantValue = getConstantValue("GLOBAL_KILL_SWITCH");
@@ -298,8 +298,8 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         // Disable global_kill_switch so that this flag can be tested.
         mFlagsTestHelper.setGlobalKillSwitch(false);
         mockGetAdServicesFlag(KEY_ENABLE_BACK_COMPAT, true);
-        extendedMockito.mockIsAtLeastT(false);
-        extendedMockito.mockIsAtLeastS(false);
+        mocker.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastS(false);
 
         expect.that(mPhFlags.getMeasurementRollbackDeletionREnabled())
                 .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_R_ENABLED);

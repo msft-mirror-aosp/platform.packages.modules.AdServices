@@ -99,7 +99,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
                         return mErr;
                     }
                 };
-        extendedMockito.mockGetCurrentUser(SYSTEM_USER);
+        mocker.mockGetCurrentUser(SYSTEM_USER);
         when(mMockContext.getUser()).thenReturn(UserHandle.SYSTEM);
     }
 
@@ -424,7 +424,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
         when(mMockContext.createContextAsUser(eq(UserHandle.SYSTEM), anyInt()))
                 .thenReturn(mMockContext);
         int secondaryUser = 10;
-        extendedMockito.mockGetCurrentUser(secondaryUser);
+        mocker.mockGetCurrentUser(secondaryUser);
         String cmd = "CMD_XYZ";
         String out = "hello";
         ShellCommandResult response =

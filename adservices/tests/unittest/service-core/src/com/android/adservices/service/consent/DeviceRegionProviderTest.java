@@ -49,7 +49,7 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         // return the default EEA countries list for most test cases
         doReturn(Flags.UI_EEA_COUNTRIES).when(mMockFlags).getUiEeaCountries();

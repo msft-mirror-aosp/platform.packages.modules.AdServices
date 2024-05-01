@@ -101,7 +101,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         appContext.set(mMockContext);
         mSpyCompatInit = spy(AdServicesBackCompatInit.getInstance());
     }
@@ -126,7 +126,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void testInitializeComponents_withTPlusFlagsOff_disablesComponentsCancelsJobs() {
-        extendedMockito.mockIsAtLeastT(true);
+        mocker.mockIsAtLeastT(true);
         doReturn(Build.VERSION_CODES.TIRAMISU).when(AdServicesBackCompatInit::getSdkLevelInt);
         mockAdServicesFlags(false);
         mockPackageName(TEST_PACKAGE_NAME);
@@ -142,7 +142,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void testInitializeComponents_withTPlusFlagsOn_disablesComponentsCancelsJobs() {
-        extendedMockito.mockIsAtLeastT(true);
+        mocker.mockIsAtLeastT(true);
         doReturn(Build.VERSION_CODES.TIRAMISU).when(AdServicesBackCompatInit::getSdkLevelInt);
         mockAdServicesFlags(true);
         mockPackageName(TEST_PACKAGE_NAME);
@@ -158,7 +158,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void testInitializeComponents_withSMinusFlagOff_doesNothing() {
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
         mockAdServicesFlags(false);
         mockPackageName(TEST_PACKAGE_NAME);
 
@@ -169,7 +169,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void testInitializeComponents_withSFlagOn_enablesComponents() {
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
         doReturn(Build.VERSION_CODES.S).when(AdServicesBackCompatInit::getSdkLevelInt);
         mockAdServicesFlags(true);
         mockPackageName(TEST_PACKAGE_NAME);
@@ -182,7 +182,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void testInitializeComponents_withRFlagOn_enablesComponents() {
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
         doReturn(Build.VERSION_CODES.R).when(AdServicesBackCompatInit::getSdkLevelInt);
         mockAdServicesFlags(true);
         mockPackageName(TEST_PACKAGE_NAME);
@@ -201,7 +201,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
                 .thenThrow(NullPointerException.class);
         doNothingOnErrorLogUtilError();
         mockAdServicesFlags(true);
-        extendedMockito.mockIsAtLeastT(true);
+        mocker.mockIsAtLeastT(true);
         mockPackageName(TEST_PACKAGE_NAME);
 
         // No exception expected, so no need to explicitly handle any exceptions here
@@ -216,7 +216,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
     public void testInitializeComponents_jobSchedulerIsNull_celLogged() throws Exception {
         when(mMockContext.getSystemService(JobScheduler.class)).thenReturn(null);
         doNothingOnErrorLogUtilError();
-        extendedMockito.mockIsAtLeastT(true);
+        mocker.mockIsAtLeastT(true);
         mockAdServicesFlags(true);
         mockPackageName(TEST_PACKAGE_NAME);
 
@@ -235,7 +235,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
                 .when(mSpyCompatInit)
                 .updateComponents(anyListOf(String.class), anyBoolean());
         doNothingOnErrorLogUtilError();
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
         mockAdServicesFlags(true);
         mockPackageName(TEST_PACKAGE_NAME);
 
@@ -254,7 +254,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testInitializeComponents_disableReceiverFailure_celLogged() throws Exception {
         doReturn(false).when(() -> PackageChangedReceiver.disableReceiver(any(), any()));
-        extendedMockito.mockIsAtLeastT(true);
+        mocker.mockIsAtLeastT(true);
         doNothingOnErrorLogUtilError();
         mockAdServicesFlags(true);
         mockPackageName(TEST_PACKAGE_NAME);
@@ -271,7 +271,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
     public void testInitializeComponents_enableReceiverFailure_celLogged() throws Exception {
         doReturn(false).when(() -> PackageChangedReceiver.enableReceiver(any(), any()));
         doNothingOnErrorLogUtilError();
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
         mockAdServicesFlags(true);
         mockPackageName(TEST_PACKAGE_NAME);
 

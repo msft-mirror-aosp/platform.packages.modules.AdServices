@@ -97,7 +97,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     @Before
     public void setExpectations() {
         appContext.set(mMockContext);
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         mockGetStatsdAdServicesLogger();
 
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenReturn(mPrefs);

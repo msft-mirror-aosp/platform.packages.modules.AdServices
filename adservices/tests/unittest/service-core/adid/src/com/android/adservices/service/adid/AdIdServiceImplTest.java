@@ -139,8 +139,8 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.ADID_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
 
-        extendedMockito.mockGetFlags(mMockFlags);
-        extendedMockito.mockGetCallingUidOrThrow(); // expected calling by its test uid by default
+        mocker.mockGetFlags(mMockFlags);
+        mocker.mockGetCallingUidOrThrow(); // expected calling by its test uid by default
 
         mockCobaltLoggingFlags(mMockFlags, false);
     }
@@ -182,7 +182,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                         SANDBOX_UID, AD_SERVICES_API_CALLED__API_NAME__GET_ADID, SOME_SDK_NAME);
 
         // Mock UID with SDK UID
-        extendedMockito.mockGetCallingUidOrThrow(SANDBOX_UID);
+        mocker.mockGetCallingUidOrThrow(SANDBOX_UID);
 
         // Mock Flags with true to enable enforcing foreground check.
         doReturn(true).when(mMockFlags).getEnforceForegroundStatusForAdId();
@@ -212,7 +212,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                         uid, AD_SERVICES_API_CALLED__API_NAME__GET_ADID, SOME_SDK_NAME);
 
         // Mock UID with Non-SDK UI
-        extendedMockito.mockGetCallingUidOrThrow(uid);
+        mocker.mockGetCallingUidOrThrow(uid);
 
         // Mock Flags with false to disable enforcing foreground check.
         doReturn(false).when(mMockFlags).getEnforceForegroundStatusForAdId();
@@ -239,7 +239,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
     @Test
     @RequiresSdkLevelAtLeastT(reason = "Sdk Sandbox only exists in T+")
     public void checkSdkNoPermission() throws Exception {
-        extendedMockito.mockGetCallingUidOrThrow(SANDBOX_UID);
+        mocker.mockGetCallingUidOrThrow(SANDBOX_UID);
 
         setupPermissions(TEST_APP_PACKAGE_NAME, ACCESS_ADSERVICES_AD_ID);
         doReturn(PackageManager.PERMISSION_DENIED)
