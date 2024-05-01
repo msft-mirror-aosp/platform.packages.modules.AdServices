@@ -16,6 +16,7 @@
 package com.android.adservices.shared.testing;
 
 import static com.android.adservices.shared.testing.AndroidSdk.Level.ANY;
+import static com.android.adservices.shared.testing.AndroidSdk.Level.DEV;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.R;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.S;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.S2;
@@ -38,6 +39,12 @@ public final class AndroidSdkLevelTest {
 
     @Test
     public void testFactoryMethod() {
+        Level forDev = Level.forLevel(10_000);
+        expect.withMessage("level 10_000").that(forDev).isSameInstanceAs(DEV);
+
+        Level forFutureVersion = Level.forLevel(108);
+        expect.withMessage("level 108").that(forFutureVersion).isSameInstanceAs(DEV);
+
         Level for30 = Level.forLevel(30);
         expect.withMessage("level 30").that(for30).isSameInstanceAs(R);
 
@@ -64,6 +71,7 @@ public final class AndroidSdkLevelTest {
     @Test
     public void testGetLevel() {
         expect.withMessage("level of ANY").that(ANY.getLevel()).isLessThan(R.getLevel());
+        expect.withMessage("level of DEV").that(DEV.getLevel()).isEqualTo(10_000);
         expect.withMessage("level of R").that(R.getLevel()).isEqualTo(30);
         expect.withMessage("level of S").that(S.getLevel()).isEqualTo(31);
         expect.withMessage("level of S2").that(S2.getLevel()).isEqualTo(32);
@@ -74,6 +82,7 @@ public final class AndroidSdkLevelTest {
 
     @Test
     public void testAtLeast() {
+        expect.withMessage("ANY.isAtLeast(DEV)").that(ANY.isAtLeast(DEV)).isFalse();
         expect.withMessage("ANY.isAtLeast(ANY)").that(ANY.isAtLeast(ANY)).isTrue();
         expect.withMessage("ANY.isAtLeast(R)").that(ANY.isAtLeast(R)).isFalse();
         expect.withMessage("ANY.isAtLeast(S)").that(ANY.isAtLeast(S)).isFalse();
@@ -82,6 +91,16 @@ public final class AndroidSdkLevelTest {
         expect.withMessage("ANY.isAtLeast(U)").that(ANY.isAtLeast(U)).isFalse();
         expect.withMessage("ANY.isAtLeast(V)").that(ANY.isAtLeast(V)).isFalse();
 
+        expect.withMessage("DEV.isAtLeast(DEV)").that(DEV.isAtLeast(DEV)).isTrue();
+        expect.withMessage("DEV.isAtLeast(ANY)").that(DEV.isAtLeast(ANY)).isTrue();
+        expect.withMessage("DEV.isAtLeast(R)").that(DEV.isAtLeast(R)).isTrue();
+        expect.withMessage("DEV.isAtLeast(S)").that(DEV.isAtLeast(S)).isTrue();
+        expect.withMessage("DEV.isAtLeast(S2)").that(DEV.isAtLeast(S2)).isTrue();
+        expect.withMessage("DEV.isAtLeast(T)").that(DEV.isAtLeast(T)).isTrue();
+        expect.withMessage("DEV.isAtLeast(U)").that(DEV.isAtLeast(U)).isTrue();
+        expect.withMessage("DEV.isAtLeast(V)").that(DEV.isAtLeast(V)).isTrue();
+
+        expect.withMessage("S.isAtLeast(DEV)").that(S.isAtLeast(DEV)).isFalse();
         expect.withMessage("R.isAtLeast(ANY)").that(R.isAtLeast(ANY)).isTrue();
         expect.withMessage("R.isAtLeast(R)").that(R.isAtLeast(R)).isTrue();
         expect.withMessage("R.isAtLeast(S)").that(R.isAtLeast(S)).isFalse();
@@ -90,6 +109,7 @@ public final class AndroidSdkLevelTest {
         expect.withMessage("R.isAtLeast(U)").that(R.isAtLeast(U)).isFalse();
         expect.withMessage("R.isAtLeast(V)").that(R.isAtLeast(V)).isFalse();
 
+        expect.withMessage("S.isAtLeast(DEV)").that(S.isAtLeast(DEV)).isFalse();
         expect.withMessage("S.isAtLeast(ANY)").that(S.isAtLeast(ANY)).isTrue();
         expect.withMessage("S.isAtLeast(R)").that(S.isAtLeast(R)).isTrue();
         expect.withMessage("S.isAtLeast(S)").that(S.isAtLeast(S)).isTrue();
@@ -98,6 +118,7 @@ public final class AndroidSdkLevelTest {
         expect.withMessage("S.isAtLeast(U)").that(S.isAtLeast(U)).isFalse();
         expect.withMessage("S.isAtLeast(V)").that(S.isAtLeast(V)).isFalse();
 
+        expect.withMessage("T.isAtLeast(DEV)").that(T.isAtLeast(DEV)).isFalse();
         expect.withMessage("T.isAtLeast(ANY)").that(T.isAtLeast(ANY)).isTrue();
         expect.withMessage("T.isAtLeast(R)").that(T.isAtLeast(R)).isTrue();
         expect.withMessage("T.isAtLeast(S)").that(T.isAtLeast(S)).isTrue();
@@ -106,6 +127,7 @@ public final class AndroidSdkLevelTest {
         expect.withMessage("T.isAtLeast(U)").that(T.isAtLeast(U)).isFalse();
         expect.withMessage("T.isAtLeast(V)").that(T.isAtLeast(V)).isFalse();
 
+        expect.withMessage("U.isAtLeast(DEV)").that(U.isAtLeast(DEV)).isFalse();
         expect.withMessage("U.isAtLeast(ANY)").that(U.isAtLeast(ANY)).isTrue();
         expect.withMessage("U.isAtLeast(R)").that(U.isAtLeast(R)).isTrue();
         expect.withMessage("U.isAtLeast(S)").that(U.isAtLeast(S)).isTrue();
@@ -114,6 +136,7 @@ public final class AndroidSdkLevelTest {
         expect.withMessage("U.isAtLeast(U)").that(U.isAtLeast(U)).isTrue();
         expect.withMessage("U.isAtLeast(V)").that(U.isAtLeast(V)).isFalse();
 
+        expect.withMessage("V.isAtLeast(DEV)").that(V.isAtLeast(DEV)).isFalse();
         expect.withMessage("V.isAtLeast(ANY)").that(V.isAtLeast(ANY)).isTrue();
         expect.withMessage("V.isAtLeast(R)").that(V.isAtLeast(R)).isTrue();
         expect.withMessage("V.isAtLeast(S)").that(V.isAtLeast(S)).isTrue();
