@@ -19,7 +19,6 @@ package com.android.adservices.service.stats;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
@@ -2281,5 +2280,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
         verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    private void mockIsAtLeastT(boolean isIt) {
+        mocker.mockIsAtLeastT(isIt);
     }
 }

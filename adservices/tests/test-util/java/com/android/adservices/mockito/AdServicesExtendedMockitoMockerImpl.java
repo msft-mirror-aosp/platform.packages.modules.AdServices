@@ -30,7 +30,7 @@ import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.modules.utils.build.SdkLevel;
 
-import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
@@ -41,12 +41,9 @@ public final class AdServicesExtendedMockitoMockerImpl implements AdServicesExte
     private static final String TAG = AdServicesExtendedMockitoMocker.class.getSimpleName();
 
     private final StaticClassChecker mStaticClassChecker;
-    private final Supplier<String> mTestNameSupplier;
 
-    public AdServicesExtendedMockitoMockerImpl(
-            StaticClassChecker staticClassChecker, Supplier<String> testNameSupplier) {
+    public AdServicesExtendedMockitoMockerImpl(StaticClassChecker staticClassChecker) {
         mStaticClassChecker = Objects.requireNonNull(staticClassChecker);
-        mTestNameSupplier = Objects.requireNonNull(testNameSupplier);
     }
 
     @Override
@@ -149,7 +146,7 @@ public final class AdServicesExtendedMockitoMockerImpl implements AdServicesExte
 
     @FormatMethod
     private void logV(@FormatString String fmt, Object... args) {
-        Log.v(TAG, "on " + mTestNameSupplier.get() + ": " + String.format(fmt, args));
+        Log.v(TAG, "on " + mStaticClassChecker.getTestName() + ": " + String.format(fmt, args));
     }
 
     // mock only, don't log
@@ -160,15 +157,40 @@ public final class AdServicesExtendedMockitoMockerImpl implements AdServicesExte
 
     private void assertSpiedOrMocked(Class<?> clazz) {
         if (!mStaticClassChecker.isSpiedOrMocked(clazz)) {
-            // TODO(b/314969513): show what's mocked (would require either a new method on
-            // StaticClassChecker, or use it's toString();
-            throw new IllegalStateException("Test doesn't static spy or mock " + clazz.getName());
+            throw new IllegalStateException(
+                    "Test doesn't static spy or mock "
+                            + clazz
+                            + ", only: "
+                            + mStaticClassChecker.getSpiedOrMockedClasses());
         }
     }
 
     /** Trivial Javadoc used to make checkstyle happy. */
     public interface StaticClassChecker {
+
         /** Trivial Javadoc used to make checkstyle happy. */
-        boolean isSpiedOrMocked(Class<?> clazz);
+        default String getTestName() {
+            return "N/A";
+        }
+
+        /** Trivial Javadoc used to make checkstyle happy. */
+        default boolean isSpiedOrMocked(Class<?> clazz) {
+            Log.d(
+                    TAG,
+                    "isSpiedOrMocked("
+                            + clazz.getSimpleName()
+                            + "): always returning true on default StaticClassChecker");
+            return true;
+        }
+
+        /** Trivial Javadoc used to make checkstyle happy. */
+        default ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
+            Log.d(
+                    TAG,
+                    "getSpiedOrMockedClasses(): always returning empty on default"
+                            + " StaticClassChecker");
+            return ImmutableSet.of();
+        }
     }
+
 }

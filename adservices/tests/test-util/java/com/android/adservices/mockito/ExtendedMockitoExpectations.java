@@ -40,6 +40,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoMockerImpl.StaticClassChecker;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -47,7 +48,6 @@ import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.testing.SyncCallback;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
 import com.google.errorprone.annotations.FormatMethod;
@@ -70,35 +70,7 @@ public final class ExtendedMockitoExpectations {
     private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
 
     private static final AdServicesExtendedMockitoMocker sMocker =
-            new AdServicesExtendedMockitoMockerImpl(clazz -> true, () -> "N/A");
-
-    // TODO(b/314969513): remove once there is no more usage
-    /**
-     * Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}.
-     *
-     * @deprecated - use {@link AdServicesExtendedMockitoMocker#mockIsAtLeastS(boolean)} instead
-     */
-    @Deprecated
-    public static void mockIsAtLeastS(boolean isIt) {
-        sMocker.mockIsAtLeastS(isIt);
-    }
-
-    // TODO(b/314969513): remove once there is no more usage
-    /**
-     * Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}.
-     *
-     * @deprecated - use {@link AdServicesExtendedMockitoMocker#mockIsAtLeastT(boolean)} instead
-     */
-    @Deprecated
-    public static void mockIsAtLeastT(boolean isIt) {
-        sMocker.mockIsAtLeastT(isIt);
-    }
-
-    /** Mocks a call to {@link SdkLevel#isAtLeastU()}, returning {@code isIt}. */
-    public static void mockIsAtLeastU(boolean isIt) {
-        Log.v(TAG, "mockIsAtLeastU(" + isIt + ")");
-        doReturn(isIt).when(SdkLevel::isAtLeastU);
-    }
+            new AdServicesExtendedMockitoMockerImpl(new StaticClassChecker() {});
 
     /**
      * Mocks a call to {@link ErrorLogUtil#e()}, does nothing.
