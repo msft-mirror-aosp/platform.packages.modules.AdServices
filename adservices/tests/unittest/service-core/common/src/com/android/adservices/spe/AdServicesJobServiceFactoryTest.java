@@ -28,8 +28,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -128,17 +126,18 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
 
     @Test
     public void testRescheduleJobWithLegacyMethod_mddJobs() {
+        boolean forceSchedule = true;
         doReturn(SCHEDULING_RESULT_CODE_SUCCESSFUL)
-                .when(() -> MddJobService.scheduleIfNeeded(any(), eq(true)));
+                .when(() -> MddJobService.scheduleIfNeeded(forceSchedule));
 
         mFactory.rescheduleJobWithLegacyMethod(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId());
-        verify(() -> MddJobService.scheduleIfNeeded(any(), eq(true)));
+        verify(() -> MddJobService.scheduleIfNeeded(forceSchedule));
         mFactory.rescheduleJobWithLegacyMethod(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId());
-        verify(() -> MddJobService.scheduleIfNeeded(any(), eq(true)), times(2));
+        verify(() -> MddJobService.scheduleIfNeeded(forceSchedule), times(2));
         mFactory.rescheduleJobWithLegacyMethod(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId());
-        verify(() -> MddJobService.scheduleIfNeeded(any(), eq(true)), times(3));
+        verify(() -> MddJobService.scheduleIfNeeded(forceSchedule), times(3));
         mFactory.rescheduleJobWithLegacyMethod(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
-        verify(() -> MddJobService.scheduleIfNeeded(any(), eq(true)), times(4));
+        verify(() -> MddJobService.scheduleIfNeeded(forceSchedule), times(4));
     }
 
     @Test

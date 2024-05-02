@@ -60,6 +60,8 @@ android_library {
         "junit",
     ],
     static_libs: [
+        // TODO (b/338132355): Clean up dependencies for adservices-test-utility.
+        "adservices-service-core",
         "adservices-shared-testing",
         "androidx.test.runner",
         "compatibility-device-util-axt",
