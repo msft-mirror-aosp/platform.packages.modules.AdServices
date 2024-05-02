@@ -21,6 +21,10 @@ java_library_host {
     srcs: [
          ":adservices-shared-sideless-testing-sources",
     ],
+    libs: [
+        "error_prone_annotations", // @FormatMethod / @FormatString
+        "guava-android-host", // @VisibleForTesting
+    ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
