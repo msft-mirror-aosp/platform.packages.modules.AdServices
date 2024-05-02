@@ -4310,6 +4310,13 @@ public class AttributionJobHandlerTest {
                         eq(Collections.singletonList(trigger.getId())),
                         eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mDebugReportApi)
+                .scheduleTriggerDebugReport(
+                        any(),
+                        any(),
+                        eq("1024"),
+                        any(),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -4456,7 +4463,7 @@ public class AttributionJobHandlerTest {
                 .scheduleTriggerDebugReport(
                         any(),
                         any(),
-                        eq("21"),
+                        eq("20"),
                         any(),
                         eq(DebugReportApi.Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS));
         verify(mMeasurementDao).insertEventReport(any());

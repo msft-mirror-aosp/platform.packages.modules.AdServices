@@ -111,7 +111,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     public void setCommonExpectations() {
         appContext.set(mMockContext);
         when(mMockContext.getPackageManager()).thenReturn(mMockPackageManager);
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         doNothingOnErrorLogUtilError();
         doNothing().when(() -> AppManifestConfigMetricsLogger.logUsage(any()));
     }
@@ -134,7 +134,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
     @Test
     public void testIsAllowedAttributionAccess_rMinus() throws Exception {
-        extendedMockito.mockSdkLevelR();
+        mocker.mockSdkLevelR();
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
         mockIsAllowedAttributionAccess(ENROLLMENT_ID, RESULT_ALLOWED);
@@ -234,7 +234,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
     @Test
     public void testIsAllowedCustomAudiencesAccess_rMinus() throws Exception {
-        extendedMockito.mockSdkLevelR();
+        mocker.mockSdkLevelR();
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
         mockIsAllowedCustomAudiencesAccess(ENROLLMENT_ID, RESULT_ALLOWED);
@@ -348,7 +348,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
             boolean expectedAllowed)
             throws Exception {
         if (isRMinus) {
-            extendedMockito.mockSdkLevelR();
+            mocker.mockSdkLevelR();
             mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         } else {
             mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
@@ -384,7 +384,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     @Test
     public void testIsAllowedApiAccess_parsingExceptionSwallowed_enabledByDefault_rMinus()
             throws Exception {
-        extendedMockito.mockSdkLevelR();
+        mocker.mockSdkLevelR();
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         Exception e = mockAppManifestConfigParserGetConfigThrows();
 
@@ -418,7 +418,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     @Test
     public void testIsAllowedApiAccess_noConfigXmlForPackage_enabledByDefault_rMinus()
             throws Exception {
-        extendedMockito.mockSdkLevelR();
+        mocker.mockSdkLevelR();
         mockAppFound(PACKAGE_NAME);
         mockGetAssetNotFound(PACKAGE_NAME);
 

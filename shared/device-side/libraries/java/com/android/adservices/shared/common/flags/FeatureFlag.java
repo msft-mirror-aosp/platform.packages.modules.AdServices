@@ -64,12 +64,16 @@ public @interface FeatureFlag {
          */
         SHARED,
 
+        // TODO(b/335725725) - remove once getAdServicesShellCommandEnabled() is moved to DebugFlags
         /**
          * Flag that is only used for debugging / development purposes - it's not pushed to the
          * device and can only be set locally by developers / tests.
          *
          * <p>The value of the field annotated by it should be {@code false}.
+         *
+         * @deprecated should use {@code DebugFlags} instead
          */
+        @Deprecated
         DEBUG,
 
         /**

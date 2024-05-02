@@ -77,7 +77,7 @@ public class ObliviousHttpEncryptorWithSeedImplTest extends AdServicesExtendedMo
                         .build()
                         .encryptionContextDao();
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test

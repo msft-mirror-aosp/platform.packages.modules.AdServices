@@ -1871,7 +1871,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testRunAdSelectionSuccess_flagToPreV3_preV3BiddingLogic() throws Exception {
         mFlags = new AdSelectionE2ETestFlags(2, false);
-        extendedMockito.mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,

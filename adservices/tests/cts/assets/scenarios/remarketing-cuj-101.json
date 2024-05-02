@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "bidding"
+        "path": "/bidding"
       },
       "response": {
         "body": "BiddingLogicV2BeaconNoView.js"
@@ -11,7 +11,7 @@
     },
     {
       "request": {
-        "path": "scoring"
+        "path": "/scoring"
       },
       "response": {
         "body": "ScoringLogicBeacon.js"
@@ -20,7 +20,7 @@
     },
     {
       "request": {
-        "path": "scoring/trusted"
+        "path": "/scoring/trusted"
       },
       "response": {
         "body": "ScoringSignals.json"
@@ -28,7 +28,7 @@
     },
     {
       "request": {
-        "path": "bidding/trusted"
+        "path": "/bidding/trusted"
       },
       "response": {
         "body": "BiddingSignals.json"
@@ -36,7 +36,7 @@
     },
     {
       "request": {
-        "path": "reportWin"
+        "path": "/reportWin"
       },
       "response": {
         "body": null
@@ -45,7 +45,7 @@
     },
     {
       "request": {
-        "path": "sellerInteraction?view",
+        "path": "/sellerInteraction?view",
         "method": "POST"
       },
       "response": {
@@ -55,7 +55,7 @@
     },
     {
       "request": {
-        "path": "sellerInteraction?click",
+        "path": "/sellerInteraction?click",
         "method": "POST"
       },
       "response": {
@@ -65,7 +65,7 @@
     },
     {
       "request": {
-        "path": "reportResult"
+        "path": "/reportResult"
       },
       "response": {
         "body": null
@@ -74,7 +74,7 @@
     },
     {
       "request": {
-        "path": "buyerInteraction?view",
+        "path": "/buyerInteraction?view",
         "method": "POST"
       },
       "response": {
@@ -84,7 +84,7 @@
     },
     {
       "request": {
-        "path": "buyerInteraction?click",
+        "path": "/buyerInteraction?click",
         "method": "POST"
       },
       "response": {
@@ -94,11 +94,11 @@
     }
   ],
   "substitutions": {
-    "<daily-update-uri>": "{base_url}/bidding/daily",
-    "<ad-render-uri-1>": "{base_url}/render_ad/1",
-    "<ad-render-uri-2>": "{base_url}/render_ad/2",
-    "<buyer-trusted-bidding-uri>": "{base_url}/bidding/trusted",
-    "<buyer-reporting-uri>": "{base_url}",
-    "<seller-reporting-uri>": "{base_url}"
+    "<daily-update-uri>": "{base_url_with_prefix}/bidding/daily",
+    "<ad-render-uri-1>": "{base_url_with_prefix}/render_ad/1",
+    "<ad-render-uri-2>": "{base_url_with_prefix}/render_ad/2",
+    "<buyer-trusted-bidding-uri>": "{base_url_with_prefix}/bidding/trusted",
+    "<buyer-reporting-uri>": "{base_url_with_prefix}",
+    "<seller-reporting-uri>": "{base_url_with_prefix}"
   }
 }

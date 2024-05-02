@@ -167,7 +167,7 @@ public class AbstractMeasurementLatencyTest {
         }
 
         // Override consent manager behavior to give user consent.
-        flags.setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true);
+        flags.setDebugFlag(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true);
 
         // Override adid kill switch.
         flags.setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);

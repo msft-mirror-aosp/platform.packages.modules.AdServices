@@ -37,7 +37,7 @@ public class ObliviousHttpKeyConfigTest extends AdServicesExtendedMockitoTestCas
 
     @Before
     public void setExpectations() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test
