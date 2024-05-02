@@ -159,7 +159,7 @@ public final class MddJob implements JobWorker {
         if (!FlagsFactory.getFlags().getSpeOnPilotJobsEnabled()) {
             int resultCode =
                     MddJobService.scheduleIfNeeded(
-                            ApplicationContextSingleton.get(), /* forceSchedule= */ true);
+                            ApplicationContextSingleton.get(), /* forceSchedule= */ false);
 
             logJobSchedulingLegacy(resultCode);
             return;

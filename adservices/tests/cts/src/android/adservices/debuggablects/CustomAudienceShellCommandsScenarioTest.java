@@ -40,13 +40,13 @@ import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
 
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
-@SetFlagEnabled(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
 @RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
 public final class CustomAudienceShellCommandsScenarioTest extends FledgeScenarioTest {
@@ -54,6 +54,11 @@ public final class CustomAudienceShellCommandsScenarioTest extends FledgeScenari
 
     private final AdServicesShellCommandHelper mShellCommandHelper =
             new AdServicesShellCommandHelper();
+
+    @Before
+    public void setDebugFlag() {
+        flags.setDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true);
+    }
 
     @Test
     public void testRun_refreshCustomAudiences_verifyCustomAudienceChanged() throws Exception {

@@ -53,7 +53,6 @@ import java.util.List;
 
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
-@SetFlagEnabled(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
 @RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
 public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsTest {
@@ -70,6 +69,8 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     @Before
     public void setUp() throws Exception {
         AdservicesTestHelper.killAdservicesProcess(sContext);
+        flags.setDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true);
+
         if (sdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         }

@@ -16,8 +16,8 @@
 
 package com.android.server.adservices;
 
-import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -60,6 +60,7 @@ import android.util.ArrayMap;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 import com.android.server.adservices.consent.AppConsentManagerFixture;
 import com.android.server.adservices.data.topics.TopicsDao;
@@ -100,6 +101,10 @@ public class AdServicesManagerServiceTest {
     @Rule
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
+
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.withDefaultLogcatTags();
 
     private AdServicesManagerService mService;
     private UserInstanceManager mUserInstanceManager;
@@ -1198,12 +1203,8 @@ public class AdServicesManagerServiceTest {
                         });
     }
 
-    private static void setShellCommandEnabled(boolean value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ADSERVICES_SHELL_COMMAND_ENABLED,
-                Boolean.toString(value),
-                /* makeDefault */ false);
+    private void setShellCommandEnabled(boolean value) {
+        flags.setDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, value);
     }
 
     private static String handleShellCommand(Binder binder) throws IOException {

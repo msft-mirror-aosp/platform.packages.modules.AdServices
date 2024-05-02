@@ -71,7 +71,8 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 
 public class AdServicesExtDataStorageServiceManagerTest {
-    private static final long TIMEOUT = 5_000L;
+    private static final long SLEEP_MS = 2_000L;
+    private static final int INVOCATION_TIMEOUT = 500;
     private static final long NO_APEX_VALUE = -1L;
     private static final AdServicesExtDataParams TEST_PARAMS =
             new AdServicesExtDataParams.Builder()
@@ -114,6 +115,10 @@ public class AdServicesExtDataStorageServiceManagerTest {
 
         // mock the device config read for checking debug proxy
         doReturn(false).when(mFlags).getEnableAdExtServiceDebugProxy();
+
+        // Mock timeouts
+        doReturn(INVOCATION_TIMEOUT).when(mFlags).getAdExtReadTimeoutMs();
+        doReturn(INVOCATION_TIMEOUT).when(mFlags).getAdExtWriteTimeoutMs();
         mockGetFlags(mFlags);
 
         doReturn(mMockWorker)
@@ -167,7 +172,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
     public void testGetAdServicesExtData_timedOut_returnsDefaultParams() {
         doAnswer(
                         (invocation) -> {
-                            Thread.sleep(TIMEOUT);
+                            Thread.sleep(SLEEP_MS);
                             return null;
                         })
                 .when(mMockWorker)
@@ -224,7 +229,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
     public void testSetAdServicesExtData_timedOut_returnsFalse() {
         doAnswer(
                         (invocation) -> {
-                            Thread.sleep(TIMEOUT);
+                            Thread.sleep(SLEEP_MS);
                             return null;
                         })
                 .when(mMockWorker)

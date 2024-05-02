@@ -25,8 +25,7 @@ import android.util.Log;
 
 import com.android.adservices.api.R;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.AdservicesShellCommandFactorySupplier;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -89,12 +88,10 @@ public final class ShellCommandActivity extends Activity {
 
     private int mRes = -1;
     private ListeningExecutorService mExecutorService;
-    private Flags mFlags;
+    private boolean mShellCommandEnabled;
 
-    private void runShellCommand(Flags flags, ListeningExecutorService executorService) {
-        mFlags = flags;
-        mExecutorService = executorService;
-        if (!mFlags.getAdServicesShellCommandEnabled()) {
+    private void runShellCommand() {
+        if (!mShellCommandEnabled) {
             Log.e(TAG, "Activity started when shell command is disabled");
             finishSelf();
             return;
@@ -127,7 +124,9 @@ public final class ShellCommandActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.shell_command_activity);
 
-        runShellCommand(FlagsFactory.getFlags(), AdServicesExecutors.getLightWeightExecutor());
+        mShellCommandEnabled = DebugFlags.getInstance().getAdServicesShellCommandEnabled();
+        mExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        runShellCommand();
     }
 
     private @Status int waitAndGetResult(PrintWriter writer) {
@@ -167,8 +166,7 @@ public final class ShellCommandActivity extends Activity {
     }
 
     private void getShellCommandResult(String[] args, PrintWriter writer) {
-        boolean enabled = mFlags.getAdServicesShellCommandEnabled();
-        if (!enabled) {
+        if (!mShellCommandEnabled) {
             Log.e(
                     TAG,
                     String.format(
