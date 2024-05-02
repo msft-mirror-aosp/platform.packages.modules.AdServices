@@ -42,7 +42,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.topics.CacheManager;
-import com.android.adservices.service.topics.EpochJobService;
+import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsServiceImpl;
 import com.android.adservices.service.topics.TopicsWorker;
@@ -102,7 +102,7 @@ public class TopicsService extends Service {
         MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         EncryptionKeyJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         MddJob.scheduleAllMddJobs();
-        EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        EpochJob.schedule();
     }
 
     private boolean hasUserConsent() {
