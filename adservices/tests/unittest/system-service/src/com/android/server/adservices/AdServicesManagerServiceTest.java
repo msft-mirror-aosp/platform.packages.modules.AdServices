@@ -54,13 +54,15 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.os.UserHandle;
-import android.provider.DeviceConfig;
 import android.util.ArrayMap;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 import com.android.server.adservices.consent.AppConsentManagerFixture;
 import com.android.server.adservices.data.topics.TopicsDao;
@@ -78,7 +80,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -97,20 +98,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Tests for {@link AdServicesManagerService} */
-public class AdServicesManagerServiceTest {
-    @Rule
-    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
-            new TestableDeviceConfig.TestableDeviceConfigRule();
-
-    @Rule
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.withDefaultLogcatTags();
-
-    private AdServicesManagerService mService;
-    private UserInstanceManager mUserInstanceManager;
-    private Context mSpyContext;
-    @Mock private PackageManager mMockPackageManager;
-    @Mock private RollbackManager mMockRollbackManager;
+public final class AdServicesManagerServiceTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String PPAPI_PACKAGE_NAME = "com.google.android.adservices.api";
     private static final String ADSERVICES_APEX_PACKAGE_NAME = "com.google.android.adservices";
@@ -125,24 +113,37 @@ public class AdServicesManagerServiceTest {
     private static final int PACKAGE_UID = 12345;
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
-    private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
     private static final int TEST_ROLLED_BACK_FROM_MODULE_VERSION = 339990000;
     private static final int TEST_ROLLED_BACK_TO_MODULE_VERSION = 330000000;
     private static final int ROLLBACK_ID = 1768705420;
     private static final String USER_INSTANCE_MANAGER_DUMP = "D'OHump!";
 
+    // TODO(b/294423183): figure out why it cannot adopt shell permissions (otherwise some tests
+    // will fail due to lack of android.permission.INTERACT_ACROSS_USERS_FULL.
+    @Rule(order = 11)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.withoutAdoptingShellPermissions();
+
+    private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
+    private AdServicesManagerService mService;
+    private UserInstanceManager mUserInstanceManager;
+    @Mock private PackageManager mMockPackageManager;
+    @Mock private RollbackManager mMockRollbackManager;
+
+    @Override
+    protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
+        return newDefaultAdServicesExtendedMockitoRuleBuilder()
+                .addStaticMockFixtures(TestableDeviceConfig::new)
+                .build();
+    }
+
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-
-        Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        mSpyContext = Mockito.spy(context);
-
         TopicsDao topicsDao = new TopicsDao(mDBHelper);
         mUserInstanceManager =
                 new UserInstanceManager(
                         topicsDao,
-                        /* adServicesBaseDir= */ context.getFilesDir().getAbsolutePath()) {
+                        /* adServicesBaseDir= */ mContext.getFilesDir().getAbsolutePath()) {
                     @Override
                     public void dump(PrintWriter writer, String[] args) {
                         writer.println(USER_INSTANCE_MANAGER_DUMP);
@@ -169,11 +170,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testAdServicesSystemService_enabled_then_disabled() throws Exception {
         // First enable the flag.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
-                Boolean.toString(Boolean.TRUE),
-                /* makeDefault */ false);
+        setFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, true);
 
         // This will trigger the registration of the Receiver.
         mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
@@ -221,11 +218,7 @@ public class AdServicesManagerServiceTest {
         assertThat(argumentHandler.getAllValues().get(1)).isNotNull();
 
         // Now disable the flag.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
-                Boolean.toString(Boolean.FALSE),
-                /* makeDefault */ false);
+        setFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, false);
 
         // When flag value is changed above, then TestableDeviceConfig invokes the DeviceConfig
         // .OnPropertiesChangedListener. The listener is invoked on the separate thread. So, we
@@ -246,11 +239,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testAdServicesSystemService_disabled() {
         // Disable the flag.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
-                Boolean.toString(Boolean.FALSE),
-                /* makeDefault */ false);
+        setFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, false);
 
         mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
@@ -266,11 +255,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testAdServicesSystemService_enabled_setAdServicesApexVersion() {
         // First enable the flag.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
-                Boolean.toString(Boolean.TRUE),
-                /* makeDefault */ false);
+        setFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, true);
 
         setupMockInstalledPackages();
 
@@ -295,11 +280,7 @@ public class AdServicesManagerServiceTest {
     @Test
     public void testAdServicesSystemService_disabled_setAdServicesApexVersion() {
         // Disable the flag.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
-                Boolean.toString(Boolean.FALSE),
-                /* makeDefault */ false);
+        setFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, false);
 
         mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
@@ -1192,7 +1173,7 @@ public class AdServicesManagerServiceTest {
         disableEnforceAdServicesManagerPermission(service);
 
         // The default enrollment channel is null.
-        assertThat(service.getEnrollmentChannel()).isEqualTo(null);
+        assertThat(service.getEnrollmentChannel()).isNull();
 
         Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
                 .forEach(
@@ -1229,5 +1210,10 @@ public class AdServicesManagerServiceTest {
                             .collect(Collectors.joining("\n"));
         }
         return output.trim();
+    }
+
+    private void setFlag(String name, boolean value) {
+        Log.d(mTag, "setFlag(): " + name + "=" + value);
+        flags.setFlag(name, value);
     }
 }
