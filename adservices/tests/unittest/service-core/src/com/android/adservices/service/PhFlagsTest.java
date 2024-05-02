@@ -45,6 +45,8 @@ import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_RESET_TOKEN;
 import static com.android.adservices.service.Flags.DEBUG_UX;
+import static com.android.adservices.service.Flags.DEFAULT_ADEXT_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
@@ -510,6 +512,8 @@ import static com.android.adservices.service.Flags.UI_OTA_RESOURCES_FEATURE_ENAB
 import static com.android.adservices.service.Flags.UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_SHA_CERTS;
@@ -8040,6 +8044,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_APPSEARCH_READ_TIMEOUT_MS,
                 DEFAULT_APPSEARCH_READ_TIMEOUT_MS,
                 Flags::getAppSearchReadTimeout);
+    }
+
+    @Test
+    public void testGetAdExtWriteTimeoutMs() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ADEXT_WRITE_TIMEOUT_MS,
+                DEFAULT_ADEXT_WRITE_TIMEOUT_MS,
+                Flags::getAdExtWriteTimeoutMs);
+    }
+
+    @Test
+    public void testGetAdExtReadTimeoutMs() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ADEXT_READ_TIMEOUT_MS,
+                DEFAULT_ADEXT_READ_TIMEOUT_MS,
+                Flags::getAdExtReadTimeoutMs);
     }
 
     private void overrideGlobalKillSwitch(boolean phOverridingValue) {
