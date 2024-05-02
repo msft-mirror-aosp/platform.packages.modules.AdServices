@@ -285,7 +285,8 @@ public class EnrollmentDao implements IEnrollmentDao {
             }
 
             while (cursor.moveToNext()) {
-                EnrollmentData data = SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                EnrollmentData data =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
                 if (validateAttributionUrl(
                                 data.getAttributionSourceRegistrationUrl(),
                                 registrationBaseUri,
@@ -877,6 +878,14 @@ public class EnrollmentDao implements IEnrollmentDao {
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
                 enrollmentData.getEncryptionKeyUrl());
+        if (supportsEnrollmentAPISchemaColumns()) {
+            values.put(
+                    EnrollmentTables.EnrollmentDataContract.ENROLLED_SITE,
+                    enrollmentData.getEnrolledSite());
+            values.put(
+                    EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS,
+                    enrollmentData.getEnrolledAPIsString());
+        }
         LogUtil.d("Inserting Enrollment record. ID : \"%s\"", enrollmentData.getEnrollmentId());
         try {
             db.insertWithOnConflict(
@@ -1004,5 +1013,10 @@ public class EnrollmentDao implements IEnrollmentDao {
             seed();
         }
         return success;
+    }
+
+    /** Check whether enrolled_apis and enrolled_site is supported in Enrollment Table. */
+    private boolean supportsEnrollmentAPISchemaColumns() {
+        return mDbHelper.supportsEnrollmentAPISchemaColumns();
     }
 }
