@@ -235,6 +235,16 @@ public class UiUtils {
                 "setprop debug.adservices.binder_timeout %s", DEFAULT_BINDER_CONNECTION_TIMEOUT_MS);
     }
 
+    /** enable pas */
+    public static void enablePas() throws Exception {
+        forceSetFlag("pas_ux_enabled", true);
+    }
+
+    /** disable pas */
+    public static void disablePas() throws Exception {
+        forceSetFlag("pas_ux_enabled", false);
+    }
+
     public static void verifyNotification(
             Context context,
             UiDevice device,

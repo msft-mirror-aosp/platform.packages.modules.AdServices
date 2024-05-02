@@ -166,7 +166,8 @@ public class AdservicesWorkflows {
             boolean isEuDevice,
             UiConstants.UX ux)
             throws Exception {
-        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, true);
+        NotificationPages.verifyNotification(
+                context, device, isDisplayed, isEuDevice, ux, true, false, false);
     }
 
     public static void verifyNotification(
@@ -177,7 +178,8 @@ public class AdservicesWorkflows {
             UiConstants.UX ux,
             boolean isV2)
             throws Exception {
-        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, isV2);
+        NotificationPages.verifyNotification(
+                context, device, isDisplayed, isEuDevice, ux, isV2, false, false);
     }
 
     public static void testClickNotificationFlow(
@@ -189,7 +191,23 @@ public class AdservicesWorkflows {
             boolean isV2,
             boolean isOptin)
             throws Exception {
-        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, isV2);
+        testClickNotificationFlow(
+                context, device, isDisplayed, isEuDevice, ux, isV2, isOptin, false, false);
+    }
+
+    public static void testClickNotificationFlow(
+            Context context,
+            UiDevice device,
+            boolean isDisplayed,
+            boolean isEuDevice,
+            UiConstants.UX ux,
+            boolean isV2,
+            boolean isOptin,
+            boolean isPas,
+            boolean isPasRenotify)
+            throws Exception {
+        NotificationPages.verifyNotification(
+                context, device, isDisplayed, isEuDevice, ux, isV2, isPas, isPasRenotify);
         // Only GA and row devices needs to got to settings page to set up consent.
         boolean isGoSettings = !isEuDevice;
         notificationConfirmWorkflow(
