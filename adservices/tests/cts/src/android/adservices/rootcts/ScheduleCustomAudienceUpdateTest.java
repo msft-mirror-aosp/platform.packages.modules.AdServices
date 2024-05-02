@@ -129,7 +129,10 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
         // Set min allowed delay in past for easier testing
         setMinAllowedDelayTimeMinutes(MIN_ALLOWED_DELAY_TEST_OVERRIDE);
 
-        Uri updateUri = Uri.parse(getServerBaseAddress() + Scenarios.UPDATE_CA_PATH);
+        Uri updateUri =
+                Uri.parse(
+                        dispatcher.getBaseAddressWithPrefix().toString()
+                                + Scenarios.UPDATE_CA_PATH);
         CustomAudience customAudience = makeCustomAudience(CA_NAME).build();
         PartialCustomAudience partialCustomAudience =
                 new PartialCustomAudience.Builder(CA_NAME)
@@ -172,7 +175,10 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
                         ScenarioDispatcherFactory.fromScenarioWithPrefix(
                                 "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json",
                                 getCacheBusterPrefix()));
-        Uri updateUri = Uri.parse(getServerBaseAddress() + Scenarios.UPDATE_CA_PATH);
+        Uri updateUri =
+                Uri.parse(
+                        dispatcher.getBaseAddressWithPrefix().toString()
+                                + Scenarios.UPDATE_CA_PATH);
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
                                 updateUri,
