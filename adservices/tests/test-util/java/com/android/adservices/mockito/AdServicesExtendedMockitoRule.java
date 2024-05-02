@@ -33,6 +33,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.testing.LogEntry.Level;
 import com.android.adservices.shared.testing.common.TestHelper;
+import com.android.adservices.spe.AdServicesJobScheduler;
+import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
@@ -202,6 +204,33 @@ public class AdServicesExtendedMockitoRule
         logV("mockGetCurrentUser(user=%d)", user);
         assertSpiedOrMocked(ActivityManager.class);
         doReturn(user).when(ActivityManager::getCurrentUser);
+    }
+
+    /**
+     * Mocks a call to {@link AdServicesJobScheduler#getInstance()}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link AdServicesJobScheduler}.
+     */
+    @Override
+    public final void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler) {
+        logV("mockSpeJobScheduler(%s)", mockedAdServicesJobScheduler);
+        assertSpiedOrMocked(AdServicesJobScheduler.class);
+        doReturn(mockedAdServicesJobScheduler).when(AdServicesJobScheduler::getInstance);
+    }
+
+    /**
+     * Mocks a call to {@link AdServicesJobServiceFactory#getInstance()}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link AdServicesJobServiceFactory}.
+     */
+    @Override
+    public final void mockAdServicesJobServiceFactory(
+            AdServicesJobServiceFactory mockedAdServicesJobServiceFactory) {
+        logV("mockAdServicesJobServiceFactory(%s)", mockedAdServicesJobServiceFactory);
+        assertSpiedOrMocked(AdServicesJobServiceFactory.class);
+        doReturn(mockedAdServicesJobServiceFactory).when(AdServicesJobServiceFactory::getInstance);
     }
 
     /**

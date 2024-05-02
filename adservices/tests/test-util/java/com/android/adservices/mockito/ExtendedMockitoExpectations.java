@@ -28,7 +28,9 @@ import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.os.SystemProperties;
@@ -41,7 +43,9 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.testing.SyncCallback;
+import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -370,6 +374,20 @@ public final class ExtendedMockitoExpectations {
     public static void verifyErrorLogUtilError(
             int errorCode, int ppapiName, VerificationMode mode) {
         verify(() -> ErrorLogUtil.e(errorCode, ppapiName), mode);
+    }
+
+    /**
+     * Mocks a call to {@link AdServicesJobServiceFactory#getJobSchedulingLogger()}.
+     *
+     * @return a mocked instance of {@link JobSchedulingLogger}.
+     */
+    public static JobSchedulingLogger mockJobSchedulingLogger(AdServicesJobServiceFactory factory) {
+        logV("mockJobSchedulingLogger()");
+
+        JobSchedulingLogger loggerMock = mock(JobSchedulingLogger.class);
+        when(factory.getJobSchedulingLogger()).thenReturn(loggerMock);
+
+        return loggerMock;
     }
 
     /**
