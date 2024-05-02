@@ -63,6 +63,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.shared.testing.annotations.DisableDebugFlag;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 import com.android.server.adservices.consent.AppConsentManagerFixture;
 import com.android.server.adservices.data.topics.TopicsDao;
@@ -289,8 +291,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
+    @DisableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
     public void testAdServicesShellCommand_disabled() throws Exception {
-        setShellCommandEnabled(false);
         String expectedOutput = handleShellCommand(new Binder());
 
         mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
@@ -301,8 +303,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
+    @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
     public void testAdServicesShellCommand_enabled() throws Exception {
-        setShellCommandEnabled(true);
         mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
         String expectedOutput =
                 String.format(AdServicesShellCommand.WRONG_UID_TEMPLATE, Binder.getCallingUid());
@@ -1182,10 +1184,6 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
                             assertThat(service.getEnrollmentChannel())
                                     .isEqualTo(channel.toString());
                         });
-    }
-
-    private void setShellCommandEnabled(boolean value) {
-        flags.setDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, value);
     }
 
     private static String handleShellCommand(Binder binder) throws IOException {
