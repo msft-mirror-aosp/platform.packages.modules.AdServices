@@ -41,6 +41,7 @@ public final class AndroidSdk {
 
     public static final int TM = 33;
     public static final int UDC = 34;
+    public static final int VIC = 35;
 
     // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
     /** Represents a specific SDK level. */
@@ -50,7 +51,8 @@ public final class AndroidSdk {
         S(SC),
         S2(SC_V2),
         T(TM),
-        U(UDC);
+        U(UDC),
+        V(VIC);
 
         private final int mLevel;
 
@@ -83,6 +85,8 @@ public final class AndroidSdk {
                     return T;
                 case 34:
                     return U;
+                case 35:
+                    return V;
             }
             throw new IllegalArgumentException("Unsupported level: " + level);
         }

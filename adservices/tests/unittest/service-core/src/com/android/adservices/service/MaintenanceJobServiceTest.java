@@ -25,8 +25,6 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroun
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.spe.AdServicesJobInfo.MAINTENANCE_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
@@ -64,7 +62,6 @@ import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
-import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.shared.testing.JobServiceCallback;
@@ -115,7 +112,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
     @Before
     public void setup() {
-        // Mock JobScheduler invocation in EpochJobService
+        // Mock JobScheduler invocation in MaintenanceJobService.
         assertThat(JOB_SCHEDULER).isNotNull();
         doReturn(JOB_SCHEDULER)
                 .when(mSpyMaintenanceJobService)
@@ -178,7 +175,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(sContext, EpochJobService.class))
+                                new ComponentName(sContext, MaintenanceJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -233,7 +230,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(sContext, EpochJobService.class))
+                                new ComponentName(sContext, MaintenanceJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -289,7 +286,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(sContext, EpochJobService.class))
+                                new ComponentName(sContext, MaintenanceJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -376,7 +373,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(sContext, EpochJobService.class))
+                                new ComponentName(sContext, MaintenanceJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -441,7 +438,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(sContext, EpochJobService.class))
+                                new ComponentName(sContext, MaintenanceJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -502,7 +499,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(sContext, EpochJobService.class))
+                                new ComponentName(sContext, MaintenanceJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -631,16 +628,12 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         // Killswitch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+        doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
 
-        // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(EpochJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false)).isFalse();
+        // The first invocation of scheduleIfNeeded() does NOT schedule the job.
+        assertThat(MaintenanceJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false))
+                .isFalse();
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNull();
-        verify(
-                () -> {
-                    ErrorLogUtil.e(
-                            eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED),
-                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS));
-                });
     }
 
     @Test
@@ -698,7 +691,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(sContext, EpochJobService.class))
+                                new ComponentName(sContext, MaintenanceJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -755,7 +748,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(sContext, EpochJobService.class))
+                                new ComponentName(sContext, MaintenanceJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -811,7 +804,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(sContext, EpochJobService.class))
+                                new ComponentName(sContext, MaintenanceJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
