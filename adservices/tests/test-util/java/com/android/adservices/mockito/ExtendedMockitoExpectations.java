@@ -69,28 +69,29 @@ public final class ExtendedMockitoExpectations {
 
     private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
 
+    private static final AdServicesExtendedMockitoMocker sMocker =
+            new AdServicesExtendedMockitoMockerImpl(clazz -> true, () -> "N/A");
+
     // TODO(b/314969513): remove once there is no more usage
     /**
      * Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}.
      *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockIsAtLeastS(boolean)} instead
+     * @deprecated - use {@link AdServicesExtendedMockitoMocker#mockIsAtLeastS(boolean)} instead
      */
     @Deprecated
     public static void mockIsAtLeastS(boolean isIt) {
-        Log.v(TAG, "mockIsAtLeastS(" + isIt + ")");
-        doReturn(isIt).when(SdkLevel::isAtLeastS);
+        sMocker.mockIsAtLeastS(isIt);
     }
 
     // TODO(b/314969513): remove once there is no more usage
     /**
      * Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}.
      *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockIsAtLeastT(boolean)} instead
+     * @deprecated - use {@link AdServicesExtendedMockitoMocker#mockIsAtLeastT(boolean)} instead
      */
     @Deprecated
     public static void mockIsAtLeastT(boolean isIt) {
-        Log.v(TAG, "mockIsAtLeastT(" + isIt + ")");
-        doReturn(isIt).when(SdkLevel::isAtLeastT);
+        sMocker.mockIsAtLeastT(isIt);
     }
 
     /** Mocks a call to {@link SdkLevel#isAtLeastU()}, returning {@code isIt}. */
@@ -158,7 +159,7 @@ public final class ExtendedMockitoExpectations {
      * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
      * FakeFlagsFactory#getFlagsForTest()}
      *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlagsForTesting()} instead
+     * @deprecated - use {@link AdServicesExtendedMockitoMocker#mockGetFlagsForTesting()} instead
      */
     public static void mockGetFlagsForTest() {
         mockGetFlags(FakeFlagsFactory.getFlagsForTest());
@@ -169,11 +170,11 @@ public final class ExtendedMockitoExpectations {
      * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}
      * object.
      *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlags(Flags)} instead
+     * @deprecated - use {@link AdServicesExtendedMockitoMocker#mockGetFlags(Flags)} instead
      */
     @Deprecated
     public static void mockGetFlags(Flags mockedFlags) {
-        doReturn(mockedFlags).when(FlagsFactory::getFlags);
+        sMocker.mockGetFlags(mockedFlags);
     }
 
     /**

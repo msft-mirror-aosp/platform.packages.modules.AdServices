@@ -120,6 +120,7 @@ filegroup {
     name: "adservices-extended-mockito-rule-sources",
     srcs: [
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java",
+        "java/com/android/adservices/mockito/AdServicesExtendedMockitoMockerImpl.java",
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoRule.java",
         "java/com/android/adservices/mockito/ExtendedMockitoInlineCleanerRule.java",
         "java/com/android/adservices/mockito/LogInterceptor.java",
