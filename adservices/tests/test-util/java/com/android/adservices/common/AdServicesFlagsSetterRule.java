@@ -55,11 +55,23 @@ import com.android.modules.utils.build.SdkLevel;
 public final class AdServicesFlagsSetterRule
         extends AbstractAdServicesFlagsSetterRule<AdServicesFlagsSetterRule> {
 
+    private final boolean mAdoptShelPermissions;
+
     private AdServicesFlagsSetterRule() {
+        this(/* adoptShelPermissions= */ true);
+    }
+
+    private AdServicesFlagsSetterRule(boolean adoptShelPermissions) {
         super(
                 AndroidLogger.getInstance(),
-                DeviceSideDeviceConfigHelper::new,
+                namespace -> new DeviceSideDeviceConfigHelper(namespace, adoptShelPermissions),
                 DeviceSideSystemPropertiesHelper.getInstance());
+        mAdoptShelPermissions = adoptShelPermissions;
+    }
+
+    /** Returns a rule that won't adopt shell permissions - typically used on unit tests. */
+    public static AdServicesFlagsSetterRule withoutAdoptingShellPermissions() {
+        return new AdServicesFlagsSetterRule(/* adoptShelPermissions= */ false);
     }
 
     /** Factory method that only {@link #setDefaultLogcatTags() sets the default logcat tags}. */
@@ -178,6 +190,7 @@ public final class AdServicesFlagsSetterRule
     public float getAdIdRequestPerSecond() {
         try {
             return callWithDeviceConfigPermissions(
+                    mAdoptShelPermissions,
                     () -> FlagsFactory.getFlags().getAdIdRequestPermitsPerSecond());
         } catch (Throwable t) {
             float defaultValue = Flags.ADID_REQUEST_PERMITS_PER_SECOND;
