@@ -16,15 +16,13 @@
 
 package com.android.server.adservices;
 
-import com.android.adservices.service.CommonFlags;
-
 /**
  * AdServices System Service Feature Flags interface. This Flags interface hold the default values
  * of AdServices System Service Flags.
  *
  * @hide
  */
-interface Flags extends CommonFlags {
+interface Flags {
     /**
      * Whether to enable the AdServices System Service. By default, the AdServices System Service is
      * disabled.

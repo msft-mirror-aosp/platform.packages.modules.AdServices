@@ -483,22 +483,6 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         mDeviceConfig.reset();
     }
 
-    /**
-     * @deprecated - use {@code setDebugFlag(name, value)} instead.
-     */
-    @Deprecated
-    public final T setSystemProperty(String name, boolean value) {
-        return setDebugFlag(name, value);
-    }
-
-    /**
-     * @deprecated - use {@code setDebugFlag(name, value)} instead.
-     */
-    @Deprecated
-    public final T setSystemProperty(String name, int value) {
-        return setDebugFlag(name, Integer.toString(value));
-    }
-
     /** Sets the value of the given {@link com.android.adservices.service.DebugFlag}. */
     public final T setDebugFlag(String name, boolean value) {
         return setDebugFlag(name, Boolean.toString(value));
@@ -590,6 +574,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                         || (annotation instanceof SetDoubleFlags)
                         || (annotation instanceof SetStringFlag)
                         || (annotation instanceof SetStringFlags)
+                        || (annotation instanceof EnableDebugFlag)
                         || (annotation instanceof EnableDebugFlags)
                         || (annotation instanceof SetLongDebugFlag)
                         || (annotation instanceof SetLongDebugFlags)
@@ -737,7 +722,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     // Single SetDebugFlagEnabled annotations present
     private void setAnnotatedFlag(EnableDebugFlag annotation) {
-        setFlag(annotation.value(), true);
+        setDebugFlag(annotation.value(), true);
     }
 
     // Multiple SetDebugFlagEnabled annotations present

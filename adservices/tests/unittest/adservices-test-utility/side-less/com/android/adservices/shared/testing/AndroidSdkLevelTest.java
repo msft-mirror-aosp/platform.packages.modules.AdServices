@@ -21,6 +21,7 @@ import static com.android.adservices.shared.testing.AndroidSdk.Level.S;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.S2;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.T;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.U;
+import static com.android.adservices.shared.testing.AndroidSdk.Level.V;
 
 import static org.junit.Assert.assertThrows;
 
@@ -52,6 +53,9 @@ public final class AndroidSdkLevelTest {
         Level for34 = Level.forLevel(34);
         expect.withMessage("level 34").that(for34).isSameInstanceAs(U);
 
+        Level for35 = Level.forLevel(35);
+        expect.withMessage("level 35").that(for35).isSameInstanceAs(V);
+
         IllegalArgumentException e =
                 assertThrows(IllegalArgumentException.class, () -> Level.forLevel(29));
         expect.that(e).hasMessageThat().contains("29");
@@ -65,6 +69,7 @@ public final class AndroidSdkLevelTest {
         expect.withMessage("level of S2").that(S2.getLevel()).isEqualTo(32);
         expect.withMessage("level of T").that(T.getLevel()).isEqualTo(33);
         expect.withMessage("level of U").that(U.getLevel()).isEqualTo(34);
+        expect.withMessage("level of V").that(V.getLevel()).isEqualTo(35);
     }
 
     @Test
@@ -75,6 +80,7 @@ public final class AndroidSdkLevelTest {
         expect.withMessage("ANY.isAtLeast(S2)").that(ANY.isAtLeast(S2)).isFalse();
         expect.withMessage("ANY.isAtLeast(T)").that(ANY.isAtLeast(T)).isFalse();
         expect.withMessage("ANY.isAtLeast(U)").that(ANY.isAtLeast(U)).isFalse();
+        expect.withMessage("ANY.isAtLeast(V)").that(ANY.isAtLeast(V)).isFalse();
 
         expect.withMessage("R.isAtLeast(ANY)").that(R.isAtLeast(ANY)).isTrue();
         expect.withMessage("R.isAtLeast(R)").that(R.isAtLeast(R)).isTrue();
@@ -82,6 +88,7 @@ public final class AndroidSdkLevelTest {
         expect.withMessage("R.isAtLeast(S2)").that(R.isAtLeast(S2)).isFalse();
         expect.withMessage("R.isAtLeast(T)").that(R.isAtLeast(T)).isFalse();
         expect.withMessage("R.isAtLeast(U)").that(R.isAtLeast(U)).isFalse();
+        expect.withMessage("R.isAtLeast(V)").that(R.isAtLeast(V)).isFalse();
 
         expect.withMessage("S.isAtLeast(ANY)").that(S.isAtLeast(ANY)).isTrue();
         expect.withMessage("S.isAtLeast(R)").that(S.isAtLeast(R)).isTrue();
@@ -89,6 +96,7 @@ public final class AndroidSdkLevelTest {
         expect.withMessage("S.isAtLeast(S2)").that(S.isAtLeast(S2)).isFalse();
         expect.withMessage("S.isAtLeast(T)").that(S.isAtLeast(T)).isFalse();
         expect.withMessage("S.isAtLeast(U)").that(S.isAtLeast(U)).isFalse();
+        expect.withMessage("S.isAtLeast(V)").that(S.isAtLeast(V)).isFalse();
 
         expect.withMessage("T.isAtLeast(ANY)").that(T.isAtLeast(ANY)).isTrue();
         expect.withMessage("T.isAtLeast(R)").that(T.isAtLeast(R)).isTrue();
@@ -96,6 +104,7 @@ public final class AndroidSdkLevelTest {
         expect.withMessage("T.isAtLeast(S2)").that(T.isAtLeast(S2)).isTrue();
         expect.withMessage("T.isAtLeast(T)").that(T.isAtLeast(T)).isTrue();
         expect.withMessage("T.isAtLeast(U)").that(T.isAtLeast(U)).isFalse();
+        expect.withMessage("T.isAtLeast(V)").that(T.isAtLeast(V)).isFalse();
 
         expect.withMessage("U.isAtLeast(ANY)").that(U.isAtLeast(ANY)).isTrue();
         expect.withMessage("U.isAtLeast(R)").that(U.isAtLeast(R)).isTrue();
@@ -103,5 +112,14 @@ public final class AndroidSdkLevelTest {
         expect.withMessage("U.isAtLeast(S2)").that(U.isAtLeast(S2)).isTrue();
         expect.withMessage("U.isAtLeast(T)").that(U.isAtLeast(T)).isTrue();
         expect.withMessage("U.isAtLeast(U)").that(U.isAtLeast(U)).isTrue();
+        expect.withMessage("U.isAtLeast(V)").that(U.isAtLeast(V)).isFalse();
+
+        expect.withMessage("V.isAtLeast(ANY)").that(V.isAtLeast(ANY)).isTrue();
+        expect.withMessage("V.isAtLeast(R)").that(V.isAtLeast(R)).isTrue();
+        expect.withMessage("V.isAtLeast(S)").that(V.isAtLeast(S)).isTrue();
+        expect.withMessage("V.isAtLeast(S2)").that(V.isAtLeast(S2)).isTrue();
+        expect.withMessage("V.isAtLeast(T)").that(V.isAtLeast(T)).isTrue();
+        expect.withMessage("V.isAtLeast(U)").that(V.isAtLeast(U)).isTrue();
+        expect.withMessage("V.isAtLeast(V)").that(V.isAtLeast(V)).isTrue();
     }
 }
