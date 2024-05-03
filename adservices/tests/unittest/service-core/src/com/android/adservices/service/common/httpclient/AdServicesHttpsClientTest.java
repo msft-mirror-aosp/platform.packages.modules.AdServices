@@ -74,6 +74,9 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesApiCalledStats;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLoggerImpl;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchCalledStats;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
@@ -154,6 +157,9 @@ public class AdServicesHttpsClientTest {
     private ArgumentCaptor<ServerAuctionKeyFetchCalledStats>
             mServerAuctionKeyFetchCalledStatsArgumentCaptor;
     private FetchProcessLogger mFetchProcessLogger;
+    private final long mStartDownloadTimestamp = 98L;
+    private final long mEndDownloadTimestamp = 199L;
+    private final int mDownloadLatency = (int) (mEndDownloadTimestamp - mStartDownloadTimestamp);
 
     @Before
     public void setup() throws Exception {
@@ -1162,7 +1168,7 @@ public class AdServicesHttpsClientTest {
     }
 
     @Test
-    public void testperformRequestAndGetResponseInBytesWithServerAuctionKeyFetchLogging()
+    public void testPerformRequestAndGetResponseInBytesWithServerAuctionKeyFetchLogging()
             throws Exception {
         setupServerAuctionKeyFetchCalledStatsLogging();
 
@@ -1192,6 +1198,27 @@ public class AdServicesHttpsClientTest {
 
         // Verify the logging of EncodingFetchStats
         verifyServerAuctionKeyFetchCalledStatsLogging(200);
+    }
+
+    @Test
+    public void testFetchPayloadSuccessfulResponseWithSelectAdsFromOutcomesLogging()
+            throws Exception {
+        SelectAdsFromOutcomesExecutionLogger executionLogger =
+                setupSelectAdsFromOutcomesApiCalledStatsLogging();
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody(mJsScript)));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        AdServicesHttpClientResponse result =
+                mClient.fetchPayloadWithLogging(
+                                Uri.parse(url.toString()), DEV_CONTEXT_DISABLED, executionLogger)
+                        .get();
+        assertEquals(mJsScript, result.getResponseBody());
+
+        // Verify the logging of SelectAdsFromOutcomesApiCalledStats
+        verifySelectAdsFromOutcomesApiCalledStatsLogging(executionLogger, 200);
     }
 
     private AdServicesHttpClientResponse fetchPayload(Uri uri, DevContext devContext)
@@ -1272,5 +1299,28 @@ public class AdServicesHttpsClientTest {
                 .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
         assertThat(stats.getNetworkStatusCode()).isEqualTo(statusCode);
         assertThat(stats.getNetworkLatencyMillis()).isEqualTo(KEY_FETCH_NETWORK_LATENCY_MS);
+    }
+
+    private SelectAdsFromOutcomesExecutionLogger setupSelectAdsFromOutcomesApiCalledStatsLogging() {
+        mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
+        mServerAuctionKeyFetchCalledStatsArgumentCaptor =
+                ArgumentCaptor.forClass(ServerAuctionKeyFetchCalledStats.class);
+
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(mStartDownloadTimestamp, mEndDownloadTimestamp);
+        return new SelectAdsFromOutcomesExecutionLoggerImpl(mMockClock, mAdServicesLoggerSpy);
+    }
+
+    private void verifySelectAdsFromOutcomesApiCalledStatsLogging(
+            SelectAdsFromOutcomesExecutionLogger executionLogger, int statusCode) {
+        ArgumentCaptor<SelectAdsFromOutcomesApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(SelectAdsFromOutcomesApiCalledStats.class);
+        executionLogger.logSelectAdsFromOutcomesApiCalledStats();
+        verify(mAdServicesLoggerSpy)
+                .logSelectAdsFromOutcomesApiCalledStats(argumentCaptor.capture());
+        SelectAdsFromOutcomesApiCalledStats stats = argumentCaptor.getValue();
+
+        assertThat(stats.getDownloadLatencyMillis()).isEqualTo(mDownloadLatency);
+        assertThat(stats.getDownloadResultCode()).isEqualTo(statusCode);
     }
 }

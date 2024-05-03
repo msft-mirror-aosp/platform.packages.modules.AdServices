@@ -88,6 +88,9 @@ public class AdsRelevanceStatusUtils {
     /** The status of JavaScript run is OTHER_FAILURE. */
     public static final int JS_RUN_STATUS_OTHER_FAILURE = 8;
 
+    /** The status of JavaScript run is JS_REFERENCE_ERROR. */
+    public static final int JS_RUN_STATUS_JS_REFERENCE_ERROR = 9;
+
     /** The auction winner type is UNSET. */
     public static final int WINNER_TYPE_UNSET = 0;
     /** The auction winner type is NO_WINNER. */
@@ -186,15 +189,16 @@ public class AdsRelevanceStatusUtils {
     @IntDef(
             prefix = {"JS_RUN_STATUS_"},
             value = {
-                    JS_RUN_STATUS_UNSET,
-                    JS_RUN_STATUS_SUCCESS,
-                    JS_RUN_STATUS_TIMEOUT,
-                    JS_RUN_STATUS_JS_SYNTAX_ERROR,
-                    JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR,
-                    JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR,
-                    JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT,
-                    JS_RUN_STATUS_DB_PERSIST_FAILURE,
-                    JS_RUN_STATUS_OTHER_FAILURE
+                JS_RUN_STATUS_UNSET,
+                JS_RUN_STATUS_SUCCESS,
+                JS_RUN_STATUS_TIMEOUT,
+                JS_RUN_STATUS_JS_SYNTAX_ERROR,
+                JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR,
+                JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR,
+                JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT,
+                JS_RUN_STATUS_DB_PERSIST_FAILURE,
+                JS_RUN_STATUS_OTHER_FAILURE,
+                JS_RUN_STATUS_JS_REFERENCE_ERROR
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface JsRunStatus {}
