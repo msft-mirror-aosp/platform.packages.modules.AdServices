@@ -30,10 +30,8 @@ import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.mockito.stubbing.Answer;
 
-/**
- * Combines TestableDeviceConfig with other needed static mocks.
- */
-public final class E2EMockStatic implements StaticMockFixture {
+/** Combines TestableDeviceConfig with other needed static mocks. */
+final class E2EMockStatic implements StaticMockFixture {
 
     private final E2ETest.ParamsProvider mParams;
 
@@ -41,9 +39,6 @@ public final class E2EMockStatic implements StaticMockFixture {
         mParams = paramsProvider;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public StaticMockitoSessionBuilder setUpMockedClasses(
             StaticMockitoSessionBuilder sessionBuilder) {
@@ -52,9 +47,6 @@ public final class E2EMockStatic implements StaticMockFixture {
         return sessionBuilder;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setUpMockBehaviors() {
         // Privacy params
@@ -65,13 +57,12 @@ public final class E2EMockStatic implements StaticMockFixture {
                 .when(() -> AppManifestConfigHelper.isAllowedAttributionAccess(any(), anyString()));
     }
 
-    /** {@inheritDoc} */
     @Override
     public void tearDown() {}
 
-    public static class E2EMockStaticRule extends AdServicesExtendedMockitoRule {
-        public E2EMockStaticRule(E2ETest.ParamsProvider paramsProvider) {
-            super(TestableDeviceConfig::new, () -> new E2EMockStatic(paramsProvider));
-        }
+    public static AdServicesExtendedMockitoRule newE2EMockStaticRule(
+            E2ETest.ParamsProvider paramsProvider) {
+        return new AdServicesExtendedMockitoRule(
+                TestableDeviceConfig::new, () -> new E2EMockStatic(paramsProvider));
     }
 }

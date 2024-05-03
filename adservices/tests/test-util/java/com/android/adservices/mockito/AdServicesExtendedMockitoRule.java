@@ -71,7 +71,7 @@ import java.util.function.Supplier;
  *     .build();
  * </pre>
  */
-public class AdServicesExtendedMockitoRule
+public final class AdServicesExtendedMockitoRule
         extends AbstractExtendedMockitoRule<
                 AdServicesExtendedMockitoRule, AdServicesExtendedMockitoRule.Builder>
         implements AdServicesExtendedMockitoMocker {
