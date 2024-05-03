@@ -28,14 +28,9 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.testing.AndroidSdk.Level;
 
-import com.google.common.truth.Expect;
-
-import org.junit.Rule;
 import org.junit.Test;
 
-public final class AndroidSdkLevelTest {
-
-    @Rule public final Expect expect = Expect.create();
+public final class AndroidSdkLevelTest extends SidelessTestCase {
 
     @Test
     public void testFactoryMethod() {

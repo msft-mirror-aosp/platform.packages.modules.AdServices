@@ -22,9 +22,9 @@ import static org.mockito.Mockito.when;
 import com.android.adservices.shared.testing.DeviceConditionsViolatedException;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.ScreenSize;
-import com.android.adservices.shared.testing.StandardStreamsLogger;
-import com.android.adservices.shared.testing.TestAnnotations;
-
+import com.android.adservices.shared.meta_testing.SimpleStatement;
+import com.android.adservices.shared.meta_testing.StandardStreamsLogger;
+import com.android.adservices.shared.meta_testing.TestAnnotations;
 import com.google.common.truth.Expect;
 
 import org.junit.Before;

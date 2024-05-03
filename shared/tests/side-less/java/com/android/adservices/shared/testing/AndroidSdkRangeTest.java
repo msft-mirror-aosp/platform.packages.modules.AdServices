@@ -29,19 +29,11 @@ import static java.lang.Integer.MAX_VALUE;
 
 import com.android.adservices.shared.testing.AndroidSdk.Range;
 
-import com.google.common.truth.Expect;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
 
-public final class AndroidSdkRangeTest {
-
-    private static final Logger sLogger =
-            new Logger(StandardStreamsLogger.getInstance(), AndroidSdkRangeTest.class);
-
-    @Rule public final Expect expect = Expect.create();
+public final class AndroidSdkRangeTest extends SidelessTestCase {
 
     @Test
     public void testInvalidRanges() {
@@ -260,7 +252,7 @@ public final class AndroidSdkRangeTest {
     }
 
     private void mergeValidAndAssertResult(Range expectedRange, Range... ranges) {
-        sLogger.d(
+        mLog.d(
                 "mergeAndAssert(): expectedRange=%s, ranges=%s",
                 expectedRange, Arrays.toString(ranges));
         Range actualRange = merge(ranges);
@@ -271,9 +263,9 @@ public final class AndroidSdkRangeTest {
     }
 
     private void mergeInvalidAndAssertThrows(Range... ranges) {
-        sLogger.d("mergeInvalidAndAssertThrows(): ranges=%s", Arrays.toString(ranges));
+        mLog.d("mergeInvalidAndAssertThrows(): ranges=%s", Arrays.toString(ranges));
         IllegalArgumentException exception =
                 assertThrows(IllegalArgumentException.class, () -> merge(ranges));
-        sLogger.d("mergeInvalidAndAssertThrows(): exception=%s", exception.getMessage());
+        mLog.d("mergeInvalidAndAssertThrows(): exception=%s", exception.getMessage());
     }
 }
