@@ -186,6 +186,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     private static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
     private static final String PLATFORM_AD_ID_VALUE = "SAMPLE_PLATFORM_AD_ID_VALUE";
     private static final String DEBUG_AD_ID_VALUE = "SAMPLE_DEBUG_AD_ID_VALUE";
+    private static final String HEADER_ODP_REGISTER_TRIGGER = "Odp-Register-Trigger";
     private static final String ODP_PACKAGE_NAME = "com.adtech1";
     private static final String ODP_CLASS_NAME = "com.adtech1.AdTechIsolatedService";
     private static final String ODP_CERT_DIGEST = "AABBCCDD";
@@ -6479,8 +6480,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         headersRequest.put(
                 "Attribution-Reporting-Register-Trigger",
                 List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}"));
-        headersRequest.put(
-                "Odp-Register-Trigger",
+        List odpHeaderValue =
                 List.of(
                         "{"
                                 + "\"service\":\""
@@ -6494,10 +6494,12 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 + "\"data\":\""
                                 + ODP_EVENT_DATA
                                 + "\""
-                                + "}"));
+                                + "}");
+        headersRequest.put(HEADER_ODP_REGISTER_TRIGGER, odpHeaderValue);
         doReturn(mUrlConnection).when(fetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Collections.unmodifiableMap(headersRequest));
 
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -6517,7 +6519,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
-        verify(odpDelegationWrapperImplMock, times(1)).registerOdpTrigger(any(), any());
+        verify(odpDelegationWrapperImplMock, times(1))
+                .registerOdpTrigger(any(), eq(Map.of(HEADER_ODP_REGISTER_TRIGGER, odpHeaderValue)));
     }
 
     @Test

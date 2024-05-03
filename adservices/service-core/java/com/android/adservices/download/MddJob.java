@@ -154,12 +154,12 @@ public final class MddJob implements JobWorker {
                         AdServicesExecutors.getBlockingExecutor());
     }
 
-    /** Scheduled all MDD background jobs. */
+    /** Schedules all MDD background jobs. */
     public static void scheduleAllMddJobs() {
         if (!FlagsFactory.getFlags().getSpeOnPilotJobsEnabled()) {
             int resultCode =
                     MddJobService.scheduleIfNeeded(
-                            ApplicationContextSingleton.get(), /* forceSchedule= */ true);
+                            ApplicationContextSingleton.get(), /* forceSchedule= */ false);
 
             logJobSchedulingLegacy(resultCode);
             return;
@@ -202,6 +202,7 @@ public final class MddJob implements JobWorker {
 
         JobPolicy jobPolicy =
                 JobPolicy.newBuilder()
+                        .setJobId(getMddTaskJobId(mddTag))
                         .setPeriodicJobParams(
                                 JobPolicy.PeriodicJobParams.newBuilder()
                                         .setPeriodicIntervalMs(periodicalIntervalMs)
@@ -211,7 +212,7 @@ public final class MddJob implements JobWorker {
                         .setIsPersisted(true)
                         .build();
 
-        return new JobSpec.Builder(getMddTaskJobId(mddTag), jobPolicy).setExtras(extras).build();
+        return new JobSpec.Builder(jobPolicy).setExtras(extras).build();
     }
 
     @VisibleForTesting

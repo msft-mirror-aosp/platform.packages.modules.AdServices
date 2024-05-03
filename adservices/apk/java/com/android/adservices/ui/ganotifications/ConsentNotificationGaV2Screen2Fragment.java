@@ -117,7 +117,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                                 .recordUserManualInteractionWithConsent(
                                         ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }
-                    requireActivity().finish();
+                    requireActivity().finishAndRemoveTask();
                 });
 
         Button rightControlButton =
@@ -224,7 +224,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                             .recordUserManualInteractionWithConsent(
                                     ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                 }
-                requireActivity().finish();
+                requireActivity().finishAndRemoveTask();
             } else {
                 ConsentNotificationActivity.handleAction(
                         LANDING_PAGE_MORE_BUTTON_CLICKED, getContext());

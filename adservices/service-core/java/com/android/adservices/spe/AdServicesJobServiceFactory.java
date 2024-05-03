@@ -19,15 +19,18 @@ package com.android.adservices.spe;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_NOT_CONFIGURED_CORRECTLY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
+import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.MddJob;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
@@ -178,6 +181,7 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
      */
     public void rescheduleJobWithLegacyMethod(int jobId) {
         AdServicesJobInfo jobInfo = AdServicesJobInfo.getJobIdToJobInfoMap().get(jobId);
+        Context context = ApplicationContextSingleton.get();
 
         try {
             switch (jobInfo) {
@@ -185,7 +189,7 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
                 case MDD_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
-                    MddJob.scheduleAllMddJobs();
+                    MddJobService.scheduleIfNeeded(context, /* forceSchedule= */ true);
                     return;
                 default:
                     throw new RuntimeException(
