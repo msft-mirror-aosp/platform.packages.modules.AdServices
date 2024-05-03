@@ -18,20 +18,23 @@ package com.android.adservices.spe;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_NOT_CONFIGURED_CORRECTLY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.download.MddJob;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
@@ -50,6 +53,7 @@ import java.util.concurrent.Executors;
 /** Unit tests for {@link AdServicesJobServiceFactory} */
 @SpyStatic(AdServicesJobInfo.class)
 @SpyStatic(MddJob.class)
+@SpyStatic(MddJobService.class)
 public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMockitoTestCase {
     private static final Executor sExecutor = Executors.newCachedThreadPool();
     private static final Map<Integer, String> sJobIdToNameMap = Map.of();
@@ -124,16 +128,17 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
 
     @Test
     public void testRescheduleJobWithLegacyMethod_mddJobs() {
-        doNothing().when(MddJob::scheduleAllMddJobs);
+        doReturn(SCHEDULING_RESULT_CODE_SUCCESSFUL)
+                .when(() -> MddJobService.scheduleIfNeeded(any(), eq(true)));
 
         mFactory.rescheduleJobWithLegacyMethod(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId());
-        verify(MddJob::scheduleAllMddJobs);
+        verify(() -> MddJobService.scheduleIfNeeded(any(), eq(true)));
         mFactory.rescheduleJobWithLegacyMethod(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId());
-        verify(MddJob::scheduleAllMddJobs, times(2));
+        verify(() -> MddJobService.scheduleIfNeeded(any(), eq(true)), times(2));
         mFactory.rescheduleJobWithLegacyMethod(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId());
-        verify(MddJob::scheduleAllMddJobs, times(3));
+        verify(() -> MddJobService.scheduleIfNeeded(any(), eq(true)), times(3));
         mFactory.rescheduleJobWithLegacyMethod(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
-        verify(MddJob::scheduleAllMddJobs, times(4));
+        verify(() -> MddJobService.scheduleIfNeeded(any(), eq(true)), times(4));
     }
 
     @Test
