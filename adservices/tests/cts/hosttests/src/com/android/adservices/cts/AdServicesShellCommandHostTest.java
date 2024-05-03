@@ -18,21 +18,17 @@ package com.android.adservices.cts;
 
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.android.adservices.common.AbstractAdServicesShellCommandHelper;
-import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
-import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
 import com.android.adservices.common.HostSideAdServicesShellCommandHelper;
-import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
+@EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 public final class AdServicesShellCommandHostTest extends AdServicesHostSideTestCase {
     private static final String CMD_ECHO = "echo";
     private static final String CMD_ECHO_OUT = "hello";
@@ -40,23 +36,11 @@ public final class AdServicesShellCommandHostTest extends AdServicesHostSideTest
     private final AbstractAdServicesShellCommandHelper mShellCommandHelper =
             new HostSideAdServicesShellCommandHelper();
 
-    @Rule(order = 0)
-    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
-
-    @Rule(order = 1)
-    public final AdServicesHostSideDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesHostSideDeviceSupportedRule();
-
-    @Rule(order = 2)
-    public final AdServicesHostSideFlagsSetterRule flags =
-            AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests()
-                    .setDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true);
-
     @Test
     public void testRunCommand_echoCommand() {
         String out = mShellCommandHelper.runCommand("%s %s", CMD_ECHO, CMD_ECHO_OUT);
 
-        assertThat(out).isEqualTo(CMD_ECHO_OUT);
+        expect.withMessage("out").that(out).isEqualTo(CMD_ECHO_OUT);
     }
 
     @Test
@@ -64,7 +48,7 @@ public final class AdServicesShellCommandHostTest extends AdServicesHostSideTest
         AbstractAdServicesShellCommandHelper.CommandResult out =
                 mShellCommandHelper.runCommandRwe("%s %s", CMD_ECHO, CMD_ECHO_OUT);
 
-        assertThat(out.getOut()).isEqualTo(CMD_ECHO_OUT);
-        assertThat(out.getErr()).isEmpty();
+        expect.withMessage("out").that(out.getOut()).isEqualTo(CMD_ECHO_OUT);
+        expect.withMessage("err").that(out.getErr()).isEmpty();
     }
 }
