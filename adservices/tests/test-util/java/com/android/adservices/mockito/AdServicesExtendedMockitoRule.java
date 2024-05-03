@@ -28,6 +28,7 @@ import com.android.adservices.shared.testing.common.TestHelper;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -138,9 +139,9 @@ public final class AdServicesExtendedMockitoRule
         return super.getClearInlineMethodsAtTheEnd(description);
     }
 
-    /** Checks if the given class is spied or mocked. */
-    public boolean isSpiedOrMocked(Class<?> clazz) {
-        return mSpiedOrMockedStaticClasses.contains(clazz);
+    /** Gets the classes that are spied or mocked. */
+    public ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
+        return ImmutableSet.copyOf(mSpiedOrMockedStaticClasses);
     }
 
     public static final class Builder

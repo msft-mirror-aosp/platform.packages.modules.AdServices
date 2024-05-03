@@ -21,16 +21,18 @@ import android.content.Context;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoMockerImpl;
+import com.android.adservices.mockito.AdServicesExtendedMockitoMockerImpl.StaticClassChecker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
+
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
-
 
 /**
  * Base class for all unit tests that use {@code ExtendedMockito} - for "regular Mockito" use {@link
@@ -59,17 +61,27 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
             new ExtendedMockitoInlineCleanerRule();
 
     @Rule(order = 10)
-    public final AdServicesExtendedMockitoRule _extendedMockito =
-            getAdServicesExtendedMockitoRule();
+    public final AdServicesExtendedMockitoRule extendedMockito = getAdServicesExtendedMockitoRule();
 
+    /** Provides common expectations. */
     public final AdServicesExtendedMockitoMocker mocker =
             new AdServicesExtendedMockitoMockerImpl(
-                    clazz -> _extendedMockito.isSpiedOrMocked(clazz),
-                    () -> _extendedMockito.getTestName());
+                    new StaticClassChecker() {
+                        @Override
+                        public boolean isSpiedOrMocked(Class<?> clazz) {
+                            return getSpiedOrMockedClasses().contains(clazz);
+                        }
 
-    // TODO(b/314969513): merge with _extendedMockito (will be done in a separate CL to avoid build
-    // breakages on pending CLs)
-    public final AdServicesExtendedMockitoMocker extendedMockito = mocker;
+                        @Override
+                        public ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
+                            return extendedMockito.getSpiedOrMockedClasses();
+                        }
+
+                        @Override
+                        public String getTestName() {
+                            return extendedMockito.getTestName();
+                        }
+                    });
 
     /**
      * Gets the {@link AdServicesExtendedMockitoRule} that will be set as the {@code
