@@ -18,6 +18,7 @@ package com.android.tests.sandbox.adid;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -29,6 +30,7 @@ import com.android.compatibility.common.util.ShellUtils;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -48,6 +50,9 @@ public class SandboxedAdIdManagerTest {
 
     private static final int LOAD_SDK_FROM_INTERNET_TIMEOUT_SEC = 60;
     private static final int FOREGROUND_ACTIVITY_BROADCAST_WAITING_TIMEOUT_MS = 10_000;
+
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();

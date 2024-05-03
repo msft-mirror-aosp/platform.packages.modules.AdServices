@@ -24,6 +24,7 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.os.Bundle;
 
 import androidx.test.filters.FlakyTest;
@@ -36,6 +37,7 @@ import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -58,6 +60,9 @@ public final class SandboxedTopicsManagerTest extends CtsSandboxedTopicsManagerT
 
     private final String mAdServicesPackageName =
             AdservicesTestHelper.getAdServicesPackageName(sContext, mTag);
+
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
     @Before
     public void setup() throws TimeoutException, InterruptedException {
