@@ -32,8 +32,8 @@ final class AdServicesHostSideSupportHelper extends AbstractDeviceSupportHelper 
 
     private static final String ADSERVICES_PACKAGE = "com.google.android.adservices.api";
     private static final String ADSERVICES_PACKAGE_AOSP = "com.android.adservices.api";
-    private static final String EXT_ADSERVICES_PACKAGE = "com.google.android.ext.adservices.api";
-    private static final String EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.adservices.api";
+    private static final String EXT_ADSERVICES_PACKAGE = "com.google.android.ext.services";
+    private static final String EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
 
     private static final ImmutableSet<String> ADSERVICES_PACKAGE_NAMES =
             ImmutableSet.of(

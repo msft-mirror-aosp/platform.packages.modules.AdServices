@@ -26,6 +26,7 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RU
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
 
 import static com.google.common.util.concurrent.Futures.transform;
 
@@ -54,6 +55,7 @@ import com.android.adservices.service.signals.ProtectedSignal;
 import com.android.adservices.service.signals.ProtectedSignalsArgumentUtil;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -617,11 +619,13 @@ public class AdSelectionScriptEngine {
     public ListenableFuture<Long> selectOutcome(
             @NonNull String selectionLogic,
             @NonNull List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris,
-            @NonNull AdSelectionSignals selectionSignals)
+            @NonNull AdSelectionSignals selectionSignals,
+            @NonNull SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(selectionLogic);
         Objects.requireNonNull(adSelectionIdWithBidAndRenderUris);
         Objects.requireNonNull(selectionSignals);
+        Objects.requireNonNull(selectAdsFromOutcomesExecutionLogger);
 
         ImmutableList<JSScriptArgument> args =
                 ImmutableList.<JSScriptArgument>builder()
@@ -640,9 +644,11 @@ public class AdSelectionScriptEngine {
         ImmutableList<JSScriptArgument> advertArgs = adSelectionIdWithBidArguments.build();
         sLogger.v("Advert args created " + advertArgs);
 
+        // Start selectOutcome script execution process.
+        selectAdsFromOutcomesExecutionLogger.startExecutionScriptTimestamp();
         return transform(
                 runAuctionScriptBatch(selectionLogic, advertArgs, args, this::callSelectOutcome),
-                this::handleSelectOutcomesOutput,
+                result -> handleSelectOutcomesOutput(result, selectAdsFromOutcomesExecutionLogger),
                 mExecutor);
     }
 
@@ -750,7 +756,9 @@ public class AdSelectionScriptEngine {
      * @throws IllegalStateException is thrown in case the status is not success or the results has
      *     more than one item.
      */
-    private Long handleSelectOutcomesOutput(AuctionScriptResult scriptResults)
+    private Long handleSelectOutcomesOutput(
+            AuctionScriptResult scriptResults,
+            SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger)
             throws IllegalStateException {
         if (scriptResults.status != JS_SCRIPT_STATUS_SUCCESS
                 || scriptResults.results.length() != 1) {
@@ -760,21 +768,28 @@ public class AdSelectionScriptEngine {
                             scriptResults.status,
                             scriptResults.results);
             sLogger.v(errorMsg);
+            selectAdsFromOutcomesExecutionLogger.endExecutionScriptTimestamp(
+                    JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR);
             throw new IllegalStateException(errorMsg);
         }
 
         if (scriptResults.results.isNull(0)) {
+            selectAdsFromOutcomesExecutionLogger.endExecutionScriptTimestamp(JS_RUN_STATUS_SUCCESS);
             return null;
         }
 
         try {
             JSONObject resultOutcomeJson = scriptResults.results.getJSONObject(0);
             // Use Long class to parse from string
-            return Long.valueOf(
+            Long result = Long.valueOf(
                     resultOutcomeJson.optString(SelectAdsFromOutcomesArgumentUtil.ID_FIELD_NAME));
+            selectAdsFromOutcomesExecutionLogger.endExecutionScriptTimestamp(JS_RUN_STATUS_SUCCESS);
+            return result;
         } catch (JSONException e) {
             String errorMsg = String.format(JS_EXECUTION_RESULT_INVALID, scriptResults.results);
             sLogger.v(errorMsg);
+            selectAdsFromOutcomesExecutionLogger.endExecutionScriptTimestamp(
+                    JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR);
             throw new IllegalStateException(errorMsg);
         }
     }

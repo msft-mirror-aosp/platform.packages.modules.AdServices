@@ -344,6 +344,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetFledgeSelectAdsFromOutcomesApiMetricsEnabled() {
+        testFeatureFlag(
+                "FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED",
+                Flags::getFledgeSelectAdsFromOutcomesApiMetricsEnabled);
+    }
+
+    @Test
     public void testGetSpeOnPilotJobsEnabled() {
         testFeatureFlag("DEFAULT_SPE_ON_PILOT_JOBS_ENABLED", Flags::getSpeOnPilotJobsEnabled);
     }

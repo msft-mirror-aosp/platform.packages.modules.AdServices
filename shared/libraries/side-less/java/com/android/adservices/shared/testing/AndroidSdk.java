@@ -33,20 +33,31 @@ public final class AndroidSdk {
     /** Android version {@code SC_V2}. */
     public static final int SC_V2 = 32;
 
+    /** Android version {@code TM}. */
+    public static final int TM = 33;
+
+    /** Android version {@code UC}. */
+    public static final int UDC = 34;
+
+    /** Android version {@code VIC}. */
+    public static final int VIC = 35;
+
+    /** Android version for unreleased builds}. */
+    public static final int CUR_DEVELOPMENT = 10_000; // Build.CUR_DEVELOPMENT.CUR_DEVELOPMENT
+
     /**
      * Convenience for ranges that are "less than T" (for example {@code
      * RequiresSdkRange(atMost=PRE_T)}), as S had 2 APIs (31 and 32)
      */
     public static final int PRE_T = SC_V2;
 
-    public static final int TM = 33;
-    public static final int UDC = 34;
-    public static final int VIC = 35;
+
 
     // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
     /** Represents a specific SDK level. */
     public enum Level {
         ANY(Integer.MIN_VALUE),
+        DEV(CUR_DEVELOPMENT),
         R(RVC),
         S(SC),
         S2(SC_V2),
@@ -75,18 +86,28 @@ public final class AndroidSdk {
         /** Gets the level abstraction for the given level). */
         public static Level forLevel(int level) {
             switch (level) {
-                case 30:
+                case CUR_DEVELOPMENT:
+                    return DEV;
+                case RVC:
                     return R;
-                case 31:
+                case SC:
                     return S;
-                case 32:
+                case SC_V2:
                     return S2;
-                case 33:
+                case TM:
                     return T;
-                case 34:
+                case UDC:
                     return U;
-                case 35:
+                case VIC:
                     return V;
+            }
+            if (level > VIC) {
+                // TODO(338232806): use a proper Logger object
+                System.err.printf(
+                        "WARNING: Level.forLevel() called with unsupported / unreleased level (%d);"
+                                + " returning DEV (%d)\n",
+                        level, DEV.mLevel);
+                return DEV;
             }
             throw new IllegalArgumentException("Unsupported level: " + level);
         }

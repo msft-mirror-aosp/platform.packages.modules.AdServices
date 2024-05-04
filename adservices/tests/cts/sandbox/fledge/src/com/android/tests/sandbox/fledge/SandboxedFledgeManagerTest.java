@@ -20,6 +20,7 @@ package com.android.tests.sandbox.fledge;
 import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Process;
@@ -56,6 +57,9 @@ public class SandboxedFledgeManagerTest extends AdServicesCtsTestCase {
     private boolean mHasAccessToDevOverrides;
 
     private String mAccessStatus;
+
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
     @Rule(order = 10)
     public AdServicesDeviceSupportedRule mAdServicesDeviceSupportedRule =

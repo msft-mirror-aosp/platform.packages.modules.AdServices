@@ -226,4 +226,7 @@ public class NoOpLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logPersistAdSelectionResultCalledStats(PersistAdSelectionResultCalledStats stats) {}
+
+    @Override
+    public void logSelectAdsFromOutcomesApiCalledStats(SelectAdsFromOutcomesApiCalledStats stats) {}
 }

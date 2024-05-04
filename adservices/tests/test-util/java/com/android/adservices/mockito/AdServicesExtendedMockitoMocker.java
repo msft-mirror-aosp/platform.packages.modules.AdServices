@@ -19,6 +19,8 @@ package com.android.adservices.mockito;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.spe.AdServicesJobScheduler;
+import com.android.adservices.spe.AdServicesJobServiceFactory;
 
 /**
  * Helper interface providing common expectations that require {@code ExtendedMockito}.
@@ -84,6 +86,23 @@ public interface AdServicesExtendedMockitoMocker {
      *     equivalent annotations) on {@link ActivityManager}.
      */
     void mockGetCurrentUser(int user);
+
+    /**
+     * Mocks a call to {@link AdServicesJobScheduler#getInstance()}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link AdServicesJobScheduler}.
+     */
+    void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler);
+
+    /**
+     * Mocks a call to {@link AdServicesJobServiceFactory#getInstance()}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link AdServicesJobServiceFactory}.
+     */
+    void mockAdServicesJobServiceFactory(
+            AdServicesJobServiceFactory mockedAdServicesJobServiceFactory);
 
     /**
      * Statically spy on {@code Log.v} for that {@code tag}.

@@ -73,7 +73,7 @@ import com.android.adservices.service.measurement.reporting.EventFallbackReporti
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
-import com.android.adservices.service.topics.EpochJobService;
+import com.android.adservices.service.topics.EpochJob;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
@@ -86,7 +86,7 @@ import org.mockito.Mock;
 @SpyStatic(AttributionJobService.class)
 @SpyStatic(AttributionFallbackJobService.class)
 @SpyStatic(BackgroundJobsManager.class)
-@SpyStatic(EpochJobService.class)
+@SpyStatic(EpochJob.class)
 @SpyStatic(EventReportingJobService.class)
 @SpyStatic(EventFallbackReportingJobService.class)
 @SpyStatic(DeleteExpiredJobService.class)
@@ -119,7 +119,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
                                         any(), anyBoolean()));
         doNothing().when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing().when(() -> AttributionFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
-        doReturn(true).when(() -> EpochJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(EpochJob::schedule);
         doNothing().when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing()
                 .when(() -> EventFallbackReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -601,7 +601,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
     }
 
     private void assertTopicsJobsScheduled(int numberOfTimes) {
-        verify(() -> EpochJobService.scheduleIfNeeded(any(), eq(false)), times(numberOfTimes));
+        verify(EpochJob::schedule, times(numberOfTimes));
     }
 
     private void assertMddJobsScheduled(int numberOfTimes) {

@@ -36,8 +36,11 @@ import java.util.concurrent.Callable;
 /** Device-side implementation of {@link DeviceConfigHelper.Interface}. */
 final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
 
-    DeviceSideDeviceConfigHelper(String namespace) {
+    private final boolean mAdoptShelPermissions;
+
+    DeviceSideDeviceConfigHelper(String namespace, boolean adoptShelPermissions) {
         super(namespace, AndroidLogger.getInstance());
+        mAdoptShelPermissions = adoptShelPermissions;
     }
 
     @Override
@@ -78,7 +81,12 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
         return ShellUtils.runShellCommand(cmdFmt, cmdArgs);
     }
 
-    static <T> T callWithDeviceConfigPermissions(Callable<T> c) {
+    private <T> T callWithDeviceConfigPermissions(Callable<T> c) {
+        return callWithDeviceConfigPermissions(mAdoptShelPermissions, c);
+    }
+
+    static <T> T callWithDeviceConfigPermissions(boolean withPermissions, Callable<T> c) {
+        if (withPermissions) {
         return invokeStaticMethodWithShellPermissions(
                 () -> {
                     try {
@@ -88,5 +96,11 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
                                 "Failed to call something with Shell permissions: " + e);
                     }
                 });
+        }
+        try {
+            return c.call();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to call something without Shell permissions: " + e);
+        }
     }
 }

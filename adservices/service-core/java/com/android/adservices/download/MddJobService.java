@@ -43,6 +43,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -223,15 +224,16 @@ public class MddJobService extends JobService {
     /**
      * Schedule MddJobService if needed: there is no scheduled job with same job parameters.
      *
-     * @param context the context
      * @param forceSchedule a flag to indicate whether to force rescheduling the job.
      */
     @JobSchedulingResultCode
-    public static int scheduleIfNeeded(Context context, boolean forceSchedule) {
+    public static int scheduleIfNeeded(boolean forceSchedule) {
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             LogUtil.e("Mdd background task is disabled, skip scheduling.");
             return SCHEDULING_RESULT_CODE_SKIPPED;
         }
+
+        Context context = ApplicationContextSingleton.get();
 
         final JobScheduler jobscheduler = context.getSystemService(JobScheduler.class);
         if (jobscheduler == null) {

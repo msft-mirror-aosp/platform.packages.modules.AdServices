@@ -30,6 +30,7 @@ import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.utils.FledgeScenarioTest;
@@ -214,7 +215,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
                     .fetchAndJoinCustomAudience(
                             new FetchAndJoinCustomAudienceRequest.Builder(
                                             Uri.parse(
-                                                    getServerBaseAddress()
+                                                    dispatcher.getBaseAddressWithPrefix().toString()
                                                             + Scenarios.FETCH_CA_PATH))
                                     .setActivationTime(customAudience.getActivationTime())
                                     .setExpirationTime(customAudience.getExpirationTime())
@@ -273,12 +274,15 @@ public class AdSelectionTest extends FledgeScenarioTest {
                 setupDispatcher(
                         ScenarioDispatcherFactory.fromScenarioWithPrefix(
                                 "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix()));
+        AdTechIdentifier adTechIdentifier = AdTechIdentifier.fromString("localhost");
         AdSelectionFromOutcomesConfig config =
                 new AdSelectionFromOutcomesConfig.Builder()
-                        .setSeller(mAdTechIdentifier)
+                        .setSeller(adTechIdentifier)
                         .setAdSelectionIds(List.of())
                         .setSelectionLogicUri(
-                                Uri.parse(getServerBaseAddress() + Scenarios.MEDIATION_LOGIC_PATH))
+                                Uri.parse(
+                                        dispatcher.getBaseAddressWithPrefix().toString()
+                                                + Scenarios.MEDIATION_LOGIC_PATH))
                         .setSelectionSignals(makeAdSelectionSignals())
                         .build();
 

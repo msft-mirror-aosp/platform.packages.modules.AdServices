@@ -199,6 +199,7 @@ java_library {
     sdk_version: "module_current",
     srcs: [
         "java/com/android/adservices/shared/testing/**/*.java",
+         ":adservices-shared-sideless-testing-sources",
     ],
     static_libs: [
         "adservices-shared-common",
