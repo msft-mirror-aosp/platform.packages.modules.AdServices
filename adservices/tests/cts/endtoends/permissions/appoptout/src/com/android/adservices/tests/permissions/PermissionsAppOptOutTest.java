@@ -75,6 +75,9 @@ public class PermissionsAppOptOutTest {
             CompatAdServicesTestUtils.setFlags();
         }
 
+        // Kill AdServices process to force new flag reads
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         // TODO: Remove once b/277790129 has been resolved
         final String flags = ShellUtils.runShellCommand("device_config list adservices");
         Log.d("Adservices", flags);
