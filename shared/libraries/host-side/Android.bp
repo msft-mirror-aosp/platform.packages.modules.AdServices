@@ -24,6 +24,7 @@ java_library_host {
     libs: [
         "error_prone_annotations", // @FormatMethod / @FormatString
         "guava-android-host", // @VisibleForTesting
+        "junit",
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
