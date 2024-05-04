@@ -69,10 +69,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * AdServicesExtDataStorageService}.
  */
 public final class AdServicesExtDataStorageServiceManager {
-    // Conservative timeouts based on what's used for AppSearch operations (500 ms for reads,
-    // 2000 ms writes). An additional 100 ms buffer is added for delays such as binder latency.
-    private static final long READ_OPERATION_TIMEOUT_MS = 600L;
-    private static final long WRITE_OPERATION_TIMEOUT_MS = 2100L;
     @VisibleForTesting static final String UNKNOWN_PACKAGE_NAME = "unknown";
 
     private static final AdServicesExtDataParams DEFAULT_PARAMS =
@@ -171,7 +167,8 @@ public final class AdServicesExtDataStorageServiceManager {
         AdServicesExtDataParams params = DEFAULT_PARAMS;
         int resultCode = STATUS_SUCCESS;
         try {
-            timedOut = !latch.await(READ_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            int timeoutMs = FlagsFactory.getFlags().getAdExtReadTimeoutMs();
+            timedOut = !latch.await(timeoutMs, TimeUnit.MILLISECONDS);
             if (timedOut) {
                 LogUtil.e("Getting AdExt data timed out! Returning default values.");
                 resultCode = STATUS_TIMEOUT;
@@ -257,7 +254,8 @@ public final class AdServicesExtDataStorageServiceManager {
         boolean timedOut;
         int resultCode = STATUS_SUCCESS;
         try {
-            timedOut = !latch.await(WRITE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            int timeoutMs = FlagsFactory.getFlags().getAdExtWriteTimeoutMs();
+            timedOut = !latch.await(timeoutMs, TimeUnit.MILLISECONDS);
             if (timedOut) {
                 resultCode = STATUS_TIMEOUT;
                 LogUtil.e("Updating AdExt data failed due to timeout!");

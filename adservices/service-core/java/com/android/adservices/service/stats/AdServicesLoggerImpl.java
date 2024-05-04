@@ -28,6 +28,7 @@ import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -379,6 +380,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logEncodingJobRunStats(EncodingJobRunStats stats) {
         mStatsdAdServicesLogger.logEncodingJobRunStats(stats);
+    }
+
+    @Override
+    public void logPersistAdSelectionResultCalledStats(PersistAdSelectionResultCalledStats stats) {
+        mStatsdAdServicesLogger.logPersistAdSelectionResultCalledStats(stats);
     }
 
     /** Logs api call error status using {@code CobaltLogger}. */
