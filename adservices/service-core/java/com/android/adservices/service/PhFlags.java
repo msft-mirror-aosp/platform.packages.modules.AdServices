@@ -2655,6 +2655,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeCpcBillingMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_CPC_BILLING_METRICS_ENABLED,
+                FLEDGE_CPC_BILLING_METRICS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeDataVersionHeaderMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED,
+                FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeReportImpressionApiMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED,
+                FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS,
@@ -5385,6 +5406,21 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED
                         + " = "
                         + getFledgeSelectAdsFromOutcomesApiMetricsEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_CPC_BILLING_METRICS_ENABLED
+                        + " = "
+                        + getFledgeCpcBillingMetricsEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED
+                        + " = "
+                        + getFledgeDataVersionHeaderMetricsEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED
+                        + " = "
+                        + getFledgeReportImpressionApiMetricsEnabled());
     }
 
     @VisibleForTesting

@@ -1136,6 +1136,18 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED =
             "fledge_select_ads_from_outcomes_api_metrics_enabled";
 
+    // FledgeCPC billing metrics key.
+    public static final String KEY_FLEDGE_CPC_BILLING_METRICS_ENABLED =
+            "fledge_cpc_billing_metrics_enabled";
+
+    // Fledge data version header metrics key.
+    public static final String KEY_FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED =
+            "fledge_data_version_header_metrics_enabled";
+
+    // Fledge report impression API metrics key.
+    public static final String KEY_FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED =
+            "fledge_report_impression_api_metrics_enabled";
+
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
 
