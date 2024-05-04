@@ -16,9 +16,9 @@
 
 package com.android.adservices.cts;
 
+import static com.android.adservices.common.AdServicesTestDeviceHelper.ADSERVICES_SETTINGS_INTENT;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.shared.testing.AndroidSdk.PRE_T;
-import static com.android.adservices.shared.testing.TestDeviceHelper.ADSERVICES_SETTINGS_INTENT;
 import static com.android.adservices.shared.testing.TestDeviceHelper.startActivity;
 
 import com.android.adservices.common.AdServicesHostSideTestCase;

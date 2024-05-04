@@ -3646,6 +3646,30 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED;
     }
 
+    // Fledge CPC billing metrics flag.
+    @FeatureFlag boolean FLEDGE_CPC_BILLING_METRICS_ENABLED = false;
+
+    /** Returns whether the FLEDGE CPC billing metrics feature is enabled. */
+    default boolean getFledgeCpcBillingMetricsEnabled() {
+        return FLEDGE_CPC_BILLING_METRICS_ENABLED;
+    }
+
+    // Fledge data version header metrics flag.
+    @FeatureFlag boolean FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED = false;
+
+    /** Returns whether the FLEDGE data version header metrics feature is enabled. */
+    default boolean getFledgeDataVersionHeaderMetricsEnabled() {
+        return FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED;
+    }
+
+    // Fledge report impression API metrics flag.
+    @FeatureFlag boolean FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED = false;
+
+    /** Returns whether the FLEDGE report impression API metrics feature is enabled. */
+    default boolean getFledgeReportImpressionApiMetricsEnabled() {
+        return FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED;
+    }
+
     /**
      * Default allowlist of the enrollments for whom debug key insertion based on join key matching
      * is allowed.

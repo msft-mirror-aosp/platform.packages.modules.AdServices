@@ -32,7 +32,7 @@ public final class HostSideAdServicesShellCommandHelper
 
     @Override
     protected CommandResult runShellCommandRwe(String cmd) {
-        return TestDeviceHelper.runShellCommandRwe("%s", cmd);
+        return AdServicesTestDeviceHelper.runShellCommandRwe("%s", cmd);
     }
 
     @Override

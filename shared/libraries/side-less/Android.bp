@@ -22,6 +22,7 @@ package {
 // device-side and "java_library_host" on host-side. Hence, projects including
 // filegroup should add the following dependencies
 //     "error_prone_annotations", // @FormatMethod / @FormatString
+//     "junit",
 //   - device:
 //      "guava", // @VisibleForTesting
 //   - host
