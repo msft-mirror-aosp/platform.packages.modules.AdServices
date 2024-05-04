@@ -17,7 +17,6 @@ package com.android.adservices.shared.testing;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.INativeDevice;
 import com.android.tradefed.device.ITestDevice;
@@ -37,9 +36,6 @@ public final class TestDeviceHelper {
 
     /** Same as android.content.Intent */
     public static final String ACTION_BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
-
-    /** Intent used to launch AdServices settings */
-    public static final String ADSERVICES_SETTINGS_INTENT = "android.adservices.ui.SETTINGS";
 
     private static final Logger sLogger =
             new Logger(ConsoleLogger.getInstance(), TestDeviceHelper.class);
@@ -90,34 +86,6 @@ public final class TestDeviceHelper {
         return result;
     }
 
-    // cmdFmt must be final because it's being passed to a method taking @FormatString
-    /**
-     * Executes AdServices shell command and returns the standard output and standard error wrapped
-     * in a {@link CommandResult}.
-     */
-    @FormatMethod
-    public static CommandResult runShellCommandRwe(
-            @FormatString final String cmdFmt, @Nullable Object... cmdArgs) {
-        return runShellCommandRwe(getTestDevice(), cmdFmt, cmdArgs);
-    }
-
-    /**
-     * Executes AdServices shell command and returns the standard output and standard error wrapped
-     * in a {@link CommandResult}.
-     */
-    @FormatMethod
-    public static CommandResult runShellCommandRwe(
-            ITestDevice device, @FormatString String cmdFmt, @Nullable Object... cmdArgs) {
-        String cmd = String.format(cmdFmt, cmdArgs);
-        com.android.tradefed.util.CommandResult result;
-        try {
-            result = device.executeShellV2Command(cmd);
-        } catch (DeviceNotAvailableException e) {
-            throw new DeviceUnavailableException(e);
-        }
-        sLogger.d("runShellCommandRwe(%s): %s", cmd, result);
-        return asCommandResult(result);
-    }
 
     /** Gets the device API level. */
     public static int getApiLevel() {
@@ -183,12 +151,12 @@ public final class TestDeviceHelper {
         return false;
     }
 
-    private static final class DeviceUnavailableException extends IllegalStateException {
-        private DeviceUnavailableException(DeviceNotAvailableException cause) {
+    public static final class DeviceUnavailableException extends IllegalStateException {
+        public DeviceUnavailableException(DeviceNotAvailableException cause) {
             super(cause);
         }
 
-        private DeviceUnavailableException(String cause) {
+        public DeviceUnavailableException(String cause) {
             super(cause);
         }
     }
@@ -233,11 +201,5 @@ public final class TestDeviceHelper {
 
     private TestDeviceHelper() {
         throw new UnsupportedOperationException("Provides only static methods");
-    }
-
-    private static CommandResult asCommandResult(com.android.tradefed.util.CommandResult input) {
-        String out = input.getStdout() != null ? input.getStdout().strip() : "";
-        String err = input.getStderr() != null ? input.getStderr().strip() : "";
-        return new CommandResult(out, err);
     }
 }
