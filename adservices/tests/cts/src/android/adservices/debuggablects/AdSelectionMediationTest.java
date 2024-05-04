@@ -37,6 +37,7 @@ import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -58,7 +59,7 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
             joinCustomAudience(SHIRTS_CA);
             AdSelectionOutcome result =
                     doSelectAds(
-                            makeAdSelectionFromOutcomesConfig()
+                            makeAdSelectionFromOutcomesConfig(dispatcher.getBaseAddressWithPrefix())
                                     .setAdSelectionIds(
                                             List.of(
                                                     doSelectAds(makeAdSelectionConfig())
@@ -90,7 +91,7 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
             long adSelectionId = doSelectAds(config).getAdSelectionId();
             AdSelectionOutcome result =
                     doSelectAds(
-                            makeAdSelectionFromOutcomesConfig()
+                            makeAdSelectionFromOutcomesConfig(dispatcher.getBaseAddressWithPrefix())
                                     .setAdSelectionIds(List.of(adSelectionId))
                                     .build());
             assertThat(result.hasOutcome()).isTrue();
@@ -134,7 +135,7 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
             long adSelectionId = adSelectionOutcome1.getAdSelectionId();
 
             final AdSelectionFromOutcomesConfig fromOutcomesConfigEnrollmentFail =
-                    makeAdSelectionFromOutcomesConfig()
+                    makeAdSelectionFromOutcomesConfig(dispatcher.getBaseAddressWithPrefix())
                             .setSeller(AdTechIdentifier.fromString("fakeadtech.com"))
                             .setAdSelectionIds(List.of(adSelectionId))
                             .build();
@@ -147,7 +148,7 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
             assertThat(e.getCause() instanceof SecurityException).isTrue();
 
             AdSelectionFromOutcomesConfig fromOutcomesConfig =
-                    makeAdSelectionFromOutcomesConfig()
+                    makeAdSelectionFromOutcomesConfig(dispatcher.getBaseAddressWithPrefix())
                             .setAdSelectionIds(List.of(adSelectionId))
                             .build();
             PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
@@ -167,12 +168,15 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
         return mAdSelectionClient.selectAds(config).get(TIMEOUT, TimeUnit.SECONDS);
     }
 
-    private AdSelectionFromOutcomesConfig.Builder makeAdSelectionFromOutcomesConfig() {
+    private AdSelectionFromOutcomesConfig.Builder makeAdSelectionFromOutcomesConfig(
+            URL serverBaseAddressWithPrefix) {
         return new AdSelectionFromOutcomesConfig.Builder()
                 .setSelectionSignals(AdSelectionSignals.fromString("{\"bidFloor\": 2.0}"))
                 .setSelectionLogicUri(
-                        Uri.parse(getServerBaseAddress() + Scenarios.MEDIATION_LOGIC_PATH))
-                .setSeller(mAdTechIdentifier)
+                        Uri.parse(
+                                serverBaseAddressWithPrefix.toString()
+                                        + Scenarios.MEDIATION_LOGIC_PATH))
+                .setSeller(AdTechIdentifier.fromString(serverBaseAddressWithPrefix.getHost()))
                 .setAdSelectionIds(List.of());
     }
 }

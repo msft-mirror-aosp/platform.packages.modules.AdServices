@@ -17,7 +17,6 @@
 package com.android.adservices.service.topics;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -27,6 +26,8 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNo
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
@@ -44,6 +45,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -55,30 +57,39 @@ import android.os.SystemClock;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.shared.testing.JobServiceCallback;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 /** Unit tests for {@link com.android.adservices.service.topics.EpochJobService} */
 @SuppressWarnings("ConstantConditions")
-public class EpochJobServiceTest {
+@SpyStatic(AdServicesJobScheduler.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@SpyStatic(EpochJobService.class)
+@SpyStatic(ErrorLogUtil.class)
+@SpyStatic(FlagsFactory.class)
+@MockStatic(ServiceCompatUtils.class)
+@SpyStatic(TopicsWorker.class)
+@RequiresSdkLevelAtLeastS
+public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
     private static final long EPOCH_JOB_PERIOD_MS = 10_000L;
     private static final long AWAIT_JOB_TIMEOUT_MS = 5_000L;
@@ -100,26 +111,12 @@ public class EpochJobServiceTest {
     @Mock private JobParameters mMockJobParameters;
     @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
+    @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
     private AdServicesJobServiceLogger mSpyLogger;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(EpochJobService.class)
-                    .spyStatic(TopicsWorker.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdServicesJobServiceLogger.class)
-                    .spyStatic(ErrorLogUtil.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .setStrictness(Strictness.WARN)
-                    .build();
 
     @Before
     public void setup() {
-        mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         // Mock JobScheduler invocation in EpochJobService
         assertThat(JOB_SCHEDULER).isNotNull();
@@ -132,6 +129,9 @@ public class EpochJobServiceTest {
                 .getSystemService(JobScheduler.class);
 
         mSpyLogger = mockAdServicesJobServiceLogger(CONTEXT, mMockFlags);
+
+        // By default, do not use SPE.
+        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(false);
     }
 
     @After
@@ -215,6 +215,16 @@ public class EpochJobServiceTest {
     }
 
     @Test
+    public void testOnStartJob_speEnabled() {
+        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(true);
+        mocker.mockSpeJobScheduler(mMockAdServicesJobScheduler);
+
+        mSpyEpochJobService.onStartJob(mMockJobParameters);
+
+        verify(mMockAdServicesJobScheduler).schedule(any());
+    }
+
+    @Test
     public void testOnStopJob_withoutLogging() {
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
@@ -238,7 +248,8 @@ public class EpochJobServiceTest {
         ExtendedMockito.doReturn(false).when(mMockFlags).getGlobalKillSwitch();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
     }
 
     @Test
@@ -250,11 +261,13 @@ public class EpochJobServiceTest {
         doReturn(TEST_FLAGS.getTopicsEpochJobFlexMs()).when(mMockFlags).getTopicsEpochJobFlexMs();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
         assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
 
         // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
-        assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
     }
 
     @Test
@@ -266,7 +279,8 @@ public class EpochJobServiceTest {
         doReturn(TEST_FLAGS.getTopicsEpochJobFlexMs()).when(mMockFlags).getTopicsEpochJobFlexMs();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
         assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
 
         // Change the value of a parameter so that the second invocation of scheduleIfNeeded()
@@ -274,7 +288,8 @@ public class EpochJobServiceTest {
         doReturn(TEST_FLAGS.getTopicsEpochJobFlexMs() + 1)
                 .when(mMockFlags)
                 .getTopicsEpochJobFlexMs();
-        assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
     }
 
     @Test
@@ -286,14 +301,17 @@ public class EpochJobServiceTest {
         doReturn(TEST_FLAGS.getTopicsEpochJobFlexMs()).when(mMockFlags).getTopicsEpochJobFlexMs();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
         assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
 
         // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
-        assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
 
         // The third invocation of scheduleIfNeeded() is forced and re-schedules the job.
-        assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ true)).isTrue();
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ true))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
     }
 
     @Test
@@ -303,7 +321,8 @@ public class EpochJobServiceTest {
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
         assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNull();
         ExtendedMockito.verify(
                 () -> {

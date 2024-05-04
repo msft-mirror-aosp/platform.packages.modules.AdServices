@@ -59,6 +59,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BID
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SELECT_ADS_FROM_OUTCOMES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_KEY_FETCH_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SIGNATURE_VERIFICATION;
@@ -275,7 +276,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getRunAdScoringResultCode(),
                 placeholder_bool,
                 placeholder_int);
-
     }
 
     @Override
@@ -901,6 +901,19 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
         AdServicesStatsLog.write(
                 PERSIST_AD_SELECTION_RESULT_CALLED,
                 stats.getWinnerType());
+    }
+
+    @Override
+    public void logSelectAdsFromOutcomesApiCalledStats(SelectAdsFromOutcomesApiCalledStats stats) {
+        AdServicesStatsLog.write(
+                SELECT_ADS_FROM_OUTCOMES_API_CALLED,
+                stats.getCountIds(),
+                stats.getCountNonExistingIds(),
+                stats.getUsedPrebuilt(),
+                stats.getDownloadResultCode(),
+                stats.getDownloadLatencyMillis(),
+                stats.getExecutionResultCode(),
+                stats.getExecutionLatencyMillis());
     }
 
     @NonNull

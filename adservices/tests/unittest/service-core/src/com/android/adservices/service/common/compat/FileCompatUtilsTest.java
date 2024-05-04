@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.common.compat;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.never;
@@ -158,5 +156,9 @@ public final class FileCompatUtilsTest extends AdServicesExtendedMockitoTestCase
 
         FileCompatUtils.getSharedPreferencesHelper(mContext, BASE_FILENAME, Context.MODE_PRIVATE);
         verify(mContext).getSharedPreferences(BASE_FILENAME, Context.MODE_PRIVATE);
+    }
+
+    private void mockIsAtLeastT(boolean isIt) {
+        mocker.mockIsAtLeastT(isIt);
     }
 }

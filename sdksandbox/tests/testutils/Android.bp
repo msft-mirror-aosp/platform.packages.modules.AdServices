@@ -33,6 +33,7 @@ java_library {
         "androidx.test.ext.junit",
         "SdkSandbox-java-lib",
         "platform-screenshot-diff-core",
+        "modules-utils-build",
     ],
     visibility: [
         // TODO(b/222118402): adjust once code is moved
@@ -47,6 +48,7 @@ java_library_host {
     ],
     static_libs: [
         "compatibility-host-util",
+        "modules-utils-build-testing",
     ],
     libs: ["tradefed"],
 }

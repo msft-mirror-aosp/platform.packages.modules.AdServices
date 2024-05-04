@@ -66,4 +66,14 @@ public interface FetchProcessLogger {
             @AdsRelevanceStatusUtils.ServerAuctionCoordinatorSource int coordinatorSource) {
         // do nothing
     }
+
+    /** Sets the timestamp of the download script start. */
+    default void startDownloadScriptTimestamp() {
+        // do nothing
+    }
+
+    /** Sets the timestamp of the download script end and stores the result code. */
+    default void endDownloadScriptTimestamp(int resultCode) {
+        // do nothing
+    }
 }

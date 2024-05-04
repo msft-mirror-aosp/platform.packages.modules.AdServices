@@ -16,7 +16,11 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.DebugFlags.DEFAULT_AD_SELECTION_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlags.DEFAULT_PROTECTED_APP_SIGNALS_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.Flags.CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
@@ -90,6 +94,22 @@ public final class DebugFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
                 DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE,
                 DebugFlags::getConsentManagerOTADebugMode);
+    }
+
+    @Test
+    public void testProtectedAppSignalsCommandsEnabled() {
+        testDebugFlag(
+                KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED,
+                DEFAULT_PROTECTED_APP_SIGNALS_CLI_ENABLED,
+                DebugFlags::getProtectedAppSignalsCommandsEnabled);
+    }
+
+    @Test
+    public void testAdSelectionCommandsEnabled() {
+        testDebugFlag(
+                KEY_AD_SELECTION_CLI_ENABLED,
+                DEFAULT_AD_SELECTION_CLI_ENABLED,
+                DebugFlags::getAdSelectionCommandsEnabled);
     }
 
     private void testDebugFlag(

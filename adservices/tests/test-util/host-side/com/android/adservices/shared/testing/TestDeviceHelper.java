@@ -236,8 +236,8 @@ public final class TestDeviceHelper {
     }
 
     private static CommandResult asCommandResult(com.android.tradefed.util.CommandResult input) {
-        String out = input.getStdout() != null ? input.getStdout() : "";
-        String err = input.getStderr() != null ? input.getStderr() : "";
+        String out = input.getStdout() != null ? input.getStdout().strip() : "";
+        String err = input.getStderr() != null ? input.getStderr().strip() : "";
         return new CommandResult(out, err);
     }
 }

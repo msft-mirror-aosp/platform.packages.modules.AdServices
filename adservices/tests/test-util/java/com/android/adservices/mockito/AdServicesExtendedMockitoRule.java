@@ -18,27 +18,17 @@ package com.android.adservices.mockito;
 
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.shouldClearInlineMocksAfterTest;
 import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
-import android.app.ActivityManager;
-import android.os.Binder;
-import android.os.Process;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
-import com.android.adservices.service.FakeFlagsFactory;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.testing.LogEntry.Level;
 import com.android.adservices.shared.testing.common.TestHelper;
-import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -69,10 +59,9 @@ import java.util.function.Supplier;
  *     .build();
  * </pre>
  */
-public class AdServicesExtendedMockitoRule
+public final class AdServicesExtendedMockitoRule
         extends AbstractExtendedMockitoRule<
-                AdServicesExtendedMockitoRule, AdServicesExtendedMockitoRule.Builder>
-        implements AdServicesExtendedMockitoMocker {
+                AdServicesExtendedMockitoRule, AdServicesExtendedMockitoRule.Builder> {
 
     private static final String TAG = AdServicesExtendedMockitoRule.class.getSimpleName();
 
@@ -100,147 +89,6 @@ public class AdServicesExtendedMockitoRule
             throw new IllegalStateException("not running a test");
         }
         return mTestName;
-    }
-
-    /**
-     * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}
-     * object.
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link FlagsFactory}.
-     */
-    @Override
-    public final void mockGetFlags(Flags mockedFlags) {
-        logV("mockGetFlags(%s)", mockedFlags);
-        assertSpiedOrMocked(FlagsFactory.class);
-        doReturn(mockedFlags).when(FlagsFactory::getFlags);
-    }
-
-    /**
-     * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
-     * FakeFlagsFactory#getFlagsForTest()}
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link FlagsFactory}.
-     */
-    @Override
-    public final void mockGetFlagsForTesting() {
-        mockGetFlags(FakeFlagsFactory.getFlagsForTest());
-    }
-
-    /**
-     * Mocks a call to {@link Binder#getCallingUidOrThrow()}, returning {@code uid}.
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link Binder}.
-     */
-    @Override
-    public final void mockGetCallingUidOrThrow(int uid) {
-        logV("mockGetCallingUidOrThrow(%d)", uid);
-        mockBinderGetCallingUidOrThrow(uid);
-    }
-
-    /**
-     * Same as {@link #mockGetCallingUidOrThrow(int)}, but using the {@code uid} of the calling
-     * process.
-     *
-     * <p>Typically used when code under test calls {@link Binder#getCallingUidOrThrow()} and the
-     * test doesn't care about the result, but it needs to be mocked otherwise the real call would
-     * fail (as the test is not running inside a binder transaction).
-     */
-    @Override
-    public final void mockGetCallingUidOrThrow() {
-        int uid = Process.myUid();
-        logV("mockGetCallingUidOrThrow(Process.myUid=%d)", uid);
-        mockBinderGetCallingUidOrThrow(uid);
-    }
-
-    /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
-    @Override
-    public final void mockIsAtLeastR(boolean isIt) {
-        logV("mockIsAtLeastR(%b)", isIt);
-        assertSpiedOrMocked(SdkLevel.class);
-        doReturn(isIt).when(SdkLevel::isAtLeastR);
-    }
-
-    /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
-    @Override
-    public final void mockIsAtLeastS(boolean isIt) {
-        logV("mockIsAtLeastS(%b)", isIt);
-        assertSpiedOrMocked(SdkLevel.class);
-        doReturn(isIt).when(SdkLevel::isAtLeastS);
-    }
-
-    /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
-    @Override
-    public final void mockIsAtLeastT(boolean isIt) {
-        logV("mockIsAtLeastT(%b)", isIt);
-        assertSpiedOrMocked(SdkLevel.class);
-        doReturn(isIt).when(SdkLevel::isAtLeastT);
-    }
-
-    /** Mocks a call to SDK level to return R */
-    @Override
-    public final void mockSdkLevelR() {
-        logV("mockSdkLevelR()");
-        assertSpiedOrMocked(SdkLevel.class);
-        doReturn(true).when(SdkLevel::isAtLeastR);
-        doReturn(false).when(SdkLevel::isAtLeastS);
-        doReturn(false).when(SdkLevel::isAtLeastSv2);
-        doReturn(false).when(SdkLevel::isAtLeastT);
-        doReturn(false).when(SdkLevel::isAtLeastU);
-    }
-
-    /**
-     * Mocks a call to {@link ActivityManager#getCurrentUser()}, returning {@code user}.
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link ActivityManager}.
-     */
-    @Override
-    public final void mockGetCurrentUser(int user) {
-        logV("mockGetCurrentUser(user=%d)", user);
-        assertSpiedOrMocked(ActivityManager.class);
-        doReturn(user).when(ActivityManager::getCurrentUser);
-    }
-
-    /**
-     * Statically spy on {@code Log.v} for that {@code tag}.
-     *
-     * @return object that can be used to assert the {@code Log.v} calls.
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link Log}.
-     */
-    @Override
-    public final LogInterceptor interceptLogV(String tag) {
-        logV("interceptLogV(%s)", tag);
-        assertSpiedOrMocked(Log.class);
-
-        return LogInterceptor.forTagAndLevels(tag, Level.VERBOSE);
-    }
-
-    /**
-     * Statically spy on {@code Log.e} for that {@code tag}.
-     *
-     * @return object that can be used to assert the {@code Log.e} calls.
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link Log}.
-     */
-    @Override
-    public final LogInterceptor interceptLogE(String tag) {
-        logV("interceptLogE(%s)", tag);
-        assertSpiedOrMocked(Log.class);
-
-        return LogInterceptor.forTagAndLevels(tag, Level.ERROR);
-    }
-
-    // NOTE: current tests are only intercepting v and e, but we could add more methods on demand
-    // (even one that takes Level...levels)
-
-    // mock only, don't log
-    private void mockBinderGetCallingUidOrThrow(int uid) {
-        assertSpiedOrMocked(Binder.class);
-        doReturn(uid).when(Binder::getCallingUidOrThrow);
     }
 
     // Overridden to get test name
@@ -291,20 +139,9 @@ public class AdServicesExtendedMockitoRule
         return super.getClearInlineMethodsAtTheEnd(description);
     }
 
-    // TODO(b/312802824): add unit tests (for rule itself)
-    private void assertSpiedOrMocked(Class<?> clazz) {
-        if (!mSpiedOrMockedStaticClasses.contains(clazz)) {
-            throw new IllegalStateException(
-                    "Test doesn't static spy or mock "
-                            + clazz
-                            + ", only: "
-                            + mSpiedOrMockedStaticClasses);
-        }
-    }
-
-    @FormatMethod
-    private void logV(@FormatString String fmt, Object... args) {
-        Log.v(TAG, "on " + getTestName() + ": " + String.format(fmt, args));
+    /** Gets the classes that are spied or mocked. */
+    public ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
+        return ImmutableSet.copyOf(mSpiedOrMockedStaticClasses);
     }
 
     public static final class Builder

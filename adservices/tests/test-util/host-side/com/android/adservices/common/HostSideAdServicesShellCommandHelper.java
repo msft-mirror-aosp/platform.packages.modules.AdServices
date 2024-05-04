@@ -27,7 +27,7 @@ public final class HostSideAdServicesShellCommandHelper
 
     @Override
     protected String runShellCommand(String cmd) {
-        return TestDeviceHelper.runShellCommand("%s", cmd);
+        return TestDeviceHelper.runShellCommand("%s", cmd).strip();
     }
 
     @Override

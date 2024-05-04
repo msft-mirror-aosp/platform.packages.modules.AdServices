@@ -509,9 +509,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         NoFailureSyncCallback<Integer> callback = new NoFailureSyncCallback<>();
 
         mExecutorService.execute(
-                () ->
-                        callback.injectResult(
-                                MddJobService.scheduleIfNeeded(sContext, forceSchedule)));
+                () -> callback.injectResult(MddJobService.scheduleIfNeeded(forceSchedule)));
 
         return callback;
     }

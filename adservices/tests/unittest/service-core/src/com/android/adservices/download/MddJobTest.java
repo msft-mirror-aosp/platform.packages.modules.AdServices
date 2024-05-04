@@ -42,7 +42,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -58,7 +57,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
-import com.android.adservices.shared.spe.scheduling.JobSpec;
 import com.android.adservices.shared.testing.FutureSyncCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobScheduler;
@@ -90,13 +88,13 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
 
     private final MddJob mMddJob = new MddJob();
 
+    @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
     @Mock private AdServicesJobServiceFactory mMockFactory;
     @Mock private MobileDataDownload mMockMobileDataDownload;
     @Mock private EnrollmentDataDownloadManager mMockEnrollmentDataDownloadManager;
     @Mock private EncryptionDataDownloadManager mMockEncryptionDataDownloadManager;
     @Mock private ExecutionRuntimeParameters mMockParams;
     @Mock private Flags mMockFlags;
-    @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private MddFlags mMockMddFlags;
 
@@ -120,8 +118,7 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
         when(mMockParams.getExtras()).thenReturn(bundle);
 
         // Mock AdServicesJobScheduler to not actually schedule the jobs.
-        doReturn(mMockAdServicesJobScheduler).when(AdServicesJobScheduler::getInstance);
-        doNothing().when(mMockAdServicesJobScheduler).schedule(any(JobSpec.class));
+        mocker.mockSpeJobScheduler(mMockAdServicesJobScheduler);
     }
 
     @Test
@@ -194,12 +191,12 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
     public void testScheduleAllMddJobs_legacy() {
         int resultCode = SCHEDULING_RESULT_CODE_SUCCESSFUL;
         when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(false);
-        doReturn(resultCode).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doReturn(resultCode).when(() -> MddJobService.scheduleIfNeeded(/* forceSchedule= */ false));
         doNothing().when(() -> MddJob.logJobSchedulingLegacy(resultCode));
 
         MddJob.scheduleAllMddJobs();
 
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        verify(() -> MddJobService.scheduleIfNeeded(/* forceSchedule= */ false));
         verify(() -> MddJob.logJobSchedulingLegacy(resultCode));
         verifyZeroInteractions(mMockAdServicesJobScheduler);
     }

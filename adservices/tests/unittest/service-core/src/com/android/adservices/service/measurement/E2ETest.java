@@ -1080,7 +1080,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     }
 
     static String preprocessTestJson(String json) {
-        return json.replaceAll("\\.test(?=[\"\\/])", ".com");
+        return json.replaceAll("\\.test(?=[\"\\/,])", ".com");
     }
 
     /**

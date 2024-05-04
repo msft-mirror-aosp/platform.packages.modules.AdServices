@@ -1115,6 +1115,24 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         verify(mStatsdLoggerMock).logPersistAdSelectionResultCalledStats(eq(stats));
     }
 
+    @Test
+    public void testLogSelectAdsFromOutcomesApiCalledStats() {
+        SelectAdsFromOutcomesApiCalledStats stats =
+                SelectAdsFromOutcomesApiCalledStats.builder()
+                        .setCountIds(5)
+                        .setCountNonExistingIds(2)
+                        .setUsedPrebuilt(false)
+                        .setDownloadResultCode(0)
+                        .setDownloadLatencyMillis(350)
+                        .setExecutionResultCode(1)
+                        .setExecutionLatencyMillis(180)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logSelectAdsFromOutcomesApiCalledStats(stats);
+
+        verify(mStatsdLoggerMock).logSelectAdsFromOutcomesApiCalledStats(eq(stats));
+    }
+
     private void mockAppNameApiErrorLogger() {
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(true);

@@ -26,24 +26,20 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.cts.statsdatom.lib.DeviceUtils;
 
-import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
-import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
 import com.android.adservices.shared.testing.BackgroundLogReceiver;
-import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
 import com.android.adservices.shared.testing.TestDeviceHelper;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 
-import com.google.common.truth.Expect;
 import com.google.common.truth.StringSubject;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -61,7 +57,8 @@ import java.util.stream.Collectors;
  * the log event, and then gets uninstalled.
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
-public class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
+@RequiresSdkLevelAtLeastT()
+public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
     private static final long BOOT_COMPLETED_TIMEOUT = 60_000L;
     private static final long LOG_RECEIVER_TIMEOUT_MS = 60_000L;
     private static final int ACTIVITY_LAUNCH_TIMEOUT_MS = 30_000;
@@ -73,38 +70,24 @@ public class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
     private int mCurrentUser = 0;
     private String mAdServicesPackageName = null;
 
-    @Rule(order = 0)
-    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAtLeastT();
-
-    @Rule(order = 1)
-    public final AdServicesHostSideDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesHostSideDeviceSupportedRule();
-
-    @Rule(order = 2)
-    public final AdServicesHostSideFlagsSetterRule flags =
-            AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests()
-                    // Top-level feature flags
-                    .setAdServicesEnabled(true)
-                    // Topics feature flags for calling the Topics API
-                    .setTopicsKillSwitch(false)
-                    .setMddBackgroundTaskKillSwitch(true)
-                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
-                    // Measurement feature flags for calling the Measurement API
-                    .setMsmtApiAppAllowList(PACKAGE)
-                    .setMsmtWebContextClientAllowList(PACKAGE)
-                    .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
-                    // AppSearch feature flags
-                    .setFlag(KEY_ENABLE_APPSEARCH_CONSENT_DATA, true)
-                    .setFlag(KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE, PACKAGE)
-                    // Logcat tags
-                    .setAllLogcatTags()
-                    .setLogcatTag("AppSearchWriterActivity", "VERBOSE");
-
-    @Rule(order = 3)
-    public final Expect expect = Expect.create();
-
     @Before
     public void setUp() throws Exception {
+        flags.setAdServicesEnabled(true)
+                // Topics feature flags for calling the Topics API
+                .setTopicsKillSwitch(false)
+                .setMddBackgroundTaskKillSwitch(true)
+                .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
+                // Measurement feature flags for calling the Measurement API
+                .setMsmtApiAppAllowList(PACKAGE)
+                .setMsmtWebContextClientAllowList(PACKAGE)
+                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
+                // AppSearch feature flags
+                .setFlag(KEY_ENABLE_APPSEARCH_CONSENT_DATA, true)
+                .setFlag(KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE, PACKAGE)
+                // Logcat tags
+                .setAllLogcatTags()
+                .setLogcatTag("AppSearchWriterActivity", "VERBOSE");
+
         // Enabling the boot-completed receiver throws a SecurityException unless adb runs as root
         Assume.assumeTrue("Needs adb root to enable the receiver", mDevice.enableAdbRoot());
 

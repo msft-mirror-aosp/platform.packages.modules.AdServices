@@ -17,6 +17,8 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
 import static com.android.adservices.service.Flags.CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
@@ -26,6 +28,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Flags that are only used for development / testing purposes.
@@ -39,6 +43,12 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED
  */
 public final class DebugFlags extends CommonDebugFlags {
     private static final DebugFlags sInstance = new DebugFlags();
+
+    /** Default for if FLEDGE app signals CLI is enabled. */
+    @VisibleForTesting static final boolean DEFAULT_PROTECTED_APP_SIGNALS_CLI_ENABLED = false;
+
+    /** Default for if FLEDGE ad selection CLI is enabled. */
+    @VisibleForTesting static final boolean DEFAULT_AD_SELECTION_CLI_ENABLED = false;
 
     public static DebugFlags getInstance() {
         return sInstance;
@@ -67,5 +77,14 @@ public final class DebugFlags extends CommonDebugFlags {
     public boolean getConsentManagerOTADebugMode() {
         return getDebugFlag(
                 KEY_CONSENT_MANAGER_OTA_DEBUG_MODE, DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
+    }
+
+    public boolean getProtectedAppSignalsCommandsEnabled() {
+        return getDebugFlag(
+                KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED, DEFAULT_PROTECTED_APP_SIGNALS_CLI_ENABLED);
+    }
+
+    public boolean getAdSelectionCommandsEnabled() {
+        return getDebugFlag(KEY_AD_SELECTION_CLI_ENABLED, DEFAULT_AD_SELECTION_CLI_ENABLED);
     }
 }

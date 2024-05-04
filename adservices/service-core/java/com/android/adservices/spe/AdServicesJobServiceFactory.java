@@ -19,7 +19,6 @@ package com.android.adservices.spe;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_NOT_CONFIGURED_CORRECTLY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
-import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -30,7 +29,8 @@ import com.android.adservices.download.MddJobService;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.service.topics.EpochJob;
+import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
@@ -116,6 +116,8 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
         AdServicesJobInfo jobInfo = AdServicesJobInfo.getJobIdToJobInfoMap().get(jobId);
         try {
             switch (jobInfo) {
+                case TOPICS_EPOCH_JOB:
+                    return new EpochJob();
                 case MDD_MAINTENANCE_PERIODIC_TASK_JOB:
                 case MDD_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
@@ -181,15 +183,21 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
      */
     public void rescheduleJobWithLegacyMethod(int jobId) {
         AdServicesJobInfo jobInfo = AdServicesJobInfo.getJobIdToJobInfoMap().get(jobId);
-        Context context = ApplicationContextSingleton.get();
+        // The legacy job generally only checks some constraints of the job, instead of the entire
+        // JobInfo including service name as SPE. Therefore, it needs to force-schedule the job
+        // because the constraint should remain the same for legacy job and SPE.
+        boolean forceSchedule = true;
 
         try {
             switch (jobInfo) {
+                case TOPICS_EPOCH_JOB:
+                    EpochJobService.scheduleIfNeeded(forceSchedule);
+                    return;
                 case MDD_MAINTENANCE_PERIODIC_TASK_JOB:
                 case MDD_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
-                    MddJobService.scheduleIfNeeded(context, /* forceSchedule= */ true);
+                    MddJobService.scheduleIfNeeded(forceSchedule);
                     return;
                 default:
                     throw new RuntimeException(

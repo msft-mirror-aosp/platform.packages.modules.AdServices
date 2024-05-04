@@ -20,6 +20,7 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.annotation.NonNull;
 
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -38,5 +39,6 @@ public interface AdOutcomeSelector {
      */
     FluentFuture<Long> runAdOutcomeSelector(
             @NonNull List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris,
-            @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig);
+            @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
+            SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger);
 }

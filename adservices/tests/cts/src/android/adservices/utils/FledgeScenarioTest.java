@@ -87,7 +87,8 @@ public abstract class FledgeScenarioTest {
     protected AdvertisingCustomAudienceClient mCustomAudienceClient;
     protected AdSelectionClient mAdSelectionClient;
 
-    protected AdTechIdentifier mAdTechIdentifier;
+    private AdTechIdentifier mBuyer;
+    private AdTechIdentifier mSeller;
     private String mServerBaseAddress;
 
     // Prefix added to all requests to bust cache.
@@ -227,14 +228,6 @@ public abstract class FledgeScenarioTest {
         Log.d(TAG, "Scheduled Custom Audience Update: " + request);
     }
 
-    protected String getServerBaseAddress() {
-        return String.format(
-                "https://%s:%s%s/",
-                mMockWebServerRule.getMockWebServer().getHostName(),
-                mMockWebServerRule.getMockWebServer().getPort(),
-                getCacheBusterPrefix());
-    }
-
     protected void overrideCpcBillingEnabled(boolean enabled) {
         ShellUtils.runShellCommand(
                 String.format(
@@ -275,11 +268,12 @@ public abstract class FledgeScenarioTest {
 
     protected AdSelectionConfig makeAdSelectionConfig() {
         AdSelectionSignals signals = FledgeScenarioTest.makeAdSelectionSignals();
-        Log.d(TAG, "Ad tech: " + mAdTechIdentifier.toString());
+        Log.d(TAG, "Ad tech buyer: " + mBuyer);
+        Log.d(TAG, "Ad tech seller: " + mSeller);
         return new AdSelectionConfig.Builder()
-                .setSeller(mAdTechIdentifier)
-                .setPerBuyerSignals(ImmutableMap.of(mAdTechIdentifier, signals))
-                .setCustomAudienceBuyers(ImmutableList.of(mAdTechIdentifier))
+                .setSeller(mSeller)
+                .setPerBuyerSignals(ImmutableMap.of(mBuyer, signals))
+                .setCustomAudienceBuyers(ImmutableList.of(mBuyer))
                 .setAdSelectionSignals(signals)
                 .setSellerSignals(signals)
                 .setDecisionLogicUri(Uri.parse(mServerBaseAddress + Scenarios.SCORING_LOGIC_PATH))
@@ -292,9 +286,13 @@ public abstract class FledgeScenarioTest {
             ScenarioDispatcherFactory scenarioDispatcherFactory) throws Exception {
         ScenarioDispatcher scenarioDispatcher =
                 mMockWebServerRule.startMockWebServer(scenarioDispatcherFactory);
-        mServerBaseAddress = getServerBaseAddress();
-        mAdTechIdentifier =
-                AdTechIdentifier.fromString(mMockWebServerRule.getMockWebServer().getHostName());
+        mServerBaseAddress = scenarioDispatcher.getBaseAddressWithPrefix().toString();
+        mBuyer =
+                AdTechIdentifier.fromString(
+                        scenarioDispatcher.getBaseAddressWithPrefix().getHost());
+        mSeller =
+                AdTechIdentifier.fromString(
+                        scenarioDispatcher.getBaseAddressWithPrefix().getHost());
         Log.d(TAG, "Started default MockWebServer.");
         return scenarioDispatcher;
     }
@@ -325,7 +323,7 @@ public abstract class FledgeScenarioTest {
                 .setAds(makeAds(customAudienceName))
                 .setBiddingLogicUri(
                         Uri.parse(String.format(mServerBaseAddress + Scenarios.BIDDING_LOGIC_PATH)))
-                .setBuyer(mAdTechIdentifier)
+                .setBuyer(mBuyer)
                 .setActivationTime(Instant.now())
                 .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS));
     }
@@ -349,7 +347,7 @@ public abstract class FledgeScenarioTest {
                 .setRenderUri(
                         Uri.parse(
                                 String.format(
-                                        "%srender/%s/%s",
+                                        "%s/render/%s/%s",
                                         mServerBaseAddress, customAudienceName, adNumber)))
                 .build();
     }

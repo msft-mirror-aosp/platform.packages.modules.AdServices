@@ -19,7 +19,9 @@ package com.android.adservices.service.adselection;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -65,6 +67,7 @@ import com.android.adservices.service.signals.ProtectedSignal;
 import com.android.adservices.service.signals.ProtectedSignalsFixture;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
@@ -213,6 +216,8 @@ public class AdSelectionScriptEngineTest {
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLoggerMock;
     @Mock private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLoggerMock;
     @Mock private EncodingExecutionLogHelper mEncodingExecutionLoggerMock;
+    @Mock private SelectAdsFromOutcomesExecutionLogger mSelectAdsFromOutcomesExecutionLoggerMock;
+
     private RetryStrategy mRetryStrategy;
 
     @Rule(order = 0)
@@ -1587,6 +1592,9 @@ public class AdSelectionScriptEngineTest {
                         Collections.singletonList(AD_SELECTION_ID_WITH_BID_1),
                         AdSelectionSignals.fromString("{bid_floor: 9}"));
         assertThat(result).isEqualTo(AD_SELECTION_ID_WITH_BID_1.getAdSelectionId());
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock).startExecutionScriptTimestamp();
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock)
+                .endExecutionScriptTimestamp(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
@@ -1604,6 +1612,9 @@ public class AdSelectionScriptEngineTest {
                         Collections.singletonList(AD_SELECTION_ID_WITH_BID_1),
                         AdSelectionSignals.fromString("{bid_floor: 11}"));
         assertThat(result).isNull();
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock).startExecutionScriptTimestamp();
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock)
+                .endExecutionScriptTimestamp(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
@@ -1627,6 +1638,9 @@ public class AdSelectionScriptEngineTest {
                                 AD_SELECTION_ID_WITH_BID_3),
                         AdSelectionSignals.EMPTY);
         assertThat(result).isEqualTo(AD_SELECTION_ID_WITH_BID_3.getAdSelectionId());
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock).startExecutionScriptTimestamp();
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock)
+                .endExecutionScriptTimestamp(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
@@ -1645,6 +1659,9 @@ public class AdSelectionScriptEngineTest {
                                                 AD_SELECTION_ID_WITH_BID_3),
                                         AdSelectionSignals.EMPTY));
         Assert.assertTrue(exception.getCause() instanceof IllegalStateException);
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock).startExecutionScriptTimestamp();
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock)
+                .endExecutionScriptTimestamp(JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR);
     }
 
     @Test
@@ -2009,7 +2026,10 @@ public class AdSelectionScriptEngineTest {
                 () -> {
                     Log.i(TAG, "Calling selectOutcome");
                     return mAdSelectionScriptEngine.selectOutcome(
-                            jsScript, adSelectionIdWithBidAndRenderUris, selectionSignals);
+                            jsScript,
+                            adSelectionIdWithBidAndRenderUris,
+                            selectionSignals,
+                            mSelectAdsFromOutcomesExecutionLoggerMock);
                 });
     }
 

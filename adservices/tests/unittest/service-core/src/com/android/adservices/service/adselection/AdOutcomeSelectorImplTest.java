@@ -21,9 +21,11 @@ import static com.android.adservices.service.adselection.AdOutcomeSelectorImpl.O
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_FROM_OUTCOMES_USE_CASE;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.verify;
 
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.common.AdSelectionSignals;
@@ -45,7 +47,12 @@ import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesApiCalledStats;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLoggerFactory;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.util.Clock;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -61,6 +68,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -81,6 +89,8 @@ public class AdOutcomeSelectorImplTest {
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     @Mock private AdSelectionScriptEngine mMockAdSelectionScriptEngine;
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
+    private SelectAdsFromOutcomesExecutionLogger mSelectAdsFromOutcomesExecutionLogger;
 
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
@@ -149,6 +159,11 @@ public class AdOutcomeSelectorImplTest {
                                 DevContext.createForDevOptionsDisabled(), mAdSelectionEntryDao),
                         mFlags,
                         mDevContext);
+
+        mSelectAdsFromOutcomesExecutionLogger =
+                new SelectAdsFromOutcomesExecutionLoggerFactory(
+                                Clock.getInstance(), mAdServicesLoggerMock, mFlags)
+                        .getSelectAdsFromOutcomesExecutionLogger();
     }
 
     @Test
@@ -174,11 +189,17 @@ public class AdOutcomeSelectorImplTest {
 
         Mockito.when(
                         mMockAdSelectionScriptEngine.selectOutcome(
-                                mSelectionLogicJs, adverts, signals))
+                                mSelectionLogicJs,
+                                adverts,
+                                signals,
+                                mSelectAdsFromOutcomesExecutionLogger))
                 .thenReturn(Futures.immediateFuture(AD_SELECTION_ID));
 
         Long selectedOutcomeId =
-                waitForFuture(() -> mAdOutcomeSelector.runAdOutcomeSelector(adverts, config));
+                waitForFuture(
+                        () ->
+                                mAdOutcomeSelector.runAdOutcomeSelector(
+                                        adverts, config, mSelectAdsFromOutcomesExecutionLogger));
 
         mMockWebServerRule.verifyMockServerRequests(
                 server,
@@ -186,6 +207,8 @@ public class AdOutcomeSelectorImplTest {
                 Collections.singletonList(SELECTION_LOGIC_JS_PATH),
                 mRequestMatcherExactMatch);
         assertEquals(AD_SELECTION_ID, (long) selectedOutcomeId);
+
+        verifySelectAdsFromOutcomesExecutionLogger(false, 200);
     }
 
     @Test
@@ -211,11 +234,17 @@ public class AdOutcomeSelectorImplTest {
 
         Mockito.when(
                         mMockAdSelectionScriptEngine.selectOutcome(
-                                mSelectionLogicJs, adverts, signals))
+                                mSelectionLogicJs,
+                                adverts,
+                                signals,
+                                mSelectAdsFromOutcomesExecutionLogger))
                 .thenReturn(Futures.immediateFuture(null));
 
         Long selectedOutcomeId =
-                waitForFuture(() -> mAdOutcomeSelector.runAdOutcomeSelector(adverts, config));
+                waitForFuture(
+                        () ->
+                                mAdOutcomeSelector.runAdOutcomeSelector(
+                                        adverts, config, mSelectAdsFromOutcomesExecutionLogger));
 
         mMockWebServerRule.verifyMockServerRequests(
                 server,
@@ -223,6 +252,8 @@ public class AdOutcomeSelectorImplTest {
                 Collections.singletonList(SELECTION_LOGIC_JS_PATH),
                 mRequestMatcherExactMatch);
         assertNull(selectedOutcomeId);
+
+        verifySelectAdsFromOutcomesExecutionLogger(false, 200);
     }
 
     @Test
@@ -249,7 +280,10 @@ public class AdOutcomeSelectorImplTest {
         String jsonExceptionMessage = "Badly formatted JSON";
         Mockito.when(
                         mMockAdSelectionScriptEngine.selectOutcome(
-                                mSelectionLogicJs, adverts, signals))
+                                mSelectionLogicJs,
+                                adverts,
+                                signals,
+                                mSelectAdsFromOutcomesExecutionLogger))
                 .thenThrow(new JSONException(jsonExceptionMessage));
 
         ExecutionException exception =
@@ -259,7 +293,9 @@ public class AdOutcomeSelectorImplTest {
                                 waitForFuture(
                                         () ->
                                                 mAdOutcomeSelector.runAdOutcomeSelector(
-                                                        adverts, config)));
+                                                        adverts,
+                                                        config,
+                                                        mSelectAdsFromOutcomesExecutionLogger)));
         Assert.assertTrue(exception.getCause() instanceof JSONException);
         Assert.assertEquals(exception.getCause().getMessage(), jsonExceptionMessage);
         mMockWebServerRule.verifyMockServerRequests(
@@ -267,13 +303,15 @@ public class AdOutcomeSelectorImplTest {
                 1,
                 Collections.singletonList(SELECTION_LOGIC_JS_PATH),
                 mRequestMatcherExactMatch);
+
+        verifySelectAdsFromOutcomesExecutionLogger(false, 200);
     }
 
     @Test
     public void testAdOutcomeSelectorTimeoutFailure() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
         Flags flagsWithSmallerLimits =
-                new Flags() {
+                new AdOutcomeSelectorImplTestFlags() {
                     @Override
                     public long getAdSelectionSelectingOutcomeTimeoutMs() {
                         return 300;
@@ -311,7 +349,10 @@ public class AdOutcomeSelectorImplTest {
 
         Mockito.when(
                         mMockAdSelectionScriptEngine.selectOutcome(
-                                mSelectionLogicJs, adverts, signals))
+                                mSelectionLogicJs,
+                                adverts,
+                                signals,
+                                mSelectAdsFromOutcomesExecutionLogger))
                 .thenAnswer(
                         (invocation) ->
                                 getOutcomeWithDelay(AD_SELECTION_ID, flagsWithSmallerLimits));
@@ -323,7 +364,9 @@ public class AdOutcomeSelectorImplTest {
                                 waitForFuture(
                                         () ->
                                                 adOutcomeSelector.runAdOutcomeSelector(
-                                                        adverts, config)));
+                                                        adverts,
+                                                        config,
+                                                        mSelectAdsFromOutcomesExecutionLogger)));
         Assert.assertTrue(exception.getCause() instanceof UncheckedTimeoutException);
         Assert.assertEquals(exception.getCause().getMessage(), OUTCOME_SELECTION_TIMED_OUT);
         mMockWebServerRule.verifyMockServerRequests(
@@ -331,6 +374,8 @@ public class AdOutcomeSelectorImplTest {
                 1, // Gets one call that causes the timeout
                 Collections.singletonList(SELECTION_LOGIC_JS_PATH),
                 mRequestMatcherExactMatch);
+
+        verifySelectAdsFromOutcomesExecutionLogger(false, 200);
     }
 
     @Test
@@ -338,7 +383,7 @@ public class AdOutcomeSelectorImplTest {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
         Flags prebuiltFlagEnabled =
-                new Flags() {
+                new AdOutcomeSelectorImplTestFlags() {
                     @Override
                     public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
                         return true;
@@ -392,11 +437,15 @@ public class AdOutcomeSelectorImplTest {
                         mMockAdSelectionScriptEngine.selectOutcome(
                                 Mockito.anyString(),
                                 Mockito.eq(adverts),
-                                Mockito.eq(selectionSignals)))
+                                Mockito.eq(selectionSignals),
+                                Mockito.eq(mSelectAdsFromOutcomesExecutionLogger)))
                 .thenReturn(Futures.immediateFuture(AD_SELECTION_ID));
 
         Long selectedOutcomeId =
-                waitForFuture(() -> adOutcomeSelector.runAdOutcomeSelector(adverts, config));
+                waitForFuture(
+                        () ->
+                                adOutcomeSelector.runAdOutcomeSelector(
+                                        adverts, config, mSelectAdsFromOutcomesExecutionLogger));
 
         mMockWebServerRule.verifyMockServerRequests(
                 server,
@@ -404,6 +453,8 @@ public class AdOutcomeSelectorImplTest {
                 Collections.emptyList(),
                 (actualRequest, expectedRequest) -> true); // Count any request
         assertEquals(AD_SELECTION_ID, (long) selectedOutcomeId);
+
+        verifySelectAdsFromOutcomesExecutionLogger(true, FIELD_UNSET);
     }
 
     private ListenableFuture<Long> getOutcomeWithDelay(Long outcomeId, @NonNull Flags flags) {
@@ -424,10 +475,35 @@ public class AdOutcomeSelectorImplTest {
         return futureResult.get();
     }
 
+    /**
+     * Validate the logging. CountIds and CountNonExistingIds are set before the AdOutcomeSelector
+     * is called, so skip their validation. Js script execution is mocked, so skip the validation of
+     * the respective fields.
+     */
+    private void verifySelectAdsFromOutcomesExecutionLogger(
+            boolean expectedUsedPrebuilt, int expectedDownloadStatusCode) {
+        ArgumentCaptor<SelectAdsFromOutcomesApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(SelectAdsFromOutcomesApiCalledStats.class);
+        mSelectAdsFromOutcomesExecutionLogger.logSelectAdsFromOutcomesApiCalledStats();
+        verify(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(argumentCaptor.capture());
+        SelectAdsFromOutcomesApiCalledStats stats = argumentCaptor.getValue();
+        assertEquals(expectedUsedPrebuilt, stats.getUsedPrebuilt());
+
+        boolean isDownloadExpectedToRun = expectedDownloadStatusCode == FIELD_UNSET;
+        assertEquals(isDownloadExpectedToRun, stats.getDownloadLatencyMillis() == FIELD_UNSET);
+        assertEquals(expectedDownloadStatusCode, stats.getDownloadResultCode());
+    }
+
     private static class AdOutcomeSelectorImplTestFlags implements Flags {
         @Override
         public long getAdSelectionSelectingOutcomeTimeoutMs() {
             return EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+        }
+
+        @Override
+        public boolean getFledgeSelectAdsFromOutcomesApiMetricsEnabled() {
+            return true;
         }
     }
 }

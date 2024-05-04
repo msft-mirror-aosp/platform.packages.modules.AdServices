@@ -29,4 +29,11 @@ public final class DebugFlagsConstants {
     // Consent Manager ota debug mode keys.
     public static final String KEY_CONSENT_MANAGER_OTA_DEBUG_MODE =
             "consent_manager_ota_debug_mode";
+
+    /** Key for feature flagging app signals CLI. */
+    public static final String KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED =
+            "fledge_is_app_signals_cli_enabled";
+
+    /** Key for feature flagging adselection CLI. */
+    public static final String KEY_AD_SELECTION_CLI_ENABLED = "fledge_is_ad_selection_cli_enabled";
 }

@@ -16,10 +16,15 @@
 package com.android.adservices.common;
 
 import com.android.adservices.shared.testing.ConsoleLogger;
+import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.TestDeviceHelper;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.IDeviceTest;
+
+import com.google.common.truth.Expect;
+
+import org.junit.Rule;
 
 import java.util.Objects;
 
@@ -33,6 +38,19 @@ public abstract class AdServicesHostSideTestCase implements IDeviceTest {
 
     protected ITestDevice mDevice;
 
+    @Rule(order = 0)
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
+
+    @Rule(order = 1)
+    public final AdServicesHostSideDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesHostSideDeviceSupportedRule();
+
+    @Rule(order = 2)
+    public final AdServicesHostSideFlagsSetterRule flags = getAdServicesHostSideFlagsSetterRule();
+
+    @Rule(order = 3)
+    public final Expect expect = Expect.create();
+
     @Override
     public final void setDevice(ITestDevice device) {
         mDevice = Objects.requireNonNull(device);
@@ -43,5 +61,9 @@ public abstract class AdServicesHostSideTestCase implements IDeviceTest {
     @Override
     public final ITestDevice getDevice() {
         return mDevice;
+    }
+
+    protected AdServicesHostSideFlagsSetterRule getAdServicesHostSideFlagsSetterRule() {
+        return AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests();
     }
 }

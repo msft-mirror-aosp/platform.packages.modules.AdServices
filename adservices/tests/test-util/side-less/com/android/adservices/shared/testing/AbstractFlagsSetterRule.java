@@ -18,6 +18,8 @@ package com.android.adservices.shared.testing;
 import com.android.adservices.shared.testing.DeviceConfigHelper.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
+import com.android.adservices.shared.testing.annotations.DisableDebugFlag;
+import com.android.adservices.shared.testing.annotations.DisableDebugFlags;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlags;
 import com.android.adservices.shared.testing.annotations.SetDoubleFlag;
@@ -430,6 +432,10 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                 setAnnotatedFlag((EnableDebugFlag) annotation);
             } else if (annotation instanceof EnableDebugFlags) {
                 setAnnotatedFlag((EnableDebugFlags) annotation);
+            } else if (annotation instanceof DisableDebugFlag) {
+                setAnnotatedFlag((DisableDebugFlag) annotation);
+            } else if (annotation instanceof DisableDebugFlags) {
+                setAnnotatedFlag((DisableDebugFlags) annotation);
             } else if (annotation instanceof SetLongDebugFlag) {
                 setAnnotatedFlag((SetLongDebugFlag) annotation);
             } else if (annotation instanceof SetLongDebugFlags) {
@@ -574,6 +580,8 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                         || (annotation instanceof SetDoubleFlags)
                         || (annotation instanceof SetStringFlag)
                         || (annotation instanceof SetStringFlags)
+                        || (annotation instanceof DisableDebugFlag)
+                        || (annotation instanceof DisableDebugFlags)
                         || (annotation instanceof EnableDebugFlag)
                         || (annotation instanceof EnableDebugFlags)
                         || (annotation instanceof SetLongDebugFlag)
@@ -720,37 +728,49 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         }
     }
 
-    // Single SetDebugFlagEnabled annotations present
+    // Single EnableDebugFlag annotations present
     private void setAnnotatedFlag(EnableDebugFlag annotation) {
         setDebugFlag(annotation.value(), true);
     }
 
-    // Multiple SetDebugFlagEnabled annotations present
+    // Multiple EnableDebugFlag annotations present
     private void setAnnotatedFlag(EnableDebugFlags repeatedAnnotation) {
         for (EnableDebugFlag annotation : repeatedAnnotation.value()) {
             setAnnotatedFlag(annotation);
         }
     }
 
-    // Single SetIntegerFlag annotations present
+    // Single DisableDebugFlag annotations present
+    private void setAnnotatedFlag(DisableDebugFlag annotation) {
+        setDebugFlag(annotation.value(), false);
+    }
+
+    // Multiple DisableDebugFlag annotations present
+    private void setAnnotatedFlag(DisableDebugFlags repeatedAnnotation) {
+        for (DisableDebugFlag annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetLongDebugFlag annotations present
     private void setAnnotatedFlag(SetLongDebugFlag annotation) {
         setDebugFlag(annotation.name(), Long.toString(annotation.value()));
     }
 
-    // Multiple SetIntegerFlag annotations present
+    // Multiple SetLongDebugFlag annotations present
     private void setAnnotatedFlag(SetLongDebugFlags repeatedAnnotation) {
         for (SetLongDebugFlag annotation : repeatedAnnotation.value()) {
             setAnnotatedFlag(annotation);
         }
     }
 
-    // Single SetIntegerFlag annotations present
+    // Single SetLogcatTag annotations present
     private void setAnnotatedFlag(SetLogcatTag annotation) {
         // TODO(b/294423183): pass LogLevel instead of string
         setLogcatTag(annotation.tag(), annotation.level().name());
     }
 
-    // Multiple SetIntegerFlag annotations present
+    // Multiple SetLogcatTag annotations present
     private void setAnnotatedFlag(SetLogcatTags repeatedAnnotation) {
         for (SetLogcatTag annotation : repeatedAnnotation.value()) {
             setAnnotatedFlag(annotation);
