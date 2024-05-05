@@ -21,6 +21,10 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_CA_WINNER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_NO_WINNER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
+
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
 import android.adservices.adselection.PersistAdSelectionResultResponse;
@@ -65,7 +69,9 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
@@ -318,16 +324,27 @@ public class PersistAdSelectionResultRunner {
                                                 "AuctionResult has an error: %s",
                                                 auctionResult.getError().getMessage());
                                 sLogger.e(err);
+                                logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                                 throw new IllegalArgumentException(err);
                             } else if (auctionResult.getIsChaff()) {
                                 sLogger.v("Result is chaff, truncating persistAdSelectionResult");
+                                logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                             } else if (auctionResult.getAdType() == AuctionResult.AdType.UNKNOWN) {
                                 String err = "AuctionResult type is unknown";
                                 sLogger.e(err);
+                                logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                                 throw new IllegalArgumentException(err);
                             } else {
                                 makeKAnonSignJoin(auctionResult, adSelectionId);
-                                validateAuctionResult(auctionResult);
+                                try {
+                                    validateAuctionResult(auctionResult);
+                                } catch (IllegalArgumentException e) {
+                                    logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
+                                    String err = "Invalid object of Auction Result";
+                                    sLogger.e(err);
+                                    throw new IllegalArgumentException(err);
+                                }
+
                                 DBAdData winningAd = fetchWinningAd(auctionResult);
                                 int persistingCookie =
                                         Tracing.beginAsyncSection(Tracing.PERSIST_AUCTION_RESULTS);
@@ -361,8 +378,10 @@ public class PersistAdSelectionResultRunner {
         DBAdData winningAd;
         if (auctionResult.getAdType() == AuctionResult.AdType.REMARKETING_AD) {
             winningAd = fetchRemarketingAd(auctionResult);
+            logPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
         } else if (auctionResult.getAdType() == AuctionResult.AdType.APP_INSTALL_AD) {
             winningAd = fetchAppInstallAd(auctionResult);
+            logPersistAdSelectionResultWinnerType(WINNER_TYPE_PAS_WINNER);
         } else {
             String err =
                     String.format(
@@ -370,6 +389,7 @@ public class PersistAdSelectionResultRunner {
                             "The value: '%s' is not defined in AdType proto!",
                             auctionResult.getAdType().getNumber());
             sLogger.e(err);
+            logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
             throw new IllegalArgumentException(err);
         }
         return winningAd;
@@ -940,6 +960,16 @@ public class PersistAdSelectionResultRunner {
 
             /** Builds a {@link ReportingRegistrationLimits} */
             public abstract ReportingRegistrationLimits build();
+        }
+    }
+
+    private void logPersistAdSelectionResultWinnerType(
+            @AdsRelevanceStatusUtils.WinnerType int winnerType) {
+        if (mFlags.getPasExtendedMetricsEnabled()) {
+            mAdServicesLogger.logPersistAdSelectionResultCalledStats(
+                    PersistAdSelectionResultCalledStats.builder()
+                            .setWinnerType(winnerType)
+                            .build());
         }
     }
 }
