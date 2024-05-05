@@ -275,7 +275,7 @@ public class ConsentNotificationPasFragment extends Fragment {
                 if (!mIsRenotify && mIsEUDevice) {
                     startTopicsConsentNotificationFragment();
                 } else {
-                    requireActivity().finish();
+                    requireActivity().finishAndRemoveTask();
                 }
             } else {
                 mScrollContainer.smoothScrollTo(
