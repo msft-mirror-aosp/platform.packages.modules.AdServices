@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
 import com.android.adservices.shared.testing.Logger;
-import com.android.adservices.shared.testing.StandardStreamsLogger;
+import com.android.adservices.shared.meta_testing.StandardStreamsLogger;
 
 import com.google.common.truth.Expect;
 
