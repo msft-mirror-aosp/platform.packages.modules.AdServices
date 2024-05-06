@@ -17,6 +17,8 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.common.JsonUtils.getStringFromJson;
+import static com.android.adservices.service.common.ScriptEngineConstants.RESULTS_FIELD_NAME;
+import static com.android.adservices.service.common.ScriptEngineConstants.STATUS_FIELD_NAME;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
@@ -67,8 +69,6 @@ public class ReportImpressionScriptEngine {
 
     // TODO: (b/228094391): Put these common constants in a separate class
     private static final int JS_SCRIPT_STATUS_SUCCESS = 0;
-    public static final String RESULTS_FIELD_NAME = "results";
-    public static final String STATUS_FIELD_NAME = "status";
     public static final String AD_SELECTION_SIGNALS_ARG_NAME = "selection_signals";
     public static final String PER_BUYER_SIGNALS_ARG_NAME = "per_buyer_signals";
     public static final String SIGNALS_FOR_BUYER_ARG_NAME = "signals_for_buyer";
