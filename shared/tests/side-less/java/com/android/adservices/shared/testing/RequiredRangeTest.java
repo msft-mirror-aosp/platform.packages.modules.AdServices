@@ -18,17 +18,12 @@ package com.android.adservices.shared.testing;
 import com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule.RequiredRange;
 import com.android.adservices.shared.testing.AndroidSdk.Range;
 
-import com.google.common.truth.Expect;
-
-import org.junit.Rule;
 import org.junit.Test;
 
-public final class RequiredRangeTest {
+public final class RequiredRangeTest extends SidelessTestCase {
 
     private static final String REASON = "To get to the other side.";
     private static final String NULL_REASON = null;
-
-    @Rule public final Expect expect = Expect.create();
 
     @Test
     public void testToString() {

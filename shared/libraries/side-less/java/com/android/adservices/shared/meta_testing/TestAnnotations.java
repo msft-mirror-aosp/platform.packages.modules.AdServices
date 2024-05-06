@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing;
+package com.android.adservices.shared.meta_testing;
 
+import com.android.adservices.shared.testing.AndroidSdk;
 import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.AndroidSdk.Range;
+import com.android.adservices.shared.testing.ScreenSize;
 import com.android.adservices.shared.testing.annotations.RequiresGoDevice;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.annotations.RequiresScreenSizeDevice;
