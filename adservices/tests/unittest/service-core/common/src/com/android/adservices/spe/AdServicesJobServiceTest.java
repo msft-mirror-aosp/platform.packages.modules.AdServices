@@ -18,6 +18,7 @@ package com.android.adservices.spe;
 
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_BACK_COMPAT_OTA;
 import static com.android.adservices.shared.spe.JobServiceConstants.SKIP_REASON_JOB_NOT_CONFIGURED;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
@@ -231,6 +232,10 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
                         mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
                                 TOPICS_EPOCH_JOB.getJobId()))
                 .isTrue();
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
+                .isTrue();
     }
 
     @Test
@@ -240,6 +245,10 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
         expect.that(
                         mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
                                 TOPICS_EPOCH_JOB.getJobId()))
+                .isFalse();
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
                 .isFalse();
     }
 
