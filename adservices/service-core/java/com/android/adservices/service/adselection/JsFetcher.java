@@ -34,8 +34,10 @@ import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
-import com.android.adservices.service.stats.FetchProcessLoggerNoLoggingImpl;
+import com.android.adservices.service.stats.JsScriptExecutionLogger;
+import com.android.adservices.service.stats.JsScriptExecutionLoggerNoLoggingImpl;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableMap;
@@ -248,7 +250,8 @@ public class JsFetcher {
     public FluentFuture<String> getOutcomeSelectionLogic(
             @NonNull final AdServicesHttpClientRequest outcomeLogicRequest,
             @NonNull final AdSelectionDevOverridesHelper adSelectionDevOverridesHelper,
-            @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig) {
+            @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
+            @NonNull SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger) {
         FluentFuture<DecisionLogic> jsOverrideFuture =
                 FluentFuture.from(
                                 mBackgroundExecutorService.submit(
@@ -258,7 +261,8 @@ public class JsFetcher {
                                                                 adSelectionFromOutcomesConfig)))
                         .transform(this::toDecisionLogic, mLightweightExecutorService);
 
-        return resolveJsScriptSource(jsOverrideFuture, outcomeLogicRequest)
+        return resolveJsScriptSource(
+                        jsOverrideFuture, outcomeLogicRequest, selectAdsFromOutcomesExecutionLogger)
                 .transform(DecisionLogic::getPayload, mLightweightExecutorService)
                 .catching(
                         Exception.class,
@@ -343,6 +347,13 @@ public class JsFetcher {
                 .orElse(null);
     }
 
+    private FluentFuture<DecisionLogic> resolveJsScriptSource(
+            FluentFuture<DecisionLogic> jsOverrideFuture,
+            AdServicesHttpClientRequest jsFetchingRequest) {
+        return resolveJsScriptSource(
+                jsOverrideFuture, jsFetchingRequest, new JsScriptExecutionLoggerNoLoggingImpl());
+    }
+
     /**
      * This method controls the order of the decision logic sources. Currently, the order is:
      *
@@ -354,11 +365,15 @@ public class JsFetcher {
      */
     private FluentFuture<DecisionLogic> resolveJsScriptSource(
             FluentFuture<DecisionLogic> jsOverrideFuture,
-            AdServicesHttpClientRequest jsFetchingRequest) {
+            AdServicesHttpClientRequest jsFetchingRequest,
+            JsScriptExecutionLogger jsScriptExecutionLogger) {
         return jsOverrideFuture.transformAsync(
                 jsOverride -> {
                     if (Objects.isNull(jsOverride)) {
-                        if (mPrebuiltLogicGenerator.isPrebuiltUri(jsFetchingRequest.getUri())) {
+                        boolean isPrebuiltUri =
+                                mPrebuiltLogicGenerator.isPrebuiltUri(jsFetchingRequest.getUri());
+                        jsScriptExecutionLogger.setUsedPrebuilt(isPrebuiltUri);
+                        if (isPrebuiltUri) {
                             sLogger.i(
                                     "Prebuilt URI is detected. Generating JS function from"
                                             + " prebuilt implementations");
@@ -374,8 +389,7 @@ public class JsFetcher {
                                             + jsFetchingRequest.getUseCache());
                             return FluentFuture.from(
                                             mAdServicesHttpsClient.fetchPayloadWithLogging(
-                                                    jsFetchingRequest,
-                                                    new FetchProcessLoggerNoLoggingImpl()))
+                                                    jsFetchingRequest, jsScriptExecutionLogger))
                                     .transform(
                                             response -> {
                                                 String payload = response.getResponseBody();

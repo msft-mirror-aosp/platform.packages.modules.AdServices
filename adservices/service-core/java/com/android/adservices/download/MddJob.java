@@ -39,7 +39,6 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.JobPolicy.NetworkType;
 import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
@@ -157,9 +156,7 @@ public final class MddJob implements JobWorker {
     /** Schedules all MDD background jobs. */
     public static void scheduleAllMddJobs() {
         if (!FlagsFactory.getFlags().getSpeOnPilotJobsEnabled()) {
-            int resultCode =
-                    MddJobService.scheduleIfNeeded(
-                            ApplicationContextSingleton.get(), /* forceSchedule= */ false);
+            int resultCode = MddJobService.scheduleIfNeeded(/* forceSchedule= */ false);
 
             logJobSchedulingLegacy(resultCode);
             return;

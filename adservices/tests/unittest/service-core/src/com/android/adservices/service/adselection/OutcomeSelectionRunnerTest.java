@@ -72,6 +72,7 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -138,6 +139,7 @@ public class OutcomeSelectionRunnerTest {
     private ListeningExecutorService mBlockingExecutorService;
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
+    @Mock private SelectAdsFromOutcomesExecutionLogger mSelectAdsFromOutcomesExecutionLoggerMock;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -214,9 +216,13 @@ public class OutcomeSelectionRunnerTest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelectionFromOutcomes(
-                        mOutcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
+                        mOutcomeSelectionRunner,
+                        config,
+                        MY_APP_PACKAGE_NAME,
+                        mSelectAdsFromOutcomesExecutionLoggerMock);
 
-        verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any());
+        var unused =
+                verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any(), any());
         assertFalse(resultsCallback.mIsSuccess);
         assertEquals(STATUS_INVALID_ARGUMENT, resultsCallback.mFledgeErrorResponse.getStatusCode());
         verify(mAdServicesLoggerMock)
@@ -258,9 +264,13 @@ public class OutcomeSelectionRunnerTest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelectionFromOutcomes(
-                        mOutcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
+                        mOutcomeSelectionRunner,
+                        config,
+                        MY_APP_PACKAGE_NAME,
+                        mSelectAdsFromOutcomesExecutionLoggerMock);
 
-        verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any());
+        var unused =
+                verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any(), any());
         assertTrue(resultsCallback.mIsSuccess);
         assertNull(resultsCallback.mAdSelectionResponse);
 
@@ -313,7 +323,10 @@ public class OutcomeSelectionRunnerTest {
         GenericListMatcher matcher = new GenericListMatcher(adSelectionIdWithBidAndRenderUris);
         doAnswer((ignored) -> getSelectedOutcomeWithDelay(AD_SELECTION_ID_1, mFlags))
                 .when(mAdOutcomeSelectorMock)
-                .runAdOutcomeSelector(argThat(matcher), eq(config));
+                .runAdOutcomeSelector(
+                        argThat(matcher),
+                        eq(config),
+                        eq(mSelectAdsFromOutcomesExecutionLoggerMock));
 
         OutcomeSelectionRunner outcomeSelectionRunner =
                 new OutcomeSelectionRunner(
@@ -332,9 +345,14 @@ public class OutcomeSelectionRunnerTest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelectionFromOutcomes(
-                        outcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
+                        outcomeSelectionRunner,
+                        config,
+                        MY_APP_PACKAGE_NAME,
+                        mSelectAdsFromOutcomesExecutionLoggerMock);
 
-        verify(mAdOutcomeSelectorMock, Mockito.times(1)).runAdOutcomeSelector(any(), any());
+        var unused =
+                verify(mAdOutcomeSelectorMock, Mockito.times(1))
+                        .runAdOutcomeSelector(any(), any(), any());
         assertFalse(resultsCallback.mIsSuccess);
         assertNotNull(resultsCallback.mFledgeErrorResponse);
         assertEquals(STATUS_TIMEOUT, resultsCallback.mFledgeErrorResponse.getStatusCode());
@@ -371,7 +389,8 @@ public class OutcomeSelectionRunnerTest {
     private OutcomeSelectionRunnerTest.AdSelectionTestCallback invokeRunAdSelectionFromOutcomes(
             OutcomeSelectionRunner outcomeSelectionRunner,
             AdSelectionFromOutcomesConfig config,
-            String callerPackageName) {
+            String callerPackageName,
+            SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger) {
 
         // Counted down in the callback
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -384,7 +403,8 @@ public class OutcomeSelectionRunnerTest {
                         .setCallerPackageName(callerPackageName)
                         .build();
 
-        outcomeSelectionRunner.runOutcomeSelection(input, adSelectionTestCallback);
+        outcomeSelectionRunner.runOutcomeSelection(
+                input, adSelectionTestCallback, selectAdsFromOutcomesExecutionLogger);
         try {
             adSelectionTestCallback.mCountDownLatch.await();
         } catch (InterruptedException e) {

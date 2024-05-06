@@ -68,6 +68,7 @@ import com.android.adservices.service.measurement.reporting.EventFallbackReporti
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
+import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.EpochJobService;
 
 import java.util.Objects;
@@ -166,7 +167,7 @@ public class BackgroundJobsManager {
      */
     public static void scheduleTopicsBackgroundJobs(@NonNull Context context) {
         if (!FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            EpochJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            EpochJob.schedule();
             MaintenanceJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             scheduleMddBackgroundJobs();
             scheduleEncryptionKeyBackgroundJobs(context);

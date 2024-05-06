@@ -60,6 +60,8 @@ android_library {
         "junit",
     ],
     static_libs: [
+        // TODO (b/338132355): Clean up dependencies for adservices-test-utility.
+        "adservices-service-core",
         "adservices-shared-testing",
         "androidx.test.runner",
         "compatibility-device-util-axt",
@@ -107,7 +109,10 @@ java_library_host {
         ":adservices-service-core-flags-constants-sources",
         ":adservices-test-utility-sideless-sources",
     ],
-    static_libs: ["compatibility-host-util"],
+    static_libs: [
+        "compatibility-host-util",
+        "adservices-shared-hostside-testing",
+    ],
     libs: [
         "tradefed",
         "framework-annotations-lib",
@@ -118,6 +123,7 @@ filegroup {
     name: "adservices-extended-mockito-rule-sources",
     srcs: [
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java",
+        "java/com/android/adservices/mockito/AdServicesExtendedMockitoMockerImpl.java",
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoRule.java",
         "java/com/android/adservices/mockito/ExtendedMockitoInlineCleanerRule.java",
         "java/com/android/adservices/mockito/LogInterceptor.java",

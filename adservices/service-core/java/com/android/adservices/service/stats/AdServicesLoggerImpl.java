@@ -387,6 +387,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logPersistAdSelectionResultCalledStats(stats);
     }
 
+    @Override
+    public void logSelectAdsFromOutcomesApiCalledStats(SelectAdsFromOutcomesApiCalledStats stats) {
+        mStatsdAdServicesLogger.logSelectAdsFromOutcomesApiCalledStats(stats);
+    }
+
     /** Logs api call error status using {@code CobaltLogger}. */
     private void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
         AppNameApiErrorLogger appNameApiErrorLogger = AppNameApiErrorLogger.getInstance();

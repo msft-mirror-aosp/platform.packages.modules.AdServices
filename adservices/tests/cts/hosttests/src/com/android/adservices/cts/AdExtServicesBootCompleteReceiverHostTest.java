@@ -16,18 +16,17 @@
 
 package com.android.adservices.cts;
 
+import static com.android.adservices.common.AdServicesTestDeviceHelper.ADSERVICES_SETTINGS_INTENT;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.shared.testing.AndroidSdk.PRE_T;
-import static com.android.adservices.shared.testing.TestDeviceHelper.ADSERVICES_SETTINGS_INTENT;
 import static com.android.adservices.shared.testing.TestDeviceHelper.startActivity;
 
-import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
 import com.android.adservices.shared.testing.BackgroundLogReceiver;
-import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -44,20 +43,12 @@ import java.util.function.Predicate;
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
 @RequiresSdkRange(atMost = PRE_T, reason = "It's for S only")
-public class AdExtServicesBootCompleteReceiverHostTest extends AdServicesHostSideTestCase {
+@SetFlagEnabled(KEY_ADSERVICES_ENABLED)
+public final class AdExtServicesBootCompleteReceiverHostTest extends AdServicesHostSideTestCase {
     private static final String LOGCAT_COMMAND = "logcat -s adservices";
 
     private static final String LOG_FROM_BOOTCOMPLETE_RECEIVER =
             "AdExtBootCompletedReceiver onReceive invoked";
-
-    @Rule(order = 0)
-    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
-
-    // Sets flags used in the test (and automatically reset them at the end)
-    @Rule(order = 1)
-    public final AdServicesHostSideFlagsSetterRule flags =
-            AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests()
-                    .setAdServicesEnabled(true);
 
     @Test
     public void testExtBootCompleteReceiver() throws Exception {

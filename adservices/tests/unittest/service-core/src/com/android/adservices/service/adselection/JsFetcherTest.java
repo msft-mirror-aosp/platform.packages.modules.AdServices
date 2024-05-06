@@ -58,6 +58,7 @@ import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLoggerNoLoggingImpl;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -348,7 +349,10 @@ public class JsFetcherTest {
                         .build();
         FluentFuture<String> decisionLogicFuture =
                 mJsFetcher.getOutcomeSelectionLogic(
-                        outcomeSelectionLogicRequest, mAdSelectionDevOverridesHelper, config);
+                        outcomeSelectionLogicRequest,
+                        mAdSelectionDevOverridesHelper,
+                        config,
+                        new SelectAdsFromOutcomesExecutionLoggerNoLoggingImpl());
         String buyerDecisionLogic = waitForFuture(() -> decisionLogicFuture);
 
         assertEquals(

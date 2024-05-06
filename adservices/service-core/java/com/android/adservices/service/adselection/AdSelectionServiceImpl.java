@@ -111,6 +111,8 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLoggerFactory;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -811,7 +813,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throws RemoteException {
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES;
 
-        // TODO(257134800): Add telemetry
+        SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger =
+                new SelectAdsFromOutcomesExecutionLoggerFactory(
+                                Clock.getInstance(), mAdServicesLogger, mFlags)
+                        .getSelectAdsFromOutcomesExecutionLogger();
+
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
@@ -854,7 +860,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mShouldUseUnifiedTables,
                                     mRetryStrategyFactory.createRetryStrategy(
                                             mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()));
-                    runner.runOutcomeSelection(inputParams, callback);
+                    runner.runOutcomeSelection(
+                            inputParams, callback, selectAdsFromOutcomesExecutionLogger);
                 });
     }
 
