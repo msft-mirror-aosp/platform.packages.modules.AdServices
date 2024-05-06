@@ -15,6 +15,9 @@
  */
 package com.android.adservices.shared.testing;
 
+import static com.android.adservices.shared.meta_testing.TestAnnotations.newAnnotationForAtLeast;
+import static com.android.adservices.shared.meta_testing.TestAnnotations.newAnnotationForLessThanT;
+import static com.android.adservices.shared.meta_testing.TestAnnotations.sdkRange;
 import static com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule.DEFAULT_REASON;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.ANY;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.R;
@@ -22,13 +25,11 @@ import static com.android.adservices.shared.testing.AndroidSdk.Level.S;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.S2;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.T;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.U;
-import static com.android.adservices.shared.testing.TestAnnotations.newAnnotationForAtLeast;
-import static com.android.adservices.shared.testing.TestAnnotations.newAnnotationForLessThanT;
-import static com.android.adservices.shared.testing.TestAnnotations.sdkRange;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.common.SimpleStatement;
+import com.android.adservices.shared.meta_testing.SimpleStatement;
+import com.android.adservices.shared.meta_testing.StandardStreamsLogger;
 import com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule.RequiredRange;
 import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.AndroidSdk.Range;
@@ -40,17 +41,14 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastU;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 
-import com.google.common.truth.Expect;
 import com.google.common.truth.StringSubject;
 
 import org.junit.AssumptionViolatedException;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
-import java.util.Objects;
 
 // TODO(b/315542995): provide host-side implementation
 /**
@@ -60,7 +58,7 @@ import java.util.Objects;
  * but subclasses should implement {@link #newRule(Level, Level)} and {@link
  * #newRuleForDeviceLevelAndRuleAtLeastLevel(Level)}.
  */
-public class AbstractSdkLevelSupportedRuleTest {
+public class AbstractSdkLevelSupportedRuleTest extends SidelessTestCase {
 
     // Not a real test (i.e., it doesn't exist on this class), but it's passed to Description
     private static final String TEST_METHOD_BEING_EXECUTED = "testAmI..OrNot";
@@ -77,16 +75,12 @@ public class AbstractSdkLevelSupportedRuleTest {
 
     private final SimpleStatement mBaseStatement = new SimpleStatement();
 
-    protected final Logger mLog;
-
-    @Rule public final Expect expect = Expect.create();
-
     public AbstractSdkLevelSupportedRuleTest() {
         this(StandardStreamsLogger.getInstance());
     }
 
     protected AbstractSdkLevelSupportedRuleTest(RealLogger realLogger) {
-        mLog = new Logger(Objects.requireNonNull(realLogger), getClass());
+        super(realLogger);
     }
 
     // NOTE: the testRuleIsAtLeastMethods... refers to the device SDK, not the rule's

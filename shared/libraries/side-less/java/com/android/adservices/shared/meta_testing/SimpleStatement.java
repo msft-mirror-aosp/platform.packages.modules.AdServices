@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.shared.meta_testing;
 
 import com.android.adservices.shared.testing.Logger;
-import com.android.adservices.shared.testing.StandardStreamsLogger;
 
 import org.junit.runners.model.Statement;
 
