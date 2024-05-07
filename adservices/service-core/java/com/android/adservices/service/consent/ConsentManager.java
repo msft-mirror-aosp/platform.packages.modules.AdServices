@@ -290,8 +290,7 @@ public class ConsentManager {
                                     MeasurementImpl.getInstance(context),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                                     SharedStorageDatabase.getInstance(context).appInstallDao(),
-                                    ProtectedSignalsDatabase.getInstance(context)
-                                            .protectedSignalsDao(),
+                                    ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                     SharedStorageDatabase.getInstance(context).frequencyCapDao(),
                                     adServicesManager,
                                     datastore,

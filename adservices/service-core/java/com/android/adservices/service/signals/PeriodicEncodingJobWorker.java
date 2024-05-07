@@ -156,8 +156,7 @@ public class PeriodicEncodingJobWorker {
 
         synchronized (SINGLETON_LOCK) {
             if (sPeriodicEncodingJobWorker == null) {
-                ProtectedSignalsDatabase signalsDatabase =
-                        ProtectedSignalsDatabase.getInstance(context);
+                ProtectedSignalsDatabase signalsDatabase = ProtectedSignalsDatabase.getInstance();
                 Flags flags = FlagsFactory.getFlags();
                 RetryStrategy retryStrategy =
                         RetryStrategyFactory.createInstance(

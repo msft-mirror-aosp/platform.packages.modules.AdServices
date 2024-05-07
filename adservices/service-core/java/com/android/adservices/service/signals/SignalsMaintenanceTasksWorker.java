@@ -77,10 +77,10 @@ public class SignalsMaintenanceTasksWorker {
     private SignalsMaintenanceTasksWorker(@NonNull Context context) {
         Objects.requireNonNull(context);
         mFlags = FlagsFactory.getFlags();
-        mProtectedSignalsDao = ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao();
+        mProtectedSignalsDao = ProtectedSignalsDatabase.getInstance().protectedSignalsDao();
         mEnrollmentDao = EnrollmentDao.getInstance();
         mEncoderLogicHandler = new EncoderLogicHandler(context);
-        mEncodedPayloadDao = ProtectedSignalsDatabase.getInstance(context).getEncodedPayloadDao();
+        mEncodedPayloadDao = ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao();
         mClock = Clock.systemUTC();
         mPackageManager = context.getPackageManager();
     }
