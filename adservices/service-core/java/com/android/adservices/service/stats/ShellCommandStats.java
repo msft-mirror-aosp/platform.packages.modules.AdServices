@@ -57,6 +57,7 @@ public final class ShellCommandStats {
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_CUSTOM_AUDIENCE_REFRESH;
 
+
     public static final int COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE;
@@ -69,6 +70,10 @@ public final class ShellCommandStats {
     public static final int COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP;
+
+    public static final int COMMAND_SIGNALS_GENERATE_INPUT_FOR_SIGNALS =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_SIGNALS_GENERATE_INPUT_FOR_SIGNALS;
 
     @IntDef({
         COMMAND_UNKNOWN,
@@ -90,7 +95,10 @@ public final class ShellCommandStats {
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE,
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_DISABLE,
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW,
-        COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP
+        COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP,
+
+        // Protected App Signals commands
+        COMMAND_SIGNALS_GENERATE_INPUT_FOR_SIGNALS
     })
     @Retention(SOURCE)
     public @interface Command {}
