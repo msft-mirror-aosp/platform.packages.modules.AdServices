@@ -31,9 +31,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_RETURNED_TOPICS_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
-import android.annotation.NonNull;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -99,8 +97,7 @@ public class TopicsDao {
     }
 
     /** Returns an instance of the TopicsDAO given a context. */
-    @NonNull
-    public static TopicsDao getInstance(@NonNull Context context) {
+    public static TopicsDao getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton = new TopicsDao(DbHelper.getInstance());
@@ -116,7 +113,7 @@ public class TopicsDao {
      * @param appClassificationTopicsMap Map of app -> classified topics
      */
     public void persistAppClassificationTopics(
-            long epochId, @NonNull Map<String, List<Topic>> appClassificationTopicsMap) {
+            long epochId, Map<String, List<Topic>> appClassificationTopicsMap) {
         Objects.requireNonNull(appClassificationTopicsMap);
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
@@ -162,7 +159,6 @@ public class TopicsDao {
      * @param epochId the epoch ID to retrieve
      * @return {@link Map} a map of app -> topics
      */
-    @NonNull
     public Map<String, List<Topic>> retrieveAppClassificationTopics(long epochId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         Map<String, List<Topic>> appTopicsMap = new HashMap<>();
@@ -226,7 +222,7 @@ public class TopicsDao {
      * @param epochId ID of current epoch
      * @param topTopics the topics list to persist into DB
      */
-    public void persistTopTopics(long epochId, @NonNull List<Topic> topTopics) {
+    public void persistTopTopics(long epochId, List<Topic> topTopics) {
         // topTopics the Top Topics: a list of 5 top topics and the 6th topic
         // which was selected randomly. We can refer this 6th topic as the random-topic.
         Objects.requireNonNull(topTopics);
@@ -271,7 +267,6 @@ public class TopicsDao {
      * @param epochId the epochId to retrieve the top topics.
      * @return {@link List} a {@link List} of {@link Topic}
      */
-    @NonNull
     public List<Topic> retrieveTopTopics(long epochId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
@@ -355,7 +350,7 @@ public class TopicsDao {
      * @param app app name
      * @param sdk sdk name
      */
-    public void recordUsageHistory(long epochId, @NonNull String app, @NonNull String sdk) {
+    public void recordUsageHistory(long epochId, String app, String sdk) {
         Objects.requireNonNull(app);
         Objects.requireNonNull(sdk);
         Preconditions.checkStringNotEmpty(app);
@@ -388,7 +383,7 @@ public class TopicsDao {
      * @param epochId epoch id to record
      * @param app app name
      */
-    public void recordAppUsageHistory(long epochId, @NonNull String app) {
+    public void recordAppUsageHistory(long epochId, String app) {
         Objects.requireNonNull(app);
         Preconditions.checkStringNotEmpty(app);
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
@@ -419,7 +414,6 @@ public class TopicsDao {
      * @param epochId the epoch to retrieve the app and sdk usage for.
      * @return Return Map<App, List<SDK>>.
      */
-    @NonNull
     public Map<String, List<String>> retrieveAppSdksUsageMap(long epochId) {
         Map<String, List<String>> appSdksUsageMap = new HashMap<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
@@ -470,7 +464,6 @@ public class TopicsDao {
      * @param epochId the epoch to retrieve the app usage for.
      * @return Map<App, UsageCount>, how many times an app called topics API in this epoch
      */
-    @NonNull
     public Map<String, Integer> retrieveAppUsageMap(long epochId) {
         Map<String, Integer> appUsageMap = new HashMap<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
@@ -516,9 +509,8 @@ public class TopicsDao {
      * @throws IllegalArgumentException if {@code tableNames} and {@code appColumnNames} have
      *     different sizes.
      */
-    @NonNull
     public Set<String> retrieveDistinctAppsFromTables(
-            @NonNull List<String> tableNames, @NonNull List<String> appColumnNames) {
+            List<String> tableNames, List<String> appColumnNames) {
         Preconditions.checkArgument(tableNames.size() == appColumnNames.size());
 
         Set<String> apps = new HashSet<>();
@@ -563,7 +555,7 @@ public class TopicsDao {
      *     This is similar to the table Can Learn Topic in the explainer.
      */
     public void persistCallerCanLearnTopics(
-            long epochId, @NonNull Map<Topic, Set<String>> callerCanLearnMap) {
+            long epochId, Map<Topic, Set<String>> callerCanLearnMap) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
@@ -612,7 +604,6 @@ public class TopicsDao {
      * @param numberOfLookBackEpochs Look back numberOfLookBackEpochs.
      * @return {@link Map} a Map<Topic, Set<Caller>> where Caller = App or Sdk.
      */
-    @NonNull
     public Map<Topic, Set<String>> retrieveCallerCanLearnTopicsMap(
             long epochId, int numberOfLookBackEpochs) {
         Preconditions.checkArgumentPositive(
@@ -695,8 +686,7 @@ public class TopicsDao {
      * @param returnedAppSdkTopics {@link Map} a Map<Pair<app, sdk>, Topic>
      */
     public void persistReturnedAppTopicsMap(
-            long epochId,
-            @NonNull Map<Pair<String, String>, Topic> returnedAppSdkTopics) {
+            long epochId, Map<Pair<String, String>, Topic> returnedAppSdkTopics) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
@@ -743,8 +733,7 @@ public class TopicsDao {
      * @param returnedAppSdkEncryptedTopics {@link Map} a Map< Pair< app, sdk>, EncryptedTopic>
      */
     public void persistReturnedAppEncryptedTopicsMap(
-            long epochId,
-            @NonNull Map<Pair<String, String>, EncryptedTopic> returnedAppSdkEncryptedTopics) {
+            long epochId, Map<Pair<String, String>, EncryptedTopic> returnedAppSdkEncryptedTopics) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
@@ -787,7 +776,6 @@ public class TopicsDao {
      *     epochs
      * @return a {@link Map} in type {@code Map<EpochId, Map < Pair < App, Sdk>, Topic>}
      */
-    @NonNull
     public Map<Long, Map<Pair<String, String>, Topic>> retrieveReturnedTopics(
             long epochId, int numberOfLookBackEpochs) {
         Map<Long, Map<Pair<String, String>, Topic>> topicsMap = new HashMap<>();
@@ -900,7 +888,6 @@ public class TopicsDao {
      *     epochs
      * @return a {@link Map} in type {@code Map<EpochId, Map < Pair < App, Sdk>, EncryptedTopic>}
      */
-    @NonNull
     public Map<Long, Map<Pair<String, String>, EncryptedTopic>> retrieveReturnedEncryptedTopics(
             long epochId, int numberOfLookBackEpochs) {
         Map<Long, Map<Pair<String, String>, EncryptedTopic>> encryptedTopicsMap = new HashMap<>();
@@ -992,7 +979,7 @@ public class TopicsDao {
      *
      * @param topic {@link Topic} to block.
      */
-    public void recordBlockedTopic(@NonNull Topic topic) {
+    public void recordBlockedTopic(Topic topic) {
         Objects.requireNonNull(topic);
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
@@ -1012,8 +999,7 @@ public class TopicsDao {
         }
     }
 
-    @NonNull
-    private ContentValues getContentValuesForBlockedTopic(@NonNull Topic topic) {
+    private ContentValues getContentValuesForBlockedTopic(Topic topic) {
         // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
         values.put(TopicsTables.BlockedTopicsContract.TOPIC, topic.getTopic());
@@ -1027,7 +1013,7 @@ public class TopicsDao {
      *
      * @param topic blocked {@link Topic} to remove.
      */
-    public void removeBlockedTopic(@NonNull Topic topic) {
+    public void removeBlockedTopic(Topic topic) {
         Objects.requireNonNull(topic);
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
@@ -1066,7 +1052,6 @@ public class TopicsDao {
      *
      * @return {@link List} a {@link List} of blocked {@link Topic}s.s
      */
-    @NonNull
     public List<Topic> retrieveAllBlockedTopics() {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         List<Topic> blockedTopics = new ArrayList<>();
@@ -1116,7 +1101,7 @@ public class TopicsDao {
      * @param epochToDeleteFrom the epoch to delete starting from (inclusive)
      */
     public void deleteDataOfOldEpochs(
-            @NonNull String tableName, @NonNull String epochColumnName, long epochToDeleteFrom) {
+            String tableName, String epochColumnName, long epochToDeleteFrom) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
@@ -1142,7 +1127,7 @@ public class TopicsDao {
      *
      * @param tablesToExclude a {@link List} of tables that won't be deleted.
      */
-    public void deleteAllTopicsTables(@NonNull List<String> tablesToExclude) {
+    public void deleteAllTopicsTables(List<String> tablesToExclude) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
@@ -1185,8 +1170,7 @@ public class TopicsDao {
      *     {@code columnNameToDeleteFrom}
      */
     public void deleteFromTableByColumn(
-            @NonNull List<Pair<String, String>> tableNamesAndColumnNamePairs,
-            @NonNull List<String> valuesToDelete) {
+            List<Pair<String, String>> tableNamesAndColumnNamePairs, List<String> valuesToDelete) {
         Objects.requireNonNull(tableNamesAndColumnNamePairs);
         Objects.requireNonNull(valuesToDelete);
 
@@ -1244,10 +1228,10 @@ public class TopicsDao {
      *     equalConditionColumnValue} is a string
      */
     public void deleteEntriesFromTableByColumnWithEqualCondition(
-            @NonNull List<Pair<String, String>> tableNamesAndColumnNamePairs,
-            @NonNull List<String> valuesToDelete,
-            @NonNull String equalConditionColumnName,
-            @NonNull String equalConditionColumnValue,
+            List<Pair<String, String>> tableNamesAndColumnNamePairs,
+            List<String> valuesToDelete,
+            String equalConditionColumnName,
+            String equalConditionColumnValue,
             boolean isStringEqualConditionColumnValue) {
         Objects.requireNonNull(tableNamesAndColumnNamePairs);
         Objects.requireNonNull(valuesToDelete);
@@ -1373,7 +1357,7 @@ public class TopicsDao {
      *     apps.
      */
     public void persistTopicContributors(
-            long epochId, @NonNull Map<Integer, Set<String>> topicToContributorsMap) {
+            long epochId, Map<Integer, Set<String>> topicToContributorsMap) {
         Objects.requireNonNull(topicToContributorsMap);
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
@@ -1414,7 +1398,6 @@ public class TopicsDao {
      * @param epochId the epochId
      * @return a {@link Map} of topic to its contributors
      */
-    @NonNull
     public Map<Integer, Set<String>> retrieveTopicToContributorsMap(long epochId) {
         Map<Integer, Set<String>> topicToContributorsMap = new HashMap<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
@@ -1468,7 +1451,7 @@ public class TopicsDao {
      *
      * @param tableName the table to delete entries from
      */
-    public void deleteAllEntriesFromTable(@NonNull String tableName) {
+    public void deleteAllEntriesFromTable(String tableName) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
