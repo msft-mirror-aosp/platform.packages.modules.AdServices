@@ -103,7 +103,7 @@ public class TopicsDao {
     public static TopicsDao getInstance(@NonNull Context context) {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
-                sSingleton = new TopicsDao(DbHelper.getInstance(context));
+                sSingleton = new TopicsDao(DbHelper.getInstance());
             }
             return sSingleton;
         }

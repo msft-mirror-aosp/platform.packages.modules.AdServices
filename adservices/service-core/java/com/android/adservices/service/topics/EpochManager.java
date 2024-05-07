@@ -155,7 +155,7 @@ public class EpochManager {
                 sSingleton =
                         new EpochManager(
                                 TopicsDao.getInstance(context),
-                                DbHelper.getInstance(context),
+                                DbHelper.getInstance(),
                                 new Random(),
                                 ClassifierManager.getInstance(context),
                                 FlagsFactory.getFlags(),
