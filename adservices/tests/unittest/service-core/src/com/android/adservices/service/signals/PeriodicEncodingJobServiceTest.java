@@ -97,11 +97,13 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     @Mock private PeriodicEncodingJobWorker mMockPeriodicEncodingJobWorker;
     @Mock private JobParameters mMockJobParameters;
     @Mock private ConsentManager mMockConsentManager;
+    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {
         assertWithMessage("job_scheduler").that(JOB_SCHEDULER).isNotNull();
         assertNoPendingJob();
+        mocker.mockGetFlags(mMockFlags);
         mockFledgeConsentIsGiven();
         doReturn(JOB_SCHEDULER).when(mSpyEncodingJobService).getSystemService(JobScheduler.class);
     }
@@ -113,39 +115,9 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStartJobFlagDisabled_withoutLogging() {
-        Flags flagsWithPeriodicEncodingDisabledWithoutLogging =
-                new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return false;
-                    }
-
-                    @Override
-                    public long getProtectedSignalPeriodicEncodingJobPeriodMs() {
-                        throw new IllegalStateException(
-                                "This configured value should not be called");
-                    }
-
-                    @Override
-                    public long getProtectedSignalsPeriodicEncodingJobFlexMs() {
-                        throw new IllegalStateException(
-                                "This configured value should not be called");
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithPeriodicEncodingDisabledWithoutLogging);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(
-                        sContext, flagsWithPeriodicEncodingDisabledWithoutLogging);
+        mockGetBackgroundJobsLoggingKillSwitch(true);
+        mockGetProtectedSignalsPeriodicEncodingEnabled(false);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
 
         testOnStartJobFlagDisabled();
 
@@ -154,39 +126,10 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStartJobFlagDisabled_withLogging() throws InterruptedException {
-        Flags flagsWithPeriodicEncodingDisabledWithLogging =
-                new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return false;
-                    }
-
-                    @Override
-                    public long getProtectedSignalPeriodicEncodingJobPeriodMs() {
-                        throw new IllegalStateException(
-                                "This configured value should not be called");
-                    }
-
-                    @Override
-                    public long getProtectedSignalsPeriodicEncodingJobFlexMs() {
-                        throw new IllegalStateException(
-                                "This configured value should not be called");
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithPeriodicEncodingDisabledWithLogging);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(
-                        sContext, flagsWithPeriodicEncodingDisabledWithLogging);
+        mockDisableParentKillSwitches();
+        mockGetProtectedSignalsPeriodicEncodingEnabled(false);
+        mockGetBackgroundJobsLoggingKillSwitch(false);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
@@ -196,15 +139,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStartJobConsentRevokedGaUxDisabled() {
-        Flags flagsWithGaUxDisabled =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return false;
-                    }
-                };
-
-        mocker.mockGetFlags(flagsWithGaUxDisabled);
+        mockGetGaUxFeatureEnabled(false);
         mockFledgeConsentIsRevoked();
         doNothing().when(mSpyEncodingJobService).jobFinished(mMockJobParameters, false);
 
@@ -226,21 +161,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStartJobConsentRevokedGaUxEnabled_withoutLogging() {
-        Flags flagsWithGaUxEnabledLoggingDisabled =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return true;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithGaUxEnabledLoggingDisabled);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxEnabledLoggingDisabled);
+        mockGetBackgroundJobsLoggingKillSwitch(true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
@@ -249,36 +171,10 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStartJobConsentRevokedGaUxEnabled_withLogging() throws InterruptedException {
-        Flags flagsWithGaUxEnabledLoggingEnabled =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
+        mockDisableRelevantKillSwitches();
+        mockGetBackgroundJobsLoggingKillSwitch(false);
 
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithGaUxEnabledLoggingEnabled);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxEnabledLoggingEnabled);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
@@ -289,19 +185,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStartJobProtectedSignalsKillSwitchOn() {
-        Flags flagsWithKillSwitchOn =
-                new Flags() {
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithKillSwitchOn);
+        mockGetProtectedSignalsPeriodicEncodingEnabled(false);
         doNothing().when(mSpyEncodingJobService).jobFinished(mMockJobParameters, false);
 
         // Schedule the job to assert after starting that the scheduled job has been cancelled
@@ -322,29 +206,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStartJobProtectedSignalsKillSwitchOff() throws InterruptedException {
-        Flags flagsWithKillSwitchOff =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithKillSwitchOff);
+        mockDisableRelevantKillSwitches();
         doReturn(mMockPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(FluentFuture.from(immediateFuture(null)))
@@ -371,36 +233,9 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStartJobUpdateSuccess_withLogging() throws InterruptedException {
-        Flags flagsWithLogging =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithLogging);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+        mockDisableRelevantKillSwitches();
+        mockGetBackgroundJobsLoggingKillSwitch(false);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -411,36 +246,9 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStartJobUpdateTimeoutHandled_withoutLogging() throws InterruptedException {
-        Flags flagsWithoutLogging =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithoutLogging);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
+        mockDisableRelevantKillSwitches();
+        mockGetBackgroundJobsLoggingKillSwitch(true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
 
         testOnStartJobUpdateTimeoutHandled();
 
@@ -449,36 +257,9 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStartJobUpdateTimeoutHandled_withLogging() throws InterruptedException {
-        Flags flagsWithLogging =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithLogging);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+        mockDisableRelevantKillSwitches();
+        mockGetBackgroundJobsLoggingKillSwitch(false);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -491,29 +272,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     public void testOnStartJobUpdateInterruptedHandled() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        Flags flagsEnabledPeriodicEncoding =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsEnabledPeriodicEncoding);
+        mockDisableRelevantKillSwitches();
         doReturn(mMockPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(
@@ -542,29 +301,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     public void testOnStartJobUpdateExecutionExceptionHandled() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        Flags flagsEnabledPeriodicEncoding =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsEnabledPeriodicEncoding);
+        mockDisableRelevantKillSwitches();
         doReturn(mMockPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
 
@@ -593,16 +330,9 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStopJobCallsStopWork_withoutLogging() {
-        Flags flagsWithoutLogging =
-                new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return true;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithoutLogging);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
+        mockDisableRelevantKillSwitches();
+        mockGetBackgroundJobsLoggingKillSwitch(true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
 
         doReturn(mMockPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
@@ -614,16 +344,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStopJob_withLogging() throws InterruptedException {
-        Flags flagsWithLogging =
-                new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithLogging);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+        mockGetBackgroundJobsLoggingKillSwitch(false);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         doReturn(mMockPeriodicEncodingJobWorker)
@@ -636,32 +358,12 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testScheduleIfNeededFlagDisabled() {
-        Flags flagsDisabledPeriodicEncoding =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
+        mockDisableParentKillSwitches();
+        mockGetProtectedSignalsPeriodicEncodingEnabled(false);
         doCallRealMethod()
                 .when(() -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)));
 
-        PeriodicEncodingJobService.scheduleIfNeeded(sContext, flagsDisabledPeriodicEncoding, false);
+        PeriodicEncodingJobService.scheduleIfNeeded(sContext, mMockFlags, false);
 
         verify(() -> PeriodicEncodingJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
@@ -669,33 +371,12 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testScheduleIfNeededSuccess() {
-        Flags flagsEnabledPeriodicEncoding =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
+        mockDisableRelevantKillSwitches();
         doCallRealMethod()
                 .when(() -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)));
         doNothing().when(() -> PeriodicEncodingJobService.schedule(any(), any()));
 
-        PeriodicEncodingJobService.scheduleIfNeeded(sContext, flagsEnabledPeriodicEncoding, false);
+        PeriodicEncodingJobService.scheduleIfNeeded(sContext, mMockFlags, false);
 
         verify(() -> PeriodicEncodingJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
@@ -703,33 +384,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testScheduleIfNeeded_AlreadyScheduled_isNotRescheduled() {
-        Flags flagsEnabledPeriodicEncoding =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-
-                    @Override
-                    public long getProtectedSignalPeriodicEncodingJobPeriodMs() {
-                        return PERIOD;
-                    }
-                };
+        mockFlagsEnabledPeriodicEncoding();
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
@@ -746,7 +401,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         doCallRealMethod()
                 .when(() -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)));
 
-        PeriodicEncodingJobService.scheduleIfNeeded(sContext, flagsEnabledPeriodicEncoding, false);
+        PeriodicEncodingJobService.scheduleIfNeeded(sContext, mMockFlags, false);
 
         verify(() -> PeriodicEncodingJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
@@ -754,33 +409,9 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testScheduleIfNeeded_AlreadyScheduledTimeoutChanged_isRescheduled() {
-        Flags flagsEnabledPeriodicEncoding =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
+        mockDisableRelevantKillSwitches();
+        mockGetProtectedSignalPeriodicEncodingJobPeriodMs(PERIOD);
 
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-
-                    @Override
-                    public long getProtectedSignalPeriodicEncodingJobPeriodMs() {
-                        return PERIOD;
-                    }
-                };
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
@@ -794,7 +425,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         doCallRealMethod()
                 .when(() -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)));
 
-        PeriodicEncodingJobService.scheduleIfNeeded(sContext, flagsEnabledPeriodicEncoding, false);
+        PeriodicEncodingJobService.scheduleIfNeeded(sContext, mMockFlags, false);
 
         verify(() -> PeriodicEncodingJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
@@ -802,33 +433,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testScheduleIfNeededUnderMin() {
-        Flags flagsEnabledPeriodicEncoding =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-
-                    @Override
-                    public long getProtectedSignalPeriodicEncodingJobPeriodMs() {
-                        return 60 * 1000;
-                    }
-                };
+        mockDisableRelevantKillSwitches();
+        mockGetProtectedSignalPeriodicEncodingJobPeriodMs(60_000);
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
@@ -842,7 +448,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         doCallRealMethod()
                 .when(() -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)));
 
-        PeriodicEncodingJobService.scheduleIfNeeded(sContext, flagsEnabledPeriodicEncoding, false);
+        PeriodicEncodingJobService.scheduleIfNeeded(sContext, mMockFlags, false);
 
         verify(() -> PeriodicEncodingJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
@@ -850,28 +456,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testScheduleIfNeededForceSuccess() {
-        Flags flagsEnabledPeriodicEncoding =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getProtectedSignalsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
+        mockDisableRelevantKillSwitches();
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
@@ -884,7 +469,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                 .when(() -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(true)));
         doNothing().when(() -> PeriodicEncodingJobService.schedule(any(), any()));
 
-        PeriodicEncodingJobService.scheduleIfNeeded(sContext, flagsEnabledPeriodicEncoding, true);
+        PeriodicEncodingJobService.scheduleIfNeeded(sContext, mMockFlags, true);
 
         verify(() -> PeriodicEncodingJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
@@ -892,35 +477,18 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testScheduleFlagDisabled() {
-        Flags flagsDisabledPeriodicEncoding =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
+        mockDisableParentKillSwitches();
+        mockGetProtectedSignalsPeriodicEncodingEnabled(false);
 
-                    @Override
-                    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                        return false;
-                    }
-                };
-        PeriodicEncodingJobService.schedule(sContext, flagsDisabledPeriodicEncoding);
+        PeriodicEncodingJobService.schedule(sContext, mMockFlags);
 
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
     }
 
     @Test
     public void testOnStartJob_shouldDisableJobTrue_withoutLogging() {
-        Flags flagsWithoutLogging =
-                new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return true;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithoutLogging);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
+        mockGetBackgroundJobsLoggingKillSwitch(true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
 
         testOnStartJobShouldDisableJobTrue();
 
@@ -929,16 +497,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
 
     @Test
     public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
-        Flags flagsWithLogging =
-                new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
-                    }
-                };
-        mocker.mockGetFlags(flagsWithLogging);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+        mockGetBackgroundJobsLoggingKillSwitch(false);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
 
         testOnStartJobShouldDisableJobTrue();
 
@@ -1058,6 +618,38 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         verifyEncodeProtectedSignalsNeverCalled();
         verifyJobFinished();
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
+    }
+
+    private void mockGetBackgroundJobsLoggingKillSwitch(boolean value) {
+        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(value);
+    }
+
+    private void mockGetProtectedSignalPeriodicEncodingJobPeriodMs(long value) {
+        when(mMockFlags.getProtectedSignalPeriodicEncodingJobPeriodMs()).thenReturn(value);
+    }
+
+    private void mockGetGaUxFeatureEnabled(boolean value) {
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(value);
+    }
+
+    private void mockDisableParentKillSwitches() {
+        mockGetGaUxFeatureEnabled(true);
+        when(mMockFlags.getProtectedSignalsEnabled()).thenReturn(true);
+        when(mMockFlags.getGlobalKillSwitch()).thenReturn(false);
+    }
+
+    private void mockDisableRelevantKillSwitches() {
+        mockDisableParentKillSwitches();
+        mockGetProtectedSignalsPeriodicEncodingEnabled(true);
+    }
+
+    private void mockGetProtectedSignalsPeriodicEncodingEnabled(boolean value) {
+        when(mMockFlags.getProtectedSignalsPeriodicEncodingEnabled()).thenReturn(value);
+    }
+
+    private void mockFlagsEnabledPeriodicEncoding() {
+        mockDisableRelevantKillSwitches();
+        mockGetProtectedSignalPeriodicEncodingJobPeriodMs(PERIOD);
     }
 
     private void mockFledgeConsentIsGiven() {
