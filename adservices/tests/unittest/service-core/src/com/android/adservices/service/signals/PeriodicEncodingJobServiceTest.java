@@ -55,6 +55,7 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.shared.testing.HandlerIdleSyncCallback;
 import com.android.adservices.shared.testing.JobServiceCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -108,8 +109,12 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
+        HandlerIdleSyncCallback callback = new HandlerIdleSyncCallback();
+
         JOB_SCHEDULER.cancelAll();
+
+        callback.assertIdle();
     }
 
     @Test
