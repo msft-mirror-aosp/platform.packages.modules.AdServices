@@ -24,7 +24,6 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinish
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.spe.AdServicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -56,6 +55,7 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.shared.testing.JobServiceCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -69,7 +69,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -125,7 +124,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     }
 
     @Test
-    public void testOnStartJobFlagDisabled_withLogging() throws InterruptedException {
+    public void testOnStartJobFlagDisabled_withLogging() throws Exception {
         mockDisableParentKillSwitches();
         mockGetProtectedSignalsPeriodicEncodingEnabled(false);
         mockGetBackgroundJobsLoggingKillSwitch(false);
@@ -170,7 +169,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     }
 
     @Test
-    public void testOnStartJobConsentRevokedGaUxEnabled_withLogging() throws InterruptedException {
+    public void testOnStartJobConsentRevokedGaUxEnabled_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
         mockGetBackgroundJobsLoggingKillSwitch(false);
 
@@ -205,25 +204,18 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     }
 
     @Test
-    public void testOnStartJobProtectedSignalsKillSwitchOff() throws InterruptedException {
+    public void testOnStartJobProtectedSignalsKillSwitchOff() throws Exception {
         mockDisableRelevantKillSwitches();
         doReturn(mMockPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mMockPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
-        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
-
-        doAnswer(
-                        unusedInvocation -> {
-                            jobFinishedCountDown.countDown();
-                            return null;
-                        })
-                .when(mSpyEncodingJobService)
-                .jobFinished(mMockJobParameters, false);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyEncodingJobService);
 
         assertOnStartSucceeded();
-        jobFinishedCountDown.await();
+        callback.assertJobFinished();
 
         verify(() -> PeriodicEncodingJobWorker.getInstance());
         verifyEncodeProtectedSignalsCalled();
@@ -232,7 +224,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     }
 
     @Test
-    public void testOnStartJobUpdateSuccess_withLogging() throws InterruptedException {
+    public void testOnStartJobUpdateSuccess_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
         mockGetBackgroundJobsLoggingKillSwitch(false);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
@@ -245,7 +237,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     }
 
     @Test
-    public void testOnStartJobUpdateTimeoutHandled_withoutLogging() throws InterruptedException {
+    public void testOnStartJobUpdateTimeoutHandled_withoutLogging() throws Exception {
         mockDisableRelevantKillSwitches();
         mockGetBackgroundJobsLoggingKillSwitch(true);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
@@ -256,7 +248,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     }
 
     @Test
-    public void testOnStartJobUpdateTimeoutHandled_withLogging() throws InterruptedException {
+    public void testOnStartJobUpdateTimeoutHandled_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
         mockGetBackgroundJobsLoggingKillSwitch(false);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
@@ -269,9 +261,9 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     }
 
     @Test
-    public void testOnStartJobUpdateInterruptedHandled() throws InterruptedException {
-        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
-
+    public void testOnStartJobUpdateInterruptedHandled() throws Exception {
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyEncodingJobService);
         mockDisableRelevantKillSwitches();
         doReturn(mMockPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
@@ -280,16 +272,9 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                                 immediateFailedFuture(new InterruptedException("testing timeout"))))
                 .when(mMockPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
-        doAnswer(
-                        unusedInvocation -> {
-                            jobFinishedCountDown.countDown();
-                            return null;
-                        })
-                .when(mSpyEncodingJobService)
-                .jobFinished(mMockJobParameters, false);
 
         assertOnStartSucceeded();
-        jobFinishedCountDown.await();
+        callback.assertJobFinished();
 
         verify(() -> PeriodicEncodingJobWorker.getInstance());
         verifyEncodeProtectedSignalsCalled();
@@ -298,9 +283,9 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     }
 
     @Test
-    public void testOnStartJobUpdateExecutionExceptionHandled() throws InterruptedException {
-        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
-
+    public void testOnStartJobUpdateExecutionExceptionHandled() throws Exception {
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyEncodingJobService);
         mockDisableRelevantKillSwitches();
         doReturn(mMockPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
@@ -311,16 +296,9 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                                         new ExecutionException("testing timeout", null))))
                 .when(mMockPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
-        doAnswer(
-                        unusedInvocation -> {
-                            jobFinishedCountDown.countDown();
-                            return null;
-                        })
-                .when(mSpyEncodingJobService)
-                .jobFinished(mMockJobParameters, false);
 
         assertOnStartSucceeded();
-        jobFinishedCountDown.await();
+        callback.assertJobFinished();
 
         verify(() -> PeriodicEncodingJobWorker.getInstance());
         verifyEncodeProtectedSignalsCalled();
@@ -343,7 +321,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     }
 
     @Test
-    public void testOnStopJob_withLogging() throws InterruptedException {
+    public void testOnStopJob_withLogging() throws Exception {
         mockGetBackgroundJobsLoggingKillSwitch(false);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
@@ -507,24 +485,18 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         verifyLoggingNotHappened(logger);
     }
 
-    private void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {
-        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+    private void testOnStartJobUpdateTimeoutHandled() throws Exception {
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyEncodingJobService);
 
         doReturn(mMockPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(FluentFuture.from(immediateFailedFuture(new TimeoutException("testing timeout"))))
                 .when(mMockPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
-        doAnswer(
-                        unusedInvocation -> {
-                            jobFinishedCountDown.countDown();
-                            return null;
-                        })
-                .when(mSpyEncodingJobService)
-                .jobFinished(mMockJobParameters, false);
 
         assertOnStartSucceeded();
-        jobFinishedCountDown.await();
+        callback.assertJobFinished();
 
         verify(() -> PeriodicEncodingJobWorker.getInstance());
         verifyEncodeProtectedSignalsCalled();
@@ -556,24 +528,17 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
     }
 
-    private void testOnStartJobUpdateSuccess() throws InterruptedException {
-        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
-
+    private void testOnStartJobUpdateSuccess() throws Exception {
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyEncodingJobService);
         doReturn(mMockPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mMockPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
-        doAnswer(
-                        unusedInvocation -> {
-                            jobFinishedCountDown.countDown();
-                            return null;
-                        })
-                .when(mSpyEncodingJobService)
-                .jobFinished(mMockJobParameters, false);
 
         assertOnStartSucceeded();
-        jobFinishedCountDown.await();
+        callback.assertJobFinished();
 
         verify(() -> PeriodicEncodingJobWorker.getInstance());
         verifyEncodeProtectedSignalsCalled();
