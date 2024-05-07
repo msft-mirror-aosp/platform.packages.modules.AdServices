@@ -110,8 +110,7 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
         ExtendedMockito.doNothing().when(EpochJob::schedule);
         ExtendedMockito.doNothing().when(MddJob::scheduleAllMddJobs);
 
-        ExtendedMockito.doReturn(mMockEnrollmentDao)
-                .when(() -> EnrollmentDao.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance());
         ExtendedMockito.doReturn(mMockAppImportanceFilter)
                 .when(
                         () ->
@@ -175,8 +174,7 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
         ExtendedMockito.doNothing().when(EpochJob::schedule);
         ExtendedMockito.doNothing().when(MddJob::scheduleAllMddJobs);
 
-        ExtendedMockito.doReturn(mMockEnrollmentDao)
-                .when(() -> EnrollmentDao.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance());
         ExtendedMockito.doReturn(mMockAppImportanceFilter)
                 .when(
                         () ->

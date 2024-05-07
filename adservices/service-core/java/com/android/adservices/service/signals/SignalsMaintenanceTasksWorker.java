@@ -78,7 +78,7 @@ public class SignalsMaintenanceTasksWorker {
         Objects.requireNonNull(context);
         mFlags = FlagsFactory.getFlags();
         mProtectedSignalsDao = ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao();
-        mEnrollmentDao = EnrollmentDao.getInstance(context);
+        mEnrollmentDao = EnrollmentDao.getInstance();
         mEncoderLogicHandler = new EncoderLogicHandler(context);
         mEncodedPayloadDao = ProtectedSignalsDatabase.getInstance(context).getEncodedPayloadDao();
         mClock = Clock.systemUTC();

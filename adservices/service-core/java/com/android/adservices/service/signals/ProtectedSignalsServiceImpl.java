@@ -145,7 +145,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                         Throttler.getInstance(FlagsFactory.getFlags())),
-                EnrollmentDao.getInstance(context));
+                EnrollmentDao.getInstance());
     }
 
     @VisibleForTesting

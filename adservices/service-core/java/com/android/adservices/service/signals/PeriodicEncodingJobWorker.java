@@ -187,7 +187,7 @@ public class PeriodicEncodingJobWorker {
                                 AdServicesExecutors.getLightWeightExecutor(),
                                 DevContextFilter.create(context),
                                 flags,
-                                EnrollmentDao.getInstance(context),
+                                EnrollmentDao.getInstance(),
                                 Clock.getInstance(),
                                 AdServicesLoggerImpl.getInstance());
             }

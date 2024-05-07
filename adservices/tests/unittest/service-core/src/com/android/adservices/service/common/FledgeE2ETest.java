@@ -396,7 +396,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         AdSelectionServerDatabase serverDb =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionServerDatabase.class).build();
         mEncryptionKeyDao = EncryptionKeyDao.getInstance(mSpyContext);
-        mEnrollmentDao = EnrollmentDao.getInstance(mSpyContext);
+        mEnrollmentDao = EnrollmentDao.getInstance();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, DEFAULT_FLAGS);
 

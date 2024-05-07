@@ -134,7 +134,7 @@ public class EncryptionKeyJobService extends JobService {
     @VisibleForTesting
     public void fetchAndUpdateEncryptionKeys() {
         EncryptionKeyDao encryptionKeyDao = EncryptionKeyDao.getInstance(getApplicationContext());
-        EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
+        EnrollmentDao enrollmentDao = EnrollmentDao.getInstance();
         EncryptionKeyJobHandler encryptionKeyJobHandler =
                 new EncryptionKeyJobHandler(
                         encryptionKeyDao,
