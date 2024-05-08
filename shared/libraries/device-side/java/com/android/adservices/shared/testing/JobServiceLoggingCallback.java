@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.adservices.common.synccallback;
+package com.android.adservices.shared.testing;
 
 import android.app.job.JobService;
-
-import com.android.adservices.shared.testing.SyncCallback;
 
 /**
  * A synchronized callback used for logging {@link JobService} on testing purpose.
