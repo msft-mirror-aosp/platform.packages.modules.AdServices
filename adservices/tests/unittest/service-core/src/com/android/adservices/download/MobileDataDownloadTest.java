@@ -840,7 +840,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         EnrollmentDataDownloadManager enrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(mContext, mMockFlags);
         EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper, mMockFlags);
-        doReturn(enrollmentDao).when(() -> EnrollmentDao.getInstance(any(Context.class)));
+        doReturn(enrollmentDao).when(() -> EnrollmentDao.getInstance());
 
         EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);
         doReturn(encryptionKeyDao).when(() -> EncryptionKeyDao.getInstance(any(Context.class)));

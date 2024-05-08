@@ -17,6 +17,7 @@
 package com.android.adservices.spe;
 
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_BACK_COMPAT_OTA;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
@@ -84,6 +85,7 @@ public final class AdServicesJobService extends AbstractJobService {
     // First batch pilot jobs: MddJobService, job ID = 11, 12, 13, 14.
     // Second batch pilot jobs:
     //     - EpochJobService, job ID = 2.
+    //     - BackgroundFetchJobService, job ID = 9.
     @VisibleForTesting
     boolean shouldRescheduleWithLegacyMethod(int jobId) {
         Flags flags = FlagsFactory.getFlags();
@@ -107,6 +109,7 @@ public final class AdServicesJobService extends AbstractJobService {
     }
 
     private boolean isSecondBatchPilotJob(int jobId) {
-        return jobId == TOPICS_EPOCH_JOB.getJobId();
+        return jobId == TOPICS_EPOCH_JOB.getJobId()
+                || jobId == FLEDGE_BACKGROUND_FETCH_JOB.getJobId();
     }
 }

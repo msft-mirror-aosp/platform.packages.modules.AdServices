@@ -101,7 +101,7 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
                                 ctx,
                                 DATABASE_NAME,
                                 CURRENT_DATABASE_VERSION,
-                                DbHelper.getInstance(ctx));
+                                DbHelper.getInstance());
             }
             return sSingleton;
         }

@@ -36,14 +36,14 @@ public class ProtectedSignalsDatabaseTest {
 
     @Test
     public void testGetInstance() {
-        ProtectedSignalsDatabase instance1 = ProtectedSignalsDatabase.getInstance(CONTEXT);
-        ProtectedSignalsDatabase instance2 = ProtectedSignalsDatabase.getInstance(CONTEXT);
+        ProtectedSignalsDatabase instance1 = ProtectedSignalsDatabase.getInstance();
+        ProtectedSignalsDatabase instance2 = ProtectedSignalsDatabase.getInstance();
         assertSame(instance1, instance2);
     }
 
     @Test
     public void testProtectedSignalsDao() {
-        ProtectedSignalsDatabase instance = ProtectedSignalsDatabase.getInstance(CONTEXT);
+        ProtectedSignalsDatabase instance = ProtectedSignalsDatabase.getInstance();
         assertNotNull(instance.protectedSignalsDao());
     }
 }

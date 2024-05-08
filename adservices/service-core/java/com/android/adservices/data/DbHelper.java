@@ -20,7 +20,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.database.DatabaseUtils;
@@ -43,6 +42,7 @@ import com.android.adservices.data.topics.migration.TopicsDbMigratorV9;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -82,25 +82,28 @@ public class DbHelper extends SQLiteOpenHelper {
      * @param dbVersion db version
      */
     @VisibleForTesting
-    public DbHelper(@NonNull Context context, @NonNull String dbName, int dbVersion) {
+    public DbHelper(Context context, String dbName, int dbVersion) {
         super(context, dbName, null, dbVersion);
         mDbFile = FileCompatUtils.getDatabasePathHelper(context, dbName);
         this.mDbVersion = dbVersion;
     }
 
     /** Returns an instance of the DbHelper given a context. */
-    @NonNull
-    public static DbHelper getInstance(@NonNull Context ctx) {
+    public static DbHelper getInstance() {
         synchronized (DbHelper.class) {
             if (sSingleton == null) {
-                sSingleton = new DbHelper(ctx, DATABASE_NAME, getDatabaseVersionToCreate());
+                sSingleton =
+                        new DbHelper(
+                                ApplicationContextSingleton.get(),
+                                DATABASE_NAME,
+                                getDatabaseVersionToCreate());
             }
             return sSingleton;
         }
     }
 
     @Override
-    public void onCreate(@NonNull SQLiteDatabase db) {
+    public void onCreate(SQLiteDatabase db) {
         LogUtil.d("DbHelper.onCreate with version %d. Name: %s", mDbVersion, mDbFile.getName());
         for (String sql : TopicsTables.CREATE_STATEMENTS) {
             db.execSQL(sql);
@@ -148,7 +151,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     // TODO(b/255964885): Consolidate DB Migrator Class across Rubidium
     @Override
-    public void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         LogUtil.d(
                 "DbHelper.onUpgrade. Attempting to upgrade version from %d to %d.",
                 oldVersion, newVersion);

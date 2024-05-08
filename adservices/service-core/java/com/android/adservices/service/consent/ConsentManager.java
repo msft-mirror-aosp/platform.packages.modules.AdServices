@@ -286,12 +286,11 @@ public class ConsentManager {
                             new ConsentManager(
                                     TopicsWorker.getInstance(context),
                                     appConsentDao,
-                                    EnrollmentDao.getInstance(context),
+                                    EnrollmentDao.getInstance(),
                                     MeasurementImpl.getInstance(context),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                                     SharedStorageDatabase.getInstance(context).appInstallDao(),
-                                    ProtectedSignalsDatabase.getInstance(context)
-                                            .protectedSignalsDao(),
+                                    ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                     SharedStorageDatabase.getInstance(context).frequencyCapDao(),
                                     adServicesManager,
                                     datastore,

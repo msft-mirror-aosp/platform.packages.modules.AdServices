@@ -95,7 +95,7 @@ public class FledgeMaintenanceTasksWorker {
         mFlags = FlagsFactory.getFlags();
         mAdSelectionEntryDao = AdSelectionDatabase.getInstance(context).adSelectionEntryDao();
         mFrequencyCapDao = SharedStorageDatabase.getInstance(context).frequencyCapDao();
-        mEnrollmentDao = EnrollmentDao.getInstance(context);
+        mEnrollmentDao = EnrollmentDao.getInstance();
         mEncryptionContextDao =
                 AdSelectionServerDatabase.getInstance(context).encryptionContextDao();
         mClock = Clock.systemUTC();

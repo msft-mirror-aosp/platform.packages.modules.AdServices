@@ -129,7 +129,7 @@ public class ConsentNotificationPasFragment extends Fragment {
 
                     setInfoViewState1(!mIsInfoViewExpanded1);
                 });
-        ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy))
+        ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy1))
                 .setMovementMethod(LinkMovementMethod.getInstance());
 
         if (!mIsFirstTimeRow) {

@@ -67,7 +67,7 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
     public static EncryptionKeyDao getInstance(@NonNull Context context) {
         synchronized (EncryptionKeyDao.class) {
             if (sSingleton == null) {
-                sSingleton = new EncryptionKeyDao(SharedDbHelper.getInstance(context));
+                sSingleton = new EncryptionKeyDao(SharedDbHelper.getInstance());
             }
             return sSingleton;
         }

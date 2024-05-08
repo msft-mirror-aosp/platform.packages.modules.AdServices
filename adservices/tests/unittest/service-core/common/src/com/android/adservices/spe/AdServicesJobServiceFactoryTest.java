@@ -18,7 +18,7 @@ package com.android.adservices.spe;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_NOT_CONFIGURED_CORRECTLY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
-import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
@@ -35,12 +35,15 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.download.MddJob;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.customaudience.BackgroundFetchJob;
+import com.android.adservices.service.customaudience.BackgroundFetchJobService;
 import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
@@ -53,10 +56,11 @@ import java.util.concurrent.Executors;
 
 /** Unit tests for {@link AdServicesJobServiceFactory} */
 @SpyStatic(AdServicesJobInfo.class)
+@MockStatic(BackgroundFetchJobService.class)
 @SpyStatic(EpochJob.class)
-@SpyStatic(EpochJobService.class)
+@MockStatic(EpochJobService.class)
 @SpyStatic(MddJob.class)
-@SpyStatic(MddJobService.class)
+@MockStatic(MddJobService.class)
 public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMockitoTestCase {
     private static final Executor sExecutor = Executors.newCachedThreadPool();
     private static final Map<Integer, String> sJobIdToNameMap = Map.of();
@@ -114,9 +118,13 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
         expect.withMessage("getJobWorkerInstance() for MDD_WIFI_CHARGING_PERIODIC_TASK_JOB")
                 .that(mFactory.getJobWorkerInstance(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()))
                 .isInstanceOf(MddJob.class);
+
         expect.withMessage("getJobWorkerInstance() for TOPICS_EPOCH_JOB")
                 .that(mFactory.getJobWorkerInstance(TOPICS_EPOCH_JOB.getJobId()))
                 .isInstanceOf(EpochJob.class);
+        expect.withMessage("getJobWorkerInstance() for FLEDGE_BACKGROUND_FETCH_JOB")
+                .that(mFactory.getJobWorkerInstance(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
+                .isInstanceOf(BackgroundFetchJob.class);
     }
 
     @Test
@@ -135,10 +143,6 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
     @Test
     public void testRescheduleJobWithLegacyMethod() {
         boolean forceSchedule = true;
-        doReturn(SCHEDULING_RESULT_CODE_SUCCESSFUL)
-                .when(() -> MddJobService.scheduleIfNeeded(forceSchedule));
-        doReturn(SCHEDULING_RESULT_CODE_SUCCESSFUL)
-                .when(() -> EpochJobService.scheduleIfNeeded(forceSchedule));
 
         mFactory.rescheduleJobWithLegacyMethod(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId());
         verify(() -> MddJobService.scheduleIfNeeded(forceSchedule));
@@ -151,6 +155,8 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
 
         mFactory.rescheduleJobWithLegacyMethod(TOPICS_EPOCH_JOB.getJobId());
         verify(() -> EpochJobService.scheduleIfNeeded(forceSchedule));
+        mFactory.rescheduleJobWithLegacyMethod(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(mMockFlags, forceSchedule));
     }
 
     @Test

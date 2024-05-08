@@ -117,7 +117,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                         FlagsFactory.getFlags()
                                                 .getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())),
                         new UpdateProcessingOrchestrator(
-                                ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
+                                ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                 new UpdateProcessorSelector(),
                                 new UpdateEncoderEventHandler(context),
                                 new SignalEvictionController()),
@@ -145,7 +145,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                         Throttler.getInstance(FlagsFactory.getFlags())),
-                EnrollmentDao.getInstance(context));
+                EnrollmentDao.getInstance());
     }
 
     @VisibleForTesting

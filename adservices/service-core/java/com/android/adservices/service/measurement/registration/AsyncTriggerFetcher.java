@@ -86,7 +86,7 @@ public class AsyncTriggerFetcher {
     public AsyncTriggerFetcher(Context context) {
         this(
                 context,
-                EnrollmentDao.getInstance(context),
+                EnrollmentDao.getInstance(),
                 FlagsFactory.getFlags(),
                 getOdpDelegationManager(context, FlagsFactory.getFlags()),
                 DatastoreManagerFactory.getDatastoreManager(context),

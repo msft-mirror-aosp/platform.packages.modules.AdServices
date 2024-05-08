@@ -34,7 +34,6 @@ import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.util.Pair;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
@@ -48,6 +47,7 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -103,15 +103,14 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     /** Returns an instance of the EnrollmentDao given a context. */
-    @NonNull
-    public static EnrollmentDao getInstance(@NonNull Context context) {
+    public static EnrollmentDao getInstance() {
         synchronized (EnrollmentDao.class) {
             if (sSingleton == null) {
                 Flags flags = FlagsFactory.getFlags();
                 sSingleton =
                         new EnrollmentDao(
-                                context,
-                                SharedDbHelper.getInstance(context),
+                                ApplicationContextSingleton.get(),
+                                SharedDbHelper.getInstance(),
                                 flags,
                                 flags.isEnableEnrollmentTestSeed(),
                                 AdServicesLoggerImpl.getInstance(),
@@ -180,7 +179,6 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     @Override
-    @NonNull
     public List<EnrollmentData> getAllEnrollmentData() {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         List<EnrollmentData> enrollmentDataList = new ArrayList<>();
@@ -423,7 +421,6 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     @Override
-    @NonNull
     public Set<AdTechIdentifier> getAllFledgeEnrolledAdTechs() {
         int buildId = mEnrollmentUtil.getBuildId();
         Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
@@ -764,7 +761,6 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     @Override
-    @NonNull
     public Set<AdTechIdentifier> getAllPASEnrolledAdTechs() {
         int buildId = mEnrollmentUtil.getBuildId();
         Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();

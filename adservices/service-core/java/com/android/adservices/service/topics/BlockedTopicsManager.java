@@ -120,7 +120,7 @@ public class BlockedTopicsManager {
                     blockedTopicsSourceOfTruth = Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
                 }
                 AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
-                TopicsDao topicsDao = TopicsDao.getInstance(context);
+                TopicsDao topicsDao = TopicsDao.getInstance();
                 handleBlockedTopicsMigrationIfNeeded(
                         context, topicsDao, adServicesManager, blockedTopicsSourceOfTruth);
                 boolean enableAppSearchConsent =

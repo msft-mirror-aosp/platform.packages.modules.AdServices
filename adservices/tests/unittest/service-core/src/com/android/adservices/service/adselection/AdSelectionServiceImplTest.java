@@ -373,7 +373,7 @@ public class AdSelectionServiceImplTest {
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDao = sharedDb.frequencyCapDao();
         mEncryptionKeyDao = EncryptionKeyDao.getInstance(CONTEXT);
-        mEnrollmentDao = EnrollmentDao.getInstance(CONTEXT);
+        mEnrollmentDao = EnrollmentDao.getInstance();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
 

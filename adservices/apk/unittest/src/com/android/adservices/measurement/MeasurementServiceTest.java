@@ -204,7 +204,7 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
                 .when(mMockConsentManager)
                 .getConsent(eq(AdServicesApiType.MEASUREMENTS));
 
-        ExtendedMockito.doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance(any()));
+        ExtendedMockito.doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance());
         doReturn(ENROLLMENT).when(mMockEnrollmentDao).getEnrollmentDataFromMeasurementUrl(any());
         ExtendedMockito.doReturn(mMockMeasurementImpl)
                 .when(() -> MeasurementImpl.getInstance(any()));

@@ -686,7 +686,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         .build()
                         .frequencyCapDao();
         mEncryptionKeyDao = EncryptionKeyDao.getInstance(mSpyContext);
-        mEnrollmentDao = EnrollmentDao.getInstance(mSpyContext);
+        mEnrollmentDao = EnrollmentDao.getInstance();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
         mMultiCloudSupportStrategy =

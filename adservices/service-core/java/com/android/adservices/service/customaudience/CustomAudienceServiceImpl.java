@@ -262,7 +262,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     sLogger.v("Joining custom audience");
                     mCustomAudienceImpl.joinCustomAudience(
                             customAudience, ownerPackageName, devContext);
-                    BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
+                    BackgroundFetchJob.schedule(mFlags);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
                     sLogger.v("Consent revoked");

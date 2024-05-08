@@ -88,7 +88,7 @@ public class TopicsService extends Service {
                             Clock.getInstance(),
                             FlagsFactory.getFlags(),
                             Throttler.getInstance(FlagsFactory.getFlags()),
-                            EnrollmentDao.getInstance(this),
+                            EnrollmentDao.getInstance(),
                             appImportanceFilter);
             mTopicsService.init();
         }
