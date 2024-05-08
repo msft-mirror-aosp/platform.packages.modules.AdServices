@@ -284,7 +284,7 @@ public class AdSelectionFromOutcomesE2ETest {
         mFrequencyCapDao = sharedDb.frequencyCapDao();
         AdSelectionServerDatabase serverDb =
                 Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
-        mEnrollmentDao = EnrollmentDao.getInstance(mContextSpy);
+        mEnrollmentDao = EnrollmentDao.getInstance();
         mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContextSpy);
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);

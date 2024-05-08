@@ -49,7 +49,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
@@ -95,6 +94,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
@@ -128,8 +128,9 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.mockwebserver.Dispatcher;
@@ -137,14 +138,12 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -156,8 +155,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class CustomAudienceServiceEndToEndTest {
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+@RequiresSdkLevelAtLeastS()
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(ScheduleCustomAudienceUpdateJobService.class)
+@MockStatic(BackgroundFetchJob.class)
+public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedMockitoTestCase {
+    @Rule(order = 11)
+    public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
@@ -243,9 +247,6 @@ public class CustomAudienceServiceEndToEndTest {
     private CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
     private CustomAudienceValidator mCustomAudienceValidator;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     private static final Flags COMMON_FLAGS_WITH_FILTERS_ENABLED =
             new FakeFlagsFactory.TestFlags() {
                 @Override
@@ -261,17 +262,6 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Before
     public void setup() {
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(ScheduleCustomAudienceUpdateJobService.class)
-                        .mockStatic(BackgroundFetchJobService.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-
         doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
         mFetchUri = mMockWebServerRule.uriForPath("/fetch");
@@ -306,7 +296,7 @@ public class CustomAudienceServiceEndToEndTest {
                 spy(
                         new FledgeAuthorizationFilter(
                                 CONTEXT.getPackageManager(),
-                                EnrollmentDao.getInstance(CONTEXT),
+                                EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock));
 
         mService =
@@ -333,7 +323,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
                                         CONTEXT.getPackageManager(),
-                                        EnrollmentDao.getInstance(CONTEXT),
+                                        EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
                                         COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
@@ -383,11 +373,6 @@ public class CustomAudienceServiceEndToEndTest {
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED));
     }
 
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
-    }
-
     @Test
     public void testJoinCustomAudience_notInBinderThread_fail() {
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
@@ -412,7 +397,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED),
                         new FledgeAuthorizationFilter(
                                 CONTEXT.getPackageManager(),
-                                EnrollmentDao.getInstance(CONTEXT),
+                                EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock),
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -428,7 +413,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
                                         CONTEXT.getPackageManager(),
-                                        EnrollmentDao.getInstance(CONTEXT),
+                                        EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
                                         COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
@@ -492,8 +477,6 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testJoinCustomAudience_joinTwice_secondJoinOverrideValues() {
         doReturn(COMMON_FLAGS_WITH_FILTERS_ENABLED).when(FlagsFactory::getFlags);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
@@ -520,7 +503,7 @@ public class CustomAudienceServiceEndToEndTest {
                         CommonFixture.VALID_BUYER_1,
                         VALID_NAME));
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verify(() -> BackgroundFetchJob.schedule(any()), times(2));
     }
 
     @Test
@@ -539,8 +522,6 @@ public class CustomAudienceServiceEndToEndTest {
                 };
         doReturn(flagsWithAppInstallDisabled).when(FlagsFactory::getFlags);
         reInitServiceWithFlags(flagsWithAppInstallDisabled);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
@@ -556,7 +537,7 @@ public class CustomAudienceServiceEndToEndTest {
 
         assertNoAppInstallFilters(result);
         verifyFCapFiltersNotNull(result);
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(1));
+        verify(() -> BackgroundFetchJob.schedule(any()));
     }
 
     @Test
@@ -575,8 +556,6 @@ public class CustomAudienceServiceEndToEndTest {
                 };
         doReturn(flagsWithFCapDisabled).when(FlagsFactory::getFlags);
         reInitServiceWithFlags(flagsWithFCapDisabled);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
@@ -592,7 +571,7 @@ public class CustomAudienceServiceEndToEndTest {
 
         assertNoFCapFilters(result);
         verifyAppInstallFiltersNotNull(result);
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(1));
+        verify(() -> BackgroundFetchJob.schedule(any()));
     }
 
     @Test
@@ -602,8 +581,6 @@ public class CustomAudienceServiceEndToEndTest {
                 getFlagsWithAuctionServerRequestFlagsEnabled();
 
         doReturn(flagsWithAuctionServerRequestFlagsEnabled).when(FlagsFactory::getFlags);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
@@ -634,7 +611,7 @@ public class CustomAudienceServiceEndToEndTest {
                         CommonFixture.VALID_BUYER_1,
                         VALID_NAME));
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verify(() -> BackgroundFetchJob.schedule(any()), times(2));
     }
 
     @Test
@@ -823,8 +800,6 @@ public class CustomAudienceServiceEndToEndTest {
                 getFlagsWithAuctionServerRequestFlagsEnabled();
 
         doReturn(flagsWithAuctionServerRequestFlagsEnabled).when(FlagsFactory::getFlags);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
@@ -841,6 +816,7 @@ public class CustomAudienceServiceEndToEndTest {
 
         // Fetch and join a custom audience with the same owner, buyer and name but a different
         // value for one of fields. In this case, we'll use a different activation time.
+        boolean auctionServerRequestFlagsEnabled = true;
         MockWebServer mockWebServer =
                 mMockWebServerRule.startMockWebServer(
                         List.of(
@@ -848,7 +824,7 @@ public class CustomAudienceServiceEndToEndTest {
                                         .setBody(
                                                 getFullSuccessfulJsonResponse(
                                                                 LOCALHOST_BUYER,
-                                                                /* auctionServerRequestFlags = */ true)
+                                                                auctionServerRequestFlagsEnabled)
                                                         .toString())));
         FetchAndJoinCustomAudienceInput input =
                 new FetchAndJoinCustomAudienceInput.Builder(mFetchUri, VALID_OWNER)
@@ -925,8 +901,6 @@ public class CustomAudienceServiceEndToEndTest {
                 getFlagsWithAuctionServerRequestFlagsEnabled();
 
         doReturn(flagsWithAuctionServerRequestFlagsEnabled).when(FlagsFactory::getFlags);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
@@ -1149,7 +1123,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED),
                         new FledgeAuthorizationFilter(
                                 CONTEXT.getPackageManager(),
-                                EnrollmentDao.getInstance(CONTEXT),
+                                EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock),
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -1165,7 +1139,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
                                         CONTEXT.getPackageManager(),
-                                        EnrollmentDao.getInstance(CONTEXT),
+                                        EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
                                         COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
@@ -1217,8 +1191,6 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testLeaveCustomAudience_leaveJoinedCustomAudience() {
         doReturn(COMMON_FLAGS_WITH_FILTERS_ENABLED).when(FlagsFactory::getFlags);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -1248,7 +1220,7 @@ public class CustomAudienceServiceEndToEndTest {
                         CommonFixture.VALID_BUYER_1,
                         VALID_NAME));
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
+        verify(() -> BackgroundFetchJob.schedule(any()));
     }
 
     @Test
@@ -1257,8 +1229,6 @@ public class CustomAudienceServiceEndToEndTest {
                 getFlagsWithAuctionServerRequestFlagsEnabled();
 
         doReturn(flagsWithAuctionServerRequestFlagsEnabled).when(FlagsFactory::getFlags);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
@@ -1291,7 +1261,7 @@ public class CustomAudienceServiceEndToEndTest {
                         CommonFixture.VALID_BUYER_1,
                         VALID_NAME));
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
+        verify(() -> BackgroundFetchJob.schedule(any()));
     }
 
     @Test
@@ -1310,8 +1280,6 @@ public class CustomAudienceServiceEndToEndTest {
                             }
                         })
                 .when(FlagsFactory::getFlags);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -1341,7 +1309,7 @@ public class CustomAudienceServiceEndToEndTest {
                         CommonFixture.VALID_BUYER_1,
                         VALID_NAME));
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
+        verify(() -> BackgroundFetchJob.schedule(any()));
     }
 
     @Test
@@ -1533,8 +1501,6 @@ public class CustomAudienceServiceEndToEndTest {
                 };
 
         doReturn(flagsWithAuctionServerRequestFlagsEnabled).when(FlagsFactory::getFlags);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
@@ -2981,8 +2947,6 @@ public class CustomAudienceServiceEndToEndTest {
         Flags flagsWithLowRateLimit = new FlagsWithLowRateLimit();
 
         doReturn(flagsWithLowRateLimit).when(FlagsFactory::getFlags);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
@@ -3001,7 +2965,7 @@ public class CustomAudienceServiceEndToEndTest {
                                             flagsWithLowRateLimit),
                                     new FledgeAuthorizationFilter(
                                             CONTEXT.getPackageManager(),
-                                            EnrollmentDao.getInstance(CONTEXT),
+                                            EnrollmentDao.getInstance(),
                                             mAdServicesLoggerMock),
                                     mConsentManagerMock,
                                     mDevContextFilter,
@@ -3017,7 +2981,7 @@ public class CustomAudienceServiceEndToEndTest {
                                             mAppImportanceFilter,
                                             new FledgeAuthorizationFilter(
                                                     CONTEXT.getPackageManager(),
-                                                    EnrollmentDao.getInstance(CONTEXT),
+                                                    EnrollmentDao.getInstance(),
                                                     mAdServicesLoggerMock),
                                             new FledgeAllowListsFilter(
                                                     flagsWithLowRateLimit, mAdServicesLoggerMock),
@@ -3240,7 +3204,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
                                         CONTEXT.getPackageManager(),
-                                        EnrollmentDao.getInstance(CONTEXT),
+                                        EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(flags, mAdServicesLoggerMock),
                                 mMockThrottler),

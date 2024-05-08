@@ -116,8 +116,8 @@ public class AppUpdateManager {
             if (sSingleton == null) {
                 sSingleton =
                         new AppUpdateManager(
-                                DbHelper.getInstance(context),
-                                TopicsDao.getInstance(context),
+                                DbHelper.getInstance(),
+                                TopicsDao.getInstance(),
                                 new Random(),
                                 FlagsFactory.getFlags());
             }

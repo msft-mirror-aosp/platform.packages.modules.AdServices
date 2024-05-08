@@ -158,7 +158,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.customaudience.BackgroundFetchJobService;
+import com.android.adservices.service.customaudience.BackgroundFetchJob;
 import com.android.adservices.service.customaudience.CustomAudienceBlobFixture;
 import com.android.adservices.service.customaudience.CustomAudienceImpl;
 import com.android.adservices.service.customaudience.CustomAudienceQuantityChecker;
@@ -210,7 +210,7 @@ import java.util.stream.Collectors;
 @MockStatic(ConsentManager.class)
 @MockStatic(AppImportanceFilter.class)
 @MockStatic(DebugReportSenderJobService.class)
-@MockStatic(BackgroundFetchJobService.class)
+@MockStatic(BackgroundFetchJob.class)
 public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
     public static final String CUSTOM_AUDIENCE_SEQ_2 = "/ca2";
@@ -396,7 +396,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         AdSelectionServerDatabase serverDb =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionServerDatabase.class).build();
         mEncryptionKeyDao = EncryptionKeyDao.getInstance(mSpyContext);
-        mEnrollmentDao = EnrollmentDao.getInstance(mSpyContext);
+        mEnrollmentDao = EnrollmentDao.getInstance();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, DEFAULT_FLAGS);
 
@@ -494,9 +494,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         CustomAudience customAudience1 =
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
@@ -508,7 +505,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         setupOverridesAndAssertSuccess(
                 customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
@@ -556,9 +553,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         CustomAudience customAudience1 =
                 createCustomAudienceWithAdCost(
                         mLocalhostBuyerDomain,
@@ -576,7 +570,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         setupOverridesAndAssertSuccess(
                 customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
@@ -624,9 +618,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         CustomAudience customAudience1 =
                 createCustomAudienceWithAdCost(
                         mLocalhostBuyerDomain,
@@ -644,7 +635,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         setupOverridesAndAssertSuccess(
                 customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
@@ -710,13 +701,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         interactionReportingSemaphore,
                         false);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         selectAdsAndReport(
                 CommonFixture.getUri(
@@ -763,13 +751,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         interactionReportingSemaphore,
                         false);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(
@@ -851,13 +836,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         interactionReportingSemaphore,
                         false);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(
@@ -945,13 +927,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         interactionReportingSemaphore,
                         false);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         selectAdsAndReport(
                 CommonFixture.getUri(
@@ -982,9 +961,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         CustomAudience customAudience1 =
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
@@ -996,7 +972,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         setupOverridesAndAssertSuccess(
                 customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
@@ -1049,9 +1025,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         CustomAudience customAudience1 =
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
@@ -1066,7 +1039,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         // Join second custom audience
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         setupOverridesAndAssertSuccess(
                 customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
@@ -1342,9 +1315,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
 
         CustomAudience customAudience2 = createCustomAudience(BUYER_DOMAIN_2, BIDS_FOR_BUYER_2);
@@ -1352,7 +1322,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         setupOverridesAndAssertSuccess(
                 customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
@@ -1467,9 +1437,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
 
         CustomAudience customAudience2 = createCustomAudience(BUYER_DOMAIN_2, BIDS_FOR_BUYER_2);
@@ -1477,7 +1444,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         setupOverridesAndAssertSuccess(
                 customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
@@ -1541,9 +1508,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         CustomAudience customAudience1 =
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
@@ -1553,7 +1517,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         setupOverridesAndAssertSuccess(
                 customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
@@ -1627,9 +1591,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         CustomAudience customAudience1 =
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
@@ -1639,7 +1600,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         // Add AdSelection Override
         AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
@@ -1876,13 +1837,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         interactionReportingSemaphore,
                         false);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         selectAdsAndReport(
                 CommonFixture.getUri(
@@ -1924,13 +1882,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         interactionReportingSemaphore,
                         true);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         // Run Ad Selection
         selectAdsAndReport(
@@ -1981,8 +1936,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                                 .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM),
                         /* debugReportingLatch= */ debugReportingLatch);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
         mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, false);
 
         AdSelectionTestCallback resultsCallback =
@@ -2046,8 +2000,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                                 .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM),
                         /* debugReportingLatch= */ null);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
         doNothing().when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
         mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, false);
 
@@ -2142,8 +2095,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                                 .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM),
                         /* debugReportingLatch= */ null);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
         doNothing().when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
         mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, true);
 
@@ -2211,8 +2163,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                                 .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM),
                         /* debugReportingLatch= */ null);
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
         doNothing().when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
         mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, false);
 
@@ -2290,13 +2241,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 mockWebServerRule.uriForPath(BUYER_REPORTING_PATH).getHost()),
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -2869,8 +2817,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         initClients(
                 false,
                 true,
-                /* frequencyCapFilteringEnabled = */ true,
-                /* appInstallFilteringEnabled = */ false,
+                /* frequencyCapFilteringEnabled= */ true,
+                /* appInstallFilteringEnabled= */ false,
                 true,
                 false,
                 false,
@@ -3053,8 +3001,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         initClients(
                 false,
                 true,
-                /* frequencyCapFilteringEnabled = */ false,
-                /* appInstallFilteringEnabled = */ true,
+                /* frequencyCapFilteringEnabled= */ false,
+                /* appInstallFilteringEnabled= */ true,
                 true,
                 false,
                 false,
@@ -3469,9 +3417,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         interactionReportingSemaphore,
                         true);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         /*
          * App #1
          * - Join CA_1 and CA_2
@@ -3671,9 +3616,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                             return new MockResponse().setResponseCode(404);
                         });
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(
@@ -3779,15 +3721,12 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         interactionReportingSemaphore,
                         false);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         registerForAppInstallFiltering();
 
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         // Run Ad Selection
         selectAdsAndReport(
@@ -3861,9 +3800,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         interactionReportingSemaphore,
                         false);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         // Registers the test app for app install filtering
         // Should fail since flag is turned off
         // Everything else should pass
@@ -3874,7 +3810,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         // CA 2's ad3 should win even though it tried to filter itself
         selectAdsAndReport(
@@ -4057,13 +3993,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         interactionReportingSemaphore,
                         false);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -5391,13 +5324,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         interactionReportingSemaphore,
                         true);
 
-        doNothing()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
 
         // Run Ad Selection no filters active
         selectAdsAndReport(
@@ -5647,6 +5577,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                                 BUYER_BIDDING_LOGIC_URI_PATH)));
         buyerContextualAds.put(buyer, contextualAds);
         return buyerContextualAds;
+    }
+
+    private void verifyBackgroundFetchJobInvocation(int invocationTimes) {
+        verify(() -> BackgroundFetchJob.schedule(any()), times(invocationTimes));
     }
 
     private static class FledgeE2ETestFlags implements Flags {

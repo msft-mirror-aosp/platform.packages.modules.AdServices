@@ -213,7 +213,7 @@ public class EnrollmentDataDownloadManager {
             bufferedReader.readLine();
             String line = null;
             // While loop runs from the second line.
-            EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(mContext);
+            EnrollmentDao enrollmentDao = EnrollmentDao.getInstance();
             List<EnrollmentData> newEnrollments = new ArrayList<>();
 
             while ((line = bufferedReader.readLine()) != null) {

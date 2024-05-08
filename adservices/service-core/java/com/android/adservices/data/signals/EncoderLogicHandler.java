@@ -120,9 +120,9 @@ public class EncoderLogicHandler {
     public EncoderLogicHandler(@NonNull Context context) {
         this(
                 EncoderPersistenceDao.getInstance(context),
-                ProtectedSignalsDatabase.getInstance(context).getEncoderEndpointsDao(),
-                ProtectedSignalsDatabase.getInstance(context).getEncoderLogicMetadataDao(),
-                ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
+                ProtectedSignalsDatabase.getInstance().getEncoderEndpointsDao(),
+                ProtectedSignalsDatabase.getInstance().getEncoderLogicMetadataDao(),
+                ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBackgroundExecutor(),
                         FlagsFactory.getFlags().getPasSignalsDownloadConnectionTimeoutMs(),

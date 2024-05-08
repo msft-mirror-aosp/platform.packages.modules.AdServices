@@ -82,7 +82,7 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
                         customAudienceDao,
                         SharedStorageDatabase.getInstance(context).appInstallDao(),
                         ApplicationContextSingleton.get().getPackageManager(),
-                        EnrollmentDao.getInstance(context),
+                        EnrollmentDao.getInstance(),
                         flags,
                         // Avoid logging metrics when using shell commands (such as daily update).
                         CustomAudienceLoggerFactory.getNoOpInstance()),
