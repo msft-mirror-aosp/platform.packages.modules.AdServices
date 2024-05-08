@@ -32,6 +32,7 @@ android_test {
       "src/android/adservices/rootcts/*.java",
     ],
     test_suites: [
+        "cts",
         "mts-adservices",
         "general-tests",
         "mcts-adservices",
@@ -121,6 +122,7 @@ android_test {
       "src/android/adservices/rootcts/*.java",
     ],
     test_suites: [
+        "cts",
         "mts-extservices",
         "general-tests",
         "mcts-extservices",
@@ -169,6 +171,7 @@ android_test {
         "auto_annotation_plugin"
     ],
     test_suites: [
+        "cts",
         "mts-adservices",
         "general-tests",
         "mcts-adservices",
@@ -210,6 +213,7 @@ android_test {
       "src/android/adservices/rootcts/*.java",
     ],
     test_suites: [
+        "cts",
         "mts-extservices",
         "general-tests",
         "mcts-extservices",

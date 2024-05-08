@@ -32,6 +32,7 @@ android_test {
         "framework-adservices-lib",
     ],
     test_suites: [
+        "cts",
         "general-tests",
         "mts-adservices",
         "mcts-adservices",
@@ -59,6 +60,7 @@ android_test {
         "framework-adservices-lib",
     ],
     test_suites: [
+        "cts",
         "general-tests",
         "mts-extservices",
         "mcts-extservices",
