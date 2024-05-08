@@ -20,7 +20,6 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RU
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
 
 import android.adservices.common.AdTechIdentifier;
-import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
@@ -53,6 +52,7 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerNoLoggingImpl;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -65,7 +65,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -110,19 +109,19 @@ public class PeriodicEncodingJobWorker {
 
     @VisibleForTesting
     protected PeriodicEncodingJobWorker(
-            @NonNull EncoderLogicHandler encoderLogicHandler,
-            @NonNull EncoderLogicMetadataDao encoderLogicMetadataDao,
-            @NonNull EncodedPayloadDao encodedPayloadDao,
-            @NonNull SignalsProviderImpl signalStorageManager,
-            @NonNull ProtectedSignalsDao protectedSignalsDao,
-            @NonNull AdSelectionScriptEngine scriptEngine,
-            @NonNull ListeningExecutorService backgroundExecutor,
-            @NonNull ListeningExecutorService lightWeightExecutor,
-            @NonNull DevContextFilter devContextFilter,
-            @NonNull Flags flags,
-            @NonNull EnrollmentDao enrollmentDao,
-            @NonNull Clock clock,
-            @NonNull AdServicesLogger adServicesLogger) {
+            EncoderLogicHandler encoderLogicHandler,
+            EncoderLogicMetadataDao encoderLogicMetadataDao,
+            EncodedPayloadDao encodedPayloadDao,
+            SignalsProviderImpl signalStorageManager,
+            ProtectedSignalsDao protectedSignalsDao,
+            AdSelectionScriptEngine scriptEngine,
+            ListeningExecutorService backgroundExecutor,
+            ListeningExecutorService lightWeightExecutor,
+            DevContextFilter devContextFilter,
+            Flags flags,
+            EnrollmentDao enrollmentDao,
+            Clock clock,
+            AdServicesLogger adServicesLogger) {
         mEncoderLogicHandler = encoderLogicHandler;
         mEncoderLogicMetadataDao = encoderLogicMetadataDao;
         mEncodedPayloadDao = encodedPayloadDao;
@@ -145,9 +144,8 @@ public class PeriodicEncodingJobWorker {
     /**
      * @return an instance of {@link PeriodicEncodingJobWorker}
      */
-    @NonNull
-    public static PeriodicEncodingJobWorker getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    public static PeriodicEncodingJobWorker getInstance() {
+        Context context = ApplicationContextSingleton.get();
 
         PeriodicEncodingJobWorker singleReadResult = sPeriodicEncodingJobWorker;
         if (singleReadResult != null) {
@@ -209,7 +207,7 @@ public class PeriodicEncodingJobWorker {
      * Runs encoding for the buyers that have registered their encoding logic. Also updates the
      * encoders for buyers that have the previous encoders downloaded outside the refresh window
      */
-    private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
+    private FluentFuture<Void> doRun(Supplier<Boolean> shouldStop) {
         boolean pasExtendedMetricsEnabled = mFlags.getPasExtendedMetricsEnabled();
         EncodingJobRunStatsLogger encodingJobRunStatsLogger =
                 pasExtendedMetricsEnabled
@@ -377,7 +375,7 @@ public class PeriodicEncodingJobWorker {
                 .withTimeout(timeout, TimeUnit.SECONDS, AdServicesExecutors.getScheduler());
     }
 
-    private void handleFailedPerBuyerEncoding(@NonNull DBEncoderLogicMetadata logic) {
+    private void handleFailedPerBuyerEncoding(DBEncoderLogicMetadata logic) {
         mEncoderLogicHandler.updateEncoderFailedCount(
                 logic.getBuyer(), logic.getFailedEncodingCount() + 1);
     }

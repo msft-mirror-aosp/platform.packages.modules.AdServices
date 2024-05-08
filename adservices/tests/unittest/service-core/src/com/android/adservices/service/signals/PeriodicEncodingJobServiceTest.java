@@ -358,7 +358,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                 };
         mocker.mockGetFlags(flagsWithKillSwitchOff);
         doReturn(mMockPeriodicEncodingJobWorker)
-                .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
+                .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mMockPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
@@ -375,7 +375,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         assertTrue(mSpyEncodingJobService.onStartJob(mMockJobParameters));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(() -> PeriodicEncodingJobWorker.getInstance(mSpyEncodingJobService));
+        ExtendedMockito.verify(() -> PeriodicEncodingJobWorker.getInstance());
         verify(mMockPeriodicEncodingJobWorker).encodeProtectedSignals();
         verify(mSpyEncodingJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
@@ -527,7 +527,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                 };
         mocker.mockGetFlags(flagsEnabledPeriodicEncoding);
         doReturn(mMockPeriodicEncodingJobWorker)
-                .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
+                .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(
                         FluentFuture.from(
                                 immediateFailedFuture(new InterruptedException("testing timeout"))))
@@ -544,7 +544,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         assertTrue(mSpyEncodingJobService.onStartJob(mMockJobParameters));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(() -> PeriodicEncodingJobWorker.getInstance(mSpyEncodingJobService));
+        ExtendedMockito.verify(() -> PeriodicEncodingJobWorker.getInstance());
         verify(mMockPeriodicEncodingJobWorker).encodeProtectedSignals();
         verify(mSpyEncodingJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
@@ -578,7 +578,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                 };
         mocker.mockGetFlags(flagsEnabledPeriodicEncoding);
         doReturn(mMockPeriodicEncodingJobWorker)
-                .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
+                .when(() -> PeriodicEncodingJobWorker.getInstance());
 
         doReturn(
                         FluentFuture.from(
@@ -597,7 +597,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         assertTrue(mSpyEncodingJobService.onStartJob(mMockJobParameters));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(() -> PeriodicEncodingJobWorker.getInstance(mSpyEncodingJobService));
+        ExtendedMockito.verify(() -> PeriodicEncodingJobWorker.getInstance());
         verify(mMockPeriodicEncodingJobWorker).encodeProtectedSignals();
         verify(mSpyEncodingJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
@@ -617,7 +617,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                 mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
 
         doReturn(mMockPeriodicEncodingJobWorker)
-                .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
+                .when(() -> PeriodicEncodingJobWorker.getInstance());
         doNothing().when(mMockPeriodicEncodingJobWorker).stopWork();
         assertTrue(mSpyEncodingJobService.onStopJob(mMockJobParameters));
         verify(mMockPeriodicEncodingJobWorker).stopWork();
@@ -640,7 +640,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         doReturn(mMockPeriodicEncodingJobWorker)
-                .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
+                .when(() -> PeriodicEncodingJobWorker.getInstance());
         doNothing().when(mMockPeriodicEncodingJobWorker).stopWork();
         assertTrue(mSpyEncodingJobService.onStopJob(mMockJobParameters));
         verify(mMockPeriodicEncodingJobWorker).stopWork();
@@ -968,7 +968,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mMockPeriodicEncodingJobWorker)
-                .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
+                .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(FluentFuture.from(immediateFailedFuture(new TimeoutException("testing timeout"))))
                 .when(mMockPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
@@ -983,7 +983,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         assertTrue(mSpyEncodingJobService.onStartJob(mMockJobParameters));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(() -> PeriodicEncodingJobWorker.getInstance(mSpyEncodingJobService));
+        ExtendedMockito.verify(() -> PeriodicEncodingJobWorker.getInstance());
         verify(mMockPeriodicEncodingJobWorker).encodeProtectedSignals();
         verify(mSpyEncodingJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
@@ -1019,7 +1019,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mMockPeriodicEncodingJobWorker)
-                .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
+                .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mMockPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
@@ -1034,7 +1034,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         assertTrue(mSpyEncodingJobService.onStartJob(mMockJobParameters));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(() -> PeriodicEncodingJobWorker.getInstance(mSpyEncodingJobService));
+        ExtendedMockito.verify(() -> PeriodicEncodingJobWorker.getInstance());
         verify(mMockPeriodicEncodingJobWorker).encodeProtectedSignals();
         verify(mSpyEncodingJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
