@@ -306,7 +306,7 @@ public class CustomAudienceServiceEndToEndTest {
                 spy(
                         new FledgeAuthorizationFilter(
                                 CONTEXT.getPackageManager(),
-                                EnrollmentDao.getInstance(CONTEXT),
+                                EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock));
 
         mService =
@@ -333,7 +333,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
                                         CONTEXT.getPackageManager(),
-                                        EnrollmentDao.getInstance(CONTEXT),
+                                        EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
                                         COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
@@ -412,7 +412,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED),
                         new FledgeAuthorizationFilter(
                                 CONTEXT.getPackageManager(),
-                                EnrollmentDao.getInstance(CONTEXT),
+                                EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock),
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -428,7 +428,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
                                         CONTEXT.getPackageManager(),
-                                        EnrollmentDao.getInstance(CONTEXT),
+                                        EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
                                         COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
@@ -1149,7 +1149,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED),
                         new FledgeAuthorizationFilter(
                                 CONTEXT.getPackageManager(),
-                                EnrollmentDao.getInstance(CONTEXT),
+                                EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock),
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -1165,7 +1165,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
                                         CONTEXT.getPackageManager(),
-                                        EnrollmentDao.getInstance(CONTEXT),
+                                        EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
                                         COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
@@ -3001,7 +3001,7 @@ public class CustomAudienceServiceEndToEndTest {
                                             flagsWithLowRateLimit),
                                     new FledgeAuthorizationFilter(
                                             CONTEXT.getPackageManager(),
-                                            EnrollmentDao.getInstance(CONTEXT),
+                                            EnrollmentDao.getInstance(),
                                             mAdServicesLoggerMock),
                                     mConsentManagerMock,
                                     mDevContextFilter,
@@ -3017,7 +3017,7 @@ public class CustomAudienceServiceEndToEndTest {
                                             mAppImportanceFilter,
                                             new FledgeAuthorizationFilter(
                                                     CONTEXT.getPackageManager(),
-                                                    EnrollmentDao.getInstance(CONTEXT),
+                                                    EnrollmentDao.getInstance(),
                                                     mAdServicesLoggerMock),
                                             new FledgeAllowListsFilter(
                                                     flagsWithLowRateLimit, mAdServicesLoggerMock),
@@ -3240,7 +3240,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
                                         CONTEXT.getPackageManager(),
-                                        EnrollmentDao.getInstance(CONTEXT),
+                                        EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(flags, mAdServicesLoggerMock),
                                 mMockThrottler),

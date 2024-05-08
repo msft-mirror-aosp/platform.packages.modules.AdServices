@@ -86,7 +86,7 @@ public class EncryptionManager {
                 sSingleton =
                         new EncryptionManager(
                                 new HpkeEncrypter(),
-                                EnrollmentDao.getInstance(context),
+                                EnrollmentDao.getInstance(),
                                 EncryptionKeyDao.getInstance(context),
                                 FlagsFactory.getFlags());
             }

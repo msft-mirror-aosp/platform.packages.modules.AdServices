@@ -87,7 +87,7 @@ public class AsyncSourceFetcher {
     public AsyncSourceFetcher(Context context) {
         this(
                 context,
-                EnrollmentDao.getInstance(context),
+                EnrollmentDao.getInstance(),
                 FlagsFactory.getFlags(),
                 DatastoreManagerFactory.getDatastoreManager(context),
                 new DebugReportApi(context, FlagsFactory.getFlags()));
