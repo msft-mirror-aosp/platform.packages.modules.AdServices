@@ -107,6 +107,7 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         private final AndroidStaticMocker mAndroidMocker;
         private final AdServicesExtendedMockitoMocker mAdServicesMocker;
 
+        // TODO(b/338132355): create helper class to implement StaticClassChecker from rule
         private Mocker(AdServicesExtendedMockitoRule rule) {
             StaticClassChecker staticClassChecker =
                     new StaticClassChecker() {

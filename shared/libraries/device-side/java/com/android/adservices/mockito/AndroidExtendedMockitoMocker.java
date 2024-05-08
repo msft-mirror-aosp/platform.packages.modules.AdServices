@@ -36,8 +36,7 @@ import com.android.modules.utils.build.SdkLevel;
 public final class AndroidExtendedMockitoMocker extends AbstractStaticMocker
         implements AndroidStaticMocker {
 
-    private static final String TAG = AndroidExtendedMockitoMocker.class.getSimpleName();
-
+    // TODO(b/338132355): create helper class to implement StaticClassChecker from rule
     public AndroidExtendedMockitoMocker(StaticClassChecker staticClassChecker) {
         super(staticClassChecker);
     }

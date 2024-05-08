@@ -21,13 +21,13 @@ import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILUR
 import static com.android.adservices.shared.spe.framework.ExecutionResult.FAILURE_WITH_RETRY;
 import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
 /** Unit tests for {@link ExecutionResult}. */
-public final class ExecutionResultTest extends AdServicesUnitTestCase {
+public final class ExecutionResultTest extends SharedUnitTestCase {
     @Test
     public void testEqualsAndHashcode() {
         EqualsTester et = new EqualsTester(expect);
