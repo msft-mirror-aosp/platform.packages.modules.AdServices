@@ -48,7 +48,6 @@ import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
@@ -128,7 +127,7 @@ public class PeriodicEncodingJobWorkerTest {
     @Mock private EncodedPayloadDao mEncodedPayloadDao;
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
     @Mock private SignalsProviderImpl mSignalStorageManager;
-    @Mock private AdSelectionScriptEngine mScriptEngine;
+    @Mock private SignalsScriptEngine mScriptEngine;
     @Mock private DevContextFilter mDevContextFilter;
     @Mock Flags mFlags;
     @Mock private EnrollmentDao mEnrollmentDao;
