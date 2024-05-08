@@ -111,7 +111,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                 sSingleton =
                         new EnrollmentDao(
                                 context,
-                                SharedDbHelper.getInstance(context),
+                                SharedDbHelper.getInstance(),
                                 flags,
                                 flags.isEnableEnrollmentTestSeed(),
                                 AdServicesLoggerImpl.getInstance(),

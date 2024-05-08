@@ -140,7 +140,7 @@ public class CacheManager {
 
                 sSingleton =
                         new CacheManager(
-                                TopicsDao.getInstance(context),
+                                TopicsDao.getInstance(),
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 BlockedTopicsManager.getInstance(context),
