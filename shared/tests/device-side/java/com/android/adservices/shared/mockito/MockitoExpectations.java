@@ -24,9 +24,9 @@ import static org.mockito.Mockito.doAnswer;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 
-import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceCallback;
+import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 
 /** A class contains common mocking methods used in unit tests. */
 // TODO(b/324919960): Move it to the test-util package.
