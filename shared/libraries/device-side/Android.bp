@@ -223,6 +223,35 @@ java_library {
     ],
 }
 
+java_library {
+    name: "adservices-shared-mockito-expectations",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/mockito/LogInterceptor.java",
+        // TODO(b/338132355): might be better to use adservices-shared-testing
+        // (or split it) instead of including LogEntry directly
+        "java/com/android/adservices/shared/testing/LogEntry.java",
+    ],
+    libs: [
+        "framework-annotations-lib", // for @Nullable
+    ],
+    static_libs: [
+        "mockito-target-extended-minus-junit4",
+        "modules-utils-preconditions",
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization"
+    ],
+}
+
 filegroup {
     name: "adservices-shared-extended-mockito-rule-sources",
     srcs: [
