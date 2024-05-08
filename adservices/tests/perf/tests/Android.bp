@@ -57,7 +57,10 @@ java_defaults {
     resource_dirs: [
         "res",
     ],
-    test_suites: ["device-tests"],
+    test_suites: [
+        "device-tests",
+        "general-tests",
+    ],
     min_sdk_version: "30",
 }
 
