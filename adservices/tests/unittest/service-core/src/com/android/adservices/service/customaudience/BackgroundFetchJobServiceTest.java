@@ -26,18 +26,19 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinish
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
@@ -86,6 +87,7 @@ import java.util.concurrent.TimeoutException;
 @RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ConsentManager.class)
+@MockStatic(BackgroundFetchJob.class)
 @SpyStatic(BackgroundFetchJobService.class)
 @SpyStatic(BackgroundFetchWorker.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
@@ -247,34 +249,16 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testOnStartJobCustomAudienceKillSwitchOff()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        doReturn(mFlagsWithCustomAudienceServiceKillSwitchOff).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
-        doReturn(AdServicesApiConsent.GIVEN)
-                .when(mConsentManagerMock)
-                .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
-        doReturn(FluentFuture.from(immediateFuture(null)))
-                .when(mBgFWorkerMock)
-                .runBackgroundFetch();
-        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+    public void testOnStartJobCustomAudienceKillSwitchOff_speDisabled() throws Exception {
+        testOnStartJobCustomAudienceKillSwitchOff(mFlagsWithCustomAudienceServiceKillSwitchOff);
+    }
 
-        doAnswer(
-                        unusedInvocation -> {
-                            jobFinishedCountDown.countDown();
-                            return null;
-                        })
-                .when(mBgFJobServiceSpy)
-                .jobFinished(mJobParametersMock, false);
+    @Test
+    public void testOnStartJobCustomAudienceKillSwitchOff_speEnabled() throws Exception {
+        Flags flags = new FlagsWithKillSwitchOffSpeEnabled();
+        testOnStartJobCustomAudienceKillSwitchOff(flags);
 
-        assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
-        jobFinishedCountDown.await();
-
-        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
-        verify(mBgFWorkerMock).runBackgroundFetch();
-        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
-        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+        verify(() -> BackgroundFetchJob.schedule(flags));
     }
 
     @Test
@@ -431,10 +415,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
 
     @Test
     public void testScheduleIfNeededFlagDisabled() {
-        doCallRealMethod()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
-
-        BackgroundFetchJobService.scheduleIfNeeded(sContext, mFlagsWithDisabledBgF, false);
+        assertThat(BackgroundFetchJobService.scheduleIfNeeded(mFlagsWithDisabledBgF, false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -442,12 +424,10 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
 
     @Test
     public void testScheduleIfNeededSuccess() {
-        doCallRealMethod()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
-        doNothing().when(() -> BackgroundFetchJobService.schedule(any(), any()));
-
-        BackgroundFetchJobService.scheduleIfNeeded(
-                sContext, mFlagsWithEnabledBgFGaUxDisabled, false);
+        assertThat(
+                        BackgroundFetchJobService.scheduleIfNeeded(
+                                mFlagsWithEnabledBgFGaUxDisabled, false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -464,11 +444,10 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
 
-        doCallRealMethod()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
-
-        BackgroundFetchJobService.scheduleIfNeeded(
-                sContext, mFlagsWithEnabledBgFGaUxDisabled, false);
+        assertThat(
+                        BackgroundFetchJobService.scheduleIfNeeded(
+                                mFlagsWithEnabledBgFGaUxDisabled, false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -485,12 +464,12 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
 
-        doCallRealMethod()
-                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(true)));
         doNothing().when(() -> BackgroundFetchJobService.schedule(any(), any()));
 
-        BackgroundFetchJobService.scheduleIfNeeded(
-                sContext, mFlagsWithEnabledBgFGaUxDisabled, true);
+        assertThat(
+                        BackgroundFetchJobService.scheduleIfNeeded(
+                                mFlagsWithEnabledBgFGaUxDisabled, true))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -528,6 +507,36 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
         verifyLoggingNotHappened(logger);
+    }
+
+    @SuppressWarnings("unused")
+    private void testOnStartJobCustomAudienceKillSwitchOff(Flags flags) throws Exception {
+        doReturn(flags).when(FlagsFactory::getFlags);
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
+        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doReturn(FluentFuture.from(immediateFuture(null)))
+                .when(mBgFWorkerMock)
+                .runBackgroundFetch();
+        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+
+        doAnswer(
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
+                .when(mBgFJobServiceSpy)
+                .jobFinished(mJobParametersMock, false);
+
+        assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+        jobFinishedCountDown.await();
+
+        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
+        FluentFuture<Void> unusedFuture = verify(mBgFWorkerMock).runBackgroundFetch();
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     private void testOnStartJobShouldDisableJobTrue()
@@ -692,6 +701,12 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         public boolean getGlobalKillSwitch() {
             return false;
         }
+
+        // By default, do not use SPE.
+        @Override
+        public boolean getSpeOnPilotJobsBatch2Enabled() {
+            return false;
+        }
     }
 
     private static class FlagsWithEnabledBgFGaUxDisabledWithoutLogging
@@ -723,6 +738,12 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
 
         @Override
         public boolean getGlobalKillSwitch() {
+            return false;
+        }
+
+        // By default, do not use SPE.
+        @Override
+        public boolean getSpeOnPilotJobsBatch2Enabled() {
             return false;
         }
     }
@@ -763,6 +784,12 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         public boolean getGlobalKillSwitch() {
             return false;
         }
+
+        // By default, do not use SPE.
+        @Override
+        public boolean getSpeOnPilotJobsBatch2Enabled() {
+            return false;
+        }
     }
 
     private static class FlagsWithKillSwitchOn implements Flags {
@@ -783,6 +810,12 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         public boolean getGlobalKillSwitch() {
             return false;
         }
+
+        // By default, do not use SPE.
+        @Override
+        public boolean getSpeOnPilotJobsBatch2Enabled() {
+            return false;
+        }
     }
 
     private static class FlagsWithKillSwitchOff implements Flags {
@@ -800,6 +833,19 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         @Override
         public boolean getGlobalKillSwitch() {
             return false;
+        }
+
+        // By default, do not use SPE.
+        @Override
+        public boolean getSpeOnPilotJobsBatch2Enabled() {
+            return false;
+        }
+    }
+
+    private static class FlagsWithKillSwitchOffSpeEnabled extends FlagsWithKillSwitchOff {
+        @Override
+        public boolean getSpeOnPilotJobsBatch2Enabled() {
+            return true;
         }
     }
 }
