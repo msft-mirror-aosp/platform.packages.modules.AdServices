@@ -44,8 +44,6 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.time.Instant;
-
 /**
  * Background fetch for FLEDGE Custom Audience API, executing periodic garbage collection and custom
  * audience updates.
@@ -57,11 +55,6 @@ public class BackgroundFetchJob implements JobWorker {
     @Override
     public ListenableFuture<ExecutionResult> getExecutionFuture(
             Context context, ExecutionRuntimeParameters executionRuntimeParameters) {
-        // TODO(b/235841960): Consider using com.android.adservices.service.stats.Clock instead of
-        // Java Clock.
-        Instant jobStartTime = java.time.Clock.systemUTC().instant();
-        sLogger.d("Starting FLEDGE background fetch job at %s", jobStartTime.toString());
-
         return BackgroundFetchWorker.getInstance(context)
                 .runBackgroundFetch()
                 .transform(voidResult -> SUCCESS, AdServicesExecutors.getBackgroundExecutor());
