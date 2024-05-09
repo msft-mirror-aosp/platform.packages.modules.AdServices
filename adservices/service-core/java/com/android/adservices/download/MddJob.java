@@ -162,7 +162,7 @@ public final class MddJob implements JobWorker {
             return;
         }
 
-        MddFlags mddFlags = MddFlags.getInstance();
+        Flags mddFlags = new Flags() {};
         AdServicesJobScheduler scheduler = AdServicesJobScheduler.getInstance();
 
         // The jobs will still be rescheduled even if they were scheduled by MddJobService with same

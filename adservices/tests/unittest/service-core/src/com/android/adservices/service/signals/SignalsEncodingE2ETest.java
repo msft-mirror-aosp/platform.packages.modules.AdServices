@@ -59,9 +59,6 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.adselection.AdCounterKeyCopierNoOpImpl;
-import com.android.adservices.service.adselection.AdSelectionScriptEngine;
-import com.android.adservices.service.adselection.DebugReportingScriptDisabledStrategy;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -156,7 +153,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private EncodedPayloadDao mEncodedPayloadDao;
     private SignalsProviderImpl mSignalStorageManager;
     private PeriodicEncodingJobWorker mPeriodicEncodingJobWorker;
-    private AdSelectionScriptEngine mAdSelectionScriptEngine;
+    private SignalsScriptEngine mScriptEngine;
 
     private AdTechUriValidator mAdtechUriValidator;
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
@@ -274,14 +271,11 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         mSignalStorageManager = new SignalsProviderImpl(mSignalsDao);
         RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
         mDevContext = DevContext.builder().setDevOptionsEnabled(true).build();
-        mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
+        mScriptEngine =
+                new SignalsScriptEngine(
                         mContextSpy,
                         () -> Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE,
                         () -> Flags.ISOLATE_MAX_HEAP_SIZE_BYTES,
-                        new AdCounterKeyCopierNoOpImpl(),
-                        new DebugReportingScriptDisabledStrategy(),
-                        false,
                         retryStrategy,
                         mDevContext);
         mClock = Clock.getInstance();
@@ -292,7 +286,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mEncodedPayloadDao,
                         mSignalStorageManager,
                         mSignalsDao,
-                        mAdSelectionScriptEngine,
+                        mScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mDevContextFilterMock,
@@ -664,7 +658,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mEncodedPayloadDao,
                         mSignalStorageManager,
                         mSignalsDao,
-                        mAdSelectionScriptEngine,
+                        mScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mDevContextFilterMock,
@@ -703,7 +697,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mEncodedPayloadDao,
                         mSignalStorageManager,
                         mSignalsDao,
-                        mAdSelectionScriptEngine,
+                        mScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mDevContextFilterMock,

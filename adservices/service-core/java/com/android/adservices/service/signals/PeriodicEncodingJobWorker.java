@@ -35,9 +35,6 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.adselection.AdCounterKeyCopierNoOpImpl;
-import com.android.adservices.service.adselection.AdSelectionScriptEngine;
-import com.android.adservices.service.adselection.DebugReportingScriptDisabledStrategy;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.SingletonRunner;
@@ -95,7 +92,7 @@ public class PeriodicEncodingJobWorker {
     private final EncodedPayloadDao mEncodedPayloadDao;
     private final SignalsProvider mSignalsProvider;
     private final ProtectedSignalsDao mProtectedSignalsDao;
-    private final AdSelectionScriptEngine mScriptEngine;
+    private final SignalsScriptEngine mScriptEngine;
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
     private final DevContextFilter mDevContextFilter;
@@ -114,7 +111,7 @@ public class PeriodicEncodingJobWorker {
             EncodedPayloadDao encodedPayloadDao,
             SignalsProviderImpl signalStorageManager,
             ProtectedSignalsDao protectedSignalsDao,
-            AdSelectionScriptEngine scriptEngine,
+            SignalsScriptEngine scriptEngine,
             ListeningExecutorService backgroundExecutor,
             ListeningExecutorService lightWeightExecutor,
             DevContextFilter devContextFilter,
@@ -171,13 +168,10 @@ public class PeriodicEncodingJobWorker {
                                 signalsDatabase.getEncodedPayloadDao(),
                                 new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
                                 signalsDatabase.protectedSignalsDao(),
-                                new AdSelectionScriptEngine(
+                                new SignalsScriptEngine(
                                         context,
                                         flags::getEnforceIsolateMaxHeapSize,
                                         flags::getIsolateMaxHeapSizeBytes,
-                                        new AdCounterKeyCopierNoOpImpl(),
-                                        new DebugReportingScriptDisabledStrategy(),
-                                        false, // not used in encoding
                                         retryStrategy,
                                         devContext),
                                 AdServicesExecutors.getBackgroundExecutor(),

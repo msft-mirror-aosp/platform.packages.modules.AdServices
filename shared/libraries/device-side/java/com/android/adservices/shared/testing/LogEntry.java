@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing;
 
-import androidx.annotation.Nullable;
+import android.annotation.Nullable;
 
 import java.util.Objects;
 

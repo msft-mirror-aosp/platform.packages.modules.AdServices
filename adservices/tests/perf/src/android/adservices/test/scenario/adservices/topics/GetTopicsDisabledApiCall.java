@@ -25,7 +25,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.service.DebugFlagsConstants;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -59,7 +59,7 @@ public class GetTopicsDisabledApiCall {
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setTopicsKillSwitch(false)
-                    .setDebugFlag(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setDebugFlag(DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                     .setCompatModeFlags();
 
     private void measureGetTopics(String label) {

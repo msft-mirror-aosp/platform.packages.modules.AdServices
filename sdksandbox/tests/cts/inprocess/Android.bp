@@ -46,6 +46,7 @@ android_test {
         ":SocketSdkProvider",
     ],
     test_suites: [
+        "cts",
         "mts-adservices",
         "general-tests",
         "mcts-adservices",

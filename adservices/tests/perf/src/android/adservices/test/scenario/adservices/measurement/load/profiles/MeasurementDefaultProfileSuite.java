@@ -35,6 +35,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.DebugFlagsConstants;
 import com.android.adservices.service.FlagsConstants;
 
 import com.google.mockwebserver.MockWebServer;
@@ -67,7 +68,7 @@ public class MeasurementDefaultProfileSuite {
     public static final AdServicesFlagsSetterRule sFlags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     // Override consent manager behavior to give user consent.
-                    .setDebugFlag(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setDebugFlag(DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                     // Override adid kill switch.
                     .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false)
                     // Override the flag to allow current package to call APIs.

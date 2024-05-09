@@ -42,13 +42,24 @@ public class PasReconsentNotificationChannel implements PrivacySandboxEnrollment
         if (!uxStatesManager.getFlag(KEY_PAS_UX_ENABLED)) {
             return false;
         }
-        return !consentManager.wasPasNotificationDisplayed()
-                && (consentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()
+        boolean bothApisOff =
+                !(consentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()
                         || consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven());
+        boolean manuallyInteractedWithConsent =
+                consentManager.getUserManualInteractionWithConsent()
+                        == ConsentManager.MANUAL_INTERACTIONS_RECORDED;
+        return !consentManager.wasPasNotificationDisplayed()
+                && !(bothApisOff && !manuallyInteractedWithConsent);
     }
 
     /** Enroll user through the PAS renotify/reconsent enrollment channel. */
     public void enroll(Context context, ConsentManager consentManager) {
+        if (!(consentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()
+                || consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven())) {
+            // don't show notification to manually opt-out users.
+            consentManager.recordPasNotificationDisplayed(true);
+            return;
+        }
         ConsentNotificationJobService.schedule(
                 context,
                 /* adidEnabled= */ consentManager.isAdIdEnabled(),

@@ -88,10 +88,11 @@ public abstract class AbstractSdkLevelSupportedRule implements TestRule {
             public void evaluate() throws Throwable {
                 String testName = description.getDisplayName();
                 RequiredRange requiredRange = getRequiredRange(description);
-                mLog.v("required SDK range for %s: %s", testName, requiredRange);
-
                 int deviceLevel = getDeviceApiLevel().getLevel();
                 boolean skip = !requiredRange.range.isInRange(deviceLevel);
+                mLog.v(
+                        "On %s: requiredRange=%s, deviceLevel=%d, skip=%b",
+                        testName, requiredRange, deviceLevel, skip);
                 if (skip) {
                     String message =
                             "requires "

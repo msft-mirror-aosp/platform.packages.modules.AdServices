@@ -22,6 +22,7 @@ java_test_host {
     srcs: ["src/**/*.java"],
     // tag this module as a cts test artifact
     test_suites: [
+        "cts",
         "general-tests",
         "mts-adservices",
         "mcts-adservices",
@@ -47,6 +48,7 @@ java_test_host {
     srcs: ["src/**/*.java"],
     // tag this module as a cts test artifact
     test_suites: [
+        "cts",
         "general-tests",
         "mts-extservices",
         "mcts-extservices",

@@ -36,6 +36,7 @@ android_test {
         "framework-sdksandbox.impl",
     ],
     test_suites: [
+        "cts",
         "general-tests",
         "mts-adservices",
         "mcts-adservices",
@@ -63,6 +64,7 @@ android_test {
         "framework-sdksandbox.impl",
     ],
     test_suites: [
+        "cts",
         "general-tests",
         "mts-extservices",
         "mcts-extservices",

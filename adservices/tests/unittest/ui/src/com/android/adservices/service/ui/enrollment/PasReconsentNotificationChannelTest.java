@@ -20,12 +20,15 @@ import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.consent.AdServicesApiConsent.GIVEN;
 import static com.android.adservices.service.consent.AdServicesApiConsent.REVOKED;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 
 import android.content.Context;
 
@@ -52,6 +55,7 @@ public class PasReconsentNotificationChannelTest {
     @Mock private PrivacySandboxUxCollection mPrivacySandboxUxCollection;
     @Mock private UxStatesManager mUxStatesManager;
     @Mock private ConsentManager mConsentManager;
+    @Mock private Context mMockContext;
 
     private MockitoSession mMockitoSession;
 
@@ -89,6 +93,7 @@ public class PasReconsentNotificationChannelTest {
     @Test
     public void isEligibleTest_pasNotificationAlreadyDisplayed() {
         doReturn(true).when(mConsentManager).wasPasNotificationDisplayed();
+        doReturn(REVOKED).when(mConsentManager).getConsent(any());
 
         assertThat(
                         mPasReconsentNotificationChannel.isEligible(
@@ -127,19 +132,7 @@ public class PasReconsentNotificationChannelTest {
                 .when(mConsentManager)
                 .getUserManualInteractionWithConsent();
         doReturn(REVOKED).when(mConsentManager).getConsent(any());
-
-        assertThat(
-                        mPasReconsentNotificationChannel.isEligible(
-                                mPrivacySandboxUxCollection.GA_UX,
-                                mConsentManager,
-                                mUxStatesManager))
-                .isFalse();
-    }
-
-    @Test
-    public void isEligibleTest_consentGiven_pas() {
-        doReturn(false).when(mConsentManager).wasPasNotificationDisplayed();
-        doReturn(GIVEN).when(mConsentManager).getConsent(any());
+        doNothing().when(mConsentManager).recordPasNotificationDisplayed(eq(true));
 
         assertThat(
                         mPasReconsentNotificationChannel.isEligible(
@@ -147,5 +140,27 @@ public class PasReconsentNotificationChannelTest {
                                 mConsentManager,
                                 mUxStatesManager))
                 .isTrue();
+
+        mPasReconsentNotificationChannel.enroll(mMockContext, mConsentManager);
+
+        verify(mConsentManager).recordPasNotificationDisplayed(eq(true));
+    }
+
+    @Test
+    public void isEligibleTest_consentGiven_pas() {
+        doReturn(false).when(mConsentManager).wasPasNotificationDisplayed();
+        doReturn(GIVEN).when(mConsentManager).getConsent(any());
+        doNothing().when(mConsentManager).recordPasNotificationDisplayed(true);
+
+        assertThat(
+                        mPasReconsentNotificationChannel.isEligible(
+                                mPrivacySandboxUxCollection.GA_UX,
+                                mConsentManager,
+                                mUxStatesManager))
+                .isTrue();
+
+        mPasReconsentNotificationChannel.enroll(mMockContext, mConsentManager);
+
+        verify(mConsentManager, never()).recordPasNotificationDisplayed(true);
     }
 }

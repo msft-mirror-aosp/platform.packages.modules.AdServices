@@ -26,6 +26,19 @@ public final class DebugFlagsConstants {
         throw new UnsupportedOperationException("Contains only static constants");
     }
 
+    // Consent Notification debug mode keys.
+    public static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE =
+            "consent_notification_debug_mode";
+
+    public static final String KEY_CONSENT_NOTIFIED_DEBUG_MODE = "consent_notified_debug_mode";
+
+    // Consent notification activity debug mode keys.
+    public static final String KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE =
+            "consent_notification_activity_debug_mode";
+
+    // Consent Manager debug mode keys.
+    public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
+
     // Consent Manager ota debug mode keys.
     public static final String KEY_CONSENT_MANAGER_OTA_DEBUG_MODE =
             "consent_manager_ota_debug_mode";
