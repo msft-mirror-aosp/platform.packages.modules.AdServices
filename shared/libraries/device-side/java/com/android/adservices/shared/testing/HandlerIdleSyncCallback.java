@@ -67,6 +67,16 @@ public final class HandlerIdleSyncCallback extends SyncCallback<Object, Void> {
     }
 
     @Override
+    public Void assertErrorReceived() throws InterruptedException {
+        throw new UnsupportedOperationException("should call assertIdle() instead");
+    }
+
+    @Override
+    public Void getErrorReceived() {
+        throw new UnsupportedOperationException("should call isIdle() instead");
+    }
+
+    @Override
     public Object assertResultReceived() throws InterruptedException {
         throw new UnsupportedOperationException("should call assertIdle() instead");
     }
