@@ -984,12 +984,25 @@ public final class FlagsConstants {
     public static final String KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS =
             "consent_notification_minimal_delay_before_interval_ends";
 
+    // Consent Notification debug mode keys.
+    public static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE =
+            "consent_notification_debug_mode";
+
     public static final String KEY_CONSENT_MANAGER_LAZY_ENABLE_MODE =
             "consent_manager_lazy_enable_mode";
+
+    public static final String KEY_CONSENT_NOTIFIED_DEBUG_MODE = "consent_notified_debug_mode";
+
+    // Consent Manager debug mode keys.
+    public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
     // Rvc post ota notification age check keys.
     public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
             "rvc_post_ota_notification_age_check";
+
+    // Consent notification activity debug mode keys.
+    public static final String KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE =
+            "consent_notification_activity_debug_mode";
 
     // Source of truth to get consent for PPAPI
     public static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
