@@ -27,8 +27,12 @@ import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
 import com.android.adservices.mockito.LogInterceptor;
+import com.android.adservices.mockito.SharedMocker;
+import com.android.adservices.mockito.SharedMockitoMocker;
 import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.spe.logging.JobServiceLogger;
+import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
@@ -102,10 +106,11 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
     }
 
     public static final class Mocker
-            implements AndroidStaticMocker, AdServicesExtendedMockitoMocker {
+            implements AndroidStaticMocker, AdServicesExtendedMockitoMocker, SharedMocker {
 
         private final AndroidStaticMocker mAndroidMocker;
         private final AdServicesExtendedMockitoMocker mAdServicesMocker;
+        private final SharedMocker mSharedMocker = new SharedMockitoMocker();
 
         // TODO(b/338132355): create helper class to implement StaticClassChecker from rule
         private Mocker(AdServicesExtendedMockitoRule rule) {
@@ -198,6 +203,18 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         public void mockAdServicesJobServiceFactory(
                 AdServicesJobServiceFactory mockedAdServicesJobServiceFactory) {
             mAdServicesMocker.mockAdServicesJobServiceFactory(mockedAdServicesJobServiceFactory);
+        }
+
+        // SharedMocker methods
+
+        @Override
+        public Context setApplicationContextSingleton() {
+            return mSharedMocker.setApplicationContextSingleton();
+        }
+
+        @Override
+        public JobServiceLoggingCallback syncRecordOnStopJob(JobServiceLogger logger) {
+            return mSharedMocker.syncRecordOnStopJob(logger);
         }
     }
 }
