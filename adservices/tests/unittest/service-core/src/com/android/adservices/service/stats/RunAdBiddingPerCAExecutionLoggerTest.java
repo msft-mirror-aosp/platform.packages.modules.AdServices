@@ -24,6 +24,7 @@ import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SC
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.STOP_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_UNSET;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.MISSING_END_GENERATE_BIDS;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.MISSING_END_GET_BUYER_DECISION_LOGIC;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.MISSING_END_GET_TRUSTED_BIDDING_SIGNALS;
@@ -44,6 +45,9 @@ import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLog
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.REPEATED_START_RUN_BIDDING;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.REPEATED_START_TRUSTED_BIDDING_SIGNALS;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.SCRIPT_UNSET;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.GENERATE_BID_JS_SCRIPT_RESULT_CODE;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -53,6 +57,7 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdSelectionSignals;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
@@ -112,6 +117,8 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
 
     @Mock private Clock mMockClock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
+    private final RunAdBiddingPerCAExeuctuinLoggerTestFlags mFlags =
+            new RunAdBiddingPerCAExeuctuinLoggerTestFlags();
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -138,7 +145,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         STOP_ELAPSED_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -149,6 +156,12 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
         runAdBiddingPerCAExecutionLogger.startGenerateBids();
         runAdBiddingPerCAExecutionLogger.endGenerateBids();
         runAdBiddingPerCAExecutionLogger.endRunBidding();
+        runAdBiddingPerCAExecutionLogger.setRunAdBiddingPerCaReturnedAdCost(
+                RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST);
+        runAdBiddingPerCAExecutionLogger.setGenerateBidBuyerAdditionalSignalsContainedDataVersion(
+                GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
+        runAdBiddingPerCAExecutionLogger.setGenerateBidJsScriptResultCode(
+                GENERATE_BID_JS_SCRIPT_RESULT_CODE);
         runAdBiddingPerCAExecutionLogger.close(STATUS_SUCCESS);
 
         verify(mAdServicesLoggerMock)
@@ -190,6 +203,14 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                 .isEqualTo(RUN_BIDDING_LATENCY_IN_MS);
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
                 .isEqualTo(STATUS_SUCCESS);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getRunAdBiddingPerCaReturnedAdCost())
+                .isEqualTo(RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST);
+        assertThat(
+                        runAdBiddingPerCAProcessReportedStats
+                                .getGenerateBidBuyerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getGenerateBidJsScriptResultCode())
+                .isEqualTo(GENERATE_BID_JS_SCRIPT_RESULT_CODE);
     }
 
     @Test
@@ -206,7 +227,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         STOP_ELAPSED_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
 
         int resultCode = STATUS_INTERNAL_ERROR;
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
@@ -216,6 +237,12 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
         runAdBiddingPerCAExecutionLogger.startGetTrustedBiddingSignals(
                 NUM_OF_KEYS_OF_TRUSTED_BIDDING_SIGNALS);
         runAdBiddingPerCAExecutionLogger.endGetTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS);
+        runAdBiddingPerCAExecutionLogger.setRunAdBiddingPerCaReturnedAdCost(
+                RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST);
+        runAdBiddingPerCAExecutionLogger.setGenerateBidBuyerAdditionalSignalsContainedDataVersion(
+                GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
+        runAdBiddingPerCAExecutionLogger.setGenerateBidJsScriptResultCode(
+                GENERATE_BID_JS_SCRIPT_RESULT_CODE);
         runAdBiddingPerCAExecutionLogger.close(resultCode);
 
         verify(mAdServicesLoggerMock)
@@ -257,6 +284,14 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                 .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - RUN_BIDDING_START_TIMESTAMP));
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
                 .isEqualTo(resultCode);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getRunAdBiddingPerCaReturnedAdCost())
+                .isEqualTo(RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST);
+        assertThat(
+                        runAdBiddingPerCAProcessReportedStats
+                                .getGenerateBidBuyerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getGenerateBidJsScriptResultCode())
+                .isEqualTo(GENERATE_BID_JS_SCRIPT_RESULT_CODE);
     }
 
     @Test
@@ -275,7 +310,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
 
         int resultCode = STATUS_INTERNAL_ERROR;
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -284,6 +319,12 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                 NUM_OF_KEYS_OF_TRUSTED_BIDDING_SIGNALS);
         runAdBiddingPerCAExecutionLogger.endGetTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS);
         runAdBiddingPerCAExecutionLogger.startGenerateBids();
+        runAdBiddingPerCAExecutionLogger.setRunAdBiddingPerCaReturnedAdCost(
+                RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST);
+        runAdBiddingPerCAExecutionLogger.setGenerateBidBuyerAdditionalSignalsContainedDataVersion(
+                GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
+        runAdBiddingPerCAExecutionLogger.setGenerateBidJsScriptResultCode(
+                GENERATE_BID_JS_SCRIPT_RESULT_CODE);
         runAdBiddingPerCAExecutionLogger.close(resultCode);
 
         verify(mAdServicesLoggerMock)
@@ -325,6 +366,14 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                 .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - RUN_BIDDING_START_TIMESTAMP));
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
                 .isEqualTo(resultCode);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getRunAdBiddingPerCaReturnedAdCost())
+                .isEqualTo(RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST);
+        assertThat(
+                        runAdBiddingPerCAProcessReportedStats
+                                .getGenerateBidBuyerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getGenerateBidJsScriptResultCode())
+                .isEqualTo(GENERATE_BID_JS_SCRIPT_RESULT_CODE);
     }
 
     @Test
@@ -340,7 +389,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         STOP_ELAPSED_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         int resultCode = STATUS_INTERNAL_ERROR;
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
@@ -348,6 +397,12 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
         runAdBiddingPerCAExecutionLogger.startRunBidding();
         runAdBiddingPerCAExecutionLogger.startGetTrustedBiddingSignals(
                 NUM_OF_KEYS_OF_TRUSTED_BIDDING_SIGNALS);
+        runAdBiddingPerCAExecutionLogger.setRunAdBiddingPerCaReturnedAdCost(
+                RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST);
+        runAdBiddingPerCAExecutionLogger.setGenerateBidBuyerAdditionalSignalsContainedDataVersion(
+                GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
+        runAdBiddingPerCAExecutionLogger.setGenerateBidJsScriptResultCode(
+                GENERATE_BID_JS_SCRIPT_RESULT_CODE);
         runAdBiddingPerCAExecutionLogger.close(resultCode);
 
         verify(mAdServicesLoggerMock)
@@ -392,6 +447,14 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                 .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - RUN_BIDDING_START_TIMESTAMP));
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
                 .isEqualTo(resultCode);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getRunAdBiddingPerCaReturnedAdCost())
+                .isEqualTo(RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST);
+        assertThat(
+                        runAdBiddingPerCAProcessReportedStats
+                                .getGenerateBidBuyerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getGenerateBidJsScriptResultCode())
+                .isEqualTo(GENERATE_BID_JS_SCRIPT_RESULT_CODE);
     }
 
     @Test
@@ -404,7 +467,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         STOP_ELAPSED_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         int resultCode = STATUS_INTERNAL_ERROR;
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
@@ -450,6 +513,14 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                 .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
                 .isEqualTo(FIELD_UNSET);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getRunAdBiddingPerCaReturnedAdCost())
+                .isEqualTo(RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST);
+        assertThat(
+                        runAdBiddingPerCAProcessReportedStats
+                                .getGenerateBidBuyerAdditionalSignalsContainedDataVersion())
+                .isFalse();
+        assertThat(runAdBiddingPerCAProcessReportedStats.getGenerateBidJsScriptResultCode())
+                .isEqualTo(JS_RUN_STATUS_UNSET);
     }
 
     @Test
@@ -458,7 +529,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                 .thenReturn(START_ELAPSED_TIMESTAMP, RUN_AD_BIDDING_PER_CA_START_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         Throwable throwable =
                 assertThrows(
@@ -474,7 +545,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
         when(mMockClock.elapsedRealtime()).thenReturn(START_ELAPSED_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
 
         Throwable throwable =
                 assertThrows(
@@ -492,7 +563,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         GET_BUYER_DECISION_LOGIC_START_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         Throwable throwable =
@@ -508,7 +579,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                 .thenReturn(START_ELAPSED_TIMESTAMP, RUN_AD_BIDDING_PER_CA_START_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         Throwable throwable =
                 assertThrows(
@@ -529,7 +600,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         GET_BUYER_DECISION_LOGIC_END_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -551,7 +622,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         GET_BUYER_DECISION_LOGIC_START_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
 
@@ -573,7 +644,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         RUN_BIDDING_START_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -597,7 +668,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         RUN_BIDDING_START_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -623,7 +694,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -651,7 +722,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         RUN_BIDDING_START_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -679,7 +750,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -708,7 +779,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -737,7 +808,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         GENERATE_BIDS_START_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -766,7 +837,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -797,7 +868,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         GENERATE_BIDS_END_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -829,7 +900,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         GENERATE_BIDS_START_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -862,7 +933,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         RUN_BIDDING_END_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -896,7 +967,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         GENERATE_BIDS_END_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
         runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(BUYER_DECISION_LOGIC_JS);
@@ -923,7 +994,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         STOP_ELAPSED_TIMESTAMP);
 
         RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger =
-                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock);
+                new RunAdBiddingPerCAExecutionLogger(mMockClock, mAdServicesLoggerMock, mFlags);
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(NUM_OF_ADS_FOR_BIDDING);
         runAdBiddingPerCAExecutionLogger.close(STATUS_INTERNAL_ERROR);
 
@@ -932,5 +1003,17 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                         IllegalStateException.class,
                         () -> runAdBiddingPerCAExecutionLogger.close(STATUS_INTERNAL_ERROR));
         assertThat(throwable.getMessage()).contains(REPEATED_END_RUN_AD_BIDDING_PER_CA);
+    }
+
+    private static class RunAdBiddingPerCAExeuctuinLoggerTestFlags implements Flags {
+        @Override
+        public boolean getFledgeCpcBillingMetricsEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeDataVersionHeaderMetricsEnabled() {
+            return true;
+        }
     }
 }

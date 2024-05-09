@@ -44,6 +44,9 @@ public class RunAdBiddingPerCAProcessReportedStatsTest {
     static final int RUN_BIDDING_LATENCY_IN_MILLIS = 5;
     static final int RUN_BIDDING_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
     static final int GET_TRUSTED_BIDDING_SIGNALS_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
+    static final boolean RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST = false;
+    static final boolean GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION = true;
+    static final int GENERATE_BID_JS_SCRIPT_RESULT_CODE = 1;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -72,6 +75,10 @@ public class RunAdBiddingPerCAProcessReportedStatsTest {
                         .setGenerateBidsLatencyInMillis(GENERATE_BIDS_LATENCY_IN_MILLIS)
                         .setRunBiddingLatencyInMillis(RUN_BIDDING_LATENCY_IN_MILLIS)
                         .setRunBiddingResultCode(RUN_BIDDING_RESULT_CODE)
+                        .setRunAdBiddingPerCaReturnedAdCost(RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST)
+                        .setGenerateBidBuyerAdditionalSignalsContainedDataVersion(
+                                GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION)
+                        .setGenerateBidJsScriptResultCode(GENERATE_BID_JS_SCRIPT_RESULT_CODE)
                         .build();
         assertEquals(NUM_OF_ADS_FOR_BIDDING, stats.getNumOfAdsForBidding());
         assertEquals(
@@ -102,5 +109,11 @@ public class RunAdBiddingPerCAProcessReportedStatsTest {
         assertEquals(GENERATE_BIDS_LATENCY_IN_MILLIS, stats.getGenerateBidsLatencyInMillis());
         assertEquals(RUN_BIDDING_LATENCY_IN_MILLIS, stats.getRunBiddingLatencyInMillis());
         assertEquals(RUN_BIDDING_RESULT_CODE, stats.getRunBiddingResultCode());
+        assertEquals(
+                RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST, stats.getRunAdBiddingPerCaReturnedAdCost());
+        assertEquals(
+                GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION,
+                stats.getGenerateBidBuyerAdditionalSignalsContainedDataVersion());
+        assertEquals(GENERATE_BID_JS_SCRIPT_RESULT_CODE, stats.getGenerateBidJsScriptResultCode());
     }
 }

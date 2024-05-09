@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_SHELL_COMMAND_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_COUNTER_HISTOGRAM_UPDATER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_AD_SELECTION_REPORTED;
@@ -54,6 +53,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOI
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.PERSIST_AD_SELECTION_RESULT_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_IMPRESSION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
@@ -254,9 +254,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     @Override
     public void logRunAdScoringProcessReportedStats(RunAdScoringProcessReportedStats stats) {
-        boolean placeholder_bool = false;
-        int placeholder_int = FIELD_UNSET;
-
         AdServicesStatsLog.write(
                 RUN_AD_SCORING_PROCESS_REPORTED,
                 stats.getGetAdSelectionLogicLatencyInMillis(),
@@ -274,16 +271,13 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getNumOfContextualAdsEnteringScoring(),
                 stats.getRunAdScoringLatencyInMillis(),
                 stats.getRunAdScoringResultCode(),
-                placeholder_bool,
-                placeholder_int);
+                stats.getScoreAdSellerAdditionalSignalsContainedDataVersion(),
+                stats.getScoreAdJsScriptResultCode());
     }
 
     @Override
     public void logRunAdBiddingPerCAProcessReportedStats(
             RunAdBiddingPerCAProcessReportedStats stats) {
-        boolean placeholder_bool = false;
-        int placeholder_int = FIELD_UNSET;
-
         AdServicesStatsLog.write(
                 RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED,
                 stats.getNumOfAdsForBidding(),
@@ -300,9 +294,9 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getGenerateBidsLatencyInMillis(),
                 stats.getRunBiddingLatencyInMillis(),
                 stats.getRunBiddingResultCode(),
-                placeholder_bool,
-                placeholder_bool,
-                placeholder_int);
+                stats.getRunAdBiddingPerCaReturnedAdCost(),
+                stats.getGenerateBidBuyerAdditionalSignalsContainedDataVersion(),
+                stats.getGenerateBidJsScriptResultCode());
     }
 
     @Override
@@ -914,6 +908,17 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getDownloadLatencyMillis(),
                 stats.getExecutionResultCode(),
                 stats.getExecutionLatencyMillis());
+    }
+
+    @Override
+    public void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats) {
+        AdServicesStatsLog.write(
+                REPORT_IMPRESSION_API_CALLED,
+                stats.getReportWinBuyerAdditionalSignalsContainedAdCost(),
+                stats.getReportWinBuyerAdditionalSignalsContainedDataVersion(),
+                stats.getReportResultSellerAdditionalSignalsContainedDataVersion(),
+                stats.getReportWinJsScriptResultCode(),
+                stats.getReportResultJsScriptResultCode());
     }
 
     @NonNull
