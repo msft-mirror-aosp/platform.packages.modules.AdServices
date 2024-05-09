@@ -23,6 +23,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
@@ -236,6 +237,10 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
                         mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
                                 FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
                 .isTrue();
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId()))
+                .isTrue();
     }
 
     @Test
@@ -249,6 +254,10 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
         expect.that(
                         mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
                                 FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
+                .isFalse();
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId()))
                 .isFalse();
     }
 
