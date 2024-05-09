@@ -237,11 +237,9 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
         DBTrustedBiddingData trustedBiddingData = customAudience.getTrustedBiddingData();
 
-        BuyerContextualSignals contextualSignals =
+        AdSelectionSignals contextualSignals =
                 mBuyerContextualSignalsDataVersionFetcher.getContextualSignalsForGenerateBid(
                         trustedBiddingData, trustedBiddingDataPerBaseUri);
-        runAdBiddingPerCAExecutionLogger.setGenerateBidBuyerAdditionalSignalsContainedDataVersion(
-                contextualSignals.getDataVersion() != null);
 
         long versionRequested = mFlags.getFledgeAdSelectionBiddingLogicJsVersion();
         Map<Integer, Long> jsVersionMap =
@@ -274,7 +272,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     versionRequested,
                                     customAudience,
                                     buyerSignals,
-                                    contextualSignals.toAdSelectionSignals(),
+                                    contextualSignals,
                                     customAudienceSignals,
                                     adSelectionSignals,
                                     trustedBiddingDataPerBaseUri,
@@ -295,7 +293,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                                 candidate);
                                         return null;
                                     }
-                                    AdCost adCost = candidate.first.getAdCost();
                                     CustomAudienceBiddingInfo customAudienceInfo =
                                             CustomAudienceBiddingInfo.create(
                                                     customAudience,
@@ -304,9 +301,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                                             .getContextualSignalsForReportWin(
                                                                     trustedBiddingData,
                                                                     trustedBiddingDataPerBaseUri,
-                                                                    adCost));
-                                    runAdBiddingPerCAExecutionLogger
-                                            .setRunAdBiddingPerCaReturnedAdCost(adCost != null);
+                                                                    candidate.first.getAdCost()));
                                     sLogger.v(
                                             "Creating Ad Bidding Outcome for CA: %s",
                                             customAudience.getName());

@@ -54,9 +54,6 @@ import static com.android.adservices.service.stats.AdSelectionExecutionLogger.RE
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_JAVASCRIPT;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_UNSET;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_UNSET;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -77,7 +74,6 @@ import android.util.Pair;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdBiddingOutcome;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
@@ -158,9 +154,6 @@ public class AdSelectionExecutionLoggerTest {
             (int) (STOP_ELAPSED_TIMESTAMP - START_ELAPSED_TIMESTAMP);
     public static final int RUN_AD_SELECTION_OVERALL_LATENCY_MS =
             BINDER_LATENCY_MS + RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS;
-
-    public static final boolean SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION = true;
-    public static final int SCORE_AD_JS_SCRIPT_RESULT_CODE = 0;
     private static final Uri DECISION_LOGIC_URI =
             Uri.parse("https://developer.android.com/test/decisions_logic_uris");
     private static final List<AdTechIdentifier> BUYERS =
@@ -241,8 +234,6 @@ public class AdSelectionExecutionLoggerTest {
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
-    private final Flags mFlags = new AdSelectionExecutionLoggerTestFlags();
-
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
@@ -290,10 +281,7 @@ public class AdSelectionExecutionLoggerTest {
         adSelectionExecutionLogger.startGetAdScores();
         adSelectionExecutionLogger.startGetTrustedScoringSignals();
         adSelectionExecutionLogger.endGetTrustedScoringSignals(mAdSelectionSignals);
-        adSelectionExecutionLogger.setScoreAdSellerAdditionalSignalsContainedDataVersion(
-                SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
         adSelectionExecutionLogger.startScoreAds();
-        adSelectionExecutionLogger.setScoreAdJsScriptResultCode(JS_RUN_STATUS_SUCCESS);
         adSelectionExecutionLogger.endScoreAds();
         adSelectionExecutionLogger.endGetAdScores();
         adSelectionExecutionLogger.endRunAdScoring(STATUS_SUCCESS);
@@ -301,7 +289,6 @@ public class AdSelectionExecutionLoggerTest {
         adSelectionExecutionLogger.startPersistAdSelection(mMockDBAdSelection);
         // Set end state of the subcomponent persist-ad-selection process.
         adSelectionExecutionLogger.endPersistAdSelection();
-
         // Close the Ad selection execution logger and log the data into the AdServicesLogger.
         int resultCode = STATUS_SUCCESS;
         adSelectionExecutionLogger.close(resultCode);
@@ -374,12 +361,6 @@ public class AdSelectionExecutionLoggerTest {
                 .isEqualTo(RUN_AD_SCORING_LATENCY_MS);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringResultCode())
                 .isEqualTo(resultCode);
-        assertThat(
-                        runAdScoringProcessReportedStats
-                                .getScoreAdSellerAdditionalSignalsContainedDataVersion())
-                .isEqualTo(SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
-        assertThat(runAdScoringProcessReportedStats.getScoreAdJsScriptResultCode())
-                .isEqualTo(JS_RUN_STATUS_SUCCESS);
 
         // Verify the logging of the RunAdSelectionProcessReportedStats.
         verify(mAdServicesLoggerMock)
@@ -435,10 +416,7 @@ public class AdSelectionExecutionLoggerTest {
         adSelectionExecutionLogger.startGetAdScores();
         adSelectionExecutionLogger.startGetTrustedScoringSignals();
         adSelectionExecutionLogger.endGetTrustedScoringSignals(mAdSelectionSignals);
-        adSelectionExecutionLogger.setScoreAdSellerAdditionalSignalsContainedDataVersion(
-                SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
         adSelectionExecutionLogger.startScoreAds();
-        adSelectionExecutionLogger.setScoreAdJsScriptResultCode(JS_RUN_STATUS_JS_REFERENCE_ERROR);
         adSelectionExecutionLogger.endRunAdScoring(resultCode);
         adSelectionExecutionLogger.close(resultCode);
 
@@ -510,12 +488,6 @@ public class AdSelectionExecutionLoggerTest {
                 .isEqualTo(RUN_AD_SCORING_LATENCY_MS);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringResultCode())
                 .isEqualTo(resultCode);
-        assertThat(
-                        runAdScoringProcessReportedStats
-                                .getScoreAdSellerAdditionalSignalsContainedDataVersion())
-                .isEqualTo(SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
-        assertThat(runAdScoringProcessReportedStats.getScoreAdJsScriptResultCode())
-                .isEqualTo(JS_RUN_STATUS_JS_REFERENCE_ERROR);
     }
 
     @Test
@@ -624,12 +596,6 @@ public class AdSelectionExecutionLoggerTest {
                 .isEqualTo(RUN_AD_SCORING_LATENCY_MS);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringResultCode())
                 .isEqualTo(resultCode);
-        assertThat(
-                        runAdScoringProcessReportedStats
-                                .getScoreAdSellerAdditionalSignalsContainedDataVersion())
-                .isFalse();
-        assertThat(runAdScoringProcessReportedStats.getScoreAdJsScriptResultCode())
-                .isEqualTo(JS_RUN_STATUS_UNSET);
     }
 
     @Test
@@ -730,12 +696,6 @@ public class AdSelectionExecutionLoggerTest {
                 .isEqualTo(RUN_AD_SCORING_LATENCY_MS);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringResultCode())
                 .isEqualTo(resultCode);
-        assertThat(
-                        runAdScoringProcessReportedStats
-                                .getScoreAdSellerAdditionalSignalsContainedDataVersion())
-                .isEqualTo(false);
-        assertThat(runAdScoringProcessReportedStats.getScoreAdJsScriptResultCode())
-                .isEqualTo(JS_RUN_STATUS_UNSET);
     }
 
     @Test
@@ -1051,7 +1011,7 @@ public class AdSelectionExecutionLoggerTest {
         when(mMockClock.elapsedRealtime()).thenReturn(START_ELAPSED_TIMESTAMP);
         AdSelectionExecutionLogger adSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock, mFlags);
+                        sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
         // Set the start of the get-ad-selection-logic process.
         Throwable throwable =
                 assertThrows(
@@ -1577,13 +1537,6 @@ public class AdSelectionExecutionLoggerTest {
 
     private AdSelectionExecutionLogger getAdSelectionExecutionLogger() {
         return new AdSelectionExecutionLogger(
-                sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock, mFlags);
-    }
-
-    private static class AdSelectionExecutionLoggerTestFlags implements Flags {
-        @Override
-        public boolean getFledgeDataVersionHeaderMetricsEnabled() {
-            return true;
-        }
+                sCallerMetadata, mMockClock, mContextMock, mAdServicesLoggerMock);
     }
 }

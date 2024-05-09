@@ -22,9 +22,6 @@ import static com.android.adservices.service.common.ScriptEngineConstants.STATUS
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
 
 import static com.google.common.util.concurrent.Futures.transform;
 
@@ -39,15 +36,12 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
-import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
 import com.android.internal.util.Preconditions;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -201,18 +195,14 @@ public class ReportImpressionScriptEngine {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull Uri renderUri,
             @NonNull double bid,
-            @NonNull AdSelectionSignals contextualSignals,
-            @NonNull ReportImpressionExecutionLogger reportImpressionExecutionLogger)
+            @NonNull AdSelectionSignals contextualSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(decisionLogicJS);
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(renderUri);
         Objects.requireNonNull(contextualSignals);
-        Objects.requireNonNull(reportImpressionExecutionLogger);
 
         sLogger.v("Reporting result");
-        reportImpressionExecutionLogger.setReportResultSellerAdditionalSignalsContainedDataVersion(
-                contextualSignals.containsDataVersion());
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
                         .add(
@@ -223,28 +213,14 @@ public class ReportImpressionScriptEngine {
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .build();
 
-        return FluentFuture.from(
-                        transform(
-                                runReportingScript(
-                                        mRegisterAdBeaconScriptEngineHelper.injectReportingJs(
-                                                decisionLogicJS, REPORT_RESULT_ENTRY_JS),
-                                        REPORT_RESULT_ENTRY_NAME,
-                                        arguments),
-                                result ->
-                                        mRegisterAdBeaconScriptEngineHelper
-                                                .handleReportResultOutput(
-                                                        result, reportImpressionExecutionLogger),
-                                mExecutor))
-                .catchingAsync(
-                        JSExecutionException.class,
-                        e -> {
-                            if (e.getMessage().contains("Uncaught ReferenceError:")) {
-                                reportImpressionExecutionLogger.setReportResultJsScriptResultCode(
-                                        JS_RUN_STATUS_JS_REFERENCE_ERROR);
-                            }
-                            throw e;
-                        },
-                        mExecutor);
+        return transform(
+                runReportingScript(
+                        mRegisterAdBeaconScriptEngineHelper.injectReportingJs(
+                                decisionLogicJS, REPORT_RESULT_ENTRY_JS),
+                        REPORT_RESULT_ENTRY_NAME,
+                        arguments),
+                mRegisterAdBeaconScriptEngineHelper::handleReportResultOutput,
+                mExecutor);
     }
 
     /**
@@ -269,8 +245,7 @@ public class ReportImpressionScriptEngine {
             @NonNull AdSelectionSignals perBuyerSignals,
             @NonNull AdSelectionSignals signalsForBuyer,
             @NonNull AdSelectionSignals contextualSignals,
-            @NonNull CustomAudienceSignals customAudienceSignals,
-            @NonNull ReportImpressionExecutionLogger reportImpressionExecutionLogger)
+            @NonNull CustomAudienceSignals customAudienceSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(biddingLogicJS);
         Objects.requireNonNull(adSelectionSignals);
@@ -278,13 +253,8 @@ public class ReportImpressionScriptEngine {
         Objects.requireNonNull(signalsForBuyer);
         Objects.requireNonNull(contextualSignals);
         Objects.requireNonNull(customAudienceSignals);
-        Objects.requireNonNull(reportImpressionExecutionLogger);
         sLogger.v("Reporting win");
 
-        reportImpressionExecutionLogger.setReportWinBuyerAdditionalSignalsContainedAdCost(
-                contextualSignals.containsAdCost());
-        reportImpressionExecutionLogger.setReportWinBuyerAdditionalSignalsContainedDataVersion(
-                contextualSignals.containsDataVersion());
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
                         .add(jsonArg(AD_SELECTION_SIGNALS_ARG_NAME, adSelectionSignals.toString()))
@@ -297,27 +267,14 @@ public class ReportImpressionScriptEngine {
                                         customAudienceSignals))
                         .build();
 
-        return FluentFuture.from(
-                        transform(
-                                runReportingScript(
-                                        mRegisterAdBeaconScriptEngineHelper.injectReportingJs(
-                                                biddingLogicJS, REPORT_WIN_ENTRY_JS),
-                                        REPORT_WIN_ENTRY_NAME,
-                                        arguments),
-                                result ->
-                                        mRegisterAdBeaconScriptEngineHelper.handleReportWinOutput(
-                                                result, reportImpressionExecutionLogger),
-                                mExecutor))
-                .catchingAsync(
-                        JSExecutionException.class,
-                        e -> {
-                            if (e.getMessage().contains("Uncaught ReferenceError:")) {
-                                reportImpressionExecutionLogger.setReportWinJsScriptResultCode(
-                                        JS_RUN_STATUS_JS_REFERENCE_ERROR);
-                            }
-                            throw e;
-                        },
-                        mExecutor);
+        return transform(
+                runReportingScript(
+                        mRegisterAdBeaconScriptEngineHelper.injectReportingJs(
+                                biddingLogicJS, REPORT_WIN_ENTRY_JS),
+                        REPORT_WIN_ENTRY_NAME,
+                        arguments),
+                mRegisterAdBeaconScriptEngineHelper::handleReportWinOutput,
+                mExecutor);
     }
 
     ListenableFuture<ReportingScriptResult> runReportingScript(
@@ -468,9 +425,7 @@ public class ReportImpressionScriptEngine {
          * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
          *     structure.
          */
-        BuyerReportingResult handleReportWinOutput(
-                @NonNull ReportingScriptResult reportResult,
-                ReportImpressionExecutionLogger reportImpressionExecutionLogger);
+        BuyerReportingResult handleReportWinOutput(@NonNull ReportingScriptResult reportResult);
 
         /**
          * Parses the output from the invocation of the {@code reportResult} JS function and
@@ -484,9 +439,7 @@ public class ReportImpressionScriptEngine {
          * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
          *     structure.
          */
-        SellerReportingResult handleReportResultOutput(
-                @NonNull ReportingScriptResult reportResult,
-                ReportImpressionExecutionLogger reportImpressionExecutionLogger);
+        SellerReportingResult handleReportResultOutput(@NonNull ReportingScriptResult reportResult);
     }
 
     /**
@@ -515,8 +468,7 @@ public class ReportImpressionScriptEngine {
 
         @Override
         public BuyerReportingResult handleReportWinOutput(
-                @NonNull ReportingScriptResult reportResult,
-                ReportImpressionExecutionLogger reportImpressionExecutionLogger) {
+                @NonNull ReportingScriptResult reportResult) {
             Objects.requireNonNull(reportResult);
             sLogger.v("Handling report win output");
 
@@ -534,20 +486,16 @@ public class ReportImpressionScriptEngine {
 
                 List<InteractionUriRegistrationInfo> interactionUriRegistrationInfoList =
                         extractInteractionUriRegistrationInfoFromArray(interactionUriJsonArray);
-                reportImpressionExecutionLogger.setReportWinJsScriptResultCode(
-                        JS_RUN_STATUS_SUCCESS);
+
                 return new BuyerReportingResult(reportingUri, interactionUriRegistrationInfoList);
             } catch (Exception e) {
-                reportImpressionExecutionLogger.setReportWinJsScriptResultCode(
-                        JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR);
                 throw new IllegalStateException("Result does not match expected structure!");
             }
         }
 
         @Override
         public SellerReportingResult handleReportResultOutput(
-                @NonNull ReportingScriptResult reportResult,
-                ReportImpressionExecutionLogger reportImpressionExecutionLogger) {
+                @NonNull ReportingScriptResult reportResult) {
             Objects.requireNonNull(reportResult);
             sLogger.v("Handling reporting result output");
             Preconditions.checkState(
@@ -570,14 +518,10 @@ public class ReportImpressionScriptEngine {
                 List<InteractionUriRegistrationInfo> interactionUriRegistrationInfoList =
                         extractInteractionUriRegistrationInfoFromArray(interactionUriJsonArray);
 
-                reportImpressionExecutionLogger.setReportResultJsScriptResultCode(
-                        JS_RUN_STATUS_SUCCESS);
                 return new SellerReportingResult(
                         adSelectionSignals, reportingUri, interactionUriRegistrationInfoList);
             } catch (Exception e) {
                 sLogger.e(e.getMessage());
-                reportImpressionExecutionLogger.setReportResultJsScriptResultCode(
-                        JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR);
                 throw new IllegalStateException("Result does not match expected structure!");
             }
         }
@@ -630,8 +574,7 @@ public class ReportImpressionScriptEngine {
 
         @Override
         public BuyerReportingResult handleReportWinOutput(
-                @NonNull ReportingScriptResult reportResult,
-                ReportImpressionExecutionLogger reportImpressionExecutionLogger) {
+                @NonNull ReportingScriptResult reportResult) {
             Objects.requireNonNull(reportResult);
             sLogger.v("Handling report win output");
 
@@ -653,8 +596,7 @@ public class ReportImpressionScriptEngine {
 
         @Override
         public SellerReportingResult handleReportResultOutput(
-                @NonNull ReportingScriptResult reportResult,
-                ReportImpressionExecutionLogger reportImpressionExecutionLogger) {
+                @NonNull ReportingScriptResult reportResult) {
             Objects.requireNonNull(reportResult);
             sLogger.v("Handling reporting result output");
             Preconditions.checkState(

@@ -22,7 +22,6 @@ import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABA
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_SCRIPT_TYPE__JAVASCRIPT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_SCRIPT_TYPE__UNSET;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_UNSET;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CallerMetadata;
@@ -33,7 +32,6 @@ import android.content.Context;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdBiddingOutcome;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.shared.util.Clock;
@@ -262,27 +260,21 @@ public class AdSelectionExecutionLogger extends ApiServiceLatencyCalculator {
     private long mDBAdSelectionSizeInBytes;
 
     private AdServicesLogger mAdServicesLogger;
-    private final boolean mDataHeaderMetricsEnabled;
-    private boolean mScoreAdSellerAdditionalSignalsContainedDataVersion;
-    private int mScoreAdJsScriptResultCode;
+
 
     public AdSelectionExecutionLogger(
             @NonNull CallerMetadata callerMetadata,
             @NonNull Clock clock,
             @NonNull Context context,
-            @NonNull AdServicesLogger adServicesLogger,
-            @NonNull Flags flags) {
+            @NonNull AdServicesLogger adServicesLogger) {
         super(clock);
         Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(context);
         Objects.requireNonNull(adServicesLogger);
-        Objects.requireNonNull(flags);
         this.mBinderElapsedTimestamp = callerMetadata.getBinderElapsedTimestamp();
         this.mContext = context;
         this.mAdServicesLogger = adServicesLogger;
-        this.mDataHeaderMetricsEnabled = flags.getFledgeDataVersionHeaderMetricsEnabled();
-        this.mScoreAdJsScriptResultCode = JS_RUN_STATUS_UNSET;
         sLogger.v("AdSelectionExecutionLogger starts.");
     }
 
@@ -558,18 +550,6 @@ public class AdSelectionExecutionLogger extends ApiServiceLatencyCalculator {
         sLogger.v("The database file size is %d", mDBAdSelectionSizeInBytes);
     }
 
-    /** Record whether ScoreAd SellerAdditionalSignals contained Data Version. */
-    public void setScoreAdSellerAdditionalSignalsContainedDataVersion(boolean value) {
-        if (mDataHeaderMetricsEnabled) {
-            this.mScoreAdSellerAdditionalSignalsContainedDataVersion = value;
-        }
-    }
-
-    /** Record the ScoreAd JsScript Result Code. */
-    public void setScoreAdJsScriptResultCode(@AdsRelevanceStatusUtils.JsRunStatus int resultCode) {
-        this.mScoreAdJsScriptResultCode = resultCode;
-    }
-
     /**
      * This method should be called at the end of an ad selection process to generate and log the
      * {@link RunAdSelectionProcessReportedStats} into the {@link AdServicesLogger}.
@@ -653,9 +633,6 @@ public class AdSelectionExecutionLogger extends ApiServiceLatencyCalculator {
                 .setNumOfContextualAdsEnteringScoring(FIELD_UNSET)
                 .setRunAdScoringLatencyInMillis(getRunScoringLatencyInMs())
                 .setRunAdScoringResultCode(resultCode)
-                .setScoreAdSellerAdditionalSignalsContainedDataVersion(
-                        mScoreAdSellerAdditionalSignalsContainedDataVersion)
-                .setScoreAdJsScriptResultCode(mScoreAdJsScriptResultCode)
                 .build();
     }
 
