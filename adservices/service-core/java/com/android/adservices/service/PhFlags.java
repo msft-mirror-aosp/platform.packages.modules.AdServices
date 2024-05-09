@@ -3225,12 +3225,12 @@ public final class PhFlags implements Flags {
                         + getRvcPostOtaNotifAgeCheck());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE
+                        + DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE
                         + " = "
                         + getConsentNotificationActivityDebugMode());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE
+                        + DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE
                         + " = "
                         + getConsentNotifiedDebugMode());
         writer.println(
@@ -5655,10 +5655,10 @@ public final class PhFlags implements Flags {
                 isUiFeatureTypeLoggingEnabled());
         uxMap.put(FlagsConstants.KEY_ADSERVICES_ENABLED, getAdServicesEnabled());
         uxMap.put(
-                FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
+                DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
                 getConsentNotificationDebugMode());
         uxMap.put(
-                FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 getConsentNotificationActivityDebugMode());
         uxMap.put(FlagsConstants.KEY_U18_UX_ENABLED, getU18UxEnabled());
         uxMap.put(
