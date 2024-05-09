@@ -334,6 +334,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMsmtRegistrationCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_MSMT_REGISTRATION_COBALT_LOGGING_ENABLED,
+                        MSMT_REGISTRATION_COBALT_LOGGING_ENABLED);
+    }
+
+    @Override
     public boolean getAppNameApiErrorCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled()
                 && getDeviceConfigFlag(
@@ -4936,6 +4944,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED
                         + " = "
                         + getTopicsCobaltLoggingEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MSMT_REGISTRATION_COBALT_LOGGING_ENABLED
+                        + " = "
+                        + getMsmtRegistrationCobaltLoggingEnabled());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println(
                 "\t" + FlagsConstants.KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
