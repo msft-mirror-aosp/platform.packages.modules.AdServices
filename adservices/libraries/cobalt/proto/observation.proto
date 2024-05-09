@@ -176,7 +176,7 @@ message StringHistogramObservation {
 // Observations of this type are produced by the PrivacyEncoder: given a single
 // Observation of some other type, the PrivacyEncoder outputs one or more
 // PrivateIndexObservations. All data for reports with a nontrivial
-// privacy level will be transported from client to server in the form of
+// privacy mechanism will be transported from client to server in the form of
 // PrivateIndexObservations.
 //
 // The field |index| of a PrivateIndexObservation is an index into an
