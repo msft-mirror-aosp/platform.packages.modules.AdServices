@@ -18,11 +18,16 @@ package com.android.adservices.shared.errorlogging;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 
-import static org.junit.Assert.assertEquals;
+import com.google.common.truth.Expect;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 public final class AdServicesErrorStatsTest {
+
+    @Rule(order = 1)
+    public final Expect expect = Expect.create();
+
     private static final int ERROR_CODE =
             AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
     private static final int PPAPI_NAME = 1;
@@ -43,12 +48,12 @@ public final class AdServicesErrorStatsTest {
                         .setLastObservedExceptionName(EXCEPTION_NAME)
                         .build();
 
-        assertEquals(ERROR_CODE, errorData.getErrorCode());
-        assertEquals(PPAPI_NAME, errorData.getPpapiName());
-        assertEquals(CLASS_NAME, errorData.getClassName());
-        assertEquals(METHOD_NAME, errorData.getMethodName());
-        assertEquals(LINE_NUMBER, errorData.getLineNumber());
-        assertEquals(EXCEPTION_NAME, errorData.getLastObservedExceptionName());
+        expect.that(errorData.getErrorCode()).isEqualTo(ERROR_CODE);
+        expect.that(errorData.getPpapiName()).isEqualTo(PPAPI_NAME);
+        expect.that(errorData.getClassName()).isEqualTo(CLASS_NAME);
+        expect.that(errorData.getMethodName()).isEqualTo(METHOD_NAME);
+        expect.that(errorData.getLineNumber()).isEqualTo(LINE_NUMBER);
+        expect.that(errorData.getLastObservedExceptionName()).isEqualTo(EXCEPTION_NAME);
     }
 
     @Test
@@ -61,12 +66,12 @@ public final class AdServicesErrorStatsTest {
                         .setLastObservedExceptionName(EXCEPTION_NAME)
                         .build();
 
-        assertEquals(ERROR_CODE, errorData.getErrorCode());
-        assertEquals(0, errorData.getPpapiName());
-        assertEquals(CLASS_NAME, errorData.getClassName());
-        assertEquals(METHOD_NAME, errorData.getMethodName());
-        assertEquals(0, errorData.getLineNumber());
-        assertEquals(EXCEPTION_NAME, errorData.getLastObservedExceptionName());
+        expect.that(errorData.getErrorCode()).isEqualTo(ERROR_CODE);
+        expect.that(errorData.getPpapiName()).isEqualTo(0);
+        expect.that(errorData.getClassName()).isEqualTo(CLASS_NAME);
+        expect.that(errorData.getMethodName()).isEqualTo(METHOD_NAME);
+        expect.that(errorData.getLineNumber()).isEqualTo(0);
+        expect.that(errorData.getLastObservedExceptionName()).isEqualTo(EXCEPTION_NAME);
     }
 
     @Test
@@ -77,11 +82,11 @@ public final class AdServicesErrorStatsTest {
                         .setPpapiName(PPAPI_NAME)
                         .build();
 
-        assertEquals(ERROR_CODE, errorData.getErrorCode());
-        assertEquals(PPAPI_NAME, errorData.getPpapiName());
-        assertEquals("", errorData.getClassName());
-        assertEquals("", errorData.getMethodName());
-        assertEquals(0, errorData.getLineNumber());
-        assertEquals("", errorData.getLastObservedExceptionName());
+        expect.that(errorData.getErrorCode()).isEqualTo(ERROR_CODE);
+        expect.that(errorData.getPpapiName()).isEqualTo(PPAPI_NAME);
+        expect.that(errorData.getClassName()).isEqualTo("");
+        expect.that(errorData.getMethodName()).isEqualTo("");
+        expect.that(errorData.getLineNumber()).isEqualTo(0);
+        expect.that(errorData.getLastObservedExceptionName()).isEqualTo("");
     }
 }

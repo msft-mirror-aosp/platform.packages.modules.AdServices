@@ -4513,6 +4513,24 @@ public interface Flags extends ModuleSharedFlags {
         return getCobaltLoggingEnabled() && TOPICS_COBALT_LOGGING_ENABLED;
     }
 
+    /**
+     * Default value of whether cobalt logging feature is enabled for source and trigger
+     * registrations in measurement service.
+     */
+    boolean MSMT_REGISTRATION_COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns whether the cobalt logging feature is enabled for source and trigger registration in
+     * measurement service .
+     *
+     * <p>The cobalt logging for measurement registration will be disabled either the {@code
+     * getCobaltLoggingEnabled} or {@code MSMT_REGISTRATION_COBALT_LOGGING_ENABLED} is {@code
+     * false}.
+     */
+    default boolean getMsmtRegistrationCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled() && MSMT_REGISTRATION_COBALT_LOGGING_ENABLED;
+    }
+
     /** Default value of whether app name and api error cobalt logging feature is enabled. */
     boolean APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED = false;
 

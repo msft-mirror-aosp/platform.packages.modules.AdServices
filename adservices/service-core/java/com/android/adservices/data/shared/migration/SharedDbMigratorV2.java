@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.shared.SharedDbHelper;
+import com.android.internal.annotations.VisibleForTesting;
 
 /** Migrates Shared DB from user version 1 to 2, create EncryptionKey table if not have it. */
 public class SharedDbMigratorV2 extends AbstractSharedDbMigrator {
@@ -34,7 +35,8 @@ public class SharedDbMigratorV2 extends AbstractSharedDbMigrator {
      * @param db shared db to migrate
      */
     @Override
-    protected void performMigration(@NonNull SQLiteDatabase db) {
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PROTECTED)
+    public void performMigration(@NonNull SQLiteDatabase db) {
         if (!SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES)) {
             EncryptionKeyTables.CREATE_STATEMENTS_V2.forEach(db::execSQL);
         }

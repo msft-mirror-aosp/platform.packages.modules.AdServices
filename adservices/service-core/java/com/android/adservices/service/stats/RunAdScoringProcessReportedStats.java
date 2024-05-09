@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_UNSET;
+
 import com.google.auto.value.AutoValue;
 
 /** Class for runAdScoring process reported stats. */
@@ -66,9 +68,22 @@ public abstract class RunAdScoringProcessReportedStats {
     /** @return the runAdScoring result code. */
     public abstract int getRunAdScoringResultCode();
 
+    /**
+     * @return whether the scoreAd SellerAdditionalSignals contained DataVersion.
+     */
+    public abstract boolean getScoreAdSellerAdditionalSignalsContainedDataVersion();
+
+    /**
+     * @return the ScoreAd JsScript result code.
+     */
+    @AdsRelevanceStatusUtils.JsRunStatus
+    public abstract int getScoreAdJsScriptResultCode();
+
     /** @return generic builder. */
     static Builder builder() {
-        return new AutoValue_RunAdScoringProcessReportedStats.Builder();
+        return new AutoValue_RunAdScoringProcessReportedStats.Builder()
+                .setScoreAdSellerAdditionalSignalsContainedDataVersion(false)
+                .setScoreAdJsScriptResultCode(JS_RUN_STATUS_UNSET);
     }
 
     /** Builder class for RunAdScoringProcessReportedStats. */
@@ -103,6 +118,11 @@ public abstract class RunAdScoringProcessReportedStats {
         abstract Builder setRunAdScoringLatencyInMillis(int value);
 
         abstract Builder setRunAdScoringResultCode(int value);
+
+        abstract Builder setScoreAdSellerAdditionalSignalsContainedDataVersion(boolean value);
+
+        abstract Builder setScoreAdJsScriptResultCode(
+                @AdsRelevanceStatusUtils.JsRunStatus int value);
 
         abstract RunAdScoringProcessReportedStats build();
     }

@@ -19,19 +19,28 @@ package com.android.adservices.shared.spe;
 import static android.app.job.JobInfo.NETWORK_TYPE_NONE;
 import static android.app.job.JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
 import static com.google.common.truth.Truth.assertThat;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 import android.app.job.JobInfo;
 import android.content.ComponentName;
 import android.net.Uri;
 import android.os.PersistableBundle;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.shared.util.LogUtil;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 
+import java.util.Locale;
+
 /** Unit tests for {@link JobUtil}. */
-public final class JobUtilTest extends AdServicesUnitTestCase {
+public final class JobUtilTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void testJobInfoToString_noUri() {
         JobInfo.Builder builder = getBaseJobInfoBuilder();
@@ -78,6 +87,18 @@ public final class JobUtilTest extends AdServicesUnitTestCase {
                                 + " PeriodicIntervalMs=0, FlexIntervalMs=0, MinimumLatencyMs=0,"
                                 + " OverrideDeadlineMs=0, Extras=PersistableBundle[{}],"
                                 + " IsPersisted=false}");
+    }
+
+    @Test
+    @SpyStatic(LogUtil.class)
+    public void testLogV() {
+        String stringToLog = "Something happened with name = %s";
+        String arg1 = "someName";
+        String formattedString = String.format(Locale.ENGLISH, stringToLog, arg1);
+
+        JobUtil.logV(stringToLog, arg1);
+
+        verify(() -> LogUtil.v(eq("at %s UTC: %s"), any(), eq(formattedString)));
     }
 
     private JobInfo.Builder getBaseJobInfoBuilder() {

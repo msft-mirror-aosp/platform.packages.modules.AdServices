@@ -35,6 +35,9 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
@@ -390,6 +393,28 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                 mContext.getPackageManager()
                         .queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER);
         return launcherActivities.size();
+    }
+
+    @Override
+    public int requestAudioFocus() {
+        try {
+            AudioManager manager = mContext.getSystemService(AudioManager.class);
+
+            AudioAttributes attr =
+                    new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build();
+
+            AudioFocusRequest mediaFocusReq =
+                    new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                            .setAudioAttributes(attr)
+                            .build();
+
+            return manager.requestAudioFocus(mediaFocusReq);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private void registerLifecycleEvents(

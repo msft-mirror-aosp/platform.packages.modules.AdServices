@@ -37,6 +37,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Supplier;
 
+// TODO(b/338132355): move to shared.common package and rename to just ExtendedMockitoRule
+
 // NOTE: javadoc below copied mostly as-is from ExtendedMockitoRule
 /**
  * Rule to make it easier to use Extended Mockito:
