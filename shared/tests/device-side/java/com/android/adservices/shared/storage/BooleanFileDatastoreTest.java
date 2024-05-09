@@ -32,17 +32,16 @@ import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.util.LogUtil;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import com.google.common.truth.Expect;
 import com.google.common.truth.IterableSubject;
 import com.google.common.truth.StringSubject;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
@@ -52,7 +51,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public final class BooleanFileDatastoreTest {
+@SpyStatic(Build.class)
+@SpyStatic(SdkLevel.class)
+public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCase {
     private static final Context APPLICATION_CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final String VALID_DIR = APPLICATION_CONTEXT.getFilesDir().getAbsolutePath();
@@ -63,15 +64,6 @@ public final class BooleanFileDatastoreTest {
 
     private final BooleanFileDatastore mDatastore =
             new BooleanFileDatastore(VALID_DIR, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY);
-
-    @Rule
-    public final AdServicesExtendedMockitoRule extendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder()
-                    .spyStatic(Build.class)
-                    .spyStatic(SdkLevel.class)
-                    .build();
-
-    @Rule public final Expect expect = Expect.create();
 
     @Before
     public void initializeDatastore() throws IOException {

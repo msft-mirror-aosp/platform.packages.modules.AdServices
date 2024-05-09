@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,27 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.shared;
 
 import android.content.Context;
 
 import org.junit.Rule;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
-/**
- * Base class for all unit tests that use "regular Mockito" (i.e., not {@code ExtendedMockito} - for
- * those, use {@link AdServicesExtendedMockitoTestCase} instead)
- */
-public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
+public abstract class SharedMockitoTestCase extends SharedUnitTestCase {
 
-    @Mock protected Context mMockContext;
-
-    /** Spy the {@link AdServicesUnitTestCase#sContext} */
-    @Spy protected final Context mSpyContext = sContext;
+    @Mock protected Context mContext;
+    @Mock protected Context mAppContext;
 
     @Rule(order = 10)
     public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);

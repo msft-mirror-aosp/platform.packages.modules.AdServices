@@ -49,7 +49,7 @@ import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
@@ -72,7 +72,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link AbstractJobService}. */
-public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
+public final class AbstractJobServiceTest extends SharedMockitoTestCase {
     // This is used to schedule a job with a latency before its execution. Use a large value so that
     // the job can NOT execute.
     private static final int EXECUTION_CANNOT_START_LATENCY_MS = 24 * 60 * 60 * 1000;

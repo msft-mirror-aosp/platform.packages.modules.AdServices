@@ -21,10 +21,16 @@ import android.content.Context;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoMockerImpl;
-import com.android.adservices.mockito.AdServicesExtendedMockitoMockerImpl.StaticClassChecker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
+import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
+import com.android.adservices.mockito.LogInterceptor;
+import com.android.adservices.mockito.StaticClassChecker;
+import com.android.adservices.service.Flags;
+import com.android.adservices.spe.AdServicesJobScheduler;
+import com.android.adservices.spe.AdServicesJobServiceFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -64,24 +70,7 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
     public final AdServicesExtendedMockitoRule extendedMockito = getAdServicesExtendedMockitoRule();
 
     /** Provides common expectations. */
-    public final AdServicesExtendedMockitoMocker mocker =
-            new AdServicesExtendedMockitoMockerImpl(
-                    new StaticClassChecker() {
-                        @Override
-                        public boolean isSpiedOrMocked(Class<?> clazz) {
-                            return getSpiedOrMockedClasses().contains(clazz);
-                        }
-
-                        @Override
-                        public ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
-                            return extendedMockito.getSpiedOrMockedClasses();
-                        }
-
-                        @Override
-                        public String getTestName() {
-                            return extendedMockito.getTestName();
-                        }
-                    });
+    public final Mocker mocker = new Mocker(extendedMockito);
 
     /**
      * Gets the {@link AdServicesExtendedMockitoRule} that will be set as the {@code
@@ -112,4 +101,103 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         return new AdServicesExtendedMockitoRule.Builder(this).setStrictness(Strictness.LENIENT);
     }
 
+    public static final class Mocker
+            implements AndroidStaticMocker, AdServicesExtendedMockitoMocker {
+
+        private final AndroidStaticMocker mAndroidMocker;
+        private final AdServicesExtendedMockitoMocker mAdServicesMocker;
+
+        // TODO(b/338132355): create helper class to implement StaticClassChecker from rule
+        private Mocker(AdServicesExtendedMockitoRule rule) {
+            StaticClassChecker staticClassChecker =
+                    new StaticClassChecker() {
+                        @Override
+                        public boolean isSpiedOrMocked(Class<?> clazz) {
+                            return getSpiedOrMockedClasses().contains(clazz);
+                        }
+
+                        @Override
+                        public ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
+                            return rule.getSpiedOrMockedClasses();
+                        }
+
+                        @Override
+                        public String getTestName() {
+                            return rule.getTestName();
+                        }
+                    };
+            mAndroidMocker = new AndroidExtendedMockitoMocker(staticClassChecker);
+            mAdServicesMocker = new AdServicesExtendedMockitoMockerImpl(staticClassChecker);
+        }
+
+        // AndroidStaticMocker methods
+
+        @Override
+        public void mockGetCallingUidOrThrow(int uid) {
+            mAndroidMocker.mockGetCallingUidOrThrow(uid);
+        }
+
+        @Override
+        public void mockGetCallingUidOrThrow() {
+            mAndroidMocker.mockGetCallingUidOrThrow();
+        }
+
+        @Override
+        public void mockIsAtLeastR(boolean isIt) {
+            mAndroidMocker.mockIsAtLeastR(isIt);
+        }
+
+        @Override
+        public void mockIsAtLeastS(boolean isIt) {
+            mAndroidMocker.mockIsAtLeastS(isIt);
+        }
+
+        @Override
+        public void mockIsAtLeastT(boolean isIt) {
+            mAndroidMocker.mockIsAtLeastT(isIt);
+        }
+
+        @Override
+        public void mockSdkLevelR() {
+            mAndroidMocker.mockSdkLevelR();
+        }
+
+        @Override
+        public void mockGetCurrentUser(int user) {
+            mAndroidMocker.mockGetCurrentUser(user);
+        }
+
+        @Override
+        public LogInterceptor interceptLogV(String tag) {
+            return mAndroidMocker.interceptLogV(tag);
+        }
+
+        @Override
+        public LogInterceptor interceptLogE(String tag) {
+            return mAndroidMocker.interceptLogE(tag);
+        }
+
+        // AdServicesExtendedMockitoMocker methods
+
+        @Override
+        public void mockGetFlags(Flags mockedFlags) {
+            mAdServicesMocker.mockGetFlags(mockedFlags);
+        }
+
+        @Override
+        public void mockGetFlagsForTesting() {
+            mAdServicesMocker.mockGetFlagsForTesting();
+        }
+
+        @Override
+        public void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler) {
+            mAdServicesMocker.mockSpeJobScheduler(mockedAdServicesJobScheduler);
+        }
+
+        @Override
+        public void mockAdServicesJobServiceFactory(
+                AdServicesJobServiceFactory mockedAdServicesJobServiceFactory) {
+            mAdServicesMocker.mockAdServicesJobServiceFactory(mockedAdServicesJobServiceFactory);
+        }
+    }
 }

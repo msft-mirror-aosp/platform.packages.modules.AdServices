@@ -21,23 +21,15 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
-import android.content.Context;
 import android.content.pm.ProviderInfo;
 
-import org.junit.Rule;
+import com.android.adservices.shared.SharedMockitoTestCase;
+
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
-public final class ApplicationContextProviderTest {
-
-    @Rule public final MockitoRule mRule = MockitoJUnit.rule();
+public final class ApplicationContextProviderTest extends SharedMockitoTestCase {
 
     private final ApplicationContextProvider mProvider = new ApplicationContextProvider();
-
-    @Mock private Context mContext;
-    @Mock private Context mAppContext;
 
     @Test
     public void testContextProviderApiMethods() {

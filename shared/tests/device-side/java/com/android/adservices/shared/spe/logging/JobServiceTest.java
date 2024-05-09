@@ -42,7 +42,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.util.Clock;
@@ -70,7 +70,7 @@ import java.util.concurrent.TimeUnit;
  * This test creates an example {@link JobService} to use logging methods in {@link
  * JobServiceLogger} and runs tests against this class.
  */
-public final class JobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as

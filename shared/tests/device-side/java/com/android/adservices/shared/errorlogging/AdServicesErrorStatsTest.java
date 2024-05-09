@@ -18,15 +18,11 @@ package com.android.adservices.shared.errorlogging;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 
-import com.google.common.truth.Expect;
+import com.android.adservices.shared.SharedUnitTestCase;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public final class AdServicesErrorStatsTest {
-
-    @Rule(order = 1)
-    public final Expect expect = Expect.create();
+public final class AdServicesErrorStatsTest extends SharedUnitTestCase {
 
     private static final int ERROR_CODE =
             AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
