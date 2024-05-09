@@ -19,7 +19,6 @@ package com.android.adservices.shared.spe.framework;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_ON_STOP_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
-import static com.android.adservices.shared.mockito.MockitoExpectations.syncJobServiceOnJobFinished;
 import static com.android.adservices.shared.mockito.MockitoExpectations.syncRecordOnStopJob;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
@@ -152,7 +151,7 @@ public final class AbstractJobServiceTest extends SharedMockitoTestCase {
                 .getExecutionFuture(
                         eq(mSpyJobService), any()); // PersistableBundle doesn't implement equals.
         doReturn(JOB_ENABLED_STATUS_ENABLED).when(mMockJobWorker).getJobEnablementStatus();
-        JobServiceCallback callback = syncJobServiceOnJobFinished(mSpyJobService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyJobService);
 
         assertWithMessage("The execution succeeding")
                 .that(mSpyJobService.onStartJob(mMockParameters))
@@ -190,7 +189,7 @@ public final class AbstractJobServiceTest extends SharedMockitoTestCase {
 
     @Test
     public void testSkipAndCancelBackgroundJob() throws Exception {
-        JobServiceCallback callback = syncJobServiceOnJobFinished(mSpyJobService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyJobService);
 
         JobInfo jobInfo =
                 new JobInfo.Builder(JOB_ID_1, new ComponentName(sContext, TestJobService.class))
@@ -352,7 +351,7 @@ public final class AbstractJobServiceTest extends SharedMockitoTestCase {
         doReturn(new BackoffPolicy.Builder().setShouldRetryOnExecutionFailure(shouldRetry).build())
                 .when(mMockJobWorker)
                 .getBackoffPolicy();
-        JobServiceCallback callback = syncJobServiceOnJobFinished(mSpyJobService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyJobService);
 
         assertWithMessage("Job Execution for job with id=%s", JOB_ID_1)
                 .that(mSpyJobService.onStartJob(mMockParameters))
