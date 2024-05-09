@@ -244,6 +244,7 @@ public class EnrollmentDataDownloadManager {
                                                     ? Arrays.asList(data[6].split(" "))
                                                     : List.of(data[6]))
                                     .setEncryptionKeyUrl(data[7])
+                                    .setEnrolledSite(data[7])
                                     .build();
                     newEnrollments.add(enrollmentData);
                 } else {
