@@ -18,37 +18,30 @@ package android.adservices.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.content.Context;
 import android.os.Build;
 
-import androidx.test.core.app.ApplicationProvider;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Assume;
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link Topic} */
-public class TopicsManagerTest {
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
+@RequiresSdkLevelAtLeastS
+public final class TopicsManagerTest extends AdServicesUnitTestCase {
     @Test
+    @RequiresSdkLevelAtLeastT
     public void testTopicsManagerCtor_TPlus() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
-        final Context context = ApplicationProvider.getApplicationContext();
-        assertThat(TopicsManager.get(context)).isNotNull();
-        assertThat(context.getSystemService(TopicsManager.class)).isNotNull();
+        assertThat(TopicsManager.get(mContext)).isNotNull();
+        assertThat(mContext.getSystemService(TopicsManager.class)).isNotNull();
     }
 
     @Test
+    // TODO(b/338085115): use @RequiresSdkLevelExactlyS
+    @RequiresSdkRange(atLeast = Build.VERSION_CODES.S, atMost = Build.VERSION_CODES.S_V2)
     public void testTopicsManagerCtor_SMinus() {
-        Assume.assumeTrue(
-                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
-                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
-        final Context context = ApplicationProvider.getApplicationContext();
-        assertThat(TopicsManager.get(context)).isNotNull();
-        assertThat(context.getSystemService(TopicsManager.class)).isNull();
+        assertThat(TopicsManager.get(mContext)).isNotNull();
+        assertThat(mContext.getSystemService(TopicsManager.class)).isNull();
     }
 }
