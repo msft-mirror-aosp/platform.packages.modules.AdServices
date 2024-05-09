@@ -273,6 +273,10 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .thenReturn(MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID);
         when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
         when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementEnableDebugReport())
+                .thenReturn(Flags.MEASUREMENT_ENABLE_DEBUG_REPORT);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport())
+                .thenReturn(Flags.MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT);
     }
 
     @Test
@@ -5348,6 +5352,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Test
     public void testBadTriggerJson_sendHeaderErrorDebugReport() throws Exception {
         // Setup
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
         String headerWithJsonError = "{[[aaa[[[[}}}";
         String headerName = "Attribution-Reporting-Register-Trigger";
         RegistrationRequest request = buildRequest(TRIGGER_URI);
@@ -5364,8 +5371,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
-
-        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         // Execution
         Optional<Trigger> fetch =
@@ -5387,8 +5392,44 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void testBadTriggerJson_headerErrorReportFlagDisabled_doNotSend() throws Exception {
+        // Setup
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(false);
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
+        String headerWithJsonError = "{[[aaa[[[[}}}";
+        String headerName = "Attribution-Reporting-Register-Trigger";
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        // Opt-in header error debug report by adding header "Attribution-Reporting-Info";
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                headerName,
+                                List.of(headerWithJsonError),
+                                "Attribution-Reporting-Info",
+                                List.of("report-header-errors")));
+        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, new AsyncRedirects());
+
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.PARSING_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mDebugReportApi, never())
+                .scheduleHeaderErrorReport(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
     public void testBadTriggerJson_notOptInHeaderErrorDebugReport_doNotSend() throws Exception {
         // Setup
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
         String headerWithJsonError = "{[[aaa[[[[}}}";
         String headerName = "Attribution-Reporting-Register-Trigger";
         RegistrationRequest request = buildRequest(TRIGGER_URI);
@@ -5417,6 +5458,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Test
     public void testBadTriggerJson_invalidOptInHeaderErrorDebugReport_doNotSend() throws Exception {
         // Setup
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
         String headerWithJsonError = "{[[aaa[[[[}}}";
         String headerName = "Attribution-Reporting-Register-Trigger";
         RegistrationRequest request = buildRequest(TRIGGER_URI);

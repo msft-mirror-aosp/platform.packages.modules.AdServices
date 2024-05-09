@@ -274,10 +274,16 @@ public class FetcherUtil {
      * registration.
      */
     public static boolean isHeaderErrorDebugReportEnabled(
-            @Nullable List<String> attributionInfoHeaders) {
+            @Nullable List<String> attributionInfoHeaders, Flags flags) {
         if (attributionInfoHeaders == null || attributionInfoHeaders.size() == 0) {
             return false;
         }
+        if (!flags.getMeasurementEnableDebugReport()
+                || !flags.getMeasurementEnableHeaderErrorDebugReport()) {
+            LoggerFactory.getMeasurementLogger().d("Debug report is disabled for header errors.");
+            return false;
+        }
+
         // When there are multiple headers or the same key appears multiple times, find the last
         // appearance and get the value.
         for (int i = attributionInfoHeaders.size() - 1; i >= 0; i--) {
