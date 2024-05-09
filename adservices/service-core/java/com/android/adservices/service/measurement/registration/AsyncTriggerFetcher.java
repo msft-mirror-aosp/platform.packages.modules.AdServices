@@ -164,7 +164,8 @@ public class AsyncTriggerFetcher {
 
         boolean isHeaderErrorDebugReportEnabled =
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO));
+                        headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO),
+                        mFlags);
         try {
             String eventTriggerData = new JSONArray().toString();
             JSONObject json = new JSONObject(registrationHeaderStr);
