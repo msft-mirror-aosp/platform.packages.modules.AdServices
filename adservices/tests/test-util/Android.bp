@@ -60,8 +60,9 @@ android_library {
         "junit",
     ],
     static_libs: [
-        // TODO (b/338132355): Clean up dependencies for adservices-test-utility.
+        // TODO(b/338132355): Clean up dependencies for adservices-test-utility.
         "adservices-service-core",
+        "adservices-shared-mockito-expectations", // TODO(b/338132355): should not be needed if mocker is split
         "adservices-shared-testing",
         "androidx.test.runner",
         "compatibility-device-util-axt",
@@ -129,7 +130,6 @@ filegroup {
     srcs: [
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java",
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoMockerImpl.java",
-        "java/com/android/adservices/mockito/LogInterceptor.java",
     ],
     path: "java",
     visibility: [

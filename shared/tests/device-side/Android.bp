@@ -33,6 +33,7 @@ android_test {
         "adservices-shared-common",
         "adservices-shared-error-logging",
         "adservices-shared-exceptions",
+        "adservices-shared-mockito-expectations",
         "adservices-shared-proto-lite",
         "adservices-shared-proto-utils",
         "adservices-shared-spe",
