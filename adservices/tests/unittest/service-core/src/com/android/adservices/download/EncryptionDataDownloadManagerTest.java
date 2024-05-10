@@ -20,7 +20,7 @@ import static com.android.adservices.download.EncryptionDataDownloadManager.Down
 import static com.android.adservices.download.EncryptionDataDownloadManager.DownloadStatus.NO_FILE_AVAILABLE;
 import static com.android.adservices.download.EncryptionDataDownloadManager.DownloadStatus.SUCCESS;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_FAILED_MDD_FILEGROUP;
@@ -98,7 +98,7 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
 
     @Test
     public void testGetInstance() {
-        mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         EncryptionDataDownloadManager firstInstance = EncryptionDataDownloadManager.getInstance();
         EncryptionDataDownloadManager secondInstance = EncryptionDataDownloadManager.getInstance();
 
