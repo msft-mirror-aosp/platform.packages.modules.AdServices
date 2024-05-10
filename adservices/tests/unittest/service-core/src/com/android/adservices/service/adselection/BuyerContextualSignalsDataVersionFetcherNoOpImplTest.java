@@ -82,8 +82,7 @@ public class BuyerContextualSignalsDataVersionFetcherNoOpImplTest {
                 AdSelectionSignals.EMPTY,
                 BUYER_CONTEXTUAL_SIGNALS_DATA_VERSION_FETCHER_NO_OP
                         .getContextualSignalsForGenerateBid(
-                                TRUSTED_BIDDING_DATA, MAP_WITH_DATA_VERSION_HEADER)
-                        .toAdSelectionSignals());
+                                TRUSTED_BIDDING_DATA, MAP_WITH_DATA_VERSION_HEADER));
     }
 
     @Test
@@ -92,8 +91,7 @@ public class BuyerContextualSignalsDataVersionFetcherNoOpImplTest {
                 AdSelectionSignals.EMPTY,
                 BUYER_CONTEXTUAL_SIGNALS_DATA_VERSION_FETCHER_NO_OP
                         .getContextualSignalsForGenerateBid(
-                                TRUSTED_BIDDING_DATA, MAP_WITHOUT_DATA_VERSION_HEADER)
-                        .toAdSelectionSignals());
+                                TRUSTED_BIDDING_DATA, MAP_WITHOUT_DATA_VERSION_HEADER));
     }
 
     @Test

@@ -16,14 +16,10 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.verify;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -50,7 +46,6 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
-import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 
@@ -60,8 +55,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 import java.util.List;
@@ -151,13 +144,10 @@ public class ReportImpressionScriptEngineTest {
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             WebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 
-    @Mock private ReportImpressionExecutionLogger mMockReportImpressionExecutionLogger;
-
     @Before
     public void setUp() {
         mReportImpressionScriptEngine =
                 initEngine(true, mFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount);
-        MockitoAnnotations.initMocks(this);
     }
 
     @Test
@@ -714,66 +704,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    public void testReportResult_JsReferenceError() throws Exception {
-        String jsScript =
-                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
-                        + " \n"
-                        + " return {'status': unknown, 'results': {'signals_for_buyer':"
-                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
-                        + "'reporting_uri': 'https://domain.com/reporting' } };\n"
-                        + "}";
-        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
-        double bid = 5;
-
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            reportResult(
-                                    jsScript,
-                                    adSelectionConfig,
-                                    TEST_DOMAIN_URI,
-                                    bid,
-                                    mContextualSignals);
-                        });
-
-        verify(mMockReportImpressionExecutionLogger)
-                .setReportResultJsScriptResultCode(JS_RUN_STATUS_JS_REFERENCE_ERROR);
-
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
-    }
-
-    @Test
-    public void testReportResult_verifyTelemetryLogging() throws Exception {
-        String jsScript =
-                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
-                        + " \n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
-                        + "'reporting_uri': 'https://domain.com/reporting' } };\n"
-                        + "}";
-        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
-        double bid = 5;
-        AdSelectionSignals contextualSignals =
-                SellerContextualSignals.builder().setDataVersion(3).build().toAdSelectionSignals();
-
-        final SellerReportingResult result =
-                reportResult(jsScript, adSelectionConfig, TEST_DOMAIN_URI, bid, contextualSignals);
-
-        assertThat(
-                        AdSelectionSignals.fromString(
-                                SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
-                .isEqualTo(result.getSignalsForBuyer());
-
-        assertEquals(REPORTING_URI, result.getReportingUri());
-
-        verify(mMockReportImpressionExecutionLogger)
-                .setReportResultSellerAdditionalSignalsContainedDataVersion(true);
-        verify(mMockReportImpressionExecutionLogger)
-                .setReportResultJsScriptResultCode(JS_RUN_STATUS_SUCCESS);
-    }
-
-    @Test
     public void testReportWinSuccessfulCaseRegisterAdBeaconEnabled() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
@@ -1194,70 +1124,6 @@ public class ReportImpressionScriptEngineTest {
                 });
     }
 
-    @Test
-    public void testReportWin_JsReferenceError() throws Exception {
-        String jsScript =
-                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
-                        + " contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': unknown, 'results': {'reporting_uri':"
-                        + " 'https://domain.com/reporting' } };\n"
-                        + "}";
-        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
-
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            reportWin(
-                                    jsScript,
-                                    adSelectionConfig.getAdSelectionSignals(),
-                                    adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
-                                    mSignalsForBuyer,
-                                    adSelectionConfig.getSellerSignals(),
-                                    mCustomAudienceSignals);
-                        });
-
-        verify(mMockReportImpressionExecutionLogger)
-                .setReportWinJsScriptResultCode(JS_RUN_STATUS_JS_REFERENCE_ERROR);
-
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
-    }
-
-    @Test
-    public void testReportWin_verifyTelemetryLogging() throws Exception {
-        String jsScript =
-                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
-                        + " contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_uri':"
-                        + " 'https://domain.com/reporting' } };\n"
-                        + "}";
-        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
-        AdSelectionSignals contextualSignals =
-                BuyerContextualSignals.builder()
-                        .setAdCost(new AdCost(1, 8))
-                        .setDataVersion(3)
-                        .build()
-                        .toAdSelectionSignals();
-
-        final BuyerReportingResult result =
-                reportWin(
-                        jsScript,
-                        adSelectionConfig.getAdSelectionSignals(),
-                        adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
-                        mSignalsForBuyer,
-                        contextualSignals,
-                        mCustomAudienceSignals);
-
-        assertEquals(REPORTING_URI, result.getReportingUri());
-
-        verify(mMockReportImpressionExecutionLogger)
-                .setReportWinBuyerAdditionalSignalsContainedAdCost(true);
-        verify(mMockReportImpressionExecutionLogger)
-                .setReportWinBuyerAdditionalSignalsContainedDataVersion(true);
-        verify(mMockReportImpressionExecutionLogger)
-                .setReportWinJsScriptResultCode(JS_RUN_STATUS_SUCCESS);
-    }
-
     private ReportingScriptResult callReportingEngine(
             String jsScript, String functionCall, List<JSScriptArgument> args) throws Exception {
         return waitForFuture(
@@ -1280,12 +1146,7 @@ public class ReportImpressionScriptEngineTest {
                 () -> {
                     Log.i(TAG, "Calling reportResult");
                     return mReportImpressionScriptEngine.reportResult(
-                            jsScript,
-                            adSelectionConfig,
-                            renderUri,
-                            bid,
-                            contextualSignals,
-                            mMockReportImpressionExecutionLogger);
+                            jsScript, adSelectionConfig, renderUri, bid, contextualSignals);
                 });
     }
 
@@ -1306,8 +1167,7 @@ public class ReportImpressionScriptEngineTest {
                             perBuyerSignals,
                             signalsForBuyer,
                             contextualSignals,
-                            customAudienceSignals,
-                            mMockReportImpressionExecutionLogger);
+                            customAudienceSignals);
                 });
     }
 

@@ -68,7 +68,6 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
 import com.android.internal.util.Preconditions;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -121,7 +120,6 @@ public class ImpressionReporter {
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     @NonNull private final DevContext mDevContext;
-    @NonNull private final ReportImpressionExecutionLogger mReportImpressionExecutionLogger;
     private int mCallerUid;
     @NonNull private String mCallerAppPackageName;
     private final boolean mShouldUseUnifiedTables;
@@ -142,8 +140,7 @@ public class ImpressionReporter {
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             final int callerUid,
             @NonNull final RetryStrategy retryStrategy,
-            boolean shouldUseUnifiedTables,
-            ReportImpressionExecutionLogger reportImpressionExecutionLogger) {
+            boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
@@ -212,7 +209,6 @@ public class ImpressionReporter {
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
-        mReportImpressionExecutionLogger = reportImpressionExecutionLogger;
     }
 
     /**
@@ -301,15 +297,11 @@ public class ImpressionReporter {
                                 notifySuccessToCaller(callback);
                                 sLogger.d("Perform reporting!");
                                 performReporting(result);
-                                mReportImpressionExecutionLogger
-                                        .logReportImpressionApiCalledStats();
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 sLogger.e(t, "Report Impression invocation failed!");
-                                mReportImpressionExecutionLogger
-                                        .logReportImpressionApiCalledStats();
                                 if (t instanceof FilterException
                                         && t.getCause()
                                                 instanceof ConsentManager.RevokedConsentException) {
@@ -563,8 +555,7 @@ public class ImpressionReporter {
                                     ctx.mAdSelectionConfig,
                                     ctx.mComputationData.getWinningRenderUri(),
                                     ctx.mComputationData.getWinningBid(),
-                                    ctx.mComputationData.getSellerContextualSignals(),
-                                    mReportImpressionExecutionLogger))
+                                    ctx.mComputationData.getSellerContextualSignals()))
                     .transform(
                             sellerResult -> Pair.create(sellerResult, ctx),
                             mLightweightExecutorService);
@@ -599,8 +590,7 @@ public class ImpressionReporter {
                                     signals,
                                     sellerReportingResult.getSignalsForBuyer(),
                                     ctx.mComputationData.getBuyerContextualSignals(),
-                                    customAudienceSignals,
-                                    mReportImpressionExecutionLogger))
+                                    customAudienceSignals))
                     .transform(
                             buyerReportingResult ->
                                     Pair.create(

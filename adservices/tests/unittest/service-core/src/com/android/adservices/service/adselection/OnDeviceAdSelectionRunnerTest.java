@@ -2519,11 +2519,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 };
         mAdSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        sCallerMetadata,
-                        mLoggerClockMock,
-                        mContextSpy,
-                        mAdServicesLoggerMock,
-                        mFlags);
+                        sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
         AdSelectionRunner runner =
                 new OnDeviceAdSelectionRunner(
                         mContextSpy,
@@ -4490,11 +4486,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         STOP_ELAPSED_TIMESTAMP);
         mAdSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        sCallerMetadata,
-                        mLoggerClockMock,
-                        mContextSpy,
-                        mAdServicesLoggerMock,
-                        mFlags);
+                        sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
     private void setAdSelectionExecutionLoggerMockWithFailedAdSelectionByValidateRequest() {
@@ -4502,11 +4494,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 .thenReturn(START_ELAPSED_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
         mAdSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        sCallerMetadata,
-                        mLoggerClockMock,
-                        mContextSpy,
-                        mAdServicesLoggerMock,
-                        mFlags);
+                        sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
     private void setAdSelectionExecutionLoggerMockWithFailedAdSelectionByNoCAs() {
@@ -4518,11 +4506,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         STOP_ELAPSED_TIMESTAMP);
         mAdSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        sCallerMetadata,
-                        mLoggerClockMock,
-                        mContextSpy,
-                        mAdServicesLoggerMock,
-                        mFlags);
+                        sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
     private void setAdSelectionExecutionLoggerMockWithFailedAdSelectionByNoBiddingOutcomes() {
@@ -4536,11 +4520,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         STOP_ELAPSED_TIMESTAMP);
         mAdSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        sCallerMetadata,
-                        mLoggerClockMock,
-                        mContextSpy,
-                        mAdServicesLoggerMock,
-                        mFlags);
+                        sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
     private void setAdSelectionExecutionLoggerMockWithContextualAdsAndNoCAs() {
@@ -4566,11 +4546,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         STOP_ELAPSED_TIMESTAMP);
         mAdSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        sCallerMetadata,
-                        mLoggerClockMock,
-                        mContextSpy,
-                        mAdServicesLoggerMock,
-                        mFlags);
+                        sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
     // TODO(b/221861861): add SCORING TIMESTAMP.
@@ -4585,11 +4561,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         STOP_ELAPSED_TIMESTAMP);
         mAdSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        sCallerMetadata,
-                        mLoggerClockMock,
-                        mContextSpy,
-                        mAdServicesLoggerMock,
-                        mFlags);
+                        sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
     private void setAdSelectionExecutionLoggerMockWithFailedAdSelectionBeforePersistAdSelection() {
@@ -4603,11 +4575,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         STOP_ELAPSED_TIMESTAMP);
         mAdSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        sCallerMetadata,
-                        mLoggerClockMock,
-                        mContextSpy,
-                        mAdServicesLoggerMock,
-                        mFlags);
+                        sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
     private void setAdSelectionExecutionLoggerMockWithAdFiltering() {
@@ -4624,11 +4592,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         AD_FILTERING_END);
         mAdSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        sCallerMetadata,
-                        mLoggerClockMock,
-                        mContextSpy,
-                        mAdServicesLoggerMock,
-                        mFlags);
+                        sCallerMetadata, mLoggerClockMock, mContextSpy, mAdServicesLoggerMock);
     }
 
     // Verify bidding process.

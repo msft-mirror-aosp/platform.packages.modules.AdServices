@@ -61,7 +61,7 @@
     },
     {
       "request": {
-        "path": "/buyerInteraction?click?adCost=1.0",
+        "path": "/buyerInteraction?click?adCost=1",
         "method": "POST"
       },
       "response": {

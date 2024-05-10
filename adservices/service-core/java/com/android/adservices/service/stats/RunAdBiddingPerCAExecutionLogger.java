@@ -21,13 +21,11 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_SCRIPT_TYPE__JAVASCRIPT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_SCRIPT_TYPE__UNSET;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_UNSET;
 
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.Flags;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -128,8 +126,6 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
     static final String REPEATED_START_RUN_BIDDING =
             "The logger has set the start of the run-bidding process.";
     private final AdServicesLogger mAdServicesLogger;
-    private final boolean mCPCMetricsEnabled;
-    private final boolean mDataHeaderMetricsEnabled;
     private int mNumOfAdsForBidding;
     private long mGetBuyerDecisionLogicStartTimestamp;
     private long mGetBuyerDecisionLogicEndTimestamp;
@@ -145,22 +141,13 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
     private long mGenerateBidsEndTimestamp;
     private long mRunBiddingEndTimestamp;
     private long mRunAdBiddingPerCAStartTimestamp;
-    private boolean mRunAdBiddingPerCaReturnedAdCost;
-    private boolean mGenerateBidBuyerAdditionalSignalsContainedDataVersion;
-    private @AdsRelevanceStatusUtils.JsRunStatus int mGenerateBidJsScriptResultCode;
 
     public RunAdBiddingPerCAExecutionLogger(
-            @NonNull Clock clock,
-            @NonNull AdServicesLogger adServicesLogger,
-            @NonNull Flags flags) {
+            @NonNull Clock clock, @NonNull AdServicesLogger adServicesLogger) {
         super(clock);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
-        Objects.requireNonNull(flags);
         this.mAdServicesLogger = adServicesLogger;
-        this.mCPCMetricsEnabled = flags.getFledgeCpcBillingMetricsEnabled();
-        this.mDataHeaderMetricsEnabled = flags.getFledgeDataVersionHeaderMetricsEnabled();
-        this.mGenerateBidJsScriptResultCode = JS_RUN_STATUS_UNSET;
     }
 
     /** Start the run-ad-bidding-per-ca process. */
@@ -279,26 +266,6 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
         this.mRunBiddingEndTimestamp = getServiceElapsedTimestamp();
     }
 
-    /** Record whether AdBiddingPerCa returned Ad Cost. */
-    public void setRunAdBiddingPerCaReturnedAdCost(boolean value) {
-        if (mCPCMetricsEnabled) {
-            this.mRunAdBiddingPerCaReturnedAdCost = value;
-        }
-    }
-
-    /** Record whether GenerateBid BuyerAdditionalSignals contained Data Version. */
-    public void setGenerateBidBuyerAdditionalSignalsContainedDataVersion(boolean value) {
-        if (mDataHeaderMetricsEnabled) {
-            this.mGenerateBidBuyerAdditionalSignalsContainedDataVersion = value;
-        }
-    }
-
-    /** Record the GenerateBid JsScript Result Code. */
-    public void setGenerateBidJsScriptResultCode(
-            @AdsRelevanceStatusUtils.JsRunStatus int resultCode) {
-        this.mGenerateBidJsScriptResultCode = resultCode;
-    }
-
     /** End the run-ad-bidding-per-ca process and log the generated atom into logger. */
     public void close(int resultCode) {
         if (resultCode == STATUS_SUCCESS) {
@@ -344,10 +311,6 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
                 .setGenerateBidsLatencyInMillis(getGenerateBidsLatencyInMs())
                 .setRunBiddingLatencyInMillis(getRunBiddingLatencyInMs())
                 .setRunBiddingResultCode(getRunBiddingResultCode(resultCode))
-                .setRunAdBiddingPerCaReturnedAdCost(mRunAdBiddingPerCaReturnedAdCost)
-                .setGenerateBidBuyerAdditionalSignalsContainedDataVersion(
-                        mGenerateBidBuyerAdditionalSignalsContainedDataVersion)
-                .setGenerateBidJsScriptResultCode(mGenerateBidJsScriptResultCode)
                 .build();
     }
 

@@ -42,8 +42,6 @@ public class RunAdScoringProcessReportedStatsTest {
     static final int RUN_AD_SCORING_LATENCY_IN_MILLIS = 10;
     static final int RUN_AD_SCORING_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
     static final int GET_AD_SELECTION_LOGIC_SCRIPT_TYPE = AdServicesStatusUtils.STATUS_SUCCESS;
-    static final boolean SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION = true;
-    static final int SCORE_AD_JS_SCRIPT_RESULT_CODE = 0;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -74,9 +72,6 @@ public class RunAdScoringProcessReportedStatsTest {
                                 NUM_OF_CONTEXTUAL_ADS_ENTERING_SCORING)
                         .setRunAdScoringLatencyInMillis(RUN_AD_SCORING_LATENCY_IN_MILLIS)
                         .setRunAdScoringResultCode(RUN_AD_SCORING_RESULT_CODE)
-                        .setScoreAdSellerAdditionalSignalsContainedDataVersion(
-                                SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION)
-                        .setScoreAdJsScriptResultCode(SCORE_AD_JS_SCRIPT_RESULT_CODE)
                         .build();
         assertEquals(
                 GET_AD_SELECTION_LOGIC_LATENCY_IN_MILLIS,
@@ -107,9 +102,5 @@ public class RunAdScoringProcessReportedStatsTest {
                 stats.getNumOfContextualAdsEnteringScoring());
         assertEquals(RUN_AD_SCORING_LATENCY_IN_MILLIS, stats.getRunAdScoringLatencyInMillis());
         assertEquals(RUN_AD_SCORING_RESULT_CODE, stats.getRunAdScoringResultCode());
-        assertEquals(
-                SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION,
-                stats.getScoreAdSellerAdditionalSignalsContainedDataVersion());
-        assertEquals(SCORE_AD_JS_SCRIPT_RESULT_CODE, stats.getScoreAdJsScriptResultCode());
     }
 }
