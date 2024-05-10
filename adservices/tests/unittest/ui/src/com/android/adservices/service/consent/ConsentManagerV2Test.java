@@ -131,7 +131,7 @@ import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
-import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
@@ -181,7 +181,7 @@ import java.util.stream.Collectors;
 @SpyStatic(AggregateReportingJobService.class)
 @SpyStatic(ImmediateAggregateReportingJobService.class)
 @SpyStatic(AsyncRegistrationQueueJobService.class)
-@SpyStatic(AsyncRegistrationFallbackJobService.class)
+@SpyStatic(AsyncRegistrationFallbackJob.class)
 @SpyStatic(AttributionJobService.class)
 @SpyStatic(AttributionFallbackJobService.class)
 @SpyStatic(BackgroundJobsManager.class)
@@ -311,11 +311,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                                 ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                         any(), anyBoolean()));
         doNothing().when(() -> AttributionFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
-        doNothing()
-                .when(
-                        () ->
-                                AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                                        any(), anyBoolean()));
+        doNothing().when(AsyncRegistrationFallbackJob::schedule);
         doNothing()
                 .when(
                         () ->
@@ -628,10 +624,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)));
         verify(() -> AttributionFallbackJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-        verify(
-                () ->
-                        AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                                any(Context.class), eq(false)));
+        verify(AsyncRegistrationFallbackJob::schedule);
         verify(
                 () ->
                         VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
@@ -690,11 +683,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(
                 () -> AttributionFallbackJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 never());
-        verify(
-                () ->
-                        AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                                any(Context.class), eq(false)),
-                never());
+        verify(AsyncRegistrationFallbackJob::schedule, never());
         verify(
                 () ->
                         VerboseDebugReportingFallbackJobService.scheduleIfNeeded(

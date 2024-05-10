@@ -23,6 +23,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -37,6 +38,8 @@ import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchJob;
 import com.android.adservices.service.customaudience.BackgroundFetchJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
 import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
@@ -56,10 +59,9 @@ import java.util.concurrent.Executors;
 
 /** Unit tests for {@link AdServicesJobServiceFactory} */
 @SpyStatic(AdServicesJobInfo.class)
+@MockStatic(AsyncRegistrationFallbackJobService.class)
 @MockStatic(BackgroundFetchJobService.class)
-@SpyStatic(EpochJob.class)
 @MockStatic(EpochJobService.class)
-@SpyStatic(MddJob.class)
 @MockStatic(MddJobService.class)
 public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMockitoTestCase {
     private static final Executor sExecutor = Executors.newCachedThreadPool();
@@ -125,6 +127,11 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
         expect.withMessage("getJobWorkerInstance() for FLEDGE_BACKGROUND_FETCH_JOB")
                 .that(mFactory.getJobWorkerInstance(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
                 .isInstanceOf(BackgroundFetchJob.class);
+        expect.withMessage("getJobWorkerInstance() for MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB")
+                .that(
+                        mFactory.getJobWorkerInstance(
+                                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId()))
+                .isInstanceOf(AsyncRegistrationFallbackJob.class);
     }
 
     @Test
@@ -157,6 +164,9 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
         verify(() -> EpochJobService.scheduleIfNeeded(forceSchedule));
         mFactory.rescheduleJobWithLegacyMethod(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(mMockFlags, forceSchedule));
+        mFactory.rescheduleJobWithLegacyMethod(
+                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId());
+        verify(() -> AsyncRegistrationFallbackJobService.scheduleIfNeeded(forceSchedule));
     }
 
     @Test

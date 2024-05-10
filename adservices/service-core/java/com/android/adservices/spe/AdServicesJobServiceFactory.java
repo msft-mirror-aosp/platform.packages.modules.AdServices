@@ -31,6 +31,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.customaudience.BackgroundFetchJob;
 import com.android.adservices.service.customaudience.BackgroundFetchJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
 import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
@@ -127,6 +129,8 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
                 case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
                     return new MddJob();
+                case MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB:
+                    return new AsyncRegistrationFallbackJob();
                 default:
                     throw new RuntimeException(
                             "The job isn't configured for jobWorker creation. Requested Job ID: "
@@ -205,6 +209,9 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
                 case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
                     MddJobService.scheduleIfNeeded(forceSchedule);
+                    return;
+                case MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB:
+                    AsyncRegistrationFallbackJobService.scheduleIfNeeded(forceSchedule);
                     return;
                 default:
                     throw new RuntimeException(
