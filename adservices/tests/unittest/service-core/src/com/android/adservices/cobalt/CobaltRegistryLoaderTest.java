@@ -30,7 +30,6 @@ import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
-import com.google.cobalt.ReportDefinition.PrivacyLevel;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ReportingInterval;
 import com.google.cobalt.StringSketchParameters;
@@ -79,7 +78,8 @@ public final class CobaltRegistryLoaderTest extends AdServicesUnitTestCase {
             assertThat(report.getReportType())
                     .isAnyOf(ReportType.FLEETWIDE_OCCURRENCE_COUNTS, ReportType.STRING_COUNTS);
             if (report.getReportType() == ReportType.STRING_COUNTS) {
-                assertThat(report.getPrivacyLevel()).isEqualTo(PrivacyLevel.NO_ADDED_PRIVACY);
+                assertThat(report.getPrivacyMechanism())
+                        .isEqualTo(ReportDefinition.PrivacyMechanism.DE_IDENTIFICATION);
             }
             if (report.getReportName().endsWith(REPORT_NAME_DOGFOOD_SUFFIX)) {
                 assertThat(report.getMaxReleaseStage()).isEqualTo(DOGFOOD);
