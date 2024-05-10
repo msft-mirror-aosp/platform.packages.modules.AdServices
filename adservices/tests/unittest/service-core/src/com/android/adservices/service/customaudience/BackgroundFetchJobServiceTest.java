@@ -17,7 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -391,7 +391,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
     @Test
     public void testOnStopJobCallsStopWork_withoutLogging() {
         Flags mockFlag = mock(Flags.class);
-        mockGetFlags(mockFlag);
+        mocker.mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
@@ -403,7 +403,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
     @Test
     public void testOnStopJob_withLogging() throws InterruptedException {
         Flags mockFlag = mock(Flags.class);
-        mockGetFlags(mockFlag);
+        mocker.mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ false);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
@@ -486,7 +486,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
     public void testOnStartJob_shouldDisableJobTrue_withoutLogging()
             throws ExecutionException, InterruptedException, TimeoutException {
         Flags mockFlag = mock(Flags.class);
-        mockGetFlags(mockFlag);
+        mocker.mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
@@ -499,7 +499,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
     public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled()
             throws ExecutionException, InterruptedException, TimeoutException {
         Flags mockFlag = mock(Flags.class);
-        mockGetFlags(mockFlag);
+        mocker.mockGetFlags(mockFlag);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
         testOnStartJobShouldDisableJobTrue();

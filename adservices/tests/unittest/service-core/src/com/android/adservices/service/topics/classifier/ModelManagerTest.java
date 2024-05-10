@@ -17,7 +17,6 @@
 package com.android.adservices.service.topics.classifier;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlagsForTest;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET;
@@ -108,7 +107,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
 
     @Before
     public void setUp() {
-        mockGetFlagsForTest();
+        mocker.mockGetFlagsForTesting();
     }
 
     @Test

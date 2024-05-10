@@ -40,9 +40,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.testing.SyncCallback;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
@@ -63,13 +61,24 @@ import java.util.Objects;
  * <p><b>NOTE: </b> most expectations require {@code spyStatic()} or {@code mockStatic()} in the
  * {@link com.android.dx.mockito.inline.extended.StaticMockitoSession session} ahead of time - this
  * helper doesn't check that such calls were made, it's up to the caller to do so.
+ *
+ * @deprecated - use {@code mocker} reference provided by test superclasses (or {@link
+ *     AdServicesExtendedMockitoMocker} when they're not available).
  */
+@Deprecated // TODO(b/314969513): remove when not used anymore
 public final class ExtendedMockitoExpectations {
 
     private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
 
-    private static final AdServicesStaticMockitoMocker sMocker =
+    // NOTE: not really "Generated code", but we're using mocker (instead of sMocker or MOCKER) as
+    // that's the name of the reference provided by the superclasses - once tests are refactored
+    // to use the superclasses, they wouldn't need to change the variable name.
+
+    // CHECKSTYLE:OFF Generated code
+    public static final AdServicesStaticMockitoMocker mocker =
             new AdServicesExtendedMockitoMocker(new StaticClassChecker() {});
+
+    // CHECKSTYLE:ON
 
     /**
      * Mocks a call to {@link ErrorLogUtil#e()}, does nothing.
@@ -123,29 +132,6 @@ public final class ExtendedMockitoExpectations {
                         })
                 .when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         return callback;
-    }
-
-    // TODO(b/314969513): remove once there is no more usage
-    /**
-     * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
-     * FakeFlagsFactory#getFlagsForTest()}
-     *
-     * @deprecated - use {@link AdServicesStaticMockitoMocker#mockGetFlagsForTesting()} instead
-     */
-    public static void mockGetFlagsForTest() {
-        mockGetFlags(FakeFlagsFactory.getFlagsForTest());
-    }
-
-    // TODO(b/314969513): remove once there is no more usage
-    /**
-     * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}
-     * object.
-     *
-     * @deprecated - use {@link AdServicesStaticMockitoMocker#mockGetFlags(Flags)} instead
-     */
-    @Deprecated
-    public static void mockGetFlags(Flags mockedFlags) {
-        sMocker.mockGetFlags(mockedFlags);
     }
 
     /**
