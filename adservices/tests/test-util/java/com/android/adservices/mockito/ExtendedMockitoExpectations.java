@@ -68,8 +68,8 @@ public final class ExtendedMockitoExpectations {
 
     private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
 
-    private static final AdServicesExtendedMockitoMocker sMocker =
-            new AdServicesExtendedMockitoMockerImpl(new StaticClassChecker() {});
+    private static final AdServicesStaticMockitoMocker sMocker =
+            new AdServicesExtendedMockitoMocker(new StaticClassChecker() {});
 
     /**
      * Mocks a call to {@link ErrorLogUtil#e()}, does nothing.
@@ -130,7 +130,7 @@ public final class ExtendedMockitoExpectations {
      * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
      * FakeFlagsFactory#getFlagsForTest()}
      *
-     * @deprecated - use {@link AdServicesExtendedMockitoMocker#mockGetFlagsForTesting()} instead
+     * @deprecated - use {@link AdServicesStaticMockitoMocker#mockGetFlagsForTesting()} instead
      */
     public static void mockGetFlagsForTest() {
         mockGetFlags(FakeFlagsFactory.getFlagsForTest());
@@ -141,7 +141,7 @@ public final class ExtendedMockitoExpectations {
      * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}
      * object.
      *
-     * @deprecated - use {@link AdServicesExtendedMockitoMocker#mockGetFlags(Flags)} instead
+     * @deprecated - use {@link AdServicesStaticMockitoMocker#mockGetFlags(Flags)} instead
      */
     @Deprecated
     public static void mockGetFlags(Flags mockedFlags) {

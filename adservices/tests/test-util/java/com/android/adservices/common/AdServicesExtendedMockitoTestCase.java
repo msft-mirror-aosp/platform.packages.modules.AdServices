@@ -20,8 +20,8 @@ import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mo
 import android.content.Context;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
-import com.android.adservices.mockito.AdServicesExtendedMockitoMockerImpl;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.mockito.AdServicesStaticMockitoMocker;
 import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
 import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
@@ -106,10 +106,10 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
     }
 
     public static final class Mocker
-            implements AndroidStaticMocker, AdServicesExtendedMockitoMocker, SharedMocker {
+            implements AndroidStaticMocker, AdServicesStaticMockitoMocker, SharedMocker {
 
         private final AndroidStaticMocker mAndroidMocker;
-        private final AdServicesExtendedMockitoMocker mAdServicesMocker;
+        private final AdServicesStaticMockitoMocker mAdServicesMocker;
         private final SharedMocker mSharedMocker = new SharedMockitoMocker();
 
         // TODO(b/338132355): create helper class to implement StaticClassChecker from rule
@@ -132,7 +132,7 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
                         }
                     };
             mAndroidMocker = new AndroidExtendedMockitoMocker(staticClassChecker);
-            mAdServicesMocker = new AdServicesExtendedMockitoMockerImpl(staticClassChecker);
+            mAdServicesMocker = new AdServicesExtendedMockitoMocker(staticClassChecker);
         }
 
         // AndroidStaticMocker methods
