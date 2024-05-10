@@ -18,10 +18,12 @@ package com.android.adservices.service.shell;
 
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
+import com.android.adservices.service.shell.signals.SignalsShellCommandFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -64,6 +66,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                         mCustomAudienceDao),
                 new AdSelectionShellCommandFactory(
                         mFlags.getFledgeConsentedDebuggingCliEnabledStatus(),
-                        mConsentedDebugConfigurationDao));
+                        mConsentedDebugConfigurationDao),
+                new SignalsShellCommandFactory(
+                        DebugFlags.getInstance().getAdServicesShellCommandEnabled()));
     }
 }

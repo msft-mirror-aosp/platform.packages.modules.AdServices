@@ -47,6 +47,7 @@ import com.android.adservices.service.shell.customaudience.CustomAudienceListCom
 import com.android.adservices.service.shell.customaudience.CustomAudienceRefreshCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.shell.customaudience.CustomAudienceViewCommand;
+import com.android.adservices.service.shell.signals.GenerateInputForSignalsCommand;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.util.Clock;
@@ -236,7 +237,8 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                                 CustomAudienceListCommand.HELP,
                                 CustomAudienceViewCommand.HELP,
                                 CustomAudienceRefreshCommand.HELP,
-                                ConsentedDebugShellCommand.HELP));
+                                ConsentedDebugShellCommand.HELP,
+                                GenerateInputForSignalsCommand.HELP));
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {
