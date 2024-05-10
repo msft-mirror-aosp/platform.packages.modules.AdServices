@@ -34,6 +34,7 @@ import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.util.Preconditions;
 
 import org.json.JSONArray;
@@ -635,7 +636,7 @@ public class DBCustomAudience {
             if (adDataList == null) {
                 return null;
             }
-
+            int toJsonTraceCookie = Tracing.beginAsyncSection(Tracing.DB_CUSTOM_AUDIENCE_TO_JSON);
             try {
                 JSONArray jsonArray = new JSONArray();
                 for (DBAdData adData : adDataList) {
@@ -644,6 +645,8 @@ public class DBCustomAudience {
                 return jsonArray.toString();
             } catch (JSONException jsonException) {
                 throw new RuntimeException("Error serialize List<AdData>.", jsonException);
+            } finally {
+                Tracing.endAsyncSection(Tracing.DB_CUSTOM_AUDIENCE_TO_JSON, toJsonTraceCookie);
             }
         }
 
@@ -655,6 +658,8 @@ public class DBCustomAudience {
                 return null;
             }
 
+            int fromJsonTraceCookie =
+                    Tracing.beginAsyncSection(Tracing.DB_CUSTOM_AUDIENCE_FROM_JSON);
             try {
                 JSONArray array = new JSONArray(json);
                 List<DBAdData> result = new ArrayList<>();
@@ -665,6 +670,8 @@ public class DBCustomAudience {
                 return result;
             } catch (JSONException jsonException) {
                 throw new RuntimeException("Error deserialize List<AdData>.", jsonException);
+            } finally {
+                Tracing.endAsyncSection(Tracing.DB_CUSTOM_AUDIENCE_FROM_JSON, fromJsonTraceCookie);
             }
         }
     }
