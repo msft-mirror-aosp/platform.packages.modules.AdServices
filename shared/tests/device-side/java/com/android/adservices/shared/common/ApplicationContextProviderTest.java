@@ -21,15 +21,19 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
+import android.content.Context;
 import android.content.pm.ProviderInfo;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
 
 import org.junit.Test;
+import org.mockito.Mock;
 
 public final class ApplicationContextProviderTest extends SharedMockitoTestCase {
 
     private final ApplicationContextProvider mProvider = new ApplicationContextProvider();
+
+    @Mock private Context mMockAppContext;
 
     @Test
     public void testContextProviderApiMethods() {
@@ -64,13 +68,13 @@ public final class ApplicationContextProviderTest extends SharedMockitoTestCase 
     @Test
     public void testOnCreate_setsSingleton() {
         ApplicationContextSingleton.setForTests(/* context= */ null);
-        mockAppContext(mContext, mAppContext);
-        mProvider.attachInfo(mContext, new ProviderInfo());
+        mockAppContext(mMockContext, mMockAppContext);
+        mProvider.attachInfo(mMockContext, new ProviderInfo());
 
         assertWithMessage("result of onCreate()").that(mProvider.onCreate()).isTrue();
 
         assertWithMessage("ApplicationContextSingleton.get()")
                 .that(ApplicationContextSingleton.get())
-                .isSameInstanceAs(mAppContext);
+                .isSameInstanceAs(mMockAppContext);
     }
 }
