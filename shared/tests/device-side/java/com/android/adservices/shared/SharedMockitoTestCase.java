@@ -17,6 +17,11 @@ package com.android.adservices.shared;
 
 import android.content.Context;
 
+import com.android.adservices.mockito.SharedMocker;
+import com.android.adservices.mockito.SharedMockitoMocker;
+import com.android.adservices.shared.spe.logging.JobServiceLogger;
+import com.android.adservices.shared.testing.JobServiceLoggingCallback;
+
 import org.junit.Rule;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -30,4 +35,24 @@ public abstract class SharedMockitoTestCase extends SharedUnitTestCase {
 
     @Rule(order = 10)
     public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
+
+    /** Provides common expectations. */
+    public final Mocker mocker = new Mocker();
+
+    public static final class Mocker implements SharedMocker {
+
+        private final SharedMocker mSharedMocker = new SharedMockitoMocker();
+
+        // SharedMocker methods
+
+        @Override
+        public Context setApplicationContextSingleton() {
+            return mSharedMocker.setApplicationContextSingleton();
+        }
+
+        @Override
+        public JobServiceLoggingCallback syncRecordOnStopJob(JobServiceLogger logger) {
+            return mSharedMocker.syncRecordOnStopJob(logger);
+        }
+    }
 }

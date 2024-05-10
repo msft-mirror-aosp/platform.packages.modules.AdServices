@@ -37,4 +37,7 @@ public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
 
     @Rule(order = 10)
     public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
+
+    // TODO(b/314969513): add Mocker that implements mocker interfaces needed by subclasses so we
+    // can deprecate MockitoExpectations - see example on AdServicesExtendedMockitoTestCase
 }

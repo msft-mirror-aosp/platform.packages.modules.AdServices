@@ -19,7 +19,6 @@ package com.android.adservices.shared.spe.framework;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_ON_STOP_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
-import static com.android.adservices.shared.mockito.MockitoExpectations.syncRecordOnStopJob;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SKIP_REASON_JOB_NOT_CONFIGURED;
@@ -418,7 +417,7 @@ public final class AbstractJobServiceTest extends SharedMockitoTestCase {
                         },
                         mFactory.getBackgroundExecutor());
         mSpyJobService.mRunningFuturesMap.put(JOB_ID_1, mockRunningFuture);
-        JobServiceLoggingCallback callback = syncRecordOnStopJob(mMockLogger);
+        JobServiceLoggingCallback callback = mocker.syncRecordOnStopJob(mMockLogger);
 
         assertWithMessage("onStopJob()")
                 .that(mSpyJobService.onStopJob(mMockParameters))
