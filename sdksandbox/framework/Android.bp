@@ -13,22 +13,48 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 filegroup {
-    name: "framework-sdksandbox-sources",
+    name: "framework-sdksandbox-aidl-sources",
     srcs: [
-      "java/**/*.aidl",
-      "java/**/*.java"
+        "java/**/*.aidl",
     ],
     visibility: [
         "//frameworks/base",
         "//packages/modules/AdServices:__subpackages__",
-        // TODO(b/222118402): remove after code is moved
-        "//packages/modules/SupplementalProcess:__subpackages__",
     ],
     path: "java",
+}
+
+filegroup {
+    name: "framework-sdksandbox-sources",
+    defaults: ["framework-sources-module-defaults"],
+    srcs: [
+        "java/**/*.java",
+        ":framework-sdksandbox-aidl-sources",
+    ],
+    visibility: ["//packages/modules/AdServices:__subpackages__"],
+    path: "java",
+}
+
+filegroup {
+    name: "framework-sdksandbox-jarjar",
+    srcs: ["jarjar_rules.txt"],
+}
+
+java_defaults {
+    name: "framework-sdksandbox-jarjar-defaults",
+    jarjar_rules: ":framework-sdksandbox-jarjar",
+    static_libs: [
+        "modules-utils-build",
+        "sdk_sandbox_flags_lib",
+    ],
+    libs: [
+        "androidx.annotation_annotation",
+    ],
 }
 
 java_sdk_library {
@@ -42,11 +68,16 @@ java_sdk_library {
     defaults: [
         "framework-module-defaults",
         "sdksandbox-java-defaults",
+        "framework-sdksandbox-jarjar-defaults",
     ],
     impl_library_visibility: [
         "//packages/modules/AdServices:__subpackages__",
-        // TODO(b/222118402): remove after code is moved
-        "//packages/modules/SupplementalProcess/service:__subpackages__",
     ],
     apex_available: ["com.android.adservices"],
+    jacoco: {
+        exclude_filter: [
+            "com.android.sdksandbox.**",
+            "com.android.server.sdksandbox.**",
+        ],
+    },
 }

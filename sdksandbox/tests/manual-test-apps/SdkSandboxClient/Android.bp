@@ -13,45 +13,31 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_app {
+android_test_helper_app {
     name: "SdkSandboxClient",
     defaults: ["platform_app_defaults"],
     platform_apis: true,
-    srcs: [
-        "src/**/sdksandboxclient/*.java",
-        ":framework-sdksandbox-sources",
-        ":sdksandbox_aidl",
-        ":sdksandbox-sources",
-    ],
+    srcs: ["src/**/sdksandboxclient/*.java"],
     static_libs: [
-        "androidx.annotation_annotation",
+        "SdkInterfaces",
         "androidx.core_core",
+        "com.google.android.material_material",
+        "androidx.appcompat_appcompat",
+        "androidx.coordinatorlayout_coordinatorlayout",
+        "androidx.media3.media3-common",
+        "androidx.media3.media3-exoplayer",
+        "androidx.media3.media3-ui",
+        "androidx.preference_preference",
+        "modules-utils-backgroundthread",
+        "modules-utils-build",
     ],
-    resource_dirs: [
-        "res",
-    ],
-    manifest: "AndroidManifest_Client1.xml",
-}
-
-android_app {
-    name: "SdkSandboxClientTwo",
-    defaults: ["platform_app_defaults"],
-    platform_apis: true,
-    srcs: [
-        "src/**/sdksandboxclienttwo/*.java",
-        ":framework-sdksandbox-sources",
-        ":sdksandbox_aidl",
-        ":sdksandbox-sources",
-    ],
-    static_libs: [
-        "androidx.annotation_annotation",
-        "androidx.core_core",
-    ],
-    resource_dirs: [
-        "res",
-    ],
-    manifest: "AndroidManifest_Client2.xml",
+    resource_dirs: ["res"],
+    manifest: "AndroidManifest_Client.xml",
+    test_suites: ["general-tests"],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }

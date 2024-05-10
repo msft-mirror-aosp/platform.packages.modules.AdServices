@@ -17,49 +17,47 @@
 package com.android.adservices.service;
 
 /**
- * Configs for AdServices.
- * These configs will be backed by PH Flags.
+ * Hard Coded Configs for AdServices.
+ *
+ * <p>For Feature Flags that are backed by PH, please see {@link PhFlags}
  */
 public class AdServicesConfig {
-    /**
-     * Job Id for idle maintenance job ({@link MaintenanceJobService}).
-     */
-    public static final int MAINTENANCE_JOB_ID = 1;
-    public static long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
-    public static long MAINTENANCE_JOB_FLEX_MS = 3 * 60 * 1000;  // 3 hours.
 
-    /**
-     * Returns the max time period (in millis) between each idle maintenance job run.
-     */
-    public static long getMaintenanceJobPeriodMs() {
-        return MAINTENANCE_JOB_PERIOD_MS;
+    public static long getMeasurementEventMainReportingJobPeriodMs() {
+        return FlagsFactory.getFlags().getMeasurementEventMainReportingJobPeriodMs();
+    }
+
+    /** Returns the min time period (in millis) between each event fallback reporting job run. */
+    public static long getMeasurementEventFallbackReportingJobPeriodMs() {
+        return FlagsFactory.getFlags().getMeasurementEventFallbackReportingJobPeriodMs();
     }
 
     /**
-     * Returns flex for the Epoch computation job in Millisecond.
+     * Returns the list of URL(comma-separated string) for fetching public encryption keys for
+     * aggregatable reports.
      */
-    public static long getMaintenanceJobFlexMs() {
-        return MAINTENANCE_JOB_FLEX_MS;
+    public static String getMeasurementAggregationCoordinatorOriginList() {
+        return FlagsFactory.getFlags().getMeasurementAggregationCoordinatorOriginList();
+    }
+
+    /** Returns the list of URL for fetching public encryption keys for aggregatable reports. */
+    public static String getMeasurementAggregationCoordinatorPath() {
+        return FlagsFactory.getFlags().getMeasurementAggregationCoordinatorPath();
+    }
+
+    public static String getMeasurementDefaultAggregationCoordinatorOrigin() {
+        return FlagsFactory.getFlags().getMeasurementDefaultAggregationCoordinatorOrigin();
+    }
+
+    /** Returns the min time period (in millis) between each aggregate main reporting job run. */
+    public static long getMeasurementAggregateMainReportingJobPeriodMs() {
+        return FlagsFactory.getFlags().getMeasurementAggregateMainReportingJobPeriodMs();
     }
 
     /**
-     * Job Id for Topics Epoch Computation Job ({@link EpochJobService})
+     * Returns the min time period (in millis) between each aggregate fallback reporting job run.
      */
-    public static final int TOPICS_EPOCH_JOB_ID = 2;
-    public static long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
-    public static long TOPICS_EPOCH_JOB_FLEX_MS = 5 * 60 * 1000; // 3 hours.
-
-    /**
-     * Returns the max time period (in millis) between each epoch computation job run.
-     */
-    public static long getTopicsEpochJobPeriodMs() {
-        return TOPICS_EPOCH_JOB_PERIOD_MS;
-    }
-
-    /**
-     * Returns flex for the Epoch computation job in Millisecond.
-     */
-    public static long getTopicsEpochJobFlexMs() {
-        return TOPICS_EPOCH_JOB_FLEX_MS;
+    public static long getMeasurementAggregateFallbackReportingJobPeriodMs() {
+        return FlagsFactory.getFlags().getMeasurementAggregateFallbackReportingJobPeriodMs();
     }
 }
