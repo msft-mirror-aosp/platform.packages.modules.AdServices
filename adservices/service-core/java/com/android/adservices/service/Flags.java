@@ -487,6 +487,14 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
     }
 
+    /** Default value for whether header error debug report is enabled. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT = false;
+
+    /** Returns whether header error debug report generation is enabled. */
+    default boolean getMeasurementEnableHeaderErrorDebugReport() {
+        return MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
+    }
+
     long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
 
     /** Returns the data expiry window in milliseconds. */
