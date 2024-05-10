@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,30 +18,25 @@ package com.android.adservices.shared.meta_testing;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * Simple implementation of {@link RealLogger} that logs messages on {@code System.out} and errors
- * on {@code System.err}, so it can be used on "side-less" tests (as device-side and host-side
- * classes would be using {@code AndroidLogger} or {@code ConsoleLogger} respectively).
+ * Simple implementation of {@link RealLogger} that stores log calls for further assertions (they
+ * can be obtained by {@link #getEntries()}.
  */
-public final class StandardStreamsLogger implements RealLogger {
+public final class FakeLogger implements RealLogger {
 
-    private static final StandardStreamsLogger sInstance = new StandardStreamsLogger();
-
-    public static StandardStreamsLogger getInstance() {
-        return sInstance;
-    }
-
-    private StandardStreamsLogger() {}
+    private final List<LogEntry> mEntries = new ArrayList<>();
 
     @Override
     @FormatMethod
     public void log(LogLevel level, String tag, @FormatString String msgFmt, Object... msgArgs) {
-        String msg = String.format(msgFmt, msgArgs);
-
-        System.out.printf("%s %s: %s\n", tag, level, msg);
+        addEntry(level, tag, /* throwable= */ null, msgFmt, msgArgs);
     }
 
     @Override
@@ -52,14 +47,27 @@ public final class StandardStreamsLogger implements RealLogger {
             Throwable throwable,
             @FormatString String msgFmt,
             Object... msgArgs) {
-        String msg = String.format(msgFmt, msgArgs);
+        addEntry(level, tag, throwable, msgFmt, msgArgs);
+    }
 
-        System.err.printf("%s %s: %s\n", tag, level, msg);
-        throwable.printStackTrace(System.err);
+    /** Gets all logged entries. */
+    public ImmutableList<LogEntry> getEntries() {
+        return ImmutableList.copyOf(mEntries);
     }
 
     @Override
     public String toString() {
-        return StandardStreamsLogger.class.getSimpleName();
+        return "[" + FakeLogger.class.getSimpleName() + ": " + mEntries.size() + " entries]";
+    }
+
+    @FormatMethod
+    private void addEntry(
+            LogLevel level,
+            String tag,
+            Throwable throwable,
+            @FormatString String msgFmt,
+            Object... msgArgs) {
+        String message = String.format(msgFmt, msgArgs);
+        mEntries.add(new LogEntry(level, tag, throwable, message));
     }
 }
