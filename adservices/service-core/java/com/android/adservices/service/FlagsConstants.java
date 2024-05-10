@@ -215,6 +215,8 @@ public final class FlagsConstants {
             "measurement_enable_source_debug_report";
     public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT =
             "measurement_enable_trigger_debug_report";
+    public static final String KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT =
+            "measurement_enable_header_error_debug_report";
     public static final String KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS =
             "measurement_data_expiry_window_ms";
 

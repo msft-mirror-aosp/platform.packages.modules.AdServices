@@ -83,6 +83,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
@@ -622,6 +623,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT,
                 MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT);
+    }
+
+    @Override
+    public boolean getMeasurementEnableHeaderErrorDebugReport() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT,
+                MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT);
     }
 
     @Override
@@ -5097,6 +5105,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED
                         + " = "
                         + getMeasurementVerboseDebugReportingFallbackJobPersisted());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT
+                        + " = "
+                        + getMeasurementEnableHeaderErrorDebugReport());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_ATTRIBUTION_JOB_PERSISTED
