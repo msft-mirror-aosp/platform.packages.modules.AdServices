@@ -17,6 +17,8 @@
 package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockJobSchedulingLogger;
+import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS;
+import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.consent.AdServicesApiConsent.GIVEN;
 import static com.android.adservices.service.consent.AdServicesApiConsent.REVOKED;
 import static com.android.adservices.service.consent.AdServicesApiType.FLEDGE;
@@ -45,6 +47,7 @@ import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
+import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
 import com.android.adservices.shared.spe.scheduling.JobSpec;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobScheduler;
@@ -171,13 +174,8 @@ public final class BackgroundFetchJobTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void testCreateJobSpec() {
-        long jobExecutionPeriodMs = Flags.FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS;
-        long jobFlexPeriodMs = Flags.FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS;
-        when(mMockFlags.getFledgeBackgroundFetchJobPeriodMs()).thenReturn(jobExecutionPeriodMs);
-        when(mMockFlags.getFledgeBackgroundFetchJobFlexMs()).thenReturn(jobFlexPeriodMs);
-
-        JobSpec jobSpec = BackgroundFetchJob.createJobSpec(mMockFlags);
+    public void testCreateDefaultJobSpec() {
+        JobSpec jobSpec = BackgroundFetchJob.createDefaultJobSpec();
 
         JobPolicy expectedJobPolicy =
                 JobPolicy.newBuilder()
@@ -186,15 +184,22 @@ public final class BackgroundFetchJobTest extends AdServicesExtendedMockitoTestC
                         .setRequireDeviceIdle(true)
                         .setPeriodicJobParams(
                                 JobPolicy.PeriodicJobParams.newBuilder()
-                                        .setPeriodicIntervalMs(jobExecutionPeriodMs)
-                                        .setFlexInternalMs(jobFlexPeriodMs)
+                                        .setPeriodicIntervalMs(
+                                                FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS)
+                                        .setFlexInternalMs(FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS)
                                         .build())
                         .setNetworkType(JobPolicy.NetworkType.NETWORK_TYPE_UNMETERED)
                         .setIsPersisted(true)
                         .build();
 
-        assertWithMessage("createJobSpec() for BackgroundFetchJob")
-                .that(jobSpec.getJobPolicy())
-                .isEqualTo(expectedJobPolicy);
+        BackoffPolicy backoffPolicy =
+                new BackoffPolicy.Builder().setShouldRetryOnExecutionStop(true).build();
+
+        assertWithMessage("createDefaultJobSpec() for BackgroundFetchJob")
+                .that(jobSpec)
+                .isEqualTo(
+                        new JobSpec.Builder(expectedJobPolicy)
+                                .setBackoffPolicy(backoffPolicy)
+                                .build());
     }
 }

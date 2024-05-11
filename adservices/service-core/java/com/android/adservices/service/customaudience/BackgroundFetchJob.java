@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS;
+import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.consent.AdServicesApiType.FLEDGE;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_NOT_LOW;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
@@ -37,6 +39,7 @@ import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.framework.JobWorker;
+import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
 import com.android.adservices.shared.spe.scheduling.JobSpec;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
@@ -103,11 +106,11 @@ public class BackgroundFetchJob implements JobWorker {
             return;
         }
 
-        AdServicesJobScheduler.getInstance().schedule(createJobSpec(flags));
+        AdServicesJobScheduler.getInstance().schedule(createDefaultJobSpec());
     }
 
     @VisibleForTesting
-    static JobSpec createJobSpec(Flags flags) {
+    static JobSpec createDefaultJobSpec() {
         JobPolicy jobPolicy =
                 JobPolicy.newBuilder()
                         .setJobId(FLEDGE_BACKGROUND_FETCH_JOB.getJobId())
@@ -116,14 +119,16 @@ public class BackgroundFetchJob implements JobWorker {
                         .setPeriodicJobParams(
                                 JobPolicy.PeriodicJobParams.newBuilder()
                                         .setPeriodicIntervalMs(
-                                                flags.getFledgeBackgroundFetchJobPeriodMs())
-                                        .setFlexInternalMs(
-                                                flags.getFledgeBackgroundFetchJobFlexMs())
+                                                FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS)
+                                        .setFlexInternalMs(FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS)
                                         .build())
                         .setNetworkType(JobPolicy.NetworkType.NETWORK_TYPE_UNMETERED)
                         .setIsPersisted(true)
                         .build();
 
-        return new JobSpec.Builder(jobPolicy).build();
+        BackoffPolicy backoffPolicy =
+                new BackoffPolicy.Builder().setShouldRetryOnExecutionStop(true).build();
+
+        return new JobSpec.Builder(jobPolicy).setBackoffPolicy(backoffPolicy).build();
     }
 }

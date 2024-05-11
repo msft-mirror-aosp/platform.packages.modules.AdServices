@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.adservices.mockito;
+
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
@@ -22,44 +23,44 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
-// TODO(b/324919960): rename to AdServicesStaticMocker for consistency
-/** Helper interface providing common expectations for static methods on AdServices APIs. */
-public interface AdServicesExtendedMockitoMocker {
+/**
+ * {@link AdServicesStaticMockitoMocker} implementation that uses {@code ExtendedMockito}.
+ *
+ * <p><b>NOTE: </b> most expectations require {@code spyStatic()} or {@code mockStatic()} in the
+ * {@link com.android.dx.mockito.inline.extended.StaticMockitoSession session} ahead of time - this
+ * helper doesn't check that such calls were made, it's up to the caller to do so.
+ */
+public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
+        implements AdServicesStaticMockitoMocker {
 
-    /**
-     * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}
-     * object.
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link FlagsFactory}.
-     */
-    void mockGetFlags(Flags mockedFlags);
+    public AdServicesExtendedMockitoMocker(StaticClassChecker staticClassChecker) {
+        super(staticClassChecker);
+    }
 
-    /**
-     * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
-     * FakeFlagsFactory#getFlagsForTest()}
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link FlagsFactory}.
-     */
-    void mockGetFlagsForTesting();
+    @Override
+    public void mockGetFlags(Flags mockedFlags) {
+        logV("mockGetFlags(%s)", mockedFlags);
+        assertSpiedOrMocked(FlagsFactory.class);
+        doReturn(mockedFlags).when(FlagsFactory::getFlags);
+    }
 
-    // TODO(b/338132355): move SPE methods to a new SharedMocker interface
+    @Override
+    public void mockGetFlagsForTesting() {
+        mockGetFlags(FakeFlagsFactory.getFlagsForTest());
+    }
 
-    /**
-     * Mocks a call to {@link AdServicesJobScheduler#getInstance()}.
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link AdServicesJobScheduler}.
-     */
-    void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler);
+    @Override
+    public void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler) {
+        logV("mockSpeJobScheduler(%s)", mockedAdServicesJobScheduler);
+        assertSpiedOrMocked(AdServicesJobScheduler.class);
+        doReturn(mockedAdServicesJobScheduler).when(AdServicesJobScheduler::getInstance);
+    }
 
-    /**
-     * Mocks a call to {@link AdServicesJobServiceFactory#getInstance()}.
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link AdServicesJobServiceFactory}.
-     */
-    void mockAdServicesJobServiceFactory(
-            AdServicesJobServiceFactory mockedAdServicesJobServiceFactory);
+    @Override
+    public void mockAdServicesJobServiceFactory(
+            AdServicesJobServiceFactory mockedAdServicesJobServiceFactory) {
+        logV("mockAdServicesJobServiceFactory(%s)", mockedAdServicesJobServiceFactory);
+        assertSpiedOrMocked(AdServicesJobServiceFactory.class);
+        doReturn(mockedAdServicesJobServiceFactory).when(AdServicesJobServiceFactory::getInstance);
+    }
 }

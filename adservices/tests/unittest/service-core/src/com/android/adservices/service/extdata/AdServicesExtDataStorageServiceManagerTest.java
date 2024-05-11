@@ -32,7 +32,7 @@ import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_M
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
 import static com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager.UNKNOWN_PACKAGE_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
@@ -119,7 +119,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
         // Mock timeouts
         doReturn(INVOCATION_TIMEOUT).when(mFlags).getAdExtReadTimeoutMs();
         doReturn(INVOCATION_TIMEOUT).when(mFlags).getAdExtWriteTimeoutMs();
-        mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
 
         doReturn(mMockWorker)
                 .when(() -> AdServicesExtDataStorageServiceWorker.getInstance(mContext));

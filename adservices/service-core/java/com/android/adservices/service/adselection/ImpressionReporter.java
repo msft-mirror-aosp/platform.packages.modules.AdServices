@@ -30,6 +30,7 @@ import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
@@ -627,7 +628,11 @@ public class ImpressionReporter {
             callback.onSuccess();
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send successful result to the callback");
-            throw e.rethrowFromSystemServer();
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
+                    0);
         }
     }
 
@@ -665,7 +670,11 @@ public class ImpressionReporter {
                             .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send failed result to the callback");
-            throw e.rethrowFromSystemServer();
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
+                    0);
         }
     }
 

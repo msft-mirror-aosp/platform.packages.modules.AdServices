@@ -20,16 +20,18 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 
 /** Unit tests for {@link android.adservices.topics.EncryptedTopic} */
-public class EncryptedTopicTest {
+@RequiresSdkLevelAtLeastS
+public final class EncryptedTopicTest extends AdServicesUnitTestCase {
 
     private static final byte[] CIPHER_TEXT =
             "{\"taxonomy_version\":2,\"model_version\":5,\"topic_id\":1}"
@@ -40,9 +42,6 @@ public class EncryptedTopicTest {
     private EncryptedTopic mEncryptedTopic1;
     private EncryptedTopic mEncryptedTopic2;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() throws Exception {
         generateEncryptedTopics();
@@ -50,34 +49,22 @@ public class EncryptedTopicTest {
 
     @Test
     public void testNullFieldsOnConstructor_throwsException() {
+        assertThrows(NullPointerException.class, () -> new EncryptedTopic(null, null, null));
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    EncryptedTopic unusedTopic = new EncryptedTopic(null, null, null);
-                });
+                () -> new EncryptedTopic(null, PUBLIC_KEY, ENCAPSULATED_KEY));
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    EncryptedTopic unusedTopic =
-                            new EncryptedTopic(null, PUBLIC_KEY, ENCAPSULATED_KEY);
-                });
+                () -> new EncryptedTopic(CIPHER_TEXT, null, ENCAPSULATED_KEY));
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    EncryptedTopic unusedTopic =
-                            new EncryptedTopic(CIPHER_TEXT, null, ENCAPSULATED_KEY);
-                });
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    EncryptedTopic unusedTopic = new EncryptedTopic(CIPHER_TEXT, PUBLIC_KEY, null);
-                });
+                () -> new EncryptedTopic(CIPHER_TEXT, PUBLIC_KEY, null));
     }
 
     @Test
     public void testGetters() {
-        assertThat(mEncryptedTopic1.getEncryptedTopic()).isEqualTo(CIPHER_TEXT);
-        assertThat(mEncryptedTopic1.getKeyIdentifier()).isEqualTo(PUBLIC_KEY);
+        expect.that(mEncryptedTopic1.getEncryptedTopic()).isEqualTo(CIPHER_TEXT);
+        expect.that(mEncryptedTopic1.getKeyIdentifier()).isEqualTo(PUBLIC_KEY);
     }
 
     @Test
@@ -89,13 +76,14 @@ public class EncryptedTopicTest {
                     + " 111, 112, 105, 99, 95, 105, 100, 34, 58, 49, 125],"
                     + " mKeyIdentifier=PublicKey1, mEncapsulatedKey=[72, 75, 68, 70, 45, 83, 72,"
                     + " 65, 50, 53, 54]}";
-        assertThat(mEncryptedTopic1.toString()).isEqualTo(expectedTopicString);
-        assertThat(mEncryptedTopic2.toString()).isEqualTo(expectedTopicString);
+        expect.that(mEncryptedTopic1.toString()).isEqualTo(expectedTopicString);
+        expect.that(mEncryptedTopic2.toString()).isEqualTo(expectedTopicString);
     }
 
     @Test
     public void testEquals() {
-        assertThat(mEncryptedTopic1).isEqualTo(mEncryptedTopic2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(mEncryptedTopic1, mEncryptedTopic2);
     }
 
     @Test
@@ -104,21 +92,16 @@ public class EncryptedTopicTest {
         assertThat(mEncryptedTopic1).isNotEqualTo(null);
     }
 
-    @Test
-    public void testHashCode() {
-        assertThat(mEncryptedTopic1.hashCode()).isEqualTo(mEncryptedTopic2.hashCode());
-    }
-
     private void generateEncryptedTopics() {
         mEncryptedTopic1 =
                 new EncryptedTopic(
-                        /* mEncryptedTopic */ CIPHER_TEXT, /* mKeyIdentifier */
-                        PUBLIC_KEY, /* mEncapsulaetKey */
-                        ENCAPSULATED_KEY);
+                        /* mEncryptedTopic */ CIPHER_TEXT,
+                        /* mKeyIdentifier */ PUBLIC_KEY,
+                        /* mEncapsulateKey */ ENCAPSULATED_KEY);
         mEncryptedTopic2 =
                 new EncryptedTopic(
-                        /* mEncryptedTopic */ CIPHER_TEXT, /* mKeyIdentifier */
-                        PUBLIC_KEY, /* mEncapsulaetKey */
-                        ENCAPSULATED_KEY);
+                        /* mEncryptedTopic */ CIPHER_TEXT,
+                        /* mKeyIdentifier */ PUBLIC_KEY,
+                        /* mEncapsulateKey */ ENCAPSULATED_KEY);
     }
 }

@@ -128,8 +128,8 @@ java_library_host {
 filegroup {
     name: "adservices-extended-mockito-rule-sources",
     srcs: [
+        "java/com/android/adservices/mockito/AdServicesStaticMockitoMocker.java",
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java",
-        "java/com/android/adservices/mockito/AdServicesExtendedMockitoMockerImpl.java",
     ],
     path: "java",
     visibility: [

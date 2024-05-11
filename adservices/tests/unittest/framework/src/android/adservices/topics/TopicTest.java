@@ -18,14 +18,16 @@ package android.adservices.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link android.adservices.topics.Topic} */
-public class TopicTest {
+@RequiresSdkLevelAtLeastS
+public final class TopicTest extends AdServicesUnitTestCase {
 
     private static final long TAXONOMY_VERSION_2 = 2L;
     private static final long MODEL_VERSION_5 = 5L;
@@ -34,9 +36,6 @@ public class TopicTest {
     private Topic mTopic1;
     private Topic mTopic2;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() throws Exception {
         generateTopics();
@@ -44,21 +43,22 @@ public class TopicTest {
 
     @Test
     public void testGetters() {
-        assertThat(mTopic1.getTopicId()).isEqualTo(1);
-        assertThat(mTopic1.getModelVersion()).isEqualTo(5L);
-        assertThat(mTopic1.getTaxonomyVersion()).isEqualTo(2L);
+        expect.that(mTopic1.getTopicId()).isEqualTo(1);
+        expect.that(mTopic1.getModelVersion()).isEqualTo(5L);
+        expect.that(mTopic1.getTaxonomyVersion()).isEqualTo(2L);
     }
 
     @Test
     public void testToString() {
         String expectedTopicString = "Topic{mTaxonomyVersion=2, mModelVersion=5, mTopicCode=1}";
-        assertThat(mTopic1.toString()).isEqualTo(expectedTopicString);
-        assertThat(mTopic2.toString()).isEqualTo(expectedTopicString);
+        expect.that(mTopic1.toString()).isEqualTo(expectedTopicString);
+        expect.that(mTopic2.toString()).isEqualTo(expectedTopicString);
     }
 
     @Test
     public void testEquals() {
-        assertThat(mTopic1).isEqualTo(mTopic2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(mTopic1, mTopic2);
     }
 
     @Test
@@ -68,19 +68,12 @@ public class TopicTest {
     }
 
     @Test
-    public void testHashCode_equalObject() {
-        assertThat(mTopic1.hashCode()).isEqualTo(mTopic2.hashCode());
-    }
-
-    @Test
-    public void testHashCode_unequalObject() {
-        assertThat(mTopic1.hashCode())
-                .isNotEqualTo(
-                        new Topic(
-                                        /* mTaxonomyVersion */ 100L,
-                                        /* mModelVersion */ 101L,
-                                        /* mTopicId */ 102)
-                                .hashCode());
+    public void testNotEquals() {
+        Topic different =
+                new Topic(
+                        /* mTaxonomyVersion */ 100L, /* mModelVersion */ 101L, /* mTopicId */ 102);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreNotEqual(mTopic1, different);
     }
 
     private void generateTopics() {
