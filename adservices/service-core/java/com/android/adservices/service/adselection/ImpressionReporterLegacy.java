@@ -230,7 +230,11 @@ public class ImpressionReporterLegacy {
                             .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send failed result to the callback");
-            throw e.rethrowFromSystemServer();
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
+                    0);
         }
     }
 
@@ -240,7 +244,11 @@ public class ImpressionReporterLegacy {
             callback.onSuccess();
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send successful result to the callback");
-            throw e.rethrowFromSystemServer();
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
+                    0);
         }
     }
 
