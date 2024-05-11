@@ -133,7 +133,7 @@
                         android:layout_marginStart="@dimen/adservices_content_horizontal_two_thirds_padding"
                         style="@style/MainStyle.Body1" />
                     <TextView
-                        android:id="@+id/learn_more_from_privacy_policy"
+                        android:id="@+id/learn_more_from_privacy_policy1"
                         android:text="@string/notificationUI_pas_leanr_more_link"
                         style="@style/MainStyle.Body1" />
                 </LinearLayout>
