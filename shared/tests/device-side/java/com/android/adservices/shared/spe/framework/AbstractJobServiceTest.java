@@ -19,6 +19,7 @@ package com.android.adservices.shared.spe.framework;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_ON_STOP_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+import static com.android.adservices.shared.spe.JobServiceConstants.ERROR_CODE_JOB_SCHEDULER_IS_UNAVAILABLE;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SKIP_REASON_JOB_NOT_CONFIGURED;
@@ -209,6 +210,37 @@ public final class AbstractJobServiceTest extends SharedMockitoTestCase {
                 .that(mJobScheduler.getPendingJob(JOB_ID_1))
                 .isNull();
         verify(mMockLogger).recordJobSkipped(JOB_ID_1, skipReason);
+    }
+
+    @Test
+    public void testSkipAndCancelBackgroundJob_jobSchedulerIsNull() throws Exception {
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyJobService);
+
+        JobInfo jobInfo =
+                new JobInfo.Builder(JOB_ID_1, new ComponentName(sContext, TestJobService.class))
+                        .setMinimumLatency(EXECUTION_CANNOT_START_LATENCY_MS)
+                        .build();
+        mJobScheduler.schedule(jobInfo);
+
+        assertWithMessage("Scheduled job with id=%s", JOB_ID_1)
+                .that(mJobScheduler.getPendingJob(JOB_ID_1))
+                .isNotNull();
+
+        doReturn(null).when(mSpyJobService).getSystemService(JobScheduler.class);
+        int skipReason = JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
+
+        mSpyJobService.skipAndCancelBackgroundJob(mMockParameters, skipReason);
+
+        callback.assertJobFinished();
+
+        assertWithMessage("Scheduled job with id=%s", JOB_ID_1)
+                .that(mJobScheduler.getPendingJob(JOB_ID_1))
+                .isNotNull();
+        verify(mMockLogger).recordJobSkipped(JOB_ID_1, skipReason);
+        verify(mMockErrorLogger)
+                .logError(
+                        ERROR_CODE_JOB_SCHEDULER_IS_UNAVAILABLE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test
