@@ -227,6 +227,13 @@ public final class AdServicesStatusUtils {
      */
     public static final int STATUS_ADSERVICES_ACTIVITY_DISABLED = 26;
 
+    /**
+     * Callback is shut down and encountered an error when invoking its methods.
+     *
+     * <p>This error may be considered similar to {@link IllegalStateException}.
+     */
+    public static final int STATUS_CALLBACK_SHUTDOWN = 27;
+
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
 
@@ -384,7 +391,8 @@ public final class AdServicesStatusUtils {
                 STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND,
                 STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID,
                 STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED,
-                STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION
+                STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
+                STATUS_CALLBACK_SHUTDOWN
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}

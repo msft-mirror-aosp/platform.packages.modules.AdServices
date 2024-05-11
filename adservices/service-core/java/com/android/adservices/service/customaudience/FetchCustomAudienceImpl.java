@@ -589,9 +589,8 @@ public class FetchCustomAudienceImpl {
             mAdServicesLogger.logFledgeApiCallStats(
                     API_NAME,
                     mCallerAppPackageName,
-                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
                     0);
-            throw new RuntimeException(e);
         }
     }
 
@@ -606,9 +605,8 @@ public class FetchCustomAudienceImpl {
             mAdServicesLogger.logFledgeApiCallStats(
                     API_NAME,
                     mCallerAppPackageName,
-                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
                     0);
-            throw new RuntimeException(e);
         }
     }
 

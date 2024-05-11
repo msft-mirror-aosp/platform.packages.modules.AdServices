@@ -18,8 +18,8 @@ package com.android.adservices.shared.spe.framework;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_ON_STOP_EXECUTION_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULER_IS_UNAVAILABLE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+import static com.android.adservices.shared.spe.JobServiceConstants.ERROR_CODE_JOB_SCHEDULER_IS_UNAVAILABLE;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SKIP_REASON_JOB_NOT_CONFIGURED;
 import static com.android.adservices.shared.spe.framework.ExecutionResult.CANCELLED_BY_SCHEDULER;
@@ -199,11 +199,13 @@ public abstract class AbstractJobService extends JobService {
 
                     if (jobScheduler != null) {
                         jobScheduler.cancel(jobId);
+                        LogUtil.d("Job %d has been cancelled.", jobId);
+                    } else {
                         LogUtil.e(
                                 "Cannot fetch JobScheduler! Failed to cancel %s.",
                                 mJobIdToNameMap.get(jobId));
                         mErrorLogger.logError(
-                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULER_IS_UNAVAILABLE,
+                                ERROR_CODE_JOB_SCHEDULER_IS_UNAVAILABLE,
                                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
                     }
 

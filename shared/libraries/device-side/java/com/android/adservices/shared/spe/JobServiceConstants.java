@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_JOB_NOT_CONFIGURED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULER_IS_UNAVAILABLE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED__RESULT_CODE__SCHEDULING_RESULT_CODE_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED__RESULT_CODE__SCHEDULING_RESULT_CODE_SKIPPED;
@@ -89,8 +90,9 @@ public final class JobServiceConstants {
     /** Maximum possible percentage for percentage variables. */
     public static final int MAX_PERCENTAGE = 100;
 
-    public static final int SKIP_REASON_JOB_NOT_CONFIGURED =
-            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_JOB_NOT_CONFIGURED;
+    /** A shorter version of error code for job scheduler is not available. */
+    public static final int ERROR_CODE_JOB_SCHEDULER_IS_UNAVAILABLE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULER_IS_UNAVAILABLE;
 
     @IntDef(
             value = {
@@ -116,6 +118,10 @@ public final class JobServiceConstants {
     /** The job is disabled due to ExtServices' job running on AdServices */
     public static final int JOB_ENABLED_STATUS_DISABLED_FOR_BACK_COMPAT_OTA =
             AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+
+    /** The job is disabled due to misconfiguration in SPE framework. */
+    public static final int SKIP_REASON_JOB_NOT_CONFIGURED =
+            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_JOB_NOT_CONFIGURED;
 
     /** Shorter version for scheduler type - SPE. */
     public static final int SCHEDULER_TYPE_SPE =
