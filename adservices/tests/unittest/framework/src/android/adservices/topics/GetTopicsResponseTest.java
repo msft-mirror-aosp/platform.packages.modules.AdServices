@@ -17,25 +17,20 @@ package android.adservices.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-/**
- * Unit tests for {@link android.adservices.topics.GetTopicsResponse}
- */
-@SmallTest
-public final class GetTopicsResponseTest {
-
+/** Unit tests for {@link android.adservices.topics.GetTopicsResponse} */
+@RequiresSdkLevelAtLeastS
+public final class GetTopicsResponseTest extends AdServicesUnitTestCase {
     private static final List<Topic> TOPICS_LIST =
             List.of(new Topic(/* mTaxonomyVersion */ 1L, /* mModelVersion */ 1L, /* mTopicId */ 0));
     private static final List<EncryptedTopic> ENCRYPTED_TOPICS_LIST =
@@ -46,23 +41,14 @@ public final class GetTopicsResponseTest {
                             /* mEncapsulatedKey */ "encapsulatedKey"
                                     .getBytes(StandardCharsets.UTF_8)));
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
     public void testGetTopicsResponseBuilder_nullableThrows() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    GetTopicsResponse unusedResponse =
-                            new GetTopicsResponse.Builder(null, ENCRYPTED_TOPICS_LIST).build();
-                });
+                () -> new GetTopicsResponse.Builder(null, ENCRYPTED_TOPICS_LIST).build());
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    GetTopicsResponse unusedResponse =
-                            new GetTopicsResponse.Builder(TOPICS_LIST, null).build();
-                });
+                () -> new GetTopicsResponse.Builder(TOPICS_LIST, null).build());
     }
 
     @Test
@@ -82,9 +68,9 @@ public final class GetTopicsResponseTest {
                 new GetTopicsResponse.Builder(TOPICS_LIST, ENCRYPTED_TOPICS_LIST).build();
 
         // Validate the topicList is same to what we created
-        assertEquals(TOPICS_LIST, response.getTopics());
+        expect.that(response.getTopics()).isEqualTo(TOPICS_LIST);
         // Validate the encryptedTopicList is same to what we created
-        assertEquals(ENCRYPTED_TOPICS_LIST, response.getEncryptedTopics());
+        expect.that(response.getEncryptedTopics()).isEqualTo(ENCRYPTED_TOPICS_LIST);
     }
 
     @Test
@@ -94,17 +80,8 @@ public final class GetTopicsResponseTest {
         GetTopicsResponse getTopicsResponse2 =
                 new GetTopicsResponse.Builder(TOPICS_LIST, ENCRYPTED_TOPICS_LIST).build();
 
-        assertThat(getTopicsResponse1.equals(getTopicsResponse2)).isTrue();
-    }
-
-    @Test
-    public void testHashCode() {
-        GetTopicsResponse getTopicsResponse1 =
-                new GetTopicsResponse.Builder(TOPICS_LIST, ENCRYPTED_TOPICS_LIST).build();
-        GetTopicsResponse getTopicsResponse2 =
-                new GetTopicsResponse.Builder(TOPICS_LIST, ENCRYPTED_TOPICS_LIST).build();
-
-        assertThat(getTopicsResponse1.hashCode()).isEqualTo(getTopicsResponse2.hashCode());
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(getTopicsResponse1, getTopicsResponse2);
     }
 }
 

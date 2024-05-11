@@ -45,7 +45,7 @@ public final class PrivacyGenerator {
     ImmutableList<PrivateIndexObservation> generateNoise(
             int maxIndex, ReportDefinition reportDefinition) {
         checkArgument(maxIndex >= 0, "maxIndex value cannot be negative");
-        double lambda = reportDefinition.getPoissonMean();
+        double lambda = reportDefinition.getShuffledDp().getPoissonMean();
         checkArgument(lambda > 0, "poisson_mean must be positive, got %s", lambda);
 
         // To minimize the number of calls to secureRandom, we draw the total number of

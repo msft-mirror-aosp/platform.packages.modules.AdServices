@@ -44,7 +44,7 @@ import static org.mockito.Mockito.when;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.util.Clock;
@@ -60,7 +60,7 @@ import org.mockito.Mock;
 import java.util.concurrent.Executors;
 
 /** Unit test for {@link JobServiceLogger}. */
-public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCase {
+public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
     // the test doesn't actually schedule a job. This avoids complicated mocking logic.
     private static final int JOB_ID_1 = 1;

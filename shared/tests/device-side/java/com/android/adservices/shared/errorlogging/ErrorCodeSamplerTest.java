@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 import android.util.Base64;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.proto.ErrorCodeList;
 import com.android.adservices.shared.proto.ErrorCodeSampleInterval;
@@ -32,7 +32,7 @@ import org.mockito.Mock;
 
 import java.util.Random;
 
-public final class ErrorCodeSamplerTest extends AdServicesMockitoTestCase {
+public final class ErrorCodeSamplerTest extends SharedMockitoTestCase {
     private static final ErrorCodeSampleInterval SAMPLE_INTERVAL =
             ErrorCodeSampleInterval.newBuilder()
                     .setDefaultSampleInterval(10)

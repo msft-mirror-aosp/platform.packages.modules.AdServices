@@ -59,7 +59,7 @@ import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
-import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
@@ -213,6 +213,7 @@ public class BackgroundJobsManager {
      *   <li>{@link DeleteExpiredJobService}
      *   <li>{@link DeleteUninstalledJobService}
      *   <li>{@link AsyncRegistrationQueueJobService}
+     *   <li>{@link AsyncRegistrationFallbackJob}
      *   <li>{@link MddJobService}
      *   <li>{@link EncryptionKeyJobService}
      *   <li>{@link CobaltJobService}
@@ -234,8 +235,7 @@ public class BackgroundJobsManager {
             DeleteExpiredJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             DeleteUninstalledJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             AsyncRegistrationQueueJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
-            AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                    context, /* forceSchedule= */ false);
+            AsyncRegistrationFallbackJob.schedule();
             VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
                     context, /* forceSchedule= */ false);
             DebugReportingFallbackJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);

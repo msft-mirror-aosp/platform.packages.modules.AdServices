@@ -32,7 +32,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.testing.NoFailureSyncCallback;
 
@@ -44,7 +44,7 @@ import org.mockito.Mock;
 import java.util.concurrent.Executors;
 
 /** Unit test for {@link JobSchedulingLogger}. */
-public final class JobSchedulingLoggerTest extends AdServicesMockitoTestCase {
+public final class JobSchedulingLoggerTest extends SharedMockitoTestCase {
     private static final int JOB_ID = 1;
     private static final int RESULT_CODE = SCHEDULING_RESULT_CODE_SUCCESSFUL;
 

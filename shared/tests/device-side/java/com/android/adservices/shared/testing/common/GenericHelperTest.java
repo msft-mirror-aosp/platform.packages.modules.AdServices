@@ -17,14 +17,11 @@ package com.android.adservices.shared.testing.common;
 
 import static org.junit.Assert.assertThrows;
 
-import com.google.common.truth.Expect;
+import com.android.adservices.shared.SharedUnitTestCase;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public final class GenericHelperTest {
-
-    public @Rule final Expect expect = Expect.create();
+public final class GenericHelperTest extends SharedUnitTestCase {
 
     @Test
     public void testGetUniqueId() {

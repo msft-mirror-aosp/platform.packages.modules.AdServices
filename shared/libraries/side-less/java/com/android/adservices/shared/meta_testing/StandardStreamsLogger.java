@@ -26,7 +26,7 @@ import com.google.errorprone.annotations.FormatString;
  * on {@code System.err}, so it can be used on "side-less" tests (as device-side and host-side
  * classes would be using {@code AndroidLogger} or {@code ConsoleLogger} respectively).
  */
-public class StandardStreamsLogger implements RealLogger {
+public final class StandardStreamsLogger implements RealLogger {
 
     private static final StandardStreamsLogger sInstance = new StandardStreamsLogger();
 

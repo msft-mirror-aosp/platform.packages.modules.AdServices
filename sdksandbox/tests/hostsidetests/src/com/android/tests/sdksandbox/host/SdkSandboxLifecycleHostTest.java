@@ -26,8 +26,11 @@ import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.device.DeviceNotAvailableException;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
+import com.android.tradefed.testtype.junit4.AfterClassWithInfo;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
+import com.android.tradefed.testtype.junit4.BeforeClassWithInfo;
 
 import org.junit.After;
 import org.junit.Before;
@@ -69,8 +72,19 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
-    private boolean mWasRoot;
     private DeviceSdkLevel mDeviceSdkLevel;
+
+    /** Root device for all tests. */
+    @BeforeClassWithInfo
+    public static void beforeClassWithDevice(TestInformation testInfo) throws Exception {
+        assertThat(testInfo.getDevice().enableAdbRoot()).isTrue();
+    }
+
+    /** UnRoot device after all tests. */
+    @AfterClassWithInfo
+    public static void afterClassWithDevice(TestInformation testInfo) throws Exception {
+        testInfo.getDevice().disableAdbRoot();
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -78,9 +92,6 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         assertThat(getBuild()).isNotNull();
         assertThat(getDevice()).isNotNull();
-
-        mWasRoot = getDevice().isAdbRoot();
-        getDevice().enableAdbRoot();
 
         mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
 
@@ -93,10 +104,6 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     public void tearDown() throws Exception {
         mUserUtils.removeSecondaryUserIfNecessary();
         cleanUpAppAndSandboxProcesses();
-
-        if (!mWasRoot) {
-            getDevice().disableAdbRoot();
-        }
     }
 
     @Test

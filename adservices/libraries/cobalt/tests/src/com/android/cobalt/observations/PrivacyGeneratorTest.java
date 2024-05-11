@@ -26,7 +26,8 @@ import com.android.cobalt.observations.testing.FakeSecureRandom;
 
 import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.ReportDefinition.PrivacyLevel;
+import com.google.cobalt.ReportDefinition.PrivacyMechanism;
+import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -37,8 +38,9 @@ public final class PrivacyGeneratorTest {
     private static final ReportDefinition sReport =
             ReportDefinition.newBuilder()
                     .setId(5)
-                    .setPrivacyLevel(PrivacyLevel.LOW_PRIVACY)
-                    .setPoissonMean(0.01)
+                    .setPrivacyMechanism(PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY)
+                    .setShuffledDp(
+                            ShuffledDifferentialPrivacyConfig.newBuilder().setPoissonMean(0.01))
                     .build();
 
     private final PrivacyGenerator mPrivacyGenerator;
@@ -63,7 +65,13 @@ public final class PrivacyGeneratorTest {
         // Use a larger Poisson mean that is guaranteed to cause a fabricated observation to be
         // created, due to the FakeSecureRandom implementation.
         ImmutableList<PrivateIndexObservation> result =
-                mPrivacyGenerator.generateNoise(0, sReport.toBuilder().setPoissonMean(0.1).build());
+                mPrivacyGenerator.generateNoise(
+                        0,
+                        sReport.toBuilder()
+                                .setShuffledDp(
+                                        ShuffledDifferentialPrivacyConfig.newBuilder()
+                                                .setPoissonMean(0.1))
+                                .build());
         // A fabricated observation.
         assertThat(result).containsExactly(makeObservation(0));
     }
@@ -74,7 +82,12 @@ public final class PrivacyGeneratorTest {
         // to be created, due to the FakeSecureRandom implementation.
         ImmutableList<PrivateIndexObservation> result =
                 mPrivacyGenerator.generateNoise(
-                        0, sReport.toBuilder().setPoissonMean(0.52).build());
+                        0,
+                        sReport.toBuilder()
+                                .setShuffledDp(
+                                        ShuffledDifferentialPrivacyConfig.newBuilder()
+                                                .setPoissonMean(0.52))
+                                .build());
         // Two fabricated observations.
         assertThat(result).containsExactly(makeObservation(0), makeObservation(0));
     }
@@ -84,7 +97,13 @@ public final class PrivacyGeneratorTest {
         // Use a larger Poisson mean that is guaranteed to cause a fabricated observation to be
         // created, due to the FakeSecureRandom implementation.
         ImmutableList<PrivateIndexObservation> result =
-                mPrivacyGenerator.generateNoise(0, sReport.toBuilder().setPoissonMean(0.1).build());
+                mPrivacyGenerator.generateNoise(
+                        0,
+                        sReport.toBuilder()
+                                .setShuffledDp(
+                                        ShuffledDifferentialPrivacyConfig.newBuilder()
+                                                .setPoissonMean(0.1))
+                                .build());
         // A fabricated index is expected.
         assertThat(result).containsExactly(makeObservation(0));
     }
@@ -95,7 +114,12 @@ public final class PrivacyGeneratorTest {
         // to be created, due to the FakeSecureRandom implementation.
         ImmutableList<PrivateIndexObservation> result =
                 mPrivacyGenerator.generateNoise(
-                        0, sReport.toBuilder().setPoissonMean(0.52).build());
+                        0,
+                        sReport.toBuilder()
+                                .setShuffledDp(
+                                        ShuffledDifferentialPrivacyConfig.newBuilder()
+                                                .setPoissonMean(0.52))
+                                .build());
         // Two fabricated indices are expected.
         assertThat(result).containsExactly(makeObservation(0), makeObservation(0));
     }
@@ -108,7 +132,12 @@ public final class PrivacyGeneratorTest {
         // the metric dimensions.
         ImmutableList<PrivateIndexObservation> result =
                 mPrivacyGenerator.generateNoise(
-                        5, sReport.toBuilder().setPoissonMean(0.02).build());
+                        5,
+                        sReport.toBuilder()
+                                .setShuffledDp(
+                                        ShuffledDifferentialPrivacyConfig.newBuilder()
+                                                .setPoissonMean(0.02))
+                                .build());
         // A fabricated index is expected.
         assertThat(result).containsExactly(makeObservation(5));
     }
@@ -129,7 +158,13 @@ public final class PrivacyGeneratorTest {
                         IllegalArgumentException.class,
                         () ->
                                 mPrivacyGenerator.generateNoise(
-                                        0, sReport.toBuilder().setPoissonMean(-0.1).build()));
+                                        0,
+                                        sReport.toBuilder()
+                                                .setShuffledDp(
+                                                        ShuffledDifferentialPrivacyConfig
+                                                                .newBuilder()
+                                                                .setPoissonMean(-0.1))
+                                                .build()));
         assertThat(thrown).hasMessageThat().contains("poisson_mean must be positive");
     }
 }

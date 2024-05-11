@@ -36,7 +36,7 @@ import android.app.job.JobInfo.TriggerContentUri;
 import android.content.ComponentName;
 import android.net.Uri;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.JobPolicy.BatteryType;
 import com.android.adservices.shared.proto.JobPolicy.NetworkType;
@@ -46,7 +46,7 @@ import com.android.adservices.shared.spe.framework.TestJobService;
 import org.junit.Test;
 
 /** Unit tests for {@link PolicyProcessor}. */
-public final class PolicyProcessorTest extends AdServicesUnitTestCase {
+public final class PolicyProcessorTest extends SharedUnitTestCase {
 
     @Test
     public void testApplyPolicyToJobInfo_nullPolicy() {

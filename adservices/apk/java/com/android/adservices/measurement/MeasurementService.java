@@ -39,7 +39,7 @@ import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
 import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
-import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
@@ -113,7 +113,7 @@ public class MeasurementService extends Service {
         DeleteUninstalledJobService.scheduleIfNeeded(this, false);
         MddJob.scheduleAllMddJobs();
         AsyncRegistrationQueueJobService.scheduleIfNeeded(this, false);
-        AsyncRegistrationFallbackJobService.scheduleIfNeeded(this, false);
+        AsyncRegistrationFallbackJob.schedule();
         DebugReportingFallbackJobService.scheduleIfNeeded(this, false);
         VerboseDebugReportingFallbackJobService.scheduleIfNeeded(this, false);
         EncryptionKeyJobService.scheduleIfNeeded(this, false);

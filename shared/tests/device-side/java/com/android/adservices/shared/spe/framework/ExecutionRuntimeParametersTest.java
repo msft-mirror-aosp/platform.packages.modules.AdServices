@@ -23,14 +23,15 @@ import static org.mockito.Mockito.when;
 import android.app.job.JobParameters;
 import android.os.PersistableBundle;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 /** Unit tests for {@link ExecutionRuntimeParameters} */
-public final class ExecutionRuntimeParametersTest extends AdServicesMockitoTestCase {
+public final class ExecutionRuntimeParametersTest extends SharedMockitoTestCase {
+
     private static final String KEY = "testKey";
     private static final String VAL = "testValue";
 

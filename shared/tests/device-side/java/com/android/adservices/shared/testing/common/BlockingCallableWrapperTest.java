@@ -24,7 +24,7 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.SharedUnitTestCase;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -42,7 +42,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public final class BlockingCallableWrapperTest extends AdServicesUnitTestCase {
+public final class BlockingCallableWrapperTest extends SharedUnitTestCase {
     private final ListeningExecutorService mLightWeightExecutor = sLightWeightExecutor;
 
     @Test

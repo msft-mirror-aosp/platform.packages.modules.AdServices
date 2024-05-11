@@ -20,9 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.SharedUnitTestCase;
+
 import org.junit.Test;
 
-public final class PreconditionsTest {
+public final class PreconditionsTest extends SharedUnitTestCase {
     private static final String MESSAGE = "A test message";
     private static final String MESSAGE_TEMPLATE = "Expect a message: %s";
 

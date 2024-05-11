@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
+import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
@@ -29,7 +31,6 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
@@ -70,9 +71,8 @@ public final class EpochJob implements JobWorker {
 
     /** Schedules the {@link EpochJob}. */
     public static void schedule() {
-        Flags flags = FlagsFactory.getFlags();
         // If SPE is not enabled, force to schedule the job with the old JobService.
-        if (!flags.getSpeOnPilotJobsBatch2Enabled()) {
+        if (!FlagsFactory.getFlags().getSpeOnPilotJobsBatch2Enabled()) {
             LoggerFactory.getTopicsLogger()
                     .d("SPE is not enabled. Schedule the job with EpochJobService.");
             int resultCode = EpochJobService.scheduleIfNeeded(/* forceSchedule= */ false);
@@ -83,11 +83,11 @@ public final class EpochJob implements JobWorker {
             return;
         }
 
-        AdServicesJobScheduler.getInstance().schedule(createJobSpec(flags));
+        AdServicesJobScheduler.getInstance().schedule(createDefaultJobSpec());
     }
 
     @VisibleForTesting
-    static JobSpec createJobSpec(Flags flags) {
+    static JobSpec createDefaultJobSpec() {
         JobPolicy jobPolicy =
                 JobPolicy.newBuilder()
                         .setJobId(TOPICS_EPOCH_JOB.getJobId())
@@ -95,8 +95,8 @@ public final class EpochJob implements JobWorker {
                         .setIsPersisted(true)
                         .setPeriodicJobParams(
                                 JobPolicy.PeriodicJobParams.newBuilder()
-                                        .setPeriodicIntervalMs(flags.getTopicsEpochJobPeriodMs())
-                                        .setFlexInternalMs(flags.getTopicsEpochJobFlexMs())
+                                        .setPeriodicIntervalMs(TOPICS_EPOCH_JOB_PERIOD_MS)
+                                        .setFlexInternalMs(TOPICS_EPOCH_JOB_FLEX_MS)
                                         .build())
                         .build();
 

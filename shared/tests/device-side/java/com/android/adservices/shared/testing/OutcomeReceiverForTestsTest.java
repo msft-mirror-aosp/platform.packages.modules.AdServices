@@ -22,7 +22,7 @@ import static com.android.adservices.shared.testing.SyncCallback.MSG_WRONG_ERROR
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.junit.SafeAndroidJUnitRunner;
 
@@ -33,7 +33,7 @@ import java.util.NoSuchElementException;
 
 @RequiresSdkLevelAtLeastS(reason = "android.os.OutcomeReceiver was introduced on S")
 @RunWith(SafeAndroidJUnitRunner.class)
-public final class OutcomeReceiverForTestsTest extends AdServicesUnitTestCase {
+public final class OutcomeReceiverForTestsTest extends SharedUnitTestCase {
 
     private static final String RESULT = "Saul Goodman!";
 

@@ -473,6 +473,18 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         }
     }
 
+    @Override
+    public void resetAppsAndBlockedApps() throws IOException {
+        mAppSearchConsentWorker.clearAppsWithConsent(AppSearchAppConsentDao.APPS_WITH_CONSENT);
+        mAppSearchConsentWorker.clearAppsWithConsent(
+                AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT);
+    }
+
+    @Override
+    public void resetApps() throws IOException {
+        mAppSearchConsentWorker.clearAppsWithConsent(AppSearchAppConsentDao.APPS_WITH_CONSENT);
+    }
+
     /**
      * Persists the use of a FLEDGE API by a single given installed application (identified by its
      * package name) if the app has not already had its consent revoked.
@@ -577,6 +589,92 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
     @Override
     public boolean wasU18NotificationDisplayed() {
         return mAppSearchConsentWorker.wasU18NotificationDisplayed();
+    }
+
+    @Override
+    public boolean wasPasNotificationDisplayed() throws IOException {
+        // PAS update not supported on S yet
+        return false;
+    }
+
+    @Override
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
+        // PAS update not supported on S yet
+    }
+
+    /** Set the measurement data reset activity happens based on consent_source_of_truth. */
+    @Override
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) throws IOException {
+        mAppSearchConsentWorker.setMeasurementDataReset(isMeasurementDataReset);
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    @Override
+    public boolean isMeasurementDataReset() throws IOException {
+        return mAppSearchConsentWorker.isMeasurementDataReset();
+    }
+
+    @Override
+    public Boolean getDefaultConsent() throws IOException {
+        return mAppSearchConsentWorker.getConsent(ConsentConstants.DEFAULT_CONSENT);
+    }
+
+    @Override
+    public Boolean getTopicsDefaultConsent() {
+        return mAppSearchConsentWorker.getConsent(ConsentConstants.TOPICS_DEFAULT_CONSENT);
+    }
+
+    @Override
+    public Boolean getFledgeDefaultConsent() {
+        return mAppSearchConsentWorker.getConsent(ConsentConstants.FLEDGE_DEFAULT_CONSENT);
+    }
+
+    @Override
+    public Boolean getMeasurementDefaultConsent() {
+        return mAppSearchConsentWorker.getConsent(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT);
+    }
+
+    @Override
+    public Boolean getDefaultAdIdState() {
+        return mAppSearchConsentWorker.getConsent(ConsentConstants.DEFAULT_AD_ID_STATE);
+    }
+
+    @Override
+    public void recordDefaultConsent(boolean defaultConsent) {
+        mAppSearchConsentWorker.setConsent(ConsentConstants.DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordTopicsDefaultConsent(boolean defaultConsent) {
+        mAppSearchConsentWorker.setConsent(ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordFledgeDefaultConsent(boolean defaultConsent) {
+        mAppSearchConsentWorker.setConsent(ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) {
+        mAppSearchConsentWorker.setConsent(
+                ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordDefaultAdIdState(boolean defaultAdIdState) {
+        mAppSearchConsentWorker.setConsent(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState);
+    }
+
+    @Override
+    public Boolean isPaDataReset() {
+        return mAppSearchConsentWorker.isPaDataReset();
+    }
+
+    @Override
+    public void setPaDataReset(boolean isPaDataReset) {
+        mAppSearchConsentWorker.setConsent(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset);
     }
 
     /**

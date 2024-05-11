@@ -17,7 +17,7 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
@@ -111,7 +111,7 @@ public class EnrollmentDataDownloadManagerTest {
 
     @Test
     public void testGetInstance() {
-        mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         EnrollmentDataDownloadManager firstInstance = EnrollmentDataDownloadManager.getInstance();
         EnrollmentDataDownloadManager secondInstance = EnrollmentDataDownloadManager.getInstance();
 

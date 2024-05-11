@@ -325,6 +325,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableHeaderErrorDebugReport() {
+        testFeatureFlagGuardedByGlobalKillSwitch(
+                "MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT",
+                Flags::getMeasurementEnableHeaderErrorDebugReport);
+    }
+
+    @Test
     public void testGetEnableBackCompat() {
         testFeatureFlag("ENABLE_BACK_COMPAT", Flags::getEnableBackCompat);
     }
@@ -399,6 +406,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetEnableBackCompatInit() {
         testFeatureFlag("DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
+    }
+
+    @Test
+    public void testGetMsmtEnableSeparateReportTypes() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT",
+                Flags::getMeasurementEnableSeparateReportTypesForAttributionRateLimit);
     }
 
     @Test

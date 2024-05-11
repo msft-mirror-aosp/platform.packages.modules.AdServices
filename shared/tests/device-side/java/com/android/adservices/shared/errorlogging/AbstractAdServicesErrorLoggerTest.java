@@ -27,13 +27,13 @@ import static org.mockito.Mockito.verify;
 
 import android.database.sqlite.SQLiteException;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-public final class AbstractAdServicesErrorLoggerTest extends AdServicesMockitoTestCase {
+public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCase {
 
     @Mock private StatsdAdServicesErrorLogger mStatsdLoggerMock;
 

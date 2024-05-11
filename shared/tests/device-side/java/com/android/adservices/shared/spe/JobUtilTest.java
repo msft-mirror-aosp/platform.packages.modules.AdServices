@@ -31,7 +31,7 @@ import android.content.ComponentName;
 import android.net.Uri;
 import android.os.PersistableBundle;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.util.LogUtil;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -40,7 +40,7 @@ import org.junit.Test;
 import java.util.Locale;
 
 /** Unit tests for {@link JobUtil}. */
-public final class JobUtilTest extends AdServicesExtendedMockitoTestCase {
+public final class JobUtilTest extends SharedExtendedMockitoTestCase {
     @Test
     public void testJobInfoToString_noUri() {
         JobInfo.Builder builder = getBaseJobInfoBuilder();

@@ -487,6 +487,14 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
     }
 
+    /** Default value for whether header error debug report is enabled. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT = false;
+
+    /** Returns whether header error debug report generation is enabled. */
+    default boolean getMeasurementEnableHeaderErrorDebugReport() {
+        return MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
+    }
+
     long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
 
     /** Returns the data expiry window in milliseconds. */
@@ -4458,6 +4466,17 @@ public interface Flags extends ModuleSharedFlags {
      */
     default boolean getMeasurementEnableNavigationReportingOriginCheck() {
         return MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
+    }
+
+    @FeatureFlag
+    boolean MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT = false;
+
+    /**
+     * Enables separate debug report types for event and aggregate attribution rate limit
+     * violations.
+     */
+    default boolean getMeasurementEnableSeparateReportTypesForAttributionRateLimit() {
+        return MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
     }
 
     int MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE = 20;

@@ -64,7 +64,7 @@ import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
-import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
@@ -96,7 +96,7 @@ import org.mockito.Mock;
 @SpyStatic(MddJob.class)
 @SpyStatic(EncryptionKeyJobService.class)
 @SpyStatic(AsyncRegistrationQueueJobService.class)
-@SpyStatic(AsyncRegistrationFallbackJobService.class)
+@SpyStatic(AsyncRegistrationFallbackJob.class)
 @SpyStatic(DebugReportingFallbackJobService.class)
 @SpyStatic(VerboseDebugReportingFallbackJobService.class)
 @SpyStatic(CobaltJobService.class)
@@ -130,11 +130,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         doReturn(true).when(() -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing()
                 .when(() -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()));
-        doNothing()
-                .when(
-                        () ->
-                                AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                                        any(), anyBoolean()));
+        doNothing().when(AsyncRegistrationFallbackJob::schedule);
         doNothing()
                 .when(() -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing()
@@ -577,9 +573,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         verify(
                 () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));
-        verify(
-                () -> AsyncRegistrationFallbackJobService.scheduleIfNeeded(any(), eq(false)),
-                times(numberOfTimes));
+        verify(AsyncRegistrationFallbackJob::schedule, times(numberOfTimes));
         verify(
                 () -> VerboseDebugReportingFallbackJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));

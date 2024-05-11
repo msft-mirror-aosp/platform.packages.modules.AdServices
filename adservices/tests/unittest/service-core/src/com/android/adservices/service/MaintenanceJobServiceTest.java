@@ -17,7 +17,7 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -118,7 +118,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
                 .when(mSpyMaintenanceJobService)
                 .getSystemService(JobScheduler.class);
 
-        mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         mSpyLogger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
     }

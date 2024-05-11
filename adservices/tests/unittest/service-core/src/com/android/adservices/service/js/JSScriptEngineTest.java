@@ -320,7 +320,7 @@ public class JSScriptEngineTest {
                                         mDefaultIsolateSettings,
                                         mNoOpRetryStrategy));
 
-        assertThat(e.getCause()).isInstanceOf(JSExecutionException.class);
+        assertThat(e).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     // During tests, look for logcat messages with tag "chromium" to check if any of your scripts
@@ -339,7 +339,7 @@ public class JSScriptEngineTest {
                                         mDefaultIsolateSettings,
                                         mNoOpRetryStrategy));
 
-        assertThat(e.getCause()).isInstanceOf(JSExecutionException.class);
+        assertThat(e).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -399,7 +399,7 @@ public class JSScriptEngineTest {
                                         "test",
                                         mDefaultIsolateSettings,
                                         mNoOpRetryStrategy));
-        assertThat(outerException.getCause()).isInstanceOf(JSExecutionException.class);
+        assertThat(outerException).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -449,7 +449,8 @@ public class JSScriptEngineTest {
                                 sLogger),
                         mDefaultIsolateSettings);
 
-        assertThat(executionException.getCause())
+        assertThat(executionException)
+                .hasCauseThat()
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
                 .hasMessageThat()
@@ -475,7 +476,8 @@ public class JSScriptEngineTest {
                                 sLogger),
                         mDefaultIsolateSettings);
 
-        assertThat(executionException.getCause())
+        assertThat(executionException)
+                .hasCauseThat()
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
                 .hasMessageThat()
@@ -501,9 +503,11 @@ public class JSScriptEngineTest {
                                 sLogger),
                         mDefaultIsolateSettings);
 
-        assertThat(executionException.getCause())
+        assertThat(executionException)
+                .hasCauseThat()
                 .isInstanceOf(JSScriptEngineConnectionException.class);
-        assertThat(executionException.getCause().getCause())
+        assertThat(executionException.getCause())
+                .hasCauseThat()
                 .isInstanceOf(SandboxDeadException.class);
         assertThat(executionException).hasMessageThat().contains(JS_SCRIPT_ENGINE_SANDBOX_DEAD_MSG);
         verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
@@ -554,8 +558,9 @@ public class JSScriptEngineTest {
                                 sLogger),
                         mDefaultIsolateSettings);
 
-        assertThat(executionException.getCause()).isInstanceOf(JSExecutionException.class);
-        assertThat(executionException.getCause().getCause())
+        assertThat(executionException).hasCauseThat().isInstanceOf(JSExecutionException.class);
+        assertThat(executionException.getCause())
+                .hasCauseThat()
                 .isInstanceOf(MemoryLimitExceededException.class);
         assertThat(executionException).hasMessageThat().contains(expectedExceptionMessage);
         verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
@@ -580,7 +585,7 @@ public class JSScriptEngineTest {
                                 sLogger),
                         mDefaultIsolateSettings);
 
-        assertThat(executionException.getCause()).isInstanceOf(JSExecutionException.class);
+        assertThat(executionException).hasCauseThat().isInstanceOf(JSExecutionException.class);
         verify(mMockSandboxProvider, never()).destroyIfCurrentInstance(mMockedSandbox);
     }
 
@@ -609,7 +614,8 @@ public class JSScriptEngineTest {
                                 sLogger),
                         enforcedHeapIsolateSettings);
 
-        assertThat(executionException.getCause())
+        assertThat(executionException)
+                .hasCauseThat()
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
                 .hasMessageThat()
@@ -638,7 +644,8 @@ public class JSScriptEngineTest {
                                 sLogger),
                         enforcedHeapIsolateSettings);
 
-        assertThat(executionException.getCause())
+        assertThat(executionException)
+                .hasCauseThat()
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
                 .hasMessageThat()
@@ -994,7 +1001,7 @@ public class JSScriptEngineTest {
         verify(mMockedSandbox).createIsolate();
         // Verifying close was invoked
         verify(mMockedIsolate, timeout(2000).atLeast(1)).close();
-        assertThat(timeoutException.getCause()).isInstanceOf(TimeoutException.class);
+        assertThat(timeoutException).hasCauseThat().isInstanceOf(TimeoutException.class);
     }
     // CHECKSTYLE:ON IndentationCheck
 
@@ -1076,7 +1083,7 @@ public class JSScriptEngineTest {
                                         mDefaultIsolateSettings,
                                         mNoOpRetryStrategy));
 
-        assertThat(outer.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(outer).hasCauseThat().isInstanceOf(IllegalStateException.class);
     }
 
     private ExecutionException callJSEngineAndAssertExecutionException(

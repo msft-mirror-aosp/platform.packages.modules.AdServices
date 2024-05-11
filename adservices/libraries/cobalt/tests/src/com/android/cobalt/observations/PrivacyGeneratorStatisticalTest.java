@@ -23,7 +23,8 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.ReportDefinition.PrivacyLevel;
+import com.google.cobalt.ReportDefinition.PrivacyMechanism;
+import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.commons.math.MathException;
@@ -45,7 +46,7 @@ public final class PrivacyGeneratorStatisticalTest {
     private static final ReportDefinition sReportTemplate =
             ReportDefinition.newBuilder()
                     .setId(5)
-                    .setPrivacyLevel(PrivacyLevel.LOW_PRIVACY)
+                    .setPrivacyMechanism(PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY)
                     .build();
 
     private final SecureRandom mSecureRandom;
@@ -96,7 +97,12 @@ public final class PrivacyGeneratorStatisticalTest {
      * @param maxIndex the maximum private index value to generate
      */
     private void totalIndicesAddedTest(int numTrials, int maxIndex, double poissonMean) {
-        ReportDefinition report = sReportTemplate.toBuilder().setPoissonMean(poissonMean).build();
+        ReportDefinition report =
+                sReportTemplate.toBuilder()
+                        .setShuffledDp(
+                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                        .setPoissonMean(poissonMean))
+                        .build();
         int totalIndicesAdded = 0;
         for (int i = 0; i < numTrials; i++) {
             totalIndicesAdded += mPrivacyGenerator.generateNoise(maxIndex, report).size();
@@ -226,7 +232,11 @@ public final class PrivacyGeneratorStatisticalTest {
     private void distributionIndicesAdded(int numTrials, int maxIndex) {
         // Use a larger Poisson mean so that more uniformly distributed values are generated per
         // call.
-        ReportDefinition report = sReportTemplate.toBuilder().setPoissonMean(1.0).build();
+        ReportDefinition report =
+                sReportTemplate.toBuilder()
+                        .setShuffledDp(
+                                ShuffledDifferentialPrivacyConfig.newBuilder().setPoissonMean(1.0))
+                        .build();
         int n = maxIndex + 1;
         int numIndicesAdded = 0;
         int[] indexCounts = new int[n];

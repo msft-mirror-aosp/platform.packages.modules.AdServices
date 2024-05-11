@@ -17,6 +17,8 @@
 package com.android.adservices.service.topics;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockJobSchedulingLogger;
+import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
+import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
@@ -130,13 +132,8 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testCreateJobSpec() {
-        long epochJobPeriodMs = Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
-        long flexJobPeriodMs = Flags.TOPICS_EPOCH_JOB_FLEX_MS;
-        when(mMockFlags.getTopicsEpochJobPeriodMs()).thenReturn(epochJobPeriodMs);
-        when(mMockFlags.getTopicsEpochJobFlexMs()).thenReturn(flexJobPeriodMs);
-
-        JobSpec jobSpec = EpochJob.createJobSpec(mMockFlags);
+    public void testCreateDefaultJobSpec() {
+        JobSpec jobSpec = EpochJob.createDefaultJobSpec();
 
         JobPolicy expectedJobPolicy =
                 JobPolicy.newBuilder()
@@ -145,8 +142,8 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
                         .setIsPersisted(true)
                         .setPeriodicJobParams(
                                 JobPolicy.PeriodicJobParams.newBuilder()
-                                        .setPeriodicIntervalMs(epochJobPeriodMs)
-                                        .setFlexInternalMs(flexJobPeriodMs)
+                                        .setPeriodicIntervalMs(TOPICS_EPOCH_JOB_PERIOD_MS)
+                                        .setFlexInternalMs(TOPICS_EPOCH_JOB_FLEX_MS)
                                         .build())
                         .build();
 

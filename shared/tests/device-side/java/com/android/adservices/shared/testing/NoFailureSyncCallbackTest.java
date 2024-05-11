@@ -18,11 +18,11 @@ package com.android.adservices.shared.testing;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.shared.SharedUnitTestCase;
 
 import org.junit.Test;
 
-public final class NoFailureSyncCallbackTest extends AdServicesExtendedMockitoTestCase {
+public final class NoFailureSyncCallbackTest extends SharedUnitTestCase {
 
     @Test
     public void testUnsupportedMethods() throws Exception {

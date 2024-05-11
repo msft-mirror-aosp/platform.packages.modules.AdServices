@@ -20,14 +20,14 @@ import static org.junit.Assert.assertThrows;
 
 import android.os.PersistableBundle;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
 /** Unit tests for {@link JobSpec}. */
-public final class JobSpecTest extends AdServicesUnitTestCase {
+public final class JobSpecTest extends SharedUnitTestCase {
     private static final int JOB_ID = 1;
     private static final JobPolicy sJobPolicy = JobPolicy.newBuilder().setJobId(JOB_ID).build();
 

@@ -159,12 +159,13 @@ public class MigrationTestHelper {
                 continue;
             }
             if (expectedValue instanceof Number
-                    && !nearlyEqual(
+                    && nearlyEqual(
                             ((Number) expectedValue).floatValue(),
                             ((Number) actualValue).floatValue(),
                             FLOAT_COMPARISON_EPSILON)) {
-                return false;
+                continue;
             }
+            return false;
         }
         return true;
     }

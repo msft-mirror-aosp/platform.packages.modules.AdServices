@@ -18,11 +18,11 @@ package com.android.adservices.shared.testing;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 
 import org.junit.Test;
 
-public final class HandlerIdleSyncCallbackTest extends AdServicesExtendedMockitoTestCase {
+public final class HandlerIdleSyncCallbackTest extends SharedExtendedMockitoTestCase {
 
     @Test
     public void testCustomMethods() throws Exception {

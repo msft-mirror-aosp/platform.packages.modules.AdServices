@@ -16,16 +16,15 @@
 package com.android.adservices.shared.testing.common;
 
 import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
-import static com.android.adservices.shared.testing.common.TestHelper.getTestName;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
-import com.google.auto.value.AutoAnnotation;
-import com.google.common.truth.Expect;
+import com.android.adservices.shared.SharedUnitTestCase;
 
-import org.junit.Rule;
+import com.google.auto.value.AutoAnnotation;
+
 import org.junit.Test;
 import org.junit.runner.Description;
 
@@ -34,13 +33,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-public final class TestHelperTest {
-
-    public @Rule final Expect expect = Expect.create();
+public final class TestHelperTest extends SharedUnitTestCase {
 
     @Test
     public void testGetTestName_null() {
-        assertThrows(NullPointerException.class, () -> getTestName(null));
+        assertThrows(NullPointerException.class, () -> TestHelper.getTestName(null));
     }
 
     @Test
@@ -49,7 +46,7 @@ public final class TestHelperTest {
                 Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest");
 
         expect.withMessage("getTestName(%s)", test)
-                .that(getTestName(test))
+                .that(TestHelper.getTestName(test))
                 .isEqualTo("AClassHasNoNothingAtAll#butItHasATest()");
     }
 
@@ -58,7 +55,7 @@ public final class TestHelperTest {
         Description test = Description.createSuiteDescription(AClassHasNoNothingAtAll.class);
 
         expect.withMessage("getTestName(%s)", test)
-                .that(getTestName(test))
+                .that(TestHelper.getTestName(test))
                 .isEqualTo("AClassHasNoNothingAtAll");
     }
 

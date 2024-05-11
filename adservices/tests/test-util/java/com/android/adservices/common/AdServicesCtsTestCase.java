@@ -33,7 +33,7 @@ public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
     protected static final String LOGCAT_TAG_ADSERVICES = "adservices";
     protected static final String LOGCAT_TAG_ADSERVICES_SERVICE = LOGCAT_TAG_ADSERVICES + "-system";
     protected static final String LOGCAT_TAG_TOPICS = LOGCAT_TAG_ADSERVICES + ".topics";
-    protected static final String LOGCAT_TAG_FLEDGE = LOGCAT_TAG_ADSERVICES + ".fledge";
+    public static final String LOGCAT_TAG_FLEDGE = LOGCAT_TAG_ADSERVICES + ".fledge";
     public static final String LOGCAT_TAG_MEASUREMENT = LOGCAT_TAG_ADSERVICES + ".measurement";
     protected static final String LOGCAT_TAG_UI = LOGCAT_TAG_ADSERVICES + ".ui";
     protected static final String LOGCAT_TAG_ADID = LOGCAT_TAG_ADSERVICES + ".adid";

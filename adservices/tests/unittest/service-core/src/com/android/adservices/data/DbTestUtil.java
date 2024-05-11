@@ -93,7 +93,7 @@ public final class DbTestUtil {
                         new SharedDbHelper(
                                 sContext,
                                 SHARED_DATABASE_NAME_FOR_TEST,
-                                SharedDbHelper.CURRENT_DATABASE_VERSION,
+                                SharedDbHelper.DATABASE_VERSION_V4,
                                 getDbHelperForTest());
             }
             return sSharedSingleton;

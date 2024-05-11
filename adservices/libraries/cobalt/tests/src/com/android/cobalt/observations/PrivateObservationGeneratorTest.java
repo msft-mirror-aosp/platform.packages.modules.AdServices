@@ -34,8 +34,9 @@ import com.google.cobalt.Observation;
 import com.google.cobalt.ObservationMetadata;
 import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.ReportDefinition.PrivacyLevel;
+import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
+import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig;
 import com.google.cobalt.ReportParticipationObservation;
 import com.google.cobalt.SystemProfile;
 import com.google.cobalt.SystemProfileField;
@@ -120,7 +121,7 @@ public final class PrivateObservationGeneratorTest {
                     .setId(REPORT_ID)
                     .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
                     .addSystemProfileField(SystemProfileField.APP_VERSION)
-                    .setPrivacyLevel(PrivacyLevel.LOW_PRIVACY)
+                    .setPrivacyMechanism(PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY)
                     // Use a poisson mean that will not produce a fabricated observation.
                     // The FakeSecureRandom will generate a fabricated observation for lamba > 0.1.
                     // Lambda is calculated by `poissonMean*(maxIndex+1)`, with maxIndex for a
@@ -128,7 +129,8 @@ public final class PrivateObservationGeneratorTest {
                     // report with metric dimensions lambda = poissonMean*(((5+1)*11-1)+1) =
                     // poissonMean*66, which requires that poissonMean < 0.0015 to ensure no
                     // fabricated observations.
-                    .setPoissonMean(0.001)
+                    .setShuffledDp(
+                            ShuffledDifferentialPrivacyConfig.newBuilder().setPoissonMean(0.001))
                     .setNumIndexPoints(11)
                     .setMinValue(0)
                     .setMaxValue(20)
@@ -208,7 +210,14 @@ public final class PrivateObservationGeneratorTest {
                         // lambda = poissonMean*((((maxEventVectorIndex+1)*numIndexPoints)-1)+1)
                         //        = poissonMean*((((0+1)*11)-1)+1) = poissonMean*11 >= 0.1
                         // poissonMean >= 0.0091
-                        CUSTOMER, PROJECT, METRIC, REPORT.toBuilder().setPoissonMean(0.01).build());
+                        CUSTOMER,
+                        PROJECT,
+                        METRIC,
+                        REPORT.toBuilder()
+                                .setShuffledDp(
+                                        ShuffledDifferentialPrivacyConfig.newBuilder()
+                                                .setPoissonMean(0.01))
+                                .build());
         List<UnencryptedObservationBatch> result =
                 mGenerator.generateObservations(DAY_INDEX, ImmutableListMultimap.of());
 
@@ -285,7 +294,14 @@ public final class PrivateObservationGeneratorTest {
                         // lambda = poissonMean*((((maxEventVectorIndex+1)*numIndexPoints)-1)+1)
                         //        = poissonMean*((((0+1)*11)-1)+1) = poissonMean*11 >= 0.1
                         // poissonMean >= 0.0091
-                        CUSTOMER, PROJECT, METRIC, REPORT.toBuilder().setPoissonMean(0.01).build());
+                        CUSTOMER,
+                        PROJECT,
+                        METRIC,
+                        REPORT.toBuilder()
+                                .setShuffledDp(
+                                        ShuffledDifferentialPrivacyConfig.newBuilder()
+                                                .setPoissonMean(0.01))
+                                .build());
         List<UnencryptedObservationBatch> result =
                 mGenerator.generateObservations(
                         DAY_INDEX,
@@ -340,7 +356,11 @@ public final class PrivateObservationGeneratorTest {
                         // lambda = poissonMean*((((maxEventVectorIndex+1)*numIndexPoints)-1)+1)
                         //        = poissonMean*((((5+1)*11)-1)+1) = poissonMean*66 >= 0.1
                         // poissonMean >= 0.00152
-                        REPORT.toBuilder().setPoissonMean(0.002).build());
+                        REPORT.toBuilder()
+                                .setShuffledDp(
+                                        ShuffledDifferentialPrivacyConfig.newBuilder()
+                                                .setPoissonMean(0.002))
+                                .build());
         List<UnencryptedObservationBatch> result =
                 mGenerator.generateObservations(
                         DAY_INDEX, ImmutableListMultimap.of(SYSTEM_PROFILE_2, EVENT_1));

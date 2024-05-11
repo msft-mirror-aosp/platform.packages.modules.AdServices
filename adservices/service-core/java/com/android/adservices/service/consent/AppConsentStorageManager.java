@@ -345,6 +345,16 @@ public class AppConsentStorageManager implements IConsentStorage {
         mAppConsentDao.setConsentForApp(packageName, isConsentRevoked);
     }
 
+    @Override
+    public void resetAppsAndBlockedApps() throws IOException {
+        mAppConsentDao.clearAllConsentData();
+    }
+
+    @Override
+    public void resetApps() throws IOException {
+        mAppConsentDao.clearKnownAppsWithConsent();
+    }
+
     /**
      * Tries to set consent for a given installed application, identified by package name, if it
      * does not already exist in the datastore, and returns the current consent setting after
@@ -411,5 +421,92 @@ public class AppConsentStorageManager implements IConsentStorage {
                 mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED), false);
     }
 
+    @Override
+    public boolean wasPasNotificationDisplayed() throws IOException {
+        return false;
+    }
 
+    @Override
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) throws IOException {
+        mDatastore.put(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, wasPasDisplayed);
+    }
+
+    /** Set the measurement data reset activity happens based on consent_source_of_truth. */
+    @Override
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) throws IOException {
+        mDatastore.put(ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset);
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    @Override
+    public boolean isMeasurementDataReset() throws IOException {
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.IS_MEASUREMENT_DATA_RESET), false);
+    }
+
+    @Override
+    public Boolean getDefaultConsent() throws IOException {
+        return Objects.requireNonNullElse(mDatastore.get(ConsentConstants.DEFAULT_CONSENT), false);
+    }
+
+    @Override
+    public Boolean getTopicsDefaultConsent() {
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.TOPICS_DEFAULT_CONSENT), false);
+    }
+
+    @Override
+    public Boolean getFledgeDefaultConsent() {
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.FLEDGE_DEFAULT_CONSENT), false);
+    }
+
+    @Override
+    public Boolean getMeasurementDefaultConsent() {
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT), false);
+    }
+
+    @Override
+    public Boolean getDefaultAdIdState() {
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.DEFAULT_AD_ID_STATE), false);
+    }
+
+    @Override
+    public void recordDefaultConsent(boolean defaultConsent) throws IOException {
+        mDatastore.put(ConsentConstants.DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordTopicsDefaultConsent(boolean defaultConsent) throws IOException {
+        mDatastore.put(ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordFledgeDefaultConsent(boolean defaultConsent) throws IOException {
+        mDatastore.put(ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) throws IOException {
+        mDatastore.put(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException {
+        mDatastore.put(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState);
+    }
+
+    @Override
+    public Boolean isPaDataReset() {
+        return Objects.requireNonNullElse(mDatastore.get(ConsentConstants.IS_PA_DATA_RESET), false);
+    }
+
+    @Override
+    public void setPaDataReset(boolean isPaDataReset) throws IOException {
+        mDatastore.put(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset);
+    }
 }

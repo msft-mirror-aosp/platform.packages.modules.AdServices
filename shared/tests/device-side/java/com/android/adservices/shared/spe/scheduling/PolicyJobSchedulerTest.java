@@ -48,7 +48,7 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.os.PersistableBundle;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
@@ -72,7 +72,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** Unit Test for {@link PolicyJobScheduler}. */
-public final class PolicyJobSchedulerTest extends AdServicesMockitoTestCase {
+public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
     // Since this unit test is to test scheduling behavior, it doesn't need to actually execute the
     // job. Set this unreachable latency to prevent the job to execute.
     private static final long MINIMUM_LATENCY_MS = 60 * 60 * 1000;

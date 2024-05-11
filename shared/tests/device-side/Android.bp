@@ -22,13 +22,7 @@ android_test {
         ":adservices-shared-sideless-meta-testing-sources",
         ":adservices-shared-sideless-tests-sources",
     ],
-    // TODO(b/338132355): should not depend on adservices-extended-mockito-defaults, just
-    // on adservices-shared-extended-mockito-defaults - will be fixed once tests are refactored
-    // (they should not depend on stuff from adservices-test-utility neither)
-    defaults: [
-        "adservices-shared-extended-mockito-defaults",
-        "adservices-extended-mockito-defaults",
-    ],
+    defaults: ["adservices-shared-extended-mockito-defaults"],
     static_libs: [
         "adservices-shared-common",
         "adservices-shared-error-logging",
@@ -40,7 +34,6 @@ android_test {
         "adservices-shared-storage",
         "adservices-shared-testing",
         "adservices-shared-util",
-        "adservices-test-utility",
         "androidx.test.core",
         "androidx.test.runner",
         "auto_value_annotations",

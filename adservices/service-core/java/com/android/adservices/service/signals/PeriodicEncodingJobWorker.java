@@ -70,7 +70,7 @@ import java.util.stream.Collectors;
  * Handles the periodic encoding responsibilities, such as fetching the raw signals and triggering
  * the JS engine for encoding.
  */
-public class PeriodicEncodingJobWorker {
+public final class PeriodicEncodingJobWorker {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
@@ -82,10 +82,6 @@ public class PeriodicEncodingJobWorker {
 
     private final int mEncodedPayLoadMaxSizeBytes;
     private final int mEncoderLogicMaximumFailure;
-
-    private static final Object SINGLETON_LOCK = new Object();
-
-    private static volatile PeriodicEncodingJobWorker sPeriodicEncodingJobWorker;
 
     private final EncoderLogicHandler mEncoderLogicHandler;
     private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
@@ -142,48 +138,46 @@ public class PeriodicEncodingJobWorker {
      * @return an instance of {@link PeriodicEncodingJobWorker}
      */
     public static PeriodicEncodingJobWorker getInstance() {
-        Context context = ApplicationContextSingleton.get();
+        return FieldHolder.sInstance;
+    }
 
-        PeriodicEncodingJobWorker singleReadResult = sPeriodicEncodingJobWorker;
-        if (singleReadResult != null) {
-            return singleReadResult;
-        }
+    // Lazy initialization holder class idiom for static fields as described in Effective Java Item
+    // 83
+    private static final class FieldHolder {
+        private static final PeriodicEncodingJobWorker sInstance = computeFieldValue();
 
-        synchronized (SINGLETON_LOCK) {
-            if (sPeriodicEncodingJobWorker == null) {
-                ProtectedSignalsDatabase signalsDatabase = ProtectedSignalsDatabase.getInstance();
-                Flags flags = FlagsFactory.getFlags();
-                RetryStrategy retryStrategy =
-                        RetryStrategyFactory.createInstance(
-                                        flags.getAdServicesRetryStrategyEnabled(),
-                                        AdServicesExecutors.getLightWeightExecutor())
-                                .createRetryStrategy(
-                                        flags.getAdServicesJsScriptEngineMaxRetryAttempts());
-                // since this is a background process, dev context is disabled
-                DevContext devContext = DevContext.createForDevOptionsDisabled();
-                sPeriodicEncodingJobWorker =
-                        new PeriodicEncodingJobWorker(
-                                new EncoderLogicHandler(context),
-                                signalsDatabase.getEncoderLogicMetadataDao(),
-                                signalsDatabase.getEncodedPayloadDao(),
-                                new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
-                                signalsDatabase.protectedSignalsDao(),
-                                new SignalsScriptEngine(
-                                        context,
-                                        flags::getEnforceIsolateMaxHeapSize,
-                                        flags::getIsolateMaxHeapSizeBytes,
-                                        retryStrategy,
-                                        devContext),
-                                AdServicesExecutors.getBackgroundExecutor(),
-                                AdServicesExecutors.getLightWeightExecutor(),
-                                DevContextFilter.create(context),
-                                flags,
-                                EnrollmentDao.getInstance(),
-                                Clock.getInstance(),
-                                AdServicesLoggerImpl.getInstance());
-            }
+        private static PeriodicEncodingJobWorker computeFieldValue() {
+            Context context = ApplicationContextSingleton.get();
+            ProtectedSignalsDatabase signalsDatabase = ProtectedSignalsDatabase.getInstance();
+            Flags flags = FlagsFactory.getFlags();
+            RetryStrategy retryStrategy =
+                    RetryStrategyFactory.createInstance(
+                                    flags.getAdServicesRetryStrategyEnabled(),
+                                    AdServicesExecutors.getLightWeightExecutor())
+                            .createRetryStrategy(
+                                    flags.getAdServicesJsScriptEngineMaxRetryAttempts());
+            // since this is a background process, dev context is disabled
+            DevContext devContext = DevContext.createForDevOptionsDisabled();
+            return new PeriodicEncodingJobWorker(
+                    new EncoderLogicHandler(context),
+                    signalsDatabase.getEncoderLogicMetadataDao(),
+                    signalsDatabase.getEncodedPayloadDao(),
+                    new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
+                    signalsDatabase.protectedSignalsDao(),
+                    new SignalsScriptEngine(
+                            context,
+                            flags::getEnforceIsolateMaxHeapSize,
+                            flags::getIsolateMaxHeapSizeBytes,
+                            retryStrategy,
+                            devContext),
+                    AdServicesExecutors.getBackgroundExecutor(),
+                    AdServicesExecutors.getLightWeightExecutor(),
+                    DevContextFilter.create(context),
+                    flags,
+                    EnrollmentDao.getInstance(),
+                    Clock.getInstance(),
+                    AdServicesLoggerImpl.getInstance());
         }
-        return sPeriodicEncodingJobWorker;
     }
 
     /** Initiates the encoding of raw signals */

@@ -22,6 +22,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 
 import android.app.job.JobParameters;
@@ -86,6 +87,7 @@ public final class AdServicesJobService extends AbstractJobService {
     // Second batch pilot jobs:
     //     - EpochJobService, job ID = 2.
     //     - BackgroundFetchJobService, job ID = 9.
+    //     - AsyncRegistrationFallbackJobService, job ID = 19.
     @VisibleForTesting
     boolean shouldRescheduleWithLegacyMethod(int jobId) {
         Flags flags = FlagsFactory.getFlags();
@@ -110,6 +112,7 @@ public final class AdServicesJobService extends AbstractJobService {
 
     private boolean isSecondBatchPilotJob(int jobId) {
         return jobId == TOPICS_EPOCH_JOB.getJobId()
-                || jobId == FLEDGE_BACKGROUND_FETCH_JOB.getJobId();
+                || jobId == FLEDGE_BACKGROUND_FETCH_JOB.getJobId()
+                || jobId == MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId();
     }
 }

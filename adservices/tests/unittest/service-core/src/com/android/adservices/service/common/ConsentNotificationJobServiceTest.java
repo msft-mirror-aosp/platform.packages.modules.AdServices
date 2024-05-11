@@ -17,7 +17,7 @@
 package com.android.adservices.service.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -233,7 +233,7 @@ public class ConsentNotificationJobServiceTest {
 
     @Test
     public void testOnStartJobShouldDisableJobTrue_withoutLogging() {
-        mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
         mockBackgroundJobsLoggingKillSwitch(mFlags, /* overrideValue= */ true);
 
         testOnStartJobShouldDisableJobTrue();
@@ -243,7 +243,7 @@ public class ConsentNotificationJobServiceTest {
 
     @Test
     public void testOnStartJobShouldDisableJobTrue_withLoggingEnabled() {
-        mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
         mockBackgroundJobsLoggingKillSwitch(mFlags, /* overrideValue= */ false);
 
         testOnStartJobShouldDisableJobTrue();
@@ -256,7 +256,7 @@ public class ConsentNotificationJobServiceTest {
     /** Test successful onStop method execution. */
     @Test
     public void testOnStopJob_withoutLogging() {
-        mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
         mockBackgroundJobsLoggingKillSwitch(mFlags, /* overrideValue= */ true);
 
         testOnStopJob();
@@ -266,7 +266,7 @@ public class ConsentNotificationJobServiceTest {
 
     @Test
     public void testOnStopJob_withLogging() throws InterruptedException {
-        mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
         mockBackgroundJobsLoggingKillSwitch(mFlags, /* overrideValue= */ false);
         JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 

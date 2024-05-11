@@ -24,8 +24,11 @@ import static org.junit.Assume.assumeTrue;
 import android.app.sdksandbox.hosttestutils.AwaitUtils;
 import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
+import com.android.tradefed.testtype.junit4.AfterClassWithInfo;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
+import com.android.tradefed.testtype.junit4.BeforeClassWithInfo;
 import com.android.tradefed.util.CommandResult;
 import com.android.tradefed.util.CommandStatus;
 
@@ -51,6 +54,18 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
     private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
     private final HashSet<Integer> mOriginalUsers = new HashSet<>();
 
+    /** Root device for all tests. */
+    @BeforeClassWithInfo
+    public static void beforeClassWithDevice(TestInformation testInfo) throws Exception {
+        assertThat(testInfo.getDevice().enableAdbRoot()).isTrue();
+    }
+
+    /** UnRoot device after all tests. */
+    @AfterClassWithInfo
+    public static void afterClassWithDevice(TestInformation testInfo) throws Exception {
+        testInfo.getDevice().disableAdbRoot();
+    }
+
     @Before
     public void setUp() throws Exception {
         assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
@@ -65,8 +80,6 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
         }
 
         mOriginalUsers.addAll(getDevice().listUsers());
-
-        assertThat(getDevice().enableAdbRoot()).isTrue();
     }
 
     @After
@@ -82,7 +95,6 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
         for (String pkg : new String[] {APP_PACKAGE, DEBUGGABLE_APP_PACKAGE}) {
             getDevice().executeShellV2Command(String.format("cmd deviceidle whitelist -%s", pkg));
         }
-        getDevice().disableAdbRoot();
     }
 
     @Test
