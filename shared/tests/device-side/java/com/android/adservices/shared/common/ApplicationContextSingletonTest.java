@@ -22,19 +22,15 @@ import static org.mockito.Mockito.when;
 
 import android.content.Context;
 
+import com.android.adservices.shared.SharedMockitoTestCase;
+
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
-public final class ApplicationContextSingletonTest {
+public final class ApplicationContextSingletonTest extends SharedMockitoTestCase {
 
-    @Rule public final MockitoRule mRule = MockitoJUnit.rule();
-
-    @Mock private Context mContext;
     @Mock private Context mOtherContext;
     @Mock private Context mAppContext;
     @Mock private Context mOtherAppContext;

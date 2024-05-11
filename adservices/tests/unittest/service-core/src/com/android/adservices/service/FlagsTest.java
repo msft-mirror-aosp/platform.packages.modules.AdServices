@@ -402,6 +402,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMsmtEnableSeparateReportTypes() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT",
+                Flags::getMeasurementEnableSeparateReportTypesForAttributionRateLimit);
+    }
+
+    @Test
     public void testGetCustomErrorCodeSamplingEnabled() {
         testFeatureFlag(
                 "DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED",

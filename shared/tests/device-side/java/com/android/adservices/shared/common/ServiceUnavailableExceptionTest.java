@@ -16,11 +16,11 @@
 
 package com.android.adservices.shared.common;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.SharedUnitTestCase;
 
 import org.junit.Test;
 
-public class ServiceUnavailableExceptionTest extends AdServicesUnitTestCase {
+public class ServiceUnavailableExceptionTest extends SharedUnitTestCase {
 
     public static final String ERROR_MESSAGE = "error_message";
 

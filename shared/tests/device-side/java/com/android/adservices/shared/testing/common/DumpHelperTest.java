@@ -22,9 +22,11 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.SharedUnitTestCase;
+
 import org.junit.Test;
 
-public final class DumpHelperTest {
+public final class DumpHelperTest extends SharedUnitTestCase {
 
     @Test
     public void testDump_null() throws Exception {

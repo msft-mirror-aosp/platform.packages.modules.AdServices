@@ -24,7 +24,6 @@ import org.junit.runners.model.Statement;
 import java.util.List;
 import java.util.Objects;
 
-// TODO(b/328682831): add unit tests
 /** Base class providing common functionatlities to all rules. */
 abstract class AbstractRule implements TestRule {
 
@@ -53,7 +52,7 @@ abstract class AbstractRule implements TestRule {
      * @param errors where errors throwing by {@code r} would go to.
      * @param r what to run
      */
-    protected void runSafely(List<Throwable> errors, Runnable r) {
+    protected final void runSafely(List<Throwable> errors, Runnable r) {
         try {
             r.run();
         } catch (Throwable e) {
@@ -63,7 +62,13 @@ abstract class AbstractRule implements TestRule {
     }
 
     /** Gets a user-friendly name of a test method. */
-    protected String getTestName(Description description) {
-        return description.getDisplayName();
+    protected final String getTestName(Description test) {
+        // TODO(b/315339283): copied from TestHelper.java, which is on device side, should reuse
+        StringBuilder testName = new StringBuilder(test.getTestClass().getSimpleName());
+        String methodName = test.getMethodName();
+        if (methodName != null) {
+            testName.append('#').append(methodName).append("()");
+        }
+        return testName.toString();
     }
 }

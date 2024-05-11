@@ -27,7 +27,7 @@ import static org.mockito.Mockito.spy;
 
 import android.content.Context;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.spe.JobServiceConstants.JobEnablementStatus;
 import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
 
@@ -37,7 +37,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.Test;
 
 /** Unit tests for default methods in {@link JobWorker}. */
-public final class JobWorkerTest extends AdServicesMockitoTestCase {
+public final class JobWorkerTest extends SharedMockitoTestCase {
     private static final JobWorker sJobWorker =
             new JobWorker() {
                 @Override

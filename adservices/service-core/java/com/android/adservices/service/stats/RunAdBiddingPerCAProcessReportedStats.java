@@ -63,22 +63,6 @@ public abstract class RunAdBiddingPerCAProcessReportedStats {
     /** @return the runBidding() result code. */
     public abstract int getRunBiddingResultCode();
 
-    /**
-     * @return the runAdBiddingPerCaReturnedAdCost.
-     */
-    public abstract boolean getRunAdBiddingPerCaReturnedAdCost();
-
-    /**
-     * @return the generateBidBuyerAdditionalSignalsContainedDataVersion.
-     */
-    public abstract boolean getGenerateBidBuyerAdditionalSignalsContainedDataVersion();
-
-    /**
-     * @return the GenerateBid JsScript result code.
-     */
-    @AdsRelevanceStatusUtils.JsRunStatus
-    public abstract int getGenerateBidJsScriptResultCode();
-
     /** @return generic builder. */
     static Builder builder() {
         return new AutoValue_RunAdBiddingPerCAProcessReportedStats.Builder();
@@ -114,13 +98,6 @@ public abstract class RunAdBiddingPerCAProcessReportedStats {
         abstract Builder setRunBiddingLatencyInMillis(int value);
 
         abstract Builder setRunBiddingResultCode(int value);
-
-        abstract Builder setRunAdBiddingPerCaReturnedAdCost(boolean value);
-
-        abstract Builder setGenerateBidBuyerAdditionalSignalsContainedDataVersion(boolean value);
-
-        abstract Builder setGenerateBidJsScriptResultCode(
-                @AdsRelevanceStatusUtils.JsRunStatus int value);
 
         abstract RunAdBiddingPerCAProcessReportedStats build();
     }

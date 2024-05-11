@@ -43,7 +43,7 @@ java_library {
     apex_available: [
         "com.android.adservices",
         "com.android.extservices",
-        "com.android.ondevicepersonalization"
+        "com.android.ondevicepersonalization",
     ],
 }
 
@@ -53,7 +53,7 @@ java_library {
     sdk_version: "module_current",
     srcs: [
         "java/com/android/adservices/shared/errorlogging/*.java",
-        ":statslog-adservices-java-gen"
+        ":statslog-adservices-java-gen",
     ],
     static_libs: [
         "adservices-shared-util",
@@ -70,8 +70,8 @@ java_library {
     ],
     plugins: [
         "auto_value_plugin",
-        "auto_annotation_plugin"
-     ],
+        "auto_annotation_plugin",
+    ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
@@ -80,7 +80,7 @@ java_library {
     apex_available: [
         "com.android.adservices",
         "com.android.extservices",
-        "com.android.ondevicepersonalization"
+        "com.android.ondevicepersonalization",
     ],
 }
 
@@ -106,8 +106,8 @@ java_library {
     ],
     plugins: [
         "auto_value_plugin",
-        "auto_annotation_plugin"
-     ],
+        "auto_annotation_plugin",
+    ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
@@ -116,7 +116,7 @@ java_library {
     apex_available: [
         "com.android.adservices",
         "com.android.extservices",
-        "com.android.ondevicepersonalization"
+        "com.android.ondevicepersonalization",
     ],
 }
 
@@ -131,7 +131,7 @@ java_library {
     srcs: [
         "java/com/android/adservices/shared/common/**/*.java",
     ],
-    exclude_srcs : [
+    exclude_srcs: [
         "java/com/android/adservices/shared/common/ServiceUnavailableException.java",
     ],
     static_libs: [
@@ -145,7 +145,7 @@ java_library {
     apex_available: [
         "com.android.adservices",
         "com.android.extservices",
-        "com.android.ondevicepersonalization"
+        "com.android.ondevicepersonalization",
     ],
 }
 
@@ -159,7 +159,7 @@ java_library {
     apex_available: [
         "com.android.adservices",
         "com.android.extservices",
-        "com.android.ondevicepersonalization"
+        "com.android.ondevicepersonalization",
     ],
 }
 
@@ -190,7 +190,11 @@ java_library {
     libs: [
         "framework-annotations-lib",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
 }
 
 java_library {
@@ -199,7 +203,7 @@ java_library {
     sdk_version: "module_current",
     srcs: [
         "java/com/android/adservices/shared/testing/**/*.java",
-         ":adservices-shared-sideless-testing-sources",
+        ":adservices-shared-sideless-testing-sources",
     ],
     static_libs: [
         // TODO(b/338132355): use defaults instead?
@@ -219,7 +223,7 @@ java_library {
     apex_available: [
         "com.android.adservices",
         "com.android.extservices",
-        "com.android.ondevicepersonalization"
+        "com.android.ondevicepersonalization",
     ],
 }
 
@@ -228,17 +232,41 @@ java_library {
     min_sdk_version: "30",
     sdk_version: "module_current",
     srcs: [
+        // TODO(b/338132355): might be better to split into separate mockers:
+
+        // Base classes
+        "java/com/android/adservices/mockito/AbstractMocker.java",
+        "java/com/android/adservices/mockito/AbstractStaticMocker.java",
+        "java/com/android/adservices/mockito/StaticClassChecker.java",
+
+        // AndroidStaticMocker
+        "java/com/android/adservices/mockito/AndroidStaticMocker.java",
+        "java/com/android/adservices/mockito/AndroidExtendedMockitoMocker.java",
         "java/com/android/adservices/mockito/LogInterceptor.java",
-        // TODO(b/338132355): might be better to use adservices-shared-testing
-        // (or split it) instead of including LogEntry directly
-        "java/com/android/adservices/shared/testing/LogEntry.java",
+
+        // SharedMocker
+        "java/com/android/adservices/mockito/SharedMocker.java",
+        "java/com/android/adservices/mockito/SharedMockitoMocker.java",
     ],
     libs: [
         "framework-annotations-lib", // for @Nullable
     ],
     static_libs: [
+        "error_prone_annotations", // for @FormatMethod
+        "guava", // for ImmutableSet
+        "modules-utils-build", // for SdkLevel
         "mockito-target-extended-minus-junit4",
         "modules-utils-preconditions",
+
+        // TODO(b/338132355): might be better to split into separate mockers
+
+        // Need by SharedMocker.java
+        "adservices-shared-common",
+        "adservices-shared-spe",
+        "adservices-shared-testing",
+
+        // Need by AndroidStaticMocker.java
+        // "adservices-shared-testing",
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
@@ -248,7 +276,7 @@ java_library {
     apex_available: [
         "com.android.adservices",
         "com.android.extservices",
-        "com.android.ondevicepersonalization"
+        "com.android.ondevicepersonalization",
     ],
 }
 
@@ -300,6 +328,6 @@ java_library {
     apex_available: [
         "com.android.adservices",
         "com.android.extservices",
-        "com.android.ondevicepersonalization"
+        "com.android.ondevicepersonalization",
     ],
 }

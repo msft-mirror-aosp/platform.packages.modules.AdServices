@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -28,7 +29,7 @@ import java.util.Map;
 public interface BuyerContextualSignalsDataVersionFetcher {
     /** Gets {@link BuyerContextualSignals} for {@code generateBid} */
     @NonNull
-    BuyerContextualSignals getContextualSignalsForGenerateBid(
+    AdSelectionSignals getContextualSignalsForGenerateBid(
             @NonNull DBTrustedBiddingData trustedBiddingData,
             @NonNull Map<Uri, TrustedBiddingResponse> trustedBiddingDataByBaseUri);
 

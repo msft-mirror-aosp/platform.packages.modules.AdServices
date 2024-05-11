@@ -17,33 +17,26 @@ package com.android.adservices.mockito;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
-import android.app.ActivityManager;
-import android.os.Binder;
-import android.os.Process;
-import android.util.Log;
 
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.testing.LogEntry.Level;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
-import com.android.modules.utils.build.SdkLevel;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
-
-import java.util.Objects;
-
-public final class AdServicesExtendedMockitoMockerImpl implements AdServicesExtendedMockitoMocker {
-
-    private static final String TAG = AdServicesExtendedMockitoMocker.class.getSimpleName();
-
-    private final StaticClassChecker mStaticClassChecker;
+// TODO(b/324919960): add unit test
+/**
+ * {@link AdServicesExtendedMockitoMocker} implementation that uses {@code ExtendedMockito}.
+ *
+ * <p><b>NOTE: </b> most expectations require {@code spyStatic()} or {@code mockStatic()} in the
+ * {@link com.android.dx.mockito.inline.extended.StaticMockitoSession session} ahead of time - this
+ * helper doesn't check that such calls were made, it's up to the caller to do so.
+ */
+public final class AdServicesExtendedMockitoMockerImpl extends AbstractStaticMocker
+        implements AdServicesExtendedMockitoMocker {
 
     public AdServicesExtendedMockitoMockerImpl(StaticClassChecker staticClassChecker) {
-        mStaticClassChecker = Objects.requireNonNull(staticClassChecker);
+        super(staticClassChecker);
     }
 
     @Override
@@ -56,74 +49,6 @@ public final class AdServicesExtendedMockitoMockerImpl implements AdServicesExte
     @Override
     public void mockGetFlagsForTesting() {
         mockGetFlags(FakeFlagsFactory.getFlagsForTest());
-    }
-
-    @Override
-    public void mockGetCallingUidOrThrow(int uid) {
-        logV("mockGetCallingUidOrThrow(%d)", uid);
-        mockBinderGetCallingUidOrThrow(uid);
-    }
-
-    @Override
-    public void mockGetCallingUidOrThrow() {
-        int uid = Process.myUid();
-        logV("mockGetCallingUidOrThrow(Process.myUid=%d)", uid);
-        mockBinderGetCallingUidOrThrow(uid);
-    }
-
-    @Override
-    public void mockIsAtLeastR(boolean isIt) {
-        logV("mockIsAtLeastR(%b)", isIt);
-        assertSpiedOrMocked(SdkLevel.class);
-        doReturn(isIt).when(SdkLevel::isAtLeastR);
-    }
-
-    @Override
-    public void mockIsAtLeastS(boolean isIt) {
-        logV("mockIsAtLeastS(%b)", isIt);
-        assertSpiedOrMocked(SdkLevel.class);
-        doReturn(isIt).when(SdkLevel::isAtLeastS);
-    }
-
-    @Override
-    public void mockIsAtLeastT(boolean isIt) {
-        logV("mockIsAtLeastT(%b)", isIt);
-        assertSpiedOrMocked(SdkLevel.class);
-        doReturn(isIt).when(SdkLevel::isAtLeastT);
-    }
-
-    @Override
-    public void mockSdkLevelR() {
-        logV("mockSdkLevelR()");
-        assertSpiedOrMocked(SdkLevel.class);
-        doReturn(true).when(SdkLevel::isAtLeastR);
-        doReturn(false).when(SdkLevel::isAtLeastS);
-        doReturn(false).when(SdkLevel::isAtLeastSv2);
-        doReturn(false).when(SdkLevel::isAtLeastT);
-        doReturn(false).when(SdkLevel::isAtLeastU);
-    }
-
-    @Override
-    public void mockGetCurrentUser(int user) {
-        logV("mockGetCurrentUser(user=%d)", user);
-        assertSpiedOrMocked(ActivityManager.class);
-        doReturn(user).when(ActivityManager::getCurrentUser);
-    }
-
-    @Override
-    public LogInterceptor interceptLogV(String tag) {
-        logV("interceptLogV(%s)", tag);
-        assertSpiedOrMocked(Log.class);
-
-        return LogInterceptor.forTagAndLevels(tag, Level.VERBOSE);
-    }
-
-    @Override
-    public LogInterceptor interceptLogE(String tag) {
-        logV("interceptLogE(%s)", tag);
-        assertSpiedOrMocked(Log.class);
-
-        return LogInterceptor.forTagAndLevels(tag, Level.ERROR);
     }
 
     @Override
@@ -140,57 +65,4 @@ public final class AdServicesExtendedMockitoMockerImpl implements AdServicesExte
         assertSpiedOrMocked(AdServicesJobServiceFactory.class);
         doReturn(mockedAdServicesJobServiceFactory).when(AdServicesJobServiceFactory::getInstance);
     }
-
-    // NOTE: current tests are only intercepting v and e, but we could add more methods on demand
-    // (even one that takes Level...levels)
-
-    @FormatMethod
-    private void logV(@FormatString String fmt, Object... args) {
-        Log.v(TAG, "on " + mStaticClassChecker.getTestName() + ": " + String.format(fmt, args));
-    }
-
-    // mock only, don't log
-    private void mockBinderGetCallingUidOrThrow(int uid) {
-        assertSpiedOrMocked(Binder.class);
-        doReturn(uid).when(Binder::getCallingUidOrThrow);
-    }
-
-    private void assertSpiedOrMocked(Class<?> clazz) {
-        if (!mStaticClassChecker.isSpiedOrMocked(clazz)) {
-            throw new IllegalStateException(
-                    "Test doesn't static spy or mock "
-                            + clazz
-                            + ", only: "
-                            + mStaticClassChecker.getSpiedOrMockedClasses());
-        }
-    }
-
-    /** Trivial Javadoc used to make checkstyle happy. */
-    public interface StaticClassChecker {
-
-        /** Trivial Javadoc used to make checkstyle happy. */
-        default String getTestName() {
-            return "N/A";
-        }
-
-        /** Trivial Javadoc used to make checkstyle happy. */
-        default boolean isSpiedOrMocked(Class<?> clazz) {
-            Log.d(
-                    TAG,
-                    "isSpiedOrMocked("
-                            + clazz.getSimpleName()
-                            + "): always returning true on default StaticClassChecker");
-            return true;
-        }
-
-        /** Trivial Javadoc used to make checkstyle happy. */
-        default ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
-            Log.d(
-                    TAG,
-                    "getSpiedOrMockedClasses(): always returning empty on default"
-                            + " StaticClassChecker");
-            return ImmutableSet.of();
-        }
-    }
-
 }

@@ -17,7 +17,6 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
 
@@ -1230,44 +1229,6 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
-    public void testGenerateBidJsReferenceError() {
-        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
-        // Logger calls come after the callback is returned
-        CountDownLatch loggerLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            loggerLatch.countDown();
-                            return null;
-                        })
-                .when(mRunAdBiddingPerCAExecutionLoggerMock)
-                .endGenerateBids();
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                generateBids(
-                                        "function generateBid(ad, auction_signals,"
-                                            + " per_buyer_signals, trusted_bidding_signals,"
-                                            + " contextual_signals, custom_audience_signals) { \n"
-                                            + " if (unknown > 2) return {'status': 0, 'ad': ad };\n"
-                                            + " else return {'status': 0, 'ad': ad, 'bid': 10 };\n"
-                                            + "}",
-                                        AD_DATA_WITH_DOUBLE_RESULT_LIST,
-                                        AdSelectionSignals.EMPTY,
-                                        AdSelectionSignals.EMPTY,
-                                        AdSelectionSignals.EMPTY,
-                                        AdSelectionSignals.EMPTY,
-                                        CUSTOM_AUDIENCE_SIGNALS_1));
-
-        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
-        verify(mRunAdBiddingPerCAExecutionLoggerMock)
-                .setGenerateBidJsScriptResultCode(JS_RUN_STATUS_JS_REFERENCE_ERROR);
-
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
-        Assert.assertTrue(exception.getCause() instanceof JSExecutionException);
-    }
-
-    @Test
     public void testScoreAdsSuccessfulCase() throws Exception {
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
@@ -1601,43 +1562,6 @@ public class AdSelectionScriptEngineTest {
                 .containsExactly("", "");
         verify(mAdSelectionExecutionLoggerMock).startScoreAds();
         verify(mAdSelectionExecutionLoggerMock).endScoreAds();
-    }
-
-    @Test
-    public void testScoreAdsJsReferenceError() {
-        doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
-        // Logger calls come after the callback is returned
-        CountDownLatch loggerLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            loggerLatch.countDown();
-                            return null;
-                        })
-                .when(mAdSelectionExecutionLoggerMock)
-                .endScoreAds();
-        Exception exception =
-                Assert.assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                scoreAds(
-                                        "function scoreAd(ad, bid, auction_config, seller_signals,"
-                                                + " trusted_scoring_signals, contextual_signal,"
-                                                + " user_signal, custom_audience_signal) { \n"
-                                                + "  return {'status': unknown, 'score': bid };\n"
-                                                + "}",
-                                        AD_WITH_BID_LIST,
-                                        anAdSelectionConfig(),
-                                        AdSelectionSignals.EMPTY,
-                                        AdSelectionSignals.EMPTY,
-                                        AdSelectionSignals.EMPTY,
-                                        CUSTOM_AUDIENCE_SIGNALS_LIST));
-
-        verify(mAdSelectionExecutionLoggerMock).startScoreAds();
-        verify(mAdSelectionExecutionLoggerMock)
-                .setScoreAdJsScriptResultCode(JS_RUN_STATUS_JS_REFERENCE_ERROR);
-
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
-        Assert.assertTrue(exception.getCause() instanceof JSExecutionException);
     }
 
     @Test

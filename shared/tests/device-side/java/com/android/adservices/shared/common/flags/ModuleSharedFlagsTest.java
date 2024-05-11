@@ -22,10 +22,12 @@ import static com.android.adservices.shared.common.flags.ModuleSharedFlags.ENCOD
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.adservices.shared.SharedUnitTestCase;
+
 import org.junit.Test;
 
 /** Unit tests for {@link ModuleSharedFlags}. */
-public final class ModuleSharedFlagsTest {
+public final class ModuleSharedFlagsTest extends SharedUnitTestCase {
     private static final ModuleSharedFlags sFlags = new ModuleSharedFlags() {};
 
     @Test

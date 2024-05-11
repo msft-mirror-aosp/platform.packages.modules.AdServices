@@ -24,8 +24,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.util.Log;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.LogInterceptor;
+import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.testing.LogEntry.Level;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -33,7 +33,7 @@ import org.junit.Test;
 
 import java.util.NoSuchElementException;
 
-public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
+public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
 
     private static final int TIMEOUT_MS = 200;
 

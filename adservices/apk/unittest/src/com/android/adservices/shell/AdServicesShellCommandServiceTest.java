@@ -33,8 +33,6 @@ public final class AdServicesShellCommandServiceTest extends AdServicesExtendedM
 
     @Mock private Flags mMockFlags;
 
-    // TODO(b/308009734): Move this to separate constants class as this will also be used by the
-    //  AdServicesShellCommandHelper
     private static final String ACTION_SHELL_COMMAND_SERVICE =
             "android.adservices.SHELL_COMMAND_SERVICE";
 

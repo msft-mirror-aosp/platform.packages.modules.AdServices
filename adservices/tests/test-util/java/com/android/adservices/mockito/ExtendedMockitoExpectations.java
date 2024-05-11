@@ -40,7 +40,6 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoMockerImpl.StaticClassChecker;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;

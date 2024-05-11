@@ -19,8 +19,6 @@ package com.android.adservices.shared.spe.framework;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_ON_STOP_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
-import static com.android.adservices.shared.mockito.MockitoExpectations.syncJobServiceOnJobFinished;
-import static com.android.adservices.shared.mockito.MockitoExpectations.syncRecordOnStopJob;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SKIP_REASON_JOB_NOT_CONFIGURED;
@@ -49,7 +47,7 @@ import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
@@ -72,7 +70,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link AbstractJobService}. */
-public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
+public final class AbstractJobServiceTest extends SharedMockitoTestCase {
     // This is used to schedule a job with a latency before its execution. Use a large value so that
     // the job can NOT execute.
     private static final int EXECUTION_CANNOT_START_LATENCY_MS = 24 * 60 * 60 * 1000;
@@ -152,7 +150,7 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
                 .getExecutionFuture(
                         eq(mSpyJobService), any()); // PersistableBundle doesn't implement equals.
         doReturn(JOB_ENABLED_STATUS_ENABLED).when(mMockJobWorker).getJobEnablementStatus();
-        JobServiceCallback callback = syncJobServiceOnJobFinished(mSpyJobService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyJobService);
 
         assertWithMessage("The execution succeeding")
                 .that(mSpyJobService.onStartJob(mMockParameters))
@@ -190,7 +188,7 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
 
     @Test
     public void testSkipAndCancelBackgroundJob() throws Exception {
-        JobServiceCallback callback = syncJobServiceOnJobFinished(mSpyJobService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyJobService);
 
         JobInfo jobInfo =
                 new JobInfo.Builder(JOB_ID_1, new ComponentName(sContext, TestJobService.class))
@@ -352,7 +350,7 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
         doReturn(new BackoffPolicy.Builder().setShouldRetryOnExecutionFailure(shouldRetry).build())
                 .when(mMockJobWorker)
                 .getBackoffPolicy();
-        JobServiceCallback callback = syncJobServiceOnJobFinished(mSpyJobService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyJobService);
 
         assertWithMessage("Job Execution for job with id=%s", JOB_ID_1)
                 .that(mSpyJobService.onStartJob(mMockParameters))
@@ -419,7 +417,7 @@ public final class AbstractJobServiceTest extends AdServicesMockitoTestCase {
                         },
                         mFactory.getBackgroundExecutor());
         mSpyJobService.mRunningFuturesMap.put(JOB_ID_1, mockRunningFuture);
-        JobServiceLoggingCallback callback = syncRecordOnStopJob(mMockLogger);
+        JobServiceLoggingCallback callback = mocker.syncRecordOnStopJob(mMockLogger);
 
         assertWithMessage("onStopJob()")
                 .that(mSpyJobService.onStopJob(mMockParameters))

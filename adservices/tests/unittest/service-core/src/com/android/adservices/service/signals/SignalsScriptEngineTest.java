@@ -52,6 +52,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -181,6 +182,7 @@ public class SignalsScriptEngineTest {
 
         String encodeSignalsJS =
                 String.format(
+                        Locale.ENGLISH,
                         "function encodeSignals(signals, maxSize) {\n"
                                 + "  // returning error if the creation time name of the only "
                                 + "  // signal is correct\n"

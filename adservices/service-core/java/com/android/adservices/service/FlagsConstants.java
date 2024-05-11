@@ -984,25 +984,12 @@ public final class FlagsConstants {
     public static final String KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS =
             "consent_notification_minimal_delay_before_interval_ends";
 
-    // Consent Notification debug mode keys.
-    public static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE =
-            "consent_notification_debug_mode";
-
     public static final String KEY_CONSENT_MANAGER_LAZY_ENABLE_MODE =
             "consent_manager_lazy_enable_mode";
-
-    public static final String KEY_CONSENT_NOTIFIED_DEBUG_MODE = "consent_notified_debug_mode";
-
-    // Consent Manager debug mode keys.
-    public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
     // Rvc post ota notification age check keys.
     public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
             "rvc_post_ota_notification_age_check";
-
-    // Consent notification activity debug mode keys.
-    public static final String KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE =
-            "consent_notification_activity_debug_mode";
 
     // Source of truth to get consent for PPAPI
     public static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
@@ -1296,6 +1283,10 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK =
             "measurement_enable_navigation_reporting_origin_check";
+
+    public static final String
+            KEY_MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT =
+                    "measurement_enable_separate_report_types_for_attribution_rate_limit";
 
     public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE =
             "measurement_max_attribution_scopes_per_source";

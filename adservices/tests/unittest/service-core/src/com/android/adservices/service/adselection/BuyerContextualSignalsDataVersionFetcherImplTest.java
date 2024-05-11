@@ -85,20 +85,16 @@ public class BuyerContextualSignalsDataVersionFetcherImplTest {
                         .toAdSelectionSignals();
         assertEquals(
                 expected,
-                BUYER_CONTEXTUAL_SIGNALS_DATA_VERSION_FETCHER
-                        .getContextualSignalsForGenerateBid(
-                                TRUSTED_BIDDING_DATA, MAP_WITH_DATA_VERSION_HEADER)
-                        .toAdSelectionSignals());
+                BUYER_CONTEXTUAL_SIGNALS_DATA_VERSION_FETCHER.getContextualSignalsForGenerateBid(
+                        TRUSTED_BIDDING_DATA, MAP_WITH_DATA_VERSION_HEADER));
     }
 
     @Test
     public void testGetContextualSignalsGenerateBidWithoutDataVersionHeaderReturnsEmpty() {
         assertEquals(
                 AdSelectionSignals.EMPTY,
-                BUYER_CONTEXTUAL_SIGNALS_DATA_VERSION_FETCHER
-                        .getContextualSignalsForGenerateBid(
-                                TRUSTED_BIDDING_DATA, MAP_WITHOUT_DATA_VERSION_HEADER)
-                        .toAdSelectionSignals());
+                BUYER_CONTEXTUAL_SIGNALS_DATA_VERSION_FETCHER.getContextualSignalsForGenerateBid(
+                        TRUSTED_BIDDING_DATA, MAP_WITHOUT_DATA_VERSION_HEADER));
     }
 
     @Test
