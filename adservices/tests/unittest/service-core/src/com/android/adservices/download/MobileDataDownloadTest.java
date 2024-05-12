@@ -67,6 +67,7 @@ import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStora
 import com.google.android.libraries.mobiledatadownload.monitor.NetworkUsageMonitor;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.mobiledatadownload.ClientConfigProto;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 import com.google.mobiledatadownload.DownloadConfigProto.DataFile;
 import com.google.mobiledatadownload.DownloadConfigProto.DataFileGroup;
@@ -80,6 +81,7 @@ import org.mockito.Mock;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /** Unit tests for {@link MobileDataDownloadFactory} */
 @RequiresSdkLevelAtLeastS
@@ -119,7 +121,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2998/b35ed340576e8a72385af87b95f1f526abdb7f5f";
     private static final String PRODUCTION_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/3210/0c19c2a06422c21070192580a136d433ba3ae7f8";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/4543/e9d118728752e6a6bfb5d7d8d1520807591f0717";
 
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
@@ -296,7 +298,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                         .get();
 
         assertThat(clientFileGroup).isNotNull();
-        verifyEncryptionKeysFileGroup(clientFileGroup, /* NumberOfKeysOnTestUrl */ 3);
+        verifyEncryptionKeysFileGroup(clientFileGroup, /* NumberOfKeysOnTestUrl */ 2);
     }
 
     /** Test disabling the feature flag does not create the manifest for download. */
@@ -810,7 +812,13 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             throws InterruptedException, ExecutionException {
         expect.that(clientFileGroup.getGroupName()).isEqualTo(ENCRYPTION_KEYS_FILE_GROUP_NAME);
         expect.that(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
-        expect.that(clientFileGroup.getFileCount()).isEqualTo(1);
+        // Number of enrollment ids with provided encryption keys.
+        expect.that(clientFileGroup.getFileCount()).isEqualTo(numberOfExpectedKeys);
+        expect.that(
+                        clientFileGroup.getFileList().stream()
+                                .map(ClientConfigProto.ClientFile::getFileId)
+                                .collect(Collectors.toList()))
+                .containsExactly("E4.json", "ptb.json");
         expect.that(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
 
         doReturn(mMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
