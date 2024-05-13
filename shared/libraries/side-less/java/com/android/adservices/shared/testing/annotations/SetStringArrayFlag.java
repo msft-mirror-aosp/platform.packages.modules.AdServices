@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,17 +23,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicates that a specific test with a string flag is set with the specified value.
+ * Indicates that a specific test with a string array flag is set with the specified value.
  *
  * <p>This should be used with {@code AdServicesFlagsSetterRule}.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
-@Repeatable(SetStringFlags.class)
-public @interface SetStringFlag {
+@Repeatable(SetStringArrayFlags.class)
+public @interface SetStringArrayFlag {
     /** Name of the flag. */
     String name();
 
+    /** String used to separate the array elements (in the underlying flag sysstem). */
+    String separator() default ",";
+
     /** Value the flag will be set to when the test is running */
-    String value();
+    String[] value();
 }

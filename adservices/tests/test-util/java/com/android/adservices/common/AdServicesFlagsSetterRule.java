@@ -44,6 +44,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAG
 
 import android.os.Build;
 
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import com.android.adservices.experimental.AbstractFlagsRouletteRunner;
 import com.android.adservices.experimental.AbstractFlagsRouletteRunner.FlagsRouletteState;
 import com.android.adservices.service.Flags;
@@ -155,6 +157,11 @@ public final class AdServicesFlagsSetterRule
     }
 
     // NOTE: add more factory methods as needed
+
+    @Override
+    protected String getTestPackageName() {
+        return InstrumentationRegistry.getInstrumentation().getTargetContext().getPackageName();
+    }
 
     @Override
     protected int getDeviceSdk() {
