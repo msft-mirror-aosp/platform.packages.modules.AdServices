@@ -344,7 +344,7 @@ public class AdSelectionManagerTest {
         assertThat(outcomeReceiver.getResult().getAdSelectionId()).isEqualTo(expectedAdSelectionId);
 
         byte[] result = outcomeReceiver.getResult().getAdSelectionData();
-        assertThat(result.length).isEqualTo(expectedByteArray.length);
+        assertThat(result).hasLength(expectedByteArray.length);
         assertArrayEquals(expectedByteArray, result);
     }
 

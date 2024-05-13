@@ -98,7 +98,7 @@ public final class UpdateSignalsInputTest extends AdServicesUnitTestCase {
     public void testNewArray() {
         int arrayLength = 5;
         UpdateSignalsInput[] array = UpdateSignalsInput.CREATOR.newArray(arrayLength);
-        assertThat(array.length).isEqualTo(arrayLength);
+        assertThat(array).hasLength(arrayLength);
     }
 
     @Test
