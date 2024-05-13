@@ -21,11 +21,13 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
+import com.android.adservices.service.signals.SignalsProviderImpl;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -36,13 +38,16 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SignalsShellCommandFactory implements ShellCommandFactory {
-    public static final String COMMAND_PREFIX = "app_signals";
+    public static final String COMMAND_PREFIX = "app-signals";
     private final Map<String, ShellCommand> mAllCommandsMap;
     private final boolean mIsSignalsCliEnabled;
 
-    public SignalsShellCommandFactory(boolean isSignalsCliEnabled) {
+    public SignalsShellCommandFactory(
+            boolean isSignalsCliEnabled, ProtectedSignalsDao protectedSignalsDao) {
         mIsSignalsCliEnabled = isSignalsCliEnabled;
-        Set<ShellCommand> allCommandsMap = ImmutableSet.of(new GenerateInputForEncodingCommand());
+        Set<ShellCommand> allCommandsMap =
+                ImmutableSet.of(new GenerateInputForEncodingCommand(
+                        new SignalsProviderImpl(protectedSignalsDao)));
         mAllCommandsMap =
                 allCommandsMap.stream()
                         .collect(
@@ -53,8 +58,10 @@ public class SignalsShellCommandFactory implements ShellCommandFactory {
     /**
      * @return an instance of the {@link SignalsShellCommandFactory}.
      */
-    public static ShellCommandFactory getInstance(DebugFlags debugFlags) {
-        return new SignalsShellCommandFactory(debugFlags.getProtectedAppSignalsCommandsEnabled());
+    public static ShellCommandFactory getInstance(
+            DebugFlags debugFlags, ProtectedSignalsDao protectedSignalsDao) {
+        return new SignalsShellCommandFactory(
+                debugFlags.getProtectedAppSignalsCommandsEnabled(), protectedSignalsDao);
     }
 
     @Nullable

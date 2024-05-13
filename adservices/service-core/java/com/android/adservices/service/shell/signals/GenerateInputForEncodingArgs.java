@@ -17,5 +17,7 @@
 package com.android.adservices.service.shell.signals;
 
 public class GenerateInputForEncodingArgs {
+    static final int ARG_PARSE_START_INDEX = 2;
+
     public static final String BUYER = "--buyer";
 }
