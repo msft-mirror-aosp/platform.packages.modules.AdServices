@@ -16,6 +16,9 @@
 
 package android.sdksandbox.test.scenario.testsdk;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import android.os.Bundle;
 
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -24,6 +27,7 @@ import androidx.test.uiautomator.Until;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 /** Utility class to help do operations for the client app. */
@@ -31,6 +35,12 @@ final class ClientAppUtils {
     private final UiDevice mUiDevice;
     private final String mPackageName;
     private final String mActivityName;
+    private final Map<String, Boolean> mClientArgBundle = new HashMap<>();
+
+    private static final String CLIENT_APP_PACKAGE_NAME_KEY = "client-app-package-name";
+    private static final String CLIENT_APP_ACTIVITY_NAME_KEY = "client-app-activity-name";
+    // Prefix for matching boolean arguments to pass to client app.
+    private static final String CLIENT_APP_ARG_KEY_PREFIX = "client-app-arg-";
 
     // Client app must use these resource ids for their buttons to be identified in test.
     private static final String INITIALIZE_SDK_BUTTON = "initializeSdkButton";
@@ -43,22 +53,18 @@ final class ClientAppUtils {
 
     public static final String AD_LOADED_BUTTON_TEXT = "Load Ad (Ad loaded)";
 
-    /** Returns the command for stopping the client app with {@code packageName}. */
-    public static String getStopAppCommand(String packageName) {
-        return "am force-stop " + packageName;
+    /** Returns the command for stopping the client app. */
+    public String getStopAppCommand() {
+        return "am force-stop " + mPackageName;
     }
 
-    /**
-     * Returns the command for starting the client app with intent extras.
-     *
-     * @param clientArgs to pass to the client activity as intent extras.
-     */
-    public String getStartAppCommand(Map<String, Boolean> clientArgs) {
+    /** Returns the command for starting the client app with intent extras. */
+    public String getStartAppCommand() {
         final ArrayList<String> commandFragments =
                 new ArrayList<>(
                         Arrays.asList("am", "start", "-n", mPackageName + "/" + mActivityName));
 
-        for (Map.Entry<String, Boolean> argEntry : clientArgs.entrySet()) {
+        for (Map.Entry<String, Boolean> argEntry : mClientArgBundle.entrySet()) {
             commandFragments.add("--ez");
             commandFragments.add(argEntry.getKey());
             commandFragments.add(String.valueOf(argEntry.getValue()));
@@ -88,12 +94,13 @@ final class ClientAppUtils {
                 Until.findObject(By.res(mPackageName, LOAD_AD_BUTTON)), UI_NAVIGATION_WAIT_MS);
     }
 
-    // TODO: b/330389288 - make button required after updating client apps.
-    /** Initializes SDK by finding the initializeSdk button and clicking on it, if it exists. */
+    /** Initializes SDK by finding the initializeSdk button and clicking on it. */
     public void initializeSdk() throws InterruptedException {
         UiObject2 initializeSdkButton = getInitializeSdkButton();
         if (initializeSdkButton != null) {
             initializeSdkButton.click();
+        } else {
+            throw new RuntimeException("Did not find 'Initialize' button.");
         }
         assertInitialized();
     }
@@ -139,16 +146,36 @@ final class ClientAppUtils {
         throw new AssertionError("Ad not loaded");
     }
 
+    /** Gets the client app package name. */
+    String getClientPackageName() {
+        return mPackageName;
+    }
+
     /**
      * Constructor for {@link ClientAppUtils}.
      *
      * @param uiDevice is the device that is being used.
-     * @param packageName is the package name for the client app.
-     * @param activityName is the activity name to start for the test.
+     * @param argsBundle is the package name for the client app.
      */
-    ClientAppUtils(UiDevice uiDevice, String packageName, String activityName) {
-        this.mUiDevice = uiDevice;
-        this.mPackageName = packageName;
-        this.mActivityName = activityName;
+    ClientAppUtils(UiDevice uiDevice, Bundle argsBundle) {
+        assertThat(uiDevice).isNotNull();
+        assertThat(argsBundle).isNotNull();
+
+        mUiDevice = uiDevice;
+        mPackageName = argsBundle.getString(CLIENT_APP_PACKAGE_NAME_KEY);
+        assertThat(mPackageName).isNotNull();
+        mActivityName = argsBundle.getString(CLIENT_APP_ACTIVITY_NAME_KEY);
+        assertThat(mActivityName).isNotNull();
+        extractExtraClientArguments(argsBundle);
+    }
+
+    private void extractExtraClientArguments(Bundle argsBundle) {
+        for (String argKey : argsBundle.keySet()) {
+            if (argKey.startsWith(CLIENT_APP_ARG_KEY_PREFIX)) {
+                mClientArgBundle.put(
+                        argKey.substring(CLIENT_APP_ARG_KEY_PREFIX.length()),
+                        Boolean.parseBoolean(argsBundle.getString(argKey)));
+            }
+        }
     }
 }

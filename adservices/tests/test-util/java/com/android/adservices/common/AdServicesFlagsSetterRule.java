@@ -82,6 +82,8 @@ public final class AdServicesFlagsSetterRule
     /** Factory method that sets default flags required to enable K-Anon functionality. */
     public static AdServicesFlagsSetterRule forKAnonEnabledTests() {
         return new AdServicesFlagsSetterRule()
+                .withDefaultLogcatTags()
+                .setLogcatTag(LOGCAT_TAG_FLEDGE, LOGCAT_LEVEL_VERBOSE)
                 .setLogcatTag(LOGCAT_TAG_KANON, LOGCAT_LEVEL_VERBOSE)
                 .setFlag(KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE, true)
                 .setFlag(KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE, true)
