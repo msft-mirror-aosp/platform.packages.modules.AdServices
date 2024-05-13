@@ -217,47 +217,6 @@ public class ConsentManager {
     @NonNull
     public static ConsentManager getInstance() {
         Context context = ApplicationContextSingleton.get();
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            ConsentManagerV2.getInstance();
-            int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
-            BooleanFileDatastore datastore = createAndInitializeDataStore(context);
-            AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
-            AppConsentDao appConsentDao = AppConsentDao.getInstance(context);
-            AppSearchConsentManager appSearchConsentManager = null;
-            boolean enableAppsearchConsentData =
-                    FlagsFactory.getFlags().getEnableAppsearchConsentData();
-            if (enableAppsearchConsentData) {
-                appSearchConsentManager = AppSearchConsentManager.getInstance();
-            }
-            AdServicesExtDataStorageServiceManager adServicesExtDataManager = null;
-            boolean enableAdExtServiceConsentData =
-                    FlagsFactory.getFlags().getEnableAdExtServiceConsentData();
-            if (enableAdExtServiceConsentData) {
-                adServicesExtDataManager =
-                        AdServicesExtDataStorageServiceManager.getInstance(context);
-            }
-            sConsentManager =
-                    new ConsentManager(
-                            TopicsWorker.getInstance(context),
-                            appConsentDao,
-                            EnrollmentDao.getInstance(),
-                            MeasurementImpl.getInstance(context),
-                            CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                            SharedStorageDatabase.getInstance(context).appInstallDao(),
-                            ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
-                            SharedStorageDatabase.getInstance(context).frequencyCapDao(),
-                            adServicesManager,
-                            datastore,
-                            appSearchConsentManager,
-                            UserProfileIdManager.getInstance(context),
-                            // TODO(b/260601944): Remove Flag Instance.
-                            UxStatesDao.getInstance(context),
-                            adServicesExtDataManager,
-                            FlagsFactory.getFlags(),
-                            consentSourceOfTruth,
-                            enableAppsearchConsentData,
-                            enableAdExtServiceConsentData);
-        }
 
         Trace.beginSection("ConsentManager#Initialization");
         if (sConsentManager == null) {

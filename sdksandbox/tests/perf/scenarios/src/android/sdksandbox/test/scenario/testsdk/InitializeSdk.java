@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package android.sdksandbox.test.scenario.testsdk;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
-
 import android.os.Bundle;
 import android.platform.test.scenario.annotation.Scenario;
 
@@ -36,7 +35,7 @@ import java.io.IOException;
 
 @Scenario
 @RunWith(JUnit4.class)
-public class LoadAd {
+public class InitializeSdk {
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
     private static final Bundle sArgsBundle = InstrumentationRegistry.getArguments();
     private static final int WAIT_TIME_BEFORE_END_TEST_MS = 3000;
@@ -44,6 +43,7 @@ public class LoadAd {
     protected static String sPackageName;
     private static ClientAppUtils sClientAppUtils;
 
+    /** Set up the arguments used to control the app under test. */
     @BeforeClass
     public static void setupArguments() {
         sClientAppUtils = new ClientAppUtils(sUiDevice, sArgsBundle);
@@ -60,12 +60,11 @@ public class LoadAd {
     @Before
     public void setup() throws Exception {
         sUiDevice.executeShellCommand(sClientAppUtils.getStartAppCommand());
-        sClientAppUtils.initializeSdk();
     }
 
     @Test
-    public void testLoadAd() throws Exception {
-        sClientAppUtils.loadAd();
+    public void testInitializeSdk() throws Exception {
+        sClientAppUtils.initializeSdk();
         // Allow metrics to stabilize after CUJ completion.
         Thread.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
