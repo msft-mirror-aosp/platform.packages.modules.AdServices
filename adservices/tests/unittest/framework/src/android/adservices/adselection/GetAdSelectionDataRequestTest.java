@@ -16,29 +16,25 @@
 
 package android.adservices.adselection;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class GetAdSelectionDataRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class GetAdSelectionDataRequestTest extends AdServicesUnitTestCase {
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetAdSelectionDataRequest_validInputWithoutUri_success() {
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
 
-        assertThat(request.getSeller()).isEqualTo(SELLER);
-        assertThat(request.getCoordinatorOriginUri()).isNull();
+        expect.that(request.getSeller()).isEqualTo(SELLER);
+        expect.that(request.getCoordinatorOriginUri()).isNull();
     }
 
     @Test
@@ -50,7 +46,7 @@ public class GetAdSelectionDataRequestTest {
                         .setCoordinatorOriginUri(expectedUri)
                         .build();
 
-        assertThat(request.getSeller()).isEqualTo(SELLER);
-        assertThat(request.getCoordinatorOriginUri()).isEqualTo(expectedUri);
+        expect.that(request.getSeller()).isEqualTo(SELLER);
+        expect.that(request.getCoordinatorOriginUri()).isEqualTo(expectedUri);
     }
 }
