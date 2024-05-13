@@ -1510,4 +1510,15 @@ public final class FlagsConstants {
     /** Key for enabling SPE on pilot background jobs. */
     public static final String KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED =
             "spe_on_pilot_jobs_batch_2_enabled";
+
+    /** Key for enabling SPE on {@code EpochJobService}. */
+    public static final String KEY_SPE_ON_EPOCH_JOB_ENABLED = "spe_on_epoch_job_enabled";
+
+    /** Key for enabling SPE on {@code BackgroundFetchJobService}. */
+    public static final String KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED =
+            "spe_on_background_fetch_job_enabled";
+
+    /** Key for enabling SPE on {@code AsyncRegistrationFallbackJobService}. */
+    public static final String KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED =
+            "spe_on_async_registration_fallback_job_enabled";
 }
