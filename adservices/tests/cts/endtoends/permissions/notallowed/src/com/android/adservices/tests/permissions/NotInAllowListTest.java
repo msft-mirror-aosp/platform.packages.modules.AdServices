@@ -36,25 +36,29 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.content.Context;
 
+
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.annotations.SetStringArrayFlag;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-@RunWith(JUnit4.class)
 // TODO: Add tests for measurement (b/238194122).
-public class NotInAllowListTest {
+
+@SetCompatModeFlags
+@SetStringArrayFlag(name = FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST, value = "empty")
+public final class NotInAllowListTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String CALLER_NOT_ALLOWED =
@@ -67,9 +71,7 @@ public class NotInAllowListTest {
 
     @Rule(order = 1)
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                    .setCompatModeFlags()
-                    .overridePpapiAppSignatureAllowList("empty");
+            AdServicesFlagsSetterRule.forAllApisEnabledTests();
 
     @Before
     public void setup() {

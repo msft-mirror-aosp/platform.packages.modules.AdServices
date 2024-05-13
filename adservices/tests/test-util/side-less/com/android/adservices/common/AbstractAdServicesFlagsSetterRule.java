@@ -34,8 +34,6 @@ import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
 import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
-import com.google.errorprone.annotations.InlineMe;
-
 import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
@@ -150,6 +148,15 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     // Helper methods to set more commonly used flags such as kill switches.
     // Less common flags can be set directly using setFlags methods.
 
+    // TODO(b/303901926): add unit test
+    /**
+     * Sets a flag that takes an array of strings with just the given value, using the default
+     * separator.
+     */
+    public final T setSimpleArrayFlag(String name, String value) {
+        return setFlag(name, new String[] {value}, ARRAY_SPLITTER_COMMA);
+    }
+
     /**
      * Overrides the flag that sets the global AdServices kill switch.
      *
@@ -211,29 +218,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                 useTestPackageAsDefault, Arrays.toString(value));
         return setAllowListFlag(
                 FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, useTestPackageAsDefault);
-    }
-
-    /**
-     * @deprecated - use {@link #setPpapiAppSignatureAllowList(String...)} insteads
-     */
-    @InlineMe(replacement = "this.setPpapiAppSignatureAllowList(value)")
-    @Deprecated
-    public final T overridePpapiAppSignatureAllowList(String... value) {
-        return setPpapiAppSignatureAllowList(value);
-    }
-
-    /**
-     * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getPpapiAppSignatureAllowList()}. NOTE: this will
-     * completely override the allow list, *not* append to it.
-     */
-    // <p> TODO (b/303901926) - remove / uses annotation only (just 2 usages)
-    public final T setPpapiAppSignatureAllowList(String... value) {
-        mLog.d("setPpapiAppSignatureAllowList(): %s", Arrays.toString(value));
-        return setAllowListFlag(
-                FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
-                value,
-                DONT_USE_TEST_PACKAGE_AS_DEFAULT);
     }
 
     /**
