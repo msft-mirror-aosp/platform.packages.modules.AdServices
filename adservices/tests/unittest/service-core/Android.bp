@@ -34,6 +34,7 @@ java_defaults {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "truth",
+        "gson",
         "adservices-assets",
         "adservices-service-core-schema",
         "adservices-shared-testing",
@@ -192,6 +193,7 @@ java_defaults {
         "opencensus-java-contrib-grpc-metrics",
         "tflite_support_classifiers_java",
         "truth",
+        "gson",
     ],
     libs: [
         "android.ext.adservices",
