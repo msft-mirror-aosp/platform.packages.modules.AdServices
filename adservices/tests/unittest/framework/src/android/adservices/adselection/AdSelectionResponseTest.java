@@ -18,29 +18,22 @@ package android.adservices.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-import android.adservices.common.CommonFixture;
 import android.net.Uri;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
-
-@SmallTest
-public class AdSelectionResponseTest {
+@RequiresSdkLevelAtLeastS
+public final class AdSelectionResponseTest extends AdServicesUnitTestCase {
     private static final Uri VALID_RENDER_URI =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
     private static final long TEST_AD_SELECTION_ID = 12345;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildAdSelectionResponse() {
@@ -50,8 +43,8 @@ public class AdSelectionResponseTest {
                         .setRenderUri(VALID_RENDER_URI)
                         .build();
 
-        assertThat(adSelectionResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(adSelectionResponse.getRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.that(adSelectionResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        expect.that(adSelectionResponse.getRenderUri()).isEqualTo(VALID_RENDER_URI);
     }
 
     @Test
@@ -67,32 +60,30 @@ public class AdSelectionResponseTest {
         p.setDataPosition(0);
         AdSelectionResponse fromParcel = AdSelectionResponse.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(fromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.that(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        expect.that(fromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URI);
     }
 
     @Test
     public void testFailsToBuildWithUnsetAdSelectionId() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    new AdSelectionResponse.Builder()
-                            // Not setting AdSelectionId making it null.
-                            .setRenderUri(VALID_RENDER_URI)
-                            .build();
-                });
+                () ->
+                        new AdSelectionResponse.Builder()
+                                // Not setting AdSelectionId making it null.
+                                .setRenderUri(VALID_RENDER_URI)
+                                .build());
     }
 
     @Test
     public void testFailsToBuildWithNullAdData() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new AdSelectionResponse.Builder()
-                            .setAdSelectionId(TEST_AD_SELECTION_ID)
-                            // Not setting AdData making it null.
-                            .build();
-                });
+                () ->
+                        new AdSelectionResponse.Builder()
+                                .setAdSelectionId(TEST_AD_SELECTION_ID)
+                                // Not setting AdData making it null.
+                                .build());
     }
 
     @Test
@@ -109,7 +100,8 @@ public class AdSelectionResponseTest {
                         .setRenderUri(VALID_RENDER_URI)
                         .build();
 
-        assertThat(obj1).isEqualTo(obj2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(obj1, obj2);
     }
 
     @Test
@@ -127,7 +119,16 @@ public class AdSelectionResponseTest {
                                 new Uri.Builder().path("different.url.com/testing/hello").build())
                         .build();
 
-        assertThat(obj1).isNotEqualTo(obj2);
+        AdSelectionResponse obj3 =
+                new AdSelectionResponse.Builder()
+                        .setAdSelectionId(13579)
+                        .setRenderUri(VALID_RENDER_URI)
+                        .build();
+
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreNotEqual(obj1, obj2);
+        et.expectObjectsAreNotEqual(obj1, obj3);
+        et.expectObjectsAreNotEqual(obj2, obj3);
     }
 
     @Test
@@ -138,45 +139,7 @@ public class AdSelectionResponseTest {
                         .setRenderUri(VALID_RENDER_URI)
                         .build();
 
-        assertEquals(0, obj.describeContents());
-    }
-
-    @Test
-    public void testEqualAdSelectionResponsesHaveSameHashCode() {
-        AdSelectionResponse obj1 =
-                new AdSelectionResponse.Builder()
-                        .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URI)
-                        .build();
-        AdSelectionResponse obj2 =
-                new AdSelectionResponse.Builder()
-                        .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URI)
-                        .build();
-
-        CommonFixture.assertHaveSameHashCode(obj1, obj2);
-    }
-
-    @Test
-    public void testNotEqualAdSelectionResponsesHaveDifferentHashCodes() {
-        AdSelectionResponse obj1 =
-                new AdSelectionResponse.Builder()
-                        .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URI)
-                        .build();
-        AdSelectionResponse obj2 =
-                new AdSelectionResponse.Builder()
-                        .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(
-                                new Uri.Builder().path("different.url.com/testing/hello").build())
-                        .build();
-        AdSelectionResponse obj3 =
-                new AdSelectionResponse.Builder()
-                        .setAdSelectionId(13579)
-                        .setRenderUri(VALID_RENDER_URI)
-                        .build();
-
-        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
+        expect.that(obj.describeContents()).isEqualTo(0);
     }
 
     @Test

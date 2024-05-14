@@ -1849,13 +1849,6 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
     }
 
-    @FeatureFlag boolean FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED = false;
-
-    /** Returns whether Consented Debugging is enabled for server auctions. */
-    default boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
-        return FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
-    }
-
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 
@@ -5242,26 +5235,6 @@ public interface Flags extends ModuleSharedFlags {
         return GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
     }
 
-    /** Default value for status of custom audiences CLI feature */
-    boolean FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED = false;
-
-    /**
-     * @return the enabled status for custom audiences CLI feature.
-     */
-    default boolean getFledgeCustomAudienceCLIEnabledStatus() {
-        return FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
-    }
-
-    /** Default value for status of consented debugging CLI feature */
-    boolean FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED = false;
-
-    /**
-     * @return the enabled status for custom audiences CLI feature.
-     */
-    default boolean getFledgeConsentedDebuggingCliEnabledStatus() {
-        return FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED;
-    }
-
     /** Default value for the base64 encoded Job Policy proto for AdServices. */
     @ConfigFlag String AD_SERVICES_MODULE_JOB_POLICY = "";
 
@@ -5419,6 +5392,47 @@ public interface Flags extends ModuleSharedFlags {
      */
     default boolean getSpeOnPilotJobsBatch2Enabled() {
         return DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
+    }
+
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code EpochJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_EPOCH_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * EpochJobService}.
+     */
+    default boolean getSpeOnEpochJobEnabled() {
+        return DEFAULT_SPE_ON_EPOCH_JOB_ENABLED;
+    }
+
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code
+     * BackgroundFetchJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * BackgroundFetchJobService}.
+     */
+    default boolean getSpeOnBackgroundFetchJobEnabled() {
+        return DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
+    }
+
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code
+     * AsyncRegistrationFallbackJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * AsyncRegistrationFallbackJobService}.
+     */
+    default boolean getSpeOnAsyncRegistrationFallbackJobEnabled() {
+        return DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
     }
 
     /** Dump some debug info for the flags */

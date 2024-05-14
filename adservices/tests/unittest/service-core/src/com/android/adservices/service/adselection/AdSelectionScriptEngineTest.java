@@ -54,7 +54,6 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine.AuctionScriptResult;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.RetryStrategy;
-import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -194,11 +193,11 @@ public class AdSelectionScriptEngineTest {
                     .setWinningAdBid(AD_BID_3)
                     .setWinningAdRenderUri(AD_RENDER_URI)
                     .build();
-    private static final DevContext DEV_CONTEXT =
-            DevContext.builder().setDevOptionsEnabled(true).build();
-    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
-    private final IsolateSettings mIsolateSettingsWithMaxHeapEnforcementDisabled =
-            IsolateSettings.forMaxHeapSizeEnforcementDisabled(DEV_CONTEXT.getDevOptionsEnabled());
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(1);
+    private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
+    private static final IsolateSettings ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED =
+            IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+                    ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
     private AdSelectionScriptEngine mAdSelectionScriptEngine;
 
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLoggerMock;
@@ -216,7 +215,7 @@ public class AdSelectionScriptEngineTest {
         mRetryStrategy = new NoOpRetryStrategyImpl();
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierNoOpImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -372,7 +371,7 @@ public class AdSelectionScriptEngineTest {
         // Reinit engine with cpc billing enabled
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierNoOpImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -421,7 +420,7 @@ public class AdSelectionScriptEngineTest {
         // Init engine with false
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierNoOpImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -470,7 +469,7 @@ public class AdSelectionScriptEngineTest {
         // Reinit engine with cpc billing enabled
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierNoOpImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -523,7 +522,7 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidWithCopierSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -567,7 +566,7 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidWithCopierWithAdCounterKeysSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -665,7 +664,7 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidV3WithCopierSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -726,7 +725,7 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidV3WithCopierWithAdCounterKeysSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -855,7 +854,7 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidWithCopierBackwardCompatCaseSuccess() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -904,7 +903,7 @@ public class AdSelectionScriptEngineTest {
             throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
@@ -1043,7 +1042,7 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidV3ReturnDebugReportingNoUrl() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
@@ -1104,7 +1103,7 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidV3ReturnDebugReportingNoUrl_WhenDisabled() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -1169,7 +1168,7 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidV3ReturnDebugReportingNoBadUrl() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
@@ -1264,7 +1263,7 @@ public class AdSelectionScriptEngineTest {
     public void testScoreAdsWithCopierSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -1304,7 +1303,7 @@ public class AdSelectionScriptEngineTest {
     public void testScoreAdsWithCopierWithAdCounterKeysSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
@@ -1376,7 +1375,7 @@ public class AdSelectionScriptEngineTest {
     public void testScoreAdsReturnsDebugReportingUrl() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
@@ -1425,7 +1424,7 @@ public class AdSelectionScriptEngineTest {
     public void testScoreAdsReturnsNoDebugReportingUrlWhenDisabled() throws Exception {
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
@@ -1476,7 +1475,7 @@ public class AdSelectionScriptEngineTest {
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
-                        mIsolateSettingsWithMaxHeapEnforcementDisabled,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
                         mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
@@ -1822,7 +1821,7 @@ public class AdSelectionScriptEngineTest {
         CountDownLatch resultLatch = new CountDownLatch(1);
         AtomicReference<ListenableFuture<T>> futureResult = new AtomicReference<>();
         futureResult.set(function.get());
-        futureResult.get().addListener(resultLatch::countDown, mExecutorService);
+        futureResult.get().addListener(resultLatch::countDown, EXECUTOR_SERVICE);
         resultLatch.await();
         return futureResult.get().get();
     }
@@ -1866,7 +1865,7 @@ public class AdSelectionScriptEngineTest {
                 debugReportingScriptStrategy,
                 isCpcBillingEnabled,
                 retryStrategy,
-                DEV_CONTEXT);
+                isolateSettings::getIsolateConsoleMessageInLogsEnabled);
     }
 
     interface ThrowingSupplier<T> {

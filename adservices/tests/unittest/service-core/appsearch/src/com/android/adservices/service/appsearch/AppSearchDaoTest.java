@@ -90,7 +90,8 @@ public class AppSearchDaoTest {
             "686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2";
     private static final PackageIdentifier PACKAGE_IDENTIFIER =
             new PackageIdentifier(
-                    /* packageName= */ TEST, /* sha256= */ new Signature(SHA).toByteArray());
+                    /* packageName= */ TEST,
+                    /* sha256Certificate= */ new Signature(SHA).toByteArray());
 
     private static final int APPSEARCH_READ_TIMEOUT_MS = 500;
     private static final int APPSEARCH_WRITE_TIMEOUT_MS = 200;
@@ -305,9 +306,9 @@ public class AppSearchDaoTest {
         SetSchemaResponse.MigrationFailure failure =
                 new SetSchemaResponse.MigrationFailure(
                         /* namespace= */ TEST,
-                        /* id= */ TEST,
+                        /* documentId= */ TEST,
                         /* schemaType= */ TEST,
-                        /* appSearchResult= */ mockResult);
+                        /* failedResult= */ mockResult);
         when(mockResponse.getMigrationFailures()).thenReturn(List.of(failure));
         // We can't use the base class instance since writing will fail without the necessary
         // Document fields defined on the class, so we use a subclass instance.
@@ -407,9 +408,9 @@ public class AppSearchDaoTest {
         SetSchemaResponse.MigrationFailure failure =
                 new SetSchemaResponse.MigrationFailure(
                         /* namespace= */ TEST,
-                        /* id= */ TEST,
+                        /* documentId= */ TEST,
                         /* schemaType= */ TEST,
-                        /* appSearchResult= */ mockResult);
+                        /* failedResult= */ mockResult);
         when(mockResponse.getMigrationFailures()).thenReturn(List.of(failure));
         // We can't use the base class instance since writing will fail without the necessary
         // Document fields defined on the class, so we use a subclass instance.

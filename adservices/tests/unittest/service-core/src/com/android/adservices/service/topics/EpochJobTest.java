@@ -110,7 +110,7 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testSchedule_spe() {
-        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(true);
+        when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(true);
 
         EpochJob.schedule();
 
@@ -120,7 +120,7 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void testSchedule_legacy() {
         int resultCode = SCHEDULING_RESULT_CODE_SUCCESSFUL;
-        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(false);
+        when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(false);
         JobSchedulingLogger logger = mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
         doReturn(resultCode).when(() -> EpochJobService.scheduleIfNeeded(anyBoolean()));
 

@@ -71,6 +71,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
@@ -110,6 +111,10 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
 
     private static final String SIGNALS_PATH = "/signals";
     private static final String ENCODER_PATH = "/encoder";
+    private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
+    private static final IsolateSettings ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED =
+            IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+                    ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
 
@@ -166,7 +171,6 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private Flags mFlags;
     private EnrollmentDao mEnrollmentDao;
     private Clock mClock;
-    private DevContext mDevContext;
 
     @Before
     public void setup() {
@@ -270,14 +274,15 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
 
         mSignalStorageManager = new SignalsProviderImpl(mSignalsDao);
         RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
-        mDevContext = DevContext.builder().setDevOptionsEnabled(true).build();
         mScriptEngine =
                 new SignalsScriptEngine(
                         mContextSpy,
-                        () -> Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE,
-                        () -> Flags.ISOLATE_MAX_HEAP_SIZE_BYTES,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED
+                                ::getEnforceMaxHeapSizeFeature,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED::getMaxHeapSizeBytes,
                         retryStrategy,
-                        mDevContext);
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED
+                                ::getIsolateConsoleMessageInLogsEnabled);
         mClock = Clock.getInstance();
         mPeriodicEncodingJobWorker =
                 new PeriodicEncodingJobWorker(

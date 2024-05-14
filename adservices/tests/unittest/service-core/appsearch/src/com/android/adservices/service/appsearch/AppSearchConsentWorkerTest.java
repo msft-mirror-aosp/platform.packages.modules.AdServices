@@ -924,9 +924,9 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         SetSchemaResponse.MigrationFailure failure =
                 new SetSchemaResponse.MigrationFailure(
                         /* namespace= */ TEST,
-                        /* id= */ TEST,
+                        /* documentId= */ TEST,
                         /* schemaType= */ TEST,
-                        /* appSearchResult= */ mockResult);
+                        /* failedResult= */ mockResult);
         when(mockResponse.getMigrationFailures()).thenReturn(List.of(failure));
     }
 

@@ -17,7 +17,6 @@
 package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -704,7 +703,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
 
         // By default, do not use SPE.
         @Override
-        public boolean getSpeOnPilotJobsBatch2Enabled() {
+        public boolean getSpeOnBackgroundFetchJobEnabled() {
             return false;
         }
     }
@@ -743,7 +742,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
 
         // By default, do not use SPE.
         @Override
-        public boolean getSpeOnPilotJobsBatch2Enabled() {
+        public boolean getSpeOnBackgroundFetchJobEnabled() {
             return false;
         }
     }
@@ -787,7 +786,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
 
         // By default, do not use SPE.
         @Override
-        public boolean getSpeOnPilotJobsBatch2Enabled() {
+        public boolean getSpeOnBackgroundFetchJobEnabled() {
             return false;
         }
     }
@@ -813,7 +812,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
 
         // By default, do not use SPE.
         @Override
-        public boolean getSpeOnPilotJobsBatch2Enabled() {
+        public boolean getSpeOnBackgroundFetchJobEnabled() {
             return false;
         }
     }
@@ -837,14 +836,14 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
 
         // By default, do not use SPE.
         @Override
-        public boolean getSpeOnPilotJobsBatch2Enabled() {
+        public boolean getSpeOnBackgroundFetchJobEnabled() {
             return false;
         }
     }
 
     private static class FlagsWithKillSwitchOffSpeEnabled extends FlagsWithKillSwitchOff {
         @Override
-        public boolean getSpeOnPilotJobsBatch2Enabled() {
+        public boolean getSpeOnBackgroundFetchJobEnabled() {
             return true;
         }
     }

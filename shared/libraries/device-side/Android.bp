@@ -228,6 +228,23 @@ java_library {
 }
 
 java_library {
+    name: "adservices-shared-static-class-checker",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/mockito/StaticClassChecker.java",
+    ],
+    static_libs: [
+        "guava", // for ImmutableSet
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+}
+
+java_library {
     name: "adservices-shared-mockito-expectations",
     min_sdk_version: "30",
     sdk_version: "module_current",
@@ -252,8 +269,8 @@ java_library {
         "framework-annotations-lib", // for @Nullable
     ],
     static_libs: [
+        "adservices-shared-static-class-checker",
         "error_prone_annotations", // for @FormatMethod
-        "guava", // for ImmutableSet
         "modules-utils-build", // for SdkLevel
         "mockito-target-extended-minus-junit4",
         "modules-utils-preconditions",
@@ -294,11 +311,14 @@ filegroup {
     ],
 }
 
-// NOTE: it does not include TestableDebviceConfig
+// NOTE: it does not include TestableDeviceConfig
 java_defaults {
     name: "adservices-shared-extended-mockito-defaults",
     srcs: [
         ":adservices-shared-extended-mockito-rule-sources",
+    ],
+    static_libs: [
+        "adservices-shared-static-class-checker",
     ],
     defaults: ["modules-utils-extended-mockito-rule-defaults"],
     visibility: [

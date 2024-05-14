@@ -82,7 +82,8 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
     public void testUpdateSignals_success() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenario("scenarios/signals-default.json"));
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/signals-default.json"));
         Uri firstUri = Uri.parse(mServerBaseAddress + FIRST_POSTFIX);
         Uri secondUri = Uri.parse(mServerBaseAddress + SECOND_POSTFIX);
         UpdateSignalsRequest firstRequest = new UpdateSignalsRequest.Builder(firstUri).build();
@@ -97,7 +98,8 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
     @Test
     @SetFlagDisabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testUpdateSignals_badUri_failure() throws Exception {
-        setupDispatcher(ScenarioDispatcherFactory.fromScenario("scenarios/signals-default.json"));
+        setupDispatcher(
+                ScenarioDispatcherFactory.createFromScenarioFile("scenarios/signals-default.json"));
         Uri uri = Uri.EMPTY;
         UpdateSignalsRequest request = new UpdateSignalsRequest.Builder(uri).build();
         ExecutionException e =
@@ -109,7 +111,9 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
 
     @Test
     public void testUpdateSignals_badJson_failure() throws Exception {
-        setupDispatcher(ScenarioDispatcherFactory.fromScenario("scenarios/signals-bad-json.json"));
+        setupDispatcher(
+                ScenarioDispatcherFactory.createFromScenarioFile(
+                        "scenarios/signals-bad-json.json"));
         Uri uri = Uri.parse(mServerBaseAddress + POSTFIX);
         UpdateSignalsRequest request = new UpdateSignalsRequest.Builder(uri).build();
         ExecutionException e =

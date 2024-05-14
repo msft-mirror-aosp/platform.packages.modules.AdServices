@@ -17,6 +17,7 @@ package com.android.adservices.mockito;
 
 import android.util.Log;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
@@ -49,11 +50,38 @@ public abstract class AbstractStaticMocker {
 
     protected final void assertSpiedOrMocked(Class<?> clazz) {
         if (!mStaticClassChecker.isSpiedOrMocked(clazz)) {
-            throw new IllegalStateException(
+            throw new ClassNotSpiedOrMockedException(
+                    clazz, mStaticClassChecker.getSpiedOrMockedClasses());
+        }
+    }
+
+    @SuppressWarnings("OverrideThrowableToString") // to remove AbstractStaticMocker.$ from name
+    public static final class ClassNotSpiedOrMockedException extends IllegalStateException {
+        private final Class<?> mMissingClass;
+        private final ImmutableSet<Class<?>> mSpiedOrMockedClasses;
+
+        private ClassNotSpiedOrMockedException(
+                Class<?> missingClass, ImmutableSet<Class<?>> spiedOrMockedClasses) {
+            super(
                     "Test doesn't static spy or mock "
-                            + clazz
+                            + missingClass
                             + ", only: "
-                            + mStaticClassChecker.getSpiedOrMockedClasses());
+                            + spiedOrMockedClasses);
+            mMissingClass = missingClass;
+            mSpiedOrMockedClasses = spiedOrMockedClasses;
+        }
+
+        public Class<?> getMissingClass() {
+            return mMissingClass;
+        }
+
+        public ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
+            return mSpiedOrMockedClasses;
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + ": " + getMessage();
         }
     }
 }

@@ -16,16 +16,13 @@
 
 package android.adservices.extdata;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 import android.os.Parcel;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class GetAdServicesExtDataResultTest {
+public final class GetAdServicesExtDataResultTest extends AdServicesUnitTestCase {
     @Test
     public void testWriteToParcel() throws Exception {
         AdServicesExtDataParams params =
@@ -47,19 +44,20 @@ public class GetAdServicesExtDataResultTest {
 
         GetAdServicesExtDataResult fromParcel =
                 GetAdServicesExtDataResult.CREATOR.createFromParcel(parcel);
-        assertEquals(GetAdServicesExtDataResult.CREATOR.newArray(1).length, 1);
+        expect.that(GetAdServicesExtDataResult.CREATOR.newArray(1)).hasLength(1);
 
-        assertEquals(1, fromParcel.getAdServicesExtDataParams().getIsNotificationDisplayed());
-        assertEquals(-1, fromParcel.getAdServicesExtDataParams().getIsMeasurementConsented());
-        assertEquals(0, fromParcel.getAdServicesExtDataParams().getIsU18Account());
-        assertEquals(1, fromParcel.getAdServicesExtDataParams().getIsAdultAccount());
-        assertEquals(
-                -1,
-                fromParcel.getAdServicesExtDataParams().getManualInteractionWithConsentStatus());
-        assertEquals(
-                200L, fromParcel.getAdServicesExtDataParams().getMeasurementRollbackApexVersion());
-        assertNull(fromParcel.getErrorMessage());
-        assertEquals(0, fromParcel.describeContents());
-        assertThat(fromParcel.toString()).isNotNull();
+        expect.that(fromParcel.getAdServicesExtDataParams().getIsNotificationDisplayed())
+                .isEqualTo(1);
+        expect.that(fromParcel.getAdServicesExtDataParams().getIsMeasurementConsented())
+                .isEqualTo(-1);
+        expect.that(fromParcel.getAdServicesExtDataParams().getIsU18Account()).isEqualTo(0);
+        expect.that(fromParcel.getAdServicesExtDataParams().getIsAdultAccount()).isEqualTo(1);
+        expect.that(fromParcel.getAdServicesExtDataParams().getManualInteractionWithConsentStatus())
+                .isEqualTo(-1);
+        expect.that(fromParcel.getAdServicesExtDataParams().getMeasurementRollbackApexVersion())
+                .isEqualTo(200L);
+        expect.that(fromParcel.getErrorMessage()).isNull();
+        expect.that(fromParcel.describeContents()).isEqualTo(0);
+        expect.that(fromParcel.toString()).isNotNull();
     }
 }

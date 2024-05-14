@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.content.Context;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -48,23 +49,25 @@ public class CtsSdkSandboxMediaTestApp {
             new ActivityScenarioRule<>(TestActivity.class);
 
     private Context mContext;
+    private SdkLifecycleHelper mSdkLifecycleHelper;
     private SdkSandboxManager mSdkSandboxManager;
 
     @Before
     public void setup() {
         mContext = ApplicationProvider.getApplicationContext();
+        mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
 
         activityScenarioRule.getScenario();
-        mSdkSandboxManager.unloadSdk(SDK_NAME);
+        mSdkLifecycleHelper.unloadSdk(SDK_NAME);
     }
 
     @After
     public void tearDown() {
         // unload SDK to fix flakiness
-        if (mSdkSandboxManager != null) {
-            mSdkSandboxManager.unloadSdk(SDK_NAME);
+        if (mSdkLifecycleHelper != null) {
+            mSdkLifecycleHelper.unloadSdk(SDK_NAME);
         }
     }
 

@@ -29,6 +29,7 @@ import android.adservices.common.UpdateAdIdRequest;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
@@ -40,6 +41,7 @@ import org.junit.Test;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+@SetPpapiAppAllowList
 public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCase {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();

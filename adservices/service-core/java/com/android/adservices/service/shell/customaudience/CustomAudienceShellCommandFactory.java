@@ -26,6 +26,7 @@ import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
@@ -73,11 +74,12 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
     /**
      * @return an instance of the {@link CustomAudienceShellCommandFactory}.
      */
-    public static ShellCommandFactory getInstance(Flags flags, Context context) {
+    public static ShellCommandFactory getInstance(
+            DebugFlags debugFlags, Flags flags, Context context) {
         CustomAudienceDao customAudienceDao =
                 CustomAudienceDatabase.getInstance(context).customAudienceDao();
         return new CustomAudienceShellCommandFactory(
-                flags.getFledgeCustomAudienceCLIEnabledStatus(),
+                debugFlags.getFledgeCustomAudienceCLIEnabledStatus(),
                 new BackgroundFetchRunner(
                         customAudienceDao,
                         SharedStorageDatabase.getInstance(context).appInstallDao(),

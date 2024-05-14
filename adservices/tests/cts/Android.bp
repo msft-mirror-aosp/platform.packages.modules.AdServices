@@ -18,6 +18,7 @@ package {
 
 android_test {
     name: "CtsAdServicesDeviceTestCases",
+    team: "trendy_team_android_rubidium",
     defaults: ["cts_defaults"],
     libs: [
         "android.test.runner",

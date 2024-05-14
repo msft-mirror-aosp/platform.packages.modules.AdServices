@@ -48,7 +48,6 @@ import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBid
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.common.RetryStrategy;
-import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -237,13 +236,13 @@ public class AdSelectionScriptEngine {
     private final AdDataArgumentUtil mAdDataArgumentUtil;
     private final DebugReportingScriptStrategy mDebugReportingScript;
     private final boolean mCpcBillingEnabled;
-    protected final JSScriptEngine mJsEngine;
+    private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
-    protected final Executor mExecutor = MoreExecutors.directExecutor();
-    protected final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
-    protected final Supplier<Long> mMaxHeapSizeBytesSupplier;
-    protected final RetryStrategy mRetryStrategy;
-    protected final DevContext mDevContext;
+    private final Executor mExecutor = MoreExecutors.directExecutor();
+    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
+    private final Supplier<Long> mMaxHeapSizeBytesSupplier;
+    private final RetryStrategy mRetryStrategy;
+    private final Supplier<Boolean> mIsolateConsoleMessageInLogsEnabled;
 
     public AdSelectionScriptEngine(
             Context context,
@@ -253,7 +252,8 @@ public class AdSelectionScriptEngine {
             DebugReportingScriptStrategy debugReportingScript,
             boolean cpcBillingEnabled,
             RetryStrategy retryStrategy,
-            DevContext devContext) {
+            Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
+        mJsEngine = JSScriptEngine.getInstance(context, sLogger);
         mAdDataArgumentUtil = new AdDataArgumentUtil(adCounterKeyCopier);
         mAdWithBidArgumentUtil = new AdWithBidArgumentUtil(mAdDataArgumentUtil);
         mDebugReportingScript = debugReportingScript;
@@ -261,8 +261,7 @@ public class AdSelectionScriptEngine {
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRetryStrategy = retryStrategy;
-        mDevContext = devContext;
-        mJsEngine = JSScriptEngine.getInstance(context, sLogger);
+        mIsolateConsoleMessageInLogsEnabled = isolateConsoleMessageInLogsEnabled;
     }
 
     /**
@@ -754,9 +753,9 @@ public class AdSelectionScriptEngine {
                         ImmutableList.of(
                                 stringArrayArg(FUNCTION_NAMES_ARG_NAME, expectedFunctionsNames)),
                         buildIsolateSettings(
-                                mDevContext,
                                 mEnforceMaxHeapSizeFeatureSupplier,
-                                mMaxHeapSizeBytesSupplier),
+                                mMaxHeapSizeBytesSupplier,
+                                mIsolateConsoleMessageInLogsEnabled),
                         mRetryStrategy),
                 Boolean::parseBoolean,
                 mExecutor);
@@ -802,9 +801,9 @@ public class AdSelectionScriptEngine {
                                 stringArrayArg(
                                         FUNCTION_NAMES_ARG_NAME, ImmutableList.of(functionName))),
                         buildIsolateSettings(
-                                mDevContext,
                                 mEnforceMaxHeapSizeFeatureSupplier,
-                                mMaxHeapSizeBytesSupplier),
+                                mMaxHeapSizeBytesSupplier,
+                                mIsolateConsoleMessageInLogsEnabled),
                         mRetryStrategy),
                 Integer::parseInt,
                 mExecutor);
@@ -904,7 +903,9 @@ public class AdSelectionScriptEngine {
                                 auctionFunctionCallGenerator.apply(args)),
                 args,
                 buildIsolateSettings(
-                        mDevContext, mEnforceMaxHeapSizeFeatureSupplier, mMaxHeapSizeBytesSupplier),
+                        mEnforceMaxHeapSizeFeatureSupplier,
+                        mMaxHeapSizeBytesSupplier,
+                        mIsolateConsoleMessageInLogsEnabled),
                 mRetryStrategy);
     }
 
@@ -956,7 +957,9 @@ public class AdSelectionScriptEngine {
                                 auctionFunctionCallGenerator.apply(otherArgs)),
                 allArgs,
                 buildIsolateSettings(
-                        mDevContext, mEnforceMaxHeapSizeFeatureSupplier, mMaxHeapSizeBytesSupplier),
+                        mEnforceMaxHeapSizeFeatureSupplier,
+                        mMaxHeapSizeBytesSupplier,
+                        mIsolateConsoleMessageInLogsEnabled),
                 mRetryStrategy);
     }
 
@@ -1032,13 +1035,13 @@ public class AdSelectionScriptEngine {
     }
 
     private static IsolateSettings buildIsolateSettings(
-            DevContext devContext,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
-            Supplier<Long> maxHeapSizeBytesSupplier) {
+            Supplier<Long> maxHeapSizeBytesSupplier,
+            Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
         return IsolateSettings.builder()
                 .setEnforceMaxHeapSizeFeature(enforceMaxHeapSizeFeatureSupplier.get())
                 .setMaxHeapSizeBytes(maxHeapSizeBytesSupplier.get())
-                .setIsolateConsoleMessageInLogsEnabled(devContext.getDevOptionsEnabled())
+                .setIsolateConsoleMessageInLogsEnabled(isolateConsoleMessageInLogsEnabled.get())
                 .build();
     }
 }

@@ -30,9 +30,11 @@ public final class AdservicesShellCommandFactorySupplier extends ShellCommandFac
     private static final ImmutableList<ShellCommandFactory> sDefaultFactories =
             ImmutableList.of(
                     CustomAudienceShellCommandFactory.getInstance(
-                            FlagsFactory.getFlags(), ApplicationContextSingleton.get()),
+                            DebugFlags.getInstance(),
+                            FlagsFactory.getFlags(),
+                            ApplicationContextSingleton.get()),
                     AdSelectionShellCommandFactory.getInstance(
-                            FlagsFactory.getFlags(), ApplicationContextSingleton.get()),
+                            DebugFlags.getInstance(), ApplicationContextSingleton.get()),
                     SignalsShellCommandFactory.getInstance(DebugFlags.getInstance()));
 
     @Override

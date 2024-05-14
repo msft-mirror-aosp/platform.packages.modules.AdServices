@@ -19,6 +19,10 @@ package android.adservices.utils;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+
 import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
@@ -41,10 +45,10 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
@@ -59,10 +63,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 
+import java.net.URL;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
-import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -70,7 +74,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /** Abstract class for FLEDGE scenario tests using local servers. */
-public abstract class FledgeScenarioTest {
+public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
     protected static final String TAG = FledgeScenarioTest.class.getSimpleName();
@@ -82,7 +86,6 @@ public abstract class FledgeScenarioTest {
     private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final long AD_ID_FETCHER_TIMEOUT = 1000;
     private static final long AD_ID_FETCHER_TIMEOUT_DEFAULT = 50;
-    private final Random mCacheBusterRandom = new Random();
 
     protected AdvertisingCustomAudienceClient mCustomAudienceClient;
     protected AdSelectionClient mAdSelectionClient;
@@ -91,8 +94,6 @@ public abstract class FledgeScenarioTest {
     private AdTechIdentifier mSeller;
     private String mServerBaseAddress;
 
-    // Prefix added to all requests to bust cache.
-    private int mCacheBuster;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -108,13 +109,6 @@ public abstract class FledgeScenarioTest {
     @Rule(order = 3)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             CtsWebViewSupportUtil.createJSSandboxAvailableRule(CONTEXT);
-
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName())
-                    .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
 
     @Rule(order = 6)
     public MockWebServerRule mMockWebServerRule =
@@ -132,16 +126,21 @@ public abstract class FledgeScenarioTest {
                 String.format("{\"valid\": true, \"publisher\": \"%s\"}", PACKAGE_NAME));
     }
 
+    @Override
+    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
+        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
+                .setCompatModeFlags()
+                .setPpapiAppAllowList(sContext.getPackageName())
+                .setFlag(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, 5_000)
+                .setFlag(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, 5_000)
+                .setFlag(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, 10_000);
+    }
+
     @Before
     public void setUp() throws Exception {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-
-        PhFlagsFixture.overrideFledgeOnDeviceAdSelectionTimeouts(
-                /* biddingTimeoutPerCaMs= */ 5_000,
-                /* scoringTimeoutMs= */ 5_000,
-                /* overallTimeoutMs= */ 10_000);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
         ExecutorService executor = Executors.newCachedThreadPool();
@@ -152,7 +151,6 @@ public abstract class FledgeScenarioTest {
                         .build();
         mAdSelectionClient =
                 new AdSelectionClient.Builder().setContext(CONTEXT).setExecutor(executor).build();
-        mCacheBuster = mCacheBusterRandom.nextInt();
     }
 
     @After
@@ -228,6 +226,10 @@ public abstract class FledgeScenarioTest {
         Log.d(TAG, "Scheduled Custom Audience Update: " + request);
     }
 
+    protected String getServerBaseAddress() {
+        return mServerBaseAddress;
+    }
+
     protected void overrideCpcBillingEnabled(boolean enabled) {
         ShellUtils.runShellCommand(
                 String.format(
@@ -266,7 +268,7 @@ public abstract class FledgeScenarioTest {
                         enabled ? "true" : "false"));
     }
 
-    protected AdSelectionConfig makeAdSelectionConfig() {
+    protected AdSelectionConfig makeAdSelectionConfig(URL serverBaseAddressWithPrefix) {
         AdSelectionSignals signals = FledgeScenarioTest.makeAdSelectionSignals();
         Log.d(TAG, "Ad tech buyer: " + mBuyer);
         Log.d(TAG, "Ad tech seller: " + mSeller);
@@ -276,9 +278,10 @@ public abstract class FledgeScenarioTest {
                 .setCustomAudienceBuyers(ImmutableList.of(mBuyer))
                 .setAdSelectionSignals(signals)
                 .setSellerSignals(signals)
-                .setDecisionLogicUri(Uri.parse(mServerBaseAddress + Scenarios.SCORING_LOGIC_PATH))
+                .setDecisionLogicUri(
+                        Uri.parse(serverBaseAddressWithPrefix + Scenarios.SCORING_LOGIC_PATH))
                 .setTrustedScoringSignalsUri(
-                        Uri.parse(mServerBaseAddress + Scenarios.SCORING_SIGNALS_PATH))
+                        Uri.parse(serverBaseAddressWithPrefix + Scenarios.SCORING_SIGNALS_PATH))
                 .build();
     }
 
@@ -295,10 +298,6 @@ public abstract class FledgeScenarioTest {
                         scenarioDispatcher.getBaseAddressWithPrefix().getHost());
         Log.d(TAG, "Started default MockWebServer.");
         return scenarioDispatcher;
-    }
-
-    protected String getCacheBusterPrefix() {
-        return String.format("/%s", mCacheBuster);
     }
 
     private JoinCustomAudienceRequest makeJoinCustomAudienceRequest(String customAudienceName) {

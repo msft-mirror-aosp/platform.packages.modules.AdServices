@@ -71,9 +71,9 @@ public final class ShellCommandStats {
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP;
 
-    public static final int COMMAND_SIGNALS_GENERATE_INPUT_FOR_SIGNALS =
+    public static final int COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING =
             AdServicesStatsLog
-                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_SIGNALS_GENERATE_INPUT_FOR_SIGNALS;
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
 
     @IntDef({
         COMMAND_UNKNOWN,
@@ -98,7 +98,7 @@ public final class ShellCommandStats {
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP,
 
         // Protected App Signals commands
-        COMMAND_SIGNALS_GENERATE_INPUT_FOR_SIGNALS
+        COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING
     })
     @Retention(SOURCE)
     public @interface Command {}

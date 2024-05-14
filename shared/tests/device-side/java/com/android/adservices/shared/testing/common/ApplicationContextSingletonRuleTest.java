@@ -27,11 +27,8 @@ import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.util.LogUtil;
 
-import com.google.common.truth.Expect;
-
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -44,8 +41,6 @@ public final class ApplicationContextSingletonRuleTest extends SharedUnitTestCas
     private static final boolean DONT_RESTORE_PREVIOUS = false;
 
     private Context mPreviousContext;
-
-    public @Rule final Expect expect = Expect.create();
 
     @Before
     public void savePreviousContext() {

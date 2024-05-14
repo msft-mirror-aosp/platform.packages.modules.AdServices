@@ -79,6 +79,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
@@ -182,7 +183,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     private final ConsentedDebugConfigurationGeneratorFactory
             mConsentedDebugConfigurationGeneratorFactory;
 
-    @NonNull final EgressConfigurationGenerator mEgressConfigurationGenerator;
+    @NonNull private final EgressConfigurationGenerator mEgressConfigurationGenerator;
+    private final boolean mConsoleMessageInLogsEnabled;
 
     @VisibleForTesting
     public AdSelectionServiceImpl(
@@ -215,7 +217,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull
                     ConsentedDebugConfigurationGeneratorFactory
                             consentedDebugConfigurationGeneratorFactory,
-            @NonNull EgressConfigurationGenerator egressConfigurationGenerator) {
+            @NonNull EgressConfigurationGenerator egressConfigurationGenerator,
+            boolean consoleMessageInLogsEnabled) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
@@ -271,6 +274,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mRetryStrategyFactory = retryStrategyFactory;
         mConsentedDebugConfigurationGeneratorFactory = consentedDebugConfigurationGeneratorFactory;
         mEgressConfigurationGenerator = egressConfigurationGenerator;
+        mConsoleMessageInLogsEnabled = consoleMessageInLogsEnabled;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -342,7 +346,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new ConsentedDebugConfigurationGeneratorFactory(
                         BinderFlagReader.readFlag(
                                 () ->
-                                        FlagsFactory.getFlags()
+                                        DebugFlags.getInstance()
                                                 .getFledgeAuctionServerConsentedDebuggingEnabled()),
                         AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao()),
                 EgressConfigurationGenerator.createInstance(
@@ -359,7 +363,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getFledgeAuctionServerAdIdFetcherTimeoutMs()),
-                        AdServicesExecutors.getLightWeightExecutor()));
+                        AdServicesExecutors.getLightWeightExecutor()),
+                BinderFlagReader.readFlag(
+                        () ->
+                                DebugFlags.getInstance()
+                                        .getAdServicesJsIsolateConsoleMessagesInLogsEnabled()));
     }
 
     @Override
@@ -794,7 +802,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mRetryStrategyFactory.createRetryStrategy(
                                 mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()),
                         mKAnonSignJoinFactory,
-                        mAdFilteringFeatureFactory.getAppInstallAdFilterer());
+                        mAdFilteringFeatureFactory.getAppInstallAdFilterer(),
+                        mConsoleMessageInLogsEnabled);
         runner.runAdSelection(inputParams, partialCallback, devContext, fullCallback);
     }
 
@@ -859,7 +868,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     callingUid,
                                     mShouldUseUnifiedTables,
                                     mRetryStrategyFactory.createRetryStrategy(
-                                            mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()));
+                                            mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()),
+                                    mConsoleMessageInLogsEnabled);
                     runner.runOutcomeSelection(
                             inputParams, callback, selectAdsFromOutcomesExecutionLogger);
                 });

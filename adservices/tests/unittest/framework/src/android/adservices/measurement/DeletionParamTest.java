@@ -15,17 +15,12 @@
  */
 package android.adservices.measurement;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Parcel;
 
-import androidx.test.InstrumentationRegistry;
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
@@ -33,9 +28,7 @@ import java.time.Instant;
 import java.util.Collections;
 
 /** Unit tests for {@link DeletionParam} */
-@SmallTest
-public final class DeletionParamTest {
-    private static final Context sContext = InstrumentationRegistry.getTargetContext();
+public final class DeletionParamTest extends AdServicesUnitTestCase {
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
 
     private DeletionParam createExample() {
@@ -63,25 +56,25 @@ public final class DeletionParamTest {
     }
 
     void verifyExample(DeletionParam request) {
-        assertEquals(1, request.getOriginUris().size());
-        assertEquals("http://foo.com", request.getOriginUris().get(0).toString());
-        assertTrue(request.getDomainUris().isEmpty());
-        assertEquals(DeletionRequest.MATCH_BEHAVIOR_PRESERVE, request.getMatchBehavior());
-        assertEquals(
-                DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA, request.getDeletionMode());
-        assertEquals(1642060000000L, request.getStart().toEpochMilli());
-        assertEquals(1642060538000L, request.getEnd().toEpochMilli());
-        assertNotNull(request.getAppPackageName());
+        expect.that(request.getOriginUris()).hasSize(1);
+        expect.that(request.getOriginUris().get(0).toString()).isEqualTo("http://foo.com");
+        expect.that(request.getDomainUris()).isEmpty();
+        expect.that(request.getMatchBehavior()).isEqualTo(DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
+        expect.that(request.getDeletionMode())
+                .isEqualTo(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA);
+        expect.that(request.getStart().toEpochMilli()).isEqualTo(1642060000000L);
+        expect.that(request.getEnd().toEpochMilli()).isEqualTo(1642060538000L);
+        expect.that(request.getAppPackageName()).isNotNull();
     }
 
     void verifyDefaultExample(DeletionParam request) {
-        assertTrue(request.getOriginUris().isEmpty());
-        assertTrue(request.getDomainUris().isEmpty());
-        assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, request.getMatchBehavior());
-        assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
-        assertEquals(Instant.MIN, request.getStart());
-        assertEquals(Instant.MAX, request.getEnd());
-        assertNotNull(request.getAppPackageName());
+        expect.that(request.getOriginUris()).isEmpty();
+        expect.that(request.getDomainUris()).isEmpty();
+        expect.that(request.getMatchBehavior()).isEqualTo(DeletionRequest.MATCH_BEHAVIOR_DELETE);
+        expect.that(request.getDeletionMode()).isEqualTo(DeletionRequest.DELETION_MODE_ALL);
+        expect.that(request.getStart()).isEqualTo(Instant.MIN);
+        expect.that(request.getEnd()).isEqualTo(Instant.MAX);
+        expect.that(request.getAppPackageName()).isNotNull();
     }
 
     @Test
@@ -204,6 +197,6 @@ public final class DeletionParamTest {
 
     @Test
     public void testDescribeContents() {
-        assertEquals(0, createExample().describeContents());
+        expect.that(createExample().describeContents()).isEqualTo(0);
     }
 }

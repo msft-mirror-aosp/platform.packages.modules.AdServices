@@ -18,7 +18,7 @@ package android.adservices.measurement;
 
 import android.net.Uri;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,8 +27,7 @@ import java.time.Instant;
 import java.util.Collections;
 
 /** Unit test for {@link android.adservices.measurement.DeletionRequest} */
-@SmallTest
-public class DeletionRequestTest {
+public final class DeletionRequestTest extends AdServicesUnitTestCase {
     private static final Uri ORIGIN_URI = Uri.parse("https://a.foo.com");
     private static final Uri DOMAIN_URI = Uri.parse("https://foo.com");
     private static final Instant START = Instant.ofEpochSecond(0);
@@ -46,15 +45,13 @@ public class DeletionRequestTest {
                         .setEnd(END)
                         .build();
 
-        Assert.assertEquals(START, request.getStart());
-        Assert.assertEquals(END, request.getEnd());
-        Assert.assertEquals(1, request.getOriginUris().size());
-        Assert.assertEquals(ORIGIN_URI, request.getOriginUris().get(0));
-        Assert.assertEquals(1, request.getDomainUris().size());
-        Assert.assertEquals(DOMAIN_URI, request.getDomainUris().get(0));
-        Assert.assertEquals(
-                DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA, request.getDeletionMode());
-        Assert.assertEquals(DeletionRequest.MATCH_BEHAVIOR_PRESERVE, request.getMatchBehavior());
+        expect.that(request.getStart()).isEqualTo(START);
+        expect.that(request.getEnd()).isEqualTo(END);
+        expect.that(request.getOriginUris()).containsExactly(ORIGIN_URI);
+        expect.that(request.getDomainUris()).containsExactly(DOMAIN_URI);
+        expect.that(request.getDeletionMode())
+                .isEqualTo(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA);
+        expect.that(request.getMatchBehavior()).isEqualTo(DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
     }
 
     @Test
@@ -66,21 +63,21 @@ public class DeletionRequestTest {
                         .setStart(START)
                         .setEnd(END)
                         .build();
-        Assert.assertTrue(request.getOriginUris().isEmpty());
-        Assert.assertTrue(request.getDomainUris().isEmpty());
-        Assert.assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
-        Assert.assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, request.getMatchBehavior());
+        expect.that(request.getOriginUris()).isEmpty();
+        expect.that(request.getDomainUris()).isEmpty();
+        expect.that(request.getDeletionMode()).isEqualTo(DeletionRequest.DELETION_MODE_ALL);
+        expect.that(request.getMatchBehavior()).isEqualTo(DeletionRequest.MATCH_BEHAVIOR_DELETE);
     }
 
     @Test
     public void testDefaultParams() {
         DeletionRequest request = new DeletionRequest.Builder().build();
-        Assert.assertEquals(Instant.MIN, request.getStart());
-        Assert.assertEquals(Instant.MAX, request.getEnd());
-        Assert.assertTrue(request.getOriginUris().isEmpty());
-        Assert.assertTrue(request.getDomainUris().isEmpty());
-        Assert.assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
-        Assert.assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, request.getMatchBehavior());
+        expect.that(request.getStart()).isEqualTo(Instant.MIN);
+        expect.that(request.getEnd()).isEqualTo(Instant.MAX);
+        expect.that(request.getOriginUris()).isEmpty();
+        expect.that(request.getDomainUris()).isEmpty();
+        expect.that(request.getDeletionMode()).isEqualTo(DeletionRequest.DELETION_MODE_ALL);
+        expect.that(request.getMatchBehavior()).isEqualTo(DeletionRequest.MATCH_BEHAVIOR_DELETE);
     }
 
     @Test
@@ -101,7 +98,7 @@ public class DeletionRequestTest {
     public void testMinAndMaxInstants() {
         DeletionRequest request =
                 new DeletionRequest.Builder().setStart(Instant.MIN).setEnd(Instant.MAX).build();
-        Assert.assertEquals(Instant.MIN, request.getStart());
-        Assert.assertEquals(Instant.MAX, request.getEnd());
+        expect.that(request.getStart()).isEqualTo(Instant.MIN);
+        expect.that(request.getEnd()).isEqualTo(Instant.MAX);
     }
 }

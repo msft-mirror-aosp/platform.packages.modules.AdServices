@@ -64,7 +64,7 @@ public final class GetAppSetIdParamTest extends AdServicesUnitTestCase {
             parcel.recycle();
         }
 
-        assertThat(GetAppSetIdParam.CREATOR.newArray(1).length).isEqualTo(1);
+        assertThat(GetAppSetIdParam.CREATOR.newArray(1)).hasLength(1);
     }
 
     @Test

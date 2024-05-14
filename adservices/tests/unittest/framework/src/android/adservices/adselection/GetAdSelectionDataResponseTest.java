@@ -18,31 +18,28 @@ package android.adservices.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AssetFileDescriptorUtil;
-import android.adservices.common.CommonFixture;
 import android.content.res.AssetFileDescriptor;
 import android.os.Parcel;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
 
-public class GetAdSelectionDataResponseTest {
+@RequiresSdkLevelAtLeastS
+public final class GetAdSelectionDataResponseTest extends AdServicesUnitTestCase {
     private static final byte[] AD_SELECTION_RESULT = new byte[] {1, 2, 3, 4};
     private static final byte[] ANOTHER_AD_SELECTION_RESULT = new byte[] {5, 6, 7, 8};
     private static final long TEST_AD_SELECTION_ID = 12345;
     private static final ExecutorService BLOCKING_EXECUTOR =
             AdServicesExecutors.getBlockingExecutor();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildGetAdSelectionDataResponse() {
@@ -52,9 +49,9 @@ public class GetAdSelectionDataResponseTest {
                         .setAdSelectionData(AD_SELECTION_RESULT)
                         .build();
 
-        assertThat(getAdSelectionDataResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(getAdSelectionDataResponse.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
-        assertThat(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
+        expect.that(getAdSelectionDataResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        expect.that(getAdSelectionDataResponse.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
+        expect.that(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
     }
 
     @Test
@@ -69,11 +66,11 @@ public class GetAdSelectionDataResponseTest {
                         .setAssetFileDescriptor(assetFileDescriptor)
                         .build();
 
-        assertThat(getAdSelectionDataResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(getAdSelectionDataResponse.getAdSelectionData()).isNull();
+        expect.that(getAdSelectionDataResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        expect.that(getAdSelectionDataResponse.getAdSelectionData()).isNull();
         byte[] result =
                 AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(assetFileDescriptor);
-        assertThat(result).isEqualTo(AD_SELECTION_RESULT);
+        expect.that(result).isEqualTo(AD_SELECTION_RESULT);
     }
 
     @Test
@@ -90,9 +87,9 @@ public class GetAdSelectionDataResponseTest {
         GetAdSelectionDataResponse fromParcel =
                 GetAdSelectionDataResponse.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(fromParcel.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
-        assertThat(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
+        expect.that(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        expect.that(fromParcel.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
+        expect.that(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
     }
 
     @Test
@@ -113,12 +110,12 @@ public class GetAdSelectionDataResponseTest {
         GetAdSelectionDataResponse fromParcel =
                 GetAdSelectionDataResponse.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(fromParcel.getAdSelectionData()).isNull();
+        expect.that(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        expect.that(fromParcel.getAdSelectionData()).isNull();
         byte[] result =
                 AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(
                         fromParcel.getAssetFileDescriptor());
-        assertThat(result).isEqualTo(AD_SELECTION_RESULT);
+        expect.that(result).isEqualTo(AD_SELECTION_RESULT);
     }
 
     @Test
@@ -135,21 +132,20 @@ public class GetAdSelectionDataResponseTest {
         GetAdSelectionDataResponse fromParcel =
                 GetAdSelectionDataResponse.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(fromParcel.getAdSelectionData()).isNull();
-        assertThat(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
+        expect.that(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        expect.that(fromParcel.getAdSelectionData()).isNull();
+        expect.that(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
     }
 
     @Test
     public void testFailsToBuildWithUnsetAdSelectionId() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    new GetAdSelectionDataResponse.Builder()
-                            // Not setting AdSelectionId making it null.
-                            .setAdSelectionData(AD_SELECTION_RESULT)
-                            .build();
-                });
+                () ->
+                        new GetAdSelectionDataResponse.Builder()
+                                // Not setting AdSelectionId making it null.
+                                .setAdSelectionData(AD_SELECTION_RESULT)
+                                .build());
     }
 
     @Test
@@ -166,7 +162,8 @@ public class GetAdSelectionDataResponseTest {
                         .setAdSelectionData(AD_SELECTION_RESULT)
                         .build();
 
-        assertThat(obj1).isEqualTo(obj2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(obj1, obj2);
     }
 
     @Test
@@ -183,7 +180,16 @@ public class GetAdSelectionDataResponseTest {
                         .setAdSelectionData(ANOTHER_AD_SELECTION_RESULT)
                         .build();
 
-        assertThat(obj1).isNotEqualTo(obj2);
+        GetAdSelectionDataResponse obj3 =
+                new GetAdSelectionDataResponse.Builder()
+                        .setAdSelectionId(13579)
+                        .setAdSelectionData(AD_SELECTION_RESULT)
+                        .build();
+
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreNotEqual(obj1, obj2);
+        et.expectObjectsAreNotEqual(obj1, obj3);
+        et.expectObjectsAreNotEqual(obj2, obj3);
     }
 
     @Test
@@ -194,44 +200,7 @@ public class GetAdSelectionDataResponseTest {
                         .setAdSelectionData(AD_SELECTION_RESULT)
                         .build();
 
-        assertEquals(0, obj.describeContents());
-    }
-
-    @Test
-    public void testEqualGetAdSelectionDataResponsesHaveSameHashCode() {
-        GetAdSelectionDataResponse obj1 =
-                new GetAdSelectionDataResponse.Builder()
-                        .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setAdSelectionData(AD_SELECTION_RESULT)
-                        .build();
-        GetAdSelectionDataResponse obj2 =
-                new GetAdSelectionDataResponse.Builder()
-                        .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setAdSelectionData(AD_SELECTION_RESULT)
-                        .build();
-
-        CommonFixture.assertHaveSameHashCode(obj1, obj2);
-    }
-
-    @Test
-    public void testNotEqualGetAdSelectionDataResponsesHaveDifferentHashCodes() {
-        GetAdSelectionDataResponse obj1 =
-                new GetAdSelectionDataResponse.Builder()
-                        .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setAdSelectionData(AD_SELECTION_RESULT)
-                        .build();
-        GetAdSelectionDataResponse obj2 =
-                new GetAdSelectionDataResponse.Builder()
-                        .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setAdSelectionData(ANOTHER_AD_SELECTION_RESULT)
-                        .build();
-        GetAdSelectionDataResponse obj3 =
-                new GetAdSelectionDataResponse.Builder()
-                        .setAdSelectionId(13579)
-                        .setAdSelectionData(AD_SELECTION_RESULT)
-                        .build();
-
-        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
+        expect.that(obj.describeContents()).isEqualTo(0);
     }
 
     @Test
@@ -243,11 +212,12 @@ public class GetAdSelectionDataResponseTest {
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
                         .setAdSelectionData(adSelectionData)
                         .build();
-        assertThat(getAdSelectionDataResponse.getAdSelectionData()).isEqualTo(adSelectionData);
+        expect.that(getAdSelectionDataResponse.getAdSelectionData()).isEqualTo(adSelectionData);
 
         byte newValue = 5;
         adSelectionData[0] = newValue;
         assertThat(getAdSelectionDataResponse.getAdSelectionData()).isNotNull();
+        assertThat(getAdSelectionDataResponse.getAdSelectionData()).isNotEmpty();
         assertThat(getAdSelectionDataResponse.getAdSelectionData()[0]).isEqualTo(originalValue);
     }
 }

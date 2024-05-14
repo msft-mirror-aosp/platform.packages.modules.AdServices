@@ -26,11 +26,9 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
-import android.content.Context;
 import android.os.Build;
 import android.util.Pair;
 
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.util.LogUtil;
@@ -54,9 +52,7 @@ import java.util.stream.IntStream;
 @SpyStatic(Build.class)
 @SpyStatic(SdkLevel.class)
 public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCase {
-    private static final Context APPLICATION_CONTEXT = ApplicationProvider.getApplicationContext();
-
-    private static final String VALID_DIR = APPLICATION_CONTEXT.getFilesDir().getAbsolutePath();
+    private static final String VALID_DIR = sContext.getFilesDir().getAbsolutePath();
     private static final String FILENAME = "BooleanFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
     private static final String TEST_KEY = "key";

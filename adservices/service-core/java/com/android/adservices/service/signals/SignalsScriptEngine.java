@@ -31,7 +31,6 @@ import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.RetryStrategy;
-import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
@@ -146,24 +145,24 @@ public class SignalsScriptEngine {
                     + MARSHALL_ENCODED_SIGNALS_JS
                     + "\n";
 
-    public final JSScriptEngine mJsEngine;
+    private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
-    public final Executor mExecutor = MoreExecutors.directExecutor();
-    public final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
-    public final Supplier<Long> mMaxHeapSizeBytesSupplier;
-    public final RetryStrategy mRetryStrategy;
-    public final DevContext mDevContext;
+    private final Executor mExecutor = MoreExecutors.directExecutor();
+    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
+    private final Supplier<Long> mMaxHeapSizeBytesSupplier;
+    private final RetryStrategy mRetryStrategy;
+    private final Supplier<Boolean> mIsolateConsoleMessageInLogsEnabled;
 
     public SignalsScriptEngine(
             Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             RetryStrategy retryStrategy,
-            DevContext devContext) {
+            Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRetryStrategy = retryStrategy;
-        mDevContext = devContext;
+        mIsolateConsoleMessageInLogsEnabled = isolateConsoleMessageInLogsEnabled;
         mJsEngine = JSScriptEngine.getInstance(context, sLogger);
     }
 
@@ -183,7 +182,7 @@ public class SignalsScriptEngine {
     public ListenableFuture<byte[]> encodeSignals(
             @NonNull String encodingLogic,
             @NonNull Map<String, List<ProtectedSignal>> rawSignals,
-            @NonNull int maxSize,
+            int maxSize,
             @NonNull EncodingExecutionLogHelper logHelper)
             throws IllegalStateException {
 
@@ -216,9 +215,9 @@ public class SignalsScriptEngine {
                                 args,
                                 ENCODE_SIGNALS_DRIVER_FUNCTION_NAME,
                                 buildIsolateSettings(
-                                        mDevContext,
                                         mEnforceMaxHeapSizeFeatureSupplier,
-                                        mMaxHeapSizeBytesSupplier),
+                                        mMaxHeapSizeBytesSupplier,
+                                        mIsolateConsoleMessageInLogsEnabled),
                                 mRetryStrategy))
                 .transform(
                         encodingResult -> handleEncodingOutput(encodingResult, logHelper),
@@ -286,13 +285,13 @@ public class SignalsScriptEngine {
     }
 
     private static IsolateSettings buildIsolateSettings(
-            DevContext devContext,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
-            Supplier<Long> maxHeapSizeBytesSupplier) {
+            Supplier<Long> maxHeapSizeBytesSupplier,
+            Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
         return IsolateSettings.builder()
                 .setEnforceMaxHeapSizeFeature(enforceMaxHeapSizeFeatureSupplier.get())
                 .setMaxHeapSizeBytes(maxHeapSizeBytesSupplier.get())
-                .setIsolateConsoleMessageInLogsEnabled(devContext.getDevOptionsEnabled())
+                .setIsolateConsoleMessageInLogsEnabled(isolateConsoleMessageInLogsEnabled.get())
                 .build();
     }
 }

@@ -42,6 +42,15 @@ public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
     @Rule(order = 5)
     public final AdServicesFlagsSetterRule flags = getAdServicesFlagsSetterRule();
 
-    /** Gets the {@link AdServicesFlagsSetterRule} for this test. */
-    protected abstract AdServicesFlagsSetterRule getAdServicesFlagsSetterRule();
+    /**
+     * Gets the {@link AdServicesFlagsSetterRule} for this test.
+     *
+     * <p>By default returns a rule with just the bare minimum set (like {@code logcat} tags) and
+     * subclasses can customize it using class annotations (such as {@link
+     * com.android.adservices.shared.testing.annotations.SetFlagEnabled}), but subclasses could
+     * extend it to support more complex scenarios.
+     */
+    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
+        return AdServicesFlagsSetterRule.withDefaultLogcatTags();
+    }
 }

@@ -16,29 +16,26 @@
 
 package android.adservices.measurement;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
 import android.os.Parcel;
 import android.view.KeyEvent;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
+
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@RunWith(MockitoJUnitRunner.class)
-public class WebSourceRegistrationRequestTest {
+public final class WebSourceRegistrationRequestTest extends AdServicesUnitTestCase {
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo1.com");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
     private static final Uri TOP_ORIGIN_URI = Uri.parse("https://top-origin.com");
@@ -72,12 +69,12 @@ public class WebSourceRegistrationRequestTest {
                         .setAppDestination(OS_DESTINATION_URI)
                         .build();
 
-        assertEquals(SOURCE_REGISTRATIONS, request.getSourceParams());
-        assertEquals(TOP_ORIGIN_URI, request.getTopOriginUri());
-        assertEquals(OS_DESTINATION_URI, request.getAppDestination());
-        assertNull(request.getInputEvent());
-        assertNull(request.getWebDestination());
-        assertNull(request.getVerifiedDestination());
+        expect.that(request.getSourceParams()).isEqualTo(SOURCE_REGISTRATIONS);
+        expect.that(request.getTopOriginUri()).isEqualTo(TOP_ORIGIN_URI);
+        expect.that(request.getAppDestination()).isEqualTo(OS_DESTINATION_URI);
+        expect.that(request.getInputEvent()).isNull();
+        expect.that(request.getWebDestination()).isNull();
+        expect.that(request.getVerifiedDestination()).isNull();
     }
 
     @Test
@@ -87,13 +84,14 @@ public class WebSourceRegistrationRequestTest {
 
     @Test
     public void build_withMissingOsAndWebDestination_DoesNotThrowException() {
-        assertNotNull(
+        WebSourceRegistrationRequest request =
                 new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
                         .setInputEvent(INPUT_KEY_EVENT)
                         .setVerifiedDestination(VERIFIED_DESTINATION)
                         .setAppDestination(null)
                         .setWebDestination(null)
-                        .build());
+                        .build();
+        assertThat(request).isNotNull();
     }
 
     @Test
@@ -111,72 +109,63 @@ public class WebSourceRegistrationRequestTest {
                 NullPointerException.class,
                 () ->
                         new WebSourceRegistrationRequest.Builder(null, TOP_ORIGIN_URI)
-                                .setInputEvent(INPUT_KEY_EVENT)
-                                .build());
+                                .setInputEvent(INPUT_KEY_EVENT));
 
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new WebSourceRegistrationRequest.Builder(
                                         Collections.emptyList(), TOP_ORIGIN_URI)
-                                .setInputEvent(INPUT_KEY_EVENT)
-                                .build());
+                                .setInputEvent(INPUT_KEY_EVENT));
 
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, null)
-                                .setInputEvent(INPUT_KEY_EVENT)
-                                .build());
+                                .setInputEvent(INPUT_KEY_EVENT));
     }
 
     @Test
     public void testMaxWebSourceParam_failsWhenExceeds() {
-        assertNotNull(
-                new WebSourceRegistrationRequest.Builder(
-                                generateWebSourceParamsList(80), TOP_ORIGIN_URI)
-                        .setInputEvent(INPUT_KEY_EVENT)
-                        .build());
+        assertThat(
+                        new WebSourceRegistrationRequest.Builder(
+                                        generateWebSourceParamsList(80), TOP_ORIGIN_URI)
+                                .setInputEvent(INPUT_KEY_EVENT)
+                                .build())
+                .isNotNull();
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new WebSourceRegistrationRequest.Builder(
                                         generateWebSourceParamsList(81), TOP_ORIGIN_URI)
-                                .setInputEvent(INPUT_KEY_EVENT)
-                                .build());
+                                .setInputEvent(INPUT_KEY_EVENT));
     }
 
     @Test
     public void testDescribeContents() {
-        assertEquals(0, createExampleRegistrationRequest().describeContents());
+        expect.that(createExampleRegistrationRequest().describeContents()).isEqualTo(0);
     }
 
     @Test
-    public void testHashCode_equals() throws Exception {
-        final WebSourceRegistrationRequest request1 = createExampleRegistrationRequest();
-        final WebSourceRegistrationRequest request2 = createExampleRegistrationRequest();
-        final Set<WebSourceRegistrationRequest> requestData1 = Set.of(request1);
-        final Set<WebSourceRegistrationRequest> requestData2 = Set.of(request2);
-        assertEquals(request1.hashCode(), request2.hashCode());
-        assertEquals(request1, request2);
-        assertEquals(requestData1, requestData2);
+    public void testEquals() throws Exception {
+        EqualsTester et = new EqualsTester(expect);
+        WebSourceRegistrationRequest request1 = createExampleRegistrationRequest();
+        WebSourceRegistrationRequest request2 = createExampleRegistrationRequest();
+        et.expectObjectsAreEqual(request1, request2);
     }
 
     @Test
-    public void testHashCode_notEquals() throws Exception {
-        final WebSourceRegistrationRequest request1 = createExampleRegistrationRequest();
-        final WebSourceRegistrationRequest request2 =
+    public void testNotEquals() {
+        EqualsTester et = new EqualsTester(expect);
+        WebSourceRegistrationRequest request1 = createExampleRegistrationRequest();
+        WebSourceRegistrationRequest request2 =
                 new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
                         .setInputEvent(null)
                         .setVerifiedDestination(VERIFIED_DESTINATION)
                         .setAppDestination(OS_DESTINATION_URI)
                         .setWebDestination(WEB_DESTINATION_URI)
                         .build();
-        final Set<WebSourceRegistrationRequest> requestData1 = Set.of(request1);
-        final Set<WebSourceRegistrationRequest> requestData2 = Set.of(request2);
-        assertNotEquals(request1.hashCode(), request2.hashCode());
-        assertNotEquals(request1, request2);
-        assertNotEquals(requestData1, requestData2);
+        et.expectObjectsAreNotEqual(request1, request2);
     }
 
     private WebSourceRegistrationRequest createExampleRegistrationRequest() {
@@ -189,14 +178,15 @@ public class WebSourceRegistrationRequestTest {
     }
 
     private void verifyExampleRegistration(WebSourceRegistrationRequest request) {
-        assertEquals(SOURCE_REGISTRATIONS, request.getSourceParams());
-        assertEquals(TOP_ORIGIN_URI, request.getTopOriginUri());
-        assertEquals(OS_DESTINATION_URI, request.getAppDestination());
-        assertEquals(WEB_DESTINATION_URI, request.getWebDestination());
-        assertEquals(INPUT_KEY_EVENT.getAction(), ((KeyEvent) request.getInputEvent()).getAction());
-        assertEquals(
-                INPUT_KEY_EVENT.getKeyCode(), ((KeyEvent) request.getInputEvent()).getKeyCode());
-        assertEquals(VERIFIED_DESTINATION, request.getVerifiedDestination());
+        expect.that(request.getSourceParams()).isEqualTo(SOURCE_REGISTRATIONS);
+        expect.that(request.getTopOriginUri()).isEqualTo(TOP_ORIGIN_URI);
+        expect.that(request.getAppDestination()).isEqualTo(OS_DESTINATION_URI);
+        expect.that(request.getWebDestination()).isEqualTo(WEB_DESTINATION_URI);
+        expect.that(((KeyEvent) request.getInputEvent()).getAction())
+                .isEqualTo(INPUT_KEY_EVENT.getAction());
+        expect.that(((KeyEvent) request.getInputEvent()).getKeyCode())
+                .isEqualTo(INPUT_KEY_EVENT.getKeyCode());
+        expect.that(request.getVerifiedDestination()).isEqualTo(VERIFIED_DESTINATION);
     }
 
     private static List<WebSourceParams> generateWebSourceParamsList(int count) {

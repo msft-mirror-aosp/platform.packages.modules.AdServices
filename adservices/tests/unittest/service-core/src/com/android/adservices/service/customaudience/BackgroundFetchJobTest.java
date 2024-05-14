@@ -149,7 +149,7 @@ public final class BackgroundFetchJobTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void testSchedule_spe() {
-        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(true);
+        when(mMockFlags.getSpeOnBackgroundFetchJobEnabled()).thenReturn(true);
 
         BackgroundFetchJob.schedule(mMockFlags);
 
@@ -159,7 +159,7 @@ public final class BackgroundFetchJobTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testSchedule_legacy() {
         int resultCode = SCHEDULING_RESULT_CODE_SUCCESSFUL;
-        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(false);
+        when(mMockFlags.getSpeOnBackgroundFetchJobEnabled()).thenReturn(false);
         JobSchedulingLogger mockedLogger =
                 mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
         doReturn(resultCode)

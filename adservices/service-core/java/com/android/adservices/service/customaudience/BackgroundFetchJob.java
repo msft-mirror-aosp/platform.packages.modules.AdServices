@@ -95,7 +95,7 @@ public class BackgroundFetchJob implements JobWorker {
      */
     public static void schedule(Flags flags) {
         // If SPE is not enabled, force to schedule the job with the old JobService.
-        if (!flags.getSpeOnPilotJobsBatch2Enabled()) {
+        if (!flags.getSpeOnBackgroundFetchJobEnabled()) {
             sLogger.d("SPE is not enabled. Schedule the job with BackgroundFetchJobService.");
             int resultCode =
                     BackgroundFetchJobService.scheduleIfNeeded(flags, /* forceSchedule= */ false);

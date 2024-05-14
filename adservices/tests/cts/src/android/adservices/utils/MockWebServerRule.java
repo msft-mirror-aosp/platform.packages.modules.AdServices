@@ -164,7 +164,10 @@ public class MockWebServerRule implements TestRule {
         }
         ScenarioDispatcher dispatcher =
                 scenarioDispatcherFactory.getDispatcher(
-                        new URL(String.format("https://localhost:%d", mPort)));
+                        new URL(
+                                String.format(
+                                        "%s://localhost:%d",
+                                        useHttps() ? "https" : "http", mPort)));
         mMockWebServer.setDispatcher(dispatcher);
 
         mMockWebServer.play(mPort);

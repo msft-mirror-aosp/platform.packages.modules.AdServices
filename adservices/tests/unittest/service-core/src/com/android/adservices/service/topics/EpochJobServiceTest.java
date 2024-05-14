@@ -131,7 +131,7 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
         mSpyLogger = mockAdServicesJobServiceLogger(CONTEXT, mMockFlags);
 
         // By default, do not use SPE.
-        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(false);
+        when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(false);
     }
 
     @After
@@ -216,7 +216,7 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testOnStartJob_speEnabled() {
-        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(true);
+        when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(true);
         mocker.mockSpeJobScheduler(mMockAdServicesJobScheduler);
 
         mSpyEpochJobService.onStartJob(mMockJobParameters);

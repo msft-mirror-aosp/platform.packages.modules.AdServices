@@ -36,13 +36,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SignalsShellCommandFactory implements ShellCommandFactory {
-    public static final String COMMAND_PREFIX = "signals";
+    public static final String COMMAND_PREFIX = "app_signals";
     private final Map<String, ShellCommand> mAllCommandsMap;
     private final boolean mIsSignalsCliEnabled;
 
     public SignalsShellCommandFactory(boolean isSignalsCliEnabled) {
         mIsSignalsCliEnabled = isSignalsCliEnabled;
-        Set<ShellCommand> allCommandsMap = ImmutableSet.of(new GenerateInputForSignalsCommand());
+        Set<ShellCommand> allCommandsMap = ImmutableSet.of(new GenerateInputForEncodingCommand());
         mAllCommandsMap =
                 allCommandsMap.stream()
                         .collect(

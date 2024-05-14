@@ -141,7 +141,7 @@ public final class EpochJobService extends JobService {
         // Also for a job with Flex Period, it will NOT execute immediately after rescheduling it.
         // Reschedule it here to let the execution complete and the next cycle will execute with
         // the EpochJob.schedule().
-        if (FlagsFactory.getFlags().getSpeOnPilotJobsBatch2Enabled()) {
+        if (FlagsFactory.getFlags().getSpeOnEpochJobEnabled()) {
             LoggerFactory.getTopicsLogger()
                     .d("SPE is enabled. Reschedule EpochJob with SPE framework.");
             EpochJob.schedule();

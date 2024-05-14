@@ -59,7 +59,7 @@ public final class GetAdIdResultTest extends AdServicesUnitTestCase {
         expect.that(response.describeContents()).isEqualTo(0);
         expect.that(response.toString()).contains("GetAdIdResult{");
 
-        expect.that(GetAdIdResult.CREATOR.newArray(1).length).isEqualTo(1);
+        expect.that(GetAdIdResult.CREATOR.newArray(1)).hasLength(1);
     }
 
     @Test

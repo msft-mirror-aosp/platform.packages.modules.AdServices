@@ -46,8 +46,8 @@ public class FledgeApiCallFromBackgroundTest extends FledgeScenarioTest {
     public void setup() throws Exception {
         mDispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix()));
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-default.json"));
     }
 
     @After
@@ -60,7 +60,11 @@ public class FledgeApiCallFromBackgroundTest extends FledgeScenarioTest {
     public void testRunAdSelectionFromBackground() {
         Exception e =
                 Assert.assertThrows(
-                        ExecutionException.class, () -> doSelectAds(makeAdSelectionConfig()));
+                        ExecutionException.class,
+                        () ->
+                                doSelectAds(
+                                        makeAdSelectionConfig(
+                                                mDispatcher.getBaseAddressWithPrefix())));
         Assert.assertTrue(e.getCause() instanceof IllegalStateException);
         Assert.assertEquals(
                 ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE, e.getCause().getMessage());

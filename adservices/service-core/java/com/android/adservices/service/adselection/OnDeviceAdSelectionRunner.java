@@ -103,7 +103,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             boolean shouldUseUnifiedTables,
             @NonNull final RetryStrategy retryStrategy,
             @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory,
-            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer,
+            boolean consoleMessageInLogsEnabled) {
         super(
                 context,
                 customAudienceDao,
@@ -146,7 +147,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 mDebugReporting.getScriptStrategy(),
                                 cpcBillingEnabled,
                                 retryStrategy,
-                                devContext),
+                                () -> consoleMessageInLogsEnabled),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -172,7 +173,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 mDebugReporting,
                                 cpcBillingEnabled,
                                 dataVersionHeaderEnabled,
-                                retryStrategy),
+                                retryStrategy,
+                                consoleMessageInLogsEnabled),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
                                 devContext,

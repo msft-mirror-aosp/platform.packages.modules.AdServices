@@ -29,14 +29,12 @@ import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInli
 import com.android.adservices.mockito.LogInterceptor;
 import com.android.adservices.mockito.SharedMocker;
 import com.android.adservices.mockito.SharedMockitoMocker;
-import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -112,27 +110,9 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         private final AdServicesStaticMockitoMocker mAdServicesMocker;
         private final SharedMocker mSharedMocker = new SharedMockitoMocker();
 
-        // TODO(b/338132355): create helper class to implement StaticClassChecker from rule
         private Mocker(AdServicesExtendedMockitoRule rule) {
-            StaticClassChecker staticClassChecker =
-                    new StaticClassChecker() {
-                        @Override
-                        public boolean isSpiedOrMocked(Class<?> clazz) {
-                            return getSpiedOrMockedClasses().contains(clazz);
-                        }
-
-                        @Override
-                        public ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
-                            return rule.getSpiedOrMockedClasses();
-                        }
-
-                        @Override
-                        public String getTestName() {
-                            return rule.getTestName();
-                        }
-                    };
-            mAndroidMocker = new AndroidExtendedMockitoMocker(staticClassChecker);
-            mAdServicesMocker = new AdServicesExtendedMockitoMocker(staticClassChecker);
+            mAndroidMocker = new AndroidExtendedMockitoMocker(rule);
+            mAdServicesMocker = new AdServicesExtendedMockitoMocker(rule);
         }
 
         // AndroidStaticMocker methods

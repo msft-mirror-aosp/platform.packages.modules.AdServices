@@ -82,11 +82,14 @@ public class AdBeaconRegistrationTest extends FledgeScenarioTest {
             throws Exception {
         mScenarioDispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                scenarioJson, getCacheBusterPrefix()));
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                scenarioJson));
         joinCustomAudience(SHOES_CA);
-        AdSelectionOutcome outcome = doSelectAds(makeAdSelectionConfig());
-        doReportImpression(outcome.getAdSelectionId(), makeAdSelectionConfig());
+        AdSelectionOutcome outcome =
+                doSelectAds(makeAdSelectionConfig(mScenarioDispatcher.getBaseAddressWithPrefix()));
+        doReportImpression(
+                outcome.getAdSelectionId(),
+                makeAdSelectionConfig(mScenarioDispatcher.getBaseAddressWithPrefix()));
         try {
             doReportEvent(outcome.getAdSelectionId(), "view");
         } catch (Exception e) {

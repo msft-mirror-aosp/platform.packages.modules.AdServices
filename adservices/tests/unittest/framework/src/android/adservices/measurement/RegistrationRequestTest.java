@@ -15,28 +15,17 @@
  */
 package android.adservices.measurement;
 
-import android.content.Context;
+import static org.junit.Assert.assertThrows;
+
 import android.net.Uri;
 import android.os.Parcel;
 
-import androidx.test.InstrumentationRegistry;
-import androidx.test.filters.SmallTest;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-
-/**
- * Unit tests for {@link android.adservices.measurement.RegistrationRequest}
- */
-@SmallTest
-public final class RegistrationRequestTest {
-    private static final Context sContext = InstrumentationRegistry.getTargetContext();
+/** Unit tests for {@link android.adservices.measurement.RegistrationRequest} */
+public final class RegistrationRequestTest extends AdServicesUnitTestCase {
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
 
     private RegistrationRequest createExampleAttribution() {
@@ -51,14 +40,13 @@ public final class RegistrationRequestTest {
     }
 
     void verifyExampleAttribution(RegistrationRequest request) {
-        assertEquals("https://baz.test", request.getRegistrationUri().toString());
-        assertEquals(RegistrationRequest.REGISTER_SOURCE,
-                request.getRegistrationType());
-        assertNull(request.getInputEvent());
-        assertNotNull(request.getAppPackageName());
-        assertEquals(SDK_PACKAGE_NAME, request.getSdkPackageName());
-        assertEquals(1000L, request.getRequestTime());
-        assertTrue(request.isAdIdPermissionGranted());
+        expect.that(request.getRegistrationUri().toString()).isEqualTo("https://baz.test");
+        expect.that(request.getRegistrationType()).isEqualTo(RegistrationRequest.REGISTER_SOURCE);
+        expect.that(request.getInputEvent()).isNull();
+        expect.that(request.getAppPackageName()).isNotNull();
+        expect.that(request.getSdkPackageName()).isEqualTo(SDK_PACKAGE_NAME);
+        expect.that(request.getRequestTime()).isEqualTo(1000L);
+        expect.that(request.isAdIdPermissionGranted()).isTrue();
     }
 
     @Test
@@ -148,12 +136,12 @@ public final class RegistrationRequestTest {
                                 sContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();
-        assertEquals("https://foo.test", request.getRegistrationUri().toString());
-        assertEquals(RegistrationRequest.REGISTER_TRIGGER, request.getRegistrationType());
-        assertNull(request.getInputEvent());
-        assertNotNull(request.getAppPackageName());
-        assertEquals(SDK_PACKAGE_NAME, request.getSdkPackageName());
-        assertEquals(0, request.getRequestTime());
+        expect.that(request.getRegistrationUri().toString()).isEqualTo("https://foo.test");
+        expect.that(request.getRegistrationType()).isEqualTo(RegistrationRequest.REGISTER_TRIGGER);
+        expect.that(request.getInputEvent()).isNull();
+        expect.that(request.getAppPackageName()).isNotNull();
+        expect.that(request.getSdkPackageName()).isEqualTo(SDK_PACKAGE_NAME);
+        expect.that(request.getRequestTime()).isEqualTo(0);
     }
 
     @Test
@@ -173,6 +161,6 @@ public final class RegistrationRequestTest {
 
     @Test
     public void testDescribeContents() {
-        assertEquals(0, createExampleAttribution().describeContents());
+        expect.that(createExampleAttribution().describeContents()).isEqualTo(0);
     }
 }

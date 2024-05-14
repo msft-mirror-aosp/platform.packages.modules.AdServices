@@ -16,52 +16,45 @@
 
 package android.adservices.adselection;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCapFixture;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 // TODO(b/265204820): Move to CTS tests once public APIs are unhidden
-@SmallTest
-public class RemoveAdCounterHistogramOverrideRequestTest {
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
+@RequiresSdkLevelAtLeastS
+public final class RemoveAdCounterHistogramOverrideRequestTest extends AdServicesUnitTestCase {
     @Test
     public void testBuildValidRequest_success() {
-        final RemoveAdCounterHistogramOverrideRequest originalRequest =
+        RemoveAdCounterHistogramOverrideRequest originalRequest =
                 new RemoveAdCounterHistogramOverrideRequest.Builder()
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
                         .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .build();
 
-        assertThat(originalRequest.getAdEventType())
+        expect.that(originalRequest.getAdEventType())
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_CLICK);
-        assertThat(originalRequest.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
-        assertThat(originalRequest.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(originalRequest.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
+        expect.that(originalRequest.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
     }
 
     @Test
     public void testToString() {
-        final RemoveAdCounterHistogramOverrideRequest originalRequest =
+        RemoveAdCounterHistogramOverrideRequest originalRequest =
                 new RemoveAdCounterHistogramOverrideRequest.Builder()
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
                         .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .build();
 
-        final String expected =
+        String expected =
                 String.format(
                         "RemoveAdCounterHistogramOverrideRequest{mAdEventType=%d,"
                                 + " mAdCounterKey=%d, mBuyer=%s}",
@@ -69,7 +62,7 @@ public class RemoveAdCounterHistogramOverrideRequestTest {
                         KeyedFrequencyCapFixture.KEY1,
                         CommonFixture.VALID_BUYER_1);
 
-        assertThat(originalRequest.toString()).isEqualTo(expected);
+        expect.that(originalRequest.toString()).isEqualTo(expected);
     }
 
     @Test
@@ -92,16 +85,16 @@ public class RemoveAdCounterHistogramOverrideRequestTest {
 
     @Test
     public void testBuildUnsetAdCounterKey_success() {
-        final RemoveAdCounterHistogramOverrideRequest originalRequest =
+        RemoveAdCounterHistogramOverrideRequest originalRequest =
                 new RemoveAdCounterHistogramOverrideRequest.Builder()
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .build();
 
-        assertThat(originalRequest.getAdEventType())
+        expect.that(originalRequest.getAdEventType())
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION);
-        assertThat(originalRequest.getAdCounterKey()).isEqualTo(0);
-        assertThat(originalRequest.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(originalRequest.getAdCounterKey()).isEqualTo(0);
+        expect.that(originalRequest.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
     }
 
     @Test

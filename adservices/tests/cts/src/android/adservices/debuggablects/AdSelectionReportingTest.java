@@ -46,10 +46,10 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
     public void testReportImpression_defaultAdSelection_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-reportimpression.json",
-                                getCacheBusterPrefix()));
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-reportimpression.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -67,9 +67,10 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
     public void testReportImpression_buyerRequestFails_sellerRequestSucceeds() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-008.json", getCacheBusterPrefix()));
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-008.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -89,9 +90,9 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
     public void testReportImpression_buyerLogicTimesOut_reportingFails() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-060.json", getCacheBusterPrefix()));
-        AdSelectionConfig config = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-060.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -117,10 +118,10 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
     public void testReportImpression_withMismatchedAdTechUri_sellerRequestFails() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-068.json", getCacheBusterPrefix()));
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-068.json"));
         AdSelectionConfig config =
-                makeAdSelectionConfig()
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix())
                         .cloneToBuilder()
                         .setSeller(AdTechIdentifier.fromString("localhost:12345"))
                         .build();
@@ -146,9 +147,9 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
     public void testReportImpression_registerBuyerAndSellerBeacons_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-beacon.json", getCacheBusterPrefix()));
-        AdSelectionConfig config = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-beacon.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -168,10 +169,9 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
             throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-beacon-buyer-failure.json",
-                                getCacheBusterPrefix()));
-        AdSelectionConfig config = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-beacon-buyer-failure.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -193,10 +193,9 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
             throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-beacon-seller-failure.json",
-                                getCacheBusterPrefix()));
-        AdSelectionConfig config = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-beacon-seller-failure.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -218,10 +217,9 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
             throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-beacon-seller-failure.json",
-                                getCacheBusterPrefix()));
-        AdSelectionConfig config = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-beacon-seller-failure.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -243,10 +241,9 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
             throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-beacon-buyer-failure.json",
-                                getCacheBusterPrefix()));
-        AdSelectionConfig config = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-beacon-buyer-failure.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -268,9 +265,9 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
             throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-101.json", getCacheBusterPrefix()));
-        AdSelectionConfig config = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-101.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -293,9 +290,9 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
             throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-061.json", getCacheBusterPrefix()));
-        AdSelectionConfig config = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-061.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);

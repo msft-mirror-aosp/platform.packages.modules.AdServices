@@ -15,8 +15,6 @@
  */
 package com.android.adservices.mockito;
 
-import static com.android.adservices.mockito.AbstractStaticMocker.TAG;
-
 import android.util.Log;
 
 import com.google.common.collect.ImmutableSet;
@@ -37,7 +35,7 @@ public interface StaticClassChecker {
      */
     default boolean isSpiedOrMocked(Class<?> clazz) {
         Log.d(
-                TAG,
+                "StaticClassChecker",
                 "isSpiedOrMocked("
                         + clazz.getSimpleName()
                         + "): always returning true on default StaticClassChecker");
@@ -51,7 +49,7 @@ public interface StaticClassChecker {
      */
     default ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
         Log.d(
-                TAG,
+                "StaticClassChecker",
                 "getSpiedOrMockedClasses(): always returning empty on default"
                         + " StaticClassChecker");
         return ImmutableSet.of();

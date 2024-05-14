@@ -119,7 +119,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private static final String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1986/9e98784bcdb26a3eb2ab3f65ee811f43177c761f";
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/4004/112af649e6414df68a02df500859b23d3a2e643d";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/4503/fecd522d3dcfbe1b3b1f1054947be8528be43e97";
     private static final String PRODUCTION_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/4543/e9d118728752e6a6bfb5d7d8d1520807591f0717";
 
@@ -134,7 +134,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private static final String UI_OTA_RESOURCES_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/3150/672c83fa4aad630a360dc3b7ce43d94ab75852cd";
 
-    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 79;
+    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 78;
     private static final int PTB_ENROLLMENT_ENTRIES = 6;
     private static final int OEM_ENROLLMENT_ENTRIES = 114;
 

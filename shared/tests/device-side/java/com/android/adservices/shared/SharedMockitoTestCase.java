@@ -30,8 +30,7 @@ import org.mockito.quality.Strictness;
 
 public abstract class SharedMockitoTestCase extends SharedUnitTestCase {
 
-    @Mock protected Context mContext;
-    @Mock protected Context mAppContext;
+    @Mock protected Context mMockContext;
 
     @Rule(order = 10)
     public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);

@@ -16,14 +16,14 @@
 
 package android.adservices.measurement;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
 import android.os.Parcel;
 import android.view.KeyEvent;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
@@ -31,11 +31,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class SourceRegistrationRequestTest {
+public final class SourceRegistrationRequestTest extends AdServicesUnitTestCase {
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://bar.test");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.test");
     private static final Uri INVALID_REGISTRATION_URI = Uri.parse("http://bar.test");
@@ -52,15 +51,15 @@ public class SourceRegistrationRequestTest {
         SourceRegistrationRequest request =
                 new SourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS).build();
 
-        assertEquals(SOURCE_REGISTRATIONS, request.getRegistrationUris());
-        assertNull(request.getInputEvent());
+        expect.that(request.getRegistrationUris()).isEqualTo(SOURCE_REGISTRATIONS);
+        expect.that(request.getInputEvent()).isNull();
     }
 
     @Test
     public void build_withAllFieldsPopulated_successfullyRetrieved() {
         SourceRegistrationRequest request = createExampleRegistrationRequest();
-        assertEquals(SOURCE_REGISTRATIONS, request.getRegistrationUris());
-        assertEquals(INPUT_KEY_EVENT, request.getInputEvent());
+        expect.that(request.getRegistrationUris()).isEqualTo(SOURCE_REGISTRATIONS);
+        expect.that(request.getInputEvent()).isEqualTo(INPUT_KEY_EVENT);
     }
 
     @Test
@@ -70,11 +69,11 @@ public class SourceRegistrationRequestTest {
         p.setDataPosition(0);
         SourceRegistrationRequest fromParcel =
                 SourceRegistrationRequest.CREATOR.createFromParcel(p);
-        assertEquals(SOURCE_REGISTRATIONS, fromParcel.getRegistrationUris());
-        assertEquals(
-                INPUT_KEY_EVENT.getAction(), ((KeyEvent) fromParcel.getInputEvent()).getAction());
-        assertEquals(
-                INPUT_KEY_EVENT.getKeyCode(), ((KeyEvent) fromParcel.getInputEvent()).getKeyCode());
+        expect.that(fromParcel.getRegistrationUris()).isEqualTo(SOURCE_REGISTRATIONS);
+        expect.that(((KeyEvent) fromParcel.getInputEvent()).getAction())
+                .isEqualTo(INPUT_KEY_EVENT.getAction());
+        expect.that(((KeyEvent) fromParcel.getInputEvent()).getKeyCode())
+                .isEqualTo(INPUT_KEY_EVENT.getKeyCode());
         p.recycle();
     }
 
@@ -85,8 +84,8 @@ public class SourceRegistrationRequestTest {
         p.setDataPosition(0);
         SourceRegistrationRequest fromParcel =
                 SourceRegistrationRequest.CREATOR.createFromParcel(p);
-        assertEquals(SOURCE_REGISTRATIONS, fromParcel.getRegistrationUris());
-        assertNull(fromParcel.getInputEvent());
+        expect.that(fromParcel.getRegistrationUris()).isEqualTo(SOURCE_REGISTRATIONS);
+        expect.that(fromParcel.getInputEvent()).isNull();
         p.recycle();
     }
 
@@ -94,64 +93,51 @@ public class SourceRegistrationRequestTest {
     public void build_withInvalidParams_fail() {
         assertThrows(
                 NullPointerException.class,
-                () ->
-                        new SourceRegistrationRequest.Builder(null)
-                                .setInputEvent(INPUT_KEY_EVENT)
-                                .build());
+                () -> new SourceRegistrationRequest.Builder(null).setInputEvent(INPUT_KEY_EVENT));
 
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new SourceRegistrationRequest.Builder(Collections.emptyList())
-                                .setInputEvent(INPUT_KEY_EVENT)
-                                .build());
+                                .setInputEvent(INPUT_KEY_EVENT));
 
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new SourceRegistrationRequest.Builder(generateAppRegistrationUrisList(21))
-                                .setInputEvent(INPUT_KEY_EVENT)
-                                .build());
+                                .setInputEvent(INPUT_KEY_EVENT));
 
-        List<Uri> listWithInvalidRegistrationUri = new ArrayList<>();
-        listWithInvalidRegistrationUri.addAll(SOURCE_REGISTRATIONS);
+        List<Uri> listWithInvalidRegistrationUri = new ArrayList<>(SOURCE_REGISTRATIONS);
         listWithInvalidRegistrationUri.add(INVALID_REGISTRATION_URI);
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new SourceRegistrationRequest.Builder(listWithInvalidRegistrationUri)
-                                .setInputEvent(INPUT_KEY_EVENT)
-                                .build());
+                                .setInputEvent(INPUT_KEY_EVENT));
     }
 
     @Test
     public void testDescribeContents() {
-        assertEquals(0, SOURCE_REGISTRATION_REQUEST.describeContents());
+        expect.that(SOURCE_REGISTRATION_REQUEST.describeContents()).isEqualTo(0);
     }
 
     @Test
     public void testHashCode_equals() throws Exception {
-        final SourceRegistrationRequest request1 = createExampleRegistrationRequest();
-        final SourceRegistrationRequest request2 = createExampleRegistrationRequest();
-        final Set<SourceRegistrationRequest> requestSet1 = Set.of(request1);
-        final Set<SourceRegistrationRequest> requestSet2 = Set.of(request2);
-        assertEquals(request1.hashCode(), request2.hashCode());
-        assertEquals(request1, request2);
-        assertEquals(requestSet1, requestSet2);
+        EqualsTester et = new EqualsTester(expect);
+        SourceRegistrationRequest request1 = createExampleRegistrationRequest();
+        SourceRegistrationRequest request2 = createExampleRegistrationRequest();
+        et.expectObjectsAreEqual(request1, request2);
     }
 
     @Test
     public void testHashCode_notEquals() throws Exception {
-        final SourceRegistrationRequest request1 = createExampleRegistrationRequest();
-        final SourceRegistrationRequest request2 =
+        EqualsTester et = new EqualsTester(expect);
+        SourceRegistrationRequest request1 = createExampleRegistrationRequest();
+        SourceRegistrationRequest request2 =
                 new SourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS)
                         .setInputEvent(null)
                         .build();
-        final Set<SourceRegistrationRequest> requestData1 = Set.of(request1);
-        final Set<SourceRegistrationRequest> requestData2 = Set.of(request2);
-        assertNotEquals(request1.hashCode(), request2.hashCode());
-        assertNotEquals(request1, request2);
-        assertNotEquals(requestData1, requestData2);
+        et.expectObjectsAreNotEqual(request1, request2);
     }
 
     private static List<Uri> generateAppRegistrationUrisList(int count) {

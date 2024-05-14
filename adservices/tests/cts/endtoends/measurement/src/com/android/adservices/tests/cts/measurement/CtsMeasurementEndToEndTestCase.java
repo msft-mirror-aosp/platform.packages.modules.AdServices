@@ -33,9 +33,11 @@ import android.util.Log;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
 import com.android.adservices.shared.testing.annotations.SetLogcatTag;
 
 @SetLogcatTag(tag = LOGCAT_TAG_MEASUREMENT)
+@SetMsmtApiAppAllowList
 abstract class CtsMeasurementEndToEndTestCase extends AdServicesCtsTestCase {
 
     @Override
@@ -43,7 +45,6 @@ abstract class CtsMeasurementEndToEndTestCase extends AdServicesCtsTestCase {
         Log.d(mTag, "getAdServicesFlagsSetterRule(): allow-listing for " + mPackageName);
         return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                 .setCompatModeFlags()
-                .setMsmtApiAppAllowList(mPackageName)
                 .setMsmtWebContextClientAllowList(mPackageName)
                 .setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                 .setDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true)

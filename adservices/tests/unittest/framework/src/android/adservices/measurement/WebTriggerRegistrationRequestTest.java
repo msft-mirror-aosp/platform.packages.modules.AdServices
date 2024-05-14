@@ -16,27 +16,23 @@
 
 package android.adservices.measurement;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
 import android.os.Parcel;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
+
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@RunWith(MockitoJUnitRunner.class)
-public class WebTriggerRegistrationRequestTest {
+public final class WebTriggerRegistrationRequestTest extends AdServicesUnitTestCase {
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo1.com");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
     private static final Uri TOP_ORIGIN_URI = Uri.parse("https://top-origin.com");
@@ -60,8 +56,8 @@ public class WebTriggerRegistrationRequestTest {
                 new WebTriggerRegistrationRequest.Builder(TRIGGER_REGISTRATIONS, TOP_ORIGIN_URI)
                         .build();
 
-        assertEquals(TRIGGER_REGISTRATIONS, request.getTriggerParams());
-        assertEquals(TOP_ORIGIN_URI, request.getDestination());
+        expect.that(request.getTriggerParams()).isEqualTo(TRIGGER_REGISTRATIONS);
+        expect.that(request.getDestination()).isEqualTo(TOP_ORIGIN_URI);
     }
 
     @Test
@@ -82,58 +78,51 @@ public class WebTriggerRegistrationRequestTest {
     public void build_withInvalidParams_fail() {
         assertThrows(
                 NullPointerException.class,
-                () -> new WebTriggerRegistrationRequest.Builder(null, TOP_ORIGIN_URI).build());
+                () -> new WebTriggerRegistrationRequest.Builder(null, TOP_ORIGIN_URI));
 
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new WebTriggerRegistrationRequest.Builder(
-                                        Collections.emptyList(), TOP_ORIGIN_URI)
-                                .build());
+                                Collections.emptyList(), TOP_ORIGIN_URI));
     }
 
     @Test
     public void testMaxWebTriggerParam_failsWhenExceeds() {
-        assertNotNull(
-                new WebTriggerRegistrationRequest.Builder(
-                                generateWebTriggerParamsList(80), TOP_ORIGIN_URI)
-                        .build());
+        expect.that(
+                        new WebTriggerRegistrationRequest.Builder(
+                                        generateWebTriggerParamsList(80), TOP_ORIGIN_URI)
+                                .build())
+                .isNotNull();
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new WebTriggerRegistrationRequest.Builder(
-                                        generateWebTriggerParamsList(81), TOP_ORIGIN_URI)
-                                .build());
+                                generateWebTriggerParamsList(81), TOP_ORIGIN_URI));
     }
 
     @Test
     public void testDescribeContents() {
-        assertEquals(0, createExampleRegistrationRequest().describeContents());
+        expect.that(createExampleRegistrationRequest().describeContents()).isEqualTo(0);
     }
 
     @Test
-    public void testHashCode_equals() {
-        final WebTriggerRegistrationRequest request1 = createExampleRegistrationRequest();
-        final WebTriggerRegistrationRequest request2 = createExampleRegistrationRequest();
-        final Set<WebTriggerRegistrationRequest> requestSet1 = Set.of(request1);
-        final Set<WebTriggerRegistrationRequest> requestSet2 = Set.of(request2);
-        assertEquals(request1.hashCode(), request2.hashCode());
-        assertEquals(request1, request2);
-        assertEquals(requestSet1, requestSet2);
+    public void testEquals() {
+        EqualsTester et = new EqualsTester(expect);
+        WebTriggerRegistrationRequest request1 = createExampleRegistrationRequest();
+        WebTriggerRegistrationRequest request2 = createExampleRegistrationRequest();
+        et.expectObjectsAreEqual(request1, request2);
     }
 
     @Test
-    public void testHashCode_notEquals() {
-        final WebTriggerRegistrationRequest request1 = createExampleRegistrationRequest();
-        final WebTriggerRegistrationRequest request2 =
+    public void testNotEquals() {
+        EqualsTester et = new EqualsTester(expect);
+        WebTriggerRegistrationRequest request1 = createExampleRegistrationRequest();
+        WebTriggerRegistrationRequest request2 =
                 new WebTriggerRegistrationRequest.Builder(
                                 TRIGGER_REGISTRATIONS, Uri.parse("https://notEqual"))
                         .build();
-        final Set<WebTriggerRegistrationRequest> requestSet1 = Set.of(request1);
-        final Set<WebTriggerRegistrationRequest> requestSet2 = Set.of(request2);
-        assertNotEquals(request1.hashCode(), request2.hashCode());
-        assertNotEquals(request1, request2);
-        assertNotEquals(requestSet1, requestSet2);
+        et.expectObjectsAreNotEqual(request1, request2);
     }
 
     private WebTriggerRegistrationRequest createExampleRegistrationRequest() {
@@ -142,8 +131,8 @@ public class WebTriggerRegistrationRequestTest {
     }
 
     private void verifyExampleRegistration(WebTriggerRegistrationRequest request) {
-        assertEquals(TRIGGER_REGISTRATIONS, request.getTriggerParams());
-        assertEquals(TOP_ORIGIN_URI, request.getDestination());
+        expect.that(request.getTriggerParams()).isEqualTo(TRIGGER_REGISTRATIONS);
+        expect.that(request.getDestination()).isEqualTo(TOP_ORIGIN_URI);
     }
 
     private static List<WebTriggerParams> generateWebTriggerParamsList(int count) {

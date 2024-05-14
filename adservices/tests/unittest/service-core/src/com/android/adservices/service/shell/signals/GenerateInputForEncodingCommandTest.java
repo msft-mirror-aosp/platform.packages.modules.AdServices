@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.shell.signals;
 
-import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_SIGNALS_GENERATE_INPUT_FOR_SIGNALS;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
 
 import android.adservices.common.AdTechIdentifier;
 
@@ -25,12 +25,12 @@ import com.android.adservices.service.stats.ShellCommandStats;
 
 import org.junit.Test;
 
-public class GenerateInputForSignalsCommandTest
-        extends ShellCommandTestCase<GenerateInputForSignalsCommand> {
+public class GenerateInputForEncodingCommandTest
+        extends ShellCommandTestCase<GenerateInputForEncodingCommand> {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
 
     @ShellCommandStats.Command
-    private static final int EXPECTED_COMMAND = COMMAND_SIGNALS_GENERATE_INPUT_FOR_SIGNALS;
+    private static final int EXPECTED_COMMAND = COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
 
     @Test
     public void testRun_happyPath_returnsSuccess() {
@@ -41,9 +41,9 @@ public class GenerateInputForSignalsCommandTest
 
     private Result runCommandAndGetResult() {
         return run(
-                new GenerateInputForSignalsCommand(),
+                new GenerateInputForEncodingCommand(),
                 SignalsShellCommandFactory.COMMAND_PREFIX,
-                GenerateInputForSignalsCommand.CMD,
+                GenerateInputForEncodingCommand.CMD,
                 "--buyer",
                 BUYER.toString());
     }

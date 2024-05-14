@@ -33,12 +33,12 @@ import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.SingletonRunner;
-import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -101,7 +101,7 @@ public final class PeriodicEncodingJobWorker {
     private final Flags mFlags;
 
     @VisibleForTesting
-    protected PeriodicEncodingJobWorker(
+    public PeriodicEncodingJobWorker(
             EncoderLogicHandler encoderLogicHandler,
             EncoderLogicMetadataDao encoderLogicMetadataDao,
             EncodedPayloadDao encodedPayloadDao,
@@ -156,8 +156,6 @@ public final class PeriodicEncodingJobWorker {
                                     AdServicesExecutors.getLightWeightExecutor())
                             .createRetryStrategy(
                                     flags.getAdServicesJsScriptEngineMaxRetryAttempts());
-            // since this is a background process, dev context is disabled
-            DevContext devContext = DevContext.createForDevOptionsDisabled();
             return new PeriodicEncodingJobWorker(
                     new EncoderLogicHandler(context),
                     signalsDatabase.getEncoderLogicMetadataDao(),
@@ -169,7 +167,9 @@ public final class PeriodicEncodingJobWorker {
                             flags::getEnforceIsolateMaxHeapSize,
                             flags::getIsolateMaxHeapSizeBytes,
                             retryStrategy,
-                            devContext),
+                            () ->
+                                    DebugFlags.getInstance()
+                                            .getAdServicesJsIsolateConsoleMessagesInLogsEnabled()),
                     AdServicesExecutors.getBackgroundExecutor(),
                     AdServicesExecutors.getLightWeightExecutor(),
                     DevContextFilter.create(context),

@@ -121,10 +121,10 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
             throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json",
-                                getCacheBusterPrefix()));
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         // Set min allowed delay in past for easier testing
         setMinAllowedDelayTimeMinutes(MIN_ALLOWED_DELAY_TEST_OVERRIDE);
@@ -172,13 +172,9 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
                         + " false");
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json",
-                                getCacheBusterPrefix()));
-        Uri updateUri =
-                Uri.parse(
-                        dispatcher.getBaseAddressWithPrefix().toString()
-                                + Scenarios.UPDATE_CA_PATH);
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json"));
+        Uri updateUri = Uri.parse(dispatcher.getBaseAddressWithPrefix() + Scenarios.UPDATE_CA_PATH);
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
                                 updateUri,

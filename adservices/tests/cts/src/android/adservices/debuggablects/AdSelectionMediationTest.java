@@ -51,18 +51,18 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
     public void testSelectAds_withAdSelectionFromOutcomes_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-mediation.json",
-                                getCacheBusterPrefix()));
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-mediation.json"));
 
         try {
             joinCustomAudience(SHIRTS_CA);
+            URL baseAddress = dispatcher.getBaseAddressWithPrefix();
             AdSelectionOutcome result =
                     doSelectAds(
-                            makeAdSelectionFromOutcomesConfig(dispatcher.getBaseAddressWithPrefix())
+                            makeAdSelectionFromOutcomesConfig(baseAddress)
                                     .setAdSelectionIds(
                                             List.of(
-                                                    doSelectAds(makeAdSelectionConfig())
+                                                    doSelectAds(makeAdSelectionConfig(baseAddress))
                                                             .getAdSelectionId()))
                                     .build());
             assertThat(result.hasOutcome()).isTrue();
@@ -82,9 +82,9 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
     public void testSelectAds_withImpressionReporting_eventsAreReceived() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-075.json", getCacheBusterPrefix()));
-        AdSelectionConfig config = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-075.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHIRTS_CA);
@@ -124,14 +124,14 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
     public void testAdSelectionFromOutcome_buyerMustEnrolledToParticipate() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-mediation.json",
-                                getCacheBusterPrefix()));
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-mediation.json"));
 
         try {
             PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
             joinCustomAudience(SHIRTS_CA);
-            AdSelectionOutcome adSelectionOutcome1 = doSelectAds(makeAdSelectionConfig());
+            AdSelectionOutcome adSelectionOutcome1 =
+                    doSelectAds(makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix()));
             long adSelectionId = adSelectionOutcome1.getAdSelectionId();
 
             final AdSelectionFromOutcomesConfig fromOutcomesConfigEnrollmentFail =

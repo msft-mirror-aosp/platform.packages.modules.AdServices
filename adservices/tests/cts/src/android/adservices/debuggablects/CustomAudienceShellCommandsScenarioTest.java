@@ -17,9 +17,9 @@
 package android.adservices.debuggablects;
 
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -35,20 +35,21 @@ import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
 
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
-@SetFlagEnabled(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
+@EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
+@EnableDebugFlag(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
 @RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
 public final class CustomAudienceShellCommandsScenarioTest extends FledgeScenarioTest {
     private static final String OWNER = sContext.getPackageName();
@@ -56,18 +57,12 @@ public final class CustomAudienceShellCommandsScenarioTest extends FledgeScenari
     private final AdServicesShellCommandHelper mShellCommandHelper =
             new AdServicesShellCommandHelper();
 
-    @Before
-    public void setDebugFlag() {
-        flags.setDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true);
-    }
-
     @Test
     public void testRun_refreshCustomAudiences_verifyCustomAudienceChanged() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-refresh-ca.json",
-                                getCacheBusterPrefix()));
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-refresh-ca.json"));
         joinCustomAudience(SHOES_CA);
         AdTechIdentifier adTechIdentifier =
                 AdTechIdentifier.fromString(dispatcher.getBaseAddressWithPrefix().getHost());

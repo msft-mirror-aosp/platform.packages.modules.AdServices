@@ -49,9 +49,10 @@ public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
     public void testAdSelection_afterOneDay_adSelectionDataCleared() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix()));
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-default.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             overrideBiddingLogicVersionToV3(true);
@@ -81,10 +82,10 @@ public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
     public void testAdSelection_afterOneDay_adInteractionsIsCleared() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-beacon-no-interactions.json",
-                                getCacheBusterPrefix()));
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-beacon-no-interactions.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             overrideBiddingLogicVersionToV3(true);

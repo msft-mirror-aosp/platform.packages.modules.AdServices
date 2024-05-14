@@ -18,8 +18,6 @@ package com.android.adservices.service.shell;
 
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
@@ -35,17 +33,23 @@ import java.util.Objects;
  */
 public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier {
 
-    private final Flags mFlags;
+    private final boolean mIsCustomAudienceCliEnabled;
+    private final boolean mIsConsentedDebugCliEnabled;
+    private final boolean mIsSignalsCliEnabled;
     private final CustomAudienceDao mCustomAudienceDao;
     private final BackgroundFetchRunner mBackgroundFetchRunner;
     private final ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
 
     TestShellCommandFactorySupplier(
-            Flags flags,
+            boolean isCustomAudienceCLiEnabled,
+            boolean isConsentedDebugCliEnabled,
+            boolean isSignalsCliEnabled,
             BackgroundFetchRunner backgroundFetchRunner,
             CustomAudienceDao customAudienceDao,
             ConsentedDebugConfigurationDao consentedDebugConfigurationDao) {
-        mFlags = Objects.requireNonNull(flags, "Flags cannot be null");
+        mIsCustomAudienceCliEnabled = isCustomAudienceCLiEnabled;
+        mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
+        mIsSignalsCliEnabled = isSignalsCliEnabled;
         mCustomAudienceDao =
                 Objects.requireNonNull(customAudienceDao, "CustomAudienceDao cannot be null");
         mBackgroundFetchRunner =
@@ -61,13 +65,9 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
     public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {
         return ImmutableList.of(
                 new CustomAudienceShellCommandFactory(
-                        mFlags.getFledgeCustomAudienceCLIEnabledStatus(),
-                        mBackgroundFetchRunner,
-                        mCustomAudienceDao),
+                        mIsCustomAudienceCliEnabled, mBackgroundFetchRunner, mCustomAudienceDao),
                 new AdSelectionShellCommandFactory(
-                        mFlags.getFledgeConsentedDebuggingCliEnabledStatus(),
-                        mConsentedDebugConfigurationDao),
-                new SignalsShellCommandFactory(
-                        DebugFlags.getInstance().getAdServicesShellCommandEnabled()));
+                        mIsConsentedDebugCliEnabled, mConsentedDebugConfigurationDao),
+                new SignalsShellCommandFactory(mIsSignalsCliEnabled));
     }
 }

@@ -16,15 +16,13 @@
 
 package android.adservices.extdata;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertEquals;
-
 import android.os.Parcel;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class AdServicesExtDataParamsTest {
+public final class AdServicesExtDataParamsTest extends AdServicesUnitTestCase {
     @Test
     public void testWriteToParcel() throws Exception {
         AdServicesExtDataParams params =
@@ -43,17 +41,17 @@ public class AdServicesExtDataParamsTest {
 
         AdServicesExtDataParams fromParcel =
                 AdServicesExtDataParams.CREATOR.createFromParcel(parcel);
-        assertEquals(AdServicesExtDataParams.CREATOR.newArray(1).length, 1);
+        expect.that(AdServicesExtDataParams.CREATOR.newArray(1)).hasLength(1);
 
-        assertEquals(1, fromParcel.getIsNotificationDisplayed());
-        assertEquals(-1, fromParcel.getIsMeasurementConsented());
-        assertEquals(0, fromParcel.getIsU18Account());
-        assertEquals(1, fromParcel.getIsAdultAccount());
-        assertEquals(-1, fromParcel.getManualInteractionWithConsentStatus());
-        assertEquals(200L, fromParcel.getMeasurementRollbackApexVersion());
+        expect.that(fromParcel.getIsNotificationDisplayed()).isEqualTo(1);
+        expect.that(fromParcel.getIsMeasurementConsented()).isEqualTo(-1);
+        expect.that(fromParcel.getIsU18Account()).isEqualTo(0);
+        expect.that(fromParcel.getIsAdultAccount()).isEqualTo(1);
+        expect.that(fromParcel.getManualInteractionWithConsentStatus()).isEqualTo(-1);
+        expect.that(fromParcel.getMeasurementRollbackApexVersion()).isEqualTo(200L);
 
-        assertEquals(0, fromParcel.describeContents());
-        assertThat(fromParcel.toString()).isNotNull();
+        expect.that(fromParcel.describeContents()).isEqualTo(0);
+        expect.that(fromParcel.toString()).isNotNull();
     }
 
     @Test
@@ -77,6 +75,6 @@ public class AdServicesExtDataParamsTest {
                         + "mManualInteractionWithConsentStatus=-1, "
                         + "mMsmtRollbackApexVersion=200}";
 
-        assertEquals(expectedResult, params.toString());
+        expect.that(params.toString()).isEqualTo(expectedResult);
     }
 }

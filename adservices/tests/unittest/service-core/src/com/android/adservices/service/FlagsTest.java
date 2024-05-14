@@ -428,6 +428,25 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED", Flags::getSpeOnPilotJobsBatch2Enabled);
     }
 
+    @Test
+    public void testGetSpeOnEpochJobEnabled() {
+        testFeatureFlag("DEFAULT_SPE_ON_EPOCH_JOB_ENABLED", Flags::getSpeOnEpochJobEnabled);
+    }
+
+    @Test
+    public void testGetSpeOnBackgroundFetchJobEnabled() {
+        testFeatureFlag(
+                "DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED",
+                Flags::getSpeOnBackgroundFetchJobEnabled);
+    }
+
+    @Test
+    public void testGetSpeOnAsyncRegistrationFallbackJobEnabled() {
+        testFeatureFlag(
+                "DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED",
+                Flags::getSpeOnAsyncRegistrationFallbackJobEnabled);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //

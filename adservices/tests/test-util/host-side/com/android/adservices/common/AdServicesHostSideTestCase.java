@@ -34,6 +34,8 @@ import java.util.Objects;
  */
 public abstract class AdServicesHostSideTestCase implements IDeviceTest {
 
+    public static final String CTS_TEST_PACKAGE = "com.android.adservices.cts";
+
     protected final Logger mLog = new Logger(ConsoleLogger.getInstance(), getClass());
 
     protected ITestDevice mDevice;

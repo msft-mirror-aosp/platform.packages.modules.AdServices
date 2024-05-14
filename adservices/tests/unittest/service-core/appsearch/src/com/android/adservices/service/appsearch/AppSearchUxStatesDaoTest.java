@@ -31,12 +31,14 @@ import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnr
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
@@ -51,7 +53,10 @@ public class AppSearchUxStatesDaoTest {
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final String mAdServicesPackageName =
             AppSearchConsentWorker.getAdServicesPackageName(mContext);
+    private final ListenableFuture mSearchSessionFuture = Futures.immediateFuture(null);
     private MockitoSession mStaticMockSession;
+
+    @Mock private Executor mMockExecutor;
 
     @Rule
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
@@ -141,21 +146,16 @@ public class AppSearchUxStatesDaoTest {
 
     @Test
     public void isEntryPointEnabledTest_nullDao() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         boolean result =
                 AppSearchUxStatesDao.readIsEntryPointEnabled(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
     }
 
     @Test
     public void isEntryPointEnabledTest_trueBit() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID1;
         AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
         Mockito.when(dao.isEntryPointEnabled()).thenReturn(false);
@@ -167,7 +167,7 @@ public class AppSearchUxStatesDaoTest {
 
         boolean result =
                 AppSearchUxStatesDao.readIsEntryPointEnabled(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
 
         // Confirm that the right value is returned even when it is true.
@@ -181,27 +181,22 @@ public class AppSearchUxStatesDaoTest {
                                         any(), any(), any(), any(), eq(query2), any()));
         boolean result2 =
                 AppSearchUxStatesDao.readIsEntryPointEnabled(
-                        mockSearchSession, mockExecutor, ID2, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID2, mAdServicesPackageName);
         assertThat(result2).isTrue();
     }
 
     @Test
     public void isAdultAccountTest_nullDao() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         boolean result =
                 AppSearchUxStatesDao.readIsAdultAccount(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
     }
 
     @Test
     public void isAdultAccountTest_trueBit() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID1;
         AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
         Mockito.when(dao.isAdultAccount()).thenReturn(false);
@@ -213,7 +208,7 @@ public class AppSearchUxStatesDaoTest {
 
         boolean result =
                 AppSearchUxStatesDao.readIsAdultAccount(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
 
         // Confirm that the right value is returned even when it is true.
@@ -227,27 +222,22 @@ public class AppSearchUxStatesDaoTest {
                                         any(), any(), any(), any(), eq(query2), any()));
         boolean result2 =
                 AppSearchUxStatesDao.readIsAdultAccount(
-                        mockSearchSession, mockExecutor, ID2, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID2, mAdServicesPackageName);
         assertThat(result2).isTrue();
     }
 
     @Test
     public void isU18AccountTest_nullDao() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         boolean result =
                 AppSearchUxStatesDao.readIsU18Account(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
     }
 
     @Test
     public void isU18AccountTest_trueBit() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID1;
         AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
         Mockito.when(dao.isU18Account()).thenReturn(false);
@@ -259,7 +249,7 @@ public class AppSearchUxStatesDaoTest {
 
         boolean result =
                 AppSearchUxStatesDao.readIsU18Account(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
 
         // Confirm that the right value is returned even when it is true.
@@ -273,27 +263,22 @@ public class AppSearchUxStatesDaoTest {
                                         any(), any(), any(), any(), eq(query2), any()));
         boolean result2 =
                 AppSearchUxStatesDao.readIsU18Account(
-                        mockSearchSession, mockExecutor, ID2, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID2, mAdServicesPackageName);
         assertThat(result2).isTrue();
     }
 
     @Test
     public void isAdIdEnabledTest_nullDao() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         boolean result =
                 AppSearchUxStatesDao.readIsAdIdEnabled(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
     }
 
     @Test
     public void isAdIdEnabledTest_trueBit() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID1;
         AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
         Mockito.when(dao.isAdIdEnabled()).thenReturn(false);
@@ -305,7 +290,7 @@ public class AppSearchUxStatesDaoTest {
 
         boolean result =
                 AppSearchUxStatesDao.readIsAdIdEnabled(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
 
         // Confirm that the right value is returned even when it is true.
@@ -319,27 +304,22 @@ public class AppSearchUxStatesDaoTest {
                                         any(), any(), any(), any(), eq(query2), any()));
         boolean result2 =
                 AppSearchUxStatesDao.readIsAdIdEnabled(
-                        mockSearchSession, mockExecutor, ID2, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID2, mAdServicesPackageName);
         assertThat(result2).isTrue();
     }
 
     @Test
     public void wasU18NotificationDisplayedTest_nullDao() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         boolean result =
                 AppSearchUxStatesDao.readIsU18NotificationDisplayed(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
     }
 
     @Test
     public void wasU18NotificationDisplayedTest_trueBit() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID1;
         AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
         Mockito.when(dao.wasU18NotificationDisplayed()).thenReturn(false);
@@ -351,7 +331,7 @@ public class AppSearchUxStatesDaoTest {
 
         boolean result =
                 AppSearchUxStatesDao.readIsU18NotificationDisplayed(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
 
         // Confirm that the right value is returned even when it is true.
@@ -365,27 +345,22 @@ public class AppSearchUxStatesDaoTest {
                                         any(), any(), any(), any(), eq(query2), any()));
         boolean result2 =
                 AppSearchUxStatesDao.readIsU18NotificationDisplayed(
-                        mockSearchSession, mockExecutor, ID2, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID2, mAdServicesPackageName);
         assertThat(result2).isTrue();
     }
 
     @Test
     public void getUxTest_nullDao() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         PrivacySandboxUxCollection result =
                 AppSearchUxStatesDao.readUx(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isEqualTo(PrivacySandboxUxCollection.UNSUPPORTED_UX);
     }
 
     @Test
     public void getUxTest_allUxs() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID1;
         AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
 
@@ -399,21 +374,19 @@ public class AppSearchUxStatesDaoTest {
 
             PrivacySandboxUxCollection result =
                     AppSearchUxStatesDao.readUx(
-                            mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                            mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
             assertThat(result).isEqualTo(ux);
         }
     }
 
     @Test
     public void getEnrollmentChannelTest_nullDao() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         PrivacySandboxEnrollmentChannelCollection result =
                 AppSearchUxStatesDao.readEnrollmentChannel(
-                        mockSearchSession,
-                        mockExecutor,
+                        mSearchSessionFuture,
+                        mMockExecutor,
                         ID1,
                         PrivacySandboxUxCollection.UNSUPPORTED_UX,
                         mAdServicesPackageName);
@@ -422,9 +395,6 @@ public class AppSearchUxStatesDaoTest {
 
     @Test
     public void getEnrollmentChannelTest_allUxsAllChannels() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID1;
         AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
 
@@ -440,7 +410,11 @@ public class AppSearchUxStatesDaoTest {
 
                 PrivacySandboxEnrollmentChannelCollection result =
                         AppSearchUxStatesDao.readEnrollmentChannel(
-                                mockSearchSession, mockExecutor, ID1, ux, mAdServicesPackageName);
+                                mSearchSessionFuture,
+                                mMockExecutor,
+                                ID1,
+                                ux,
+                                mAdServicesPackageName);
                 assertThat(result).isEqualTo(channel);
             }
         }
@@ -448,21 +422,16 @@ public class AppSearchUxStatesDaoTest {
 
     @Test
     public void isMeasurementDataResetTest_nullDao() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         boolean result =
                 AppSearchUxStatesDao.readIsMeasurementDataReset(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
     }
 
     @Test
     public void readIsMeasurementDataResetTest_trueBit() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID1;
         AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
         Mockito.when(dao.isMeasurementDataReset()).thenReturn(false);
@@ -474,7 +443,7 @@ public class AppSearchUxStatesDaoTest {
 
         boolean result =
                 AppSearchUxStatesDao.readIsMeasurementDataReset(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
 
         // Confirm that the right value is returned even when it is true.
@@ -488,27 +457,22 @@ public class AppSearchUxStatesDaoTest {
                                         any(), any(), any(), any(), eq(query2), any()));
         boolean result2 =
                 AppSearchUxStatesDao.readIsMeasurementDataReset(
-                        mockSearchSession, mockExecutor, ID2, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID2, mAdServicesPackageName);
         assertThat(result2).isTrue();
     }
 
     @Test
     public void isPaDataResetTest_nullDao() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         boolean result =
                 AppSearchUxStatesDao.readIsPaDataReset(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
     }
 
     @Test
     public void readIsPaDataResetTest_trueBit() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID1;
         AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
         Mockito.when(dao.isPaDataReset()).thenReturn(false);
@@ -520,7 +484,7 @@ public class AppSearchUxStatesDaoTest {
 
         boolean result =
                 AppSearchUxStatesDao.readIsPaDataReset(
-                        mockSearchSession, mockExecutor, ID1, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID1, mAdServicesPackageName);
         assertThat(result).isFalse();
 
         // Confirm that the right value is returned even when it is true.
@@ -534,7 +498,7 @@ public class AppSearchUxStatesDaoTest {
                                         any(), any(), any(), any(), eq(query2), any()));
         boolean result2 =
                 AppSearchUxStatesDao.readIsPaDataReset(
-                        mockSearchSession, mockExecutor, ID2, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID2, mAdServicesPackageName);
         assertThat(result2).isTrue();
     }
 }

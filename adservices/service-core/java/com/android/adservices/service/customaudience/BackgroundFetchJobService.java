@@ -175,7 +175,7 @@ public class BackgroundFetchJobService extends JobService {
         // Also for a job with Flex Period, it will NOT execute immediately after rescheduling it.
         // Reschedule it here to let the execution complete and the next cycle will execute with
         // the BackgroundFetchJob.schedule().
-        if (flags.getSpeOnPilotJobsBatch2Enabled()) {
+        if (flags.getSpeOnBackgroundFetchJobEnabled()) {
             LoggerFactory.getFledgeLogger()
                     .d("SPE is enabled. Reschedule BackgroundFetchJobService with SPE framework.");
             BackgroundFetchJob.schedule(flags);

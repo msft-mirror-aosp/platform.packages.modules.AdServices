@@ -16,6 +16,7 @@
 
 package com.android.adservices.cts;
 
+import static com.android.adservices.common.AdServicesHostSideTestCase.CTS_TEST_PACKAGE;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
@@ -27,6 +28,8 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import android.cts.statsdatom.lib.DeviceUtils;
 
 import com.android.adservices.common.AdServicesHostSideTestCase;
+import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
+import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
 import com.android.adservices.shared.testing.BackgroundLogReceiver;
 import com.android.adservices.shared.testing.TestDeviceHelper;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
@@ -58,12 +61,14 @@ import java.util.stream.Collectors;
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
 @RequiresSdkLevelAtLeastT()
+// Measurement feature flags for calling the Measurement API
+@SetMsmtApiAppAllowList(CTS_TEST_PACKAGE)
+@SetMsmtWebContextClientAppAllowList(CTS_TEST_PACKAGE)
 public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
     private static final long BOOT_COMPLETED_TIMEOUT = 60_000L;
     private static final long LOG_RECEIVER_TIMEOUT_MS = 60_000L;
     private static final int ACTIVITY_LAUNCH_TIMEOUT_MS = 30_000;
 
-    private static final String PACKAGE = "com.android.adservices.cts";
     private static final String CLASS = "AppSearchWriterActivity";
     private static final String ADSERVICES_APK_PACKAGE_NAME_SUFFIX = "android.adservices.api";
 
@@ -77,13 +82,10 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
                 .setTopicsKillSwitch(false)
                 .setMddBackgroundTaskKillSwitch(true)
                 .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
-                // Measurement feature flags for calling the Measurement API
-                .setMsmtApiAppAllowList(PACKAGE)
-                .setMsmtWebContextClientAllowList(PACKAGE)
                 .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
                 // AppSearch feature flags
                 .setFlag(KEY_ENABLE_APPSEARCH_CONSENT_DATA, true)
-                .setFlag(KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE, PACKAGE)
+                .setFlag(KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE, CTS_TEST_PACKAGE)
                 // Logcat tags
                 .setAllLogcatTags()
                 .setLogcatTag("AppSearchWriterActivity", "VERBOSE");
@@ -153,7 +155,7 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
         // Start the test helper app that will write consent data and trigger a migration
         DeviceUtils.runActivity(
                 mDevice,
-                PACKAGE,
+                CTS_TEST_PACKAGE,
                 CLASS,
                 /* actionKey= */ "user-id",
                 /* actionValue= */ Integer.toString(mCurrentUser),

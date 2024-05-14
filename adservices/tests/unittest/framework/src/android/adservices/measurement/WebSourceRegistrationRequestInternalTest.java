@@ -16,27 +16,21 @@
 
 package android.adservices.measurement;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Parcel;
 import android.view.KeyEvent;
 
-import androidx.test.platform.app.InstrumentationRegistry;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
-public class WebSourceRegistrationRequestInternalTest {
-    private static final Context CONTEXT =
-            InstrumentationRegistry.getInstrumentation().getContext();
+public final class WebSourceRegistrationRequestInternalTest extends AdServicesUnitTestCase {
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo1.com");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
@@ -86,11 +80,7 @@ public class WebSourceRegistrationRequestInternalTest {
                 NullPointerException.class,
                 () ->
                         new WebSourceRegistrationRequestInternal.Builder(
-                                        null,
-                                        CONTEXT.getPackageName(),
-                                        SDK_PACKAGE_NAME,
-                                        REQUEST_TIME)
-                                .build());
+                                null, mPackageName, SDK_PACKAGE_NAME, REQUEST_TIME));
     }
 
     @Test
@@ -99,11 +89,10 @@ public class WebSourceRegistrationRequestInternalTest {
                 NullPointerException.class,
                 () ->
                         new WebSourceRegistrationRequestInternal.Builder(
-                                        EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                                        /* appPackageName = */ null,
-                                        SDK_PACKAGE_NAME,
-                                        REQUEST_TIME)
-                                .build());
+                                EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
+                                /* appPackageName= */ null,
+                                SDK_PACKAGE_NAME,
+                                REQUEST_TIME));
     }
 
     @Test
@@ -112,33 +101,30 @@ public class WebSourceRegistrationRequestInternalTest {
                 NullPointerException.class,
                 () ->
                         new WebSourceRegistrationRequestInternal.Builder(
-                                        EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                                        CONTEXT.getPackageName(),
-                                        /* sdkPackageName = */ null,
-                                        REQUEST_TIME)
-                                .build());
+                                EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
+                                mPackageName,
+                                /* sdkPackageName= */ null,
+                                REQUEST_TIME));
     }
 
     @Test
     public void testDescribeContents() {
-        assertEquals(0, createExampleRegistrationRequest().describeContents());
+        expect.that(createExampleRegistrationRequest().describeContents()).isEqualTo(0);
     }
 
     @Test
-    public void testHashCode_equals() {
-        final WebSourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
-        final WebSourceRegistrationRequestInternal request2 = createExampleRegistrationRequest();
-        final Set<WebSourceRegistrationRequestInternal> requestSet1 = Set.of(request1);
-        final Set<WebSourceRegistrationRequestInternal> requestSet2 = Set.of(request2);
-        assertEquals(request1.hashCode(), request2.hashCode());
-        assertEquals(request1, request2);
-        assertEquals(requestSet1, requestSet2);
+    public void testEquals() {
+        EqualsTester et = new EqualsTester(expect);
+        WebSourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        WebSourceRegistrationRequestInternal request2 = createExampleRegistrationRequest();
+        et.expectObjectsAreEqual(request1, request2);
     }
 
     @Test
-    public void testHashCode_notEquals() {
-        final WebSourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
-        final WebSourceRegistrationRequestInternal request2 =
+    public void testNotEquals() {
+        EqualsTester et = new EqualsTester(expect);
+        WebSourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        WebSourceRegistrationRequestInternal request2 =
                 new WebSourceRegistrationRequestInternal.Builder(
                                 EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
                                 "com.foo",
@@ -146,17 +132,13 @@ public class WebSourceRegistrationRequestInternalTest {
                                 REQUEST_TIME)
                         .build();
 
-        final Set<WebSourceRegistrationRequestInternal> requestSet1 = Set.of(request1);
-        final Set<WebSourceRegistrationRequestInternal> requestSet2 = Set.of(request2);
-        assertNotEquals(request1.hashCode(), request2.hashCode());
-        assertNotEquals(request1, request2);
-        assertNotEquals(requestSet1, requestSet2);
+        et.expectObjectsAreNotEqual(request1, request2);
     }
 
     private WebSourceRegistrationRequestInternal createExampleRegistrationRequest() {
         return new WebSourceRegistrationRequestInternal.Builder(
                         EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                        CONTEXT.getPackageName(),
+                        mPackageName,
                         SDK_PACKAGE_NAME,
                         REQUEST_TIME)
                 .setAdIdPermissionGranted(true)
@@ -165,19 +147,20 @@ public class WebSourceRegistrationRequestInternalTest {
 
     private void verifyExampleRegistrationInternal(WebSourceRegistrationRequestInternal request) {
         verifyExampleRegistration(request.getSourceRegistrationRequest());
-        assertEquals(CONTEXT.getPackageName(), request.getAppPackageName());
-        assertEquals(SDK_PACKAGE_NAME, request.getSdkPackageName());
-        assertTrue(request.isAdIdPermissionGranted());
+        expect.that(request.getAppPackageName()).isEqualTo(mPackageName);
+        expect.that(request.getSdkPackageName()).isEqualTo(SDK_PACKAGE_NAME);
+        expect.that(request.isAdIdPermissionGranted()).isTrue();
     }
 
     private void verifyExampleRegistration(WebSourceRegistrationRequest request) {
-        assertEquals(SOURCE_REGISTRATIONS, request.getSourceParams());
-        assertEquals(TOP_ORIGIN_URI, request.getTopOriginUri());
-        assertEquals(OS_DESTINATION_URI, request.getAppDestination());
-        assertEquals(WEB_DESTINATION_URI, request.getWebDestination());
-        assertEquals(INPUT_KEY_EVENT.getAction(), ((KeyEvent) request.getInputEvent()).getAction());
-        assertEquals(
-                INPUT_KEY_EVENT.getKeyCode(), ((KeyEvent) request.getInputEvent()).getKeyCode());
-        assertEquals(VERIFIED_DESTINATION, request.getVerifiedDestination());
+        expect.that(request.getSourceParams()).isEqualTo(SOURCE_REGISTRATIONS);
+        expect.that(request.getTopOriginUri()).isEqualTo(TOP_ORIGIN_URI);
+        expect.that(request.getAppDestination()).isEqualTo(OS_DESTINATION_URI);
+        expect.that(request.getWebDestination()).isEqualTo(WEB_DESTINATION_URI);
+        expect.that(((KeyEvent) request.getInputEvent()).getAction())
+                .isEqualTo(INPUT_KEY_EVENT.getAction());
+        expect.that(((KeyEvent) request.getInputEvent()).getKeyCode())
+                .isEqualTo(INPUT_KEY_EVENT.getKeyCode());
+        expect.that(request.getVerifiedDestination()).isEqualTo(VERIFIED_DESTINATION);
     }
 }
