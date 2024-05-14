@@ -17,9 +17,15 @@ package com.android.adservices.common;
 
 import static com.android.adservices.common.AbstractAdServicesSystemPropertiesDumperRule.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX;
 import static com.android.adservices.service.FlagsConstants.ARRAY_SPLITTER_COMMA;
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.EnableAllApis;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.common.annotations.SetDefaultLogcatTags;
@@ -95,6 +101,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     @Override
     protected boolean isAnnotationSupported(Annotation annotation) {
         return annotation instanceof DisableGlobalKillSwitch
+                || annotation instanceof EnableAllApis
                 || annotation instanceof SetCompatModeFlags
                 || annotation instanceof SetPpapiAppAllowList
                 || annotation instanceof SetMsmtApiAppAllowList
@@ -107,6 +114,8 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     protected void processAnnotation(Description description, Annotation annotation) {
         if (annotation instanceof DisableGlobalKillSwitch) {
             setGlobalKillSwitch(false);
+        } else if (annotation instanceof EnableAllApis) {
+            enableAllApis();
         } else if (annotation instanceof SetCompatModeFlags) {
             setCompatModeFlags();
         } else if (annotation instanceof SetPpapiAppAllowList) {
@@ -166,6 +175,17 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     @Deprecated
     public final T setGlobalKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
+    }
+
+    final T enableAllApis() {
+        return setAllLogcatTags()
+                .setGlobalKillSwitch(false)
+                .setTopicsKillSwitch(false)
+                .setFlag(KEY_ADID_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, true);
     }
 
     /**

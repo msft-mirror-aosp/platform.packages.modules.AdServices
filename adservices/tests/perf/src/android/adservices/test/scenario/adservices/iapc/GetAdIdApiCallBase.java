@@ -45,7 +45,7 @@ import java.util.concurrent.Executors;
 abstract class GetAdIdApiCallBase extends AdServicesUnitTestCase {
 
     @Rule(order = 11)
-    public AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.pristine();
+    public AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
 
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
 
