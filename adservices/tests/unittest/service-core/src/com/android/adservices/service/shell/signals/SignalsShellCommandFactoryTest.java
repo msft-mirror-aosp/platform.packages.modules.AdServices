@@ -38,8 +38,8 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
 
     @Test
     public void test_generateInputCmd() {
-        ShellCommand shellCommand = mFactory.getShellCommand(GenerateInputForSignalsCommand.CMD);
-        Truth.assertThat(shellCommand).isInstanceOf(GenerateInputForSignalsCommand.class);
+        ShellCommand shellCommand = mFactory.getShellCommand(GenerateInputForEncodingCommand.CMD);
+        Truth.assertThat(shellCommand).isInstanceOf(GenerateInputForEncodingCommand.class);
     }
 
     @Test
@@ -63,7 +63,7 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
     @Test
     public void test_cliDisabled() {
         mFactory = new SignalsShellCommandFactory(false);
-        ShellCommand shellCommand = mFactory.getShellCommand(GenerateInputForSignalsCommand.CMD);
+        ShellCommand shellCommand = mFactory.getShellCommand(GenerateInputForEncodingCommand.CMD);
         Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
 
@@ -79,6 +79,6 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
         mFactory = new SignalsShellCommandFactory(SIGNALS_CLI_ENABLED);
 
         Truth.assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
-                .containsExactlyElementsIn(Sets.newHashSet(GenerateInputForSignalsCommand.HELP));
+                .containsExactlyElementsIn(Sets.newHashSet(GenerateInputForEncodingCommand.HELP));
     }
 }
