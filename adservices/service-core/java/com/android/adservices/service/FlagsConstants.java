@@ -45,7 +45,14 @@ public final class FlagsConstants {
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     public static final String NAMESPACE_ADSERVICES = "adservices";
 
+    /** (Default) string used to separate array values on flattened flags. */
     public static final String ARRAY_SPLITTER_COMMA = ",";
+
+    /** Constant used to allow everything (typically all packages) on allow-list flags. */
+    public static final String ALLOWLIST_ALL = "*";
+
+    /** Constant used to not allow anything (typically all packages) on allow-list flags. */
+    public static final String ALLOWLIST_NONE = "";
 
     // Maximum possible percentage for percentage variables
     public static final int MAX_PERCENTAGE = 100;
@@ -765,8 +772,6 @@ public final class FlagsConstants {
     public static final String
             KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED =
                     "fledge_auction_server_get_ad_selection_data_payload_metrics_enabled";
-    public static final String KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED =
-            "fledge_auction_server_consented_debugging_enabled";
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
@@ -1434,14 +1439,6 @@ public final class FlagsConstants {
     public static final String KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST =
             "get_adservices_common_states_allow_list";
 
-    /** Key for feature flagging custom audiences CLI. */
-    public static final String KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED =
-            "fledge_is_custom_audience_cli_enabled";
-
-    /** Key for feature flagging consented debugging CLI. */
-    public static final String KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED =
-            "fledge_is_consented_debugging_cli_enabled";
-
     /** Key for AdServices' module job policy. */
     public static final String KEY_AD_SERVICES_MODULE_JOB_POLICY = "ad_services_module_job_policy";
 
@@ -1510,4 +1507,15 @@ public final class FlagsConstants {
     /** Key for enabling SPE on pilot background jobs. */
     public static final String KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED =
             "spe_on_pilot_jobs_batch_2_enabled";
+
+    /** Key for enabling SPE on {@code EpochJobService}. */
+    public static final String KEY_SPE_ON_EPOCH_JOB_ENABLED = "spe_on_epoch_job_enabled";
+
+    /** Key for enabling SPE on {@code BackgroundFetchJobService}. */
+    public static final String KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED =
+            "spe_on_background_fetch_job_enabled";
+
+    /** Key for enabling SPE on {@code AsyncRegistrationFallbackJobService}. */
+    public static final String KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED =
+            "spe_on_async_registration_fallback_job_enabled";
 }

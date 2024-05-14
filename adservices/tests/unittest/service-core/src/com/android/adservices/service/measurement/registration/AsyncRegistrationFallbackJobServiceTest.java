@@ -17,7 +17,6 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -111,6 +110,9 @@ public class AsyncRegistrationFallbackJobServiceTest extends AdServicesExtendedM
         when(mMockFlags.getMeasurementAsyncRegistrationFallbackJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
         when(mMockFlags.getMeasurementAsyncRegistrationFallbackJobPersisted()).thenReturn(true);
+
+        // By default, disable SPE
+        when(mMockFlags.getSpeOnAsyncRegistrationFallbackJobEnabled()).thenReturn(false);
     }
 
     @Test
@@ -232,7 +234,7 @@ public class AsyncRegistrationFallbackJobServiceTest extends AdServicesExtendedM
     @SpyStatic(AdServicesJobScheduler.class)
     public void onStartJob_speEnabled() {
         mocker.mockGetFlags(mMockFlags);
-        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(true);
+        when(mMockFlags.getSpeOnAsyncRegistrationFallbackJobEnabled()).thenReturn(true);
 
         AdServicesJobScheduler mockedAdServicesJobScheduler = mock(AdServicesJobScheduler.class);
         JobParameters mockedJobParameters = mock(JobParameters.class);

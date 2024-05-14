@@ -139,7 +139,8 @@ public class OutcomeSelectionRunner {
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             final int callerUid,
             boolean shouldUseUnifiedTables,
-            @NonNull final RetryStrategy retryStrategy) {
+            @NonNull final RetryStrategy retryStrategy,
+            boolean consoleMessageInLogsEnabled) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
@@ -173,7 +174,7 @@ public class OutcomeSelectionRunner {
                                 new DebugReportingScriptDisabledStrategy(),
                                 cpcBillingEnabled,
                                 retryStrategy,
-                                devContext),
+                                () -> consoleMessageInLogsEnabled),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,

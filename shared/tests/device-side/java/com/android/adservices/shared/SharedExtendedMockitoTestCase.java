@@ -20,9 +20,7 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
 import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.LogInterceptor;
-import com.android.adservices.mockito.StaticClassChecker;
 
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
 
@@ -39,26 +37,8 @@ public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
 
         private final AndroidStaticMocker mAndroidMocker;
 
-        // TODO(b/338132355): create helper class to implement StaticClassChecker from rule
         private Mocker(AdServicesExtendedMockitoRule rule) {
-            StaticClassChecker staticClassChecker =
-                    new StaticClassChecker() {
-                        @Override
-                        public boolean isSpiedOrMocked(Class<?> clazz) {
-                            return getSpiedOrMockedClasses().contains(clazz);
-                        }
-
-                        @Override
-                        public ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
-                            return rule.getSpiedOrMockedClasses();
-                        }
-
-                        @Override
-                        public String getTestName() {
-                            return rule.getTestName();
-                        }
-                    };
-            mAndroidMocker = new AndroidExtendedMockitoMocker(staticClassChecker);
+            mAndroidMocker = new AndroidExtendedMockitoMocker(rule);
         }
 
         // AndroidStaticMocker methods

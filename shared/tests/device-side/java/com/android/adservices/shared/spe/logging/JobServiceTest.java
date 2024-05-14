@@ -38,9 +38,7 @@ import static org.mockito.Mockito.when;
 import android.annotation.NonNull;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
-import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
@@ -72,7 +70,6 @@ import java.util.concurrent.TimeUnit;
  */
 public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
     // the test doesn't actually schedule a job. This avoids complicated mocking logic.
     private static final int JOB_ID = 1;
@@ -111,7 +108,7 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
         mLogger =
                 Mockito.spy(
                         new JobServiceLogger(
-                                CONTEXT,
+                                sContext,
                                 mMockClock,
                                 sMockStatsdLogger,
                                 mMockErrorLogger,
@@ -120,7 +117,7 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
                                 sMockFlags));
 
         // Clear shared preference
-        CONTEXT.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
+        sContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
 
         when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
     }
@@ -128,7 +125,7 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     @After
     public void teardown() {
         // Clear shared preference
-        CONTEXT.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
+        sContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
     }
 
     /** To test 1) success as first execution 2) success result code */

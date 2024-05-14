@@ -39,16 +39,7 @@ public abstract class SharedUnitTestCase {
     protected static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-    /** Package name of the app being instrumented. */
-    protected static final String sPackageName = sContext.getPackageName();
-
     protected final String mTag = getClass().getSimpleName();
-
-    /** Reference to the context of package being instrumented (target context). */
-    protected final Context mContext = sContext;
-
-    /** Package name of the app being instrumented. */
-    protected final String mPackageName = sPackageName;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();

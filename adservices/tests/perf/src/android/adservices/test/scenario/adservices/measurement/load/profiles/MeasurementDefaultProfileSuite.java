@@ -72,9 +72,9 @@ public class MeasurementDefaultProfileSuite {
                     // Override adid kill switch.
                     .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false)
                     // Override the flag to allow current package to call APIs.
-                    .setPpapiAppAllowList("*")
+                    .setPpapiAppAllowList(FlagsConstants.ALLOWLIST_ALL)
                     // Override the flag to allow current package to call delete API.
-                    .setMsmtWebContextClientAllowList("*")
+                    .setMsmtWebContextClientAllowList(FlagsConstants.ALLOWLIST_ALL)
                     // Override the flag for the global kill switch.
                     .setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, false)
                     // Override measurement kill switch.

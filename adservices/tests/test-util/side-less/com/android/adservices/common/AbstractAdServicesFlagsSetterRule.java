@@ -21,6 +21,9 @@ import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES
 
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
+import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
 import com.android.adservices.shared.testing.DeviceConfigHelper;
@@ -28,9 +31,12 @@ import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
 import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
+import com.google.errorprone.annotations.InlineMe;
+
 import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Objects;
 
 // TODO(b/294423183): add unit tests for the most relevant / less repetitive stuff (don't need to
@@ -48,8 +54,6 @@ import java.util.Objects;
 public abstract class AbstractAdServicesFlagsSetterRule<
                 T extends AbstractAdServicesFlagsSetterRule<T>>
         extends AbstractFlagsSetterRule<T> {
-
-    private static final String ALLOWLIST_SEPARATOR = ARRAY_SPLITTER_COMMA;
 
     protected static final String LOGCAT_LEVEL_VERBOSE = "VERBOSE";
 
@@ -73,6 +77,9 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                             || prop.name.startsWith(
                                     SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + "adservices");
 
+    private static final boolean USE_TEST_PACKAGE_AS_DEFAULT = true;
+    private static final boolean DONT_USE_TEST_PACKAGE_AS_DEFAULT = false;
+
     protected AbstractAdServicesFlagsSetterRule(
             RealLogger logger,
             DeviceConfigHelper.InterfaceFactory deviceConfigInterfaceFactory,
@@ -89,7 +96,10 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     @Override
     protected boolean isAnnotationSupported(Annotation annotation) {
         return annotation instanceof DisableGlobalKillSwitch
-                || annotation instanceof SetCompatModeFlags;
+                || annotation instanceof SetCompatModeFlags
+                || annotation instanceof SetPpapiAppAllowList
+                || annotation instanceof SetMsmtApiAppAllowList
+                || annotation instanceof SetMsmtWebContextClientAppAllowList;
     }
 
     @Override
@@ -98,6 +108,16 @@ public abstract class AbstractAdServicesFlagsSetterRule<
             setGlobalKillSwitch(false);
         } else if (annotation instanceof SetCompatModeFlags) {
             setCompatModeFlags();
+        } else if (annotation instanceof SetPpapiAppAllowList) {
+            setPpapiAppAllowList(
+                    ((SetPpapiAppAllowList) annotation).value(), USE_TEST_PACKAGE_AS_DEFAULT);
+        } else if (annotation instanceof SetMsmtApiAppAllowList) {
+            setMsmtApiAppAllowList(
+                    ((SetMsmtApiAppAllowList) annotation).value(), USE_TEST_PACKAGE_AS_DEFAULT);
+        } else if (annotation instanceof SetMsmtWebContextClientAppAllowList) {
+            setMsmtWebContextClientAllowList(
+                    ((SetMsmtWebContextClientAppAllowList) annotation).value(),
+                    USE_TEST_PACKAGE_AS_DEFAULT);
         } else {
             // should not happen
             throw new IllegalStateException(
@@ -106,40 +126,55 @@ public abstract class AbstractAdServicesFlagsSetterRule<
         }
     }
 
+    /**
+     * Gets the package name of the app running this test.
+     *
+     * <p>Used on annotations that applies to the test app by default (for example, for allowlist).
+     */
+    protected String getTestPackageName() {
+        //
+        throw new UnsupportedOperationException(
+                "Concrete rule ("
+                        + getClass().getSimpleName()
+                        + ") cannot infer the name of the test package (typically happens on"
+                        + " host-side tests)");
+    }
+
     // Helper methods to set more commonly used flags such as kill switches.
     // Less common flags can be set directly using setFlags methods.
 
-    /** Overrides the flag that sets the global AdServices kill switch. */
-    public T setGlobalKillSwitch(boolean value) {
+    /**
+     * Overrides the flag that sets the global AdServices kill switch.
+     *
+     * @deprecated - it's cleaner to use the {@link DisableGlobalKillSwitch} annotation and this
+     *     method might be eventually removed.
+     */
+    @Deprecated
+    public final T setGlobalKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
     }
 
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getAdServicesEnabled}.
      */
-    public T setAdServicesEnabled(boolean value) {
+    public final T setAdServicesEnabled(boolean value) {
         return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
     }
 
-    /** Overrides the flag that sets the AppsetId kill switch. */
-    public T setAppsetIdKillSwitch(boolean value) {
-        return setFlag(FlagsConstants.KEY_APPSETID_KILL_SWITCH, value);
-    }
-
     /** Overrides the flag that sets the Topics kill switch. */
-    public T setTopicsKillSwitch(boolean value) {
+    public final T setTopicsKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_TOPICS_KILL_SWITCH, value);
     }
 
     /** Overrides the flag that sets the Topics Device Classifier kill switch. */
-    public T setTopicsOnDeviceClassifierKillSwitch(boolean value) {
+    public final T setTopicsOnDeviceClassifierKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, value);
     }
 
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getEnableBackCompat()}.
      */
-    public T setEnableBackCompat(boolean value) {
+    public final T setEnableBackCompat(boolean value) {
         return setFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, value);
     }
 
@@ -147,17 +182,37 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMeasurementRollbackDeletionAppSearchKillSwitch()}.
      */
-    public T setMeasurementRollbackDeletionAppSearchKillSwitch(boolean value) {
+    public final T setMeasurementRollbackDeletionAppSearchKillSwitch(boolean value) {
         return setFlag(
                 FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH, value);
     }
 
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPpapiAppAllowList()}.
+     *
+     * @deprecated it's cleaner to use the {@link SetPpapiAppAllowList} annotation and this method
+     *     might be eventually removed.
      */
-    // <p> TODO (b/303901926) - apply consistent naming to allow list methods
-    public T setPpapiAppAllowList(String value) {
-        return setOrCacheFlag(FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
+    @Deprecated
+    public final T setPpapiAppAllowList(String... value) {
+        return setPpapiAppAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
+    }
+
+    private T setPpapiAppAllowList(String[] value, boolean useTestPackageAsDefault) {
+        mLog.d(
+                "setPpapiAppAllowList(useTestPackageAsDefault=%b): %s",
+                useTestPackageAsDefault, Arrays.toString(value));
+        return setAllowListFlag(
+                FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, useTestPackageAsDefault);
+    }
+
+    /**
+     * @deprecated - use {@link #setPpapiAppSignatureAllowList(String...)} insteads
+     */
+    @InlineMe(replacement = "this.setPpapiAppSignatureAllowList(value)")
+    @Deprecated
+    public final T overridePpapiAppSignatureAllowList(String... value) {
+        return setPpapiAppSignatureAllowList(value);
     }
 
     /**
@@ -165,27 +220,52 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * com.android.adservices.service.PhFlags#getPpapiAppSignatureAllowList()}. NOTE: this will
      * completely override the allow list, *not* append to it.
      */
-    // <p> TODO (b/303901926) - apply consistent naming to allow list methods
-    public T overridePpapiAppSignatureAllowList(String value) {
-        return setFlag(FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST, value);
+    // <p> TODO (b/303901926) - remove / uses annotation only (just 2 usages)
+    public final T setPpapiAppSignatureAllowList(String... value) {
+        mLog.d("setPpapiAppSignatureAllowList(): %s", Arrays.toString(value));
+        return setAllowListFlag(
+                FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
+                value,
+                DONT_USE_TEST_PACKAGE_AS_DEFAULT);
     }
 
     /**
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMsmtApiAppAllowList()}.
+     *
+     * @deprecated - it's cleaner to use the {@link SetMsmtApiAppAllowList} annotation and this
+     *     method might be eventually removed.
      */
-    public T setMsmtApiAppAllowList(String value) {
-        return setOrCacheFlag(
-                FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
+    @Deprecated
+    public final T setMsmtApiAppAllowList(String... value) {
+        return setMsmtApiAppAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
+    }
+
+    private T setMsmtApiAppAllowList(String[] value, boolean useTestPackageAsDefault) {
+        mLog.d(
+                "setMsmtApiAppAllowList(useTestPackageAsDefault=%b): %s",
+                useTestPackageAsDefault, Arrays.toString(value));
+        return setAllowListFlag(
+                FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST, value, useTestPackageAsDefault);
     }
 
     /**
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getWebContextClientAppAllowList()}.
+     *
+     * @deprecated - it's cleaner to use the {@link SetMsmtWebContextClientAppAllowList} annotation
+     *     and this method might be eventually removed.
      */
-    public T setMsmtWebContextClientAllowList(String value) {
-        return setOrCacheFlagWithSeparator(
-                FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
+    public final T setMsmtWebContextClientAllowList(String... value) {
+        return setMsmtWebContextClientAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
+    }
+
+    private T setMsmtWebContextClientAllowList(String[] value, boolean useTestPackageAsDefault) {
+        mLog.d(
+                "setMsmtWebContextClientAllowList(useTestPackageAsDefault=%b): %s",
+                useTestPackageAsDefault, Arrays.toString(value));
+        return setAllowListFlag(
+                FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST, value, useTestPackageAsDefault);
     }
 
     /**
@@ -196,7 +276,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
 
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
     // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
@@ -206,7 +285,11 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     /**
      * Sets all flags needed to enable compatibility mode, according to the Android version of the
      * device running the test.
+     *
+     * @deprecated - it's cleaner to use the {@link SetCompatModeFlags} annotation and this method
+     *     might be eventually removed
      */
+    @Deprecated
     public T setCompatModeFlags() {
         return runOrCache(
                 "setCompatModeFlags()",
@@ -291,6 +374,18 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
     // make it easier to transition the test to an annotated-base approach.                       //
     ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private T setAllowListFlag(String name, String[] values, boolean useTestPackageAsDefault) {
+        if (values.length == 0 && useTestPackageAsDefault) {
+            String testPkg = getTestPackageName();
+            mLog.d(
+                    "setAllowListUsingTestAppAsDefault(%s): package not set by annotation, using"
+                            + " test package name %s",
+                    name, testPkg);
+            values = new String[] {testPkg};
+        }
+        return setFlag(name, values, ARRAY_SPLITTER_COMMA);
+    }
 
     private T setOrCacheFlagWithSeparator(String name, String value, String separator) {
         return setOrCacheFlag(name, value, Objects.requireNonNull(separator));

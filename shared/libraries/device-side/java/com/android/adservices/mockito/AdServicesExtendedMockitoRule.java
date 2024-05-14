@@ -63,7 +63,8 @@ import java.util.function.Supplier;
  */
 public final class AdServicesExtendedMockitoRule
         extends AbstractExtendedMockitoRule<
-                AdServicesExtendedMockitoRule, AdServicesExtendedMockitoRule.Builder> {
+                AdServicesExtendedMockitoRule, AdServicesExtendedMockitoRule.Builder>
+        implements StaticClassChecker {
 
     private static final String TAG = AdServicesExtendedMockitoRule.class.getSimpleName();
 
@@ -80,15 +81,14 @@ public final class AdServicesExtendedMockitoRule
         super(new Builder().addStaticMockFixtures(suppliers));
     }
 
-    // TODO(b/312802824): add unit tests (for rule itself)
-    /**
-     * Gets the name of the test being executed.
-     *
-     * @throws IllegalStateException if not running a test.
-     */
+    // TODO(b/339831452): add unit tests (for rule itself)
+    @Override
     public final String getTestName() {
         if (mTestName == null) {
-            throw new IllegalStateException("not running a test");
+            // TODO(b/339831452): create constant for "N/A" and use / fix it in other places (like
+            // TestHelper - it might even be worth to create a new interface (like TestNamer) and
+            // use on our superclass, as it's provided by a couple or rules (like ProcessLifeGuard)
+            return "N/A";
         }
         return mTestName;
     }
@@ -141,9 +141,25 @@ public final class AdServicesExtendedMockitoRule
         return super.getClearInlineMethodsAtTheEnd(description);
     }
 
-    /** Gets the classes that are spied or mocked. */
+    @Override
     public ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
         return ImmutableSet.copyOf(mSpiedOrMockedStaticClasses);
+    }
+
+    @Override
+    public boolean isSpiedOrMocked(Class<?> clazz) {
+        return mSpiedOrMockedStaticClasses.contains(clazz);
+    }
+
+    @Override
+    public String toString() {
+        return "["
+                + getClass().getSimpleName()
+                + ": spying / mocking on "
+                + mSpiedOrMockedStaticClasses.size()
+                + " classes: "
+                + mSpiedOrMockedStaticClasses
+                + "]";
     }
 
     public static final class Builder

@@ -75,7 +75,7 @@ public class AsyncRegistrationFallbackJobService extends JobService {
         //
         // Note the job without a flex period will execute immediately after rescheduling with the
         // same ID. Therefore, ending the execution here and let it run in the new SPE job.
-        if (FlagsFactory.getFlags().getSpeOnPilotJobsBatch2Enabled()) {
+        if (FlagsFactory.getFlags().getSpeOnAsyncRegistrationFallbackJobEnabled()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "SPE is enabled. Reschedule AsyncRegistrationFallbackJobService with"

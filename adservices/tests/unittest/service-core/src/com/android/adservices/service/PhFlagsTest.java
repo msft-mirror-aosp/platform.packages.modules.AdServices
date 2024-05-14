@@ -105,6 +105,9 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_EPOCH_JOB_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
@@ -175,7 +178,6 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGRO
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
-import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
@@ -235,8 +237,6 @@ import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JO
 import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS;
-import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED;
-import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
@@ -622,7 +622,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
@@ -701,8 +700,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACH
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION;
@@ -965,6 +962,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOT
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_EPOCH_JOB_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
@@ -4839,14 +4839,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetFledgeAuctionServerConsentedDebuggingEnabled() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
-                FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
-                Flags::getFledgeAuctionServerConsentedDebuggingEnabled);
-    }
-
-    @Test
     public void testGetFledgeAuctionServerCoordinatorUrlAllowlist() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST,
@@ -5619,22 +5611,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetFledgeCustomAudienceCliEnabledStatusFlag() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
-                FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED,
-                Flags::getFledgeCustomAudienceCLIEnabledStatus);
-    }
-
-    @Test
-    public void testGetFledgConsentedDebuggingCliEnabledStatusFlag() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED,
-                FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED,
-                Flags::getFledgeConsentedDebuggingCliEnabledStatus);
-    }
-
-    @Test
     public void testGetAdServicesRetryStrategyEnabled() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED,
@@ -5857,6 +5833,30 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED,
                 DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED,
                 Flags::getSpeOnPilotJobsBatch2Enabled);
+    }
+
+    @Test
+    public void testGetSpeOnEpochJobEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_SPE_ON_EPOCH_JOB_ENABLED,
+                DEFAULT_SPE_ON_EPOCH_JOB_ENABLED,
+                Flags::getSpeOnEpochJobEnabled);
+    }
+
+    @Test
+    public void getSpeOnBackgroundFetchJobEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED,
+                DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED,
+                Flags::getSpeOnBackgroundFetchJobEnabled);
+    }
+
+    @Test
+    public void getSpeOnAsyncRegistrationFallbackJobEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED,
+                DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED,
+                Flags::getSpeOnAsyncRegistrationFallbackJobEnabled);
     }
 
     private void setMeasurementKillSwitch(boolean value) {

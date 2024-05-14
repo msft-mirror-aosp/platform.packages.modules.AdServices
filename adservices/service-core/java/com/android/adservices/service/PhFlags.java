@@ -36,8 +36,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION;
@@ -109,6 +107,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_EXECU
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_EPOCH_JOB_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.MAX_PERCENTAGE;
@@ -2427,13 +2428,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
-                FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED);
-    }
-
-    @Override
     public boolean isDisableTopicsEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK),
@@ -4561,11 +4555,6 @@ public final class PhFlags implements Flags {
                         + getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerConsentedDebuggingEnabled());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getAdSelectionOverallTimeoutMs());
@@ -5395,16 +5384,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
                         + " = "
                         + getAdServicesCommonStatesAllowList());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED
-                        + " = "
-                        + getFledgeCustomAudienceCLIEnabledStatus());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED
-                        + " = "
-                        + getFledgeConsentedDebuggingCliEnabledStatus());
         writer.println(
                 "\t"
                         + KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED
@@ -6506,20 +6485,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getFledgeCustomAudienceCLIEnabledStatus() {
-        return getDeviceConfigFlag(
-                KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
-                FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED);
-    }
-
-    @Override
-    public boolean getFledgeConsentedDebuggingCliEnabledStatus() {
-        return getDeviceConfigFlag(
-                KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED,
-                FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED);
-    }
-
-    @Override
     public boolean getBackgroundJobsLoggingEnabled() {
         return !getBackgroundJobsLoggingKillSwitch();
     }
@@ -6636,6 +6601,25 @@ public final class PhFlags implements Flags {
     public boolean getSpeOnPilotJobsBatch2Enabled() {
         return getDeviceConfigFlag(
                 KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED, DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED);
+    }
+
+    @Override
+    public boolean getSpeOnEpochJobEnabled() {
+        return getDeviceConfigFlag(KEY_SPE_ON_EPOCH_JOB_ENABLED, DEFAULT_SPE_ON_EPOCH_JOB_ENABLED);
+    }
+
+    @Override
+    public boolean getSpeOnBackgroundFetchJobEnabled() {
+        return getDeviceConfigFlag(
+                KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED,
+                DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED);
+    }
+
+    @Override
+    public boolean getSpeOnAsyncRegistrationFallbackJobEnabled() {
+        return getDeviceConfigFlag(
+                KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED,
+                DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers

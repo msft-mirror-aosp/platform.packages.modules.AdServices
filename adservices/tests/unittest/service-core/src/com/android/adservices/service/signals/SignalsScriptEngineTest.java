@@ -32,7 +32,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.RetryStrategy;
-import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
@@ -61,10 +60,10 @@ import java.util.concurrent.TimeoutException;
 public class SignalsScriptEngineTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String TAG = "SignalsScriptEngineTest";
-    private static final DevContext DEV_CONTEXT =
-            DevContext.builder().setDevOptionsEnabled(true).build();
+    private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
     private static final IsolateSettings ISOLATE_SETTINGS =
-            IsolateSettings.forMaxHeapSizeEnforcementDisabled(DEV_CONTEXT.getDevOptionsEnabled());
+            IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+                    ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
     private SignalsScriptEngine mSignalsScriptEngine;
 
@@ -329,6 +328,6 @@ public class SignalsScriptEngineTest {
                 isolateSettings::getEnforceMaxHeapSizeFeature,
                 isolateSettings::getMaxHeapSizeBytes,
                 retryStrategy,
-                DEV_CONTEXT);
+                isolateSettings::getIsolateConsoleMessageInLogsEnabled);
     }
 }

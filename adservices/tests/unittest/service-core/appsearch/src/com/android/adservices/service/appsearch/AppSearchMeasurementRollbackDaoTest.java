@@ -33,10 +33,10 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.shared.testing.EqualsTester;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.util.concurrent.Executor;
@@ -51,7 +51,8 @@ public final class AppSearchMeasurementRollbackDaoTest extends AdServicesExtende
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final String mAdServicePackageName =
             AppSearchConsentWorker.getAdServicesPackageName(mContext);
-    @Mock private ListenableFuture<AppSearchSession> mAppSearchSession;
+    private final ListenableFuture<AppSearchSession> mAppSearchSession =
+            Futures.immediateFuture(null);
 
     @Test
     public void testGetProperties() {

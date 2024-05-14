@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.shell.signals;
 
-import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_SIGNALS_GENERATE_INPUT_FOR_SIGNALS;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
 
 import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandResult;
@@ -26,26 +26,26 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.PrintWriter;
 
-public class GenerateInputForSignalsCommand extends AbstractShellCommand {
-    @VisibleForTesting public static final String CMD = "generate-input-for-signals";
+public class GenerateInputForEncodingCommand extends AbstractShellCommand {
+    @VisibleForTesting public static final String CMD = "generate-input-for-encoding";
 
     public static final String HELP =
             CustomAudienceShellCommandFactory.COMMAND_PREFIX
                     + " "
                     + CMD
                     + " "
-                    + GenerateInputForSignalsArgs.BUYER
+                    + GenerateInputForEncodingArgs.BUYER
                     + " <buyer>"
                     + " "
-                    + "\n    Generate input JavaScript for signals. This command generates wrapper "
-                    + "JavaScript code that can be appended to a user-supplied encodeSignals method"
-                    + "for offline testing.";
+                    + "\n    Generate input JavaScript for signals encoding. This command generates"
+                    + " JavaScript code that can be appended to a user-supplied encodeSignals"
+                    + " method for offline testing.";
 
     @Override
     public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
         // TODO(b/338182810): Add implementation for command after refactoring script engine.
         return toShellCommandResult(
-                ShellCommandStats.RESULT_SUCCESS, COMMAND_SIGNALS_GENERATE_INPUT_FOR_SIGNALS);
+                ShellCommandStats.RESULT_SUCCESS, COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class GenerateInputForSignalsCommand extends AbstractShellCommand {
 
     @Override
     public int getMetricsLoggerCommand() {
-        return COMMAND_SIGNALS_GENERATE_INPUT_FOR_SIGNALS;
+        return COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
     }
 
     @Override
