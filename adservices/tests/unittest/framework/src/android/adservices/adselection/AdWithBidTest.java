@@ -16,9 +16,6 @@
 
 package android.adservices.adselection;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdData;
@@ -26,29 +23,24 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 /** CTS tests for {@link AdWithBid} */
-@SmallTest
-public final class AdWithBidTest {
+@RequiresSdkLevelAtLeastS
+public final class AdWithBidTest extends AdServicesUnitTestCase {
     private static final AdData VALID_AD_DATA =
             AdDataFixture.getValidAdDataByBuyer(CommonFixture.VALID_BUYER_1, 0);
     private static final double TEST_BID = 1.0;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidAdWithBidSuccess() {
         AdWithBid validAdWithBid = new AdWithBid(VALID_AD_DATA, TEST_BID);
 
-        assertThat(validAdWithBid.getAdData()).isEqualTo(VALID_AD_DATA);
-        assertThat(validAdWithBid.getBid()).isEqualTo(TEST_BID);
+        expect.that(validAdWithBid.getAdData()).isEqualTo(VALID_AD_DATA);
+        expect.that(validAdWithBid.getBid()).isEqualTo(TEST_BID);
     }
 
     @Test
@@ -60,21 +52,19 @@ public final class AdWithBidTest {
         p.setDataPosition(0);
         AdWithBid fromParcel = AdWithBid.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getAdData()).isEqualTo(VALID_AD_DATA);
-        assertThat(fromParcel.getBid()).isEqualTo(TEST_BID);
+        expect.that(fromParcel.getAdData()).isEqualTo(VALID_AD_DATA);
+        expect.that(fromParcel.getBid()).isEqualTo(TEST_BID);
     }
 
     @Test
     public void testBuildNullAdDataAdWithBidFails() {
-        assertThrows(NullPointerException.class, () -> {
-            new AdWithBid(null, TEST_BID);
-        });
+        assertThrows(NullPointerException.class, () -> new AdWithBid(null, TEST_BID));
     }
 
     @Test
     public void testAdWithBidDescribeContents() {
         AdWithBid obj = new AdWithBid(VALID_AD_DATA, TEST_BID);
 
-        assertEquals(0, obj.describeContents());
+        expect.that(obj.describeContents()).isEqualTo(0);
     }
 }

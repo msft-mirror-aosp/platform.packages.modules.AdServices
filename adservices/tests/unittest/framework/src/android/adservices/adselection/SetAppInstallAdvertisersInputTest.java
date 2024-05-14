@@ -16,19 +16,15 @@
 
 package android.adservices.adselection;
 
-import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdTechIdentifier;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -36,17 +32,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 /** Unit tests for {@link SetAppInstallAdvertisersInput} */
-@SmallTest
-public final class SetAppInstallAdvertisersInputTest {
+@RequiresSdkLevelAtLeastS
+public final class SetAppInstallAdvertisersInputTest extends AdServicesUnitTestCase {
     private static final Set<AdTechIdentifier> ADVERTISERS =
             new HashSet<>(
                     Arrays.asList(
                             AdTechIdentifier.fromString("example1.com"),
                             AdTechIdentifier.fromString("example2.com")));
     private static final String CALLER_PACKAGE_NAME = "callerPackageName";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testWriteToParcel() {
@@ -62,32 +55,30 @@ public final class SetAppInstallAdvertisersInputTest {
         SetAppInstallAdvertisersInput fromParcel =
                 SetAppInstallAdvertisersInput.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getAdvertisers()).isEqualTo(ADVERTISERS);
-        assertThat(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(fromParcel.getAdvertisers()).isEqualTo(ADVERTISERS);
+        expect.that(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
     }
 
     @Test
     public void testFailsToBuildWithNullCallerPackageName() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new SetAppInstallAdvertisersInput.Builder()
-                            .setAdvertisers(ADVERTISERS)
-                            // Not setting CallerPackageName making it null.
-                            .build();
-                });
+                () ->
+                        new SetAppInstallAdvertisersInput.Builder()
+                                .setAdvertisers(ADVERTISERS)
+                                // Not setting CallerPackageName making it null.
+                                .build());
     }
 
     @Test
     public void testFailsToBuildWithNullAdvertisers() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new SetAppInstallAdvertisersInput.Builder()
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            // Not setting Advertisers making it null.
-                            .build();
-                });
+                () ->
+                        new SetAppInstallAdvertisersInput.Builder()
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                // Not setting Advertisers making it null.
+                                .build());
     }
 
     @Test
@@ -98,6 +89,6 @@ public final class SetAppInstallAdvertisersInputTest {
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
-        assertEquals(obj.describeContents(), 0);
+        expect.that(obj.describeContents()).isEqualTo(0);
     }
 }

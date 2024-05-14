@@ -18,25 +18,18 @@ package android.adservices.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
-@SmallTest
-public class DecisionLogicTest {
-
+@RequiresSdkLevelAtLeastS
+public final class DecisionLogicTest extends AdServicesUnitTestCase {
     private static final String DECISION_LOGIC = "reportWin()";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValid_Success() {
@@ -58,16 +51,12 @@ public class DecisionLogicTest {
 
     @Test
     public void testBuildWith_NullDecisionLogic_Failure() {
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    new DecisionLogic(null);
-                });
+        assertThrows(NullPointerException.class, () -> new DecisionLogic(null));
     }
 
     @Test
     public void testDescribeContents() {
         DecisionLogic obj = new DecisionLogic(DECISION_LOGIC);
-        assertEquals(0, obj.describeContents());
+        assertThat(obj.describeContents()).isEqualTo(0);
     }
 }
