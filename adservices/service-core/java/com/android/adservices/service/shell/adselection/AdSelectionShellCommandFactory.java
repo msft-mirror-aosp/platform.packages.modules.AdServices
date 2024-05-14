@@ -23,7 +23,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
-import com.android.adservices.service.Flags;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
@@ -64,9 +64,10 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
     /**
      * @return an instance of the {@link AdSelectionShellCommandFactory}.
      */
-    public static AdSelectionShellCommandFactory getInstance(Flags flags, Context context) {
+    public static AdSelectionShellCommandFactory getInstance(
+            DebugFlags debugFlags, Context context) {
         return new AdSelectionShellCommandFactory(
-                flags.getFledgeConsentedDebuggingCliEnabledStatus(),
+                debugFlags.getFledgeConsentedDebuggingCliEnabledStatus(),
                 AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao());
     }
 

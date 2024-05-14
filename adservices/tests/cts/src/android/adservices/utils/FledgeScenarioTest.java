@@ -19,6 +19,10 @@ package android.adservices.utils;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+
 import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
@@ -41,10 +45,10 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
@@ -70,7 +74,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /** Abstract class for FLEDGE scenario tests using local servers. */
-public abstract class FledgeScenarioTest {
+public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
     protected static final String TAG = FledgeScenarioTest.class.getSimpleName();
@@ -106,13 +110,6 @@ public abstract class FledgeScenarioTest {
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             CtsWebViewSupportUtil.createJSSandboxAvailableRule(CONTEXT);
 
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName())
-                    .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
-
     @Rule(order = 6)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
@@ -129,16 +126,21 @@ public abstract class FledgeScenarioTest {
                 String.format("{\"valid\": true, \"publisher\": \"%s\"}", PACKAGE_NAME));
     }
 
+    @Override
+    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
+        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
+                .setCompatModeFlags()
+                .setPpapiAppAllowList(sContext.getPackageName())
+                .setFlag(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, 5_000)
+                .setFlag(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, 5_000)
+                .setFlag(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, 10_000);
+    }
+
     @Before
     public void setUp() throws Exception {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-
-        PhFlagsFixture.overrideFledgeOnDeviceAdSelectionTimeouts(
-                /* biddingTimeoutPerCaMs= */ 5_000,
-                /* scoringTimeoutMs= */ 5_000,
-                /* overallTimeoutMs= */ 10_000);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
         ExecutorService executor = Executors.newCachedThreadPool();

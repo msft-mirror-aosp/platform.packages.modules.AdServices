@@ -180,6 +180,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                                                     .build())
                                     .build())
                     .build();
+    private static final boolean CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
     @Mock private HttpCache mHttpCacheMock;
     @Mock private DevContextFilter mDevContextFilterMock;
@@ -310,7 +311,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder(
@@ -477,7 +479,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -551,7 +554,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                             false,
                             mRetryStrategyFactory,
                             mConsentedDebugConfigurationGeneratorFactory,
-                            mEgressConfigurationGenerator);
+                            mEgressConfigurationGenerator,
+                            CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
             UpdateAdCounterHistogramTestCallback callback =
                     callUpdateAdCounterHistogram(mInputParams);
@@ -806,7 +810,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -926,7 +931,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);

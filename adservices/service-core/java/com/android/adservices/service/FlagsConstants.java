@@ -769,8 +769,6 @@ public final class FlagsConstants {
     public static final String
             KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED =
                     "fledge_auction_server_get_ad_selection_data_payload_metrics_enabled";
-    public static final String KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED =
-            "fledge_auction_server_consented_debugging_enabled";
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
@@ -1437,14 +1435,6 @@ public final class FlagsConstants {
     /** key for allow list of get adservices common states. */
     public static final String KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST =
             "get_adservices_common_states_allow_list";
-
-    /** Key for feature flagging custom audiences CLI. */
-    public static final String KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED =
-            "fledge_is_custom_audience_cli_enabled";
-
-    /** Key for feature flagging consented debugging CLI. */
-    public static final String KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED =
-            "fledge_is_consented_debugging_cli_enabled";
 
     /** Key for AdServices' module job policy. */
     public static final String KEY_AD_SERVICES_MODULE_JOB_POLICY = "ad_services_module_job_policy";

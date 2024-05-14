@@ -178,7 +178,6 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGRO
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
-import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
@@ -238,8 +237,6 @@ import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JO
 import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS;
-import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED;
-import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
@@ -625,7 +622,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
@@ -704,8 +700,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACH
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION;
@@ -4845,14 +4839,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetFledgeAuctionServerConsentedDebuggingEnabled() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
-                FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
-                Flags::getFledgeAuctionServerConsentedDebuggingEnabled);
-    }
-
-    @Test
     public void testGetFledgeAuctionServerCoordinatorUrlAllowlist() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST,
@@ -5622,22 +5608,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS,
                 FLEDGE_DEFAULT_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS,
                 Flags::getFledgeKAnonPercentageImmediateSignJoinCalls);
-    }
-
-    @Test
-    public void testGetFledgeCustomAudienceCliEnabledStatusFlag() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
-                FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED,
-                Flags::getFledgeCustomAudienceCLIEnabledStatus);
-    }
-
-    @Test
-    public void testGetFledgConsentedDebuggingCliEnabledStatusFlag() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED,
-                FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED,
-                Flags::getFledgeConsentedDebuggingCliEnabledStatus);
     }
 
     @Test

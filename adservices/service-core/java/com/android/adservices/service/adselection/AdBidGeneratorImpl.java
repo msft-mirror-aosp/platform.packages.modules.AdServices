@@ -115,7 +115,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull DebugReporting debugReporting,
             boolean cpcBillingEnabled,
             boolean dataVersionHeaderEnabled,
-            @NonNull RetryStrategy retryStrategy) {
+            @NonNull RetryStrategy retryStrategy,
+            boolean consoleMessageInLogsEnabled) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -145,7 +146,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         debugReporting.getScriptStrategy(),
                         cpcBillingEnabled,
                         retryStrategy,
-                        mDevContext);
+                        () -> consoleMessageInLogsEnabled);
         mJsFetcher =
                 new JsFetcher(
                         backgroundExecutorService,

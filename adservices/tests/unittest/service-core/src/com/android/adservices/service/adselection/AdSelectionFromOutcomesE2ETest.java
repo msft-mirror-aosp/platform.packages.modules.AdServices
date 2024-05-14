@@ -185,6 +185,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private static final long AD_SELECTION_ID_2 = 123456L;
     private static final long AD_SELECTION_ID_3 = 1234567L;
     private static final long AD_SELECTION_ID_4 = 12345678L;
+    private static final boolean CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
 
     private static final int SUCCESS_DOWNLOAD_RESULT_CODE = 200;
 
@@ -343,7 +344,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -507,7 +509,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);
@@ -589,7 +592,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         true,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);

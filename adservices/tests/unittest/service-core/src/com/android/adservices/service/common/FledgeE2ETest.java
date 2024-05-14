@@ -310,7 +310,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
     private static final AdCost AD_COST_1 = new AdCost(1.2, NUM_BITS_STOCHASTIC_ROUNDING);
     private static final AdCost AD_COST_2 = new AdCost(2.2, NUM_BITS_STOCHASTIC_ROUNDING);
-
+    private static final boolean CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
@@ -1245,7 +1245,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1407,7 +1408,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -3524,7 +3526,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -4962,7 +4965,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         false,
                         mRetryStrategyFactory,
                         mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator);
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
     }
 
     private AdSelectionTestCallback invokeRunAdSelection(
