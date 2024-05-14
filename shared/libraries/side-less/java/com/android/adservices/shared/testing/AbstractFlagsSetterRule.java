@@ -38,6 +38,8 @@ import com.android.adservices.shared.testing.annotations.SetLongDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetLongDebugFlags;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.shared.testing.annotations.SetLongFlags;
+import com.android.adservices.shared.testing.annotations.SetStringArrayFlag;
+import com.android.adservices.shared.testing.annotations.SetStringArrayFlags;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.shared.testing.annotations.SetStringFlags;
 
@@ -352,6 +354,32 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return setOrCacheFlag(name, value);
     }
 
+    // TODO(b/303901926): add unit test
+    /**
+     * Sets the string array flag with the given value , using the {@code separator} to flatten it.
+     */
+    public final T setFlag(String name, String[] value, String separator) {
+        if (value == null || value.length == 0) {
+            throw new IllegalArgumentException("no values (name=" + name + ")");
+        }
+        if (value.length == 1) {
+            return setFlag(name, value[0]);
+        }
+
+        // TODO(b/303901926): use some existing helper / utility to flatten it - or a stream like
+        // list.stream().map(Object::toString).collect(Collectors.joining(delimiter) - once it's
+        // unit tested
+        StringBuilder flattenedValue = new StringBuilder().append(value[0]);
+        for (int i = 1; i < value.length; i++) {
+            String nextValue = value[i];
+            if (i < value.length) {
+                flattenedValue.append(separator);
+            }
+            flattenedValue.append(nextValue);
+        }
+        return setFlag(new NameValuePair(name, flattenedValue.toString(), separator));
+    }
+
     // TODO(b/294423183): take LogLevel instead of string
     /** Sets a {@code logcat} tag. */
     public final T setLogcatTag(String tag, String level) {
@@ -427,6 +455,10 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                 setAnnotatedFlag((SetStringFlag) annotation);
             } else if (annotation instanceof SetStringFlags) {
                 setAnnotatedFlag((SetStringFlags) annotation);
+            } else if (annotation instanceof SetStringArrayFlag) {
+                setAnnotatedFlag((SetStringArrayFlag) annotation);
+            } else if (annotation instanceof SetStringArrayFlags) {
+                setAnnotatedFlag((SetStringArrayFlags) annotation);
                 // Debug flags
             } else if (annotation instanceof EnableDebugFlag) {
                 setAnnotatedFlag((EnableDebugFlag) annotation);
@@ -580,6 +612,8 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                         || (annotation instanceof SetDoubleFlags)
                         || (annotation instanceof SetStringFlag)
                         || (annotation instanceof SetStringFlags)
+                        || (annotation instanceof SetStringArrayFlag)
+                        || (annotation instanceof SetStringArrayFlags)
                         || (annotation instanceof DisableDebugFlag)
                         || (annotation instanceof DisableDebugFlags)
                         || (annotation instanceof EnableDebugFlag)
@@ -724,6 +758,18 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     // Multiple SetStringFlag annotations present
     private void setAnnotatedFlag(SetStringFlags repeatedAnnotation) {
         for (SetStringFlag annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetStringArrayFlag annotations present
+    private void setAnnotatedFlag(SetStringArrayFlag annotation) {
+        setFlag(annotation.name(), annotation.value(), annotation.separator());
+    }
+
+    // Multiple SetStringArrayFlag annotations present
+    private void setAnnotatedFlag(SetStringArrayFlags repeatedAnnotation) {
+        for (SetStringArrayFlag annotation : repeatedAnnotation.value()) {
             setAnnotatedFlag(annotation);
         }
     }

@@ -174,10 +174,10 @@ public class AbstractMeasurementLatencyTest {
         flags.setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
 
         // Override the flag to allow current package to call APIs.
-        flags.setPpapiAppAllowList("*");
+        flags.setPpapiAppAllowList(FlagsConstants.ALLOWLIST_ALL);
 
         // Override the flag to allow current package to call delete API.
-        flags.setMsmtWebContextClientAllowList("*");
+        flags.setMsmtWebContextClientAllowList(FlagsConstants.ALLOWLIST_ALL);
 
         // Override the flag for the global kill switch.
         flags.setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, false);
