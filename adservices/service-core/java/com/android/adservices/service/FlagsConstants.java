@@ -51,6 +51,9 @@ public final class FlagsConstants {
     /** Constant used to allow everything (typically all packages) on allow-list flags. */
     public static final String ALLOWLIST_ALL = "*";
 
+    /** Constant used to not allow anything (typically all packages) on allow-list flags. */
+    public static final String ALLOWLIST_NONE = "";
+
     // Maximum possible percentage for percentage variables
     public static final int MAX_PERCENTAGE = 100;
 

@@ -21,6 +21,8 @@ import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES
 
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
+import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
@@ -75,6 +77,9 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                             || prop.name.startsWith(
                                     SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + "adservices");
 
+    private static final boolean USE_TEST_PACKAGE_AS_DEFAULT = true;
+    private static final boolean DONT_USE_TEST_PACKAGE_AS_DEFAULT = false;
+
     protected AbstractAdServicesFlagsSetterRule(
             RealLogger logger,
             DeviceConfigHelper.InterfaceFactory deviceConfigInterfaceFactory,
@@ -92,7 +97,9 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     protected boolean isAnnotationSupported(Annotation annotation) {
         return annotation instanceof DisableGlobalKillSwitch
                 || annotation instanceof SetCompatModeFlags
-                || annotation instanceof SetPpapiAppAllowList;
+                || annotation instanceof SetPpapiAppAllowList
+                || annotation instanceof SetMsmtApiAppAllowList
+                || annotation instanceof SetMsmtWebContextClientAppAllowList;
     }
 
     @Override
@@ -102,7 +109,15 @@ public abstract class AbstractAdServicesFlagsSetterRule<
         } else if (annotation instanceof SetCompatModeFlags) {
             setCompatModeFlags();
         } else if (annotation instanceof SetPpapiAppAllowList) {
-            setPpapiAppAllowList((SetPpapiAppAllowList) annotation);
+            setPpapiAppAllowList(
+                    ((SetPpapiAppAllowList) annotation).value(), USE_TEST_PACKAGE_AS_DEFAULT);
+        } else if (annotation instanceof SetMsmtApiAppAllowList) {
+            setMsmtApiAppAllowList(
+                    ((SetMsmtApiAppAllowList) annotation).value(), USE_TEST_PACKAGE_AS_DEFAULT);
+        } else if (annotation instanceof SetMsmtWebContextClientAppAllowList) {
+            setMsmtWebContextClientAllowList(
+                    ((SetMsmtWebContextClientAppAllowList) annotation).value(),
+                    USE_TEST_PACKAGE_AS_DEFAULT);
         } else {
             // should not happen
             throw new IllegalStateException(
@@ -172,19 +187,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                 FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH, value);
     }
 
-    private void setPpapiAppAllowList(SetPpapiAppAllowList annotation) {
-        String[] pkgs = annotation.value();
-        if (pkgs.length == 0) {
-            String testPkg = getTestPackageName();
-            mLog.d(
-                    "setPpapiAppAllowList(): package not set on annotation %s using test package"
-                            + " name %s",
-                    annotation, testPkg);
-            pkgs = new String[] {testPkg};
-        }
-        setFlag(FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, pkgs, ARRAY_SPLITTER_COMMA);
-    }
-
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPpapiAppAllowList()}.
      *
@@ -193,8 +195,15 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      */
     @Deprecated
     public final T setPpapiAppAllowList(String... value) {
-        mLog.d("setPpapiAppAllowList(): %s", Arrays.toString(value));
-        return setFlag(FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, ARRAY_SPLITTER_COMMA);
+        return setPpapiAppAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
+    }
+
+    private T setPpapiAppAllowList(String[] value, boolean useTestPackageAsDefault) {
+        mLog.d(
+                "setPpapiAppAllowList(useTestPackageAsDefault=%b): %s",
+                useTestPackageAsDefault, Arrays.toString(value));
+        return setAllowListFlag(
+                FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, useTestPackageAsDefault);
     }
 
     /**
@@ -214,28 +223,49 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     // <p> TODO (b/303901926) - remove / uses annotation only (just 2 usages)
     public final T setPpapiAppSignatureAllowList(String... value) {
         mLog.d("setPpapiAppSignatureAllowList(): %s", Arrays.toString(value));
-        return setFlag(
-                FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST, value, ARRAY_SPLITTER_COMMA);
+        return setAllowListFlag(
+                FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
+                value,
+                DONT_USE_TEST_PACKAGE_AS_DEFAULT);
     }
 
     /**
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMsmtApiAppAllowList()}.
+     *
+     * @deprecated - it's cleaner to use the {@link SetMsmtApiAppAllowList} annotation and this
+     *     method might be eventually removed.
      */
-    // <p> TODO (b/303901926) - add annotation as well
+    @Deprecated
     public final T setMsmtApiAppAllowList(String... value) {
-        mLog.d("setMsmtApiAppAllowList(): %s", Arrays.toString(value));
-        return setFlag(FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST, value, ARRAY_SPLITTER_COMMA);
+        return setMsmtApiAppAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
+    }
+
+    private T setMsmtApiAppAllowList(String[] value, boolean useTestPackageAsDefault) {
+        mLog.d(
+                "setMsmtApiAppAllowList(useTestPackageAsDefault=%b): %s",
+                useTestPackageAsDefault, Arrays.toString(value));
+        return setAllowListFlag(
+                FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST, value, useTestPackageAsDefault);
     }
 
     /**
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getWebContextClientAppAllowList()}.
+     *
+     * @deprecated - it's cleaner to use the {@link SetMsmtWebContextClientAppAllowList} annotation
+     *     and this method might be eventually removed.
      */
     public final T setMsmtWebContextClientAllowList(String... value) {
-        mLog.d("setMsmtWebContextClientAllowList(): %s", Arrays.toString(value));
-        return setFlag(
-                FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST, value, ARRAY_SPLITTER_COMMA);
+        return setMsmtWebContextClientAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
+    }
+
+    private T setMsmtWebContextClientAllowList(String[] value, boolean useTestPackageAsDefault) {
+        mLog.d(
+                "setMsmtWebContextClientAllowList(useTestPackageAsDefault=%b): %s",
+                useTestPackageAsDefault, Arrays.toString(value));
+        return setAllowListFlag(
+                FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST, value, useTestPackageAsDefault);
     }
 
     /**
@@ -344,6 +374,18 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
     // make it easier to transition the test to an annotated-base approach.                       //
     ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private T setAllowListFlag(String name, String[] values, boolean useTestPackageAsDefault) {
+        if (values.length == 0 && useTestPackageAsDefault) {
+            String testPkg = getTestPackageName();
+            mLog.d(
+                    "setAllowListUsingTestAppAsDefault(%s): package not set by annotation, using"
+                            + " test package name %s",
+                    name, testPkg);
+            values = new String[] {testPkg};
+        }
+        return setFlag(name, values, ARRAY_SPLITTER_COMMA);
+    }
 
     private T setOrCacheFlagWithSeparator(String name, String value, String separator) {
         return setOrCacheFlag(name, value, Objects.requireNonNull(separator));
