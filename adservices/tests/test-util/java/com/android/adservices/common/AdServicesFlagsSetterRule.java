@@ -52,6 +52,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.modules.utils.build.SdkLevel;
 
 public final class AdServicesFlagsSetterRule
@@ -71,22 +72,26 @@ public final class AdServicesFlagsSetterRule
         mAdoptShelPermissions = adoptShelPermissions;
     }
 
+    /** Returns a rule that doesn't set anything. */
+    public static AdServicesFlagsSetterRule pristine() {
+        return new AdServicesFlagsSetterRule();
+    }
+
     /** Returns a rule that won't adopt shell permissions - typically used on unit tests. */
     public static AdServicesFlagsSetterRule withoutAdoptingShellPermissions() {
         return new AdServicesFlagsSetterRule(/* adoptShelPermissions= */ false);
     }
 
     /** Factory method that only {@link #setDefaultLogcatTags() sets the default logcat tags}. */
-    public static AdServicesFlagsSetterRule withDefaultLogcatTags() {
-        return new AdServicesFlagsSetterRule().setDefaultLogcatTags();
+    private static AdServicesFlagsSetterRule withDefaultLogcatTags() {
+        return pristine().setDefaultLogcatTags();
     }
 
     /** Factory method that sets default flags required to enable K-Anon functionality. */
     public static AdServicesFlagsSetterRule forKAnonEnabledTests() {
-        return new AdServicesFlagsSetterRule()
-                .withDefaultLogcatTags()
-                .setLogcatTag(LOGCAT_TAG_FLEDGE, LOGCAT_LEVEL_VERBOSE)
-                .setLogcatTag(LOGCAT_TAG_KANON, LOGCAT_LEVEL_VERBOSE)
+        return withDefaultLogcatTags()
+                .setLogcatTag(LOGCAT_TAG_FLEDGE, LogLevel.VERBOSE)
+                .setLogcatTag(LOGCAT_TAG_KANON, LogLevel.VERBOSE)
                 .setFlag(KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE, true)
                 .setFlag(KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE, true)
                 .setFlag(KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN, "android")
@@ -96,11 +101,6 @@ public final class AdServicesFlagsSetterRule
                 .setFlag(KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED, true);
     }
 
-    /** Factory method that only {@link #setAllLogcatTags() sets all relevant logcat tags}. */
-    public static AdServicesFlagsSetterRule withAllLogcatTags() {
-        return new AdServicesFlagsSetterRule().setAllLogcatTags();
-    }
-
     /** Factory method that only disables the global kill switch. */
     public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
         return withDefaultLogcatTags().setGlobalKillSwitch(false);
@@ -108,7 +108,8 @@ public final class AdServicesFlagsSetterRule
 
     /** Factory method that disables all major API kill switches. */
     public static AdServicesFlagsSetterRule forAllApisEnabledTests() {
-        return withAllLogcatTags()
+        return pristine()
+                .setAllLogcatTags()
                 .setGlobalKillSwitch(false)
                 .setTopicsKillSwitch(false)
                 .setFlag(KEY_ADID_KILL_SWITCH, false)
@@ -127,7 +128,7 @@ public final class AdServicesFlagsSetterRule
     /** Factory method for Measurement E2E CTS tests */
     public static AdServicesFlagsSetterRule forMeasurementE2ETests(String packageName) {
         return forGlobalKillSwitchDisabledTests()
-                .setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE)
+                .setLogcatTag(LOGCAT_TAG_MEASUREMENT, LogLevel.VERBOSE)
                 .setCompatModeFlags()
                 .setMsmtApiAppAllowList(packageName)
                 .setMsmtWebContextClientAllowList(packageName)
@@ -149,7 +150,7 @@ public final class AdServicesFlagsSetterRule
     public static AdServicesFlagsSetterRule forTopicsPerfTests(
             long epochPeriodMs, int pctRandomTopic) {
         return forGlobalKillSwitchDisabledTests()
-                .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
+                .setLogcatTag(LOGCAT_TAG_TOPICS, LogLevel.VERBOSE)
                 .setTopicsKillSwitch(false)
                 .setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                 .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)

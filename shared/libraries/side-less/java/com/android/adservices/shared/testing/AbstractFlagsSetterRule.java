@@ -16,6 +16,7 @@
 package com.android.adservices.shared.testing;
 
 import com.android.adservices.shared.testing.DeviceConfigHelper.SyncDisabledModeForTest;
+import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
 import com.android.adservices.shared.testing.annotations.DisableDebugFlag;
@@ -67,8 +68,6 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         extends AbstractRethrowerRule {
 
     protected static final String SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX = "log.tag.";
-
-    protected static final String LOGCAT_LEVEL_VERBOSE = "VERBOSE";
 
     private final String mDeviceConfigNamespace;
     private final DeviceConfigHelper mDeviceConfig;
@@ -357,6 +356,9 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     // TODO(b/303901926): add unit test
     /**
      * Sets the string array flag with the given value , using the {@code separator} to flatten it.
+     *
+     * <p><b>Note:</b> in most cases, it's clearer to use the {@link SetLogcatTag} annotation
+     * instead.
      */
     public final T setFlag(String name, String[] value, String separator) {
         if (value == null || value.length == 0) {
@@ -380,10 +382,13 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return setFlag(new NameValuePair(name, flattenedValue.toString(), separator));
     }
 
-    // TODO(b/294423183): take LogLevel instead of string
-    /** Sets a {@code logcat} tag. */
-    public final T setLogcatTag(String tag, String level) {
-        setOrCacheLogtagSystemProperty(tag, level);
+    /**
+     * Sets a {@code logcat} tag.
+     *
+     * <p><b>Note: </b> it's clearer to use the {@link SetLogcatTag} annotation instead.
+     */
+    public final T setLogcatTag(String tag, LogLevel level) {
+        setOrCacheLogtagSystemProperty(tag, level.name());
         return getThis();
     }
 
@@ -812,8 +817,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     // Single SetLogcatTag annotations present
     private void setAnnotatedFlag(SetLogcatTag annotation) {
-        // TODO(b/294423183): pass LogLevel instead of string
-        setLogcatTag(annotation.tag(), annotation.level().name());
+        setLogcatTag(annotation.tag(), annotation.level());
     }
 
     // Multiple SetLogcatTag annotations present

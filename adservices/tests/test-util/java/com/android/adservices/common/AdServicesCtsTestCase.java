@@ -15,6 +15,8 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.common.annotations.SetDefaultLogcatTags;
+
 import org.junit.Rule;
 
 /**
@@ -26,13 +28,13 @@ import org.junit.Rule;
  * start defining rules with {@code order = 11} (although for now they can use {@code order = 0} for
  * {@code SdkLevelSupportRule}, as that rule cannot be defined here yet.
  */
+@SetDefaultLogcatTags
 public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
 
-    // TODO(b/295321663): move these constants (and those from LogFactory) to AdServicesCommon
-    protected static final String LOGCAT_LEVEL_VERBOSE = "VERBOSE";
+    // TODO(b/295321663): move these constants (and those from LogFactory
     protected static final String LOGCAT_TAG_ADSERVICES = "adservices";
     protected static final String LOGCAT_TAG_ADSERVICES_SERVICE = LOGCAT_TAG_ADSERVICES + "-system";
-    protected static final String LOGCAT_TAG_TOPICS = LOGCAT_TAG_ADSERVICES + ".topics";
+    public static final String LOGCAT_TAG_TOPICS = LOGCAT_TAG_ADSERVICES + ".topics";
     public static final String LOGCAT_TAG_FLEDGE = LOGCAT_TAG_ADSERVICES + ".fledge";
     public static final String LOGCAT_TAG_MEASUREMENT = LOGCAT_TAG_ADSERVICES + ".measurement";
     protected static final String LOGCAT_TAG_UI = LOGCAT_TAG_ADSERVICES + ".ui";
@@ -51,6 +53,6 @@ public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
      * extend it to support more complex scenarios.
      */
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.withDefaultLogcatTags();
+        return AdServicesFlagsSetterRule.pristine();
     }
 }
