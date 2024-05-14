@@ -5421,6 +5421,47 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
     }
 
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code EpochJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_EPOCH_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * EpochJobService}.
+     */
+    default boolean getSpeOnEpochJobEnabled() {
+        return DEFAULT_SPE_ON_EPOCH_JOB_ENABLED;
+    }
+
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code
+     * BackgroundFetchJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * BackgroundFetchJobService}.
+     */
+    default boolean getSpeOnBackgroundFetchJobEnabled() {
+        return DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
+    }
+
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code
+     * AsyncRegistrationFallbackJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * AsyncRegistrationFallbackJobService}.
+     */
+    default boolean getSpeOnAsyncRegistrationFallbackJobEnabled() {
+        return DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
+    }
+
     /** Dump some debug info for the flags */
     default void dump(PrintWriter writer, @Nullable String[] args) {}
 }
