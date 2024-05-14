@@ -72,7 +72,7 @@ public final class EpochJob implements JobWorker {
     /** Schedules the {@link EpochJob}. */
     public static void schedule() {
         // If SPE is not enabled, force to schedule the job with the old JobService.
-        if (!FlagsFactory.getFlags().getSpeOnPilotJobsBatch2Enabled()) {
+        if (!FlagsFactory.getFlags().getSpeOnEpochJobEnabled()) {
             LoggerFactory.getTopicsLogger()
                     .d("SPE is not enabled. Schedule the job with EpochJobService.");
             int resultCode = EpochJobService.scheduleIfNeeded(/* forceSchedule= */ false);

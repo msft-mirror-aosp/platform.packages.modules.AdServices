@@ -111,7 +111,7 @@ public final class AsyncRegistrationFallbackJobTest extends AdServicesExtendedMo
 
     @Test
     public void testSchedule_spe() {
-        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(true);
+        when(mMockFlags.getSpeOnAsyncRegistrationFallbackJobEnabled()).thenReturn(true);
 
         AsyncRegistrationFallbackJob.schedule();
 
@@ -121,7 +121,7 @@ public final class AsyncRegistrationFallbackJobTest extends AdServicesExtendedMo
     @Test
     public void testSchedule_legacy() {
         int resultCode = SCHEDULING_RESULT_CODE_SUCCESSFUL;
-        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(false);
+        when(mMockFlags.getSpeOnAsyncRegistrationFallbackJobEnabled()).thenReturn(false);
         JobSchedulingLogger mockedLogger =
                 mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
         doReturn(resultCode)

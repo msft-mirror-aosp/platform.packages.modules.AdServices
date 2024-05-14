@@ -77,7 +77,7 @@ public final class AsyncRegistrationFallbackJob implements JobWorker {
     /** Schedules the {@link AsyncRegistrationFallbackJob}. */
     public static void schedule() {
         // If SPE is not enabled, force to schedule the job with the old JobService.
-        if (!FlagsFactory.getFlags().getSpeOnPilotJobsBatch2Enabled()) {
+        if (!FlagsFactory.getFlags().getSpeOnAsyncRegistrationFallbackJobEnabled()) {
             sLogger.d(
                     "SPE is not enabled. Schedule the job with"
                             + " AsyncRegistrationFallbackJobService.");

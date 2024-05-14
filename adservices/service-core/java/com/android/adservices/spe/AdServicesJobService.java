@@ -92,27 +92,33 @@ public final class AdServicesJobService extends AbstractJobService {
     boolean shouldRescheduleWithLegacyMethod(int jobId) {
         Flags flags = FlagsFactory.getFlags();
 
-        if (isFirstBatchPilotJob(jobId) && !flags.getSpeOnPilotJobsEnabled()) {
+        if (isFirstBatchPilotJobDisabledForSpe(jobId, flags)) {
             return true;
         }
 
-        if (isSecondBatchPilotJob(jobId) && !flags.getSpeOnPilotJobsBatch2Enabled()) {
+        if (isSecondBatchPilotJobDisabledForSpe(jobId, flags)) {
             return true;
         }
 
         return false;
     }
 
-    private boolean isFirstBatchPilotJob(int jobId) {
-        return jobId == MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()
-                || jobId == MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId()
-                || jobId == MDD_CHARGING_PERIODIC_TASK_JOB.getJobId()
-                || jobId == MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId();
+    private boolean isFirstBatchPilotJobDisabledForSpe(int jobId, Flags flags) {
+        return (jobId == MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()
+                        || jobId == MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId()
+                        || jobId == MDD_CHARGING_PERIODIC_TASK_JOB.getJobId()
+                        || jobId == MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId())
+                && !flags.getSpeOnPilotJobsEnabled();
     }
 
-    private boolean isSecondBatchPilotJob(int jobId) {
-        return jobId == TOPICS_EPOCH_JOB.getJobId()
-                || jobId == FLEDGE_BACKGROUND_FETCH_JOB.getJobId()
-                || jobId == MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId();
+    private boolean isSecondBatchPilotJobDisabledForSpe(int jobId, Flags flags) {
+        if ((jobId == TOPICS_EPOCH_JOB.getJobId() && !flags.getSpeOnEpochJobEnabled())
+                || (jobId == FLEDGE_BACKGROUND_FETCH_JOB.getJobId()
+                        && !flags.getSpeOnBackgroundFetchJobEnabled())
+                || (jobId == MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId()
+                        && !flags.getSpeOnAsyncRegistrationFallbackJobEnabled())) {
+            return true;
+        }
+        return false;
     }
 }
