@@ -34,7 +34,9 @@ import java.util.Objects;
  */
 public abstract class AdServicesHostSideTestCase implements IDeviceTest {
 
+    // Need to define these constants here so they can be used on subclasses annotations
     public static final String CTS_TEST_PACKAGE = "com.android.adservices.cts";
+    public static final String APPSEARCH_WRITER_ACTIVITY_CLASS = "AppSearchWriterActivity";
 
     protected final Logger mLog = new Logger(ConsoleLogger.getInstance(), getClass());
 

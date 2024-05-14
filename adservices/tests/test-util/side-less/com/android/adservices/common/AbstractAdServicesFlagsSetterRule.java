@@ -20,13 +20,16 @@ import static com.android.adservices.service.FlagsConstants.ARRAY_SPLITTER_COMMA
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.common.annotations.SetDefaultLogcatTags;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
 import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
 import com.android.adservices.shared.testing.DeviceConfigHelper;
+import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
 import com.android.adservices.shared.testing.SystemPropertiesHelper;
@@ -54,8 +57,6 @@ import java.util.Objects;
 public abstract class AbstractAdServicesFlagsSetterRule<
                 T extends AbstractAdServicesFlagsSetterRule<T>>
         extends AbstractFlagsSetterRule<T> {
-
-    protected static final String LOGCAT_LEVEL_VERBOSE = "VERBOSE";
 
     // TODO(b/295321663): move these constants (and those from LogFactory) to AdServicesCommon
     protected static final String LOGCAT_TAG_ADSERVICES = "adservices";
@@ -99,7 +100,9 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                 || annotation instanceof SetCompatModeFlags
                 || annotation instanceof SetPpapiAppAllowList
                 || annotation instanceof SetMsmtApiAppAllowList
-                || annotation instanceof SetMsmtWebContextClientAppAllowList;
+                || annotation instanceof SetMsmtWebContextClientAppAllowList
+                || annotation instanceof SetDefaultLogcatTags
+                || annotation instanceof SetAllLogcatTags;
     }
 
     @Override
@@ -118,6 +121,10 @@ public abstract class AbstractAdServicesFlagsSetterRule<
             setMsmtWebContextClientAllowList(
                     ((SetMsmtWebContextClientAppAllowList) annotation).value(),
                     USE_TEST_PACKAGE_AS_DEFAULT);
+        } else if (annotation instanceof SetDefaultLogcatTags) {
+            setDefaultLogcatTags();
+        } else if (annotation instanceof SetAllLogcatTags) {
+            setAllLogcatTags();
         } else {
             // should not happen
             throw new IllegalStateException(
@@ -333,11 +340,15 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      *
      * <p>This method is usually set automatically by the factory methods, but should be set again
      * (on host-side tests) after reboot.
+     *
+     * @deprecated - it's cleaner to use the {@link SetDefaultLogcatTags} annotation and this method
+     *     might be eventually removed.
      */
+    @Deprecated
     public T setDefaultLogcatTags() {
-        setLogcatTag(LOGCAT_TAG_ADSERVICES, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_SHARED, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_ADSERVICES, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_SHARED, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LogLevel.VERBOSE);
         return getThis();
     }
 
@@ -346,15 +357,19 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      *
      * <p>This method is usually set automatically by the factory methods, but should be set again
      * (on host-side tests) after reboot.
+     *
+     * @deprecated - it's cleaner to use the {@link SetAllLogcatTags} annotation and this method
+     *     might be eventually removed.
      */
+    @Deprecated
     public T setAllLogcatTags() {
         setDefaultLogcatTags();
-        setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_FLEDGE, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_ADID, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_APPSETID, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_KANON, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_TOPICS, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_FLEDGE, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_ADID, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_APPSETID, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_KANON, LogLevel.VERBOSE);
         return getThis();
     }
 
@@ -365,7 +380,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * (on host-side tests) after reboot.
      */
     public T setMeasurementTags() {
-        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LogLevel.VERBOSE);
         return getThis();
     }
 
