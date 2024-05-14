@@ -393,7 +393,7 @@ public class KAnonE2ETest {
         AdSelectionServerDatabase serverDb =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
         mEncryptionKeyDao =
-                com.android.adservices.data.encryptionkey.EncryptionKeyDao.getInstance(mContext);
+                com.android.adservices.data.encryptionkey.EncryptionKeyDao.getInstance();
         mEnrollmentDao = EnrollmentDao.getInstance();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFlags);

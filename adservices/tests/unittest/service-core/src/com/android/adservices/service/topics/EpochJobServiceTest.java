@@ -360,8 +360,7 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
         // Mock static method TopicsWorker.getInstance, let it return the local topicsWorker
         // in order to get a test instance.
-        ExtendedMockito.doReturn(topicsWorker)
-                .when(() -> TopicsWorker.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(topicsWorker).when(TopicsWorker::getInstance);
 
         // Schedule the job to assert after starting that the scheduled job has been started
         JobInfo existingJobInfo =
