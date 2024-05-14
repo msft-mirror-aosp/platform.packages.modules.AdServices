@@ -16,6 +16,6 @@
 
 package com.android.adservices.service.shell.signals;
 
-public class GenerateInputForSignalsArgs {
+public class GenerateInputForEncodingArgs {
     public static final String BUYER = "--buyer";
 }
