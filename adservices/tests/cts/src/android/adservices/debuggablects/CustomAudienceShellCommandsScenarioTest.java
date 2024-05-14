@@ -65,9 +65,8 @@ public final class CustomAudienceShellCommandsScenarioTest extends FledgeScenari
     public void testRun_refreshCustomAudiences_verifyCustomAudienceChanged() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/remarketing-cuj-refresh-ca.json",
-                                getCacheBusterPrefix()));
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-refresh-ca.json"));
         joinCustomAudience(SHOES_CA);
         AdTechIdentifier adTechIdentifier =
                 AdTechIdentifier.fromString(dispatcher.getBaseAddressWithPrefix().getHost());
