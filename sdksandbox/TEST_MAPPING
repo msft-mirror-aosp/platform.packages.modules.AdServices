@@ -1,4 +1,71 @@
 {
+  "adservices-mainline-presubmit": [
+    {
+      "name": "CtsSdkSandboxHostSideTests",
+      "options": [
+        {
+          "exclude-annotation": "android.platform.test.annotations.LargeTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsSdkSandboxInprocessTests"
+    },
+    {
+      "name": "SdkSandboxInprocessTests"
+    },
+    {
+      "name": "SdkSandboxManagerServiceUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "SdkSandboxFrameworkUnitTests"
+    },
+    {
+      "name": "SdkSandboxUnitTests"
+    },
+    {
+      "name": "SdkSandboxManagerTests"
+    },
+    {
+      "name": "SdkSandboxLifecycleHostTest"
+    },
+    {
+      "name": "SdkSandboxShellHostTest"
+    },
+    {
+      "name": "SdkSandboxRestrictionsTests"
+    },
+    {
+      "name": "SdkSandboxStorageHostTest",
+      "options": [
+        {
+          "exclude-annotation": "android.platform.test.annotations.LargeTest"
+        }
+      ]
+    },
+    {
+      "name": "SdkSandboxMetricsHostTest"
+    },
+    {
+      "name": "CtsSdkSandboxWebkitTestCases",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "SdkSandboxManagerDisabledTests"
+    },
+    {
+      "name": "SdkSandboxPerfScenarioTests"
+    }
+  ],
   "mainline-presubmit": [
     // Install com.google.android.adservices.apex and run the corresponding test.
     {
