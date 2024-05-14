@@ -59,10 +59,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
                 "Relevant flags @Before: "
                         + KEY_AD_ID_CACHE_ENABLED
                         + "="
-                        + flags.getFlag(KEY_AD_ID_CACHE_ENABLED)
-                        + ", "
-                        + KEY_AD_ID_CACHE_ENABLED
-                        + "="
                         + flags.getFlag(KEY_AD_ID_CACHE_ENABLED));
     }
 
