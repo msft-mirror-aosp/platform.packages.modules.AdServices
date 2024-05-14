@@ -128,7 +128,13 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     // Helper methods to set more commonly used flags such as kill switches.
     // Less common flags can be set directly using setFlags methods.
 
-    /** Overrides the flag that sets the global AdServices kill switch. */
+    /**
+     * Overrides the flag that sets the global AdServices kill switch.
+     *
+     * @deprecated - it's cleaner to use the {@link DisableGlobalKillSwitch} annotation and this
+     *     method might be eventually removed.
+     */
+    @Deprecated
     public final T setGlobalKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
     }
@@ -138,11 +144,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      */
     public final T setAdServicesEnabled(boolean value) {
         return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
-    }
-
-    /** Overrides the flag that sets the AppsetId kill switch. */
-    public final T setAppsetIdKillSwitch(boolean value) {
-        return setFlag(FlagsConstants.KEY_APPSETID_KILL_SWITCH, value);
     }
 
     /** Overrides the flag that sets the Topics kill switch. */
@@ -186,8 +187,11 @@ public abstract class AbstractAdServicesFlagsSetterRule<
 
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPpapiAppAllowList()}.
+     *
+     * @deprecated it's cleaner to use the {@link SetPpapiAppAllowList} annotation and this method
+     *     might be eventually removed.
      */
-    // <p> TODO (b/303901926) - apply consistent naming to allow list methods
+    @Deprecated
     public final T setPpapiAppAllowList(String... value) {
         mLog.d("setPpapiAppAllowList(): %s", Arrays.toString(value));
         return setFlag(FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, ARRAY_SPLITTER_COMMA);
@@ -242,7 +246,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
 
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
     // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
@@ -252,7 +255,11 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     /**
      * Sets all flags needed to enable compatibility mode, according to the Android version of the
      * device running the test.
+     *
+     * @deprecated - it's cleaner to use the {@link SetCompatModeFlags} annotation and this method
+     *     might be eventually removed
      */
+    @Deprecated
     public T setCompatModeFlags() {
         return runOrCache(
                 "setCompatModeFlags()",

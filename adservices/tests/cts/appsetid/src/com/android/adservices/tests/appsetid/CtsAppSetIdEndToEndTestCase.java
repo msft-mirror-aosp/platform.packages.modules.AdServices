@@ -17,14 +17,20 @@ package com.android.adservices.tests.appsetid;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
+import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 
+@SetCompatModeFlags
+@SetPpapiAppAllowList
+@DisableGlobalKillSwitch
+@SetFlagDisabled(FlagsConstants.KEY_APPSETID_KILL_SWITCH)
 abstract class CtsAppSetIdEndToEndTestCase extends AdServicesCtsTestCase {
 
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                .setCompatModeFlags()
-                .setPpapiAppAllowList(mPackageName)
-                .setAppsetIdKillSwitch(false);
+        return AdServicesFlagsSetterRule.withDefaultLogcatTags();
     }
 }

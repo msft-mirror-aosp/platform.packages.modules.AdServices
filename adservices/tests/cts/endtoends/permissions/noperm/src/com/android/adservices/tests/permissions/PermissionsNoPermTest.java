@@ -53,6 +53,8 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.DevContextUtils;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -66,8 +68,10 @@ import java.util.concurrent.Executors;
 
 /** In the manifest file, no API permissions are declared for this test. */
 @RunWith(AndroidJUnit4.class)
+@SetCompatModeFlags
+@SetPpapiAppAllowList
 // TODO: Add tests for measurement (b/238194122).
-public class PermissionsNoPermTest {
+public final class PermissionsNoPermTest {
     private static final String TAG = "PermissionsNoPermTest";
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -81,9 +85,7 @@ public class PermissionsNoPermTest {
 
     @Rule(order = 1)
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName());
+            AdServicesFlagsSetterRule.forAllApisEnabledTests();
 
     private boolean mHasAccessToDevOverrides;
 
