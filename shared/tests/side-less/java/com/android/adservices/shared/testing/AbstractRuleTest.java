@@ -34,7 +34,7 @@ import org.junit.runners.model.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class AbstractRuleTest extends SidelessTestCase {
+public final class AbstractRuleTest extends SharedSidelessTestCase {
 
     private final SimpleStatement mBaseStatement = new SimpleStatement();
     private final Description mDefaultDescription =

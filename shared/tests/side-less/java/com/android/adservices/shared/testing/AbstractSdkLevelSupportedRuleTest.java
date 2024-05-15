@@ -58,7 +58,7 @@ import java.util.Arrays;
  * but subclasses should implement {@link #newRule(Level, Level)} and {@link
  * #newRuleForDeviceLevelAndRuleAtLeastLevel(Level)}.
  */
-public class AbstractSdkLevelSupportedRuleTest extends SidelessTestCase {
+public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
 
     // Not a real test (i.e., it doesn't exist on this class), but it's passed to Description
     private static final String TEST_METHOD_BEING_EXECUTED = "testAmI..OrNot";

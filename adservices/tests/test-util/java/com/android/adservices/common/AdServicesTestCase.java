@@ -25,19 +25,18 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.shared.testing.ProcessLifeguardRule;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SidelessTestCase;
 
-import com.google.common.truth.Expect;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 
 // TODO(b/285014040): need to add unit tests for this class itself, as it's now providing logic.
 
-// Superclass for all other "base classes"
-abstract class AdServicesTestCase {
+/** Superclass for all other "base classes" on {@code AdServices} projects. */
+abstract class AdServicesTestCase extends SidelessTestCase {
 
     private static final String TAG = AdServicesTestCase.class.getSimpleName();
 
@@ -65,10 +64,6 @@ abstract class AdServicesTestCase {
     /** Package name of the app being instrumented. */
     protected static final String sPackageName = sContext.getPackageName();
 
-    private static int sTestCount;
-
-    private int mTestNumber;
-
     protected final String mTag = getClass().getSimpleName();
 
     /** Reference to the context of package being instrumented (target context). */
@@ -88,23 +83,14 @@ abstract class AdServicesTestCase {
     public final ProcessLifeguardRule processLifeguard =
             new ProcessLifeguardRule(ProcessLifeguardRule.Mode.IGNORE);
 
-    @Rule(order = 3)
-    public final Expect expect = Expect.create();
-
-    @Before
-    public final void setTestNumber() {
-        mTestNumber = ++sTestCount;
-        Log.d(TAG, "setTestNumber(): " + getTestName() + " is test #" + mTestNumber);
-    }
-
     @After
     public final void postTestOptionalActions() {
         throwExceptionInBgAfterTest();
         sleepAfterTest();
     }
 
-    /** Gets the name of the test being executed. */
-    protected final String getTestName() {
+    @Override
+    public final String getTestName() {
         return processLifeguard.getTestName();
     }
 
@@ -161,15 +147,16 @@ abstract class AdServicesTestCase {
             return;
         }
 
+        int testNumber = getTestInvocationId();
         boolean throwException =
-                (frequency < 0 && (mTestNumber % frequency != 0))
-                        || (frequency > 0 && mTestNumber == frequency);
+                (frequency < 0 && (testNumber % frequency != 0))
+                        || (frequency > 0 && testNumber == frequency);
 
         if (!throwException) {
             Log.i(
                     TAG,
                     "Not throwing exception after test #"
-                            + mTestNumber
+                            + testNumber
                             + " (frequency="
                             + frequency
                             + ")");
@@ -178,13 +165,13 @@ abstract class AdServicesTestCase {
 
         Log.e(
                 TAG,
-                "Throwing exception after test #" + mTestNumber + " (frequency=" + frequency + ")");
+                "Throwing exception after test #" + testNumber + " (frequency=" + frequency + ")");
 
-        String threadName = getTestName() + "-postTest-#" + mTestNumber;
+        String threadName = getTestName() + "-postTest-#" + testNumber;
         String message =
                 getTestName()
                         + " failing @After "
-                        + mTestNumber
+                        + testNumber
                         + " invocation(s) of "
                         + "test methods from classes that extend "
                         + AdServicesTestCase.class.getSimpleName()

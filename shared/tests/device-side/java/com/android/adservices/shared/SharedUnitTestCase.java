@@ -23,16 +23,15 @@ import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
-import com.google.common.truth.Expect;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
 import org.junit.Rule;
 import org.junit.rules.TestName;
 
-// TODO(b/285014040): create super class on testing library
-public abstract class SharedUnitTestCase {
+public abstract class SharedUnitTestCase extends SharedSidelessTestCase {
 
     private static final String TAG = SharedUnitTestCase.class.getSimpleName();
 
@@ -43,9 +42,6 @@ public abstract class SharedUnitTestCase {
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
-
-    @Rule(order = 1)
-    public final Expect expect = Expect.create();
 
     // TODO(b/285014040): use custom rule
     @Rule(order = 2)
@@ -69,8 +65,8 @@ public abstract class SharedUnitTestCase {
         Log.i(TAG, "Little Suzie woke up!");
     }
 
-    /** Gets the name of the test being executed. */
-    protected final String getTestName() {
+    @Override
+    public final String getTestName() {
         return name.getMethodName();
     }
 }

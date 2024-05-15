@@ -30,7 +30,7 @@ import com.android.adservices.shared.testing.AndroidSdk.Level;
 
 import org.junit.Test;
 
-public final class AndroidSdkLevelTest extends SidelessTestCase {
+public final class AndroidSdkLevelTest extends SharedSidelessTestCase {
 
     @Test
     public void testFactoryMethod() {
