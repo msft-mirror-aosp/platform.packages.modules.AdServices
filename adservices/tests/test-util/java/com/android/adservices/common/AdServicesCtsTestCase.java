@@ -53,6 +53,6 @@ public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
      * extend it to support more complex scenarios.
      */
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.pristine();
+        return AdServicesFlagsSetterRule.newInstance();
     }
 }
