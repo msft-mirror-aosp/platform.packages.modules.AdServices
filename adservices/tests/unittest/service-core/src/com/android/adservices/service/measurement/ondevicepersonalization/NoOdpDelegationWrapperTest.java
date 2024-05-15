@@ -77,7 +77,7 @@ public class NoOdpDelegationWrapperTest {
                                 + ODP_EVENT_DATA
                                 + "\""
                                 + "}"));
-        noOdpDelegationWrapper.registerOdpTrigger(asyncRegistration, header);
+        noOdpDelegationWrapper.registerOdpTrigger(asyncRegistration, header, false);
         ArgumentCaptor<MeasurementOdpRegistrationStats> odpRegistrationStatsArg =
                 ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
         verify(mLogger, times(1)).logMeasurementOdpRegistrations(odpRegistrationStatsArg.capture());
