@@ -17,7 +17,6 @@
 package com.android.adservices.data.encryptionkey;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -64,7 +63,7 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
 
     /** Returns an instance of the EncryptionKeyDao given a context. */
     @NonNull
-    public static EncryptionKeyDao getInstance(@NonNull Context context) {
+    public static EncryptionKeyDao getInstance() {
         synchronized (EncryptionKeyDao.class) {
             if (sSingleton == null) {
                 sSingleton = new EncryptionKeyDao(SharedDbHelper.getInstance());

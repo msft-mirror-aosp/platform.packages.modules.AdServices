@@ -287,7 +287,7 @@ public final class EncryptionKeyJobServiceTest extends AdServicesExtendedMockito
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(mMockContext).when(mSpyService).getApplicationContext();
         doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
-        doReturn(mock(EncryptionKeyDao.class)).when(() -> EncryptionKeyDao.getInstance(any()));
+        doReturn(mock(EncryptionKeyDao.class)).when(EncryptionKeyDao::getInstance);
         doNothing().when(() -> EncryptionKeyJobService.schedule(any(), any()));
         mockGetAdServicesJobServiceLogger(mSpyLogger);
     }

@@ -308,7 +308,7 @@ public class ConsentManagerV2 {
                             new AppConsentStorageManager(datastore, appConsentDao, uxStatesDao);
                     sConsentManager =
                             new ConsentManagerV2(
-                                    TopicsWorker.getInstance(context),
+                                    TopicsWorker.getInstance(),
                                     appConsentDao,
                                     EnrollmentDao.getInstance(),
                                     MeasurementImpl.getInstance(context),

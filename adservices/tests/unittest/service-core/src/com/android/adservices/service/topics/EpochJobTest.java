@@ -36,8 +36,6 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -77,7 +75,7 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
         mocker.mockSpeJobScheduler(mMockAdServicesJobScheduler);
         mocker.mockAdServicesJobServiceFactory(mMockAdServicesJobServiceFactory);
 
-        doReturn(mMockTopicsWorker).when(() -> TopicsWorker.getInstance(any(Context.class)));
+        doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
     }
 
     @Test

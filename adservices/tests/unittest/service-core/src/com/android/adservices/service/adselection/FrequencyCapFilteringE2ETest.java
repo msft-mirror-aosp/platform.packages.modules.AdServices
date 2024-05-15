@@ -247,7 +247,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
         Flags flagsEnablingAdFiltering = new FlagsOverridingAdFiltering(true);
         doReturn(flagsEnablingAdFiltering).when(FlagsFactory::getFlags);
 
-        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mSpyContext);
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance();
         mEnrollmentDao = EnrollmentDao.getInstance();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();

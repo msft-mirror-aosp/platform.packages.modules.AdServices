@@ -32,6 +32,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.ClassifierInputConfig.ClassifierInputField;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -57,9 +58,10 @@ public class ClassifierInputManager {
 
     /** Returns the singleton instance of the {@link ClassifierInputManager} given a context. */
     @NonNull
-    public static ClassifierInputManager getInstance(@NonNull Context context) {
+    public static ClassifierInputManager getInstance() {
         synchronized (ClassifierInputManager.class) {
             if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
                 sSingleton = new ClassifierInputManager(context, new Preprocessor(context));
             }
         }

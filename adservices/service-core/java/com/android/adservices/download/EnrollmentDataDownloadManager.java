@@ -182,7 +182,7 @@ public class EnrollmentDataDownloadManager {
     }
 
     private void fetchEncryptionKeysForNewEnrollment(List<EnrollmentData> enrollmentDataList) {
-        EncryptionKeyDao encryptionKeyDao = EncryptionKeyDao.getInstance(mContext);
+        EncryptionKeyDao encryptionKeyDao = EncryptionKeyDao.getInstance();
         for (EnrollmentData enrollmentData : enrollmentDataList) {
             List<EncryptionKey> existingKeys =
                     encryptionKeyDao.getEncryptionKeyFromEnrollmentId(

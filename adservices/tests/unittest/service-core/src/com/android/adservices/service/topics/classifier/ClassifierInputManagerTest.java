@@ -35,28 +35,29 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.ClassifierInputConfig.ClassifierInputField;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 /**
  * Unit tests for {@link com.android.adservices.service.topics.classifier.ClassifierInputManager}.
  */
-public class ClassifierInputManagerTest {
+@SpyStatic(SdkLevel.class)
+@SpyStatic(Preprocessor.class)
+@SpyStatic(FlagsFactory.class)
+// TODO(b/290839573) - Remove rule if Topics is enabled on R in the future.
+@RequiresSdkLevelAtLeastS
+public class ClassifierInputManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_PACKAGE_NAME = "com.sample.package.name";
     private static final String TEST_APP_NAME = "Name for App";
     private static final CharSequence TEST_APP_DESCRIPTION = "Description for App";
@@ -70,29 +71,13 @@ public class ClassifierInputManagerTest {
     @Mock private ApplicationInfo mApplicationInfo;
     @Mock private Resources mAppResources;
     @Mock private Resources mContextResources;
-    @Mock private Context mContext;
     @Mock private Context mApplicationContext;
     @Mock private Preprocessor mPreprocessor;
     @Mock private Flags mFlags;
-    private MockitoSession mStaticMockSession;
-
-    // We are not expecting to launch Topics API on Android R. Hence, skipping this test on
-    // Android R since some tests require handling of unsupported PackageManager APIs.
-    // TODO(b/290839573) - Remove rule if Topics is enabled on R in the future.
-    @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(SdkLevel.class)
-                        .spyStatic(Preprocessor.class)
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-
-        doReturn(mApplicationContext).when(mContext).getApplicationContext();
+        doReturn(mApplicationContext).when(mMockContext).getApplicationContext();
         doReturn(mPackageManager).when(mApplicationContext).getPackageManager();
         doReturn(mApplicationInfo)
                 .when(mPackageManager)
@@ -115,14 +100,7 @@ public class ClassifierInputManagerTest {
         doAnswer(returnsFirstArg())
                 .when(() -> Preprocessor.limitDescriptionSize(anyString(), anyInt(), anyInt()));
 
-        mClassifierInputManager = new ClassifierInputManager(mContext, mPreprocessor);
-    }
-
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
+        mClassifierInputManager = new ClassifierInputManager(mMockContext, mPreprocessor);
     }
 
     @Test

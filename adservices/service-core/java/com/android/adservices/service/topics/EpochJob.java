@@ -52,7 +52,7 @@ public final class EpochJob implements JobWorker {
             Context context, ExecutionRuntimeParameters executionRuntimeParameters) {
         return Futures.submit(
                 () -> {
-                    TopicsWorker.getInstance(context).computeEpoch();
+                    TopicsWorker.getInstance().computeEpoch();
                     return SUCCESS;
                 },
                 AdServicesExecutors.getBackgroundExecutor());

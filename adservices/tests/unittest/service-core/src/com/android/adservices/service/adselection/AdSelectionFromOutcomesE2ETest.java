@@ -286,7 +286,7 @@ public class AdSelectionFromOutcomesE2ETest {
         AdSelectionServerDatabase serverDb =
                 Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
         mEnrollmentDao = EnrollmentDao.getInstance();
-        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContextSpy);
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance();
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
         mAdFilteringFeatureFactory =

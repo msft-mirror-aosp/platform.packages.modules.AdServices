@@ -107,11 +107,10 @@ public class AppUpdateManager {
     /**
      * Returns an instance of AppUpdateManager given a context
      *
-     * @param context the context
      * @return an instance of AppUpdateManager
      */
     @NonNull
-    public static AppUpdateManager getInstance(@NonNull Context context) {
+    public static AppUpdateManager getInstance() {
         synchronized (AppUpdateManager.class) {
             if (sSingleton == null) {
                 sSingleton =
