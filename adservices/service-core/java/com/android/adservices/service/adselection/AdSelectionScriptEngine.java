@@ -16,17 +16,18 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.common.ScriptEngineConstants.JS_EXECUTION_RESULT_INVALID;
-import static com.android.adservices.service.common.ScriptEngineConstants.JS_EXECUTION_STATUS_UNSUCCESSFUL;
-import static com.android.adservices.service.common.ScriptEngineConstants.JS_SCRIPT_STATUS_SUCCESS;
-import static com.android.adservices.service.common.ScriptEngineConstants.RESULTS_FIELD_NAME;
-import static com.android.adservices.service.common.ScriptEngineConstants.SCRIPT_ARGUMENT_NAME_IGNORED;
-import static com.android.adservices.service.common.ScriptEngineConstants.STATUS_FIELD_NAME;
 import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArrayArg;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.ENTRY_POINT_FUNC_NAME;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.JS_EXECUTION_RESULT_INVALID;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.JS_EXECUTION_STATUS_UNSUCCESSFUL;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.JS_SCRIPT_STATUS_SUCCESS;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.RESULTS_FIELD_NAME;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.SCRIPT_ARGUMENT_NAME_IGNORED;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.STATUS_FIELD_NAME;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
@@ -52,6 +53,7 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.js.JSScriptEngineCommonConstants;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
@@ -120,7 +122,7 @@ public class AdSelectionScriptEngine {
      */
     public static final String AD_SELECTION_ITERATIVE_PROCESSING_JS =
             "function "
-                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + ENTRY_POINT_FUNC_NAME
                     + "(%s) {\n"
                     + " let status = 0;\n"
                     + " const results = []; \n"
@@ -157,7 +159,7 @@ public class AdSelectionScriptEngine {
      */
     public static final String AD_SELECTION_BATCH_PROCESSING_JS =
             "function "
-                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + ENTRY_POINT_FUNC_NAME
                     + "(%s) {\n"
                     + "  let status = 0;\n"
                     + "  const results = []; \n"
@@ -176,7 +178,7 @@ public class AdSelectionScriptEngine {
 
     public static final String AD_SELECTION_GENERATE_BID_JS_V3 =
             "function "
-                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + ENTRY_POINT_FUNC_NAME
                     + "(%s) {\n"
                     + "    let status = 0;\n"
                     + "    let results = null;\n"
@@ -205,7 +207,7 @@ public class AdSelectionScriptEngine {
 
     public static final String CHECK_FUNCTIONS_EXIST_JS =
             "function "
-                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + ENTRY_POINT_FUNC_NAME
                     + "(names) {\n"
                     + " for (const name of names) {\n"
                     + "     try {\n"
@@ -218,7 +220,7 @@ public class AdSelectionScriptEngine {
                     + "}";
     public static final String GET_FUNCTION_ARGUMENT_COUNT =
             "function "
-                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + ENTRY_POINT_FUNC_NAME
                     + "(names) {\n"
                     + " for (const name of names) {\n"
                     + "     try {\n"
@@ -498,9 +500,8 @@ public class AdSelectionScriptEngine {
      * and convert it to a list of {@link GenerateBidResult} objects. The script output has been
      * pre-parsed into an {@link AuctionScriptResult} object that will contain the script status
      * code and the list of ads. The method will return an empty list of ads if the status code is
-     * not {@link
-     * com.android.adservices.service.common.ScriptEngineConstants#JS_SCRIPT_STATUS_SUCCESS} or if
-     * there has been any problem parsing the JS response.
+     * not {@link JSScriptEngineCommonConstants#JS_SCRIPT_STATUS_SUCCESS} or if there has been any
+     * problem parsing the JS response.
      */
     private List<GenerateBidResult> handleGenerateBidsOutput(AuctionScriptResult batchBidResult) {
         ImmutableList.Builder<GenerateBidResult> results = ImmutableList.builder();
@@ -549,8 +550,8 @@ public class AdSelectionScriptEngine {
      * associated bids {@link Double}. The script output has been pre-parsed into an {@link
      * AuctionScriptResult} object that will contain the script sstatus code and the list of scores.
      * The method will return an empty list of ads if the status code is not {@link
-     * com.android.adservices.service.common.ScriptEngineConstants#JS_SCRIPT_STATUS_SUCCESS} or if
-     * there has been any problem parsing the JS response.
+     * JSScriptEngineCommonConstants#JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem
+     * parsing the JS response.
      */
     private List<ScoreAdResult> handleScoreAdsOutput(
             AuctionScriptResult batchBidResult,
@@ -591,11 +592,11 @@ public class AdSelectionScriptEngine {
      * been pre-parsed into an {@link AuctionScriptResult} object that will contain the script
      * status code and the results as a list. This handler expects a single result in the {@code
      * results} or an empty list which is also valid as long as {@code status} is {@link
-     * com.android.adservices.service.common.ScriptEngineConstants#JS_SCRIPT_STATUS_SUCCESS}
+     * JSScriptEngineCommonConstants#JS_SCRIPT_STATUS_SUCCESS}
      *
      * <p>The method will return a status code is not {@link
-     * com.android.adservices.service.common.ScriptEngineConstants#JS_SCRIPT_STATUS_SUCCESS} if
-     * there has been any problem executing JS script or parsing the JS response.
+     * JSScriptEngineCommonConstants#JS_SCRIPT_STATUS_SUCCESS} if there has been any problem
+     * executing JS script or parsing the JS response.
      *
      * @throws IllegalStateException is thrown in case the status is not success or the results has
      *     more than one item.

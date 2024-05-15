@@ -16,9 +16,13 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.js.JSScriptArgument.numericArg;
+
 import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.service.js.JSScriptArgument;
+
+import com.google.common.collect.ImmutableList;
 
 import org.json.JSONException;
 
@@ -116,5 +120,17 @@ public class ProtectedSignalsArgumentUtil {
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException(INVALID_BASE64_SIGNAL);
         }
+    }
+
+    static ImmutableList<JSScriptArgument> getArgumentsFromRawSignalsAndMaxSize(
+            Map<String, List<ProtectedSignal>> rawSignals, int maxSizeInBytes)
+            throws JSONException {
+        return ImmutableList.<JSScriptArgument>builder()
+                .add(asScriptArgument(SignalsDriverLogicGenerator.SIGNALS_ARG_NAME, rawSignals))
+                .add(
+                        numericArg(
+                                SignalsDriverLogicGenerator.MAX_SIZE_BYTES_ARG_NAME,
+                                maxSizeInBytes))
+                .build();
     }
 }
