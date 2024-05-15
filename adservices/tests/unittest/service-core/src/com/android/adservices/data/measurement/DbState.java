@@ -30,6 +30,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.registration.AsyncRedirect;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -379,7 +380,7 @@ public class DbState {
                         .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
                         .setAttributionMode(
                                 sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
-                        .setFilterData(sJSON.optString("filterData", null))
+                        .setFilterDataString(sJSON.optString("filterData", null))
                         .setRegistrationOrigin(getRegistrationOrigin(sJSON))
                         .setTriggerSpecsString(sJSON.optString("triggerSpecs", null))
                         .setEventAttributionStatus(sJSON.optString("eventAttributionStatus", null));
@@ -427,6 +428,9 @@ public class DbState {
                 .setFilters(tJSON.optString("filters", null))
                 .setNotFilters(tJSON.optString("not_filters", null))
                 .setRegistrationOrigin(getRegistrationOrigin(tJSON))
+                .setAggregatableSourceRegistrationTimeConfig(
+                        Trigger.SourceRegistrationTimeConfig.valueOf(
+                                tJSON.getString("aggregatableSourceRegistrationTimeConfig")))
                 .build();
     }
 
@@ -609,6 +613,8 @@ public class DbState {
                 .setVerifiedDestination(Uri.parse(aJSON.getString("verifiedDestination")))
                 .setWebDestination(Uri.parse(aJSON.getString("webDestination")))
                 .setSourceType(Source.SourceType.values()[aJSON.getInt("sourceType")])
+                .setRedirectBehavior(
+                        AsyncRedirect.RedirectBehavior.valueOf(aJSON.getString("redirectBehavior")))
                 .build();
     }
 

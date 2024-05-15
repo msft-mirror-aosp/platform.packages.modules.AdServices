@@ -109,6 +109,10 @@
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID_COMPAT"/>
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD_COMPAT" />
 
+    <!-- Permission to allow self calling Common Service. -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_STATE_COMPAT"/>
+    <uses-permission android:name="android.permission.MODIFY_ADSERVICES_STATE_COMPAT"/>
+
     <!-- Allows JobScheduler to persist jobs across reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
@@ -207,6 +211,19 @@
             android:process=".adservices">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.NOTIFICATIONS"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for Adservices to run shell command. This is disabled by default.-->
+        <activity
+            android:name="com.android.adservices.shell.ShellCommandActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:theme="@style/Theme.SubSettingsBase"
+            android:process=".adservices">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.BACK_COMPACT_SHELL_COMMAND"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
@@ -393,6 +410,13 @@
                  android:process=".adservices">
         </service>
 
+        <!-- FLEDGE Schedule Custom Audience Update Job -->
+        <service android:name=
+                     "com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
         <!-- FLEDGE Ad selection debug report sender Job -->
         <service android:name=
                      "com.android.adservices.service.adselection.DebugReportSenderJobService"
@@ -403,6 +427,20 @@
         <!-- FLEDGE Protected Signals periodic encoding job -->
         <service android:name=
                      "com.android.adservices.service.signals.PeriodicEncodingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
+        <!-- FLEDGE KAnon sign join background job -->
+        <service android:name=
+                     "com.android.adservices.service.kanon.KAnonSignJoinBackgroundJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
+        <!-- FLEDGE Background Key Fetch Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE"
                  android:process=".adservices">
         </service>

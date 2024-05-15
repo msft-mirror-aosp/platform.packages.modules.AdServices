@@ -57,23 +57,25 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @SpyStatic(FlagsFactory.class)
 @RequiresSdkLevelAtLeastS
@@ -88,8 +90,11 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     private static final Topic TOPIC1 = Topic.create(0, 1, 11);
     private static final Topic TOPIC2 = Topic.create(12, 2, 22);
     private static final Topic TOPIC3 = Topic.create(123, 3, 33);
-    private final List<Topic> mTopics = Arrays.asList(TOPIC1, TOPIC2, TOPIC3);
+    private static final int APPSEARCH_TIMEOUT_MS = 1000;
 
+    private final List<Topic> mTopics = Arrays.asList(TOPIC1, TOPIC2, TOPIC3);
+    private final ListeningExecutorService mExecutorService =
+            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     @Mock private Flags mMockFlags;
 
     @Before
@@ -98,149 +103,114 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         when(mMockFlags.getAdservicesApkShaCertificate())
                 .thenReturn(Flags.ADSERVICES_APK_SHA_CERTIFICATE);
         when(mMockFlags.getAppsearchWriterAllowListOverride()).thenReturn("");
+        // Reduce AppSearch write timeout to speed up the tests.
+        when(mMockFlags.getAppSearchWriteTimeout()).thenReturn(APPSEARCH_TIMEOUT_MS);
+        when(mMockFlags.getAppSearchReadTimeout()).thenReturn(APPSEARCH_TIMEOUT_MS);
     }
 
     @Test
+    @MockStatic(AppSearchConsentDao.class)
     public void testGetConsent() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .mockStatic(AppSearchConsentDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(false)
-                    .when(
-                            () ->
-                                    AppSearchConsentDao.readConsentData(
-                                            /* globalSearchSession= */ any(ListenableFuture.class),
-                                            /* executor= */ any(),
-                                            /* userId= */ any(),
-                                            eq(API_TYPE),
-                                            any()));
-            boolean result = AppSearchConsentWorker.getInstance().getConsent(API_TYPE);
-            assertThat(result).isFalse();
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                AppSearchConsentDao.readConsentData(
+                                        /* searchSession= */ any(ListenableFuture.class),
+                                        /* executor= */ any(),
+                                        /* userId= */ any(),
+                                        eq(API_TYPE),
+                                        any()));
 
-            // Confirm that the right value is returned even when it is true.
-            ExtendedMockito.doReturn(true)
-                    .when(
-                            () ->
-                                    AppSearchConsentDao.readConsentData(
-                                            /* globalSearchSession= */ any(ListenableFuture.class),
-                                            /* executor= */ any(),
-                                            /* userId= */ any(),
-                                            eq(API_TYPE),
-                                            any()));
-            boolean result2 = AppSearchConsentWorker.getInstance().getConsent(API_TYPE);
-            assertThat(result2).isTrue();
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        boolean result = AppSearchConsentWorker.getInstance().getConsent(API_TYPE);
+        assertThat(result).isFalse();
+
+        // Confirm that the right value is returned even when it is true.
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                AppSearchConsentDao.readConsentData(
+                                        /* searchSession= */ any(ListenableFuture.class),
+                                        /* executor= */ any(),
+                                        /* userId= */ any(),
+                                        eq(API_TYPE),
+                                        any()));
+
+        boolean result2 = AppSearchConsentWorker.getInstance().getConsent(API_TYPE);
+        assertThat(result2).isTrue();
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void testSetConsent_failure() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initFailureResponse();
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class,
-                            () ->
-                                    AppSearchConsentWorker.getInstance()
-                                            .setConsent(API_TYPE, CONSENTED));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        initFailureResponse();
+
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> AppSearchConsentWorker.getInstance().setConsent(API_TYPE, CONSENTED));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testSetConsent_failure_timeout() {
+        initTimeoutResponse();
+
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> AppSearchConsentWorker.getInstance().setConsent(API_TYPE, CONSENTED));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    @MockStatic(UserHandle.class)
     public void testSetConsent() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
-            // Verify that no exception is thrown.
-            AppSearchConsentWorker.getInstance().setConsent(API_TYPE, CONSENTED);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        initSuccessResponse();
+
+        // Verify that no exception is thrown.
+        AppSearchConsentWorker.getInstance().setConsent(API_TYPE, CONSENTED);
     }
 
     @Test
+    @SpyStatic(UserHandle.class)
     public void testGetUserIdentifierFromBinderCallingUid() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            UserHandle mockUserHandle = Mockito.mock(UserHandle.class);
-            Mockito.when(UserHandle.getUserHandleForUid(Binder.getCallingUid()))
-                    .thenReturn(mockUserHandle);
-            Mockito.when(mockUserHandle.getIdentifier()).thenReturn(UID);
-            String result =
-                    AppSearchConsentWorker.getInstance().getUserIdentifierFromBinderCallingUid();
-            assertThat(result).isEqualTo("" + UID);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        UserHandle mockUserHandle = Mockito.mock(UserHandle.class);
+
+        Mockito.when(UserHandle.getUserHandleForUid(Binder.getCallingUid()))
+                .thenReturn(mockUserHandle);
+        Mockito.when(mockUserHandle.getIdentifier()).thenReturn(UID);
+
+        String result =
+                AppSearchConsentWorker.getInstance().getUserIdentifierFromBinderCallingUid();
+        assertThat(result).isEqualTo("" + UID);
     }
 
     @Test
+    @SpyStatic(AdServicesCommon.class)
     public void testGetAdServicesPackageName_null() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AdServicesCommon.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            Context context = Mockito.mock(Context.class);
-            PackageManager mockPackageManager = Mockito.mock(PackageManager.class);
-            Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
-            Mockito.when(AdServicesCommon.resolveAdServicesService(any(), any())).thenReturn(null);
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class,
-                            () -> AppSearchConsentWorker.getAdServicesPackageName(context));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        Context context = Mockito.mock(Context.class);
+        PackageManager mockPackageManager = Mockito.mock(PackageManager.class);
+
+        Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
+        Mockito.when(AdServicesCommon.resolveAdServicesService(any(), any())).thenReturn(null);
+
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> AppSearchConsentWorker.getAdServicesPackageName(context));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
     public void testGetAdServicesPackageName() {
         Context context = Mockito.mock(Context.class);
         PackageManager mockPackageManager = Mockito.mock(PackageManager.class);
+
         // When the resolveInfo returns AdServices package name, that is returned.
         Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
 
@@ -255,6 +225,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         resolveInfo2.serviceInfo = serviceInfo2;
         Mockito.when(mockPackageManager.queryIntentServices(any(), anyInt()))
                 .thenReturn(List.of(resolveInfo1, resolveInfo2));
+
         assertThat(AppSearchConsentWorker.getAdServicesPackageName(context))
                 .isEqualTo(ADSERVICES_PACKAGE_NAME);
 
@@ -262,884 +233,640 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         // is returned.
         Mockito.when(mockPackageManager.queryIntentServices(any(), anyInt()))
                 .thenReturn(List.of(resolveInfo2));
+
         assertThat(AppSearchConsentWorker.getAdServicesPackageName(context))
                 .isEqualTo(ADSERVICES_PACKAGE_NAME);
     }
 
     @Test
+    @SpyStatic(AppSearchAppConsentDao.class)
     public void testGetAppsWithConsent_nullOrEmpty() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchAppConsentDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            // Null dao is returned.
-            ExtendedMockito.doReturn(null)
-                    .when(
-                            () ->
-                                    AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), any(), any()));
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
-            assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isEmpty();
+        // Null dao is returned.
+        ExtendedMockito.doReturn(null)
+                .when(
+                        () ->
+                                AppSearchAppConsentDao.readConsentData(
+                                        any(), any(), any(), any(), any()));
 
-            // Dao is returned, but list is null.
-            AppSearchAppConsentDao mockDao = Mockito.mock(AppSearchAppConsentDao.class);
-            ExtendedMockito.doReturn(mockDao)
-                    .when(
-                            () ->
-                                    AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), any(), any()));
-            assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
-            assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isEmpty();
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
+        assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isEmpty();
+
+        // Dao is returned, but list is null.
+        AppSearchAppConsentDao mockDao = Mockito.mock(AppSearchAppConsentDao.class);
+        ExtendedMockito.doReturn(mockDao)
+                .when(
+                        () ->
+                                AppSearchAppConsentDao.readConsentData(
+                                        any(), any(), any(), any(), any()));
+
+        assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
+        assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isEmpty();
     }
 
     @Test
+    @SpyStatic(AppSearchAppConsentDao.class)
     public void testGetAppsWithConsent() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchAppConsentDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            // Null dao is returned.
-            ExtendedMockito.doReturn(null)
-                    .when(
-                            () ->
-                                    AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), any(), any()));
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
-            assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isEmpty();
+        // Null dao is returned.
+        ExtendedMockito.doReturn(null)
+                .when(
+                        () ->
+                                AppSearchAppConsentDao.readConsentData(
+                                        any(), any(), any(), any(), any()));
 
-            // Dao is returned, but list is null.
-            AppSearchAppConsentDao mockDao = Mockito.mock(AppSearchAppConsentDao.class);
-            List<String> apps = ImmutableList.of(TEST);
-            when(mockDao.getApps()).thenReturn(apps);
-            ExtendedMockito.doReturn(mockDao)
-                    .when(
-                            () ->
-                                    AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), any(), any()));
-            assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
-            assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isEqualTo(apps);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
+        assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isEmpty();
+
+        // Dao is returned, but list is null.
+        AppSearchAppConsentDao mockDao = Mockito.mock(AppSearchAppConsentDao.class);
+        List<String> apps = ImmutableList.of(TEST);
+
+        when(mockDao.getApps()).thenReturn(apps);
+        ExtendedMockito.doReturn(mockDao)
+                .when(
+                        () ->
+                                AppSearchAppConsentDao.readConsentData(
+                                        any(), any(), any(), any(), any()));
+
+        assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
+        assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isEqualTo(apps);
     }
 
     @Test
+    @SpyStatic(AppSearchDao.class)
     public void testClearAppsWithConsent_failure() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            FluentFuture future =
-                    FluentFuture.from(
-                            Futures.immediateFailedFuture(new ExecutionException("test", null)));
-            ExtendedMockito.doReturn(future)
-                    .when(() -> AppSearchDao.deleteData(any(), any(), any(), any(), any()));
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class,
-                            () -> appSearchConsentWorker.clearAppsWithConsent(TEST));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        Exception exception = new IllegalStateException("test exception");
+        ExtendedMockito.doThrow(exception)
+                .when(() -> AppSearchDao.deleteData(any(), any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> appSearchConsentWorker.clearAppsWithConsent(TEST));
+        assertThat(e).isSameInstanceAs(exception);
     }
 
     @Test
+    @SpyStatic(AppSearchDao.class)
     public void testClearAppsWithConsent() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            FluentFuture future = FluentFuture.from(Futures.immediateFuture(result));
-            ExtendedMockito.doReturn(future)
-                    .when(() -> AppSearchDao.deleteData(any(), any(), any(), any(), any()));
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            // No exceptions are thrown.
-            appSearchConsentWorker.clearAppsWithConsent(TEST);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        ExtendedMockito.doReturn(result)
+                .when(() -> AppSearchDao.deleteData(any(), any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        // No exceptions are thrown.
+        appSearchConsentWorker.clearAppsWithConsent(TEST);
     }
 
     @Test
+    @SpyStatic(AppSearchAppConsentDao.class)
     public void testAddAppWithConsent_null() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchAppConsentDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(null)
-                    .when(
-                            () ->
-                                    AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), any(), any()));
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            // No exceptions are thrown.
-            assertThat(appSearchConsentWorker.addAppWithConsent(consentType, TEST)).isTrue();
-            ExtendedMockito.verify(
-                    () -> AppSearchAppConsentDao.getRowId(any(), eq(consentType)), atLeastOnce());
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
+
+        ExtendedMockito.doReturn(null)
+                .when(
+                        () ->
+                                AppSearchAppConsentDao.readConsentData(
+                                        any(), any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+
+        // No exceptions are thrown.
+        assertThat(appSearchConsentWorker.addAppWithConsent(consentType, TEST)).isTrue();
+        ExtendedMockito.verify(
+                () -> AppSearchAppConsentDao.getRowId(any(), eq(consentType)), atLeastOnce());
     }
 
     @Test
+    @SpyStatic(AppSearchAppConsentDao.class)
     public void testAddAppWithConsent_failure() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchAppConsentDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            AppSearchAppConsentDao dao = Mockito.mock(AppSearchAppConsentDao.class);
-            ExtendedMockito.doReturn(dao)
-                    .when(
-                            () ->
-                                    AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), eq(consentType), any()));
-            when(dao.getApps()).thenReturn(List.of());
-            FluentFuture future =
-                    FluentFuture.from(
-                            Futures.immediateFailedFuture(new ExecutionException("test", null)));
-            when(dao.writeData(any(), any(), any())).thenReturn(future);
+        String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
+        AppSearchAppConsentDao dao = Mockito.mock(AppSearchAppConsentDao.class);
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.addAppWithConsent(consentType, TEST)).isFalse();
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        ExtendedMockito.doReturn(dao)
+                .when(
+                        () ->
+                                AppSearchAppConsentDao.readConsentData(
+                                        any(), any(), any(), eq(consentType), any()));
+        when(dao.getApps()).thenReturn(List.of());
+        when(dao.writeData(any(), any(), any())).thenThrow(new IllegalStateException("test", null));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.addAppWithConsent(consentType, TEST)).isFalse();
     }
 
     @Test
+    @SpyStatic(AppSearchAppConsentDao.class)
     public void testAddAppWithConsent() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchAppConsentDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            AppSearchAppConsentDao dao = Mockito.mock(AppSearchAppConsentDao.class);
-            ExtendedMockito.doReturn(dao)
-                    .when(
-                            () ->
-                                    AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), eq(consentType), any()));
-            when(dao.getApps()).thenReturn(List.of());
-            AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            FluentFuture future = FluentFuture.from(Futures.immediateFuture(result));
-            when(dao.writeData(any(), any(), any())).thenReturn(future);
+        String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
+        AppSearchAppConsentDao dao = Mockito.mock(AppSearchAppConsentDao.class);
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            // No exceptions are thrown.
-            assertThat(appSearchConsentWorker.addAppWithConsent(consentType, TEST)).isTrue();
-            verify(dao, atLeastOnce()).getApps();
-            verify(dao, atLeastOnce()).writeData(any(), any(), any());
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        ExtendedMockito.doReturn(dao)
+                .when(
+                        () ->
+                                AppSearchAppConsentDao.readConsentData(
+                                        any(), any(), any(), eq(consentType), any()));
+        when(dao.getApps()).thenReturn(List.of());
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+
+        // No exceptions are thrown.
+        assertThat(appSearchConsentWorker.addAppWithConsent(consentType, TEST)).isTrue();
+        verify(dao, atLeastOnce()).getApps();
+        verify(dao, atLeastOnce()).writeData(any(), any(), any());
     }
 
     @Test
+    @SpyStatic(AppSearchAppConsentDao.class)
     public void testRemoveAppWithConsent_null() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchAppConsentDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(null)
-                    .when(
-                            () ->
-                                    AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), any(), any()));
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            // No exceptions are thrown.
-            appSearchConsentWorker.removeAppWithConsent(consentType, TEST);
-            ExtendedMockito.verify(
-                    () -> AppSearchAppConsentDao.getRowId(any(), eq(consentType)), never());
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
+
+        ExtendedMockito.doReturn(null)
+                .when(
+                        () ->
+                                AppSearchAppConsentDao.readConsentData(
+                                        any(), any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        // No exceptions are thrown.
+        appSearchConsentWorker.removeAppWithConsent(consentType, TEST);
+        ExtendedMockito.verify(
+                () -> AppSearchAppConsentDao.getRowId(any(), eq(consentType)), never());
     }
 
     @Test
+    @SpyStatic(AppSearchAppConsentDao.class)
     public void testRemoveAppWithConsent_failure() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchAppConsentDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            AppSearchAppConsentDao dao = Mockito.mock(AppSearchAppConsentDao.class);
-            ExtendedMockito.doReturn(dao)
-                    .when(
-                            () ->
-                                    AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), eq(consentType), any()));
-            when(dao.getApps()).thenReturn(List.of(TEST));
-            FluentFuture future =
-                    FluentFuture.from(
-                            Futures.immediateFailedFuture(new ExecutionException("test", null)));
-            when(dao.writeData(any(), any(), any())).thenReturn(future);
+        String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
+        AppSearchAppConsentDao dao = Mockito.mock(AppSearchAppConsentDao.class);
+        Exception exception = new IllegalStateException("test");
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class,
-                            () -> appSearchConsentWorker.removeAppWithConsent(consentType, TEST));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        ExtendedMockito.doReturn(dao)
+                .when(
+                        () ->
+                                AppSearchAppConsentDao.readConsentData(
+                                        any(), any(), any(), eq(consentType), any()));
+        when(dao.getApps()).thenReturn(List.of(TEST));
+        when(dao.writeData(any(), any(), any())).thenThrow(exception);
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> appSearchConsentWorker.removeAppWithConsent(consentType, TEST));
+        assertThat(e).isSameInstanceAs(exception);
     }
 
     @Test
+    @SpyStatic(AppSearchAppConsentDao.class)
     public void testRemoveAppWithConsent() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchAppConsentDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            AppSearchAppConsentDao dao = Mockito.mock(AppSearchAppConsentDao.class);
-            ExtendedMockito.doReturn(dao)
-                    .when(
-                            () ->
-                                    AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), eq(consentType), any()));
+        String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
+        AppSearchAppConsentDao dao = Mockito.mock(AppSearchAppConsentDao.class);
 
-            when(dao.getApps()).thenReturn(List.of(TEST));
-            AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            FluentFuture future = FluentFuture.from(Futures.immediateFuture(result));
-            when(dao.writeData(any(), any(), any())).thenReturn(future);
+        ExtendedMockito.doReturn(dao)
+                .when(
+                        () ->
+                                AppSearchAppConsentDao.readConsentData(
+                                        any(), any(), any(), eq(consentType), any()));
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            // No exceptions are thrown.
-            appSearchConsentWorker.removeAppWithConsent(consentType, TEST);
-            verify(dao, atLeastOnce()).getApps();
-            verify(dao, atLeastOnce()).writeData(any(), any(), any());
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        when(dao.getApps()).thenReturn(List.of(TEST));
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        // No exceptions are thrown.
+        appSearchConsentWorker.removeAppWithConsent(consentType, TEST);
+        verify(dao, atLeastOnce()).getApps();
+        verify(dao, atLeastOnce()).writeData(any(), any(), any());
     }
 
     @Test
+    @SpyStatic(AppSearchNotificationDao.class)
     public void testWasNotificationDisplayed() {
         runNotificationDisplayedTest(true);
     }
 
     @Test
+    @SpyStatic(AppSearchNotificationDao.class)
     public void testNotificationNotDisplayed() {
         runNotificationDisplayedTest(false);
     }
 
     private void runNotificationDisplayedTest(boolean displayed) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchNotificationDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(displayed)
-                    .when(
-                            () ->
-                                    AppSearchNotificationDao.wasNotificationDisplayed(
-                                            any(), any(), any(), any()));
+        ExtendedMockito.doReturn(displayed)
+                .when(
+                        () ->
+                                AppSearchNotificationDao.wasNotificationDisplayed(
+                                        any(), any(), any(), any()));
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.wasNotificationDisplayed()).isEqualTo(displayed);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.wasNotificationDisplayed()).isEqualTo(displayed);
     }
 
     @Test
+    @SpyStatic(AppSearchNotificationDao.class)
     public void testWasGaUxNotificationDisplayed() {
         runGaUxNotificationDisplayedTest(true);
     }
 
     @Test
+    @SpyStatic(AppSearchNotificationDao.class)
     public void testGaUxNotificationNotDisplayed() {
         runGaUxNotificationDisplayedTest(false);
     }
 
     private void runGaUxNotificationDisplayedTest(boolean displayed) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchNotificationDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(displayed)
-                    .when(
-                            () ->
-                                    AppSearchNotificationDao.wasGaUxNotificationDisplayed(
-                                            any(), any(), any(), any()));
+        ExtendedMockito.doReturn(displayed)
+                .when(
+                        () ->
+                                AppSearchNotificationDao.wasGaUxNotificationDisplayed(
+                                        any(), any(), any(), any()));
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.wasGaUxNotificationDisplayed()).isEqualTo(displayed);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.wasGaUxNotificationDisplayed()).isEqualTo(displayed);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void testRecordNotificationDisplayed_failure() {
         runRecordNotificationDisplayedTestFailure(/* isBetaUx= */ true);
     }
 
     @Test
-    public void testRecordGaUxNotificationDisplayed_faiure() {
+    @SpyStatic(PlatformStorage.class)
+    public void testRecordGaUxNotificationDisplayed_failure() {
         runRecordNotificationDisplayedTestFailure(/* isBetaUx= */ false);
     }
 
     private void runRecordNotificationDisplayedTestFailure(boolean isBetaUx) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initFailureResponse();
-            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-            if (isBetaUx) {
-                RuntimeException e =
-                        assertThrows(
-                                RuntimeException.class,
-                                () -> worker.recordNotificationDisplayed(true));
-                assertThat(e.getMessage())
-                        .isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-            } else {
-                RuntimeException e =
-                        assertThrows(
-                                RuntimeException.class,
-                                () -> worker.recordGaUxNotificationDisplayed(true));
-                assertThat(e.getMessage())
-                        .isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-            }
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        initFailureResponse();
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        isBetaUx
+                                ? () -> worker.recordNotificationDisplayed(true)
+                                : () -> worker.recordGaUxNotificationDisplayed(true));
+
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordNotificationDisplayed_failure_timeout() {
+        runRecordNotificationDisplayedTestFailureTimeout(/* isBetaUx= */ true);
+    }
+
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordGaUxNotificationDisplayed_failure_timeout() {
+        runRecordNotificationDisplayedTestFailureTimeout(/* isBetaUx= */ false);
+    }
+
+    private void runRecordNotificationDisplayedTestFailureTimeout(boolean isBetaUx) {
+        initTimeoutResponse();
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+
+        RuntimeException e;
+        if (isBetaUx) {
+            e =
+                    assertThrows(
+                            RuntimeException.class, () -> worker.recordNotificationDisplayed(true));
+        } else {
+            e =
+                    assertThrows(
+                            RuntimeException.class,
+                            () -> worker.recordGaUxNotificationDisplayed(true));
+        }
+
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
+    @Test
+    @MockStatic(AppSearchNotificationDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
     public void testRecordNotificationDisplayed() {
         runRecordNotificationDisplayed(/* isBetaUx= */ true);
     }
 
     @Test
+    @MockStatic(AppSearchNotificationDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
     public void testRecordGaUxNotificationDisplayed() {
         runRecordNotificationDisplayed(/* isBetaUx= */ false);
     }
 
     private void runRecordNotificationDisplayed(boolean isBetaUx) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchNotificationDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
-            when(AppSearchNotificationDao.getRowId(eq("" + UID))).thenReturn("" + UID);
-            // Verify that no exception is thrown.
-            if (isBetaUx) {
-                when(AppSearchNotificationDao.wasGaUxNotificationDisplayed(
-                                any(), any(), any(), any()))
-                        .thenReturn(false);
-                AppSearchConsentWorker.getInstance().recordNotificationDisplayed(true);
-            } else {
-                when(AppSearchNotificationDao.wasNotificationDisplayed(any(), any(), any(), any()))
-                        .thenReturn(false);
-                AppSearchConsentWorker.getInstance().recordGaUxNotificationDisplayed(true);
-            }
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
+        initSuccessResponse();
+        when(AppSearchNotificationDao.getRowId(eq("" + UID))).thenReturn("" + UID);
+        // Verify that no exception is thrown.
+        if (isBetaUx) {
+            when(AppSearchNotificationDao.wasGaUxNotificationDisplayed(any(), any(), any(), any()))
+                    .thenReturn(false);
+            AppSearchConsentWorker.getInstance().recordNotificationDisplayed(true);
+        } else {
+            when(AppSearchNotificationDao.wasNotificationDisplayed(any(), any(), any(), any()))
+                    .thenReturn(false);
+            AppSearchConsentWorker.getInstance().recordGaUxNotificationDisplayed(true);
         }
     }
 
     @Test
+    @SpyStatic(AppSearchInteractionsDao.class)
     public void testGetPrivacySandboxFeature() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchInteractionsDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            PrivacySandboxFeatureType feature = PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT;
-            ExtendedMockito.doReturn(feature)
-                    .when(
-                            () ->
-                                    AppSearchInteractionsDao.getPrivacySandboxFeatureType(
-                                            any(), any(), any(), any()));
+        PrivacySandboxFeatureType feature = PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT;
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.getPrivacySandboxFeature()).isEqualTo(feature);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        ExtendedMockito.doReturn(feature)
+                .when(
+                        () ->
+                                AppSearchInteractionsDao.getPrivacySandboxFeatureType(
+                                        any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.getPrivacySandboxFeature()).isEqualTo(feature);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void testSetCurrentPrivacySandboxFeature_failure() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initFailureResponse();
-            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class,
-                            () ->
-                                    worker.setCurrentPrivacySandboxFeature(
-                                            PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        initFailureResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () ->
+                                worker.setCurrentPrivacySandboxFeature(
+                                        PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testSetCurrentPrivacySandboxFeature_failure_timeout() {
+        initTimeoutResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () ->
+                                worker.setCurrentPrivacySandboxFeature(
+                                        PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
     public void testSetCurrentPrivacySandboxFeature() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
-            // Verify that no exception is thrown.
-            PrivacySandboxFeatureType feature =
-                    PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT;
-            AppSearchConsentWorker.getInstance().setCurrentPrivacySandboxFeature(feature);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        initSuccessResponse();
+
+        // Verify that no exception is thrown.
+        PrivacySandboxFeatureType feature = PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT;
+        AppSearchConsentWorker.getInstance().setCurrentPrivacySandboxFeature(feature);
     }
 
     @Test
+    @SpyStatic(AppSearchInteractionsDao.class)
     public void testGetInteractions() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchInteractionsDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            int umi = ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
-            ExtendedMockito.doReturn(umi)
-                    .when(
-                            () ->
-                                    AppSearchInteractionsDao.getManualInteractions(
-                                            any(), any(), any(), any()));
+        int umi = ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.getUserManualInteractionWithConsent()).isEqualTo(umi);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        ExtendedMockito.doReturn(umi)
+                .when(
+                        () ->
+                                AppSearchInteractionsDao.getManualInteractions(
+                                        any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.getUserManualInteractionWithConsent()).isEqualTo(umi);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void testRecordUserManualInteractionWithConsent_failure() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initFailureResponse();
-            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-            int interactions = ConsentManager.MANUAL_INTERACTIONS_RECORDED;
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class,
-                            () -> worker.recordUserManualInteractionWithConsent(interactions));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        initFailureResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        int interactions = ConsentManager.MANUAL_INTERACTIONS_RECORDED;
+
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> worker.recordUserManualInteractionWithConsent(interactions));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
+    @MockStatic(AppSearchInteractionsDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordUserManualInteractionWithConsent_failure_timeout() {
+        initTimeoutResponse();
+
+        when(AppSearchInteractionsDao.getRowId(any(), any())).thenReturn("" + UID);
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        int interactions = ConsentManager.MANUAL_INTERACTIONS_RECORDED;
+
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> worker.recordUserManualInteractionWithConsent(interactions));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
+    @Test
+    @MockStatic(AppSearchInteractionsDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
     public void testRecordUserManualInteractionWithConsent() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchInteractionsDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
-            when(AppSearchInteractionsDao.getRowId(any(), any())).thenReturn("" + UID);
-            // Verify that no exception is thrown.
-            int interactions = ConsentManager.MANUAL_INTERACTIONS_RECORDED;
-            AppSearchConsentWorker.getInstance()
-                    .recordUserManualInteractionWithConsent(interactions);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        initSuccessResponse();
+
+        when(AppSearchInteractionsDao.getRowId(any(), any())).thenReturn("" + UID);
+
+        // Verify that no exception is thrown.
+        int interactions = ConsentManager.MANUAL_INTERACTIONS_RECORDED;
+        AppSearchConsentWorker.getInstance().recordUserManualInteractionWithConsent(interactions);
     }
 
     @Test
+    @SpyStatic(AppSearchTopicsConsentDao.class)
     public void testGetBlockedTopics() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchTopicsConsentDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(mTopics)
-                    .when(
-                            () ->
-                                    AppSearchTopicsConsentDao.getBlockedTopics(
-                                            any(), any(), any(), any()));
+        ExtendedMockito.doReturn(mTopics)
+                .when(() -> AppSearchTopicsConsentDao.getBlockedTopics(any(), any(), any(), any()));
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.getBlockedTopics()).isEqualTo(mTopics);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.getBlockedTopics()).isEqualTo(mTopics);
     }
 
     @Test
-    public void testRecordBlockedTopics_failure() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initFailureResponse();
-            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-            RuntimeException e =
-                    assertThrows(RuntimeException.class, () -> worker.recordBlockedTopic(TOPIC1));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+    @SpyStatic(PlatformStorage.class)
+    public void testRecordBlockedTopic_failure() {
+        initFailureResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(RuntimeException.class, () -> worker.recordBlockedTopic(TOPIC1));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
-    public void testRecordBlockedTopics_new() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchTopicsConsentDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
-            String query = "" + UID;
-            ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
-            ExtendedMockito.doReturn(null)
-                    .when(
-                            () ->
-                                    AppSearchTopicsConsentDao.readConsentData(
-                                            any(), any(), any(), any()));
+    @MockStatic(AppSearchTopicsConsentDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordBlockedTopic_failure_timeout() {
+        initTimeoutResponse();
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            appSearchConsentWorker.recordBlockedTopic(TOPIC1);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        String query = "" + UID;
+        ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
+        ExtendedMockito.doReturn(null)
+                .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any(), any()));
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(RuntimeException.class, () -> worker.recordBlockedTopic(TOPIC1));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
     }
 
     @Test
-    public void testRecordBlockedTopics() throws Exception {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchTopicsConsentDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            String query = "" + UID;
-            ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
-            AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
-            ExtendedMockito.doReturn(dao)
-                    .when(
-                            () ->
-                                    AppSearchTopicsConsentDao.readConsentData(
-                                            any(), any(), any(), any()));
-            AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            when(dao.writeData(any(), any(), any()))
-                    .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+    @MockStatic(AppSearchTopicsConsentDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordBlockedTopic_new() {
+        initSuccessResponse();
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            appSearchConsentWorker.recordBlockedTopic(TOPIC1);
-            verify(dao).addBlockedTopic(TOPIC1);
-            verify(dao).writeData(any(), any(), any());
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        String query = "" + UID;
+        ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
+        ExtendedMockito.doReturn(null)
+                .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        appSearchConsentWorker.recordBlockedTopic(TOPIC1);
     }
 
     @Test
-    public void testRecordUnblockedTopics_failure() throws Exception {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchTopicsConsentDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
-            ExtendedMockito.doReturn(dao)
-                    .when(
-                            () ->
-                                    AppSearchTopicsConsentDao.readConsentData(
-                                            any(), any(), any(), any()));
-            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-            when(dao.writeData(any(), any(), any()))
-                    .thenReturn(
-                            FluentFuture.from(
-                                    Futures.immediateFailedFuture(new InterruptedException())));
+    @MockStatic(AppSearchTopicsConsentDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordBlockedTopic() {
+        String query = "" + UID;
+        ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
+        AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
+        ExtendedMockito.doReturn(dao)
+                .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any(), any()));
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
-            RuntimeException e =
-                    assertThrows(RuntimeException.class, () -> worker.recordUnblockedTopic(TOPIC1));
-            verify(dao).removeBlockedTopic(TOPIC1);
-            verify(dao).writeData(any(), any(), any());
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        appSearchConsentWorker.recordBlockedTopic(TOPIC1);
+        verify(dao).addBlockedTopic(TOPIC1);
+        verify(dao).writeData(any(), any(), any());
     }
 
     @Test
-    public void testRecordUnblockedTopics_new() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchTopicsConsentDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            String query = "" + UID;
-            ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
-            ExtendedMockito.doReturn(null)
-                    .when(
-                            () ->
-                                    AppSearchTopicsConsentDao.readConsentData(
-                                            any(), any(), any(), any()));
+    @MockStatic(AppSearchTopicsConsentDao.class)
+    @SpyStatic(PlatformStorage.class)
+    public void testRecordUnblockedTopic_failure() {
+        AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
+        ExtendedMockito.doReturn(dao)
+                .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any(), any()));
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            appSearchConsentWorker.recordUnblockedTopic(TOPIC1);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        IllegalStateException exception = new IllegalStateException("test exception");
+        when(dao.writeData(any(), any(), any())).thenThrow(exception);
+
+        RuntimeException e =
+                assertThrows(RuntimeException.class, () -> worker.recordUnblockedTopic(TOPIC1));
+        verify(dao).removeBlockedTopic(TOPIC1);
+        verify(dao).writeData(any(), any(), any());
+        assertThat(e).isSameInstanceAs(exception);
     }
 
     @Test
-    public void testRecordUnblockedTopics() throws Exception {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchTopicsConsentDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            String query = "" + UID;
-            ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
-            AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
-            ExtendedMockito.doReturn(dao)
-                    .when(
-                            () ->
-                                    AppSearchTopicsConsentDao.readConsentData(
-                                            any(), any(), any(), any()));
-            AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            when(dao.writeData(any(), any(), any()))
-                    .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+    @MockStatic(AppSearchTopicsConsentDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordUnblockedTopic_new() {
+        String query = "" + UID;
+        ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
+        ExtendedMockito.doReturn(null)
+                .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any(), any()));
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            appSearchConsentWorker.recordUnblockedTopic(TOPIC1);
-            verify(dao).removeBlockedTopic(TOPIC1);
-            verify(dao).writeData(any(), any(), any());
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        appSearchConsentWorker.recordUnblockedTopic(TOPIC1);
     }
 
     @Test
+    @MockStatic(AppSearchTopicsConsentDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordUnblockedTopic() {
+        String query = "" + UID;
+        ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
+        AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
+        ExtendedMockito.doReturn(dao)
+                .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any(), any()));
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        appSearchConsentWorker.recordUnblockedTopic(TOPIC1);
+        verify(dao).removeBlockedTopic(TOPIC1);
+        verify(dao).writeData(any(), any(), any());
+    }
+
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
     public void testClearBlockedTopics_failure() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initFailureResponse();
-            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-            RuntimeException e =
-                    assertThrows(RuntimeException.class, () -> worker.clearBlockedTopics());
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        initFailureResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e = assertThrows(RuntimeException.class, worker::clearBlockedTopics);
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testClearBlockedTopics_failure_timeout() {
+        initTimeoutResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e = assertThrows(RuntimeException.class, worker::clearBlockedTopics);
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
     public void testClearBlockedTopics() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            // Verify no exceptions are thrown.
-            appSearchConsentWorker.clearBlockedTopics();
-        } finally {
-            staticMockSessionLocal.finishMocking();
-        }
+        initSuccessResponse();
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        // Verify no exceptions are thrown.
+        appSearchConsentWorker.clearBlockedTopics();
     }
 
     private void initSuccessResponse() {
@@ -1162,6 +889,26 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         when(mockResponse.getMigrationFailures()).thenReturn(List.of());
     }
 
+    private void initTimeoutResponse() {
+        AppSearchSession mockSession = Mockito.mock(AppSearchSession.class);
+        UserHandle mockUserHandle = Mockito.mock(UserHandle.class);
+        Mockito.when(UserHandle.getUserHandleForUid(Binder.getCallingUid()))
+                .thenReturn(mockUserHandle);
+        Mockito.when(mockUserHandle.getIdentifier()).thenReturn(UID);
+        ExtendedMockito.doReturn(Futures.immediateFuture(mockSession))
+                .when(() -> PlatformStorage.createSearchSessionAsync(any()));
+        verify(mockSession, atMost(1)).setSchemaAsync(any(SetSchemaRequest.class));
+
+        SetSchemaResponse mockResponse = Mockito.mock(SetSchemaResponse.class);
+        when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
+                .thenReturn(Futures.immediateFuture(mockResponse));
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(mockSession.putAsync(any())).thenReturn(getLongRunningOperation(result));
+
+        verify(mockResponse, atMost(1)).getMigrationFailures();
+        when(mockResponse.getMigrationFailures()).thenReturn(List.of());
+    }
+
     private void initFailureResponse() {
         AppSearchSession mockSession = Mockito.mock(AppSearchSession.class);
         ExtendedMockito.doReturn(Futures.immediateFuture(mockSession))
@@ -1172,7 +919,8 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
                 .thenReturn(Futures.immediateFuture(mockResponse));
 
-        AppSearchResult mockResult = Mockito.mock(AppSearchResult.class);
+        AppSearchResult<String> mockResult =
+                AppSearchResult.newFailedResult(AppSearchResult.RESULT_INVALID_ARGUMENT, "test");
         SetSchemaResponse.MigrationFailure failure =
                 new SetSchemaResponse.MigrationFailure(
                         /* namespace= */ TEST,
@@ -1182,562 +930,421 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         when(mockResponse.getMigrationFailures()).thenReturn(List.of(failure));
     }
 
+    private <T> ListenableFuture<T> getLongRunningOperation(T result) {
+        // Wait for a time that's longer than the AppSearch write timeout, then return the result.
+        return mExecutorService.submit(
+                () -> {
+                    TimeUnit.MILLISECONDS.sleep(APPSEARCH_TIMEOUT_MS + 1000);
+                    return result;
+                });
+    }
+
     @Test
+    @SpyStatic(AppSearchUxStatesDao.class)
     public void isAdIdEnabledTest_trueBit() {
         isAdIdEnabledTest(true);
     }
 
     @Test
+    @SpyStatic(AppSearchUxStatesDao.class)
     public void isAdIdEnabledTest_falseBit() {
         isAdIdEnabledTest(false);
     }
 
     private void isAdIdEnabledTest(boolean isAdIdEnabled) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchUxStatesDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(isAdIdEnabled)
-                    .when(() -> AppSearchUxStatesDao.readIsAdIdEnabled(any(), any(), any(), any()));
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.isAdIdEnabled()).isEqualTo(isAdIdEnabled);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        ExtendedMockito.doReturn(isAdIdEnabled)
+                .when(() -> AppSearchUxStatesDao.readIsAdIdEnabled(any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.isAdIdEnabled()).isEqualTo(isAdIdEnabled);
     }
 
     @Test
+    @MockStatic(AppSearchUxStatesDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
     public void setAdIdEnabledTest_success() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchUxStatesDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
+        String query = "" + UID;
+        ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
+        AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
+        ExtendedMockito.doReturn(dao)
+                .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
-            String query = "" + UID;
-            ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
-            AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
-            ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
-            AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            when(dao.writeData(any(), any(), any()))
-                    .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
-
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            appSearchConsentWorker.setAdIdEnabled(true);
-            verify(dao).setAdIdEnabled(anyBoolean());
-            verify(dao).writeData(any(), any(), any());
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        appSearchConsentWorker.setAdIdEnabled(true);
+        verify(dao).setAdIdEnabled(anyBoolean());
+        verify(dao).writeData(any(), any(), any());
     }
 
     @Test
-    public void setAdIdEnabledTest_trueBit() {
-        setAdIdEnabledTest(true);
+    @SpyStatic(PlatformStorage.class)
+    public void setAdIdEnabledTest_failure_trueBit() {
+        setAdIdEnabledTestFailure(true);
     }
 
     @Test
-    public void setAdIdEnabledTest_falseBit() {
-        setAdIdEnabledTest(false);
+    @SpyStatic(PlatformStorage.class)
+    public void setAdIdEnabledTest_failure_falseBit() {
+        setAdIdEnabledTestFailure(false);
     }
 
-    private void setAdIdEnabledTest(boolean isAdIdEnabled) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initFailureResponse();
-            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class, () -> worker.setAdIdEnabled(isAdIdEnabled));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+    private void setAdIdEnabledTestFailure(boolean isAdIdEnabled) {
+        initFailureResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(RuntimeException.class, () -> worker.setAdIdEnabled(isAdIdEnabled));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
+    @SpyStatic(AppSearchUxStatesDao.class)
     public void isU18AccountTest_trueBit() {
         isU18AccountTest(true);
     }
 
     @Test
+    @SpyStatic(AppSearchUxStatesDao.class)
     public void isU18AccountTest_falseBit() {
         isU18AccountTest(false);
     }
 
     private void isU18AccountTest(boolean isU18Account) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchUxStatesDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(isU18Account)
-                    .when(() -> AppSearchUxStatesDao.readIsU18Account(any(), any(), any(), any()));
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.isU18Account()).isEqualTo(isU18Account);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        ExtendedMockito.doReturn(isU18Account)
+                .when(() -> AppSearchUxStatesDao.readIsU18Account(any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.isU18Account()).isEqualTo(isU18Account);
     }
 
     @Test
+    @MockStatic(AppSearchUxStatesDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
     public void setU18AccountTest_success() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchUxStatesDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
+        String query = "" + UID;
+        ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
+        AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
+        ExtendedMockito.doReturn(dao)
+                .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
-            String query = "" + UID;
-            ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
-            AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
-            ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
-            AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            when(dao.writeData(any(), any(), any()))
-                    .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
-
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            appSearchConsentWorker.setU18Account(true);
-            verify(dao).setU18Account(anyBoolean());
-            verify(dao).writeData(any(), any(), any());
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        appSearchConsentWorker.setU18Account(true);
+        verify(dao).setU18Account(anyBoolean());
+        verify(dao).writeData(any(), any(), any());
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void setU18AccountTest_trueBit() {
         setU18AccountTest(true);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void setU18AccountTest_falseBit() {
         setU18AccountTest(false);
     }
 
     private void setU18AccountTest(boolean isU18Account) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initFailureResponse();
-            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-            RuntimeException e =
-                    assertThrows(RuntimeException.class, () -> worker.setU18Account(isU18Account));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        initFailureResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(RuntimeException.class, () -> worker.setU18Account(isU18Account));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
+    @SpyStatic(AppSearchUxStatesDao.class)
     public void isEntryPointEnabledTest_trueBit() {
         isEntryPointEnabledTest(true);
     }
 
     @Test
+    @SpyStatic(AppSearchUxStatesDao.class)
     public void isEntryPointEnabledTest_falseBit() {
         isEntryPointEnabledTest(false);
     }
 
     private void isEntryPointEnabledTest(boolean isEntryPointEnabled) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchUxStatesDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(isEntryPointEnabled)
-                    .when(
-                            () ->
-                                    AppSearchUxStatesDao.readIsEntryPointEnabled(
-                                            any(), any(), any(), any()));
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.isEntryPointEnabled()).isEqualTo(isEntryPointEnabled);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        ExtendedMockito.doReturn(isEntryPointEnabled)
+                .when(
+                        () ->
+                                AppSearchUxStatesDao.readIsEntryPointEnabled(
+                                        any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.isEntryPointEnabled()).isEqualTo(isEntryPointEnabled);
     }
 
     @Test
+    @MockStatic(AppSearchUxStatesDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
     public void setEntryPointEnabledTest_success() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchUxStatesDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
+        initSuccessResponse();
 
-            String query = "" + UID;
-            ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
-            AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
-            ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
-            AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            when(dao.writeData(any(), any(), any()))
-                    .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+        String query = "" + UID;
+        ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
+        AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
+        ExtendedMockito.doReturn(dao)
+                .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            appSearchConsentWorker.setEntryPointEnabled(true);
-            verify(dao).setEntryPointEnabled(anyBoolean());
-            verify(dao).writeData(any(), any(), any());
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        appSearchConsentWorker.setEntryPointEnabled(true);
+        verify(dao).setEntryPointEnabled(anyBoolean());
+        verify(dao).writeData(any(), any(), any());
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void setEntryPointEnabledTest_trueBit() {
         setEntryPointEnabledTest(true);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void setEntryPointEnabledTest_falseBit() {
         setEntryPointEnabledTest(false);
     }
 
     private void setEntryPointEnabledTest(boolean isEntryPointEnabled) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initFailureResponse();
-            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class,
-                            () -> worker.setEntryPointEnabled(isEntryPointEnabled));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        initFailureResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> worker.setEntryPointEnabled(isEntryPointEnabled));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
+    @SpyStatic(AppSearchUxStatesDao.class)
     public void isAdultAccountTest_trueBit() {
         isAdultAccountTest(true);
     }
 
     @Test
+    @SpyStatic(AppSearchUxStatesDao.class)
     public void isAdultAccountTest_falseBit() {
         isAdultAccountTest(false);
     }
 
     private void isAdultAccountTest(boolean isAdultAccount) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchUxStatesDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(isAdultAccount)
-                    .when(
-                            () ->
-                                    AppSearchUxStatesDao.readIsAdultAccount(
-                                            any(), any(), any(), any()));
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.isAdultAccount()).isEqualTo(isAdultAccount);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        ExtendedMockito.doReturn(isAdultAccount)
+                .when(() -> AppSearchUxStatesDao.readIsAdultAccount(any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.isAdultAccount()).isEqualTo(isAdultAccount);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void setAdultAccountTest_trueBit() {
         setAdultAccountTest(true);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void setAdultAccountTest_falseBit() {
         setAdultAccountTest(false);
     }
 
     private void setAdultAccountTest(boolean isAdultAccount) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initFailureResponse();
-            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class, () -> worker.setAdultAccount(isAdultAccount));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        initFailureResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(RuntimeException.class, () -> worker.setAdultAccount(isAdultAccount));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
-    public void setU18AdultAccountTest_success() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchUxStatesDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
+    @MockStatic(AppSearchUxStatesDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void setAdultAccountTest_success() {
+        initSuccessResponse();
 
-            String query = "" + UID;
-            ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
-            AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
-            ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
-            AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            when(dao.writeData(any(), any(), any()))
-                    .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+        String query = "" + UID;
+        ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
+        AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
+        ExtendedMockito.doReturn(dao)
+                .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            appSearchConsentWorker.setAdultAccount(true);
-            verify(dao).setAdultAccount(anyBoolean());
-            verify(dao).writeData(any(), any(), any());
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        appSearchConsentWorker.setAdultAccount(true);
+        verify(dao).setAdultAccount(anyBoolean());
+        verify(dao).writeData(any(), any(), any());
     }
 
     @Test
+    @SpyStatic(AppSearchUxStatesDao.class)
     public void wasU18NotificationDisplayedTest_trueBit() {
         wasU18NotificationDisplayedTest(true);
     }
 
     @Test
+    @SpyStatic(AppSearchUxStatesDao.class)
     public void wasU18NotificationDisplayedTest_falseBit() {
         wasU18NotificationDisplayedTest(false);
     }
 
     private void wasU18NotificationDisplayedTest(boolean wasU18NotificationDisplayed) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchUxStatesDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(wasU18NotificationDisplayed)
-                    .when(
-                            () ->
-                                    AppSearchUxStatesDao.readIsU18NotificationDisplayed(
-                                            any(), any(), any(), any()));
-            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            assertThat(appSearchConsentWorker.wasU18NotificationDisplayed())
-                    .isEqualTo(wasU18NotificationDisplayed);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
+        ExtendedMockito.doReturn(wasU18NotificationDisplayed)
+                .when(
+                        () ->
+                                AppSearchUxStatesDao.readIsU18NotificationDisplayed(
+                                        any(), any(), any(), any()));
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        assertThat(appSearchConsentWorker.wasU18NotificationDisplayed())
+                .isEqualTo(wasU18NotificationDisplayed);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void setU18NotificationDisplayedTest_trueBit() {
         setU18NotificationDisplayedTest(true);
     }
 
     @Test
+    @SpyStatic(PlatformStorage.class)
     public void setU18NotificationDisplayedTest_falseBit() {
         setU18NotificationDisplayedTest(false);
     }
 
     private void setU18NotificationDisplayedTest(boolean wasU18NotificationDisplayed) {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initFailureResponse();
-            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class,
-                            () -> worker.setU18NotificationDisplayed(wasU18NotificationDisplayed));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
+        initFailureResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> worker.setU18NotificationDisplayed(wasU18NotificationDisplayed));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+    }
+
+    @Test
+    @MockStatic(AppSearchUxStatesDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void setU18NotificationDisplayedTest_success() {
+        initSuccessResponse();
+
+        String query = "" + UID;
+        ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
+        AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
+        ExtendedMockito.doReturn(dao)
+                .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
+
+        AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+        appSearchConsentWorker.setU18NotificationDisplayed(true);
+        verify(dao).setU18NotificationDisplayed(anyBoolean());
+        verify(dao).writeData(any(), any(), any());
+    }
+
+    @Test
+    @SpyStatic(AppSearchUxStatesDao.class)
+    public void getUxTest_allUxs() {
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            ExtendedMockito.doReturn(ux)
+                    .when(() -> AppSearchUxStatesDao.readUx(any(), any(), any(), any()));
+            AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
+            assertThat(appSearchConsentWorker.getUx()).isEqualTo(ux);
         }
     }
 
     @Test
-    public void setU18NotificationDisplayedTest_success() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchUxStatesDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
+    @SpyStatic(PlatformStorage.class)
+    public void setUxTest_allUxsFailure() {
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            initFailureResponse();
 
+            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+            RuntimeException e = assertThrows(RuntimeException.class, () -> worker.setUx(ux));
+            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        }
+    }
+
+    @Test
+    @MockStatic(AppSearchUxStatesDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void setUxTest_allUxsSuccess() {
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
             String query = "" + UID;
             ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
             AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
             ExtendedMockito.doReturn(dao)
                     .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            when(dao.writeData(any(), any(), any()))
-                    .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
-
+            when(dao.writeData(any(), any(), any())).thenReturn(result);
             AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
-            appSearchConsentWorker.setU18NotificationDisplayed(true);
-            verify(dao).setU18NotificationDisplayed(anyBoolean());
+            appSearchConsentWorker.setUx(ux);
+            verify(dao).setUx(ux.toString());
             verify(dao).writeData(any(), any(), any());
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
         }
     }
 
     @Test
-    public void getUxTest_allUxs() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchUxStatesDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
+    @SpyStatic(AppSearchUxStatesDao.class)
+    public void getEnrollmentChannelTest_allUxsAllEnrollmentChannels() {
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            for (PrivacySandboxEnrollmentChannelCollection channel :
+                    ux.getEnrollmentChannelCollection()) {
+                ExtendedMockito.doReturn(channel)
+                        .when(
+                                () ->
+                                        AppSearchUxStatesDao.readEnrollmentChannel(
+                                                any(), any(), any(), any(), any()));
 
-            for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
-                ExtendedMockito.doReturn(ux)
-                        .when(() -> AppSearchUxStatesDao.readUx(any(), any(), any(), any()));
                 AppSearchConsentWorker appSearchConsentWorker =
                         AppSearchConsentWorker.getInstance();
-                assertThat(appSearchConsentWorker.getUx()).isEqualTo(ux);
-            }
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
+                assertThat(appSearchConsentWorker.getEnrollmentChannel(ux)).isEqualTo(channel);
             }
         }
     }
 
     @Test
-    public void setUxTest_allUxsFailure() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-
-            for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+    @SpyStatic(PlatformStorage.class)
+    public void setEnrollmentChannelTest_allUxsAllEnrollmentChannelsFailure() {
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            for (PrivacySandboxEnrollmentChannelCollection channel :
+                    ux.getEnrollmentChannelCollection()) {
                 initFailureResponse();
+
                 AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-                RuntimeException e = assertThrows(RuntimeException.class, () -> worker.setUx(ux));
+                RuntimeException e =
+                        assertThrows(
+                                RuntimeException.class,
+                                () -> worker.setEnrollmentChannel(ux, channel));
                 assertThat(e.getMessage())
                         .isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
             }
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
         }
     }
 
     @Test
-    public void setUxTest_allUxsSuccess() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchUxStatesDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
-
-            for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+    @MockStatic(AppSearchUxStatesDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void setEnrollmentChannelTest_allUxsAllEnrollmentChannelsSuccess() {
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            for (PrivacySandboxEnrollmentChannelCollection channel :
+                    ux.getEnrollmentChannelCollection()) {
                 String query = "" + UID;
                 ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
                 AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
@@ -1745,122 +1352,13 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
                         .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
                 AppSearchBatchResult<String, Void> result =
                         Mockito.mock(AppSearchBatchResult.class);
-                when(dao.writeData(any(), any(), any()))
-                        .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+                when(dao.writeData(any(), any(), any())).thenReturn(result);
 
                 AppSearchConsentWorker appSearchConsentWorker =
                         AppSearchConsentWorker.getInstance();
-                appSearchConsentWorker.setUx(ux);
-                verify(dao).setUx(ux.toString());
+                appSearchConsentWorker.setEnrollmentChannel(ux, channel);
+                verify(dao).setEnrollmentChannel(channel.toString());
                 verify(dao).writeData(any(), any(), any());
-            }
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
-    }
-
-    @Test
-    public void getEnrollmentChannelTest_allUxsAllEnrollmentChannels() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(AppSearchUxStatesDao.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-
-            for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
-                for (PrivacySandboxEnrollmentChannelCollection channel :
-                        ux.getEnrollmentChannelCollection()) {
-                    ExtendedMockito.doReturn(channel)
-                            .when(
-                                    () ->
-                                            AppSearchUxStatesDao.readEnrollmentChannel(
-                                                    any(), any(), any(), any(), any()));
-                    AppSearchConsentWorker appSearchConsentWorker =
-                            AppSearchConsentWorker.getInstance();
-                    assertThat(appSearchConsentWorker.getEnrollmentChannel(ux)).isEqualTo(channel);
-                }
-            }
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
-    }
-
-    @Test
-    public void setEnrollmentChannelTest_allUxsAllEnrollmentChannelsFailure() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-
-            for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
-                for (PrivacySandboxEnrollmentChannelCollection channel :
-                        ux.getEnrollmentChannelCollection()) {
-                    initFailureResponse();
-                    AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-                    RuntimeException e =
-                            assertThrows(
-                                    RuntimeException.class,
-                                    () -> worker.setEnrollmentChannel(ux, channel));
-                    assertThat(e.getMessage())
-                            .isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-                }
-            }
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
-    }
-
-    @Test
-    public void setEnrollmentChannelTest_allUxsAllEnrollmentChannelsSuccess() {
-        MockitoSession staticMockSessionLocal = null;
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(PlatformStorage.class)
-                            .mockStatic(AppSearchUxStatesDao.class)
-                            .spyStatic(UserHandle.class)
-                            .strictness(Strictness.WARN)
-                            .initMocks(this)
-                            .startMocking();
-            initSuccessResponse();
-
-            for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
-                for (PrivacySandboxEnrollmentChannelCollection channel :
-                        ux.getEnrollmentChannelCollection()) {
-                    String query = "" + UID;
-                    ExtendedMockito.doReturn(query)
-                            .when(() -> AppSearchUxStatesDao.getQuery(any()));
-                    AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
-                    ExtendedMockito.doReturn(dao)
-                            .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
-                    AppSearchBatchResult<String, Void> result =
-                            Mockito.mock(AppSearchBatchResult.class);
-                    when(dao.writeData(any(), any(), any()))
-                            .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
-
-                    AppSearchConsentWorker appSearchConsentWorker =
-                            AppSearchConsentWorker.getInstance();
-                    appSearchConsentWorker.setEnrollmentChannel(ux, channel);
-                    verify(dao).setEnrollmentChannel(channel.toString());
-                    verify(dao).writeData(any(), any(), any());
-                }
-            }
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
             }
         }
     }

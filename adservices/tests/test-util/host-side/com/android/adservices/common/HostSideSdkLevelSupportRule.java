@@ -15,13 +15,15 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.common.AndroidSdk.Level;
+import com.android.adservices.common.AndroidSdk.Range;
 import com.android.tradefed.device.ITestDevice;
 
 /** See {@link AbstractSdkLevelSupportedRule}. */
 public final class HostSideSdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    private HostSideSdkLevelSupportRule(AndroidSdkLevel level) {
-        super(ConsoleLogger.getInstance(), AndroidSdkRange.forAtLeast(level.getLevel()));
+    private HostSideSdkLevelSupportRule(Level atLeast) {
+        super(ConsoleLogger.getInstance(), Range.forAtLeast(atLeast.getLevel()));
     }
 
     public void setDevice(ITestDevice device) {
@@ -41,26 +43,26 @@ public final class HostSideSdkLevelSupportRule extends AbstractSdkLevelSupported
      * </ul>
      */
     public static HostSideSdkLevelSupportRule forAnyLevel() {
-        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.ANY);
+        return new HostSideSdkLevelSupportRule(Level.ANY);
     }
 
     /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
     public static HostSideSdkLevelSupportRule forAtLeastS() {
-        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.S);
+        return new HostSideSdkLevelSupportRule(Level.S);
     }
 
     /** Gets a rule that ensures test is executed on Android T+. Skips test otherwise. */
     public static HostSideSdkLevelSupportRule forAtLeastT() {
-        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.T);
+        return new HostSideSdkLevelSupportRule(Level.T);
     }
 
     /** Gets a rule that ensures test is executed on Android U+. Skips test otherwise. */
     public static HostSideSdkLevelSupportRule forAtLeastU() {
-        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.U);
+        return new HostSideSdkLevelSupportRule(Level.U);
     }
 
     @Override
-    public AndroidSdkLevel getDeviceApiLevel() {
-        return AndroidSdkLevel.forLevel(TestDeviceHelper.getApiLevel());
+    public Level getDeviceApiLevel() {
+        return Level.forLevel(TestDeviceHelper.getApiLevel());
     }
 }

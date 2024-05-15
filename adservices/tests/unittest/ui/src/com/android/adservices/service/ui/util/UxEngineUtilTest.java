@@ -106,9 +106,7 @@ public class UxEngineUtilTest {
 
         mUxEngineUtil = UxEngineUtil.getInstance();
 
-        ExtendedMockito.doReturn(mConsentManager).when(
-                () -> ConsentManager.getInstance(any())
-        );
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
 

@@ -16,21 +16,20 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -54,9 +53,8 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -83,7 +81,7 @@ public class DeleteUninstalledJobServiceTest {
     @Spy private DeleteUninstalledJobService mSpyService;
 
     @Mock private Flags mMockFlags;
-    private AdservicesJobServiceLogger mSpyLogger;
+    private AdServicesJobServiceLogger mSpyLogger;
 
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
@@ -91,7 +89,7 @@ public class DeleteUninstalledJobServiceTest {
                     .spyStatic(MeasurementImpl.class)
                     .spyStatic(DeleteUninstalledJobService.class)
                     .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .spyStatic(AdServicesJobServiceLogger.class)
                     .mockStatic(ServiceCompatUtils.class)
                     .setStrictness(Strictness.LENIENT)
                     .build();
@@ -422,15 +420,7 @@ public class DeleteUninstalledJobServiceTest {
         ExtendedMockito.doNothing().when(() -> DeleteUninstalledJobService.schedule(any(), any()));
 
         StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
-        mSpyLogger =
-                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
-
-        // Mock AdservicesJobServiceLogger to not actually log the stats to server
-        Mockito.doNothing()
-                .when(mSpyLogger)
-                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-        ExtendedMockito.doReturn(mSpyLogger)
-                .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+        mSpyLogger = mockAdServicesJobServiceLogger(CONTEXT, mMockFlags);
 
         // Execute
         execute.run();

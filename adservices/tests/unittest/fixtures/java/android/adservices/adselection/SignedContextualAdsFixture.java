@@ -16,15 +16,25 @@
 
 package android.adservices.adselection;
 
+import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PRIVATE_TEST_KEY_STRING;
+
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.adselection.signature.SignedContextualAdsHashUtil;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,7 +43,8 @@ import java.util.stream.Collectors;
  * SignedContextualAds}.
  */
 public class SignedContextualAdsFixture {
-    public static final byte[] PLACEHOLDER_SIGNATURE = new byte[] {0, 0};
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private static final byte[] PLACEHOLDER_EMPTY_SIGNATURE = new byte[] {};
     public static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
     public static final AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
 
@@ -51,44 +62,128 @@ public class SignedContextualAdsFixture {
     public static final List<AdWithBid> ADS_WITH_BID =
             ImmutableList.of(AD_WITH_BID_1, AD_WITH_BID_2);
 
-    public static SignedContextualAds.Builder aSignedContextualAdBuilder() {
+    /**
+     * Returns a {@link SignedContextualAds} object with a placeholder signature
+     *
+     * <p>This object's signature will not pass the verification
+     */
+    public static SignedContextualAds.Builder aContextualAdsWithEmptySignatureBuilder() {
         return new SignedContextualAds.Builder()
                 .setBuyer(BUYER)
                 .setDecisionLogicUri(DECISION_LOGIC_URI)
                 .setAdsWithBid(ADS_WITH_BID)
-                .setSignature(PLACEHOLDER_SIGNATURE);
+                .setSignature(PLACEHOLDER_EMPTY_SIGNATURE);
     }
 
-    public static SignedContextualAds.Builder generateSignedContextualAds(
-            AdTechIdentifier buyer, List<Double> bids) {
-        return new SignedContextualAds.Builder()
+    /**
+     * Returns a {@link SignedContextualAds} object with a placeholder signature and the given
+     * buyer.
+     *
+     * <p>This object's signature will not pass the verification
+     */
+    public static SignedContextualAds.Builder aContextualAdsWithEmptySignatureBuilder(
+            AdTechIdentifier buyer) {
+        return aContextualAdsWithEmptySignatureBuilder()
                 .setBuyer(buyer)
-                .setDecisionLogicUri(CommonFixture.getUri(buyer, DECISION_LOGIC_FRAGMENT))
-                .setAdsWithBid(
-                        bids.stream()
-                                .map(
-                                        bid ->
-                                                new AdWithBid(
-                                                        AdDataFixture.getValidFilterAdDataByBuyer(
-                                                                buyer, bid.intValue()),
-                                                        bid))
-                                .collect(Collectors.toList()))
-                .setSignature(PLACEHOLDER_SIGNATURE);
+                .setDecisionLogicUri(CommonFixture.getUri(buyer, DECISION_LOGIC_FRAGMENT));
     }
 
-    public static SignedContextualAds aSignedContextualAd() {
-        return aSignedContextualAdBuilder().build();
+    /**
+     * Returns a {@link SignedContextualAds} object with a placeholder signature with given buyer
+     * and bids.
+     *
+     * <p>This object's signature will not pass the verification
+     */
+    public static SignedContextualAds.Builder aContextualAdsWithEmptySignatureBuilder(
+            AdTechIdentifier buyer, List<Double> bids) {
+        List<AdWithBid> adsWithBid =
+                bids.stream()
+                        .map(
+                                bid ->
+                                        new AdWithBid(
+                                                AdDataFixture.getValidFilterAdDataByBuyer(
+                                                        buyer, bid.intValue()),
+                                                bid))
+                        .collect(Collectors.toList());
+        return aContextualAdsWithEmptySignatureBuilder(buyer).setAdsWithBid(adsWithBid);
     }
 
-    public static SignedContextualAds aSignedContextualAd(AdTechIdentifier buyer) {
-        return aSignedContextualAdBuilder().setBuyer(buyer).build();
+    /**
+     * Returns a {@link SignedContextualAds} object that is signed.
+     *
+     * <p>This object's signature can be verified using {@link SignedContextualAdsFixture
+     * #PUBLIC_KEY_STRING}.
+     */
+    public static SignedContextualAds aSignedContextualAds() {
+        return signContextualAds(aContextualAdsWithEmptySignatureBuilder());
     }
 
-    public static ImmutableMap<AdTechIdentifier, SignedContextualAds> getBuyerContextualAdsMap() {
+    /**
+     * Returns a {@link SignedContextualAds} object that is signed with given buyer.
+     *
+     * <p>This object's signature can be verified using {@link SignedContextualAdsFixture
+     * #PUBLIC_KEY_STRING}.
+     */
+    public static SignedContextualAds aSignedContextualAds(AdTechIdentifier buyer) {
+        return signContextualAds(aContextualAdsWithEmptySignatureBuilder(buyer));
+    }
+
+    /**
+     * Returns a {@link SignedContextualAds} object that is signed with given buyer.
+     *
+     * <p>This object's signature can be verified using {@link SignedContextualAdsFixture
+     * #PUBLIC_KEY_STRING}.
+     */
+    public static SignedContextualAds aSignedContextualAds(
+            AdTechIdentifier buyer, List<Double> bids) {
+        return signContextualAds(aContextualAdsWithEmptySignatureBuilder(buyer, bids));
+    }
+
+    public static ImmutableMap<AdTechIdentifier, SignedContextualAds>
+            getBuyerSignedContextualAdsMap() {
         return ImmutableMap.of(
                 CommonFixture.VALID_BUYER_1,
-                aSignedContextualAd(CommonFixture.VALID_BUYER_1),
+                aSignedContextualAds(CommonFixture.VALID_BUYER_1),
                 CommonFixture.VALID_BUYER_2,
-                aSignedContextualAd(CommonFixture.VALID_BUYER_2));
+                aSignedContextualAds(CommonFixture.VALID_BUYER_2));
+    }
+
+    /**
+     * Signs contextual ads using {@link
+     * com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager
+     * #PRIVATE_KEY_STRING}.
+     *
+     * <p>Bundle can be verified using {@link
+     * com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager
+     * #PUBLIC_KEY_STRING}
+     */
+    public static SignedContextualAds signContextualAds(
+            SignedContextualAds.Builder notSignedContextualAdsBuilder) {
+        SignedContextualAds signedContextualAds;
+        try {
+            Signature ecdsaSigner = getECDSASignatureInstance();
+            ecdsaSigner.update(
+                    new SignedContextualAdsHashUtil()
+                            .serialize(notSignedContextualAdsBuilder.build()));
+            signedContextualAds =
+                    notSignedContextualAdsBuilder.setSignature(ecdsaSigner.sign()).build();
+        } catch (Exception e) {
+            String errMsg =
+                    String.format(
+                            "Something went wrong during signing a contextual ad bundle: %s", e);
+            sLogger.v(errMsg);
+            throw new RuntimeException(errMsg, e);
+        }
+        return signedContextualAds;
+    }
+
+    private static Signature getECDSASignatureInstance() throws Exception {
+        byte[] privateKeyBytes = Base64.getDecoder().decode(PRIVATE_TEST_KEY_STRING);
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("EC");
+        PrivateKey privateKey = keyFactory.generatePrivate(spec);
+        Signature ecdsaSign = Signature.getInstance("SHA256withECDSA");
+        ecdsaSign.initSign(privateKey);
+        return ecdsaSign;
     }
 }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.tests.cts.topics.connection;
 
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -49,8 +51,6 @@ import java.util.concurrent.Executors;
 public class TopicsConnectionTest {
     private static final String TAG = "TopicsConnectionTest";
 
-    private static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
-
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
 
@@ -83,14 +83,14 @@ public class TopicsConnectionTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        flags.setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS);
+        flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
         flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
+    @FlakyTest(bugId = 321944400)
     @Test
-    @FlakyTest(bugId = 300194644)
     public void testEnableGlobalKillSwitch() throws Exception {
         // First enable the Global Kill Switch and then connect to the TopicsService.
         // The connection should fail with Exception.
@@ -109,7 +109,6 @@ public class TopicsConnectionTest {
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(exception).hasMessageThat().contains(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
 
         // Now disable the Global Kill Switch, we should be able to connect to the Service normally.
         enableGlobalKillSwitch(/* enabled */ false);

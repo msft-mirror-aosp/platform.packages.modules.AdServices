@@ -71,6 +71,11 @@ public class BlockedAppsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initRvc() {}
 
+    @Override
+    public void initGaUxWithPas() {
+        initGA();
+    }
+
     private void configureSharedElements(Boolean isGA) {
         // no blocked apps message
         configureElement(
@@ -109,7 +114,7 @@ public class BlockedAppsActivityActionDelegate extends BaseActionDelegate {
                         if (event == BlockedAppsViewModelUiEvent.RESTORE_APP) {
                             UiStatsLogger.logUnblockAppSelected();
                             mBlockedAppsViewModel.restoreAppConsent(app);
-                            if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                            if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                 if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                     DialogFragmentManager.showUnblockAppDialog(mActivity, app);
                                 } else {

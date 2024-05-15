@@ -15,7 +15,11 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.common.AbstractDeviceSupportHelper.GMS_CORE_PACKAGE;
+import static com.android.adservices.common.AbstractDeviceSupportHelper.PLAY_STORE_PACKAGE;
 import static com.android.adservices.common.TestDeviceHelper.call;
+
+import com.android.compatibility.common.util.PackageUtil;
 
 /** Helper to check if AdServices is supported / enabled in a device. */
 final class AdServicesHostSideSupportHelper extends AbstractDeviceSupportHelper {
@@ -35,6 +39,16 @@ final class AdServicesHostSideSupportHelper extends AbstractDeviceSupportHelper 
     @Override
     protected boolean isLowRamDeviceByDefault() {
         return "true".equals(call(device -> device.getProperty("ro.config.low_ram")));
+    }
+
+    @Override
+    protected boolean hasGmsCore() {
+        return call(device -> PackageUtil.exists(device, GMS_CORE_PACKAGE));
+    }
+
+    @Override
+    protected boolean hasPlayStore() {
+        return call(device -> PackageUtil.exists(device, PLAY_STORE_PACKAGE));
     }
 
     @Override

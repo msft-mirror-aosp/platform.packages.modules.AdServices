@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.ui.enrollment;
 
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
@@ -87,7 +87,7 @@ public class RvcPostOTAChannelTest {
 
     @Test
     public void isEligibleTest_isRvcAdultUser() {
-        doReturn(true).when(mUxStatesManager).getFlag(KEY_RVC_NOTIFICATION_ENABLED);
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED);
         doReturn(true).when(mConsentManager).isOtaAdultUserFromRvc();
 
         assertThat(
@@ -100,7 +100,7 @@ public class RvcPostOTAChannelTest {
 
     @Test
     public void isEligibleTest_notRvcAdultUser() {
-        doReturn(true).when(mUxStatesManager).getFlag(KEY_RVC_NOTIFICATION_ENABLED);
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED);
         doReturn(false).when(mConsentManager).isOtaAdultUserFromRvc();
 
         assertThat(

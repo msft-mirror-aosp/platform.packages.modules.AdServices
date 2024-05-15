@@ -17,7 +17,7 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MAINTENANCE_JOB;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
@@ -38,7 +38,7 @@ import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
 import com.android.adservices.service.topics.TopicsWorker;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -80,13 +80,13 @@ public final class MaintenanceJobService extends JobService {
             LogUtil.d(
                     "Disabling MaintenanceJobService job because it's running in ExtServices on"
                             + " T+");
-            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
+            return skipAndCancelBackgroundJob(params, /* skipReason= */ 0, /* doRecord= */ false);
         }
 
         Flags flags = FlagsFactory.getFlags();
 
         LogUtil.d("MaintenanceJobService.onStartJob");
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(MAINTENANCE_JOB_ID);
+        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(MAINTENANCE_JOB_ID);
 
         if (flags.getTopicsKillSwitch()
                 && flags.getFledgeSelectAdsKillSwitch()
@@ -97,7 +97,7 @@ public final class MaintenanceJobService extends JobService {
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
-                    /* doRecord=*/ true);
+                    /* doRecord= */ true);
         }
 
         ListenableFuture<Void> appReconciliationFuture;
@@ -145,7 +145,7 @@ public final class MaintenanceJobService extends JobService {
                     @Override
                     public void onSuccess(List<Void> result) {
                         boolean shouldRetry = false;
-                        AdservicesJobServiceLogger.getInstance(MaintenanceJobService.this)
+                        AdServicesJobServiceLogger.getInstance(MaintenanceJobService.this)
                                 .recordJobFinished(
                                         MAINTENANCE_JOB_ID, /* isSuccessful= */ true, shouldRetry);
 
@@ -156,7 +156,7 @@ public final class MaintenanceJobService extends JobService {
                     @Override
                     public void onFailure(Throwable t) {
                         boolean shouldRetry = false;
-                        AdservicesJobServiceLogger.getInstance(MaintenanceJobService.this)
+                        AdServicesJobServiceLogger.getInstance(MaintenanceJobService.this)
                                 .recordJobFinished(
                                         MAINTENANCE_JOB_ID, /* isSuccessful= */ false, shouldRetry);
 
@@ -177,7 +177,7 @@ public final class MaintenanceJobService extends JobService {
         // execution is completed or not to avoid executing the task twice.
         boolean shouldRetry = false;
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MAINTENANCE_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -255,7 +255,7 @@ public final class MaintenanceJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance(this)
                     .recordJobSkipped(MAINTENANCE_JOB_ID, skipReason);
         }
 
@@ -288,6 +288,7 @@ public final class MaintenanceJobService extends JobService {
         getFledgeMaintenanceTasksWorker().clearExpiredAdSelectionData();
         getFledgeMaintenanceTasksWorker()
                 .clearInvalidFrequencyCapHistogramData(this.getPackageManager());
+        getFledgeMaintenanceTasksWorker().clearExpiredKAnonMessageEntities();
     }
 
     private void doProtectedSignalsDataMaintenanceTasks() {

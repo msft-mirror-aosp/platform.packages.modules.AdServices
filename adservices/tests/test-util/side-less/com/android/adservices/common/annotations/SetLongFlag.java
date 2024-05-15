@@ -28,11 +28,11 @@ import java.lang.annotation.Target;
  * <p>This should be used with {@code AdServicesFlagsSetterRule}.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Repeatable(SetLongFlags.class)
 public @interface SetLongFlag {
     /** Name of the flag. */
     String name();
     /** Value the flag will be set to when the test is running */
-    int value();
+    long value();
 }

@@ -31,8 +31,11 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
@@ -47,6 +50,9 @@ public class EncoderPersistenceDaoTest {
             "function bye() {\n" + "  console.log(\"Goodbye World!\");\n" + "}";
 
     private EncoderPersistenceDao mEncoderPersistenceDao;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

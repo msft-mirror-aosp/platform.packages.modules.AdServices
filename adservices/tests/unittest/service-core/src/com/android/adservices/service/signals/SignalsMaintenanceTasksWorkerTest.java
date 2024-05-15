@@ -17,6 +17,7 @@
 package com.android.adservices.service.signals;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -25,6 +26,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.content.pm.PackageManager;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
@@ -55,7 +57,11 @@ public class SignalsMaintenanceTasksWorkerTest {
     @Mock private PackageManager mPackageManagerMock;
 
     SignalsMaintenanceTasksWorker mSignalsMaintenanceTasksWorker;
+    Instant mNow;
     Instant mExpirationTime;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -69,6 +75,7 @@ public class SignalsMaintenanceTasksWorkerTest {
                         mClockMock,
                         mPackageManagerMock);
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        mNow = CommonFixture.FIXED_NOW;
         mExpirationTime = CommonFixture.FIXED_NOW.minusSeconds(ProtectedSignal.EXPIRATION_SECONDS);
     }
 
@@ -76,21 +83,25 @@ public class SignalsMaintenanceTasksWorkerTest {
     public void testClearInvalidSignalsEnrollmentEnabled() throws Exception {
         when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(false);
 
-        mSignalsMaintenanceTasksWorker.clearInvalidSignals(mExpirationTime);
+        mSignalsMaintenanceTasksWorker.clearInvalidSignals(mExpirationTime, mNow);
 
-        verify(mProtectedSignalsDaoMock).deleteSignalsBeforeTime(mExpirationTime);
+        verify(mProtectedSignalsDaoMock)
+                .deleteExpiredSignalsAndUpdateSignalsUpdateMetadata(mExpirationTime, mNow);
         verify(mFlagsMock).getDisableFledgeEnrollmentCheck();
         verify(mProtectedSignalsDaoMock).deleteDisallowedBuyerSignals(any());
-        verify(mProtectedSignalsDaoMock).deleteAllDisallowedPackageSignals(any(), any());
+        verify(mProtectedSignalsDaoMock)
+                .deleteAllDisallowedPackageSignalsAndUpdateSignalUpdateMetadata(
+                        any(), any(), eq(mNow));
     }
 
     @Test
     public void testClearInvalidSignalsEnrollmentDisabled() throws Exception {
         when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(true);
 
-        mSignalsMaintenanceTasksWorker.clearInvalidSignals(mExpirationTime);
+        mSignalsMaintenanceTasksWorker.clearInvalidSignals(mExpirationTime, mNow);
 
-        verify(mProtectedSignalsDaoMock).deleteSignalsBeforeTime(mExpirationTime);
+        verify(mProtectedSignalsDaoMock)
+                .deleteExpiredSignalsAndUpdateSignalsUpdateMetadata(mExpirationTime, mNow);
         verify(mFlagsMock).getDisableFledgeEnrollmentCheck();
     }
 

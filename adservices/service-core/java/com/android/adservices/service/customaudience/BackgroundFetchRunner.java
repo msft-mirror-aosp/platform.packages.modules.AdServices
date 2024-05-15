@@ -21,6 +21,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 
+import android.adservices.common.AdServicesStatusUtils.StatusCode;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.content.pm.PackageManager;
@@ -140,7 +141,8 @@ public class BackgroundFetchRunner {
     }
 
     /** Updates a single given custom audience and persists the results. */
-    public FluentFuture<?> updateCustomAudience(
+    @StatusCode
+    public FluentFuture<Integer> updateCustomAudience(
             @NonNull Instant jobStartTime,
             @NonNull final DBCustomAudienceBackgroundFetchData fetchData) {
         Objects.requireNonNull(jobStartTime);
@@ -188,11 +190,11 @@ public class BackgroundFetchRunner {
                             } catch (Exception e) {
                                 sLogger.d(
                                         "Error when closing updateCustomAudienceExecutionLogger, "
-                                                + "skipping metrics logging: {}",
+                                                + "skipping metrics logging: %s",
                                         e.getMessage());
                             }
 
-                            return null;
+                            return resultCode;
                         },
                         AdServicesExecutors.getBackgroundExecutor());
     }

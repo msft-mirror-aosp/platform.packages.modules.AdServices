@@ -18,7 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.VERBOSE_DEBUG_REPORTING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -30,7 +30,6 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
@@ -38,7 +37,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -73,7 +72,7 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStartJob(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementVerboseDebugReportingFallbackJobKillSwitch()) {
@@ -95,7 +94,7 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
                         () -> {
                             sendReports();
                             boolean shouldRetry = false;
-                            AdservicesJobServiceLogger.getInstance(
+                            AdServicesJobServiceLogger.getInstance(
                                             VerboseDebugReportingFallbackJobService.this)
                                     .recordJobFinished(
                                             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
@@ -114,7 +113,7 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(
                         params, MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -180,7 +179,7 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance(this)
                     .recordJobSkipped(
                             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID, skipReason);
         }
@@ -197,11 +196,9 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
         final JobLockHolder lock = JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING);
         if (lock.tryLock()) {
             try {
-                EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
                 DatastoreManager datastoreManager =
                         DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new DebugReportingJobHandler(
-                                enrollmentDao,
                                 datastoreManager,
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),

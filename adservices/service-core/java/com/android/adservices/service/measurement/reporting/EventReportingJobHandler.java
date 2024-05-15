@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
@@ -25,7 +27,6 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
@@ -51,7 +52,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class EventReportingJobHandler {
 
-    private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private boolean mIsDebugInstance;
     private final Flags mFlags;
@@ -63,22 +63,19 @@ public class EventReportingJobHandler {
 
     @VisibleForTesting
     EventReportingJobHandler(
-            EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             Flags flags,
             Context context) {
-        this(enrollmentDao, datastoreManager, flags, AdServicesLoggerImpl.getInstance(), context);
+        this(datastoreManager, flags, AdServicesLoggerImpl.getInstance(), context);
     }
 
     EventReportingJobHandler(
-            EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             Flags flags,
             AdServicesLogger logger,
             ReportingStatus.ReportType reportType,
             ReportingStatus.UploadMethod uploadMethod,
             Context context) {
-        mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mLogger = logger;
@@ -89,12 +86,10 @@ public class EventReportingJobHandler {
 
     @VisibleForTesting
     EventReportingJobHandler(
-            EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             Flags flags,
             AdServicesLogger logger,
             Context context) {
-        mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mLogger = logger;
@@ -270,7 +265,7 @@ public class EventReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
@@ -281,7 +276,7 @@ public class EventReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
                 // Unrecoverable state - delete the report.
@@ -305,7 +300,7 @@ public class EventReportingJobHandler {
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
                     && ThreadLocalRandom.current().nextFloat()

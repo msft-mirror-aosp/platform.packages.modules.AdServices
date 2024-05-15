@@ -209,7 +209,8 @@
           "attribution_destination": "android-app://example.2d1.test",
           "histograms": [
             {"key": "0x559", "value": 32768},
-            {"key": "0xa85", "value": 1664}]
+            {"key": "0xa85", "value": 1664}],
+            "source_registration_time": "799977600"
         }
       }]
   }

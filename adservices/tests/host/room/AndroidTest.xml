@@ -19,6 +19,10 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
 
+    <!-- For this test suite to get picked up in mainline presubmit -->
+    <option name="config-descriptor:metadata" key="mainline-param"
+        value="com.google.android.adservices.apex" />
+
     <test class="com.android.tradefed.testtype.HostTest">
         <option name="class"
                 value="com.android.adservices.room.test.RoomDatabaseVersionBumpGuardrailTest"/>

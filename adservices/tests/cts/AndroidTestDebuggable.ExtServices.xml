@@ -68,6 +68,12 @@
         <option name="teardown-command"
                 value="setprop debug.adservices.consent_manager_debug_mode false"/>
 
+        <!-- Override MDD background job to avoid race condition. -->
+        <option name="run-command"
+                value="setprop debug.adservices.mdd_background_task_kill_switch true"/>
+        <option name="teardown-command"
+                value="setprop debug.adservices.mdd_background_task_kill_switch false"/>
+
         <!-- Increase the allowed API queries per second -->
         <option name="run-command"
                 value="setprop debug.adservices.sdk_request_permits_per_second 100000"/>

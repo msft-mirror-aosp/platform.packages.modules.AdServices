@@ -23,11 +23,17 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
 
 public class DBEncoderLogicMetadataTest {
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testCreateEncodingLogic() {

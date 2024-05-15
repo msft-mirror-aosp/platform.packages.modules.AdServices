@@ -38,6 +38,7 @@ public class FilterMap {
     private Map<String, List<String>> mAttributionFilterMap;
     private Map<String, FilterValue> mAttributionFilterMapWithLongValue;
 
+    public static final String RESERVED_PREFIX = "_";
     public static final String LOOKBACK_WINDOW = "_lookback_window";
 
     FilterMap() {

@@ -32,6 +32,7 @@ java_defaults {
         "truth",
         "flag-junit",
         "platform-test-annotations",
+        "adservices-test-utility",
         "SdkSandboxTestUtils",
         "SdkSandbox-java-lib",
     ],
@@ -86,11 +87,13 @@ android_test {
         "service-sdksandbox.impl",
         "services.core",
         "modules-utils-build",
+        "sdk_sandbox_flags_lib",
     ],
     data: [
         ":SampleCodeProviderApp",
         ":SampleApp",
         ":CodeProviderWithResources",
+        ":CtsSdkProviderAppWithoutSdkProviderClassNameProperty",
     ],
     java_resources: [
         "verification/corrupt_allowlist.binarypb",

@@ -37,6 +37,11 @@ java_sdk_library {
         "modules-utils-preconditions",
         "framework-sdksandbox.impl",
         "androidx.annotation_annotation",
+        "error_prone_annotations",
+        "adservices_flags_lib",
+    ],
+    static_libs : [
+        "adservices-shared-exceptions",
     ],
     sdk_version: "module_current",
     min_sdk_version: "30",
@@ -53,6 +58,9 @@ java_sdk_library {
         "com.android.adservices",
         "com.android.extservices",
     ],
+    aconfig_declarations: [
+        "adservices_flags",
+    ],
 }
 
 java_library {
@@ -62,6 +70,11 @@ java_library {
         "modules-utils-preconditions",
         "framework-sdksandbox.impl",
         "androidx.annotation_annotation",
+        "error_prone_annotations",
+        "adservices_flags_lib",
+    ],
+    static_libs : [
+        "adservices-shared-exceptions",
     ],
     min_sdk_version: "30",
     defaults: ["framework-module-defaults"],

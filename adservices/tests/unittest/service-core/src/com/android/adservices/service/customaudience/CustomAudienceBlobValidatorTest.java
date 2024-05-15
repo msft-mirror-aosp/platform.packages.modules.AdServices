@@ -86,6 +86,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
@@ -102,6 +103,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -161,6 +163,9 @@ public class CustomAudienceBlobValidatorTest {
                     mValidAdsValidator);
 
     private CustomAudienceBlob mCustomAudience;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

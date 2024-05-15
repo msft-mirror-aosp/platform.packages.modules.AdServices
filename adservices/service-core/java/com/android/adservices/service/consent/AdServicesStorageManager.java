@@ -125,53 +125,22 @@ public final class AdServicesStorageManager implements IConsentStorage {
     @Override
     public AdServicesApiConsent getConsent(AdServicesApiType apiType) {
         int consentApiType = apiType.toConsentApiType();
-        return AdServicesApiConsent.getConsent(
-                mAdServicesManager.getConsent(consentApiType).isIsGiven());
+        ConsentParcel consentParcel = mAdServicesManager.getConsent(consentApiType);
+        if (consentParcel == null) {
+            return AdServicesApiConsent.REVOKED;
+        }
+        return AdServicesApiConsent.getConsent(consentParcel.isIsGiven());
     }
 
     /** Returns the current privacy sandbox feature. */
     @Override
-    public PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() {
+    public PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() throws IOException {
+        if (mAdServicesManager == null
+                || mAdServicesManager.getCurrentPrivacySandboxFeature() == null) {
+            return PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED;
+        }
         return PrivacySandboxFeatureType.valueOf(
                 mAdServicesManager.getCurrentPrivacySandboxFeature());
-    }
-
-    /**
-     * Returns the default AdId state of a user.
-     *
-     * @return true if the default AdId State is enabled, false otherwise.
-     */
-    @Override
-    public boolean getDefaultAdIdState() {
-        return mAdServicesManager.getDefaultAdIdState();
-    }
-
-    /**
-     * Returns the PP API default consent of a user.
-     *
-     * @return true if the PP API default consent is given, false otherwise.
-     */
-    @Override
-    public AdServicesApiConsent getDefaultConsent(AdServicesApiType apiType) {
-        boolean consentVal;
-        switch (apiType) {
-            case ALL_API:
-                consentVal = mAdServicesManager.getDefaultConsent();
-                break;
-            case FLEDGE:
-                consentVal = mAdServicesManager.getFledgeDefaultConsent();
-                break;
-            case TOPICS:
-                consentVal = mAdServicesManager.getTopicsDefaultConsent();
-                break;
-            case MEASUREMENTS:
-                consentVal = mAdServicesManager.getMeasurementDefaultConsent();
-                break;
-            default:
-                consentVal = false;
-                break;
-        }
-        return AdServicesApiConsent.getConsent(consentVal);
     }
 
     /** Returns current enrollment channel. */
@@ -267,33 +236,6 @@ public final class AdServicesStorageManager implements IConsentStorage {
     @Override
     public boolean isU18Account() {
         return mAdServicesManager.isU18Account();
-    }
-
-    /** Saves the default AdId state of a user. */
-    @Override
-    public void recordDefaultAdIdState(boolean defaultAdIdState) {
-        mAdServicesManager.recordDefaultAdIdState(defaultAdIdState);
-    }
-
-    /** Saves the PP API default consent of a user. */
-    @Override
-    public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent) {
-        switch (apiType) {
-            case ALL_API:
-                mAdServicesManager.recordDefaultConsent(defaultConsent);
-                break;
-            case FLEDGE:
-                mAdServicesManager.recordFledgeDefaultConsent(defaultConsent);
-                break;
-            case TOPICS:
-                mAdServicesManager.recordTopicsDefaultConsent(defaultConsent);
-                break;
-            case MEASUREMENTS:
-                mAdServicesManager.recordMeasurementDefaultConsent(defaultConsent);
-                break;
-            default:
-                break;
-        }
     }
 
     /**
@@ -434,7 +376,8 @@ public final class AdServicesStorageManager implements IConsentStorage {
         return mAdServicesManager.wasU18NotificationDisplayed();
     }
 
-    private PrivacySandboxUxCollection convertUxString(String uxString) {
+    private PrivacySandboxUxCollection convertUxString(@NonNull String uxString) {
+        Objects.requireNonNull(uxString);
         return Stream.of(PrivacySandboxUxCollection.values())
                 .filter(ux -> uxString.equals(ux.toString()))
                 .findFirst()

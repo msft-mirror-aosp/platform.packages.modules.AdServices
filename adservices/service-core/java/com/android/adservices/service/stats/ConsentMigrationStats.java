@@ -19,6 +19,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED__MIGRATION_STATUS__SUCCESS_WITH_SHARED_PREF_NOT_UPDATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED__MIGRATION_STATUS__SUCCESS_WITH_SHARED_PREF_UPDATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED__MIGRATION_STATUS__UNSPECIFIED_MIGRATION_STATUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED__MIGRATION_TYPE__ADEXT_SERVICE_TO_APPSEARCH;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED__MIGRATION_TYPE__ADEXT_SERVICE_TO_SYSTEM_SERVICE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED__MIGRATION_TYPE__APPSEARCH_TO_SYSTEM_SERVICE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED__MIGRATION_TYPE__PPAPI_TO_SYSTEM_SERVICE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED__MIGRATION_TYPE__UNSPECIFIED_MIGRATION_TYPE;
@@ -51,10 +53,6 @@ public abstract class ConsentMigrationStats {
      * @return opt in/out value of fledge app
      */
     public abstract boolean getFledgeConsent();
-    /**
-     * @return opt in/out value in beta for all apps
-     */
-    public abstract boolean getDefaultConsent();
     /***
      *
      * @return region of OTA
@@ -75,7 +73,14 @@ public abstract class ConsentMigrationStats {
                 AD_SERVICES_CONSENT_MIGRATED__MIGRATION_TYPE__PPAPI_TO_SYSTEM_SERVICE),
         // Migrating consent from App Search to system service
         APPSEARCH_TO_SYSTEM_SERVICE(
-                AD_SERVICES_CONSENT_MIGRATED__MIGRATION_TYPE__APPSEARCH_TO_SYSTEM_SERVICE);
+                AD_SERVICES_CONSENT_MIGRATED__MIGRATION_TYPE__APPSEARCH_TO_SYSTEM_SERVICE),
+        // Migrating consent from AdServicesExtDataStorageService to System Server
+        ADEXT_SERVICE_TO_SYSTEM_SERVICE(
+                AD_SERVICES_CONSENT_MIGRATED__MIGRATION_TYPE__ADEXT_SERVICE_TO_SYSTEM_SERVICE),
+        // Migrating consent from AdServicesExtDataStorageService to App Search
+        ADEXT_SERVICE_TO_APPSEARCH(
+                AD_SERVICES_CONSENT_MIGRATED__MIGRATION_TYPE__ADEXT_SERVICE_TO_APPSEARCH);
+
         private final int mMigrationType;
 
         MigrationType(int migrationType) {
@@ -125,8 +130,6 @@ public abstract class ConsentMigrationStats {
         public abstract Builder setTopicsConsent(boolean value);
         /** Set opt in/out value of fledge app */
         public abstract Builder setFledgeConsent(boolean value);
-        /** Set opt in/out value in beta for all apps */
-        public abstract Builder setDefaultConsent(boolean value);
         /** Set region of OTA */
         public abstract Builder setRegion(int value);
         /** build for {@link ConsentMigrationStats}. */

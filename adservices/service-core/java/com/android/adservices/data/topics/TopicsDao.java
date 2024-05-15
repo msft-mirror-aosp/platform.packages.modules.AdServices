@@ -1157,7 +1157,9 @@ public class TopicsDao {
                     try {
                         db.delete(table, /* whereClause= */ null, /* whereArgs= */ null);
                     } catch (SQLException e) {
-                        sLogger.e("Failed to delete %s table for Topics." + e.getMessage(), table);
+                        sLogger.e(
+                                "Failed to delete %s table for Topics. Error: %s",
+                                table, e.getMessage());
                         ErrorLogUtil.e(
                                 e,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE,

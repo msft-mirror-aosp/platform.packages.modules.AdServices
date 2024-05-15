@@ -34,6 +34,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
@@ -50,6 +51,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
@@ -88,6 +90,9 @@ public class TrustedBiddingDataFetcherTest {
     @Mock private CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
 
     private TrustedBiddingDataFetcher mTrustedBiddingDataFetcher;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

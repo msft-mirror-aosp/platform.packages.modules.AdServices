@@ -16,13 +16,15 @@
 
 package com.android.adservices.shared.testing.common;
 
+import static com.android.adservices.shared.util.LogUtil.DEBUG;
+
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.util.LogUtil;
 
 import com.google.common.truth.Expect;
 
@@ -34,9 +36,6 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 public final class ApplicationContextSingletonRuleTest {
-
-    private static final String TAG = ApplicationContextSingletonRuleTest.class.getSimpleName();
-
     // Not a real test (i.e., it doesn't exist on this class), but it's passed to Description
     private static final String TEST_METHOD_BEING_EXECUTED = "testAmI..OrNot";
 
@@ -50,12 +49,16 @@ public final class ApplicationContextSingletonRuleTest {
     @Before
     public void savePreviousContext() {
         mPreviousContext = ApplicationContextSingleton.getForTests();
-        Log.d(TAG, "@Before: save context as " + mPreviousContext);
+        if (DEBUG) {
+            LogUtil.d("@Before: save context as %s", mPreviousContext);
+        }
     }
 
     @After
     public void restorePreviousContext() {
-        Log.d(TAG, "@After: restoring context as " + mPreviousContext);
+        if (DEBUG) {
+            LogUtil.d("@After: restoring context as %s", mPreviousContext);
+        }
         ApplicationContextSingleton.setForTests(mPreviousContext);
     }
 
@@ -240,15 +243,17 @@ public final class ApplicationContextSingletonRuleTest {
         @Override
         public void evaluate() throws Throwable {
             mEvaluated = true;
-            Log.d(
-                    TAG,
-                    "RunnableStatement: before run(), ApplicationContextSingleton is "
-                            + ApplicationContextSingleton.getForTests());
+            if (DEBUG) {
+                LogUtil.d(
+                        "RunnableStatement: before run(), ApplicationContextSingleton is %s",
+                        ApplicationContextSingleton.getForTests());
+            }
             mRunnable.run();
-            Log.d(
-                    TAG,
-                    "RunnableStatement: after run(), ApplicationContextSingleton is "
-                            + ApplicationContextSingleton.getForTests());
+            if (DEBUG) {
+                LogUtil.d(
+                        "RunnableStatement: after run(), ApplicationContextSingleton is %s",
+                        ApplicationContextSingleton.getForTests());
+            }
         }
 
         @Override

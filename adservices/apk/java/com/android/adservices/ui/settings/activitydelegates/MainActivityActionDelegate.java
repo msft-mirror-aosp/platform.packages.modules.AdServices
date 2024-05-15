@@ -162,6 +162,11 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
         initU18();
     }
 
+    @Override
+    public void initGaUxWithPas() {
+        initGA();
+    }
+
     private void listenToMainViewModelUiEvents() {
         Observer<MainViewModel.MainViewModelUiEvent> observer =
                 event -> {
@@ -174,7 +179,7 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
                                 mMainViewModel.setConsent(true);
                                 break;
                             case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showOptOutDialogFragment(
                                                 mActivity, mMainViewModel);

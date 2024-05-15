@@ -23,6 +23,7 @@ import android.content.Context;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.common.UserProfileIdDao;
 import com.android.adservices.data.common.UserProfileIdDaoSharedPreferencesImpl;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -36,15 +37,21 @@ public class UserProfileIdManager {
     private static final Object SINGLETON_LOCK = new Object();
 
     private final UserProfileIdDao mUserProfileIdDao;
+    private final Clock mClock;
 
     @GuardedBy("SINGLETON_LOCK")
     private static volatile UserProfileIdManager sUserProfileIdManager;
 
+    @VisibleForTesting static final long MILLISECONDS_IN_DAY = 1000 * 60 * 60 * 24;
+
     @VisibleForTesting
-    UserProfileIdManager(@NonNull final UserProfileIdDao userProfileIdDao) {
+    public UserProfileIdManager(
+            @NonNull final UserProfileIdDao userProfileIdDao, @NonNull Clock clock) {
         Objects.requireNonNull(userProfileIdDao);
+        Objects.requireNonNull(clock);
 
         mUserProfileIdDao = userProfileIdDao;
+        mClock = clock;
     }
 
     /** Returns the singleton instance of the {@link UserProfileIdManager} */
@@ -54,7 +61,8 @@ public class UserProfileIdManager {
             if (sUserProfileIdManager == null) {
                 sUserProfileIdManager =
                         new UserProfileIdManager(
-                                UserProfileIdDaoSharedPreferencesImpl.getInstance(context));
+                                UserProfileIdDaoSharedPreferencesImpl.getInstance(context),
+                                Clock.getInstance());
             }
             return sUserProfileIdManager;
         }
@@ -82,8 +90,16 @@ public class UserProfileIdManager {
         return id;
     }
 
-    /** Clear the user profile id storage in case of consent revoke. */
+    /**
+     * Clear the user profile id storage in case of consent revoke.
+     *
+     * <p>We only clear the ID if it's persisted for more than 24 hours to prevent abuse vector
+     * whereby a malicious user regenerates consentIds by toggling consent on and off
+     */
     public void deleteId() {
-        mUserProfileIdDao.deleteStorage();
+        long lastPersistedTimestamp = mUserProfileIdDao.getTimestamp();
+        if (mClock.currentTimeMillis() >= lastPersistedTimestamp + MILLISECONDS_IN_DAY) {
+            mUserProfileIdDao.deleteStorage();
+        }
     }
 }

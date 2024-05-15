@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.measurement;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -62,6 +63,8 @@ import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.measurement.access.AccessInfo;
+import com.android.adservices.service.measurement.access.AccessResolverInfo;
 import com.android.adservices.service.measurement.access.AppPackageAccessResolver;
 import com.android.adservices.service.measurement.access.ConsentNotifiedAccessResolver;
 import com.android.adservices.service.measurement.access.DevContextAccessResolver;
@@ -73,7 +76,7 @@ import com.android.adservices.service.measurement.access.UserConsentAccessResolv
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.List;
@@ -166,7 +169,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     request.getAppPackageName(),
                     request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
-                    STATUS_RATE_LIMIT_REACHED);
+                    STATUS_RATE_LIMIT_REACHED,
+                    FAILURE_REASON_UNSET);
             return;
         }
         final int callerUid = Binder.getCallingUidOrThrow();
@@ -226,7 +230,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     request.getAppPackageName(),
                     request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
-                    STATUS_RATE_LIMIT_REACHED);
+                    STATUS_RATE_LIMIT_REACHED,
+                    FAILURE_REASON_UNSET);
             return;
         }
 
@@ -292,7 +297,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     request.getAppPackageName(),
                     request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
-                    STATUS_RATE_LIMIT_REACHED);
+                    STATUS_RATE_LIMIT_REACHED,
+                    FAILURE_REASON_UNSET);
             return;
         }
         final int callerUid = Binder.getCallingUidOrThrow();
@@ -352,7 +358,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     request.getAppPackageName(),
                     request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
-                    STATUS_RATE_LIMIT_REACHED);
+                    STATUS_RATE_LIMIT_REACHED,
+                    FAILURE_REASON_UNSET);
             return;
         }
 
@@ -414,7 +421,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     request.getAppPackageName(),
                     request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
-                    STATUS_RATE_LIMIT_REACHED);
+                    STATUS_RATE_LIMIT_REACHED,
+                    FAILURE_REASON_UNSET);
             return;
         }
 
@@ -468,6 +476,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         sLightExecutor.execute(
                 () -> {
                     @StatusCode int statusCode = STATUS_UNSET;
+                    int failureReason = FAILURE_REASON_UNSET;
                     try {
                         final Supplier<Boolean> enforceForeground =
                                 mFlags::getEnforceForegroundStatusForMeasurementStatus;
@@ -509,14 +518,17 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                     statusParam.getAppPackageName()));
                         }
 
-                        final Optional<IAccessResolver> optionalResolver =
-                                getAccessDenied(accessResolvers);
+                        AccessResolverInfo accessResolverInfo = getAccessDenied(accessResolvers);
+                        Optional<IAccessResolver> optionalResolver =
+                                accessResolverInfo.getAccessResolver();
 
                         if (optionalResolver.isPresent()) {
-                            final IAccessResolver resolver = optionalResolver.get();
+                            IAccessResolver resolver = optionalResolver.get();
                             LoggerFactory.getMeasurementLogger().e(resolver.getErrorMessage());
                             callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
                             statusCode = resolver.getErrorStatusCode();
+                            failureReason =
+                                    accessResolverInfo.getAccessInfo().getDeniedAccessReason();
                             return;
                         }
 
@@ -531,7 +543,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                 statusParam.getAppPackageName(),
                                 statusParam.getSdkPackageName(),
                                 getLatency(callerMetadata, serviceStartTime),
-                                statusCode);
+                                statusCode,
+                                failureReason);
                     }
                 });
     }
@@ -576,7 +589,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             String appPackageName,
             String sdkPackageName,
             int latency,
-            int resultCode) {
+            int resultCode,
+            int failureReason) {
         mAdServicesLogger.logApiCallStats(
                 new ApiCallStats.Builder()
                         .setCode(AD_SERVICES_API_CALLED)
@@ -585,7 +599,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                         .setAppPackageName(appPackageName)
                         .setSdkPackageName(sdkPackageName)
                         .setLatencyMillisecond(latency)
-                        .setResultCode(resultCode)
+                        .setResult(resultCode, failureReason)
                         .build());
     }
 
@@ -600,13 +614,16 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             long serviceStartTime) {
 
         int statusCode = STATUS_UNSET;
+        int failureReason = FAILURE_REASON_UNSET;
         try {
 
-            final Optional<IAccessResolver> optionalResolver = getAccessDenied(accessResolvers);
+            AccessResolverInfo accessResolverInfo = getAccessDenied(accessResolvers);
+            Optional<IAccessResolver> optionalResolver = accessResolverInfo.getAccessResolver();
             if (optionalResolver.isPresent()) {
-                final IAccessResolver resolver = optionalResolver.get();
+                IAccessResolver resolver = optionalResolver.get();
                 LoggerFactory.getMeasurementLogger().e(resolver.getErrorMessage());
                 statusCode = resolver.getErrorStatusCode();
+                failureReason = accessResolverInfo.getAccessInfo().getDeniedAccessReason();
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
                                 .setStatusCode(resolver.getErrorStatusCode())
@@ -628,7 +645,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     appPackageName,
                     sdkPackageName,
                     getLatency(callerMetadata, serviceStartTime),
-                    statusCode);
+                    statusCode,
+                    failureReason);
         }
     }
 
@@ -643,13 +661,16 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             long serviceStartTime) {
 
         int statusCode = STATUS_UNSET;
+        int failureReason = FAILURE_REASON_UNSET;
         try {
 
-            final Optional<IAccessResolver> optionalResolver = getAccessDenied(accessResolvers);
+            AccessResolverInfo accessResolverInfo = getAccessDenied(accessResolvers);
+            Optional<IAccessResolver> optionalResolver = accessResolverInfo.getAccessResolver();
             if (optionalResolver.isPresent()) {
-                final IAccessResolver resolver = optionalResolver.get();
+                IAccessResolver resolver = optionalResolver.get();
                 LoggerFactory.getMeasurementLogger().e(resolver.getErrorMessage());
                 statusCode = resolver.getErrorStatusCode();
+                failureReason = accessResolverInfo.getAccessInfo().getDeniedAccessReason();
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
                                 .setStatusCode(resolver.getErrorStatusCode())
@@ -678,14 +699,25 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     appPackageName,
                     sdkPackageName,
                     getLatency(callerMetadata, serviceStartTime),
-                    statusCode);
+                    statusCode,
+                    failureReason);
         }
     }
 
-    private Optional<IAccessResolver> getAccessDenied(List<IAccessResolver> apiAccessResolvers) {
-        return apiAccessResolvers.stream()
-                .filter(accessResolver -> !accessResolver.isAllowed(mContext))
-                .findFirst();
+    private AccessResolverInfo getAccessDenied(List<IAccessResolver> apiAccessResolvers) {
+        AccessResolverInfo accessResolverInfo =
+                new AccessResolverInfo(Optional.empty(), new AccessInfo(true));
+        Optional<IAccessResolver> deniedAccessResolver =
+                apiAccessResolvers.stream()
+                        .filter(
+                                accessResolver -> {
+                                    accessResolverInfo.setAccessInfo(
+                                            accessResolver.getAccessInfo(mContext));
+                                    return !accessResolverInfo.getAccessInfo().isAllowedAccess();
+                                })
+                        .findFirst();
+        accessResolverInfo.setAccessResolver(deniedAccessResolver);
+        return accessResolverInfo;
     }
 
     private Throttler.ApiKey getApiKey(RegistrationRequest request) {

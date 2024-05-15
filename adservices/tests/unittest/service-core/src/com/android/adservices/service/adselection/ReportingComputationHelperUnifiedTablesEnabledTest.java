@@ -25,9 +25,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -40,6 +42,9 @@ public class ReportingComputationHelperUnifiedTablesEnabledTest {
             mReportingComputationHelperUnifiedTablesEnabled;
 
     private static final int AD_SELECTION_ID = 1;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

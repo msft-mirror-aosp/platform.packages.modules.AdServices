@@ -353,7 +353,6 @@ public final class EncryptionKeyFetcher {
                         .setFetchStatus(fetchStatus)
                         .setIsFirstTimeFetch(mIsFirstTimeFetch)
                         .setAdtechEnrollmentId(enrollmentData.getEnrollmentId())
-                        .setCompanyId(enrollmentData.getCompanyId())
                         .setEncryptionKeyUrl(encryptionKeyUrl)
                         .build();
         mAdServicesLogger.logEncryptionKeyFetchedStats(stats);

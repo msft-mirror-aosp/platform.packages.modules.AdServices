@@ -24,8 +24,6 @@ import com.android.modules.utils.build.SdkLevel;
 
 /** Utility class for compatibility of Build APIs with Android S and earlier. */
 public final class BuildCompatUtils {
-    private static final boolean IS_DEBUGGABLE = computeIsDebuggable();
-
     private BuildCompatUtils() {
         // Prevent instantiation
     }
@@ -38,15 +36,11 @@ public final class BuildCompatUtils {
      *     "eng".
      */
     public static boolean isDebuggable() {
-        return IS_DEBUGGABLE;
+        return SdkLevel.isAtLeastS() ? Build.isDebuggable() : computeIsDebuggable_R();
     }
 
     @VisibleForTesting
-    static boolean computeIsDebuggable() {
-        if (SdkLevel.isAtLeastS()) {
-            return Build.isDebuggable();
-        }
-
+    static boolean computeIsDebuggable_R() {
         // Build.isDebuggable was added in S; duplicate that functionality for R.
         return SystemProperties.getInt("ro.debuggable", 0) == 1;
     }

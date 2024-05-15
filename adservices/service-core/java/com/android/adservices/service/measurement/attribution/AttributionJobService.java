@@ -18,7 +18,7 @@ package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.ATTRIBUTION_PROCESSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -39,7 +39,7 @@ import com.android.adservices.service.measurement.attribution.AttributionJobHand
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.util.JobLockHolder;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -75,7 +75,7 @@ public class AttributionJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStartJob(MEASUREMENT_ATTRIBUTION_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobAttributionKillSwitch()) {
@@ -97,7 +97,7 @@ public class AttributionJobService extends JobService {
                             final boolean shouldRetry =
                                     !ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED.equals(result);
                             final boolean isSuccessful = !ProcessingResult.FAILURE.equals(result);
-                            AdservicesJobServiceLogger.getInstance(AttributionJobService.this)
+                            AdServicesJobServiceLogger.getInstance(AttributionJobService.this)
                                     .recordJobFinished(
                                             MEASUREMENT_ATTRIBUTION_JOB_ID,
                                             isSuccessful,
@@ -154,7 +154,7 @@ public class AttributionJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MEASUREMENT_ATTRIBUTION_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -244,7 +244,7 @@ public class AttributionJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance(this)
                     .recordJobSkipped(MEASUREMENT_ATTRIBUTION_JOB_ID, skipReason);
         }
 

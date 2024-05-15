@@ -35,6 +35,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.Activity;
@@ -56,7 +57,6 @@ import android.content.res.Configuration;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Parcel;
 import android.os.RemoteException;
 import android.platform.test.annotations.RequiresFlagsDisabled;
 import android.platform.test.annotations.RequiresFlagsEnabled;
@@ -73,6 +73,7 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.Until;
 
 import com.android.compatibility.common.util.DeviceConfigStateHelper;
+import com.android.compatibility.common.util.SystemUtil;
 import com.android.ctssdkprovider.IActivityActionExecutor;
 import com.android.ctssdkprovider.IActivityStarter;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
@@ -137,6 +138,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     private ActivityScenario<TestActivity> mScenario;
 
     private SdkSandboxManager mSdkSandboxManager;
+    private boolean mCustomizedSdkContextEnabled;
 
     private final DeviceConfigStateHelper mDeviceConfig =
             new DeviceConfigStateHelper(NAMESPACE_WINDOW_MANAGER);
@@ -146,6 +148,14 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     @Before
     public void setup() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
+        SystemUtil.runWithShellPermissionIdentity(
+                () -> {
+                    mCustomizedSdkContextEnabled =
+                            DeviceConfig.getBoolean(
+                                    DeviceConfig.NAMESPACE_ADSERVICES,
+                                    CUSTOMIZED_SDK_CONTEXT_ENABLED,
+                                    false);
+                });
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
         mScenario = activityScenarioRule.getScenario();
         mDeviceConfig.set(ASM_RESTRICTIONS_ENABLED, "1");
@@ -287,6 +297,20 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_DEFINED_ERROR);
+    }
+
+    @Test
+    public void testLoadSdkPropertySdkProviderClassNameNotSet() {
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(
+                "com.android.property_sdkprovider_classname_not_present",
+                new Bundle(),
+                Runnable::run,
+                callback);
+        callback.assertLoadSdkIsUnsuccessful();
+        assertThat(callback.getLoadSdkErrorCode()).isEqualTo(SdkSandboxManager.LOAD_SDK_NOT_FOUND);
+        assertThat(callback.getLoadSdkErrorMsg())
+                .contains("android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME property");
     }
 
     @Test
@@ -566,47 +590,6 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
         }
     }
 
-    // TODO(b/244730098): The test below needs to be moved from e2e.
-    // It is not and e2e test.
-    @Test
-    public void testLoadSdkExceptionWriteToParcel() {
-        final Bundle bundle = new Bundle();
-        bundle.putChar("testKey", /*testValue=*/ 'C');
-        final String errorMessage = "Error Message";
-        final Exception cause = new Exception(errorMessage);
-
-        final LoadSdkException exception = new LoadSdkException(cause, bundle);
-
-        final Parcel parcel = Parcel.obtain();
-        exception.writeToParcel(parcel, /*flags=*/ 0);
-
-        // Create LoadSdkException with the same parcel
-        parcel.setDataPosition(0); // rewind
-        final LoadSdkException exceptionCheck = LoadSdkException.CREATOR.createFromParcel(parcel);
-
-        assertThat(exceptionCheck.getLoadSdkErrorCode()).isEqualTo(exception.getLoadSdkErrorCode());
-        assertThat(exceptionCheck.getMessage()).isEqualTo(exception.getMessage());
-        assertThat(exceptionCheck.getExtraInformation().getChar("testKey"))
-                .isEqualTo(exception.getExtraInformation().getChar("testKey"));
-        assertThat(exceptionCheck.getExtraInformation().keySet()).containsExactly("testKey");
-    }
-
-    // TODO(b/244730098): The test below needs to be moved from e2e.
-    // It is not and e2e test.
-    @Test
-    public void testLoadSdkExceptionDescribeContents() throws Exception {
-        final LoadSdkException exception = new LoadSdkException(new Exception(), new Bundle());
-        assertThat(exception.describeContents()).isEqualTo(0);
-    }
-
-    // TODO(b/244730098): The test below needs to be moved from e2e.
-    // It is not and e2e test.
-    @Test
-    public void testSandboxedSdkDescribeContents() throws Exception {
-        final SandboxedSdk sandboxedSdk = new SandboxedSdk(new Binder());
-        assertThat(sandboxedSdk.describeContents()).isEqualTo(0);
-    }
-
     @Test
     public void testSdkAndAppProcessImportanceIsAligned_AppIsBackgrounded() throws Exception {
         // Sandbox and app priority is aligned only in U+.
@@ -800,11 +783,8 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     @RequiresFlagsEnabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testSandboxActivityUseSdkBasedContextIfRequiredFlagAreEnabled()
             throws RemoteException {
-        assumeTrue(SdkLevel.isAtLeastU());
-
-        DeviceConfigStateHelper mDeviceConfig =
-                new DeviceConfigStateHelper(DeviceConfig.NAMESPACE_ADSERVICES);
-        mDeviceConfig.set(CUSTOMIZED_SDK_CONTEXT_ENABLED, "true");
+        assumeTrue(SdkLevel.isAtLeastV());
+        assumeTrue(mCustomizedSdkContextEnabled);
 
         ICtsSdkProviderApi sdk = loadSdk();
 
@@ -829,12 +809,8 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     @RequiresFlagsEnabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testSandboxActivityUseAppBasedContextIfCustomizedSdkFlagIsDisabled()
             throws RemoteException {
-        assumeTrue(SdkLevel.isAtLeastU());
-
-        DeviceConfigStateHelper mDeviceConfig =
-                new DeviceConfigStateHelper(DeviceConfig.NAMESPACE_ADSERVICES);
-        mDeviceConfig.set(CUSTOMIZED_SDK_CONTEXT_ENABLED, "false");
-
+        assumeTrue(SdkLevel.isAtLeastV());
+        assumeFalse(mCustomizedSdkContextEnabled);
         ICtsSdkProviderApi sdk = loadSdk();
 
         ActivityStarter sandboxActivityStarter = new ActivityStarter();
@@ -858,11 +834,8 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     @RequiresFlagsDisabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testSandboxActivityUseAppBasedContextIfSdkBasedFlagIDisabled()
             throws RemoteException {
-        assumeTrue(SdkLevel.isAtLeastU());
-
-        DeviceConfigStateHelper mDeviceConfig =
-                new DeviceConfigStateHelper(DeviceConfig.NAMESPACE_ADSERVICES);
-        mDeviceConfig.set(CUSTOMIZED_SDK_CONTEXT_ENABLED, "true");
+        assumeTrue(SdkLevel.isAtLeastV());
+        assumeTrue(mCustomizedSdkContextEnabled);
 
         ICtsSdkProviderApi sdk = loadSdk();
 

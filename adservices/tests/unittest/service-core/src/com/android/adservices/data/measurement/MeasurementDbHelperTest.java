@@ -29,7 +29,6 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
-import com.android.adservices.data.DbHelperTest;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.migration.ContentValueFixtures;
 
@@ -106,7 +105,7 @@ public class MeasurementDbHelperTest {
                         MIGRATION_DB_REFERENCE_NAME,
                         MeasurementDbHelper.CURRENT_DATABASE_VERSION);
         DbTestUtil.assertDatabasesEqual(referenceLatestDb, actualMigratedDb);
-        DbHelperTest.assertMeasurementTablesDoNotExist(oldDb);
+        DbTestUtil.assertMeasurementTablesDoNotExist(oldDb);
     }
 
     @Test
@@ -134,7 +133,7 @@ public class MeasurementDbHelperTest {
                         MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION,
                         dbHelper);
         SQLiteDatabase newDb = measurementDbHelper.safeGetWritableDatabase();
-        DbHelperTest.assertMeasurementTablesDoNotExist(oldDb);
+        DbTestUtil.assertMeasurementTablesDoNotExist(oldDb);
         SQLiteDatabase referenceLatestDb =
                 createReferenceDbAtVersion(
                         sContext,

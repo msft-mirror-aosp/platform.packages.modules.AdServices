@@ -36,14 +36,6 @@ public enum AdServicesApiType {
     @VisibleForTesting static final String CONSENT_MEASUREMENT = "CONSENT-MEASUREMENT";
     @VisibleForTesting static final String CONSENT_TOPICS = "CONSENT-TOPICS";
 
-    @VisibleForTesting static final String DEFAULT_CONSENT = "DEFAULT_CONSENT";
-
-    @VisibleForTesting static final String TOPICS_DEFAULT_CONSENT = "TOPICS_DEFAULT_CONSENT";
-
-    @VisibleForTesting static final String FLEDGE_DEFAULT_CONSENT = "FLEDGE_DEFAULT_CONSENT";
-
-    @VisibleForTesting
-    static final String MEASUREMENT_DEFAULT_CONSENT = "MEASUREMENT_DEFAULT_CONSENT";
 
     /** Maps the {@link AdServicesApiType} to Consent API type integer. */
     public int toConsentApiType() {
@@ -61,21 +53,6 @@ public enum AdServicesApiType {
         }
     }
 
-    /** Maps the {@link AdServicesApiType} to Default Consent datastore key. */
-    public String toDefaultConsentDatastoreKey() {
-        switch (this) {
-            case TOPICS:
-                return TOPICS_DEFAULT_CONSENT;
-            case FLEDGE:
-                return FLEDGE_DEFAULT_CONSENT;
-            case MEASUREMENTS:
-                return MEASUREMENT_DEFAULT_CONSENT;
-            case ALL_API:
-                return DEFAULT_CONSENT;
-            default:
-                throw new IllegalStateException("AdServicesApiType doesn't exist.");
-        }
-    }
     /**
      * Maps the {@link AdServicesApiType} to {@link String} which represents the key in the PP API
      * datastore.

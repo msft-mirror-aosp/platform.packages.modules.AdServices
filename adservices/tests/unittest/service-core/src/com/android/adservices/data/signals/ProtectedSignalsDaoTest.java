@@ -20,7 +20,9 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -35,6 +37,7 @@ import android.content.pm.PackageManager;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
@@ -43,11 +46,13 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -68,6 +73,9 @@ public class ProtectedSignalsDaoTest {
     private ProtectedSignalsDao mProtectedSignalsDao;
 
     private MockitoSession mStaticMockSession;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -139,6 +147,17 @@ public class ProtectedSignalsDaoTest {
     }
 
     @Test
+    public void testTwoSignalsDeleteAll() {
+        mProtectedSignalsDao.insertSignals(
+                Arrays.asList(DBProtectedSignalFixture.SIGNAL, DBProtectedSignalFixture.SIGNAL));
+
+        List<DBProtectedSignal> readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        mProtectedSignalsDao.deleteAllSignals();
+        readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        assertEquals(0, readResult.size());
+    }
+
+    @Test
     public void testTwoBuyers() {
         DBProtectedSignal signal1 =
                 DBProtectedSignal.builder()
@@ -176,16 +195,27 @@ public class ProtectedSignalsDaoTest {
     public void testInsertAndDelete() {
         // Insert two signals
         mProtectedSignalsDao.insertAndDelete(
+                BUYER_1,
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                 Arrays.asList(DBProtectedSignalFixture.SIGNAL, DBProtectedSignalFixture.SIGNAL),
                 Collections.emptyList());
         // Get all the signals for the test buyer
         List<DBProtectedSignal> readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        assertEquals(
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1).getLastSignalsUpdatedTime());
         // Delete one of the signals and insert two more
         mProtectedSignalsDao.insertAndDelete(
+                BUYER_1,
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                 Arrays.asList(DBProtectedSignalFixture.SIGNAL, DBProtectedSignalFixture.SIGNAL),
                 readResult.subList(0, 1));
         // Check that the deletions and insertion occurred
         readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        assertEquals(
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1).getLastSignalsUpdatedTime());
+
         assertEquals(3, readResult.size());
         assertNotNull(readResult.get(0).getId());
         assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, readResult.get(0));
@@ -197,17 +227,32 @@ public class ProtectedSignalsDaoTest {
     public void testDeleteSignalsBeforeTime() {
         // Insert two signals
         mProtectedSignalsDao.insertAndDelete(
+                BUYER_1,
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                 Arrays.asList(
                         DBProtectedSignalFixture.SIGNAL,
                         DBProtectedSignalFixture.LATER_TIME_SIGNAL),
                 Collections.emptyList());
+        assertEquals(
+                DBSignalsUpdateMetadata.builder()
+                        .setBuyer(BUYER_1)
+                        .setLastSignalsUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build(),
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1));
         // Delete the older signal
         assertEquals(
                 1,
-                mProtectedSignalsDao.deleteSignalsBeforeTime(
+                mProtectedSignalsDao.deleteExpiredSignalsAndUpdateSignalsUpdateMetadata(
                         DBProtectedSignalFixture.SIGNAL
                                 .getCreationTime()
-                                .plus(Duration.ofMillis(1))));
+                                .plus(Duration.ofMillis(1)),
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
+        assertEquals(
+                DBSignalsUpdateMetadata.builder()
+                        .setBuyer(BUYER_1)
+                        .setLastSignalsUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build(),
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1));
         // Check that the deletions and insertion occurred
         List<DBProtectedSignal> readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
         assertEquals(1, readResult.size());
@@ -226,7 +271,10 @@ public class ProtectedSignalsDaoTest {
         DBProtectedSignal signal2 = DBProtectedSignalFixture.getBuilder().setBuyer(BUYER_2).build();
         // Insert two signals
         mProtectedSignalsDao.insertAndDelete(
-                Arrays.asList(signal1, signal2), Collections.emptyList());
+                BUYER_1,
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                Arrays.asList(signal1, signal2),
+                Collections.emptyList());
         when(mEnrollmentDaoMock.getAllFledgeEnrolledAdTechs())
                 .thenReturn(new HashSet<>(Arrays.asList(BUYER_1, BUYER_2)));
         assertEquals(0, mProtectedSignalsDao.deleteDisallowedBuyerSignals(mEnrollmentDaoMock));
@@ -235,10 +283,17 @@ public class ProtectedSignalsDaoTest {
         assertEquals(1, readResult.size());
         assertNotNull(readResult.get(0).getId());
         assertEqualsExceptId(signal1, readResult.get(0));
+        assertEquals(
+                DBSignalsUpdateMetadata.builder()
+                        .setBuyer(BUYER_1)
+                        .setLastSignalsUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build(),
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1));
         readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_2);
         assertEquals(1, readResult.size());
         assertNotNull(readResult.get(0).getId());
         assertEqualsExceptId(signal2, readResult.get(0));
+        assertNull(mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_2));
     }
 
     @Test
@@ -249,10 +304,37 @@ public class ProtectedSignalsDaoTest {
                 DBProtectedSignalFixture.getBuilder().setBuyer(CommonFixture.VALID_BUYER_2).build();
         // Insert two signals
         mProtectedSignalsDao.insertAndDelete(
-                Arrays.asList(signal1, signal2), Collections.emptyList());
+                BUYER_1,
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                List.of(signal1),
+                Collections.emptyList());
+        mProtectedSignalsDao.insertAndDelete(
+                BUYER_2,
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                List.of(signal2),
+                Collections.emptyList());
+        assertEquals(
+                DBSignalsUpdateMetadata.builder()
+                        .setBuyer(BUYER_1)
+                        .setLastSignalsUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build(),
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1));
+        assertEquals(
+                DBSignalsUpdateMetadata.builder()
+                        .setBuyer(BUYER_2)
+                        .setLastSignalsUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build(),
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_2));
         when(mEnrollmentDaoMock.getAllFledgeEnrolledAdTechs())
                 .thenReturn(Collections.singleton(CommonFixture.VALID_BUYER_1));
         assertEquals(1, mProtectedSignalsDao.deleteDisallowedBuyerSignals(mEnrollmentDaoMock));
+        assertEquals(
+                DBSignalsUpdateMetadata.builder()
+                        .setBuyer(BUYER_1)
+                        .setLastSignalsUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build(),
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1));
+        assertNull(mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_2));
         // Check that the correct deletion occurred
         List<DBProtectedSignal> readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
         assertEquals(1, readResult.size());
@@ -264,8 +346,10 @@ public class ProtectedSignalsDaoTest {
     public void testDeleteDisallowedPackageSignalsNoSignals() {
         assertEquals(
                 0,
-                mProtectedSignalsDao.deleteAllDisallowedPackageSignals(
-                        mPackageManagerMock, mFlagsMock));
+                mProtectedSignalsDao.deleteAllDisallowedPackageSignalsAndUpdateSignalUpdateMetadata(
+                        mPackageManagerMock,
+                        mFlagsMock,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
     }
 
     @Test
@@ -276,7 +360,7 @@ public class ProtectedSignalsDaoTest {
                 DBProtectedSignalFixture.getBuilder().setPackageName(PACKAGE_2).build();
         final class FlagsWithAllAppsAllowed implements Flags {
             @Override
-            public String getPpapiAppAllowList() {
+            public String getPasAppAllowList() {
                 return AllowLists.ALLOW_ALL;
             }
         }
@@ -292,8 +376,10 @@ public class ProtectedSignalsDaoTest {
         assertEquals(2, readResult1.size());
         assertEquals(
                 0,
-                mProtectedSignalsDao.deleteAllDisallowedPackageSignals(
-                        mPackageManagerMock, new FlagsWithAllAppsAllowed()));
+                mProtectedSignalsDao.deleteAllDisallowedPackageSignalsAndUpdateSignalUpdateMetadata(
+                        mPackageManagerMock,
+                        new FlagsWithAllAppsAllowed(),
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
         // Check that no deletion occurred
         List<DBProtectedSignal> readResult2 = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
         assertEquals(2, readResult2.size());
@@ -307,7 +393,7 @@ public class ProtectedSignalsDaoTest {
                 DBProtectedSignalFixture.getBuilder().setPackageName(PACKAGE_2).build();
         class FlagsThatAllowOneApp implements Flags {
             @Override
-            public String getPpapiAppAllowList() {
+            public String getPasAppAllowList() {
                 return PACKAGE_1;
             }
         }
@@ -322,11 +408,105 @@ public class ProtectedSignalsDaoTest {
         assertEquals(2, readResult1.size());
         assertEquals(
                 1,
-                mProtectedSignalsDao.deleteAllDisallowedPackageSignals(
-                        CONTEXT.getPackageManager(), new FlagsThatAllowOneApp()));
+                mProtectedSignalsDao.deleteAllDisallowedPackageSignalsAndUpdateSignalUpdateMetadata(
+                        CONTEXT.getPackageManager(),
+                        new FlagsThatAllowOneApp(),
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
         List<DBProtectedSignal> readResult2 = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
         assertEquals(1, readResult2.size());
         assertEquals(PACKAGE_1, readResult2.get(0).getPackageName());
+    }
+
+    @Test
+    public void testPersistMetadata() {
+        assertNull(
+                "Initial state of the table should be empty",
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1));
+
+        DBSignalsUpdateMetadata signalsUpdateMetadata =
+                DBSignalsUpdateMetadata.builder()
+                        .setBuyer(BUYER_1)
+                        .setLastSignalsUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build();
+        assertEquals(
+                "One entry should have been inserted",
+                1,
+                mProtectedSignalsDao.persistSignalsUpdateMetadata(signalsUpdateMetadata));
+    }
+
+    @Test
+    public void testDeleteMetadata() {
+        assertNull(
+                "Initial state of the table should be empty",
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1));
+
+        DBSignalsUpdateMetadata signalsUpdateMetadata =
+                DBSignalsUpdateMetadata.builder()
+                        .setBuyer(BUYER_1)
+                        .setLastSignalsUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build();
+        assertEquals(
+                "One entry should have been inserted",
+                1,
+                mProtectedSignalsDao.persistSignalsUpdateMetadata(signalsUpdateMetadata));
+
+        mProtectedSignalsDao.deleteSignalsUpdateMetadata(BUYER_1);
+        assertNull(
+                "Metadata should have been deleted",
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1));
+    }
+
+    @Test
+    public void testQuerySignalsUpdateMetadata() {
+        assertNull(
+                "Initial state of the table should be empty",
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1));
+
+        DBSignalsUpdateMetadata signalsUpdateMetadata =
+                DBSignalsUpdateMetadata.builder()
+                        .setBuyer(BUYER_1)
+                        .setLastSignalsUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build();
+        assertEquals(
+                "One entry should have been inserted",
+                1,
+                mProtectedSignalsDao.persistSignalsUpdateMetadata(signalsUpdateMetadata));
+        DBSignalsUpdateMetadata retrieved = mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1);
+
+        assertEquals(signalsUpdateMetadata.getBuyer(), retrieved.getBuyer());
+        assertEquals(
+                signalsUpdateMetadata.getLastSignalsUpdatedTime(),
+                retrieved.getLastSignalsUpdatedTime());
+    }
+
+    @Test
+    public void testPersistMetadataReplacesExisting() {
+        assertNull(
+                "Initial state of the table should be empty",
+                mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1));
+
+        DBSignalsUpdateMetadata.Builder anBuilder =
+                DBSignalsUpdateMetadata.builder().setBuyer(BUYER_1);
+        DBSignalsUpdateMetadata previous =
+                anBuilder
+                        .setLastSignalsUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build();
+        mProtectedSignalsDao.persistSignalsUpdateMetadata(previous);
+
+        DBSignalsUpdateMetadata retrieved = mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1);
+        assertEquals(previous.getLastSignalsUpdatedTime(), retrieved.getLastSignalsUpdatedTime());
+
+        DBSignalsUpdateMetadata updated =
+                anBuilder
+                        .setLastSignalsUpdatedTime(
+                                CommonFixture.FIXED_NEXT_ONE_DAY.truncatedTo(ChronoUnit.MILLIS))
+                        .build();
+
+        mProtectedSignalsDao.persistSignalsUpdateMetadata(updated);
+        retrieved = mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER_1);
+        assertNotEquals(
+                previous.getLastSignalsUpdatedTime(), retrieved.getLastSignalsUpdatedTime());
+        assertEquals(updated.getLastSignalsUpdatedTime(), retrieved.getLastSignalsUpdatedTime());
     }
 
     private void assertEqualsExceptId(DBProtectedSignal expected, DBProtectedSignal actual) {

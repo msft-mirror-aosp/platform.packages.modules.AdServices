@@ -128,10 +128,10 @@ public class ConsentNotificationGaFragment extends Fragment {
                                 LANDING_PAGE_OPT_OUT_CLICKED, getContext());
 
                         // opt-out confirmation activity
-                        ConsentManager.getInstance(requireContext())
+                        ConsentManager.getInstance()
                                 .disable(requireContext(), AdServicesApiType.TOPICS);
                         if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                            ConsentManager.getInstance(requireContext())
+                            ConsentManager.getInstance()
                                     .recordUserManualInteractionWithConsent(
                                             ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                         }
@@ -260,10 +260,9 @@ public class ConsentNotificationGaFragment extends Fragment {
                             LANDING_PAGE_OPT_IN_CLICKED, getContext());
 
                     // opt-in confirmation activity
-                    ConsentManager.getInstance(requireContext())
-                            .enable(requireContext(), AdServicesApiType.TOPICS);
+                    ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.TOPICS);
                     if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                        ConsentManager.getInstance(requireContext())
+                        ConsentManager.getInstance()
                                 .recordUserManualInteractionWithConsent(
                                         ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }
@@ -275,7 +274,7 @@ public class ConsentNotificationGaFragment extends Fragment {
                             LANDING_PAGE_GOT_IT_CLICKED, getContext());
 
                     if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                        ConsentManager.getInstance(requireContext())
+                        ConsentManager.getInstance()
                                 .recordUserManualInteractionWithConsent(
                                         ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }

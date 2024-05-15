@@ -67,7 +67,7 @@ public class EncryptionKeyJobHandlerTest {
     private static final EnrollmentData ENROLLMENT_DATA =
             new EnrollmentData.Builder()
                     .setEnrollmentId("100")
-                    .setCompanyId("1001")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_TOPICS")
                     .setSdkNames("1sdk")
                     .setAttributionSourceRegistrationUrl(List.of("https://test1.com/source"))
                     .setAttributionTriggerRegistrationUrl(List.of("https://test.com/trigger"))

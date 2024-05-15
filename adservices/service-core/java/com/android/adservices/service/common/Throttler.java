@@ -65,6 +65,9 @@ public class Throttler {
         // Key to throttle Persist Ad Selection Result API
         FLEDGE_API_PERSIST_AD_SELECTION_RESULT,
 
+        // Key to throttle Schedule Custom Audience Update API
+        FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE,
+
         // Key to throttle Set App Install Advertisers API
         FLEDGE_API_SET_APP_INSTALL_ADVERTISERS,
 

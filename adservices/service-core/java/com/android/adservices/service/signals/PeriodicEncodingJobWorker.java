@@ -24,16 +24,19 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncoderLogicMetadata;
+import com.android.adservices.data.signals.DBSignalsUpdateMetadata;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
-import com.android.adservices.data.signals.EncoderPersistenceDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdCounterKeyCopierNoOpImpl;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.adselection.DebugReportingScriptDisabledStrategy;
+import com.android.adservices.service.common.RetryStrategy;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.SingletonRunner;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -75,14 +78,13 @@ public class PeriodicEncodingJobWorker {
 
     private final EncoderLogicHandler mEncoderLogicHandler;
     private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
-    private final EncoderPersistenceDao mEncoderPersistenceDao;
     private final EncodedPayloadDao mEncodedPayloadDao;
     private final SignalsProvider mSignalsProvider;
+    private final ProtectedSignalsDao mProtectedSignalsDao;
     private final AdSelectionScriptEngine mScriptEngine;
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
     private final DevContextFilter mDevContextFilter;
-
     private final SingletonRunner<Void> mSingletonRunner =
             new SingletonRunner<>(JOB_DESCRIPTION, this::doRun);
 
@@ -92,9 +94,9 @@ public class PeriodicEncodingJobWorker {
     protected PeriodicEncodingJobWorker(
             @NonNull EncoderLogicHandler encoderLogicHandler,
             @NonNull EncoderLogicMetadataDao encoderLogicMetadataDao,
-            @NonNull EncoderPersistenceDao encoderPersistenceDao,
             @NonNull EncodedPayloadDao encodedPayloadDao,
             @NonNull SignalsProviderImpl signalStorageManager,
+            @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull AdSelectionScriptEngine scriptEngine,
             @NonNull ListeningExecutorService backgroundExecutor,
             @NonNull ListeningExecutorService lightWeightExecutor,
@@ -102,9 +104,9 @@ public class PeriodicEncodingJobWorker {
             @NonNull Flags flags) {
         mEncoderLogicHandler = encoderLogicHandler;
         mEncoderLogicMetadataDao = encoderLogicMetadataDao;
-        mEncoderPersistenceDao = encoderPersistenceDao;
         mEncodedPayloadDao = encodedPayloadDao;
         mSignalsProvider = signalStorageManager;
+        mProtectedSignalsDao = protectedSignalsDao;
         mScriptEngine = scriptEngine;
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
@@ -131,26 +133,32 @@ public class PeriodicEncodingJobWorker {
             if (sPeriodicEncodingJobWorker == null) {
                 ProtectedSignalsDatabase signalsDatabase =
                         ProtectedSignalsDatabase.getInstance(context);
+                Flags flags = FlagsFactory.getFlags();
+                RetryStrategy retryStrategy =
+                        RetryStrategyFactory.createInstance(
+                                        flags.getAdServicesRetryStrategyEnabled(),
+                                        AdServicesExecutors.getLightWeightExecutor())
+                                .createRetryStrategy(
+                                        flags.getAdServicesJsScriptEngineMaxRetryAttempts());
                 sPeriodicEncodingJobWorker =
                         new PeriodicEncodingJobWorker(
                                 new EncoderLogicHandler(context),
                                 signalsDatabase.getEncoderLogicMetadataDao(),
-                                EncoderPersistenceDao.getInstance(context),
                                 signalsDatabase.getEncodedPayloadDao(),
                                 new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
+                                signalsDatabase.protectedSignalsDao(),
                                 new AdSelectionScriptEngine(
                                         context,
-                                        () ->
-                                                FlagsFactory.getFlags()
-                                                        .getEnforceIsolateMaxHeapSize(),
-                                        () -> FlagsFactory.getFlags().getIsolateMaxHeapSizeBytes(),
+                                        flags::getEnforceIsolateMaxHeapSize,
+                                        flags::getIsolateMaxHeapSizeBytes,
                                         new AdCounterKeyCopierNoOpImpl(),
                                         new DebugReportingScriptDisabledStrategy(),
-                                        false), // not used in encoding
+                                        false, // not used in encoding
+                                        retryStrategy),
                                 AdServicesExecutors.getBackgroundExecutor(),
                                 AdServicesExecutors.getLightWeightExecutor(),
                                 DevContextFilter.create(context),
-                                FlagsFactory.getFlags());
+                                flags);
             }
         }
         return sPeriodicEncodingJobWorker;
@@ -242,10 +250,28 @@ public class PeriodicEncodingJobWorker {
     FluentFuture<Void> runEncodingPerBuyer(
             DBEncoderLogicMetadata encoderLogicMetadata, int timeout) {
         AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
+
         Map<String, List<ProtectedSignal>> signals = mSignalsProvider.getSignals(buyer);
         if (signals.isEmpty()) {
             mEncoderLogicHandler.deleteEncoderForBuyer(buyer);
             return FluentFuture.from(Futures.immediateFuture(null));
+        }
+
+        DBSignalsUpdateMetadata signalsUpdateMetadata =
+                mProtectedSignalsDao.getSignalsUpdateMetadata(buyer);
+        DBEncodedPayload existingPayload = mEncodedPayloadDao.getEncodedPayload(buyer);
+        if (signalsUpdateMetadata != null && existingPayload != null) {
+            boolean isNoNewSignalUpdateAfterLastEncoding =
+                    signalsUpdateMetadata
+                            .getLastSignalsUpdatedTime()
+                            .isBefore(existingPayload.getCreationTime());
+            boolean isEncoderLogicNotUpdatedAfterLastEncoding =
+                    encoderLogicMetadata
+                            .getCreationTime()
+                            .isBefore(existingPayload.getCreationTime());
+            if (isNoNewSignalUpdateAfterLastEncoding && isEncoderLogicNotUpdatedAfterLastEncoding) {
+                return FluentFuture.from(Futures.immediateFuture(null));
+            }
         }
 
         int failedCount = encoderLogicMetadata.getFailedEncodingCount();

@@ -23,6 +23,8 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.Index;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.AutoValue.CopyAnnotations;
 import com.google.common.hash.HashCode;
@@ -56,7 +58,8 @@ import com.google.common.hash.Hashing;
                     },
                     unique = true)
         })
-abstract class StringHashEntity {
+@VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+public abstract class StringHashEntity {
     /** Values uniquely identifying the report. */
     @CopyAnnotations
     @Embedded
@@ -95,7 +98,8 @@ abstract class StringHashEntity {
     /** Creates an {@link StringHashEntity}. */
     @Ignore
     @NonNull
-    static StringHashEntity create(
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+    public static StringHashEntity create(
             ReportKey reportKey, int dayIndex, int listIndex, String string) {
         return new AutoValue_StringHashEntity(reportKey, dayIndex, listIndex, getHash(string));
     }

@@ -27,6 +27,9 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link ReportImpressionInput} */
@@ -34,6 +37,9 @@ import org.junit.Test;
 public final class ReportImpressionInputTest {
     private static final long AUCTION_ID = 123;
     private static final String CALLER_PACKAGE_NAME = "callerPackageName";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testWriteToParcel() throws Exception {

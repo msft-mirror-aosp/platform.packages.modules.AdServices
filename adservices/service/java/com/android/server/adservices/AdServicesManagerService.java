@@ -517,6 +517,33 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                         .wasGaUxNotificationDisplayed());
     }
 
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordPasNotificationDisplayed(boolean wasNotificationDisplayed) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordPasNotificationDisplayed() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordPasNotificationDisplayed(wasNotificationDisplayed);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to Record PAS Notification Displayed.");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasPasNotificationDisplayed() {
+        return executeGetter(
+                /* defaultReturn= */ true,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .wasPasNotificationDisplayed());
+    }
+
     /** retrieves the default consent of a user. */
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean getDefaultConsent() {
@@ -767,7 +794,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
 
         LogUtil.v("Executing shell cmd: %s", Arrays.toString(args));
-        return new AdServicesShellCommand()
+        return new AdServicesShellCommand(mContext)
                 .exec(
                         this,
                         in.getFileDescriptor(),
@@ -1318,7 +1345,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         final int userIdentifier = getUserIdentifierFromBinderCallingUid();
 
         String logPrefix = getClass().getSimpleName() + function.toString();
-        LogUtil.v(logPrefix + " called.", userIdentifier);
+        LogUtil.v("%s called. User identifier: %s", logPrefix, userIdentifier);
 
         try {
             return function.apply(userIdentifier);

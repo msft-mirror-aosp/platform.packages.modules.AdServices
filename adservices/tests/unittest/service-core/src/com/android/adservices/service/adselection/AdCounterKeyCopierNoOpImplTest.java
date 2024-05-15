@@ -25,6 +25,7 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.js.JSScriptRecordArgument;
@@ -32,6 +33,7 @@ import com.android.adservices.service.js.JSScriptRecordArgument;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -39,6 +41,9 @@ import java.util.HashSet;
 
 public class AdCounterKeyCopierNoOpImplTest {
     private final AdCounterKeyCopierNoOpImpl mAdCounterKeyCopier = new AdCounterKeyCopierNoOpImpl();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testCopyAdCounterKeys_DBAdDataToAdDataBuilder_NullBuilderThrows() {
