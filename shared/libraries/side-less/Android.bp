@@ -37,6 +37,16 @@ filegroup {
     ],
 }
 
+filegroup {
+    name: "adservices-shared-sideless-testing-TestNamer-sources",
+    srcs: [
+        "java/com/android/adservices/shared/testing/TestNamer.java",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/libraries:__subpackages__",
+    ],
+}
+
 // Shared test classes used to test shared test classes - Malkovich!
 filegroup {
     name: "adservices-shared-sideless-meta-testing-sources",

@@ -26,12 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-// TODO(b/302757068): add unit tests
+// TODO(b/340959631): add unit tests
 
 /**
  * See documentation on {#link {@link com.android.adservices.shared.testing.ProcessLifeguardRule}.
  */
-public abstract class AbstractProcessLifeguardRule implements TestRule {
+public abstract class AbstractProcessLifeguardRule implements TestRule, TestNamer {
 
     // TODO(b/302757068): protected these static variables (either using @GuardedBy or
     // AtomitReference)
@@ -129,16 +129,9 @@ public abstract class AbstractProcessLifeguardRule implements TestRule {
                         + " for full stack trace and name of these tests");
     }
 
-    /**
-     * Gets the name of the test being executed.
-     *
-     * @throws IllegalStateException if not running a test.
-     */
+    @Override
     public final String getTestName() {
-        if (mTestName == null) {
-            throw new IllegalStateException("not running a test");
-        }
-        return mTestName;
+        return mTestName == null ? DEFAULT_TEST_NAME : mTestName;
     }
 
     @Override
@@ -147,10 +140,7 @@ public abstract class AbstractProcessLifeguardRule implements TestRule {
 
             @Override
             public void evaluate() throws Throwable {
-                mTestName =
-                        description.getTestClass().getSimpleName()
-                                + "#"
-                                + description.getMethodName();
+                mTestName = TestHelper.getTestName(description);
                 try {
                     evaluateWitTestNameSet();
                 } finally {

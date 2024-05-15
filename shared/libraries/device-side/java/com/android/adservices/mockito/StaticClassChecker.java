@@ -17,14 +17,16 @@ package com.android.adservices.mockito;
 
 import android.util.Log;
 
+import com.android.adservices.shared.testing.TestNamer;
+
 import com.google.common.collect.ImmutableSet;
 
 /** Helper class use to check if a class is statically spied / mocked. */
-public interface StaticClassChecker {
+public interface StaticClassChecker extends TestNamer {
 
-    /** Gets the name of the test being running (for logging purposes). */
+    @Override
     default String getTestName() {
-        return "N/A"; // TODO(b/285014040): get from constant
+        return TestNamer.DEFAULT_TEST_NAME;
     }
 
     /**
