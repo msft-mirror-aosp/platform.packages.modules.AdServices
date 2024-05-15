@@ -89,6 +89,8 @@ public final class FetcherUtilTest {
     @Before
     public void setup() {
         ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
     }
 
     @Test
@@ -1163,34 +1165,58 @@ public final class FetcherUtilTest {
     @Test
     public void isHeaderErrorDebugReportEnabled_nullValue_returnsFalse() {
         assertFalse(
-                FetcherUtil.isHeaderErrorDebugReportEnabled(/* attributionInfoHeader = */ null));
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        /* attributionInfoHeader= */ null, mFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_noMatchingKey_returnsFalse() {
-        assertFalse(FetcherUtil.isHeaderErrorDebugReportEnabled(List.of("preferred-platform=web")));
+        assertFalse(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        List.of("preferred-platform=web"), mFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_matchingKeyWrongFormat_returnsFalse() {
         assertFalse(
-                FetcherUtil.isHeaderErrorDebugReportEnabled(List.of("report-header-errors=os")));
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        List.of("report-header-errors=os"), mFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_matchingKeyEnabled_returnsTrue() {
-        assertTrue(FetcherUtil.isHeaderErrorDebugReportEnabled(List.of("report-header-errors")));
-        assertTrue(FetcherUtil.isHeaderErrorDebugReportEnabled(List.of("report-header-errors=?1")));
         assertTrue(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        List.of("preferred-platform=web, report-header-errors;")));
+                        List.of("report-header-errors"), mFlags));
+        assertTrue(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        List.of("report-header-errors=?1"), mFlags));
+        assertTrue(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        List.of("preferred-platform=web, report-header-errors;"), mFlags));
+    }
+
+    @Test
+    public void isHeaderErrorDebugReportEnabled_debugReportDisabled_returnsFalse() {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        assertFalse(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        List.of("report-header-errors"), mFlags));
+    }
+
+    @Test
+    public void isHeaderErrorDebugReportEnabled_headerErrorReportDisabled_returnsFalse() {
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(false);
+        assertFalse(
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        List.of("report-header-errors"), mFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_matchingKeyDisabled_returnsFalse() {
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        List.of("preferred-platform=web, report-header-errors=?0;")));
+                        List.of("preferred-platform=web, report-header-errors=?0;"), mFlags));
     }
 
     @Test
@@ -1199,22 +1225,24 @@ public final class FetcherUtilTest {
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
                         List.of(
                                 "preferred-platform=web,"
-                                        + " report-header-errors=?0;report-header-errors")));
+                                        + " report-header-errors=?0;report-header-errors"),
+                        mFlags));
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
                         List.of(
                                 "report-header-errors;report-header-errors=?0,"
-                                        + " preferred-platform=os;")));
+                                        + " preferred-platform=os;"),
+                        mFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_multipleHeaders_returnsLast() {
         assertTrue(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        Arrays.asList("report-header-errors=?0", "report-header-errors")));
+                        Arrays.asList("report-header-errors=?0", "report-header-errors"), mFlags));
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        Arrays.asList("report-header-errors", "report-header-errors=?0")));
+                        Arrays.asList("report-header-errors", "report-header-errors=?0"), mFlags));
     }
 
     private Map<String, List<String>> createHeadersMap() {
