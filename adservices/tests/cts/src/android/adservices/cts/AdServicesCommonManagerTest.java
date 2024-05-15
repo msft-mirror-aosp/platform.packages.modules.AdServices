@@ -32,8 +32,8 @@ import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
-import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +64,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on S+.")
-    @SetFlagDisabled(KEY_ADSERVICES_ENABLED)
+    @SetFlagFalse(KEY_ADSERVICES_ENABLED)
     public void testStatusManagerNotAuthorizedOnSPlus() throws Exception {
         // At beginning, Sdk1 receives a false status.
         OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
@@ -86,7 +86,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @SetFlagDisabled(KEY_ADSERVICES_ENABLED)
+    @SetFlagFalse(KEY_ADSERVICES_ENABLED)
     public void testStatusManagerNotAuthorizedCompat() throws Exception {
         // At beginning, Sdk1 receives a false status.
         AdServicesOutcomeReceiverForTests<Boolean> receiver =
@@ -110,7 +110,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on T")
-    @SetFlagEnabled(KEY_AD_ID_CACHE_ENABLED)
+    @SetFlagTrue(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notAuthorized_sPlus() throws Exception {
         UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
         OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
@@ -122,7 +122,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on T")
-    @SetFlagDisabled(KEY_AD_ID_CACHE_ENABLED)
+    @SetFlagFalse(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notEnabled_sPlus() throws Exception {
         UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
 
@@ -133,7 +133,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @SetFlagEnabled(KEY_AD_ID_CACHE_ENABLED)
+    @SetFlagTrue(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notAuthorized_rPlus() throws Exception {
         AdServicesOutcomeReceiverForTests<Boolean> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
@@ -145,7 +145,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @SetFlagDisabled(KEY_AD_ID_CACHE_ENABLED)
+    @SetFlagFalse(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notEnabled_rPlus() throws Exception {
         AdServicesOutcomeReceiverForTests<Boolean> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
@@ -173,7 +173,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @SetFlagDisabled(KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED)
+    @SetFlagFalse(KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED)
     public void testGetAdservicesCommonStates_notEnabled_rPlus() throws Exception {
         AdServicesOutcomeReceiverForTests<AdServicesCommonStatesResponse> receiver =
                 new AdServicesOutcomeReceiverForTests<>();

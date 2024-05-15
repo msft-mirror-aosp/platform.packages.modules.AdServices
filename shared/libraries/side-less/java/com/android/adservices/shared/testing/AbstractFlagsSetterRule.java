@@ -27,8 +27,12 @@ import com.android.adservices.shared.testing.annotations.SetDoubleFlag;
 import com.android.adservices.shared.testing.annotations.SetDoubleFlags;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetFlagsDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagsEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagsFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagsTrue;
 import com.android.adservices.shared.testing.annotations.SetFloatFlag;
 import com.android.adservices.shared.testing.annotations.SetFloatFlags;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
@@ -429,9 +433,11 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         // Apply the annotations in the reverse order. First apply from the super classes, test
         // class and then test method. If same annotated flag is present in class and test
         // method, test method takes higher priority.
+        // NOTE: add annotations sorted by "most likely usage" and "groups"
         for (int i = annotations.size() - 1; i >= 0; i--) {
             Annotation annotation = annotations.get(i);
-            // Device-config flags
+
+            // Boolean
             if (annotation instanceof SetFlagEnabled) {
                 setAnnotatedFlag((SetFlagEnabled) annotation);
             } else if (annotation instanceof SetFlagsEnabled) {
@@ -440,6 +446,16 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                 setAnnotatedFlag((SetFlagDisabled) annotation);
             } else if (annotation instanceof SetFlagsDisabled) {
                 setAnnotatedFlag((SetFlagsDisabled) annotation);
+            } else if (annotation instanceof SetFlagTrue) {
+                setAnnotatedFlag((SetFlagTrue) annotation);
+            } else if (annotation instanceof SetFlagsTrue) {
+                setAnnotatedFlag((SetFlagsTrue) annotation);
+            } else if (annotation instanceof SetFlagFalse) {
+                setAnnotatedFlag((SetFlagFalse) annotation);
+            } else if (annotation instanceof SetFlagsFalse) {
+                setAnnotatedFlag((SetFlagsFalse) annotation);
+
+                // Numbers
             } else if (annotation instanceof SetIntegerFlag) {
                 setAnnotatedFlag((SetIntegerFlag) annotation);
             } else if (annotation instanceof SetIntegerFlags) {
@@ -456,6 +472,8 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                 setAnnotatedFlag((SetDoubleFlag) annotation);
             } else if (annotation instanceof SetDoubleFlags) {
                 setAnnotatedFlag((SetDoubleFlags) annotation);
+
+                // String
             } else if (annotation instanceof SetStringFlag) {
                 setAnnotatedFlag((SetStringFlag) annotation);
             } else if (annotation instanceof SetStringFlags) {
@@ -464,6 +482,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                 setAnnotatedFlag((SetStringArrayFlag) annotation);
             } else if (annotation instanceof SetStringArrayFlags) {
                 setAnnotatedFlag((SetStringArrayFlags) annotation);
+
                 // Debug flags
             } else if (annotation instanceof EnableDebugFlag) {
                 setAnnotatedFlag((EnableDebugFlag) annotation);
@@ -477,6 +496,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                 setAnnotatedFlag((SetLongDebugFlag) annotation);
             } else if (annotation instanceof SetLongDebugFlags) {
                 setAnnotatedFlag((SetLongDebugFlags) annotation);
+
                 // Logcat flags
             } else if (annotation instanceof SetLogcatTag) {
                 setAnnotatedFlag((SetLogcatTag) annotation);
@@ -602,11 +622,18 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     // TODO(b/294423183): improve logic used here and on setAnnotatedFlags()
     // NOTE: when adding an annotation here, you also need to add it on setAnnotatedFlags()
     private boolean isFlagAnnotationPresent(Annotation annotation) {
+        // NOTE: add annotations sorted by "most likely usage" and "groups"
         boolean processedHere =
+                // Boolean
                 (annotation instanceof SetFlagEnabled)
                         || (annotation instanceof SetFlagsEnabled)
                         || (annotation instanceof SetFlagDisabled)
                         || (annotation instanceof SetFlagsDisabled)
+                        || (annotation instanceof SetFlagTrue)
+                        || (annotation instanceof SetFlagsTrue)
+                        || (annotation instanceof SetFlagFalse)
+                        || (annotation instanceof SetFlagsFalse)
+                        // Numbers
                         || (annotation instanceof SetIntegerFlag)
                         || (annotation instanceof SetIntegerFlags)
                         || (annotation instanceof SetLongFlag)
@@ -615,16 +642,19 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                         || (annotation instanceof SetFloatFlags)
                         || (annotation instanceof SetDoubleFlag)
                         || (annotation instanceof SetDoubleFlags)
+                        // Strings
                         || (annotation instanceof SetStringFlag)
                         || (annotation instanceof SetStringFlags)
                         || (annotation instanceof SetStringArrayFlag)
                         || (annotation instanceof SetStringArrayFlags)
+                        // Debug flags
                         || (annotation instanceof DisableDebugFlag)
                         || (annotation instanceof DisableDebugFlags)
                         || (annotation instanceof EnableDebugFlag)
                         || (annotation instanceof EnableDebugFlags)
                         || (annotation instanceof SetLongDebugFlag)
                         || (annotation instanceof SetLongDebugFlags)
+                        // Logcat flags
                         || (annotation instanceof SetLogcatTag)
                         || (annotation instanceof SetLogcatTags);
         return processedHere || isAnnotationSupported(annotation);
@@ -703,6 +733,30 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     // Multiple SetFlagDisabled annotations present
     private void setAnnotatedFlag(SetFlagsDisabled repeatedAnnotation) {
         for (SetFlagDisabled annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetFlagTrue annotations present
+    private void setAnnotatedFlag(SetFlagTrue annotation) {
+        setFlag(annotation.value(), true);
+    }
+
+    // Multiple SetFlagTrue annotations present
+    private void setAnnotatedFlag(SetFlagsTrue repeatedAnnotation) {
+        for (SetFlagTrue annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetFlagFalse annotations present
+    private void setAnnotatedFlag(SetFlagFalse annotation) {
+        setFlag(annotation.value(), false);
+    }
+
+    // Multiple SetFlagFalse annotations present
+    private void setAnnotatedFlag(SetFlagsFalse repeatedAnnotation) {
+        for (SetFlagFalse annotation : repeatedAnnotation.value()) {
             setAnnotatedFlag(annotation);
         }
     }

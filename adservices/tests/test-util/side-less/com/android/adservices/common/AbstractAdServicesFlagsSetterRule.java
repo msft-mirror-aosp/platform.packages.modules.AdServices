@@ -94,17 +94,19 @@ public abstract class AbstractAdServicesFlagsSetterRule<
 
     @Override
     protected boolean isAnnotationSupported(Annotation annotation) {
+        // NOTE: add annotations sorted by "most likely usage"
         return annotation instanceof DisableGlobalKillSwitch
                 || annotation instanceof SetCompatModeFlags
                 || annotation instanceof SetPpapiAppAllowList
-                || annotation instanceof SetMsmtApiAppAllowList
-                || annotation instanceof SetMsmtWebContextClientAppAllowList
                 || annotation instanceof SetDefaultLogcatTags
-                || annotation instanceof SetAllLogcatTags;
+                || annotation instanceof SetAllLogcatTags
+                || annotation instanceof SetMsmtApiAppAllowList
+                || annotation instanceof SetMsmtWebContextClientAppAllowList;
     }
 
     @Override
     protected void processAnnotation(Description description, Annotation annotation) {
+        // NOTE: add annotations sorted by "most likely usage"
         if (annotation instanceof DisableGlobalKillSwitch) {
             setGlobalKillSwitch(false);
         } else if (annotation instanceof SetCompatModeFlags) {
@@ -112,6 +114,10 @@ public abstract class AbstractAdServicesFlagsSetterRule<
         } else if (annotation instanceof SetPpapiAppAllowList) {
             setPpapiAppAllowList(
                     ((SetPpapiAppAllowList) annotation).value(), USE_TEST_PACKAGE_AS_DEFAULT);
+        } else if (annotation instanceof SetDefaultLogcatTags) {
+            setDefaultLogcatTags();
+        } else if (annotation instanceof SetAllLogcatTags) {
+            setAllLogcatTags();
         } else if (annotation instanceof SetMsmtApiAppAllowList) {
             setMsmtApiAppAllowList(
                     ((SetMsmtApiAppAllowList) annotation).value(), USE_TEST_PACKAGE_AS_DEFAULT);
@@ -119,10 +125,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
             setMsmtWebContextClientAllowList(
                     ((SetMsmtWebContextClientAppAllowList) annotation).value(),
                     USE_TEST_PACKAGE_AS_DEFAULT);
-        } else if (annotation instanceof SetDefaultLogcatTags) {
-            setDefaultLogcatTags();
-        } else if (annotation instanceof SetAllLogcatTags) {
-            setAllLogcatTags();
         } else {
             // should not happen
             throw new IllegalStateException(
