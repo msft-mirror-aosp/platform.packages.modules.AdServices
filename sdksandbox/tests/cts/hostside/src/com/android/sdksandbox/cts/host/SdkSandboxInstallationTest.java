@@ -16,6 +16,8 @@
 
 package com.android.sdksandbox.cts.host;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import android.platform.test.annotations.LargeTest;
 
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -36,26 +38,27 @@ public class SdkSandboxInstallationTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest // Reboot device
-    public void testSdkSandbox_deviceReboot_sdkInstalled() throws Exception {
+    public void testSdkSandbox_deviceReboot_sdkInstalledAndDexopted() throws Exception {
 
-        assertInstalled(
+        assertInstalledAndDexopted(
                 getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER1), SDK_PROVIDER1);
 
-        assertInstalled(
+        assertInstalledAndDexopted(
                 getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER2), SDK_PROVIDER2);
 
         getDevice().reboot();
         getDevice().waitForBootComplete(TIME_OUT);
 
-        assertInstalled(
+        assertInstalledAndDexopted(
                 getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER1), SDK_PROVIDER1);
-        assertInstalled(
+        assertInstalledAndDexopted(
                 getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER2), SDK_PROVIDER2);
     }
 
-    private static void assertInstalled(String str, String provider) {
+    private static void assertInstalledAndDexopted(String str, String provider) {
         if (str == null || !str.contains("Package [" + provider + "]")) {
             throw new AssertionError("Expected package [" + provider + "] not found at " + str);
         }
+        assertWithMessage("Expected to have ODEX in Dexopt state").that(str).contains("base.odex");
     }
 }
