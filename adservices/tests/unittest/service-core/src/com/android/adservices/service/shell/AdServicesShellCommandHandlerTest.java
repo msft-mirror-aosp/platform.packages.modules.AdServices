@@ -39,6 +39,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
@@ -82,6 +83,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private BackgroundFetchRunner mBackgroundFetchRunner;
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    @Mock private ProtectedSignalsDao mProtectedSignalsDao;
     @Mock private AdServicesLogger mAdServicesLogger;
     @Mock private Clock mClock;
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
@@ -96,7 +98,8 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                         SIGNALS_CLI_ENABLED,
                         mBackgroundFetchRunner,
                         mCustomAudienceDao,
-                        mConsentedDebugConfigurationDao);
+                        mConsentedDebugConfigurationDao,
+                        mProtectedSignalsDao);
         mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
     }
 
