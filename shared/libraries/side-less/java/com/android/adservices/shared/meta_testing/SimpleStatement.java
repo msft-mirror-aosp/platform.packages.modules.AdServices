@@ -16,6 +16,7 @@
 package com.android.adservices.shared.meta_testing;
 
 import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.StandardStreamsLogger;
 
 import org.junit.runners.model.Statement;
 

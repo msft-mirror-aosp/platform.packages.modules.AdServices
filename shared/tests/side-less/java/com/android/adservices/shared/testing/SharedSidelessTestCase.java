@@ -15,7 +15,6 @@
  */
 package com.android.adservices.shared.testing;
 
-import com.android.adservices.shared.meta_testing.StandardStreamsLogger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 
 import java.util.Objects;
