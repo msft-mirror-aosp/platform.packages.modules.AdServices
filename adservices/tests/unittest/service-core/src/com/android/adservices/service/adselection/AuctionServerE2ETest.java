@@ -385,7 +385,7 @@ public class AuctionServerE2ETest {
         AdSelectionServerDatabase serverDb =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
         mEncryptionKeyDao =
-                com.android.adservices.data.encryptionkey.EncryptionKeyDao.getInstance(mContext);
+                com.android.adservices.data.encryptionkey.EncryptionKeyDao.getInstance();
         mEnrollmentDao = EnrollmentDao.getInstance();
         mAuctionServerEncryptionKeyDao = serverDb.encryptionKeyDao();
         mProtectedServersEncryptionConfigDao = serverDb.protectedServersEncryptionConfigDao();

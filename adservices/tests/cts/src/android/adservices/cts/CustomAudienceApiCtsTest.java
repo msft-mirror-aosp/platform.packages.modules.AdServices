@@ -66,9 +66,10 @@ import android.util.Pair;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
@@ -97,6 +98,8 @@ import java.util.concurrent.TimeoutException;
 @SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
+@SetPpapiAppAllowList
+@SetAllLogcatTags
 public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     private AdvertisingCustomAudienceClient mClient;
@@ -112,12 +115,6 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     private final ArrayList<Pair<AdTechIdentifier, String>> mCustomAudiencesToCleanUp =
             new ArrayList<>();
-
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.withAllLogcatTags()
-                .setPpapiAppAllowList(mPackageName);
-    }
 
     @Before
     public void setup() throws Exception {

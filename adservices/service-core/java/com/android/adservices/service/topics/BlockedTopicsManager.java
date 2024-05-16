@@ -46,6 +46,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.consent.ConsentConstants;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -107,9 +108,10 @@ public class BlockedTopicsManager {
 
     /** Returns an instance of the {@link BlockedTopicsManager} given a context. */
     @NonNull
-    public static BlockedTopicsManager getInstance(Context context) {
+    public static BlockedTopicsManager getInstance() {
         synchronized (LOCK) {
             if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
                 // Execute one-time migration of blocked topics if needed.
                 int blockedTopicsSourceOfTruth =
                         FlagsFactory.getFlags().getBlockedTopicsSourceOfTruth();

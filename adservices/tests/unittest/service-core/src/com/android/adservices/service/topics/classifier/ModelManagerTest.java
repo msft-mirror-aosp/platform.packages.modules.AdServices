@@ -112,8 +112,8 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetInstance() {
-        ModelManager firstInstance = ModelManager.getInstance(sContext);
-        ModelManager secondInstance = ModelManager.getInstance(sContext);
+        ModelManager firstInstance = ModelManager.getInstance();
+        ModelManager secondInstance = ModelManager.getInstance();
 
         assertThat(firstInstance).isNotNull();
         assertThat(secondInstance).isNotNull();

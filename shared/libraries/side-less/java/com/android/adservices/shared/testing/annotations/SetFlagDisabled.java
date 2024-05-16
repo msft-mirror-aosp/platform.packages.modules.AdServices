@@ -23,10 +23,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicates that a specific test should set the flag to false.
- *
- * <p>This should be used with {@code AdServicesFlagsSetterRule} which sets the specified the flags
- * in the test to false.
+ * Alternative to {@link SetFlagFalse} for cases where it's more readable, like "guarding flags"
+ * that don't have {@code ENABLED} as suffix.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})

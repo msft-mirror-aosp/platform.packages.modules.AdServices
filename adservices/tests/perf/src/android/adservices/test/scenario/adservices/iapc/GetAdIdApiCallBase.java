@@ -27,34 +27,25 @@ import android.util.Log;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
 
 import org.junit.Rule;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-/**
- * The base class to measure the start-up latency for Ad ID API.
- *
- * <p>How to run the test:
- *
- * <ul>
- *   <li><code> m AdServicesScenarioTests</code>
- *   <li><code> adb install $ANDROID_PRODUCT_OUT/testcases/AdServicesScenarioTests/[arm64 or x86_64]
- *   /AdServicesScenarioTests.apk
- *       </code>
- *   <li><code> adb root</code>
- *   <li><code>
- *        adb shell am instrument -w
- *        -e class android.adservices.test.scenario.adservices.iapc.GetAdIdApiCallMicrobenchmark
- *        -e iterations 3 android.platform.test.scenario/androidx.test.runner.AndroidJUnitRunner
- *       </code>
- * </ul>
- */
-// TODO(b/334161996): Enhance Rubidium CB tests.
+// How to run the test:
+// Note: not using javadoc because of /*/
+//
+// m -j AdServicesScenarioTests && adb root && adb install $ANDROID_PRODUCT_OUT/testcases/AdServicesScenarioTests/*/AdServicesScenarioTests.apk && adb shell am instrument -w -e class android.adservices.test.scenario.adservices.iapc.GetAdIdApiCallMicrobenchmark -e iterations 3 android.platform.test.scenario/androidx.test.runner.AndroidJUnitRunner
+
+/** The base class to measure the start-up latency for Ad ID API. */
+// TODO(b/334161996): Enhance AdsServices performance tests.
+@SetAllLogcatTags
 abstract class GetAdIdApiCallBase extends AdServicesUnitTestCase {
+
     @Rule(order = 11)
-    public AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.withAllLogcatTags();
+    public AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.pristine();
 
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
 

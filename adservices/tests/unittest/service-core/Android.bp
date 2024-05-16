@@ -34,6 +34,7 @@ java_defaults {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "truth",
+        "gson",
         "adservices-assets",
         "adservices-service-core-schema",
         "adservices-shared-testing",
@@ -202,6 +203,7 @@ java_defaults {
         "opencensus-java-contrib-grpc-metrics",
         "tflite_support_classifiers_java",
         "truth",
+        "gson",
         "adservices_flags_lib", // Used by FlagsConstantsTest
         // Tests may run on the platforms that don't have ODP module installed.
         // Without static_lib dependency, the framework code from ODP won't be
