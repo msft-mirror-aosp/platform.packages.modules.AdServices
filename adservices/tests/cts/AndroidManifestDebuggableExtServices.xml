@@ -35,8 +35,6 @@
     <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
                      android:label="Debuggable CTS adservices tests"
                      android:targetPackage="android.adextservices.debuggablects">
-        <meta-data android:name="listener"
-                   android:value="com.android.cts.runner.CtsTestRunListener" />
     </instrumentation>
 </manifest>
 
