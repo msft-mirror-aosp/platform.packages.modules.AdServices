@@ -67,7 +67,7 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                 new CustomAudienceShellCommandFactory(
                         mIsCustomAudienceCliEnabled, mBackgroundFetchRunner, mCustomAudienceDao),
                 new AdSelectionShellCommandFactory(
-                        mIsConsentedDebugCliEnabled, mConsentedDebugConfigurationDao),
+                        mIsConsentedDebugCliEnabled, true, mConsentedDebugConfigurationDao),
                 new SignalsShellCommandFactory(mIsSignalsCliEnabled));
     }
 }
