@@ -16,7 +16,6 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
-import static android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule.COORDINATOR_WITH_OLD_KEYS;
 
 import android.Manifest;
 import android.adservices.adselection.AdSelectionOutcome;
@@ -29,9 +28,11 @@ import android.adservices.test.scenario.adservices.fledge.utils.CustomAudienceTe
 import android.adservices.test.scenario.adservices.fledge.utils.FakeAdExchangeServer;
 import android.adservices.test.scenario.adservices.fledge.utils.SelectAdResponse;
 import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
+import android.platform.test.option.StringOption;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
+import android.provider.DeviceConfig;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -42,6 +43,7 @@ import com.google.common.io.BaseEncoding;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -57,13 +59,39 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
     private static final String CONTEXTUAL_SIGNALS_ONE_BUYER = "PtbContextualSignals.json";
     private static final String CUSTOM_AUDIENCE_ONE_CA_ONE_AD = "PtbCustomAudienceOneCaOneAd.json";
 
-    private static final String SFE_ADDRESS =
-            "https://seller1-paptb.sfe.ppapi.gcp.pstest.dev/v1/selectAd";
+    @ClassRule
+    public static StringOption serverUrlOption =
+            new StringOption("server-url").setRequired(true).setDefault("");
+
+    @ClassRule
+    public static StringOption coordinatorUrlOption =
+            new StringOption("coordinator-url").setRequired(true).setDefault("");
+
+    @ClassRule
+    public static StringOption sellerOption =
+            new StringOption("seller").setRequired(true).setDefault("");
+
+    @ClassRule
+    public static StringOption winnerDomainOption =
+            new StringOption("winner-domain").setRequired(true).setDefault("");
 
     private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = true;
 
-    private static final String AD_WINNER_DOMAIN = "https://ptb-ba-buyer-5jyy5ulagq-uc.a.run.app/";
-    private static final String SELLER = "ptb-ba-seller-5jyy5ulagq-uc.a.run.app";
+    private String getCoordinator() {
+        return coordinatorUrlOption.get();
+    }
+
+    private String getServer() {
+        return serverUrlOption.get();
+    }
+
+    private String getSeller() {
+        return sellerOption.get();
+    }
+
+    private String getAdWinnerDomain() {
+        return winnerDomainOption.get();
+    }
 
     @Rule
     public RuleChain rules =
@@ -77,9 +105,9 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
                             // AdServices process.
                             new CleanPackageRule(
                                     AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
-                                    /* clearOnStarting = */ true,
-                                    /* clearOnFinished = */ false))
-                    .around(new SelectAdsFlagRule(COORDINATOR_WITH_OLD_KEYS));
+                                    /* clearOnStarting= */ true,
+                                    /* clearOnFinished= */ false))
+                    .around(new SelectAdsFlagRule());
 
     /** Perform the class-wide required setup. */
     @BeforeClass
@@ -97,18 +125,24 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
      */
     @Before
     public void warmup() throws Exception {
-        makeWarmUpNetworkCall(COORDINATOR_WITH_OLD_KEYS);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_auction_server_auction_key_fetch_uri",
+                getCoordinator(),
+                false);
+
+        makeWarmUpNetworkCall(getCoordinator());
 
         byte[] getAdSelectionData =
                 warmupBiddingAuctionServer(
                         CUSTOM_AUDIENCE_ONE_CA_ONE_AD,
-                        SELLER,
+                        getSeller(),
                         CONTEXTUAL_SIGNALS_ONE_BUYER,
-                        SFE_ADDRESS,
+                        getServer(),
                         true);
         Thread.sleep(2000L);
 
-        runServerAuction(CONTEXTUAL_SIGNALS_ONE_BUYER, getAdSelectionData, SFE_ADDRESS, true);
+        runServerAuction(CONTEXTUAL_SIGNALS_ONE_BUYER, getAdSelectionData, getServer(), true);
         Thread.sleep(2000L);
     }
 
@@ -125,7 +159,7 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
 
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder()
-                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .setSeller(AdTechIdentifier.fromString(getSeller()))
                         .build();
         GetAdSelectionDataOutcome outcome =
                 AD_SELECTION_CLIENT
@@ -136,13 +170,13 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
                 FakeAdExchangeServer.runServerAuction(
                         CONTEXTUAL_SIGNALS_ONE_BUYER,
                         outcome.getAdSelectionData(),
-                        SFE_ADDRESS,
+                        getServer(),
                         SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
                         .setAdSelectionId(outcome.getAdSelectionId())
-                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .setSeller(AdTechIdentifier.fromString(getSeller()))
                         .setAdSelectionResult(
                                 BaseEncoding.base64()
                                         .decode(selectAdResponse.auctionResultCiphertext))
@@ -155,6 +189,7 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
 
-        Assert.assertTrue(adSelectionOutcome.getRenderUri().toString().contains(AD_WINNER_DOMAIN));
+        Assert.assertTrue(
+                adSelectionOutcome.getRenderUri().toString().contains(getAdWinnerDomain()));
     }
 }
