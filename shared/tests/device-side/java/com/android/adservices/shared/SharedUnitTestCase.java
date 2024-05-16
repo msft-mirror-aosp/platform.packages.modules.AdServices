@@ -15,15 +15,13 @@
  */
 package com.android.adservices.shared;
 
-import android.content.Context;
 import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.shared.testing.DeviceSideTestCase;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -31,14 +29,9 @@ import com.google.errorprone.annotations.FormatString;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 
-public abstract class SharedUnitTestCase extends SharedSidelessTestCase {
+public abstract class SharedUnitTestCase extends DeviceSideTestCase {
 
     private static final String TAG = SharedUnitTestCase.class.getSimpleName();
-
-    protected static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getTargetContext();
-
-    protected final String mTag = getClass().getSimpleName();
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
