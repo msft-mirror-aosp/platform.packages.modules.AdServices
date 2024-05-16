@@ -42,19 +42,24 @@ public class NoOdpDelegationWrapper implements IOdpDelegationWrapper {
 
     @Override
     public void registerOdpTrigger(
-            AsyncRegistration asyncRegistration, Map<String, List<String>> headers) {
+            AsyncRegistration asyncRegistration,
+            Map<String, List<String>> headers,
+            boolean isValidEnrollment) {
         LoggerFactory.getMeasurementLogger().d("registerOdpTrigger: ODP is not available");
-        logOdpRegistrationMetrics();
+        logOdpRegistrationMetrics(
+                new OdpRegistrationStatus(
+                        OdpRegistrationStatus.RegistrationType.TRIGGER,
+                        OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE));
     }
 
-    private void logOdpRegistrationMetrics() {
+    @Override
+    public void logOdpRegistrationMetrics(OdpRegistrationStatus odpRegistrationStatus) {
         mLogger.logMeasurementOdpRegistrations(
                 new MeasurementOdpRegistrationStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION)
-                        .setRegistrationType(
-                                OdpRegistrationStatus.RegistrationType.TRIGGER.getValue())
+                        .setRegistrationType(odpRegistrationStatus.getRegistrationType().getValue())
                         .setRegistrationStatus(
-                                OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE.getValue())
+                                odpRegistrationStatus.getRegistrationStatus().getValue())
                         .build());
     }
 }

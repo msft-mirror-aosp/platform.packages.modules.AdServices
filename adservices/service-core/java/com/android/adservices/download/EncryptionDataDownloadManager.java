@@ -34,7 +34,6 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -93,8 +92,7 @@ public final class EncryptionDataDownloadManager {
                     sEncryptionDataDownloadManager =
                             new EncryptionDataDownloadManager(
                                     FlagsFactory.getFlags(),
-                                    // TODO(b/311183933): Remove context param.
-                                    EncryptionKeyDao.getInstance(ApplicationContextSingleton.get()),
+                                    EncryptionKeyDao.getInstance(),
                                     Clock.getInstance());
                 }
             }

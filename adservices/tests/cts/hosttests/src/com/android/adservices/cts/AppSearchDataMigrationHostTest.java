@@ -17,6 +17,7 @@
 package com.android.adservices.cts;
 
 import static com.android.adservices.common.AdServicesHostSideTestCase.CTS_TEST_PACKAGE;
+import static com.android.adservices.common.AdServicesHostSideTestCase.APPSEARCH_WRITER_ACTIVITY_CLASS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
@@ -28,11 +29,14 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import android.cts.statsdatom.lib.DeviceUtils;
 
 import com.android.adservices.common.AdServicesHostSideTestCase;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
 import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
 import com.android.adservices.shared.testing.BackgroundLogReceiver;
 import com.android.adservices.shared.testing.TestDeviceHelper;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetLogcatTag;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -64,12 +68,14 @@ import java.util.stream.Collectors;
 // Measurement feature flags for calling the Measurement API
 @SetMsmtApiAppAllowList(CTS_TEST_PACKAGE)
 @SetMsmtWebContextClientAppAllowList(CTS_TEST_PACKAGE)
+// Logcat tags
+@SetAllLogcatTags
+@SetLogcatTag(tag = APPSEARCH_WRITER_ACTIVITY_CLASS)
 public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
     private static final long BOOT_COMPLETED_TIMEOUT = 60_000L;
     private static final long LOG_RECEIVER_TIMEOUT_MS = 60_000L;
     private static final int ACTIVITY_LAUNCH_TIMEOUT_MS = 30_000;
 
-    private static final String CLASS = "AppSearchWriterActivity";
     private static final String ADSERVICES_APK_PACKAGE_NAME_SUFFIX = "android.adservices.api";
 
     private int mCurrentUser = 0;
@@ -85,10 +91,7 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
                 .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
                 // AppSearch feature flags
                 .setFlag(KEY_ENABLE_APPSEARCH_CONSENT_DATA, true)
-                .setFlag(KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE, CTS_TEST_PACKAGE)
-                // Logcat tags
-                .setAllLogcatTags()
-                .setLogcatTag("AppSearchWriterActivity", "VERBOSE");
+                .setFlag(KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE, CTS_TEST_PACKAGE);
 
         // Enabling the boot-completed receiver throws a SecurityException unless adb runs as root
         Assume.assumeTrue("Needs adb root to enable the receiver", mDevice.enableAdbRoot());
@@ -122,15 +125,13 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
     }
 
     @Test
+    // Need to re-set these because the reboot in the setup method causes them to be cleared.
+    @SetAllLogcatTags
+    @SetLogcatTag(tag = APPSEARCH_WRITER_ACTIVITY_CLASS)
+    @SetFlagEnabled(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK)
     public void testAppSearchConsentMigration() throws Exception {
         // Wait a few seconds for the device to get to the home screen
         TimeUnit.SECONDS.sleep(5);
-
-        // Need to re-set these system properties because the reboot in the setup method causes them
-        // to be cleared.
-        flags.setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
-                .setLogcatTag("adservices", "VERBOSE")
-                .setLogcatTag("AppSearchWriterActivity", "VERBOSE");
 
         String msmtSuccessMsg = "AppSearchWriterActivity: GetMeasurementStatus API call succeeded";
         String msmtFailureMsg = "AppSearchWriterActivity: GetMeasurementStatus API call failed";
@@ -156,7 +157,7 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
         DeviceUtils.runActivity(
                 mDevice,
                 CTS_TEST_PACKAGE,
-                CLASS,
+                APPSEARCH_WRITER_ACTIVITY_CLASS,
                 /* actionKey= */ "user-id",
                 /* actionValue= */ Integer.toString(mCurrentUser),
                 ACTIVITY_LAUNCH_TIMEOUT_MS);

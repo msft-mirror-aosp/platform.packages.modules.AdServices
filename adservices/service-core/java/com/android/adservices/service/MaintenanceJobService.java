@@ -106,7 +106,7 @@ public final class MaintenanceJobService extends JobService {
         } else {
             appReconciliationFuture =
                     Futures.submit(
-                            () -> TopicsWorker.getInstance(this).reconcileApplicationUpdate(this),
+                            () -> TopicsWorker.getInstance().reconcileApplicationUpdate(this),
                             AdServicesExecutors.getBackgroundExecutor());
         }
 

@@ -16,11 +16,13 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.service.common.ScriptEngineConstants.JS_EXECUTION_STATUS_UNSUCCESSFUL;
-import static com.android.adservices.service.common.ScriptEngineConstants.JS_SCRIPT_STATUS_SUCCESS;
-import static com.android.adservices.service.common.ScriptEngineConstants.RESULTS_FIELD_NAME;
-import static com.android.adservices.service.common.ScriptEngineConstants.STATUS_FIELD_NAME;
-import static com.android.adservices.service.js.JSScriptArgument.numericArg;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.JS_EXECUTION_STATUS_UNSUCCESSFUL;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.JS_SCRIPT_STATUS_SUCCESS;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.RESULTS_FIELD_NAME;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.STATUS_FIELD_NAME;
+import static com.android.adservices.service.signals.ProtectedSignalsArgumentUtil.getArgumentsFromRawSignalsAndMaxSize;
+import static com.android.adservices.service.signals.SignalsDriverLogicGenerator.ENCODE_SIGNALS_DRIVER_FUNCTION_NAME;
+import static com.android.adservices.service.signals.SignalsDriverLogicGenerator.getCombinedDriverAndEncodingLogic;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
@@ -52,98 +54,8 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
-public class SignalsScriptEngine {
+public final class SignalsScriptEngine {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-
-    public static final String ENCODE_SIGNALS_DRIVER_FUNCTION_NAME = "encodeSignalsDriver";
-    public static final String ENCODE_SIGNALS_FUNCTION_NAME = "encodeSignals";
-    public static final String SIGNALS_ARG_NAME = "__rb_protected_signals";
-    public static final String MAX_SIZE_BYTES_ARG_NAME = "__rb_max_size_bytes";
-
-    /**
-     * Minified JS that un-marshals signals to map their keys and values to byte[]. Should be
-     * invoked by the driver script before passing the signals to encodeSignals() function.
-     *
-     * <pre>
-     * function decodeHex(hexString) {
-     *     hexString = hexString.replace(/\\s/g, '');
-     *     if (hexString.length % 2 !== 0) {
-     *         throw new Error('hex must have even chars.');
-     *     }
-     *     const byteArray = new Uint8Array(hexString.length / 2);
-     *     for (let i = 0; i < hexString.length; i += 2) {
-     *         const byteValue = parseInt(hexString.substr(i, 2), 16);
-     *         byteArray[i / 2] = byteValue;
-     *     }
-     *
-     *     return byteArray;
-     * }
-     *
-     * function unmarshal(signalObjects){
-     *    const result=new Map();
-     *    signalObjects.forEach(
-     *      (signalGroup=> {
-     *        for(const key in signalGroup){
-     *          const signal_key = decodeHex(key)
-     *          const decodedValues= signalGroup[key].map((entry=>({
-     *                 signal_value: decodeHex(entry.val),
-     *                 creation_time: entry.time,
-     *                 package_name: entry.app.trim()
-     *               })));
-     *
-     *           result.set(signal_key, decodedValues)
-     *         }
-     *        })
-     *     )
-     *   return result;
-     * }
-     * </pre>
-     */
-    private static final String UNMARSHAL_SIGNALS_JS =
-            "function decodeHex(e){if((e=e.replace(/\\\\s/g,\"\")).length%2!=0)throw Error(\"hex "
-                    + "must have even chars.\");let t=new Uint8Array(e.length/2);for(let n=0;n<e"
-                    + ".length;n+=2){let a=parseInt(e.substr(n,2),16);t[n/2]=a}return t}function "
-                    + "unmarshal(e){let t=new Map;return e.forEach(e=>{for(let n in e){let a=e[n]."
-                    + "map(e=>({signal_value:decodeHex(e.val),creation_time:e.time,package_name:e."
-                    + "app.trim()}));t.set(decodeHex(n),a)}}),t}";
-
-    /**
-     * Function used to marshal the Uint8Array returned by encodeSignals into an hex string.
-     *
-     * <pre>
-     * function encodeHex(signals) {
-     *    return signals.reduce(
-     *      (output, byte) => output + byte.toString(16).padStart(2, '0'), ''
-     *    );
-     * };
-     * </pre>
-     */
-    private static final String MARSHALL_ENCODED_SIGNALS_JS =
-            "function encodeHex(e){return e.reduce((e,n)=>e+n.toString(16).padStart(2,"
-                    + " '0'),\"\");}";
-
-    /**
-     * This JS wraps around encodeSignals() logic. Un-marshals the signals and then invokes the
-     * encodeSignals() script.
-     */
-    private static final String ENCODE_SIGNALS_DRIVER_JS =
-            "function "
-                    + ENCODE_SIGNALS_DRIVER_FUNCTION_NAME
-                    + "(signals, maxSize) {\n"
-                    + "  const unmarshalledSignals = unmarshal(signals);\n"
-                    + "\n"
-                    + "  "
-                    + "  let encodeResult = "
-                    + ENCODE_SIGNALS_FUNCTION_NAME
-                    + "(unmarshalledSignals, maxSize);\n"
-                    + "   return { 'status': encodeResult.status, "
-                    + "'results': encodeHex(encodeResult.results) };\n"
-                    + "}\n"
-                    + "\n"
-                    + UNMARSHAL_SIGNALS_JS
-                    + "\n"
-                    + MARSHALL_ENCODED_SIGNALS_JS
-                    + "\n";
 
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
@@ -193,16 +105,10 @@ public class SignalsScriptEngine {
             return Futures.immediateFuture(new byte[0]);
         }
 
-        String combinedDriverAndEncodingLogic = ENCODE_SIGNALS_DRIVER_JS + encodingLogic;
+        String combinedDriverAndEncodingLogic = getCombinedDriverAndEncodingLogic(encodingLogic);
         ImmutableList<JSScriptArgument> args;
         try {
-            args =
-                    ImmutableList.<JSScriptArgument>builder()
-                            .add(
-                                    ProtectedSignalsArgumentUtil.asScriptArgument(
-                                            SIGNALS_ARG_NAME, rawSignals))
-                            .add(numericArg(MAX_SIZE_BYTES_ARG_NAME, maxSize))
-                            .build();
+            args = getArgumentsFromRawSignalsAndMaxSize(rawSignals, maxSize);
         } catch (JSONException e) {
             logHelper.setStatus(JS_RUN_STATUS_OTHER_FAILURE);
             logHelper.finish();

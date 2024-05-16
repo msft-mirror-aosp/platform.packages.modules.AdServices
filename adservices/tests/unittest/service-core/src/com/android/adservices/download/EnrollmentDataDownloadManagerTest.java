@@ -126,7 +126,7 @@ public class EnrollmentDataDownloadManagerTest {
         doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
         doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
-        doReturn(mMockEncryptionKeyDao).when(() -> (EncryptionKeyDao.getInstance(any())));
+        doReturn(mMockEncryptionKeyDao).when(EncryptionKeyDao::getInstance);
         when(mMockFileStorage.open(any(), any()))
                 .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
 
@@ -306,7 +306,7 @@ public class EnrollmentDataDownloadManagerTest {
         doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
         doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
-        doReturn(mMockEncryptionKeyDao).when(() -> (EncryptionKeyDao.getInstance(any())));
+        doReturn(mMockEncryptionKeyDao).when(EncryptionKeyDao::getInstance);
         when(mMockFileStorage.open(any(), any()))
                 .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
         mEnrollmentDataDownloadManager =
@@ -375,7 +375,7 @@ public class EnrollmentDataDownloadManagerTest {
         doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
         doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
-        doReturn(mMockEncryptionKeyDao).when(() -> (EncryptionKeyDao.getInstance(any())));
+        doReturn(mMockEncryptionKeyDao).when(EncryptionKeyDao::getInstance);
         when(mMockFileStorage.open(any(), any()))
                 .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
 

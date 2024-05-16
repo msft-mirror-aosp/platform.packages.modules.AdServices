@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.js;
 
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.WASM_MODULE_BYTES_ID;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
@@ -49,7 +51,6 @@ import java.io.Closeable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.GuardedBy;
 
@@ -62,11 +63,8 @@ import javax.annotation.concurrent.GuardedBy;
  * have every thread using its own instance.
  */
 public class JSScriptEngine {
-    public static final String ENTRY_POINT_FUNC_NAME = "__rb_entry_point";
 
     @VisibleForTesting public static final String TAG = JSScriptEngine.class.getSimpleName();
-    public static final String WASM_MODULE_BYTES_ID = "__wasmModuleBytes";
-    public static final String WASM_MODULE_ARG_NAME = "wasmModule";
 
     public static final String NON_SUPPORTED_MAX_HEAP_SIZE_EXCEPTION_MSG =
             "JS isolate does not support Max heap size";
@@ -106,6 +104,7 @@ public class JSScriptEngine {
 
         @GuardedBy("mSandboxLock")
         private FluentFuture<JavaScriptSandbox> mFutureSandbox;
+
         JavaScriptSandboxProvider(Profiler profiler, LoggerFactory.Logger logger) {
             mProfiler = profiler;
             mLogger = logger;
@@ -170,23 +169,28 @@ public class JSScriptEngine {
                                             if (mFutureSandbox != futureSandbox) {
                                                 mLogger.d(
                                                         "mFutureSandbox is already set to a"
-                                                            + " different future which indicates"
-                                                            + " this is not the active sandbox");
+                                                                + " different future which "
+                                                                + "indicates"
+                                                                + " this is not the active "
+                                                                + "sandbox");
                                                 return null;
                                             }
                                             if (jsSandbox == javaScriptSandbox) {
                                                 mLogger.d(
                                                         "Closing connection from JSScriptEngine to"
-                                                            + " WebView Sandbox as the sandbox"
-                                                            + " requested is the current instance");
+                                                                + " WebView Sandbox as the sandbox"
+                                                                + " requested is the current "
+                                                                + "instance");
                                                 jsSandbox.close();
                                                 mFutureSandbox = null;
                                             } else {
                                                 mLogger.d(
                                                         "Not closing the connection from"
-                                                            + " JSScriptEngine to WebView sandbox"
-                                                            + " as this is not the same instance as"
-                                                            + " requested");
+                                                                + " JSScriptEngine to WebView "
+                                                                + "sandbox"
+                                                                + " as this is not the same "
+                                                                + "instance as"
+                                                                + " requested");
                                             }
                                             return null;
                                         }
@@ -359,7 +363,7 @@ public class JSScriptEngine {
 
     /**
      * Same as {@link #evaluate(String, List, String, IsolateSettings, RetryStrategy)} where the
-     * entry point function name is {@link #ENTRY_POINT_FUNC_NAME}.
+     * entry point function name is {@link JSScriptEngineCommonConstants#ENTRY_POINT_FUNC_NAME}.
      */
     @NonNull
     public ListenableFuture<String> evaluate(
@@ -367,7 +371,12 @@ public class JSScriptEngine {
             @NonNull List<JSScriptArgument> args,
             @NonNull IsolateSettings isolateSettings,
             @NonNull RetryStrategy retryStrategy) {
-        return evaluate(jsScript, args, ENTRY_POINT_FUNC_NAME, isolateSettings, retryStrategy);
+        return evaluate(
+                jsScript,
+                args,
+                JSScriptEngineCommonConstants.ENTRY_POINT_FUNC_NAME,
+                isolateSettings,
+                retryStrategy);
     }
 
     /**
@@ -389,7 +398,24 @@ public class JSScriptEngine {
             @NonNull IsolateSettings isolateSettings,
             @NonNull RetryStrategy retryStrategy) {
         return evaluateInternal(
-                jsScript, args, entryFunctionName, null, isolateSettings, retryStrategy);
+                jsScript, args, entryFunctionName, null, isolateSettings, retryStrategy, true);
+    }
+
+    /**
+     * Invokes the JS code in {@code jsScript} and return the result. It will reset the WebView
+     * status after evaluating the script.
+     *
+     * @param jsScript The JS script
+     * @return A {@link ListenableFuture} containing the JS string representation of the result of
+     *     {@code entryFunctionName}'s invocation
+     */
+    @NonNull
+    public ListenableFuture<String> evaluate(
+            @NonNull String jsScript,
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy) {
+        return evaluateInternal(
+                jsScript, List.of(), "", null, isolateSettings, retryStrategy, false);
     }
 
     /**
@@ -417,7 +443,13 @@ public class JSScriptEngine {
         Objects.requireNonNull(wasmBinary);
 
         return evaluateInternal(
-                jsScript, args, entryFunctionName, wasmBinary, isolateSettings, retryStrategy);
+                jsScript,
+                args,
+                entryFunctionName,
+                wasmBinary,
+                isolateSettings,
+                retryStrategy,
+                true);
     }
 
     @NonNull
@@ -427,7 +459,8 @@ public class JSScriptEngine {
             @NonNull String entryFunctionName,
             @Nullable byte[] wasmBinary,
             @NonNull IsolateSettings isolateSettings,
-            @NonNull RetryStrategy retryStrategy) {
+            @NonNull RetryStrategy retryStrategy,
+            boolean generateEntryPointWrapper) {
         Objects.requireNonNull(jsScript);
         Objects.requireNonNull(args);
         Objects.requireNonNull(entryFunctionName);
@@ -444,7 +477,8 @@ public class JSScriptEngine {
                                                         args,
                                                         entryFunctionName,
                                                         wasmBinary,
-                                                        isolateSettings),
+                                                        isolateSettings,
+                                                        generateEntryPointWrapper),
                                         mExecutorService)
                                 .finishToFuture(),
                 RETRYABLE_EXCEPTIONS_FROM_JS_ENGINE,
@@ -460,7 +494,8 @@ public class JSScriptEngine {
             @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName,
             @Nullable byte[] wasmBinary,
-            @NonNull IsolateSettings isolateSettings) {
+            @NonNull IsolateSettings isolateSettings,
+            boolean generateEntryPointWrapper) {
 
         boolean hasWasmModule = wasmBinary != null;
         if (hasWasmModule) {
@@ -503,15 +538,21 @@ public class JSScriptEngine {
             mLogger.d("Logging console messages from Javascript Isolate is disabled.");
         }
 
-        String entryPointCall = callEntryPoint(args, entryFunctionName, hasWasmModule);
+        StringBuilder fullScript = new StringBuilder(jsScript);
+        if (generateEntryPointWrapper) {
+            String entryPointCall =
+                    JSScriptEngineCommonCodeGenerator.generateEntryPointCallingCode(
+                            args, entryFunctionName, hasWasmModule);
 
-        String fullScript = jsScript + "\n" + entryPointCall;
+            fullScript.append("\n");
+            fullScript.append(entryPointCall);
+        }
         mLogger.v("Calling WebView for script %s", fullScript);
 
         StopWatch jsExecutionStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
         int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_EVALUATE_ON_SANDBOX);
-        return ClosingFuture.from(jsIsolate.evaluateJavaScriptAsync(fullScript))
+        return ClosingFuture.from(jsIsolate.evaluateJavaScriptAsync(fullScript.toString()))
                 .transform(
                         (ignoredCloser, result) -> {
                             jsExecutionStopWatch.stop();
@@ -674,53 +715,6 @@ public class JSScriptEngine {
             isolateStopWatch.stop();
             Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE, traceCookie);
         }
-    }
-
-    /**
-     * @return The JS code for the definition an anonymous function containing the declaration of
-     *     the value of {@code args} and the invocation of the given {@code entryFunctionName}. If
-     *     the {@code addWasmBinary} parameter is true, the target function is expected to accept an
-     *     extra final parameter 'wasmModule' of type {@code WebAssembly.Module} and the method will
-     *     return a promise.
-     */
-    @NonNull
-    private String callEntryPoint(
-            @NonNull List<JSScriptArgument> args,
-            @NonNull String entryFunctionName,
-            boolean addWasmBinary) {
-        StringBuilder resultBuilder = new StringBuilder("(function() {\n");
-        // Declare args as constant inside this function closure to avoid any direct access by
-        // the functions in the script we are calling.
-        for (JSScriptArgument arg : args) {
-            // Avoiding to use addJavaScriptInterface because too expensive, just
-            // declaring the string parameter as part of the script.
-            resultBuilder.append(arg.variableDeclaration());
-            resultBuilder.append("\n");
-        }
-
-        String argumentPassing =
-                args.stream().map(JSScriptArgument::name).collect(Collectors.joining(","));
-        if (addWasmBinary) {
-            argumentPassing += "," + WASM_MODULE_ARG_NAME;
-            resultBuilder.append(
-                    String.format(
-                            "return android.consumeNamedDataAsArrayBuffer(\"%s\")"
-                                    + ".then((__value) => {\n"
-                                    + " return WebAssembly.compile(__value).then((%s) => {\n",
-                            WASM_MODULE_BYTES_ID, WASM_MODULE_ARG_NAME));
-        }
-
-        // Call entryFunctionName with the constants just declared as parameters
-        resultBuilder.append(
-                String.format(
-                        "return JSON.stringify(%s(%s));\n", entryFunctionName, argumentPassing));
-
-        if (addWasmBinary) {
-            resultBuilder.append("})});\n");
-        }
-        resultBuilder.append("})();\n");
-
-        return resultBuilder.toString();
     }
 
     /**

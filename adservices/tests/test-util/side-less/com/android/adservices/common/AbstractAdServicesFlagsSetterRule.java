@@ -17,21 +17,28 @@ package com.android.adservices.common;
 
 import static com.android.adservices.common.AbstractAdServicesSystemPropertiesDumperRule.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX;
 import static com.android.adservices.service.FlagsConstants.ARRAY_SPLITTER_COMMA;
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.EnableAllApis;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.common.annotations.SetDefaultLogcatTags;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
 import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
 import com.android.adservices.shared.testing.DeviceConfigHelper;
+import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
 import com.android.adservices.shared.testing.SystemPropertiesHelper;
-
-import com.google.errorprone.annotations.InlineMe;
 
 import org.junit.runner.Description;
 
@@ -54,8 +61,6 @@ import java.util.Objects;
 public abstract class AbstractAdServicesFlagsSetterRule<
                 T extends AbstractAdServicesFlagsSetterRule<T>>
         extends AbstractFlagsSetterRule<T> {
-
-    protected static final String LOGCAT_LEVEL_VERBOSE = "VERBOSE";
 
     // TODO(b/295321663): move these constants (and those from LogFactory) to AdServicesCommon
     protected static final String LOGCAT_TAG_ADSERVICES = "adservices";
@@ -95,22 +100,33 @@ public abstract class AbstractAdServicesFlagsSetterRule<
 
     @Override
     protected boolean isAnnotationSupported(Annotation annotation) {
+        // NOTE: add annotations sorted by "most likely usage"
         return annotation instanceof DisableGlobalKillSwitch
+                || annotation instanceof EnableAllApis
                 || annotation instanceof SetCompatModeFlags
                 || annotation instanceof SetPpapiAppAllowList
+                || annotation instanceof SetDefaultLogcatTags
+                || annotation instanceof SetAllLogcatTags
                 || annotation instanceof SetMsmtApiAppAllowList
                 || annotation instanceof SetMsmtWebContextClientAppAllowList;
     }
 
     @Override
     protected void processAnnotation(Description description, Annotation annotation) {
+        // NOTE: add annotations sorted by "most likely usage"
         if (annotation instanceof DisableGlobalKillSwitch) {
             setGlobalKillSwitch(false);
+        } else if (annotation instanceof EnableAllApis) {
+            enableAllApis();
         } else if (annotation instanceof SetCompatModeFlags) {
             setCompatModeFlags();
         } else if (annotation instanceof SetPpapiAppAllowList) {
             setPpapiAppAllowList(
                     ((SetPpapiAppAllowList) annotation).value(), USE_TEST_PACKAGE_AS_DEFAULT);
+        } else if (annotation instanceof SetDefaultLogcatTags) {
+            setDefaultLogcatTags();
+        } else if (annotation instanceof SetAllLogcatTags) {
+            setAllLogcatTags();
         } else if (annotation instanceof SetMsmtApiAppAllowList) {
             setMsmtApiAppAllowList(
                     ((SetMsmtApiAppAllowList) annotation).value(), USE_TEST_PACKAGE_AS_DEFAULT);
@@ -143,6 +159,15 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     // Helper methods to set more commonly used flags such as kill switches.
     // Less common flags can be set directly using setFlags methods.
 
+    // TODO(b/303901926): add unit test
+    /**
+     * Sets a flag that takes an array of strings with just the given value, using the default
+     * separator.
+     */
+    public final T setSimpleArrayFlag(String name, String value) {
+        return setFlag(name, new String[] {value}, ARRAY_SPLITTER_COMMA);
+    }
+
     /**
      * Overrides the flag that sets the global AdServices kill switch.
      *
@@ -152,6 +177,17 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     @Deprecated
     public final T setGlobalKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
+    }
+
+    final T enableAllApis() {
+        return setAllLogcatTags()
+                .setGlobalKillSwitch(false)
+                .setTopicsKillSwitch(false)
+                .setFlag(KEY_ADID_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, true);
     }
 
     /**
@@ -204,29 +240,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                 useTestPackageAsDefault, Arrays.toString(value));
         return setAllowListFlag(
                 FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, useTestPackageAsDefault);
-    }
-
-    /**
-     * @deprecated - use {@link #setPpapiAppSignatureAllowList(String...)} insteads
-     */
-    @InlineMe(replacement = "this.setPpapiAppSignatureAllowList(value)")
-    @Deprecated
-    public final T overridePpapiAppSignatureAllowList(String... value) {
-        return setPpapiAppSignatureAllowList(value);
-    }
-
-    /**
-     * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getPpapiAppSignatureAllowList()}. NOTE: this will
-     * completely override the allow list, *not* append to it.
-     */
-    // <p> TODO (b/303901926) - remove / uses annotation only (just 2 usages)
-    public final T setPpapiAppSignatureAllowList(String... value) {
-        mLog.d("setPpapiAppSignatureAllowList(): %s", Arrays.toString(value));
-        return setAllowListFlag(
-                FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
-                value,
-                DONT_USE_TEST_PACKAGE_AS_DEFAULT);
     }
 
     /**
@@ -333,11 +346,15 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      *
      * <p>This method is usually set automatically by the factory methods, but should be set again
      * (on host-side tests) after reboot.
+     *
+     * @deprecated - it's cleaner to use the {@link SetDefaultLogcatTags} annotation and this method
+     *     might be eventually removed.
      */
+    @Deprecated
     public T setDefaultLogcatTags() {
-        setLogcatTag(LOGCAT_TAG_ADSERVICES, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_SHARED, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_ADSERVICES, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_SHARED, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LogLevel.VERBOSE);
         return getThis();
     }
 
@@ -346,15 +363,19 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      *
      * <p>This method is usually set automatically by the factory methods, but should be set again
      * (on host-side tests) after reboot.
+     *
+     * @deprecated - it's cleaner to use the {@link SetAllLogcatTags} annotation and this method
+     *     might be eventually removed.
      */
+    @Deprecated
     public T setAllLogcatTags() {
         setDefaultLogcatTags();
-        setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_FLEDGE, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_ADID, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_APPSETID, LOGCAT_LEVEL_VERBOSE);
-        setLogcatTag(LOGCAT_TAG_KANON, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_TOPICS, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_FLEDGE, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_ADID, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_APPSETID, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_KANON, LogLevel.VERBOSE);
         return getThis();
     }
 
@@ -365,7 +386,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * (on host-side tests) after reboot.
      */
     public T setMeasurementTags() {
-        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LogLevel.VERBOSE);
         return getThis();
     }
 

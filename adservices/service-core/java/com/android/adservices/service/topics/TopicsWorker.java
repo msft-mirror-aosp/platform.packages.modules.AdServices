@@ -97,16 +97,16 @@ public class TopicsWorker {
      * existing instance will be returned.
      */
     @NonNull
-    public static TopicsWorker getInstance(Context context) {
+    public static TopicsWorker getInstance() {
         if (sTopicsWorker == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sTopicsWorker == null) {
                     sTopicsWorker =
                             new TopicsWorker(
-                                    EpochManager.getInstance(context),
-                                    CacheManager.getInstance(context),
-                                    BlockedTopicsManager.getInstance(context),
-                                    AppUpdateManager.getInstance(context),
+                                    EpochManager.getInstance(),
+                                    CacheManager.getInstance(),
+                                    BlockedTopicsManager.getInstance(),
+                                    AppUpdateManager.getInstance(),
                                     FlagsFactory.getFlags());
                 }
             }

@@ -290,7 +290,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                 ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                 SharedStorageDatabase.getInstance(context).frequencyCapDao(),
-                EncryptionKeyDao.getInstance(context),
+                EncryptionKeyDao.getInstance(),
                 EnrollmentDao.getInstance(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),

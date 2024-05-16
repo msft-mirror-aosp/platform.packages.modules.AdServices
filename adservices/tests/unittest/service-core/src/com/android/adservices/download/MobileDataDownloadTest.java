@@ -851,7 +851,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         doReturn(enrollmentDao).when(() -> EnrollmentDao.getInstance());
 
         EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);
-        doReturn(encryptionKeyDao).when(() -> EncryptionKeyDao.getInstance(any(Context.class)));
+        doReturn(encryptionKeyDao).when(EncryptionKeyDao::getInstance);
 
         assertThat(enrollmentDao.deleteAll()).isTrue();
         // Verify no enrollment data after table cleared.

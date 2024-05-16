@@ -241,6 +241,10 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
         when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
                 .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
+        when(mFlags.getMeasurementEnableDebugReport())
+                .thenReturn(Flags.MEASUREMENT_ENABLE_DEBUG_REPORT);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport())
+                .thenReturn(Flags.MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT);
     }
 
     @Test
@@ -880,6 +884,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void testBadSourceJson_sendHeaderErrorDebugReport() throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
         String headerWithJsonError =
                 "{\n" + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\",\",\"[" + "\"";
         String headerName = "Attribution-Reporting-Register-Source";
@@ -916,7 +922,40 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
+    public void testBadSourceJson_headerErrorDebugReportDiabled_doNotSend() throws Exception {
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(false);
+        String headerWithJsonError =
+                "{\n" + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\",\",\"[" + "\"";
+        String headerName = "Attribution-Reporting-Register-Source";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        // Opt-in header error debug report by adding header "Attribution-Reporting-Info";
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                headerName,
+                                List.of(headerWithJsonError),
+                                "Attribution-Reporting-Info",
+                                List.of("report-header-errors")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.PARSING_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mDebugReportApi, never())
+                .scheduleHeaderErrorReport(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
     public void testBadSourceJson_notOptInHeaderErrorDebugReport_doNotSend() throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
         String headerWithJsonError = "{[[aaa[[[[}}}";
         String headerName = "Attribution-Reporting-Register-Source";
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -941,6 +980,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
 
     @Test
     public void testBadSourceJson_invalidOptInHeaderErrorDebugReport_doNotSend() throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
         String headerWithJsonError = "{[[aaa[[[[}}}";
         String headerName = "Attribution-Reporting-Register-Source";
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);

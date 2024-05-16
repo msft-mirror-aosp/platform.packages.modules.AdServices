@@ -285,7 +285,7 @@ public class ConsentManager {
 
                     sConsentManager =
                             new ConsentManager(
-                                    TopicsWorker.getInstance(context),
+                                    TopicsWorker.getInstance(),
                                     appConsentDao,
                                     EnrollmentDao.getInstance(),
                                     MeasurementImpl.getInstance(context),

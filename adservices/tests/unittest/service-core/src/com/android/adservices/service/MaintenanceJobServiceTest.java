@@ -17,7 +17,6 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -191,7 +190,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         callback.assertJobFinished();
 
         // Verify that topics job is not done
-        verify(() -> TopicsWorker.getInstance(any(Context.class)), never());
+        verify(TopicsWorker::getInstance, never());
         verify(mMockAppUpdateManager, never())
                 .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         verify(mMockAppUpdateManager, never())
@@ -221,7 +220,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
         // Mock static method AppUpdateWorker.getInstance, let it return the local
         // appUpdateWorker in order to get a test instance.
-        doReturn(topicsWorker).when(() -> TopicsWorker.getInstance(any(Context.class)));
+        doReturn(topicsWorker).when(TopicsWorker::getInstance);
 
         JobServiceCallback callback =
                 new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
@@ -245,7 +244,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
         callback.assertJobFinished();
 
-        verify(() -> TopicsWorker.getInstance(any(Context.class)));
+        verify(TopicsWorker::getInstance);
         verify(mMockAppUpdateManager)
                 .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         verify(mMockAppUpdateManager)
@@ -272,7 +271,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
         // Mock static method AppUpdateWorker.getInstance, let it return the local
         // appUpdateWorker in order to get a test instance.
-        doReturn(topicsWorker).when(() -> TopicsWorker.getInstance(any(Context.class)));
+        doReturn(topicsWorker).when(TopicsWorker::getInstance);
         doReturn(mPackageManagerMock).when(mSpyMaintenanceJobService).getPackageManager();
         mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
                 mFledgeMaintenanceTasksWorkerMock);
@@ -301,7 +300,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
         callback.assertJobFinished();
 
-        verify(() -> TopicsWorker.getInstance(any(Context.class)));
+        verify(TopicsWorker::getInstance);
         verify(mMockAppUpdateManager)
                 .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         verify(mMockAppUpdateManager)
@@ -352,7 +351,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
         // Mock static method AppUpdateWorker.getInstance, let it return the local
         // appUpdateWorker in order to get a test instance.
-        doReturn(topicsWorker).when(() -> TopicsWorker.getInstance(any(Context.class)));
+        doReturn(topicsWorker).when(TopicsWorker::getInstance);
 
         // Inject FledgeMaintenanceTasksWorker since the test can't get it the standard way
         doReturn(mPackageManagerMock).when(mSpyMaintenanceJobService).getPackageManager();
@@ -418,7 +417,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
         // Mock static method AppUpdateWorker.getInstance, let it return the local
         // appUpdateWorker in order to get a test instance.
-        doReturn(topicsWorker).when(() -> TopicsWorker.getInstance(any(Context.class)));
+        doReturn(topicsWorker).when(TopicsWorker::getInstance);
 
         // Inject FledgeMaintenanceTasksWorker since the test can't get it the standard way
         mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
@@ -453,9 +452,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
         callback.assertJobFinished();
 
-        verify(
-                () -> TopicsWorker.getInstance(any(Context.class)),
-                timeout(BACKGROUND_THREAD_TIMEOUT_MS));
+        verify(TopicsWorker::getInstance, timeout(BACKGROUND_THREAD_TIMEOUT_MS));
         verify(mMockAppUpdateManager, timeout(BACKGROUND_THREAD_TIMEOUT_MS))
                 .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         verify(mMockAppUpdateManager, timeout(BACKGROUND_THREAD_TIMEOUT_MS))
@@ -517,7 +514,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
         verify(mSpyMaintenanceJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));
 
-        verify(() -> TopicsWorker.getInstance(any(Context.class)), never());
+        verify(TopicsWorker::getInstance, never());
         verify(mMockAppUpdateManager, never())
                 .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         verify(mMockAppUpdateManager, never())
@@ -733,7 +730,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
         // Mock static method AppUpdateWorker.getInstance, let it return the local
         // appUpdateWorker in order to get a test instance.
-        doReturn(topicsWorker).when(() -> TopicsWorker.getInstance(any(Context.class)));
+        doReturn(topicsWorker).when(TopicsWorker::getInstance);
 
         JobServiceCallback callback =
                 new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
@@ -763,7 +760,7 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
         callback.assertJobFinished();
 
-        verify(() -> TopicsWorker.getInstance(any(Context.class)));
+        verify(TopicsWorker::getInstance);
         verify(mMockAppUpdateManager)
                 .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
         verify(mMockAppUpdateManager)

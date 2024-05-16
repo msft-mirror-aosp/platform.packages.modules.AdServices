@@ -89,14 +89,12 @@ public final class EpochJobService extends JobService {
         // TODO(b/225382268): Handle cancellation.
         ListenableFuture<Void> epochComputationFuture =
                 Futures.submit(
-                        () -> {
-                            TopicsWorker.getInstance(this).computeEpoch();
-                        },
+                        () -> TopicsWorker.getInstance().computeEpoch(),
                         AdServicesExecutors.getBackgroundExecutor());
 
         Futures.addCallback(
                 epochComputationFuture,
-                new FutureCallback<Void>() {
+                new FutureCallback<>() {
                     @Override
                     public void onSuccess(Void result) {
                         LoggerFactory.getTopicsLogger().d("Epoch Computation succeeded!");

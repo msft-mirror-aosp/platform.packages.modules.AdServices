@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,12 @@
 package com.android.adservices.shared.testing.annotations;
 
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Alternative to {@link SetFlagTrue} for cases where it's more readable, like "guarding flags" that
- * don't have {@code ENABLED} as suffix.
- */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
-@Repeatable(SetFlagsEnabled.class)
-public @interface SetFlagEnabled {
-    /** Name of the flag. */
-    String value();
+public @interface SetFlagsTrue {
+    SetFlagTrue[] value();
 }

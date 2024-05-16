@@ -85,7 +85,9 @@ public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
     @Override
     @RequiresPermission(NOTIFY_MEASUREMENT_EVENT)
     public void registerOdpTrigger(
-            AsyncRegistration asyncRegistration, Map<String, List<String>> headers) {
+            AsyncRegistration asyncRegistration,
+            Map<String, List<String>> headers,
+            boolean isValidEnrollment) {
         Objects.requireNonNull(asyncRegistration);
         Objects.requireNonNull(headers);
         LoggerFactory.getMeasurementLogger().d("registerOdpTrigger: ODP is available");
@@ -93,10 +95,19 @@ public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
         OdpRegistrationStatus odpRegistrationStatus = new OdpRegistrationStatus();
         odpRegistrationStatus.setRegistrationType(OdpRegistrationStatus.RegistrationType.TRIGGER);
 
+        if (!isValidEnrollment) {
+            odpRegistrationStatus.setRegistrationStatus(
+                    OdpRegistrationStatus.RegistrationStatus.INVALID_ENROLLMENT);
+            logOdpRegistrationMetrics(odpRegistrationStatus);
+            return;
+        }
+
         if (FetcherUtil.calculateHeadersCharactersLength(headers)
                 > mFlags.getMaxOdpTriggerRegistrationHeaderSizeBytes()) {
             LoggerFactory.getMeasurementLogger()
                     .d("registerOdpTrigger: Header size limit exceeded");
+            odpRegistrationStatus.setRegistrationStatus(
+                    OdpRegistrationStatus.RegistrationStatus.HEADER_SIZE_LIMIT_EXCEEDED);
             logOdpRegistrationMetrics(odpRegistrationStatus);
             return;
         }
@@ -185,17 +196,23 @@ public class OdpDelegationWrapperImpl implements IOdpDelegationWrapper {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_JSON_PARSING_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            odpRegistrationStatus.setRegistrationStatus(
+                    OdpRegistrationStatus.RegistrationStatus.PARSING_EXCEPTION);
         } catch (Exception e) {
             LoggerFactory.getMeasurementLogger().d(e, "registerOdpTrigger: Unknown Exception");
             ErrorLogUtil.e(
+                    e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_PARSING_UNKNOWN_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            odpRegistrationStatus.setRegistrationStatus(
+                    OdpRegistrationStatus.RegistrationStatus.PARSING_EXCEPTION);
         } finally {
             logOdpRegistrationMetrics(odpRegistrationStatus);
         }
     }
 
-    private void logOdpRegistrationMetrics(OdpRegistrationStatus odpRegistrationStatus) {
+    @Override
+    public void logOdpRegistrationMetrics(OdpRegistrationStatus odpRegistrationStatus) {
         mLogger.logMeasurementOdpRegistrations(
                 new MeasurementOdpRegistrationStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION)
