@@ -162,6 +162,9 @@
   ],
   "sdksandbox-postsubmit": [
     {
+      "name": "CtsAnimationTestCases"
+    },
+    {
       "name": "CtsApacheHttpTestCases"
     },
     {
@@ -169,6 +172,21 @@
     },
     {
       "name": "CtsGraphicsTestCases"
+    },
+    {
+      "name": "CtsLocationCoarseTestCases"
+    },
+    {
+      "name": "CtsLocationFineTestCases"
+    },
+    {
+      "name": "CtsLocationGnssTestCases"
+    },
+    {
+      "name": "CtsLocationNoneTestCases"
+    },
+    {
+      "name": "CtsLocationPrivilegedTestCases"
     },
     {
       "name": "CtsMediaCodecTestCases"
