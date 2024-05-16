@@ -24,7 +24,7 @@ import org.junit.runners.model.Statement;
 import java.util.List;
 import java.util.Objects;
 
-/** Base class providing common functionatlities to all rules. */
+/** Base class providing common functionalities to all rules. */
 abstract class AbstractRule implements TestRule, TestNamer {
 
     protected final Logger mLog;
