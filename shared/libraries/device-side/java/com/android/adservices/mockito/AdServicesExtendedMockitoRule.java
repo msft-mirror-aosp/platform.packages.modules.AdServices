@@ -17,7 +17,7 @@
 package com.android.adservices.mockito;
 
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.shouldClearInlineMocksAfterTest;
-import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
+import static com.android.adservices.shared.testing.TestHelper.getAnnotation;
 
 import android.util.Log;
 
@@ -25,7 +25,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
 import com.android.adservices.shared.testing.SidelessTestCase;
-import com.android.adservices.shared.testing.common.TestHelper;
+import com.android.adservices.shared.testing.TestHelper;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 
