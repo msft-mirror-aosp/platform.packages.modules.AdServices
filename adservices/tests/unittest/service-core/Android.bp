@@ -400,12 +400,18 @@ cc_library_shared {
     ],
     include_dirs: [
         "packages/modules/AdServices/adservices/service-core/jni/include",
-        "packages/modules/AdServices/adservices/tests/unittest/service-core/src/jni/cpp"
+        "packages/modules/AdServices/adservices/tests/unittest/service-core/src/jni/cpp",
     ],
     header_libs: ["jni_headers"],
-    shared_libs: ["liblog",],
-    static_libs: ["libact", "libcrypto_static"],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    shared_libs: ["liblog"],
+    static_libs: [
+        "libact",
+        "libcrypto_static",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",

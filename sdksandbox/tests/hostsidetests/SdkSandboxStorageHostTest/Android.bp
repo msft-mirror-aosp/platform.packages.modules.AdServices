@@ -74,7 +74,7 @@ android_test_helper_app {
         "androidx.test.ext.junit",
         "androidx.test.runner",
         "androidx.test.uiautomator_uiautomator",
-        "truth"
+        "truth",
     ],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",
