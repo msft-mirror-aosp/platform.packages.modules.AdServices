@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.cobalt.crypto.testing;
+package com.android.cobalt.testing.crypto;
 
 import android.annotation.NonNull;
 
