@@ -39,7 +39,10 @@ public class OdpRegistrationStatus {
         ODP_UNAVAILABLE(2),
         INVALID_HEADER_FORMAT(3),
         MISSING_REQUIRED_HEADER_FIELD(4),
-        INVALID_HEADER_FIELD_VALUE(5);
+        INVALID_HEADER_FIELD_VALUE(5),
+        INVALID_ENROLLMENT(6),
+        HEADER_SIZE_LIMIT_EXCEEDED(7),
+        PARSING_EXCEPTION(8);
 
         private final int mValue;
 
@@ -56,8 +59,13 @@ public class OdpRegistrationStatus {
     private RegistrationStatus mRegistrationStatus;
 
     public OdpRegistrationStatus() {
-        mRegistrationType = RegistrationType.UNKNOWN;
-        mRegistrationStatus = RegistrationStatus.UNKNOWN;
+        this(RegistrationType.UNKNOWN, RegistrationStatus.UNKNOWN);
+    }
+
+    public OdpRegistrationStatus(
+            RegistrationType registrationType, RegistrationStatus registrationStatus) {
+        mRegistrationType = registrationType;
+        mRegistrationStatus = registrationStatus;
     }
 
     /** Get the type of ODP registration that occurred. */
