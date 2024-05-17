@@ -708,7 +708,7 @@ public abstract class E2EMockTest extends E2ETest {
     private void runDeleteExpiredRecordsJob(long earliestValidInsertion) {
         int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         mDatastoreManager.runInTransaction(
-                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
+                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit, null));
     }
 
     void updateEnrollment(String uri) {
