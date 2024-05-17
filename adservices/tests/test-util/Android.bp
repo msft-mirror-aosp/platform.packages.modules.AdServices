@@ -71,7 +71,10 @@ android_library {
         // TODO(b/281577492): should use modules-utils-extended-mockito-rule instead
         "modules-utils-testable-device-config",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//vendor:__subpackages__", // used by some integration tests
@@ -101,7 +104,10 @@ android_library {
         "mockito-target-extended-minus-junit4",
         "truth",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
     lint: {
         extra_check_modules: ["AdServicesLintChecker"],
     },
