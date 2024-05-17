@@ -23,6 +23,16 @@ flag {
 }
 
 flag {
+    name: "selinux_sdk_sandbox_input_selector"
+    namespace: "sdk_sandbox"
+    description: "Bug fix for the SDK sandbox selinux input selector"
+    bug: "295861450"
+    metadata {
+        purpose: PURPOSE_BUGFIX
+    }
+}
+
+flag {
     name: "first_and_last_sdk_sandbox_uid_public"
     namespace: "sdk_sandbox"
     description: "Make Process#FIRST_SDK_SANDBOX_UID and Process#LAST_SDK_SANDBOX_UID public"
