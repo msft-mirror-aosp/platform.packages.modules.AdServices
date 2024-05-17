@@ -59,6 +59,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -163,7 +164,8 @@ public class AsyncTriggerFetcher {
 
         boolean isHeaderErrorDebugReportEnabled =
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO));
+                        headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO),
+                        mFlags);
         try {
             String eventTriggerData = new JSONArray().toString();
             JSONObject json = new JSONObject(registrationHeaderStr);
@@ -468,13 +470,22 @@ public class AsyncTriggerFetcher {
             return Optional.empty();
         }
         // TODO(b/276825561): Fix code duplication between fetchSource & fetchTrigger request flow
+        Optional<String> enrollmentId = Optional.empty();
         try {
             urlConnection =
                     (HttpURLConnection)
                             openUrl(new URL(asyncRegistration.getRegistrationUri().toString()));
             urlConnection.setRequestMethod("POST");
             urlConnection.setInstanceFollowRedirects(false);
-            headers = urlConnection.getHeaderFields();
+            headers = new HashMap<>(urlConnection.getHeaderFields());
+            enrollmentId = getEnrollmentId(asyncRegistration);
+
+            // remove ODP header from headers map and forward ODP header
+            Optional<Map<String, List<String>>> odpHeader = extractOdpTriggerHeader(headers);
+            if (odpHeader.isPresent() && enrollmentId.isPresent()) {
+                mOdpWrapper.registerOdpTrigger(asyncRegistration, odpHeader.get());
+            }
+
             long headerSize = FetcherUtil.calculateHeadersCharactersLength(headers);
             if (mFlags.getMeasurementEnableUpdateTriggerHeaderLimit()
                     && headerSize > mFlags.getMaxTriggerRegistrationHeaderSizeBytes()) {
@@ -517,17 +528,6 @@ public class AsyncTriggerFetcher {
             return Optional.empty();
         }
 
-        Optional<String> enrollmentId =
-                mFlags.isDisableMeasurementEnrollmentCheck()
-                        ? WebAddresses.topPrivateDomainAndScheme(
-                                        asyncRegistration.getRegistrationUri())
-                                .map(Uri::toString)
-                        : Enrollment.getValidEnrollmentId(
-                                asyncRegistration.getRegistrationUri(),
-                                asyncRegistration.getRegistrant().getAuthority(),
-                                mEnrollmentDao,
-                                mContext,
-                                mFlags);
         if (enrollmentId.isEmpty()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
@@ -539,14 +539,7 @@ public class AsyncTriggerFetcher {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return Optional.empty();
         }
-
-        Optional<Trigger> parsedTrigger =
-                parseTrigger(asyncRegistration, enrollmentId.get(), headers, asyncFetchStatus);
-
-        // parse & forward registration to ODP if available
-        mOdpWrapper.registerOdpTrigger(asyncRegistration, headers);
-
-        return parsedTrigger;
+        return parseTrigger(asyncRegistration, enrollmentId.get(), headers, asyncFetchStatus);
     }
 
     /** Return instance of IOdpDelegationWrapper. */
@@ -557,6 +550,28 @@ public class AsyncTriggerFetcher {
     private boolean isTriggerHeaderPresent(Map<String, List<String>> headers) {
         return headers.containsKey(
                 TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER);
+    }
+
+    private Optional<Map<String, List<String>>> extractOdpTriggerHeader(
+            Map<String, List<String>> headers) {
+        return headers.containsKey(OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER)
+                ? Optional.of(Map.of(
+                        OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER,
+                        headers.remove(
+                                OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER)))
+                : Optional.empty();
+    }
+
+    private Optional<String> getEnrollmentId(AsyncRegistration asyncRegistration) {
+        return mFlags.isDisableMeasurementEnrollmentCheck()
+                ? WebAddresses.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
+                        .map(Uri::toString)
+                : Enrollment.getValidEnrollmentId(
+                        asyncRegistration.getRegistrationUri(),
+                        asyncRegistration.getRegistrant().getAuthority(),
+                        mEnrollmentDao,
+                        mContext,
+                        mFlags);
     }
 
     private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {
@@ -886,5 +901,9 @@ public class AsyncTriggerFetcher {
         String AGGREGATABLE_SOURCE_REGISTRATION_TIME = "aggregatable_source_registration_time";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
         String ATTRIBUTION_SCOPES = "attribution_scopes";
+    }
+
+    private interface OdpTriggerHeaderContract {
+        String HEADER_ODP_REGISTER_TRIGGER = "Odp-Register-Trigger";
     }
 }

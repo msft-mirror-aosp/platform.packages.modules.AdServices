@@ -215,6 +215,8 @@ public final class FlagsConstants {
             "measurement_enable_source_debug_report";
     public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT =
             "measurement_enable_trigger_debug_report";
+    public static final String KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT =
+            "measurement_enable_header_error_debug_report";
     public static final String KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS =
             "measurement_data_expiry_window_ms";
 
@@ -1018,6 +1020,8 @@ public final class FlagsConstants {
             "max_response_based_registration_size_bytes";
     public static final String KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES =
             "max_trigger_registration_header_size_bytes";
+    public static final String KEY_MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES =
+            "max_odp_trigger_registration_header_size_bytes";
 
     public static final String KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT =
             "enable_update_trigger_registration_header_limit";

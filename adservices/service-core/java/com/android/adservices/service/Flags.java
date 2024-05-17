@@ -484,6 +484,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
     }
 
+    /** Default value for whether header error debug report is enabled. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT = false;
+
+    /** Returns whether header error debug report generation is enabled. */
+    default boolean getMeasurementEnableHeaderErrorDebugReport() {
+        return MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
+    }
+
     long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
 
     /** Returns the data expiry window in milliseconds. */
@@ -3265,10 +3273,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
     long MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 250 * 1024; // 250 kB
+    long MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 16 * 1024; // 16 kB
 
     /** Returns max allowed size in bytes for trigger registrations header. */
     default long getMaxTriggerRegistrationHeaderSizeBytes() {
         return MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+    }
+
+    /** Returns max allowed size in bytes for ODP trigger registrations header. */
+    default long getMaxOdpTriggerRegistrationHeaderSizeBytes() {
+        return MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
     }
 
     boolean MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT = false;

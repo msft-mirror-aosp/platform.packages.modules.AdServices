@@ -323,6 +323,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableHeaderErrorDebugReport() {
+        testFeatureFlagGuardedByGlobalKillSwitch(
+                "MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT",
+                Flags::getMeasurementEnableHeaderErrorDebugReport);
+    }
+
+    @Test
     public void testGetEnableBackCompat() {
         testFeatureFlag("ENABLE_BACK_COMPAT", Flags::getEnableBackCompat);
     }

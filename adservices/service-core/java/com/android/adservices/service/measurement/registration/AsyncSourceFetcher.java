@@ -796,7 +796,8 @@ public class AsyncSourceFetcher {
 
         boolean isHeaderErrorDebugReportEnabled =
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO));
+                        headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO),
+                        mFlags);
         try {
             JSONObject json = new JSONObject(registrationHeaderStr);
             boolean isValid =
