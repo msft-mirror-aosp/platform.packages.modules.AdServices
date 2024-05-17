@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_SHELL_COMMAND_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_COUNTER_HISTOGRAM_UPDATER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_AD_SELECTION_REPORTED;
@@ -255,9 +254,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     @Override
     public void logRunAdScoringProcessReportedStats(RunAdScoringProcessReportedStats stats) {
-        boolean placeholder_bool = false;
-        int placeholder_int = FIELD_UNSET;
-
         AdServicesStatsLog.write(
                 RUN_AD_SCORING_PROCESS_REPORTED,
                 stats.getGetAdSelectionLogicLatencyInMillis(),
@@ -275,8 +271,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getNumOfContextualAdsEnteringScoring(),
                 stats.getRunAdScoringLatencyInMillis(),
                 stats.getRunAdScoringResultCode(),
-                placeholder_bool,
-                placeholder_int);
+                stats.getScoreAdSellerAdditionalSignalsContainedDataVersion(),
+                stats.getScoreAdJsScriptResultCode());
     }
 
     @Override
