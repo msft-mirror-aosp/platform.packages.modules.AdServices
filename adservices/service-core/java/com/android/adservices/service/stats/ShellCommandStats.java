@@ -70,6 +70,9 @@ public final class ShellCommandStats {
     public static final int COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP;
+    public static final int COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
 
     public static final int COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING =
             AdServicesStatsLog
@@ -96,6 +99,7 @@ public final class ShellCommandStats {
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_DISABLE,
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW,
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP,
+        COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA,
 
         // Protected App Signals commands
         COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING

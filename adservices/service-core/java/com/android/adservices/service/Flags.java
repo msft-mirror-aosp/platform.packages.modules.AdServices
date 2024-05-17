@@ -5435,6 +5435,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
     }
 
+    /** Default value for the enablement the new apis for business logic migration. */
+    @FeatureFlag boolean DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED = false;
+
+    /** Returns the default value of the enablement of adservices business logic migration. */
+    default boolean getAdServicesConsentBusinessLogicMigrationEnabled() {
+        return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+    }
+
     /** Dump some debug info for the flags */
     default void dump(PrintWriter writer, @Nullable String[] args) {}
 }

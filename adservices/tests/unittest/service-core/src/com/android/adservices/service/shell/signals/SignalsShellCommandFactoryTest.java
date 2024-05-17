@@ -17,6 +17,7 @@
 package com.android.adservices.service.shell.signals;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
@@ -26,14 +27,16 @@ import com.google.common.truth.Truth;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
     private static final boolean SIGNALS_CLI_ENABLED = true;
     private ShellCommandFactory mFactory;
+    @Mock private ProtectedSignalsDao mProtectedSignalsDao;
 
     @Before
     public void setup() {
-        mFactory = new SignalsShellCommandFactory(SIGNALS_CLI_ENABLED);
+        mFactory = new SignalsShellCommandFactory(SIGNALS_CLI_ENABLED, mProtectedSignalsDao);
     }
 
     @Test
@@ -62,21 +65,21 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
 
     @Test
     public void test_cliDisabled() {
-        mFactory = new SignalsShellCommandFactory(false);
+        mFactory = new SignalsShellCommandFactory(false, mProtectedSignalsDao);
         ShellCommand shellCommand = mFactory.getShellCommand(GenerateInputForEncodingCommand.CMD);
         Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
 
     @Test
     public void test_invalidCmdCLIDisabled() {
-        mFactory = new SignalsShellCommandFactory(false);
+        mFactory = new SignalsShellCommandFactory(false, mProtectedSignalsDao);
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
         Truth.assertThat(shellCommand).isNull();
     }
 
     @Test
     public void test_getAllCommandsHelp() {
-        mFactory = new SignalsShellCommandFactory(SIGNALS_CLI_ENABLED);
+        mFactory = new SignalsShellCommandFactory(SIGNALS_CLI_ENABLED, mProtectedSignalsDao);
 
         Truth.assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
                 .containsExactlyElementsIn(Sets.newHashSet(GenerateInputForEncodingCommand.HELP));

@@ -110,15 +110,15 @@ public class SignalsScriptEngineTest {
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x00}),
                 List.of(
-                        ProtectedSignalsFixture.generateDBProtectedSignal(
+                        ProtectedSignalsFixture.generateProtectedSignal(
                                 "", new byte[] {(byte) 0xA0})));
 
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x01}),
                 List.of(
-                        ProtectedSignalsFixture.generateDBProtectedSignal(
+                        ProtectedSignalsFixture.generateProtectedSignal(
                                 "", new byte[] {(byte) 0xA1}),
-                        ProtectedSignalsFixture.generateDBProtectedSignal(
+                        ProtectedSignalsFixture.generateProtectedSignal(
                                 "", new byte[] {(byte) 0xA2})));
 
         // Assumes keys and values are 1 byte long
@@ -175,7 +175,7 @@ public class SignalsScriptEngineTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
         ProtectedSignal signalValue =
-                ProtectedSignalsFixture.generateDBProtectedSignal("", new byte[] {(byte) 0xA0});
+                ProtectedSignalsFixture.generateProtectedSignal("", new byte[] {(byte) 0xA0});
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x00}), List.of(signalValue));
 
@@ -212,7 +212,7 @@ public class SignalsScriptEngineTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
         ProtectedSignal signalValue =
-                ProtectedSignalsFixture.generateDBProtectedSignal("", new byte[] {(byte) 0xA0});
+                ProtectedSignalsFixture.generateProtectedSignal("", new byte[] {(byte) 0xA0});
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x00}), List.of(signalValue));
 

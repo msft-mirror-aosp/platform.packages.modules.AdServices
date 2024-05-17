@@ -15,8 +15,8 @@
  */
 package com.android.adservices.mockito;
 
-import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
-import static com.android.adservices.shared.testing.common.TestHelper.getTestName;
+import static com.android.adservices.shared.testing.TestHelper.getAnnotation;
+import static com.android.adservices.shared.testing.TestHelper.getTestName;
 
 import android.util.Log;
 

@@ -596,6 +596,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getAdExtReadTimeoutMs);
     }
 
+    @Test
+    public void testGetAdServicesApiV2MigrationEnabled() {
+        testFeatureFlag(
+                "DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED",
+                Flags::getAdServicesConsentBusinessLogicMigrationEnabled);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal helpers - do not add new tests following this point.                              //
     ////////////////////////////////////////////////////////////////////////////////////////////////

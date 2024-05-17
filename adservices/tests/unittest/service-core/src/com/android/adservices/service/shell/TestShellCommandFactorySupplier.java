@@ -18,6 +18,7 @@ package com.android.adservices.service.shell;
 
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
@@ -39,6 +40,7 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
     private final CustomAudienceDao mCustomAudienceDao;
     private final BackgroundFetchRunner mBackgroundFetchRunner;
     private final ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    private final ProtectedSignalsDao mProtectedSignalsDao;
 
     TestShellCommandFactorySupplier(
             boolean isCustomAudienceCLiEnabled,
@@ -46,7 +48,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
             boolean isSignalsCliEnabled,
             BackgroundFetchRunner backgroundFetchRunner,
             CustomAudienceDao customAudienceDao,
-            ConsentedDebugConfigurationDao consentedDebugConfigurationDao) {
+            ConsentedDebugConfigurationDao consentedDebugConfigurationDao,
+            ProtectedSignalsDao protectedSignalsDao) {
         mIsCustomAudienceCliEnabled = isCustomAudienceCLiEnabled;
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
         mIsSignalsCliEnabled = isSignalsCliEnabled;
@@ -59,6 +62,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                 Objects.requireNonNull(
                         consentedDebugConfigurationDao,
                         "ConsentedDebugConfigurationDao cannot be null");
+        mProtectedSignalsDao =
+                Objects.requireNonNull(protectedSignalsDao, "ProtectedSignalsDao cannot be null");
     }
 
     @Override
@@ -67,7 +72,7 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                 new CustomAudienceShellCommandFactory(
                         mIsCustomAudienceCliEnabled, mBackgroundFetchRunner, mCustomAudienceDao),
                 new AdSelectionShellCommandFactory(
-                        mIsConsentedDebugCliEnabled, mConsentedDebugConfigurationDao),
-                new SignalsShellCommandFactory(mIsSignalsCliEnabled));
+                        mIsConsentedDebugCliEnabled, true, mConsentedDebugConfigurationDao),
+                new SignalsShellCommandFactory(mIsSignalsCliEnabled, mProtectedSignalsDao));
     }
 }

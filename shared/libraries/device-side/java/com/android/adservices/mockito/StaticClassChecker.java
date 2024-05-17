@@ -24,8 +24,7 @@ public interface StaticClassChecker {
 
     /** Gets the name of the test being running (for logging purposes). */
     default String getTestName() {
-        // TODO(b/285014040): move constant to uber superclass
-        return "N/A";
+        return "N/A"; // TODO(b/285014040): get from constant
     }
 
     /**

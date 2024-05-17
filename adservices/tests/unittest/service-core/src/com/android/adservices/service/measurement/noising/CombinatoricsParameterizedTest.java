@@ -19,6 +19,9 @@ package com.android.adservices.service.measurement.noising;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -36,6 +39,10 @@ public class CombinatoricsParameterizedTest {
     private final int mNumBucketIncrements;
     private final int[] mPerTypeNumWindows;
     private final int[] mPerTypeCap;
+
+    // TODO(b/339652190) - Remove when this test is fixed on R/S
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     public CombinatoricsParameterizedTest(int numBucketIncrements, int[] perTypeNumWindows,
             int[] perTypeCap) {

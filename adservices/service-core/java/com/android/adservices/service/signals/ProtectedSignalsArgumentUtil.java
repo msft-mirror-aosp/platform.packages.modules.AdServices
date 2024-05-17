@@ -109,7 +109,7 @@ public class ProtectedSignalsArgumentUtil {
 
     // TODO(b/294900378) Avoid second serialization
     @VisibleForTesting
-    static String validateAndSerializeBase64(String base64String) {
+    public static String validateAndSerializeBase64(String base64String) {
         try {
             byte[] bytes = Base64.getDecoder().decode(base64String);
             StringBuilder sb = new StringBuilder(bytes.length * 2);

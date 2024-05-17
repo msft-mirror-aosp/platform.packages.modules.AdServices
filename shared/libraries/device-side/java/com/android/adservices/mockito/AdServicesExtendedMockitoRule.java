@@ -17,14 +17,15 @@
 package com.android.adservices.mockito;
 
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.shouldClearInlineMocksAfterTest;
-import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
+import static com.android.adservices.shared.testing.TestHelper.getAnnotation;
 
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
-import com.android.adservices.shared.testing.common.TestHelper;
+import com.android.adservices.shared.testing.SidelessTestCase;
+import com.android.adservices.shared.testing.TestHelper;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 
@@ -85,10 +86,10 @@ public final class AdServicesExtendedMockitoRule
     @Override
     public final String getTestName() {
         if (mTestName == null) {
-            // TODO(b/339831452): create constant for "N/A" and use / fix it in other places (like
-            // TestHelper - it might even be worth to create a new interface (like TestNamer) and
-            // use on our superclass, as it's provided by a couple or rules (like ProcessLifeGuard)
-            return "N/A";
+            // TODO(b/339831452): it might even be worth to create a new interface (like TestNamer)
+            // and use on our superclass, as it's provided by a couple or rules (like
+            // ProcessLifeGuard)
+            return SidelessTestCase.DEFAULT_TEST_NAME;
         }
         return mTestName;
     }

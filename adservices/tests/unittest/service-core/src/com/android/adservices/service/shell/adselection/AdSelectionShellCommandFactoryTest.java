@@ -39,7 +39,7 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
     public void setup() {
         mFactory =
                 new AdSelectionShellCommandFactory(
-                        CONSENTED_DEBUGGING_CLI_ENABLED, mConsentedDebugConfigurationDao);
+                        CONSENTED_DEBUGGING_CLI_ENABLED, true, mConsentedDebugConfigurationDao);
     }
 
     @Test
@@ -49,9 +49,23 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
     }
 
     @Test
+    public void test_GetAdSelectionDataCmd() {
+        ShellCommand shellCommand = mFactory.getShellCommand(GetAdSelectionDataCommand.CMD);
+        Truth.assertThat(shellCommand).isInstanceOf(GetAdSelectionDataCommand.class);
+    }
+
+    @Test
     public void test_consentedDebugCmdDisabled() {
-        mFactory = new AdSelectionShellCommandFactory(false, mConsentedDebugConfigurationDao);
+        mFactory = new AdSelectionShellCommandFactory(false, true, mConsentedDebugConfigurationDao);
         ShellCommand shellCommand = mFactory.getShellCommand(ConsentedDebugShellCommand.CMD);
+        Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
+    }
+
+    @Test
+    public void test_GetAdSelectionDataCmdDisabled() {
+        mFactory =
+                new AdSelectionShellCommandFactory(false, false, mConsentedDebugConfigurationDao);
+        ShellCommand shellCommand = mFactory.getShellCommand(GetAdSelectionDataCommand.CMD);
         Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
 
@@ -75,7 +89,7 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
 
     @Test
     public void test_invalidCmd_consentedDebugCliDisabled() {
-        mFactory = new AdSelectionShellCommandFactory(false, mConsentedDebugConfigurationDao);
+        mFactory = new AdSelectionShellCommandFactory(false, true, mConsentedDebugConfigurationDao);
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
         Truth.assertThat(shellCommand).isNull();
     }
@@ -84,9 +98,11 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
     public void test_getAllCommandsHelp() {
         mFactory =
                 new AdSelectionShellCommandFactory(
-                        CONSENTED_DEBUGGING_CLI_ENABLED, mConsentedDebugConfigurationDao);
+                        CONSENTED_DEBUGGING_CLI_ENABLED, true, mConsentedDebugConfigurationDao);
 
         Truth.assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
-                .containsExactlyElementsIn(Sets.newHashSet(ConsentedDebugShellCommand.HELP));
+                .containsExactlyElementsIn(
+                        Sets.newHashSet(
+                                ConsentedDebugShellCommand.HELP, GetAdSelectionDataCommand.HELP));
     }
 }

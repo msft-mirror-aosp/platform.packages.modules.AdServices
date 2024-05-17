@@ -135,7 +135,14 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/3150/672c83fa4aad630a360dc3b7ce43d94ab75852cd";
 
     private static final int PRODUCTION_ENROLLMENT_ENTRIES = 78;
+
+    /** Old PTB URL with a small number of enrollment records. */
+    private static final String PTB_OLD_ENROLLMENT_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/3156/9d9d99be0c6dc71fc329f5c02a0fac48d3b06e73";
+
     private static final int PTB_ENROLLMENT_ENTRIES = 6;
+
+    private static final int PTB_OLD_ENROLLMENT_ENTRIES = 4;
     private static final int OEM_ENROLLMENT_ENTRIES = 114;
 
     private static final int PRODUCTION_FILEGROUP_VERSION = 0;
@@ -358,11 +365,12 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
     /**
      * This method tests Prod Test Bed enrollment data, verifies files downloaded successfully and
-     * data saved into DB correctly.
+     * data saved into DB correctly, additionally checks record deletion when flag is enabled.
      */
     @Test
     public void testEnrollmentDataDownload_PTB()
             throws ExecutionException, InterruptedException, TimeoutException {
+        when(mMockFlags.getEnrollmentMddRecordDeletionEnabled()).thenReturn(true);
         createMddForEnrollment(PTB_ENROLLMENT_MANIFEST_FILE_URL);
 
         ClientFileGroup clientFileGroup =
@@ -372,7 +380,19 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                                         .build())
                         .get();
 
-        verifyMeasurementFileGroup(clientFileGroup, PTB_FILEGROUP_VERSION, PTB_ENROLLMENT_ENTRIES);
+        verifyMeasurementFileGroup(
+                clientFileGroup,
+                PTB_FILEGROUP_VERSION,
+                PTB_ENROLLMENT_ENTRIES,
+                /* clearExistingData= */ true,
+                /* clearDownloadedData= */ false);
+        createMddForEnrollment(PTB_OLD_ENROLLMENT_FILE_URL);
+        verifyMeasurementFileGroup(
+                clientFileGroup,
+                PTB_FILEGROUP_VERSION,
+                PTB_OLD_ENROLLMENT_ENTRIES,
+                /* clearExistingData= */ false,
+                /* clearDownloadedData= */ true);
     }
 
     /**
@@ -834,34 +854,69 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         expect.that(getNumEntriesInEncryptionKeysTable()).isEqualTo(numberOfExpectedKeys);
     }
 
-    private void verifyMeasurementFileGroup(
-            ClientFileGroup clientFileGroup, int fileGroupVersion, int enrollmentEntries)
-            throws InterruptedException, ExecutionException {
+    private void verifyEnrollmentMddDownloadStatus(
+            ClientFileGroup clientFileGroup, int fileGroupVersion) {
         assertThat(clientFileGroup.getGroupName()).isEqualTo(ENROLLMENT_FILE_GROUP_NAME);
         assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
         assertThat(clientFileGroup.getFileCount()).isEqualTo(1);
         assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
         assertThat(clientFileGroup.getVersionNumber()).isEqualTo(fileGroupVersion);
+    }
 
-        doReturn(mMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
-
-        EnrollmentDataDownloadManager enrollmentDataDownloadManager =
-                new EnrollmentDataDownloadManager(mContext, mMockFlags);
+    private EnrollmentDao setupEnrollmentDaoForTest() {
         EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper, mMockFlags);
         doReturn(enrollmentDao).when(() -> EnrollmentDao.getInstance());
+        return enrollmentDao;
+    }
+
+    private EnrollmentDataDownloadManager setupEnrollmentDownloadManagerForTest() {
+        EnrollmentDataDownloadManager enrollmentDataDownloadManager =
+                new EnrollmentDataDownloadManager(mContext, mMockFlags);
 
         EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);
         doReturn(encryptionKeyDao).when(EncryptionKeyDao::getInstance);
+        return enrollmentDataDownloadManager;
+    }
 
-        assertThat(enrollmentDao.deleteAll()).isTrue();
-        // Verify no enrollment data after table cleared.
-        assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(0);
+    private void verifyMeasurementFileGroup(
+            ClientFileGroup clientFileGroup, int fileGroupVersion, int enrollmentEntries)
+            throws InterruptedException, ExecutionException {
+        verifyMeasurementFileGroup(
+                clientFileGroup,
+                fileGroupVersion,
+                enrollmentEntries,
+                /* clearExistingData= */ true,
+                /* clearDownloadedData= */ true);
+    }
+
+    private void verifyMeasurementFileGroup(
+            ClientFileGroup clientFileGroup,
+            int fileGroupVersion,
+            int enrollmentEntries,
+            boolean clearExistingData,
+            boolean clearDownloadedData)
+            throws InterruptedException, ExecutionException {
+        verifyEnrollmentMddDownloadStatus(clientFileGroup, fileGroupVersion);
+
+        doReturn(mMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
+
+        EnrollmentDao enrollmentDao = setupEnrollmentDaoForTest();
+        if (clearExistingData) {
+            assertThat(enrollmentDao.deleteAll()).isTrue();
+            // Verify no enrollment data after table cleared.
+            assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(0);
+        }
+
+        EnrollmentDataDownloadManager enrollmentDataDownloadManager =
+                setupEnrollmentDownloadManagerForTest();
         // Verify enrollment data file read from MDD and insert the data into the enrollment
         // database.
         assertThat(enrollmentDataDownloadManager.readAndInsertEnrollmentDataFromMdd().get())
                 .isEqualTo(SUCCESS);
         assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(enrollmentEntries);
-        assertThat(enrollmentDao.deleteAll()).isTrue();
+        if (clearDownloadedData) {
+            assertThat(enrollmentDao.deleteAll()).isTrue();
+        }
     }
 
     private void mockMddFlags() {

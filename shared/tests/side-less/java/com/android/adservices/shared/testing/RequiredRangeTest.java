@@ -20,7 +20,7 @@ import com.android.adservices.shared.testing.AndroidSdk.Range;
 
 import org.junit.Test;
 
-public final class RequiredRangeTest extends SidelessTestCase {
+public final class RequiredRangeTest extends SharedSidelessTestCase {
 
     private static final String REASON = "To get to the other side.";
     private static final String NULL_REASON = null;

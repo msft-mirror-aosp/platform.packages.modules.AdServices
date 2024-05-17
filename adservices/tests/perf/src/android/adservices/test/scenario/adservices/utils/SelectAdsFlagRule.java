@@ -39,9 +39,6 @@ public class SelectAdsFlagRule implements TestRule {
     public static final String TEST_COORDINATOR =
             "https://ba-kv-service-5jyy5ulagq-uc.a.run.app/keys/2";
 
-    public static final String COORDINATOR_WITH_OLD_KEYS =
-            "https://key-test-5jyy5ulagq-uc.a.run.app/keys/3";
-
     public SelectAdsFlagRule() {
         this.mCoordinatorToUse = TEST_COORDINATOR;
     }

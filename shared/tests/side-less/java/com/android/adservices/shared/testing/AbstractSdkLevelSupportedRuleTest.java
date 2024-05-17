@@ -29,7 +29,6 @@ import static com.android.adservices.shared.testing.AndroidSdk.Level.U;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.SimpleStatement;
-import com.android.adservices.shared.meta_testing.StandardStreamsLogger;
 import com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule.RequiredRange;
 import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.AndroidSdk.Range;
@@ -58,7 +57,7 @@ import java.util.Arrays;
  * but subclasses should implement {@link #newRule(Level, Level)} and {@link
  * #newRuleForDeviceLevelAndRuleAtLeastLevel(Level)}.
  */
-public class AbstractSdkLevelSupportedRuleTest extends SidelessTestCase {
+public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
 
     // Not a real test (i.e., it doesn't exist on this class), but it's passed to Description
     private static final String TEST_METHOD_BEING_EXECUTED = "testAmI..OrNot";

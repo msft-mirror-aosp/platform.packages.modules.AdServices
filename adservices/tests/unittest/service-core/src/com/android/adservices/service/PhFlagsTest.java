@@ -47,6 +47,7 @@ import static com.android.adservices.service.Flags.DEBUG_UX;
 import static com.android.adservices.service.Flags.DEFAULT_ADEXT_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_VERSION_MAPPINGS;
@@ -508,6 +509,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_S
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST;
@@ -5857,6 +5859,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED,
                 DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED,
                 Flags::getSpeOnAsyncRegistrationFallbackJobEnabled);
+    }
+
+    @Test
+    public void testGetAdServicesApiV2MigrationEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED,
+                DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED,
+                Flags::getAdServicesConsentBusinessLogicMigrationEnabled);
     }
 
     private void setMeasurementKillSwitch(boolean value) {

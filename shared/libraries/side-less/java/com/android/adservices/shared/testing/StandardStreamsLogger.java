@@ -13,13 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.meta_testing;
+package com.android.adservices.shared.testing;
 
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
+
+import java.io.PrintStream;
+import java.util.Objects;
 
 /**
  * Simple implementation of {@link RealLogger} that logs messages on {@code System.out} and errors
@@ -34,14 +38,25 @@ public final class StandardStreamsLogger implements RealLogger {
         return sInstance;
     }
 
-    private StandardStreamsLogger() {}
+    private final PrintStream mOut;
+    private final PrintStream mErr;
+
+    private StandardStreamsLogger() {
+        this(System.out, System.err);
+    }
+
+    @VisibleForTesting
+    StandardStreamsLogger(PrintStream out, PrintStream err) {
+        mOut = Objects.requireNonNull(out, "out cannot be null");
+        mErr = Objects.requireNonNull(err, "err cannot be null");
+    }
 
     @Override
     @FormatMethod
     public void log(LogLevel level, String tag, @FormatString String msgFmt, Object... msgArgs) {
         String msg = String.format(msgFmt, msgArgs);
 
-        System.out.printf("%s %s: %s\n", tag, level, msg);
+        mOut.printf("%s %s: %s\n", tag, level, msg);
     }
 
     @Override
@@ -54,8 +69,8 @@ public final class StandardStreamsLogger implements RealLogger {
             Object... msgArgs) {
         String msg = String.format(msgFmt, msgArgs);
 
-        System.err.printf("%s %s: %s\n", tag, level, msg);
-        throwable.printStackTrace(System.err);
+        mErr.printf("%s %s: %s\n", tag, level, msg);
+        throwable.printStackTrace(mErr);
     }
 
     @Override

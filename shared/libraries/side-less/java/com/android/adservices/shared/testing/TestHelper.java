@@ -13,11 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing.common;
-
-import androidx.annotation.Nullable;
-
-import com.android.adservices.shared.util.LogUtil;
+package com.android.adservices.shared.testing;
 
 import org.junit.runner.Description;
 
@@ -27,6 +23,10 @@ import java.util.Objects;
 /** Provides helpers for generic test-related tasks. */
 public final class TestHelper {
     private static final boolean VERBOSE = false; // Should NEVER be merged as true
+
+    // TODO(b/338232806): use proper logger
+    private static final Logger sLogger =
+            new Logger(StandardStreamsLogger.getInstance(), TestHelper.class);
 
     // TODO(b/315339283): use in other places
     /** Gets the given annotation from the test, its class, or its ancestors. */
@@ -40,7 +40,7 @@ public final class TestHelper {
                                         annotationClass, "annotationClass cannot be null"));
         if (annotation != null) {
             if (VERBOSE) {
-                LogUtil.v(
+                sLogger.v(
                         "getAnnotation(%s): returning annotation (%s) from test itself (%s)",
                         test, annotation, getTestName(test));
             }
@@ -51,21 +51,21 @@ public final class TestHelper {
             annotation = testClass.getAnnotation(annotationClass);
             if (annotation != null) {
                 if (VERBOSE) {
-                    LogUtil.v(
+                    sLogger.v(
                             "getAnnotation(%s): returning annotation (%s) from test class (%s)",
                             test, annotation, testClass.getSimpleName());
                 }
                 return annotation;
             }
             if (VERBOSE) {
-                LogUtil.v(
+                sLogger.v(
                         "getAnnotation(%s): not found on class %s, will try superclass (%s)",
                         test, testClass, testClass.getSuperclass());
             }
             testClass = testClass.getSuperclass();
         }
         if (VERBOSE) {
-            LogUtil.v("getAnnotation(" + test + "): returning null");
+            sLogger.v("getAnnotation(%s): returning null", test);
         }
         return null;
     }
