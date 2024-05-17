@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.shell;
 
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
@@ -35,7 +36,9 @@ public final class AdservicesShellCommandFactorySupplier extends ShellCommandFac
                             ApplicationContextSingleton.get()),
                     AdSelectionShellCommandFactory.getInstance(
                             DebugFlags.getInstance(), ApplicationContextSingleton.get()),
-                    SignalsShellCommandFactory.getInstance(DebugFlags.getInstance()));
+                    SignalsShellCommandFactory.getInstance(
+                            DebugFlags.getInstance(),
+                            ProtectedSignalsDatabase.getInstance().protectedSignalsDao()));
 
     @Override
     public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {

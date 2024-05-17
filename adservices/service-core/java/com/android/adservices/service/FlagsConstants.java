@@ -1518,4 +1518,8 @@ public final class FlagsConstants {
     /** Key for enabling SPE on {@code AsyncRegistrationFallbackJobService}. */
     public static final String KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED =
             "spe_on_async_registration_fallback_job_enabled";
+
+    /** Key for enabling adservices apis v2. */
+    public static final String KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED =
+            "adservices_consent_business_logic_migration_enabled";
 }

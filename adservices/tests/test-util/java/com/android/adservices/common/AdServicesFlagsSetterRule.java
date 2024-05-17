@@ -20,7 +20,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT;
@@ -28,8 +27,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_KEY
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
@@ -73,7 +70,7 @@ public final class AdServicesFlagsSetterRule
     }
 
     /** Returns a rule that doesn't set anything. */
-    public static AdServicesFlagsSetterRule pristine() {
+    public static AdServicesFlagsSetterRule newInstance() {
         return new AdServicesFlagsSetterRule();
     }
 
@@ -84,7 +81,7 @@ public final class AdServicesFlagsSetterRule
 
     /** Factory method that only {@link #setDefaultLogcatTags() sets the default logcat tags}. */
     private static AdServicesFlagsSetterRule withDefaultLogcatTags() {
-        return pristine().setDefaultLogcatTags();
+        return newInstance().setDefaultLogcatTags();
     }
 
     /** Factory method that sets default flags required to enable K-Anon functionality. */
@@ -108,15 +105,7 @@ public final class AdServicesFlagsSetterRule
 
     /** Factory method that disables all major API kill switches. */
     public static AdServicesFlagsSetterRule forAllApisEnabledTests() {
-        return pristine()
-                .setAllLogcatTags()
-                .setGlobalKillSwitch(false)
-                .setTopicsKillSwitch(false)
-                .setFlag(KEY_ADID_KILL_SWITCH, false)
-                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
-                .setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
-                .setFlag(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false)
-                .setFlag(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, true);
+        return newInstance().enableAllApis();
     }
 
     // TODO(b/297085722): pass clearFlags() on forGlobalKillSwitchDisabledTests() by default?

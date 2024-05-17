@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell.signals;
+package com.android.adservices.service.shell.adselection;
 
-public class GenerateInputForEncodingArgs {
-    static final int ARG_PARSE_START_INDEX = 2;
+public final class GetAdSelectionDataArgs {
+    static final int FIRST_ARG_FOR_PARSING = 2;
 
     public static final String BUYER = "--buyer";
+
+    private GetAdSelectionDataArgs() {
+        throw new UnsupportedOperationException();
+    }
 }

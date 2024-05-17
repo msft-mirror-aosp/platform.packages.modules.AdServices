@@ -376,7 +376,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             CallerMetadata callerMetadata,
             GetAdSelectionDataCallback callback)
             throws RemoteException {
-        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA);
+        int e2eTraceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA);
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 
         AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
@@ -427,8 +427,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             callback,
                             callingUid,
                             devContext,
-                            adsRelevanceExecutionLogger);
-                    Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_DATA, traceCookie);
+                            adsRelevanceExecutionLogger,
+                            e2eTraceCookie);
                 });
     }
 
@@ -607,7 +607,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             GetAdSelectionDataCallback callback,
             int callingUid,
             DevContext devContext,
-            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger) {
+            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
+            int e2eTraceCookie) {
         ListenableFuture<AuctionServerDebugReporting> auctionServerDebugReportingFuture =
                 AuctionServerDebugReporting.createInstance(
                         mFlags,
@@ -629,6 +630,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 GetAdSelectionDataRunner runner =
                                         new GetAdSelectionDataRunner(
                                                 mContext,
+                                                e2eTraceCookie,
                                                 mMultiCloudSupportStrategy,
                                                 mAdSelectionEntryDao,
                                                 mCustomAudienceDao,
@@ -664,6 +666,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 GetAdSelectionDataRunner runner =
                                         new GetAdSelectionDataRunner(
                                                 mContext,
+                                                e2eTraceCookie,
                                                 mMultiCloudSupportStrategy,
                                                 mAdSelectionEntryDao,
                                                 mCustomAudienceDao,

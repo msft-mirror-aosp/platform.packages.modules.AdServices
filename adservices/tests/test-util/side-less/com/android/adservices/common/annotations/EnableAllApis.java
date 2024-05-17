@@ -13,11 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adservices.common.annotations;
 
-package com.android.adservices.service.shell.signals;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class GenerateInputForEncodingArgs {
-    static final int ARG_PARSE_START_INDEX = 2;
-
-    public static final String BUYER = "--buyer";
-}
+/**
+ * Used by {@code AbstractAdServicesFlagsSetterRule} to disable all kill switches / enable all APIs.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.TYPE})
+public @interface EnableAllApis {}

@@ -33,7 +33,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
-public final class AndroidSdkRangeTest extends SidelessTestCase {
+public final class AndroidSdkRangeTest extends SharedSidelessTestCase {
 
     @Test
     public void testInvalidRanges() {

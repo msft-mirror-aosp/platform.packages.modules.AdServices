@@ -15,26 +15,20 @@
  */
 package com.android.adservices.shared.testing;
 
-import com.android.adservices.shared.meta_testing.StandardStreamsLogger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
-import com.google.common.truth.Expect;
 
 import java.util.Objects;
 
-import org.junit.Rule;
-
 /** Base class for all tests on shared testing infra. */
-public abstract class SidelessTestCase {
-
-    @Rule public final Expect expect = Expect.create();
+public abstract class SharedSidelessTestCase extends SidelessTestCase {
 
     protected final Logger mLog;
 
-    protected SidelessTestCase() {
+    protected SharedSidelessTestCase() {
         this(StandardStreamsLogger.getInstance());
     }
 
-    protected SidelessTestCase(RealLogger realLogger) {
+    protected SharedSidelessTestCase(RealLogger realLogger) {
         mLog = new Logger(Objects.requireNonNull(realLogger), getClass());
     }
 }

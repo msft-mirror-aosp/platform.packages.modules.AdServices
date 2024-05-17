@@ -42,6 +42,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.EnableAllApis;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.annotations.SetStringArrayFlag;
@@ -56,6 +57,7 @@ import java.util.concurrent.Executors;
 
 // TODO: Add tests for measurement (b/238194122).
 
+@EnableAllApis
 @SetCompatModeFlags
 @SetStringArrayFlag(name = FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST, value = "empty")
 public final class NotInAllowListTest {
@@ -70,8 +72,7 @@ public final class NotInAllowListTest {
             new AdServicesDeviceSupportedRule();
 
     @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAllApisEnabledTests();
+    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
 
     @Before
     public void setup() {

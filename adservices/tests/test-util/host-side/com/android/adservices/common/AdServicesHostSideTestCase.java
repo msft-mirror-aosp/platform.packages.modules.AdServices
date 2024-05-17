@@ -15,32 +15,20 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.shared.testing.ConsoleLogger;
 import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
-import com.android.adservices.shared.testing.Logger;
-import com.android.adservices.shared.testing.TestDeviceHelper;
-import com.android.tradefed.device.ITestDevice;
-import com.android.tradefed.testtype.IDeviceTest;
-
-import com.google.common.truth.Expect;
+import com.android.adservices.shared.testing.HostSideTestCase;
 
 import org.junit.Rule;
-
-import java.util.Objects;
 
 /**
  * Base class for host-side tests, it contains just the bare minimum setup needed by all tests (like
  * implementing {@link IDeviceTest}).
  */
-public abstract class AdServicesHostSideTestCase implements IDeviceTest {
+public abstract class AdServicesHostSideTestCase extends HostSideTestCase {
 
     // Need to define these constants here so they can be used on subclasses annotations
     public static final String CTS_TEST_PACKAGE = "com.android.adservices.cts";
     public static final String APPSEARCH_WRITER_ACTIVITY_CLASS = "AppSearchWriterActivity";
-
-    protected final Logger mLog = new Logger(ConsoleLogger.getInstance(), getClass());
-
-    protected ITestDevice mDevice;
 
     @Rule(order = 0)
     public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
@@ -51,21 +39,6 @@ public abstract class AdServicesHostSideTestCase implements IDeviceTest {
 
     @Rule(order = 2)
     public final AdServicesHostSideFlagsSetterRule flags = getAdServicesHostSideFlagsSetterRule();
-
-    @Rule(order = 3)
-    public final Expect expect = Expect.create();
-
-    @Override
-    public final void setDevice(ITestDevice device) {
-        mDevice = Objects.requireNonNull(device);
-        // TODO(b/296240972): this is needed because our custom rules
-        TestDeviceHelper.setTestDevice(device);
-    }
-
-    @Override
-    public final ITestDevice getDevice() {
-        return mDevice;
-    }
 
     protected AdServicesHostSideFlagsSetterRule getAdServicesHostSideFlagsSetterRule() {
         return AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests();
