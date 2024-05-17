@@ -282,9 +282,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     @Override
     public void logRunAdBiddingPerCAProcessReportedStats(
             RunAdBiddingPerCAProcessReportedStats stats) {
-        boolean placeholder_bool = false;
-        int placeholder_int = FIELD_UNSET;
-
         AdServicesStatsLog.write(
                 RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED,
                 stats.getNumOfAdsForBidding(),
@@ -301,9 +298,9 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getGenerateBidsLatencyInMillis(),
                 stats.getRunBiddingLatencyInMillis(),
                 stats.getRunBiddingResultCode(),
-                placeholder_bool,
-                placeholder_bool,
-                placeholder_int);
+                stats.getRunAdBiddingPerCaReturnedAdCost(),
+                stats.getGenerateBidBuyerAdditionalSignalsContainedDataVersion(),
+                stats.getGenerateBidJsScriptResultCode());
     }
 
     @Override
