@@ -27,10 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>It provide the bare minimum features that will be used by all sort of tests (unit / CTS,
  * device/host side, project-specific).
  */
-public abstract class SidelessTestCase {
-
-    /** Value returned by {@link #getTestName()} when not running a test. */
-    public static final String DEFAULT_TEST_NAME = "N/A";
+public abstract class SidelessTestCase implements TestNamer {
 
     private static final AtomicInteger sNextInvocationId = new AtomicInteger();
 
@@ -43,12 +40,7 @@ public abstract class SidelessTestCase {
     // Something like (which used to be on AdServicesTestCase):
     // Log.d(TAG, "setTestNumber(): " + getTestName() + " is test #" + mTestNumber);
 
-    /**
-     * Gets the name of the test being executed.
-     *
-     * @return {@link #DEFAULT_TEST_NAME} by default, but subclasses should override to provide the
-     *     proper name (typically obtained from a rule).
-     */
+    @Override
     public String getTestName() {
         return DEFAULT_TEST_NAME;
     }

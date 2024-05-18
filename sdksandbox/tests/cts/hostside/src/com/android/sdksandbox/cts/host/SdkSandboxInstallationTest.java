@@ -18,11 +18,15 @@ package com.android.sdksandbox.cts.host;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.junit.Assume.assumeTrue;
+
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 import android.platform.test.annotations.LargeTest;
 
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -35,6 +39,13 @@ public class SdkSandboxInstallationTest extends BaseHostJUnit4Test {
     private static final String SDK_PROVIDER2 = SDK_PACKAGE + ".storagetest";
 
     public static final int TIME_OUT = 600_000;
+
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
+
+    @Before
+    public void setUp() throws Exception {
+        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
+    }
 
     @Test
     @LargeTest // Reboot device

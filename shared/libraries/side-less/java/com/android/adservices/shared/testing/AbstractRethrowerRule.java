@@ -79,7 +79,7 @@ public abstract class AbstractRethrowerRule extends AbstractRule {
      * (typically using {@link #runSafely(List, Runnable)} to execute its logic.
      */
     protected void preTest(Statement base, Description description, List<Throwable> cleanUpErrors) {
-        mLog.v("preTest(%s): not overridden by subclass", getTestName(description));
+        mLog.v("preTest(%s): not overridden by subclass", TestHelper.getTestName(description));
     }
 
     /**
@@ -95,7 +95,7 @@ public abstract class AbstractRethrowerRule extends AbstractRule {
             Throwable testFailure) {
         mLog.v(
                 "onTestFailure(%s, %s): not overridden by subclass",
-                getTestName(description), testFailure);
+                TestHelper.getTestName(description), testFailure);
     }
 
     /**
@@ -106,7 +106,7 @@ public abstract class AbstractRethrowerRule extends AbstractRule {
      */
     protected void postTest(
             Statement base, Description description, List<Throwable> cleanUpErrors) {
-        mLog.v("postTest(%s): not overridden by subclass", getTestName(description));
+        mLog.v("postTest(%s): not overridden by subclass", TestHelper.getTestName(description));
     }
 
     /** Decorates the message that is thrown when a test fail. */

@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing;
 
-import static com.android.adservices.shared.testing.SidelessTestCase.DEFAULT_TEST_NAME;
+import static com.android.adservices.shared.testing.TestNamer.DEFAULT_TEST_NAME;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 

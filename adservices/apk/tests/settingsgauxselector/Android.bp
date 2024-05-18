@@ -22,8 +22,8 @@ android_test {
         ":adservicesapk-filegroup",
     ],
     exclude_srcs: [
-            "src/com/android/adservices/ui/settingsga/SettingsRvcUxSelectorUiAutomatorTest.java",
-        ],
+        "src/com/android/adservices/ui/settingsga/SettingsRvcUxSelectorUiAutomatorTest.java",
+    ],
     certificate: "platform",
     privileged: true,
     defaults: ["modules-utils-testable-device-config-defaults"],

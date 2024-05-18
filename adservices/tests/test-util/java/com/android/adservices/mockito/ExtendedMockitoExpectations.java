@@ -77,7 +77,6 @@ public final class ExtendedMockitoExpectations {
     // CHECKSTYLE:OFF Generated code
     public static final AdServicesStaticMockitoMocker mocker =
             new AdServicesExtendedMockitoMocker(new StaticClassChecker() {});
-
     // CHECKSTYLE:ON
 
     /**

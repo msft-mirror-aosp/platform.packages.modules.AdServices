@@ -40,7 +40,7 @@ java_sdk_library {
         "error_prone_annotations",
         "adservices_flags_lib",
     ],
-    static_libs : [
+    static_libs: [
         "adservices-shared-exceptions",
     ],
     sdk_version: "module_current",
@@ -73,7 +73,7 @@ java_library {
         "error_prone_annotations",
         "adservices_flags_lib",
     ],
-    static_libs : [
+    static_libs: [
         "adservices-shared-exceptions",
     ],
     min_sdk_version: "30",

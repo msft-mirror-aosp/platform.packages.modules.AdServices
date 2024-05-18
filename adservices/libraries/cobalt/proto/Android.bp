@@ -31,7 +31,7 @@ java_library {
         type: "lite",
         include_dirs: [
             "external/protobuf/src",
-            "external/protobuf/java"
+            "external/protobuf/java",
         ],
         canonical_path_from_root: false,
     },
@@ -40,5 +40,8 @@ java_library {
         ":libprotobuf-internal-protos",
     ],
     static_libs: ["libprotobuf-java-lite"],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
 }

@@ -161,7 +161,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     @Override
     protected void preTest(Statement base, Description description, List<Throwable> cleanUpErrors) {
-        String testName = getTestName(description);
+        String testName = TestHelper.getTestName(description);
         mIsRunning = true;
 
         // TODO(b/294423183): ideally should be "setupErrors", but it's not used yet (other
@@ -194,7 +194,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     @Override
     protected void postTest(
             Statement base, Description description, List<Throwable> cleanUpErrors) {
-        String testName = getTestName(description);
+        String testName = TestHelper.getTestName(description);
         runSafely(cleanUpErrors, () -> resetFlags(testName));
         runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
         runSafely(cleanUpErrors, () -> setSyncDisabledMode(mPreviousSyncDisabledModeForTest));

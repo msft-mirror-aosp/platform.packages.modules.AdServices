@@ -53,7 +53,7 @@ java_library {
         "modules-utils-testable-device-config",
         "adservices-profile-text-protos-genrule",
         "adservices-concurrent-profile-text-protos-genrule",
-        "adservices-collectors-helper"
+        "adservices-collectors-helper",
     ],
 
     srcs: ["src/**/*.java"],
@@ -77,8 +77,8 @@ java_genrule {
      * If a profile fails to parse, an error is thrown and the build will fail.
      */
     cmd: "out_dir=$$(dirname $(out)) && assets_dir=\"assets\" && mkdir -p $$out_dir/$$assets_dir " +
-        "&& src_protos=($(locations assets/topics_profile.textpb)) && red='\033[0;31m' " +
-        "&& no_color='\033[0m' && for file in $${src_protos[@]} ; do fname=$$(basename $$file) " +
+        "&& src_protos=($(locations assets/topics_profile.textpb)) && red='\x1b[0;31m' " +
+        "&& no_color='\x1b[0m' && for file in $${src_protos[@]} ; do fname=$$(basename $$file) " +
         "&& if ! ($(location aprotoc) --encode=longevity.profile.Configuration " +
         "$(location :profile-proto-def) < $$file > " +
         "$$out_dir/$$assets_dir/$${fname//.textpb/.pb}) ; then " +
@@ -104,8 +104,8 @@ java_genrule {
      * If a profile fails to parse, an error is thrown and the build will fail.
      */
     cmd: "out_dir=$$(dirname $(out)) && assets_dir=\"assets\" && mkdir -p $$out_dir/$$assets_dir " +
-        "&& src_protos=($(locations assets/concurrent-configs/*.textpb)) && red='\033[0;31m' " +
-        "&& no_color='\033[0m' && for file in $${src_protos[@]} ; do fname=$$(basename $$file) " +
+        "&& src_protos=($(locations assets/concurrent-configs/*.textpb)) && red='\x1b[0;31m' " +
+        "&& no_color='\x1b[0m' && for file in $${src_protos[@]} ; do fname=$$(basename $$file) " +
         "&& if ! ($(location aprotoc) --encode=adservices.longevity.profile.concurrent.Configuration " +
         "$(location :concurrent-profile-proto-def) < $$file > " +
         "$$out_dir/$$assets_dir/$${fname//.textpb/.pb}) ; then " +

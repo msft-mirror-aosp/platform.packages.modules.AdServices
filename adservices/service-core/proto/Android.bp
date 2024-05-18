@@ -40,7 +40,7 @@ java_library {
         ":adservices-proto",
         ":libprotobuf-internal-protos",
         ":act-proto",
-        ":private-join-and-compute-proto"
+        ":private-join-and-compute-proto",
     ],
     static_libs: ["libprotobuf-java-lite"],
     apex_available: [

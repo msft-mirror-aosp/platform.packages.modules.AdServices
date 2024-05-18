@@ -24,10 +24,12 @@ import org.junit.runners.model.Statement;
 import java.util.List;
 import java.util.Objects;
 
-/** Base class providing common functionatlities to all rules. */
-abstract class AbstractRule implements TestRule {
+/** Base class providing common functionalities to all rules. */
+abstract class AbstractRule implements TestRule, TestNamer {
 
     protected final Logger mLog;
+
+    @Nullable private String mTestName = DEFAULT_TEST_NAME;
 
     protected AbstractRule(RealLogger logger) {
         mLog = new Logger(Objects.requireNonNull(logger), getClass());
@@ -38,12 +40,17 @@ abstract class AbstractRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                AbstractRule.this.evaluate(base, description);
+                mTestName = TestHelper.getTestName(description);
+                try {
+                    AbstractRule.this.evaluate(base, description);
+                } finally {
+                    mTestName = DEFAULT_TEST_NAME;
+                }
             }
         };
     }
 
-    /** Defines the rule lofic. */
+    /** Defines the rule logic. */
     protected abstract void evaluate(Statement base, Description description) throws Throwable;
 
     /**
@@ -61,14 +68,8 @@ abstract class AbstractRule implements TestRule {
         }
     }
 
-    /** Gets a user-friendly name of a test method. */
-    protected final String getTestName(Description test) {
-        // TODO(b/315339283): copied from TestHelper.java, which is on device side, should reuse
-        StringBuilder testName = new StringBuilder(test.getTestClass().getSimpleName());
-        String methodName = test.getMethodName();
-        if (methodName != null) {
-            testName.append('#').append(methodName).append("()");
-        }
-        return testName.toString();
+    @Override
+    public final String getTestName() {
+        return mTestName;
     }
 }
