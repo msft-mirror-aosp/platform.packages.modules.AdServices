@@ -16,7 +16,6 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-
 // Java classes that are used by both device-side and host-side test libraries
 // NOTE: cannot create a proper "library", as it would be "java_library" on
 // device-side and "java_library_host" on host-side. Hence, projects including
@@ -31,6 +30,16 @@ filegroup {
     name: "adservices-shared-sideless-testing-sources",
     srcs: [
         "java/com/android/adservices/shared/testing/**/*.java",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/libraries:__subpackages__",
+    ],
+}
+
+filegroup {
+    name: "adservices-shared-sideless-testing-TestNamer-sources",
+    srcs: [
+        "java/com/android/adservices/shared/testing/TestNamer.java",
     ],
     visibility: [
         "//packages/modules/AdServices/shared/libraries:__subpackages__",

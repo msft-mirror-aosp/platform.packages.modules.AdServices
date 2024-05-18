@@ -233,6 +233,7 @@ java_library {
     sdk_version: "module_current",
     srcs: [
         "java/com/android/adservices/mockito/StaticClassChecker.java",
+        ":adservices-shared-sideless-testing-TestNamer-sources",
     ],
     static_libs: [
         "guava", // for ImmutableSet

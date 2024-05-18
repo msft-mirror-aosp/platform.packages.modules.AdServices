@@ -42,6 +42,8 @@ import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.LoggerFactory.Logger;
 import com.android.adservices.common.AdservicesTestHelper;
 
 import com.google.common.collect.ConcurrentHashMultiset;
@@ -58,6 +60,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
@@ -109,6 +112,7 @@ import java.util.concurrent.TimeUnit;
  * custom audiences via test apps, and run a new ad auction with different expected results.
  */
 public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCase {
+    private static final String TAG = "CustomAudienceTest";
     private static final String TEST_PACKAGE_NAME =
             "com.android.adservices.tests.cts.customaudience";
     private static final String HIGH_BID_APK_PATH =
@@ -177,6 +181,8 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
             TEST_PACKAGE_NAME + ".JOINED_CUSTOM_AUDIENCE_LOW_BID";
 
     private static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
+
+    private static final Logger sLogger = LoggerFactory.getFledgeLogger();
 
     private final Random mCacheBusterRandom = new Random();
 
@@ -479,7 +485,17 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
         assertThat(initialAdRenderUris).doesNotContain(adSelectionOutcome.getRenderUri());
 
         // Finally, uninstall app.
+        // Register expected app uninstall broadcasts.
+        mExpectedAppUninstallBroadcasts =
+                HashMultiset.create(ImmutableList.of(HIGH_BID_PACKAGE_NAME));
+        mAppUninstallBroadcastLatch = new CountDownLatch(mExpectedAppUninstallBroadcasts.size());
+
         uninstallApp(HIGH_BID_PACKAGE_NAME);
+
+        // Wait to receive broadcast confirming app was uninstalled.
+        assertThat(mAppUninstallBroadcastLatch.await(EXECUTION_WAITING_TIME, TimeUnit.MILLISECONDS))
+                .isTrue();
+        assertThat(mExpectedAppUninstallBroadcasts).isEmpty();
     }
 
     // Broadcast Receiver to receive joinedCustomAudience broadcast from test apps.
@@ -496,8 +512,14 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
                     public void onReceive(Context context, Intent intent) {
                         String action = Objects.requireNonNull(intent.getAction());
                         List<Uri> adRenderUris =
-                                intent.getParcelableArrayListExtra(
-                                        AD_RENDER_URIS_INTENT_KEY, Uri.class);
+                                Objects.requireNonNull(
+                                        intent.getParcelableArrayListExtra(
+                                                AD_RENDER_URIS_INTENT_KEY, Uri.class));
+
+                        sLogger.v(
+                                "%s - Received joined custom audience broadcast of type: %s "
+                                        + "with render URIs: %s",
+                                TAG, action, Arrays.toString(adRenderUris.toArray()));
 
                         // Verify the joined custom audience and save ad render URIs
                         // for broadcast type to check against auction results.
@@ -506,6 +528,9 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
                         } else if (action.equals(JOINED_CUSTOM_AUDIENCE_LOW_BID_BROADCAST)) {
                             mCustomAudienceLowBidAdRenderUris = adRenderUris;
                         } else {
+                            sLogger.v(
+                                    "%s - Unexpected joined custom audience broadcast of type: %s",
+                                    TAG, action);
                             return;
                         }
 
@@ -534,8 +559,15 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
                         String packageName =
                                 Objects.requireNonNull(intent.getData()).getSchemeSpecificPart();
 
+                        sLogger.v(
+                                "%s - Received app install broadcast for app: %s",
+                                TAG, packageName);
+
                         // Verify the installed app.
                         if (!mExpectedAppInstallBroadcasts.contains(packageName)) {
+                            sLogger.v(
+                                    "%s - Unexpected app install broadcast for app: %s, returning",
+                                    TAG, packageName);
                             return;
                         }
 
@@ -564,8 +596,16 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
                         String packageName =
                                 Objects.requireNonNull(intent.getData()).getSchemeSpecificPart();
 
+                        sLogger.v(
+                                "%s - Received app uninstall broadcast for app: %s",
+                                TAG, packageName);
+
                         // Verify the installed app.
                         if (!mExpectedAppUninstallBroadcasts.contains(packageName)) {
+                            sLogger.v(
+                                    "%s - Unexpected app uninstall broadcast for app: %s, "
+                                            + "returning",
+                                    TAG, packageName);
                             return;
                         }
 

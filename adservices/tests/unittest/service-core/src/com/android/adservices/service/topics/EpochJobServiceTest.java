@@ -196,16 +196,21 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testOnStartJob_speEnabled() {
+    public void testOnStartJob_speEnabled() throws Exception {
         when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(true);
         doReturn(false).when(mMockFlags).getGlobalKillSwitch();
         mocker.mockSpeJobScheduler(mMockAdServicesJobScheduler);
         // Mock not to run actual execution logic.
         doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
+        // Verify logging for current execution.
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
         mSpyEpochJobService.onStartJob(mMockJobParameters);
 
         verify(mMockAdServicesJobScheduler).schedule(any());
+        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test

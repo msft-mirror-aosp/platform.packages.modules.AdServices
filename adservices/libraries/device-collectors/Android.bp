@@ -9,8 +9,8 @@ java_library {
     srcs: ["src/**/*.java"],
 
     static_libs: [
-      "adservices-collectors-helper",
-      "collector-device-lib-platform",
+        "adservices-collectors-helper",
+        "collector-device-lib-platform",
     ],
 
     sdk_version: "test_current",
