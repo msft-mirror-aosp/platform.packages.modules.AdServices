@@ -481,8 +481,9 @@ public class AsyncTriggerFetcher {
 
             // remove ODP header from headers map and forward ODP header
             Optional<Map<String, List<String>>> odpHeader = extractOdpTriggerHeader(headers);
-            if (odpHeader.isPresent() && enrollmentId.isPresent()) {
-                mOdpWrapper.registerOdpTrigger(asyncRegistration, odpHeader.get());
+            if (odpHeader.isPresent()) {
+                mOdpWrapper.registerOdpTrigger(
+                        asyncRegistration, odpHeader.get(), enrollmentId.isPresent());
             }
 
             long headerSize = FetcherUtil.calculateHeadersCharactersLength(headers);
