@@ -19,6 +19,7 @@ package com.android.adservices.mockito;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
@@ -59,4 +60,12 @@ public interface AdServicesStaticMockitoMocker {
      */
     void mockAdServicesJobServiceFactory(
             AdServicesJobServiceFactory mockedAdServicesJobServiceFactory);
+
+    /**
+     * Mocks a call to {@link AdServicesLoggerImpl#getInstance()}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link AdServicesLoggerImpl}.
+     */
+    void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl);
 }
