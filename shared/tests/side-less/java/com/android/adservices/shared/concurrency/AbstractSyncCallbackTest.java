@@ -19,90 +19,139 @@ import static org.junit.Assert.assertThrows;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
+import com.android.adservices.shared.testing.StandardStreamsLogger;
+
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
 
     private static final AtomicInteger sThreadId = new AtomicInteger();
 
-    private static final int WAIT_TIMEOUT_MS = 500;
+    private static final int LONGER_TIMEOUT_MS = 1000;
+    private static final int SMALLER_TIMEOUT_MS = 100;
 
-    private final ConcreteSyncCallback mSingleCallCallback = new ConcreteSyncCallback();
+    private static final String MSG_SET_CALLED = "setCalled() called";
+    private static final String MSG_SET_CALLED_RETURNING = "setCalled() returning";
+    private static final String MSG_WAIT_CALLED = "waitCalled() called";
+    private static final String MSG_WAIT_CALLED_RETURNING = "waitCalled() returning";
+    private static final String MSG_WAIT_WITH_TIMEOUT_CALLED =
+            "waitCalled(" + LONGER_TIMEOUT_MS + ", " + MILLISECONDS + ") called";
+    private static final String MSG_WAIT_WITH_TIMEOUT_CALLED_RETURNING =
+            "waitCalled(" + LONGER_TIMEOUT_MS + ", " + MILLISECONDS + ") returning";
+
+    private final ConcreteSyncCallback mSingleCallback = new ConcreteSyncCallback();
 
     @Test
-    public void testIsCalled() {
-        expect.withMessage("%s.isCalled() initially", mSingleCallCallback)
-                .that(mSingleCallCallback.isCalled())
+    public void testIsCalled() throws Exception {
+        mSingleCallback.expectLogCalls(MSG_SET_CALLED, MSG_SET_CALLED_RETURNING);
+
+        expect.withMessage("%s.isCalled() initially", mSingleCallback)
+                .that(mSingleCallback.isCalled())
                 .isFalse();
 
-        mSingleCallCallback.setCalled();
+        mSingleCallback.setCalled();
 
-        expect.withMessage("%s.isCalled() after setCalled()", mSingleCallCallback)
-                .that(mSingleCallCallback.isCalled())
+        expect.withMessage("%s.isCalled() after setCalled()", mSingleCallback)
+                .that(mSingleCallback.isCalled())
                 .isTrue();
-        assertLogSetCalled(1);
+
+        mSingleCallback.assertLoggedCalls();
     }
 
     @Test
-    public void testSetCalled_multipleTimes() {
-        mSingleCallCallback.setCalled();
-        mSingleCallCallback.setCalled();
+    public void testSetCalled_multipleTimes() throws Exception {
+        mSingleCallback.expectLogCalls(
+                MSG_SET_CALLED, MSG_SET_CALLED_RETURNING, MSG_SET_CALLED, MSG_SET_CALLED_RETURNING);
 
-        expect.withMessage("%s.isCalled() after setCalled() (twice)", mSingleCallCallback)
-                .that(mSingleCallCallback.isCalled())
+        mSingleCallback.setCalled();
+        mSingleCallback.setCalled();
+
+        expect.withMessage("%s.isCalled() after setCalled() (twice)", mSingleCallback)
+                .that(mSingleCallback.isCalled())
                 .isTrue();
-        assertLogSetCalled(2);
     }
 
     @Test
     public void testWaitCalledWithTimeout_called() throws Exception {
-        runLater(WAIT_TIMEOUT_MS / 2, () -> mSingleCallCallback.setCalled());
+        mSingleCallback.expectLogCalls(
+                MSG_SET_CALLED,
+                MSG_SET_CALLED_RETURNING,
+                MSG_WAIT_WITH_TIMEOUT_CALLED,
+                MSG_WAIT_WITH_TIMEOUT_CALLED_RETURNING);
 
-        mSingleCallCallback.waitCalled(WAIT_TIMEOUT_MS, MILLISECONDS);
+        runLater(SMALLER_TIMEOUT_MS, () -> mSingleCallback.setCalled());
 
-        expect.withMessage("%s.isCalled() after setCalled()", mSingleCallCallback)
-                .that(mSingleCallCallback.isCalled())
+        mSingleCallback.waitCalled(LONGER_TIMEOUT_MS, MILLISECONDS);
+
+        expect.withMessage("%s.isCalled() after setCalled()", mSingleCallback)
+                .that(mSingleCallback.isCalled())
                 .isTrue();
-        assertLogWaitWithTimeoutCalled();
+
+        mSingleCallback.assertLoggedCalls();
     }
 
     @Test
     public void testWaitCalledWithTimeout_neverCalled() throws Exception {
-        IllegalStateException thrown =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> mSingleCallCallback.waitCalled(WAIT_TIMEOUT_MS, MILLISECONDS));
+        mSingleCallback.expectLogCalls(
+                MSG_WAIT_WITH_TIMEOUT_CALLED, MSG_WAIT_WITH_TIMEOUT_CALLED_RETURNING);
 
-        expect.withMessage("timeout exception on %s.waitCalled()", mSingleCallCallback)
-                .that(thrown)
-                .hasMessageThat()
-                .contains(WAIT_TIMEOUT_MS + " " + MILLISECONDS);
-        expect.withMessage("%s.isCalled() after setCalled()", mSingleCallCallback)
-                .that(mSingleCallCallback.isCalled())
+        SyncCallbackTimeoutException thrown =
+                assertThrows(
+                        SyncCallbackTimeoutException.class,
+                        () -> mSingleCallback.waitCalled(LONGER_TIMEOUT_MS, MILLISECONDS));
+
+        // Assert exception first
+        expect.withMessage("exception.what on %s.waitCalled()", mSingleCallback)
+                .that(thrown.getWhat())
+                .isEqualTo(mSingleCallback.toString());
+        expect.withMessage("exception.timeouton %s.waitCalled()", mSingleCallback)
+                .that(thrown.getTimeout())
+                .isEqualTo(LONGER_TIMEOUT_MS);
+        expect.withMessage("exception.unit %s.waitCalled()", mSingleCallback)
+                .that(thrown.getUnit())
+                .isEqualTo(MILLISECONDS);
+
+        // Then state
+        expect.withMessage("%s.isCalled() after setCalled()", mSingleCallback)
+                .that(mSingleCallback.isCalled())
                 .isFalse();
-        assertLogWaitWithTimeoutCalled();
+        mSingleCallback.assertLoggedCalls();
     }
 
     @Test
     public void testWaitCalledWithoutTimeout_called() throws Exception {
-        runLater(WAIT_TIMEOUT_MS / 2, () -> mSingleCallCallback.setCalled());
+        mSingleCallback.expectLogCalls(
+                MSG_SET_CALLED,
+                MSG_SET_CALLED_RETURNING,
+                MSG_WAIT_CALLED,
+                MSG_WAIT_CALLED_RETURNING);
 
-        mSingleCallCallback.waitCalled();
+        runLater(SMALLER_TIMEOUT_MS, () -> mSingleCallback.setCalled());
 
-        expect.withMessage("%s.isCalled() after setCalled()", mSingleCallCallback)
-                .that(mSingleCallCallback.isCalled())
+        mSingleCallback.waitCalled();
+
+        expect.withMessage("%s.isCalled() after setCalled()", mSingleCallback)
+                .that(mSingleCallback.isCalled())
                 .isTrue();
-        assertLogWaitCalled();
+        mSingleCallback.assertLoggedCalls();
     }
 
     @Test
     public void testWaitCalledWithoutTimeout_interrupted() throws Exception {
+        mSingleCallback.expectLogCalls(MSG_WAIT_CALLED, MSG_WAIT_CALLED_RETURNING);
         ArrayBlockingQueue<Throwable> actualFailureQueue = new ArrayBlockingQueue<Throwable>(1);
 
         // Must run it in another thread so it can be interrupted
@@ -110,27 +159,37 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
                 startNewThread(
                         () -> {
                             try {
-                                mSingleCallCallback.waitCalled();
+                                mSingleCallback.waitCalled();
                             } catch (Throwable t) {
                                 actualFailureQueue.offer(t);
                             }
                         });
         thread.interrupt();
 
-        Throwable actualFailure = actualFailureQueue.poll(WAIT_TIMEOUT_MS, MILLISECONDS);
-
+        Throwable actualFailure = actualFailureQueue.poll(LONGER_TIMEOUT_MS, MILLISECONDS);
         expect.withMessage("thrown exception")
                 .that(actualFailure)
                 .isInstanceOf(InterruptedException.class);
-        assertLogWaitCalled();
+        mSingleCallback.assertLoggedCalls();
+    }
+
+    @Test
+    public void testGetId() {
+        String id1 = mSingleCallback.getId();
+        expect.withMessage("id").that(id1).isNotNull();
+
+        ConcreteSyncCallback callback2 = new ConcreteSyncCallback();
+        String id2 = callback2.getId();
+        expect.withMessage("id2").that(id2).isNotNull();
+        expect.withMessage("id2").that(id2).isNotEqualTo(id1);
     }
 
     @Test
     public void testToString() {
-        String toString1 = mSingleCallCallback.toString();
+        String toString1 = mSingleCallback.toString();
         expect.withMessage("toString() before setCalled()")
                 .that(toString1)
-                .matches("^\\[ConcreteSyncCallback:.*missingCalls=1.*\\]$");
+                .matches("^\\[ConcreteSyncCallback.*missingCalls=1.*\\]$");
 
         ConcreteSyncCallback callback2 = new ConcreteSyncCallback();
         String toString2 = callback2.toString();
@@ -140,13 +199,13 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
         // But everything else should be the same
         expect.withMessage("toString2")
                 .that(toString2)
-                .matches("^\\[ConcreteSyncCallback:.*missingCalls=1.*\\]$");
+                .matches("^\\[ConcreteSyncCallback.*missingCalls=1.*\\]$");
 
         // missingCalls should have changed after setCalled()
-        mSingleCallCallback.setCalled();
+        mSingleCallback.setCalled();
         expect.withMessage("toString() after setCalled()")
-                .that(mSingleCallCallback.toString())
-                .matches("^\\[ConcreteSyncCallback:.*missingCalls=0.*\\]$");
+                .that(mSingleCallback.toString())
+                .matches("^\\[ConcreteSyncCallback.*missingCalls=0.*\\]$");
     }
 
     @Test
@@ -156,7 +215,6 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
                     protected void customizeToString(StringBuilder string) {
                         string.append("I AM GROOT");
                     }
-                    ;
                 };
 
         expect.withMessage("customized toString() ")
@@ -177,7 +235,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
                 .that(charmCallback.isCalled())
                 .isFalse();
 
-        runLater(WAIT_TIMEOUT_MS / 2, () -> charmCallback.setCalled());
+        runLater(SMALLER_TIMEOUT_MS, () -> charmCallback.setCalled());
         charmCallback.waitCalled();
 
         // 3rd time is a charm!
@@ -215,44 +273,15 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
         }
     }
 
-    private void assertLogSetCalled(int numberTimes) {
-        expect.withMessage("number of calls to %s.logSetCalled()", mSingleCallCallback)
-                .that(mSingleCallCallback.numberOfLogSetCalledCalls)
-                .isEqualTo(numberTimes);
-    }
+    private final class ConcreteSyncCallback extends AbstractSyncCallback {
+        private final Logger mLogger =
+                new Logger(StandardStreamsLogger.getInstance(), ConcreteSyncCallback.class);
 
-    private void assertLogWaitCalled() {
-        expect.withMessage("number of calls to %s.logWaitCalled()", mSingleCallCallback)
-                .that(mSingleCallCallback.numberOfLogWaitCalls)
-                .isEqualTo(1);
-    }
-
-    private void assertLogWaitWithTimeoutCalled() {
-        TimeUnit unit = mSingleCallCallback.unitOnLogWaitWithTimeOutCall;
-        boolean called = unit != null;
-        expect.withMessage("%s.logWaitCalled(timeout, unit) called", mSingleCallCallback)
-                .that(called)
-                .isTrue();
-        if (called) {
-            expect.withMessage(
-                            "timeout on %s.logWaitCalled(timeout, unit) called",
-                            mSingleCallCallback)
-                    .that(mSingleCallCallback.timeoutOnLogWaitWithTimeOutCall)
-                    .isEqualTo(WAIT_TIMEOUT_MS);
-            expect.withMessage(
-                            "unit on %s.logWaitCalled(timeout, unit) called", mSingleCallCallback)
-                    .that(unit)
-                    .isEqualTo(MILLISECONDS);
-        }
-    }
-
-    private static final class ConcreteSyncCallback extends AbstractSyncCallback {
-        public int numberOfLogSetCalledCalls;
-        public int numberOfLogWaitCalls;
-
-        // For simplicity, we're assuming it will be called just once
-        public long timeoutOnLogWaitWithTimeOutCall;
-        public TimeUnit unitOnLogWaitWithTimeOutCall;
+        private final List<String> mActuallogEntries = new ArrayList<>();
+        // TODO(b/341797803): @Nullable
+        private List<String> mExpectedLoggedMessages;
+        // TODO(b/341797803): @Nullable
+        private CountDownLatch mLoggedMessagesLatch;
 
         private ConcreteSyncCallback() {
             this(1);
@@ -262,20 +291,51 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
             super(numberOfExpectedCalls);
         }
 
-        @Override
-        protected void logSetCalled() {
-            numberOfLogSetCalledCalls++;
+        public void expectLogCalls(String... messages) {
+            mExpectedLoggedMessages = Arrays.asList(messages);
+            mLog.v("expectLogCalls(): %s", mExpectedLoggedMessages);
+            mLoggedMessagesLatch = new CountDownLatch(messages.length);
         }
 
         @Override
-        protected void logWaitCalled() throws InterruptedException {
-            numberOfLogWaitCalls++;
+        @FormatMethod
+        protected void logD(@FormatString String msgFmt, Object... msgArgs) {
+            mLogger.d(msgFmt, msgArgs);
+            log(msgFmt, msgArgs);
         }
 
         @Override
-        protected void logWaitCalled(long timeout, TimeUnit unit) throws InterruptedException {
-            timeoutOnLogWaitWithTimeOutCall = timeout;
-            unitOnLogWaitWithTimeOutCall = unit;
+        @FormatMethod
+        protected void logV(@FormatString String msgFmt, Object... msgArgs) {
+            mLogger.v(msgFmt, msgArgs);
+            log(msgFmt, msgArgs);
+        }
+
+        @FormatMethod
+        private void log(@FormatString String msgFmt, Object... msgArgs) {
+            String message = String.format(Locale.ENGLISH, msgFmt, msgArgs);
+            mActuallogEntries.add(message);
+            if (mLoggedMessagesLatch != null) {
+                mLoggedMessagesLatch.countDown();
+            }
+        }
+
+        public void assertLoggedCalls() throws InterruptedException {
+            if (mLoggedMessagesLatch == null) {
+                mLog.v("asserLoggedCalls(): skipping when mLoggedMessagesLatch is null");
+                return;
+            }
+            if (!mLoggedMessagesLatch.await(LONGER_TIMEOUT_MS * 2, MILLISECONDS)) {
+                throw new IllegalStateException(
+                        "Timed out waiting for "
+                                + mExpectedLoggedMessages
+                                + "; so far received: "
+                                + mActuallogEntries);
+            }
+
+            expect.withMessage("logged messages on %s", this)
+                    .that(mActuallogEntries)
+                    .containsExactlyElementsIn(mExpectedLoggedMessages);
         }
     }
 }
