@@ -352,3 +352,21 @@ java_library {
         "com.android.ondevicepersonalization",
     ],
 }
+
+// SyncCallback classes for production (i.e., not testing) code.
+java_library {
+    name: "adservices-shared-sync-callback",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [ ":adservices-shared-sideless-sync-callback-sources"],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
+ }

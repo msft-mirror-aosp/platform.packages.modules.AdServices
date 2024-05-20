@@ -58,3 +58,13 @@ filegroup {
         "//packages/modules/AdServices/adservices/tests/unittest/adservices-test-utility",
     ],
 }
+
+filegroup {
+    name: "adservices-shared-sideless-sync-callback-sources",
+    srcs: [
+        "java/com/android/adservices/shared/concurrency/*SyncCallback*.java",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/libraries:__subpackages__",
+    ],
+}
