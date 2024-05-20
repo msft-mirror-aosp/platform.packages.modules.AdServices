@@ -1144,6 +1144,10 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED =
             "fledge_report_impression_api_metrics_enabled";
 
+    // Fledge report impression API metrics key.
+    public static final String KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED =
+            "fledge_js_script_result_code_metrics_enabled";
+
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
 

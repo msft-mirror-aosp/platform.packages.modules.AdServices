@@ -112,6 +112,8 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
+import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
+import com.android.adservices.service.stats.ReportImpressionExecutionLoggerFactory;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLoggerFactory;
 import com.android.adservices.shared.util.Clock;
@@ -902,6 +904,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
 
+        ReportImpressionExecutionLogger reportImpressionExecutionLogger =
+                new ReportImpressionExecutionLoggerFactory(mAdServicesLogger, mFlags)
+                        .getReportImpressionExecutionLogger();
+
         // ImpressionReporter enables Auction Server flow reporting and sets the stage for Phase 2
         // in go/rb-rm-unified-flow-reporting whereas ImpressionReporterLegacy is the logic before
         // Phase 1. FLEDGE_AUCTION_SERVER_REPORTING_ENABLED flag controls which logic is called.
@@ -925,7 +931,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             mRetryStrategyFactory.createRetryStrategy(
                                     BinderFlagReader.readFlag(
                                             mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)),
-                            mShouldUseUnifiedTables);
+                            mShouldUseUnifiedTables,
+                            reportImpressionExecutionLogger);
             reporter.reportImpression(requestParams, callback);
         } else {
             ImpressionReporterLegacy reporter =
@@ -947,7 +954,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             mShouldUseUnifiedTables,
                             mRetryStrategyFactory.createRetryStrategy(
                                     BinderFlagReader.readFlag(
-                                            mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)));
+                                            mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)),
+                            reportImpressionExecutionLogger);
             reporter.reportImpression(requestParams, callback);
         }
     }
