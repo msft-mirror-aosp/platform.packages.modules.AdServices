@@ -56,6 +56,7 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
                     + "[\n";
     private static final String EXPECTED_CALLS_PREFIX = "Expected Calls:\n" + "[\n";
     private static final String ACTUAL_CALLS_PREFIX = "Actual Calls:\n" + "[\n";
+    private static final String RESOLUTION_MESSAGE = "Use appropriate annotations over test method";
 
     @Mock private Description mDescription;
 
@@ -108,6 +109,7 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         expectedErrorMessage.append(EXPECTED_CALLS_PREFIX).append("]");
 
         expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
+        expect.that(exception).hasMessageThat().contains(RESOLUTION_MESSAGE);
     }
 
     @Test
@@ -135,6 +137,7 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         expectedErrorMessage.append(ACTUAL_CALLS_PREFIX).append("]");
 
         expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
+        expect.that(exception).hasMessageThat().doesNotContain(RESOLUTION_MESSAGE);
     }
 
     @Test
@@ -174,6 +177,7 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
                 .append("\tTestLogCall(4), times = 2\n]");
 
         expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
+        expect.that(exception).hasMessageThat().contains(RESOLUTION_MESSAGE);
     }
 
     @Test
@@ -210,6 +214,7 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
                 .append("\tTestLogCall(2), times = 1\n]");
 
         expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
+        expect.that(exception).hasMessageThat().doesNotContain(RESOLUTION_MESSAGE);
     }
 
     // Simple log verifier for testing
@@ -226,6 +231,11 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         @Override
         protected Set<TestLogCall> getExpectedLogCalls(Description description) {
             return mExpectedLogCalls;
+        }
+
+        @Override
+        protected String getResolutionMessage() {
+            return RESOLUTION_MESSAGE;
         }
     }
 

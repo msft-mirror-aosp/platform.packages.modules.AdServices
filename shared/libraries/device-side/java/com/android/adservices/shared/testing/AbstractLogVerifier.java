@@ -68,6 +68,12 @@ public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerif
     protected abstract Set<T> getExpectedLogCalls(Description description);
 
     /**
+     * Returns relevant message providing information on how to use appropriate annotations when
+     * test fails due to mismatch of expected and actual log calls.
+     */
+    protected abstract String getResolutionMessage();
+
+    /**
      * Subclasses are expected to use this method to record actual log call. Assumes only a single
      * call is being recorded at once.
      *
@@ -115,6 +121,8 @@ public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerif
                 .append("\n[")
                 .append(callsToStr(expectedCalls))
                 .append("\n]\n");
+        // Include info about annotation usage since something is wrong with expected log calls.
+        sb.append(getResolutionMessage()).append('\n');
 
         throw new IllegalStateException(sb.toString());
     }

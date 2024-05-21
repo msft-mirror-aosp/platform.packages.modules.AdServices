@@ -84,6 +84,14 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
         return expectedCalls;
     }
 
+    @Override
+    public String getResolutionMessage() {
+        // TODO (b/337042949): Update message to include multiple annotation support
+        // TODO (b/337043102): Update message to include info about default args
+        return "Please make sure to use @ExpectErrorLogUtilCall(..) over test method to denote "
+                + "all expected ErrorLogUtil.e(..) calls.";
+    }
+
     private void validateAnnotation(ExpectErrorLogUtilCall annotation) {
         int times = annotation.times();
 
