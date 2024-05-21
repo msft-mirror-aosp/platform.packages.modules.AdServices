@@ -16,15 +16,84 @@
 
 package com.android.adservices.common.logging;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+
+import android.util.Log;
+
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.shared.testing.AbstractLogVerifier;
 
+import org.junit.runner.Description;
+
+import java.util.HashSet;
+import java.util.Set;
+
 /** Log verifier for {@link ErrorLogUtil} calls. */
-// TODO (b/323000746): Implement ErrorLogUtil verifiers. Design for log verifiers subjected to
-//  change. This was only created to abstract out logic from AdServicesLoggingUsageRule.
-public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier {
+public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<ErrorLogUtilCall> {
     @Override
     protected void mockLogCalls() {
-        throw new UnsupportedOperationException("TODO");
+        // Mock ErrorLogUtil.e(int, int) calls and capture logging arguments.
+        doAnswer(
+                        invocation -> {
+                            recordActualCall(
+                                    new ErrorLogUtilCall(
+                                            ExpectErrorLogUtilCall.None.class,
+                                            invocation.getArgument(0),
+                                            invocation.getArgument(1)));
+                            return null;
+                        })
+                .when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
+
+        // Mock ErrorLogUtil.e(Throwable, int, int) calls and capture logging arguments.
+        doAnswer(
+                        invocation -> {
+                            recordActualCall(
+                                    new ErrorLogUtilCall(
+                                            ((Throwable) invocation.getArgument(0)).getClass(),
+                                            invocation.getArgument(1),
+                                            invocation.getArgument(2)));
+                            return null;
+                        })
+                .when(() -> ErrorLogUtil.e(any(Throwable.class), anyInt(), anyInt()));
+    }
+
+    @Override
+    public Set<ErrorLogUtilCall> getExpectedLogCalls(Description description) {
+        // TODO(b/337042949): Support repeatable annotations
+        ExpectErrorLogUtilCall annotation = description.getAnnotation(ExpectErrorLogUtilCall.class);
+
+        Set<ErrorLogUtilCall> expectedCalls = new HashSet<>();
+        if (annotation == null) {
+            Log.v(mTag, "No @ExpectErrorLogUtilCall found over test method.");
+            return expectedCalls;
+        }
+
+        validateAnnotation(annotation);
+
+        expectedCalls.add(
+                new ErrorLogUtilCall(
+                        annotation.throwable(),
+                        annotation.errorCode(),
+                        annotation.ppapiName(),
+                        annotation.times()));
+
+        return expectedCalls;
+    }
+
+    private void validateAnnotation(ExpectErrorLogUtilCall annotation) {
+        int times = annotation.times();
+
+        if (times == 0) {
+            throw new IllegalStateException(
+                    "Detected @ExpectErrorLogUtilCall with times = 0. Remove annotation as the "
+                            + "test will automatically fail if any log calls are detected.");
+        }
+        if (times < 0) {
+            throw new IllegalStateException("Detected @ExpectErrorLogUtilCall with times < 0!");
+        }
     }
 }

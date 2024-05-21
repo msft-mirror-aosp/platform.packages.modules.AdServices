@@ -16,17 +16,22 @@
 
 package com.android.adservices.common.logging;
 
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.shared.testing.LogVerifier;
 
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
+import java.util.Objects;
 
 /** Factory class to centralize creation of {@link LogVerifier} objects. */
 public final class AdServicesLogVerifierFactory {
     /** Supported log types. */
     enum LogType {
-        /** Verify ErrorLogUtil.e(Throwable, int, int) and ErrorLogUtil.e(int, int) calls. */
+        /**
+         * Verify ErrorLogUtil.e(Throwable, int, int) and ErrorLogUtil.e(int, int) calls. Use {@link
+         * ExpectErrorLogUtilCall} annotation to denote expected logging calls.
+         */
         ERROR_LOG_UTIL;
     }
 
@@ -37,6 +42,8 @@ public final class AdServicesLogVerifierFactory {
      * @return list of {@link LogVerifier} objects associated with the log types.
      */
     public static List<LogVerifier> create(LogType logType) {
+        Objects.requireNonNull(logType);
+
         switch (logType) {
             case ERROR_LOG_UTIL:
                 return ImmutableList.of(new AdServicesErrorLogUtilVerifier());

@@ -16,12 +16,29 @@
 
 package com.android.adservices.shared.testing;
 
+import android.util.Log;
+
 import org.junit.runner.Description;
 
-/** Abstract log verifier to hold common logic across all log verifiers. */
-// TODO (b/323000746): Design for log verifiers subjected to
-//  change. This was only created to abstract out logic from AdServicesLoggingUsageRule.
-public abstract class AbstractLogVerifier implements LogVerifier {
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+/**
+ * Abstract log verifier to hold common logic across all log verifiers.
+ *
+ * @param <T> expected {@link LogCall} type to be verified
+ */
+public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerifier {
+    protected final String mTag = getClass().getSimpleName();
+
+    // Key is the LogCall object, value is the source of truth for times; we do not keep track of
+    // the times value in the LogCall object itself because we would like to group together all
+    // identical log call invocations, irrespective of number of times they have been invoked.
+    private final Map<T, Integer> mActualCalls = new LinkedHashMap<>();
+
     @Override
     public void setup() {
         mockLogCalls();
@@ -29,9 +46,90 @@ public abstract class AbstractLogVerifier implements LogVerifier {
 
     @Override
     public void verify(Description description) {
-        throw new UnsupportedOperationException("TODO");
+        // Obtain expected log call entries from subclass.
+        Set<T> expectedCalls = getExpectedLogCalls(description);
+        // Extract actual log calls entries from map that was built through mocking log calls.
+        Set<T> actualCalls = getActualCalls();
+
+        verifyCalls(expectedCalls, actualCalls);
     }
 
-    /** Mocks relevant calls to store metadata of log calls that were actually made. */
+    /**
+     * Mocks relevant calls in order to store metadata of log calls that were actually made.
+     * Subclasses are expected to call recordActualCall to store actual calls.
+     */
     protected abstract void mockLogCalls();
+
+    /**
+     * Return a set of {@link LogCall} to be verified.
+     *
+     * @param description test that was executed.
+     */
+    protected abstract Set<T> getExpectedLogCalls(Description description);
+
+    /**
+     * Subclasses are expected to use this method to record actual log call. Assumes only a single
+     * call is being recorded at once.
+     *
+     * @param actualCall Actual call to be recorded
+     */
+    public void recordActualCall(T actualCall) {
+        mActualCalls.put(actualCall, mActualCalls.getOrDefault(actualCall, 0) + 1);
+    }
+
+    private void verifyCalls(Set<T> expectedCalls, Set<T> actualCalls) {
+        Log.v(mTag, "Total expected calls: " + expectedCalls.size());
+        Log.v(mTag, "Total actual calls: " + actualCalls.size());
+
+        if (Objects.equals(expectedCalls, actualCalls)) {
+            Log.v(mTag, "No unexpected logging calls!");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        // Check if there are any unverified expected calls, denoted via annotations.
+        Set<T> clonedExpectedCalls = new LinkedHashSet<>(expectedCalls);
+        clonedExpectedCalls.removeAll(actualCalls);
+
+        if (!clonedExpectedCalls.isEmpty()) {
+            sb.append("Detected logging calls that were expected but not actually made:\n");
+            sb.append("Unexpected Calls:")
+                    .append("\n[")
+                    .append(callsToStr(clonedExpectedCalls))
+                    .append("\n]\n");
+            sb.append("Actual Calls:\n[").append(callsToStr(actualCalls)).append("\n]\n");
+            throw new IllegalStateException(sb.toString());
+        }
+
+        // Check if there are any actual calls that were not expected via annotations.
+        Set<T> clonedActualCalls = new LinkedHashSet<>(actualCalls);
+        clonedActualCalls.removeAll(expectedCalls);
+        sb.append(
+                "Detected logging calls that were actually made but not expected via "
+                        + "annotations:\n");
+        sb.append("Unexpected Actual Calls:\n[")
+                .append(callsToStr(clonedActualCalls))
+                .append("\n]\n");
+        sb.append("Expected Calls:")
+                .append("\n[")
+                .append(callsToStr(expectedCalls))
+                .append("\n]\n");
+
+        throw new IllegalStateException(sb.toString());
+    }
+
+    private String callsToStr(Set<T> calls) {
+        return calls.stream().map(call -> "\n\t" + call).reduce("", (a, b) -> a + b);
+    }
+
+    private Set<T> getActualCalls() {
+        // At this point, the map of actual calls will no longer be updated. Therefore, it's safe
+        // // to alter the times field in the actual LogCall objects and retrieve all keys.
+        mActualCalls
+                .keySet()
+                .forEach(actualLogCall -> actualLogCall.mTimes = mActualCalls.get(actualLogCall));
+
+        return mActualCalls.keySet();
+    }
 }
