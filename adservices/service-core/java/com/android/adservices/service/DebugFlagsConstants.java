@@ -64,4 +64,7 @@ public final class DebugFlagsConstants {
 
     public static final String KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED =
             "fledge_auction_server_consented_debugging_enabled";
+
+    public static final String KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED =
+            "record_topics_complete_broadcast_enabled";
 }

@@ -18,6 +18,7 @@ package {
 
 java_test_host {
     name: "CtsAdServicesHostTests",
+    team: "trendy_team_android_rubidium",
     defaults: ["cts_defaults"],
     srcs: ["src/**/*.java"],
     // tag this module as a cts test artifact

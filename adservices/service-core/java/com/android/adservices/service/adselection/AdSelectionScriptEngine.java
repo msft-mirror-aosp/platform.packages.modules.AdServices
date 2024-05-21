@@ -459,6 +459,19 @@ public class AdSelectionScriptEngine {
                                 scoreAdJS, adWithBidArguments.build(), args, this::callScoreAd))
                 .transform(
                         result -> handleScoreAdsOutput(result, adSelectionExecutionLogger),
+                        mExecutor)
+                .catchingAsync(
+                        JSExecutionException.class,
+                        e -> {
+                            if (e.getMessage().contains("Uncaught ReferenceError:")) {
+                                adSelectionExecutionLogger.setScoreAdJsScriptResultCode(
+                                        JS_RUN_STATUS_JS_REFERENCE_ERROR);
+                            } else {
+                                adSelectionExecutionLogger.setScoreAdJsScriptResultCode(
+                                        JS_RUN_STATUS_OTHER_FAILURE);
+                            }
+                            throw e;
+                        },
                         mExecutor);
     }
 
@@ -579,6 +592,8 @@ public class AdSelectionScriptEngine {
 
         if (batchBidResult.status != JS_SCRIPT_STATUS_SUCCESS) {
             sLogger.v("Scoring script failed, returning empty result.");
+            adSelectionExecutionLogger.setScoreAdJsScriptResultCode(
+                    JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR);
         } else {
             for (int i = 0; i < batchBidResult.results.length(); i++) {
                 // If the output of the score for this advert is invalid JSON or doesn't have a
@@ -599,6 +614,7 @@ public class AdSelectionScriptEngine {
                                 .setLossDebugReportUri(debugReportingLossUri)
                                 .build());
             }
+            adSelectionExecutionLogger.setScoreAdJsScriptResultCode(JS_RUN_STATUS_SUCCESS);
         }
 
         adSelectionExecutionLogger.endScoreAds();

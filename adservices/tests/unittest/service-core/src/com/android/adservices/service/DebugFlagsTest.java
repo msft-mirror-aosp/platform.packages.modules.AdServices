@@ -22,6 +22,7 @@ import static com.android.adservices.service.DebugFlags.DEFAULT_FLEDGE_CONSENTED
 import static com.android.adservices.service.DebugFlags.DEFAULT_FLEDGE_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_PROTECTED_APP_SIGNALS_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlags.DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
@@ -33,6 +34,7 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_AUCT
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.Flags.CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
@@ -150,6 +152,14 @@ public final class DebugFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED,
                 DEFAULT_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED,
                 DebugFlags::getAdServicesJsIsolateConsoleMessagesInLogsEnabled);
+    }
+
+    @Test
+    public void testRecordTopicsCompleteBroadcastEnabled() {
+        testDebugFlag(
+                KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED,
+                DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED,
+                DebugFlags::getRecordTopicsCompleteBroadcastEnabled);
     }
 
     private void testDebugFlag(
