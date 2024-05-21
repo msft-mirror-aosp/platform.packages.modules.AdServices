@@ -90,6 +90,20 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testLogE() throws Exception {
+        mCallback.logE("%d D'OH!s", 42);
+
+        ImmutableList<LogEntry> logEntries = mFakeLogger.getEntries();
+        assertWithMessage("log entries").that(logEntries).hasSize(1);
+        expect.withMessage("logged message")
+                .about(logEntry())
+                .that(logEntries.get(0))
+                .hasLevel(LogLevel.ERROR)
+                .hasTag(LOG_TAG)
+                .hasMessage(mCallback + ": 42 D'OH!s");
+    }
+
+    @Test
     public void testLogD() throws Exception {
         mCallback.logD("Dude: %s", "Sweet!");
 
@@ -128,7 +142,7 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
         }
     }
 
-    // TODO(b/285014040): move to superclass
+    // TODO(b/285014040): move to ConcurrencyHelper
     private void runLater(long when, Runnable r) {
         startNewThread(
                 () -> {
@@ -137,7 +151,7 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
                 });
     }
 
-    // TODO(b/285014040): move to superclass
+    // TODO(b/285014040): move to ConcurrencyHelper
     private Thread startNewThread(Runnable r) {
         String threadName = mLog.getTag() + "-runLaterThread-" + sThreadId.incrementAndGet();
         mLog.d("Starting new thread (%s) to run %s", threadName, r);
