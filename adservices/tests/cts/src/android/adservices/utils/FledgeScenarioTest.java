@@ -220,6 +220,14 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
         Log.d(TAG, "Left Custom Audience: " + customAudienceName);
     }
 
+    protected void leaveCustomAudience(CustomAudience customAudience)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        mCustomAudienceClient
+                .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
+                .get(TIMEOUT, TimeUnit.SECONDS);
+        Log.d(TAG, "Left Custom Audience: " + customAudience.getName());
+    }
+
     protected void doScheduleCustomAudienceUpdate(ScheduleCustomAudienceUpdateRequest request)
             throws ExecutionException, InterruptedException, TimeoutException {
         mCustomAudienceClient.scheduleCustomAudienceUpdate(request).get(TIMEOUT, TimeUnit.SECONDS);
