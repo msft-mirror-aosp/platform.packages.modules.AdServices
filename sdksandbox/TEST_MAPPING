@@ -238,6 +238,9 @@
       "name": "CtsContentTestCases"
     },
     {
+      "name": "CtsDatabaseTestCases"
+    },
+    {
       "name": "CtsGraphicsTestCases"
     },
     {
