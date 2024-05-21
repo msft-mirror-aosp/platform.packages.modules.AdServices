@@ -378,6 +378,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetFledgeJsScriptResultCodeMetricsEnabled() {
+        testFeatureFlag(
+                "FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED",
+                Flags::getFledgeJsScriptResultCodeMetricsEnabled);
+    }
+
+    @Test
     public void testGetSpeOnPilotJobsEnabled() {
         testFeatureFlag("DEFAULT_SPE_ON_PILOT_JOBS_ENABLED", Flags::getSpeOnPilotJobsEnabled);
     }

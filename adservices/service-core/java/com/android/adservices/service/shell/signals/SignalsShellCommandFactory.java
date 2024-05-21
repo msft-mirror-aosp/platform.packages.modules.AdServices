@@ -38,7 +38,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SignalsShellCommandFactory implements ShellCommandFactory {
-    public static final String COMMAND_PREFIX = "app-signals";
+    public static final String COMMAND_PREFIX = "app_signals";
     private final Map<String, ShellCommand> mAllCommandsMap;
     private final boolean mIsSignalsCliEnabled;
 
@@ -46,8 +46,9 @@ public class SignalsShellCommandFactory implements ShellCommandFactory {
             boolean isSignalsCliEnabled, ProtectedSignalsDao protectedSignalsDao) {
         mIsSignalsCliEnabled = isSignalsCliEnabled;
         Set<ShellCommand> allCommandsMap =
-                ImmutableSet.of(new GenerateInputForEncodingCommand(
-                        new SignalsProviderImpl(protectedSignalsDao)));
+                ImmutableSet.of(
+                        new GenerateInputForEncodingCommand(
+                                new SignalsProviderImpl(protectedSignalsDao)));
         mAllCommandsMap =
                 allCommandsMap.stream()
                         .collect(

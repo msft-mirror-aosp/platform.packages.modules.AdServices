@@ -2688,6 +2688,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeJsScriptResultCodeMetricsEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED,
+                FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS,
@@ -5440,6 +5447,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED
                         + " = "
                         + getFledgeReportImpressionApiMetricsEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED
+                        + " = "
+                        + getFledgeJsScriptResultCodeMetricsEnabled());
     }
 
     @VisibleForTesting

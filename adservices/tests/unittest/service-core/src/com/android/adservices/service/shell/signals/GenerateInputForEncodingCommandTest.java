@@ -65,8 +65,7 @@ public final class GenerateInputForEncodingCommandTest
     private static final long JS_SCRIPT_ENGINE_TIMEOUT_SEC = 10;
     public static final String VALID_SIGNAL_KEY = "someKey";
 
-    @Mock
-    private SignalsProvider mSignalsProvider;
+    @Mock private SignalsProvider mSignalsProvider;
 
     // For executing the generated script after the command runs.
     private JSScriptEngine mJSScriptEngine;
@@ -93,13 +92,12 @@ public final class GenerateInputForEncodingCommandTest
         List<ProtectedSignal> signals =
                 List.of(
                         ProtectedSignalsFixture.generateProtectedSignal(
-                                SIGNAL_GENERATION_SEED_1, new byte[]{(byte) 0xA1}),
+                                SIGNAL_GENERATION_SEED_1, new byte[] {(byte) 0xA1}),
                         ProtectedSignalsFixture.generateProtectedSignal(
-                                SIGNAL_GENERATION_SEED_2, new byte[]{(byte) 0xA2}));
+                                SIGNAL_GENERATION_SEED_2, new byte[] {(byte) 0xA2}));
         when(mSignalsProvider.getSignals(BUYER)).thenReturn(Map.of(VALID_SIGNAL_KEY, signals));
 
         Result actualResult = runCommandAndGetResult(BUYER);
-
         expectSuccess(actualResult, EXPECTED_COMMAND);
         String jsScript = actualResult.mOut;
         Exception exception =
@@ -112,18 +110,18 @@ public final class GenerateInputForEncodingCommandTest
                                                 mIsolateSettings,
                                                 new NoOpRetryStrategyImpl())
                                         .get(JS_SCRIPT_ENGINE_TIMEOUT_SEC, TimeUnit.SECONDS));
-        // We expect that ad techs need to define the encodeSignals() logic for this to execute, but
+
+        // We expect that ad techs need to define the encodeSignals() logic for this to
+        // execute, but
         // there should be no parsing errors.
         assertThat(exception.getMessage())
                 .contains("Uncaught ReferenceError: encodeSignals is not defined");
         assertThat(jsScript).contains(ProtectedSignalsFixture.PACKAGE_NAME_PREFIX);
         Base64.Encoder encoder = Base64.getEncoder();
         assertThat(jsScript)
-                .contains(
-                        validateAndSerializeBase64(signals.get(0).getBase64EncodedValue()));
+                .contains(validateAndSerializeBase64(signals.get(0).getBase64EncodedValue()));
         assertThat(jsScript)
-                .contains(
-                        validateAndSerializeBase64(signals.get(1).getBase64EncodedValue()));
+                .contains(validateAndSerializeBase64(signals.get(1).getBase64EncodedValue()));
     }
 
     @Test

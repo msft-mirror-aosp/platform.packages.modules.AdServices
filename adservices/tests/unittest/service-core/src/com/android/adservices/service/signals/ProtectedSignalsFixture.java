@@ -18,8 +18,6 @@ package com.android.adservices.service.signals;
 
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.data.signals.DBProtectedSignal;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;

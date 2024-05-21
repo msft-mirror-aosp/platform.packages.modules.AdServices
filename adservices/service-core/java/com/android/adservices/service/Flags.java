@@ -3671,6 +3671,14 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED;
     }
 
+    // Fledge JS script result code metrics flag.
+    @FeatureFlag boolean FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED = false;
+
+    /** Returns whether the FLEDGE JS script result code metrics feature is enabled. */
+    default boolean getFledgeJsScriptResultCodeMetricsEnabled() {
+        return FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED;
+    }
+
     /**
      * Default allowlist of the enrollments for whom debug key insertion based on join key matching
      * is allowed.
