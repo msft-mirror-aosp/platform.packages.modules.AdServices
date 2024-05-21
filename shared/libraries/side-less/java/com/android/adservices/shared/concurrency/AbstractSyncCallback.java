@@ -25,6 +25,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 /** Base implementation for {@link SyncCallback}. */
 public abstract class AbstractSyncCallback implements SyncCallback {
 
+    /** Tag used on {@code logcat} calls. */
+    public static final String LOG_TAG = "SyncCallback";
+
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
 
     private final String mId = getClass().getSimpleName() + '#' + sIdGenerator.incrementAndGet();
@@ -49,11 +52,11 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     protected void customizeToString(StringBuilder string) {}
 
     /** Gets a unique id identifying the callback - used for logging / debugging purposes. */
-    protected final String getId() {
+    public final String getId() {
         return mId;
     }
 
-    // TODO(b/341797803): add @Nullable on msgArgs
+    // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
     /**
      * Convenience method to log a debug message.
      *
@@ -61,11 +64,11 @@ public abstract class AbstractSyncCallback implements SyncCallback {
      * id} in the message.
      */
     @FormatMethod
-    protected void logD(@FormatString String msgFmt, Object... msgArgs) {
+    public void logD(@FormatString String msgFmt, Object... msgArgs) {
         // TODO(b/280460130): use side-less Logger so it's not empty
     }
 
-    // TODO(b/341797803): add @Nullable on msgArgs
+    // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
     /**
      * Convenience method to log a verbose message.
      *
@@ -73,7 +76,7 @@ public abstract class AbstractSyncCallback implements SyncCallback {
      * by {@link #toString()}) in the message.
      */
     @FormatMethod
-    protected void logV(@FormatString String msgFmt, Object... msgArgs) {
+    public void logV(@FormatString String msgFmt, Object... msgArgs) {
         // TODO(b/280460130): use side-less Logger so it's not empty
     }
 
@@ -87,8 +90,9 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         }
     }
 
+    // NOTE: not final because test version might disable it
     @Override
-    public final void waitCalled() throws InterruptedException {
+    public void waitCalled() throws InterruptedException {
         logD("waitCalled() called");
         try {
             mLatch.await();
@@ -97,8 +101,9 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         }
     }
 
+    // NOTE: not final because test version might set timeout on constructor
     @Override
-    public final void waitCalled(long timeout, TimeUnit unit) throws InterruptedException {
+    public void waitCalled(long timeout, TimeUnit unit) throws InterruptedException {
         logD("waitCalled(%d, %s) called", timeout, unit);
         try {
             if (!mLatch.await(timeout, unit)) {
