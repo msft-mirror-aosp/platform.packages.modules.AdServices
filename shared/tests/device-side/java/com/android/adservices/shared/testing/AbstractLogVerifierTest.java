@@ -71,13 +71,13 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         TestLogVerifier testLogVerifier =
                 new TestLogVerifier(
                         ImmutableSet.of(
-                                new TestLogCall(/* times= */ 2, /* arg= */ 2),
-                                new TestLogCall(/* times= */ 1, /* arg= */ 3)));
+                                new TestLogCall(/* times= */ 2, /* param= */ 2),
+                                new TestLogCall(/* times= */ 1, /* param= */ 3)));
 
         // Record one actual call at a time to mimic mocking of log call invocations
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 2));
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 3));
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 2));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 2));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 3));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 2));
 
         testLogVerifier.verify(mDescription);
     }
@@ -88,9 +88,9 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         TestLogVerifier testLogVerifier = new TestLogVerifier(ImmutableSet.of());
 
         // Record one actual call at a time to mimic mocking of log call invocations
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 2));
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 3));
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 2));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 2));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 3));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 2));
 
         Exception exception =
                 assertThrows(
@@ -116,8 +116,8 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         TestLogVerifier testLogVerifier =
                 new TestLogVerifier(
                         ImmutableSet.of(
-                                new TestLogCall(/* times= */ 2, /* arg= */ 2),
-                                new TestLogCall(/* times= */ 1, /* arg= */ 3)));
+                                new TestLogCall(/* times= */ 2, /* param= */ 2),
+                                new TestLogCall(/* times= */ 1, /* param= */ 3)));
 
         Exception exception =
                 assertThrows(
@@ -143,19 +143,19 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         TestLogVerifier testLogVerifier =
                 new TestLogVerifier(
                         ImmutableSet.of(
-                                new TestLogCall(/* times= */ 3, /* arg= */ 2),
-                                new TestLogCall(/* times= */ 2, /* arg= */ 4)));
+                                new TestLogCall(/* times= */ 3, /* param= */ 2),
+                                new TestLogCall(/* times= */ 2, /* param= */ 4)));
 
         // Record one actual call at a time to mimic mocking of log call invocations
         // Same as expected calls
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 2));
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 2));
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 2));
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 4));
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 4));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 2));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 2));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 2));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 4));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 4));
         // Additional calls
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 5));
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 5));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 5));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 5));
 
         Exception exception =
                 assertThrows(
@@ -182,14 +182,14 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         TestLogVerifier testLogVerifier =
                 new TestLogVerifier(
                         ImmutableSet.of(
-                                new TestLogCall(/* times= */ 2, /* arg= */ 1),
-                                new TestLogCall(/* times= */ 4, /* arg= */ 2),
-                                new TestLogCall(/* times= */ 1, /* arg= */ 3)));
+                                new TestLogCall(/* times= */ 2, /* param= */ 1),
+                                new TestLogCall(/* times= */ 4, /* param= */ 2),
+                                new TestLogCall(/* times= */ 1, /* param= */ 3)));
 
         // Record one actual call at a time to mimic mocking of log call invocations
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 1));
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 2));
-        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* arg= */ 1));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 1));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 2));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 1));
 
         Exception exception =
                 assertThrows(
