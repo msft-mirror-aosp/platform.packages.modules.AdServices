@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
 
@@ -46,6 +47,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
@@ -61,7 +63,7 @@ import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,7 +74,6 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -91,7 +92,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @SmallTest
-public class AdSelectionScriptEngineTest {
+@RequiresSdkLevelAtLeastS
+public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String TAG = "AdSelectionScriptEngineTest";
 
@@ -206,9 +208,6 @@ public class AdSelectionScriptEngineTest {
 
     private RetryStrategy mRetryStrategy;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
@@ -294,7 +293,7 @@ public class AdSelectionScriptEngineTest {
                                         ImmutableList.of(),
                                         AD_DATA_ARGUMENT_UTIL_WITHOUT_COPIER));
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -969,8 +968,7 @@ public class AdSelectionScriptEngineTest {
                                         AdSelectionSignals.EMPTY,
                                         CUSTOM_AUDIENCE_SIGNALS_1));
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
-        Assert.assertTrue(exception.getCause() instanceof JSExecutionException);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -1225,6 +1223,35 @@ public class AdSelectionScriptEngineTest {
         assertThat(results.size()).isEqualTo(1);
         assertThat(results.get(0).getWinDebugReportUri()).isEqualTo(Uri.EMPTY);
         assertThat(results.get(0).getLossDebugReportUri()).isEqualTo(Uri.EMPTY);
+    }
+
+    @Test
+    public void testGenerateBidJsReferenceError() throws Exception {
+        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+
+        Exception exception =
+                Assert.assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                generateBids(
+                                        "function generateBid(ad, auction_signals,"
+                                            + " per_buyer_signals, trusted_bidding_signals,"
+                                            + " contextual_signals, custom_audience_signals) { \n"
+                                            + " if (unknown > 2) return {'status': 0, 'ad': ad };\n"
+                                            + " else return {'status': 0, 'ad': ad, 'bid': 10 };\n"
+                                            + "}",
+                                        AD_DATA_WITH_DOUBLE_RESULT_LIST,
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        CUSTOM_AUDIENCE_SIGNALS_1));
+
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock)
+                .setGenerateBidJsScriptResultCode(JS_RUN_STATUS_JS_REFERENCE_ERROR);
+
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test

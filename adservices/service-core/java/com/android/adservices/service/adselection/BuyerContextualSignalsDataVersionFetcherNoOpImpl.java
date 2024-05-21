@@ -34,12 +34,12 @@ public class BuyerContextualSignalsDataVersionFetcherNoOpImpl
     /** Returns {@link AdSelectionSignals#EMPTY} since data version header is disabled. */
     @Override
     @NonNull
-    public AdSelectionSignals getContextualSignalsForGenerateBid(
+    public BuyerContextualSignals getContextualSignalsForGenerateBid(
             @NonNull DBTrustedBiddingData trustedBiddingData,
             @NonNull Map<Uri, TrustedBiddingResponse> trustedBiddingDataByBaseUri) {
         Objects.requireNonNull(trustedBiddingData);
         Objects.requireNonNull(trustedBiddingDataByBaseUri);
-        return AdSelectionSignals.EMPTY;
+        return BuyerContextualSignals.builder().build();
     }
 
     /**

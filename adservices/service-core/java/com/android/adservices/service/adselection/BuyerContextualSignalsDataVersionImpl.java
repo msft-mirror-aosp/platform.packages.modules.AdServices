@@ -25,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
 import java.util.Map;
@@ -33,6 +34,7 @@ import java.util.Objects;
 /** Contains implementation of extracting data version header into buyer contextual signals. */
 public class BuyerContextualSignalsDataVersionImpl
         implements BuyerContextualSignalsDataVersionFetcher {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     /**
      * Tries to fetch the data version from trusted bidding data headers. If it exists, returns
@@ -41,19 +43,17 @@ public class BuyerContextualSignalsDataVersionImpl
      */
     @Override
     @NonNull
-    public AdSelectionSignals getContextualSignalsForGenerateBid(
+    public BuyerContextualSignals getContextualSignalsForGenerateBid(
             @NonNull DBTrustedBiddingData trustedBiddingData,
             @NonNull Map<Uri, TrustedBiddingResponse> trustedBiddingDataByBaseUri) {
         Objects.requireNonNull(trustedBiddingData);
         Objects.requireNonNull(trustedBiddingDataByBaseUri);
         try {
             int dataVersion = getBuyerDataVersion(trustedBiddingData, trustedBiddingDataByBaseUri);
-            return BuyerContextualSignals.builder()
-                    .setDataVersion(dataVersion)
-                    .build()
-                    .toAdSelectionSignals();
+            return BuyerContextualSignals.builder().setDataVersion(dataVersion).build();
         } catch (IllegalStateException e) {
-            return AdSelectionSignals.EMPTY;
+            sLogger.d("BuyerContextualSignals doesn't contain data version");
+            return BuyerContextualSignals.builder().build();
         }
     }
 

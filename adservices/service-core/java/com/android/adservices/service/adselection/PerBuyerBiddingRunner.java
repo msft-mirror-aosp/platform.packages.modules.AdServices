@@ -160,7 +160,7 @@ public class PerBuyerBiddingRunner {
                 adSelectionConfig.getAdSelectionSignals(),
                 buyerSignal,
                 new RunAdBiddingPerCAExecutionLogger(
-                        Clock.getInstance(), AdServicesLoggerImpl.getInstance()));
+                        Clock.getInstance(), AdServicesLoggerImpl.getInstance(), mFlags));
     }
 
     /**

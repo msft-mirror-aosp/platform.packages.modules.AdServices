@@ -16,6 +16,7 @@
 
 package com.android.adservices.tests.cts.topics;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
@@ -35,7 +36,9 @@ import androidx.test.filters.FlakyTest;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.compatibility.common.util.ShellUtils;
@@ -50,6 +53,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 // TODO(b/243062789): Test should not use CountDownLatch or Sleep.
+@EnableDebugFlag(KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED)
 public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
 
     // Test constants for testing encryption
@@ -93,6 +97,9 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     private static final String INCORRECT_TAXONOMY_VERSION_MESSAGE =
             "Incorrect taxonomy version detected. Please repo sync, build and install the new"
                     + " apex.";
+
+    private static final String ACTION_RECORD_TOPICS_COMPLETE =
+            "android.adservices.debug.RECORD_TOPICS_COMPLETE";
 
     @Before
     public void setup() throws Exception {
@@ -179,7 +186,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk5 receives no topic.
-        GetTopicsResponse sdk5Result = advertisingTopicsClient5.getTopics().get();
+        GetTopicsResponse sdk5Result = getTopicsSync(advertisingTopicsClient5);
+
         assertThat(sdk5Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -243,8 +251,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .setUseGetMethodToCreateManagerInstance(useGetMethodToCreateManager)
                         .build();
 
-        // At beginning, Sdk1 receives no topic.
-        GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
+        GetTopicsResponse sdk1Result = getTopicsSync(advertisingTopicsClient1);
+
         assertThat(sdk1Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -328,7 +336,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk3 receives no topic.
-        GetTopicsResponse sdk3Result = advertisingTopicsClient3.getTopics().get();
+        GetTopicsResponse sdk3Result = getTopicsSync(advertisingTopicsClient3);
+
         assertThat(sdk3Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -407,7 +416,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk4 receives no topic.
-        GetTopicsResponse sdk4Result = advertisingTopicsClient4.getTopics().get();
+        GetTopicsResponse sdk4Result = getTopicsSync(advertisingTopicsClient4);
+
         assertThat(sdk4Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -478,7 +488,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk6 receives no topic.
-        GetTopicsResponse sdk6Result = advertisingTopicsClient6.getTopics().get();
+        GetTopicsResponse sdk6Result = getTopicsSync(advertisingTopicsClient6);
+
         assertThat(sdk6Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -545,5 +556,15 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
+    }
+
+    private GetTopicsResponse getTopicsSync(AdvertisingTopicsClient advertisingTopicsClient)
+            throws Exception {
+        BroadcastReceiverSyncCallback receiverSyncCallback =
+                new BroadcastReceiverSyncCallback(sContext);
+        receiverSyncCallback.prepare(ACTION_RECORD_TOPICS_COMPLETE);
+        GetTopicsResponse sdkResult = advertisingTopicsClient.getTopics().get();
+        receiverSyncCallback.assertResultReceived();
+        return sdkResult;
     }
 }

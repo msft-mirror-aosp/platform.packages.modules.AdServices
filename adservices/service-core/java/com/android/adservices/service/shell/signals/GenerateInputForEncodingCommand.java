@@ -25,7 +25,6 @@ import android.adservices.common.AdTechIdentifier;
 import android.util.Log;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandArgParserHelper;
@@ -33,7 +32,6 @@ import com.android.adservices.service.shell.ShellCommandResult;
 import com.android.adservices.service.signals.ProtectedSignal;
 import com.android.adservices.service.signals.SignalsDriverLogicGenerator;
 import com.android.adservices.service.signals.SignalsProvider;
-import com.android.adservices.service.signals.SignalsProviderImpl;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -49,7 +47,7 @@ import java.util.Objects;
 public final class GenerateInputForEncodingCommand extends AbstractShellCommand {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
-    @VisibleForTesting public static final String CMD = "generate-input-for-encoding";
+    @VisibleForTesting public static final String CMD = "generate_input_for_encoding";
 
     public static final String HELP =
             SignalsShellCommandFactory.COMMAND_PREFIX

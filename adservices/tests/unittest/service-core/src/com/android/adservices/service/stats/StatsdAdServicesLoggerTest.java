@@ -2263,6 +2263,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setGenerateBidsLatencyInMillis(105)
                         .setRunBiddingLatencyInMillis(150)
                         .setRunBiddingResultCode(200)
+                        .setRunAdBiddingPerCaReturnedAdCost(true)
+                        .setGenerateBidBuyerAdditionalSignalsContainedDataVersion(false)
+                        .setGenerateBidJsScriptResultCode(2)
                         .build();
 
         doNothing()
@@ -2310,10 +2313,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(105),
                                 eq(150),
                                 eq(200),
-                                eq(false), // placeholder_bool
-                                eq(false), // placeholder_bool
-                                eq(FIELD_UNSET) // placeholder_int
-                                );
+                                eq(true),
+                                eq(false),
+                                eq(2));
 
         verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));

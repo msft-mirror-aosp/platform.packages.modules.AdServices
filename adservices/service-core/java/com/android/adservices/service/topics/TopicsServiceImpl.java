@@ -48,6 +48,7 @@ import android.adservices.topics.IGetTopicsCallback;
 import android.adservices.topics.ITopicsService;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
@@ -60,6 +61,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -91,6 +93,9 @@ import java.util.concurrent.Executor;
 public class TopicsServiceImpl extends ITopicsService.Stub {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private static final String ACTION_RECORD_TOPICS_COMPLETE =
+            "android.adservices.debug.RECORD_TOPICS_COMPLETE";
+
     private final Context mContext;
     private final TopicsWorker mTopicsWorker;
     private final AdServicesLogger mAdServicesLogger;
@@ -170,6 +175,15 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                         if (topicsParam.shouldRecordObservation()) {
                             mTopicsWorker.recordUsage(
                                     topicsParam.getAppPackageName(), topicsParam.getSdkName());
+
+                            if (DebugFlags.getInstance()
+                                    .getRecordTopicsCompleteBroadcastEnabled()) {
+                                sLogger.e(
+                                        "Sending broadcast to indicate record topics is completed"
+                                                + " with intent: "
+                                                + ACTION_RECORD_TOPICS_COMPLETE);
+                                mContext.sendBroadcast(new Intent(ACTION_RECORD_TOPICS_COMPLETE));
+                            }
                         }
                     } catch (RemoteException e) {
                         sLogger.e(e, "Unable to send result to the callback");
