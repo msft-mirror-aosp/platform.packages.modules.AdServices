@@ -26,6 +26,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Optional;
@@ -50,7 +51,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @param <T> type of the object received on success.
  * @param <E> type of the object received on error.
+ * @deprecated will be replaced by {@link FailableResultSyncCallback}.
  */
+@Deprecated
 public class SyncCallback<T, E> implements Identifiable {
 
     @VisibleForTesting static final String TAG = SyncCallback.class.getSimpleName();

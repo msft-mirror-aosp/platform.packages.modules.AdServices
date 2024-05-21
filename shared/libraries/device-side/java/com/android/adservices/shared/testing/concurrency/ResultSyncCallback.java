@@ -26,7 +26,8 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @param <T> type of the result.
  */
-public class ResultSyncCallback<T> extends AbstractTestSyncCallback {
+public class ResultSyncCallback<T> extends AbstractTestSyncCallback
+        implements ResultTestSyncCallback<T> {
 
     private final AtomicReference<Optional<T>> mResult = new AtomicReference<>();
 
@@ -47,8 +48,7 @@ public class ResultSyncCallback<T> extends AbstractTestSyncCallback {
         logV("Injecting %s (mResult=%s)", result, mResult);
         Optional<T> newResult = Optional.fromNullable(result);
         if (!mResult.compareAndSet(null, newResult)) {
-            throw new IllegalStateException(
-                    "injectResult already called (with " + getResult() + ")");
+            throw new CallbackAlreadyCalledException("injectResult()", getResult(), result);
         }
         super.setCalled();
     }
@@ -76,5 +76,16 @@ public class ResultSyncCallback<T> extends AbstractTestSyncCallback {
     @Override
     public final void setCalled() {
         throw new UnsupportedOperationException("should call injectResult() instead");
+    }
+
+    @Override
+    protected void customizeToString(StringBuilder string) {
+        super.customizeToString(string);
+
+        if (mResult.get() == null) {
+            string.append(", (no result yet)");
+        } else {
+            string.append(", result=").append(getResult());
+        }
     }
 }

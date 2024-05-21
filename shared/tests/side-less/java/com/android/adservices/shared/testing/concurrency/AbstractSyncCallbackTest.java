@@ -224,6 +224,27 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testAppendInfo_null() {
+        assertThrows(NullPointerException.class, () -> mSingleCallback.appendInfo(null));
+    }
+
+    @Test
+    public void testAppendInfo() {
+        StringBuilder builder = new StringBuilder("[ConcreteSyncCallback: ");
+
+        StringBuilder returned = mSingleCallback.appendInfo(builder);
+
+        expect.withMessage("object returned by appendInfo()")
+                .that(returned)
+                .isSameInstanceAs(builder);
+        String manualToString = builder.append(']').toString();
+        String toString = mSingleCallback.toString();
+        expect.withMessage("toString() created from appendInfo")
+                .that(manualToString)
+                .isEqualTo(toString);
+    }
+
+    @Test
     public void testCustomizeToString() {
         AbstractSyncCallback callback =
                 new AbstractSyncCallback(new SyncCallbackSettings.Builder().build()) {

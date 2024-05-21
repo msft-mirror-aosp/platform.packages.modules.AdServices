@@ -15,11 +15,11 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import com.android.adservices.shared.SharedExtendedMockitoTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 
 import org.junit.Test;
 
-public final class SimpleSyncCallbackTest extends SharedExtendedMockitoTestCase {
+public final class SimpleSyncCallbackTest extends SharedMockitoTestCase {
 
     @Test
     public void testGetCalled_singleCallback() {
