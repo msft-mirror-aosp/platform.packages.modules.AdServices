@@ -117,7 +117,8 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
                 .hasMessage(mCallback + ": Vuve: Sddeet!");
     }
 
-    private final class ConcreteSidelessTestSyncCallback extends AbstractSidelessTestSyncCallback {
+    private static final class ConcreteSidelessTestSyncCallback
+            extends AbstractSidelessTestSyncCallback {
         ConcreteSidelessTestSyncCallback(RealLogger realLogger) {
             super(realLogger);
         }
