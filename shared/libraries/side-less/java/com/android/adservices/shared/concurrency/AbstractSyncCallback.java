@@ -80,8 +80,9 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         // TODO(b/280460130): use side-less Logger so it's not empty
     }
 
+    // NOTE: not final because test version might disable it
     @Override
-    public final void setCalled() {
+    public void setCalled() {
         logD("setCalled() called");
         try {
             mLatch.countDown();
