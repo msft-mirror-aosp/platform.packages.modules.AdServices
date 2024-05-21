@@ -98,8 +98,8 @@ import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
-import com.android.adservices.shared.testing.NoFailureSyncCallback;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableMap;
@@ -195,7 +195,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     private AdsRelevanceExecutionLoggerFactory mAdsRelevanceExecutionLoggerFactory;
     private AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
 
-    private NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback;
+    private ResultSyncCallback<ApiCallStats> logApiCallStatsCallback;
 
     private AdServicesLogger mAdServicesLoggerSpy;
     @Mock private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;

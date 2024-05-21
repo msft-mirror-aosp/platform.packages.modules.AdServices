@@ -57,7 +57,7 @@ import com.android.adservices.shared.spe.framework.TestJobService;
 import com.android.adservices.shared.spe.framework.TestJobServiceFactory;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
-import com.android.adservices.shared.testing.NoFailureSyncCallback;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -308,11 +308,11 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
     public void testAddCallbackToSchedulingFuture_onSuccess() throws Exception {
         ListenableFuture<Integer> future =
                 Futures.immediateFuture(SCHEDULING_RESULT_CODE_SUCCESSFUL);
-        NoFailureSyncCallback<Void> callback = syncRecordOnScheduling();
+        ResultSyncCallback<Void> callback = syncRecordOnScheduling();
 
         mPolicyJobScheduler.addCallbackToSchedulingFuture(future, JOB_ID_1);
 
-        callback.assertReceived();
+        callback.assertResultReceived();
         verify(mMockJobSchedulingLogger)
                 .recordOnScheduling(JOB_ID_1, SCHEDULING_RESULT_CODE_SUCCESSFUL);
     }
@@ -321,11 +321,11 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
     public void testAddCallbackToSchedulingFuture_onFailure() throws Exception {
         RuntimeException exception = new RuntimeException("Failed!");
         ListenableFuture<Integer> future = Futures.immediateFailedFuture(exception);
-        NoFailureSyncCallback<Void> callback = syncRecordOnScheduling();
+        ResultSyncCallback<Void> callback = syncRecordOnScheduling();
 
         mPolicyJobScheduler.addCallbackToSchedulingFuture(future, JOB_ID_1);
 
-        callback.assertReceived();
+        callback.assertResultReceived();
         verify(mMockErrorLogger)
                 .logErrorWithExceptionInfo(
                         exception,
@@ -364,8 +364,8 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
                 .isEqualTo(expectedJobInfo);
     }
 
-    private NoFailureSyncCallback<Void> syncRecordOnScheduling() {
-        NoFailureSyncCallback<Void> callback = new NoFailureSyncCallback<>();
+    private ResultSyncCallback<Void> syncRecordOnScheduling() {
+        ResultSyncCallback<Void> callback = new ResultSyncCallback<>();
 
         doAnswer(
                         invocation -> {
