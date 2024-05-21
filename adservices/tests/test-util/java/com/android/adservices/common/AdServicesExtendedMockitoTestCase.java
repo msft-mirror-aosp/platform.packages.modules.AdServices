@@ -30,11 +30,11 @@ import com.android.adservices.mockito.LogInterceptor;
 import com.android.adservices.mockito.SharedMocker;
 import com.android.adservices.mockito.SharedMockitoMocker;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
-
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -183,6 +183,11 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         public void mockAdServicesJobServiceFactory(
                 AdServicesJobServiceFactory mockedAdServicesJobServiceFactory) {
             mAdServicesMocker.mockAdServicesJobServiceFactory(mockedAdServicesJobServiceFactory);
+        }
+
+        @Override
+        public void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl) {
+            mAdServicesMocker.mockAdServicesLoggerImpl(mockedAdServicesLoggerImpl);
         }
 
         // SharedMocker methods

@@ -172,6 +172,7 @@ public class AdsScoreGeneratorImplTest {
     private Dispatcher mDefaultDispatcher;
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
     private AdSelectionExecutionLogger mAdSelectionExecutionLogger;
+    private static final boolean DATA_VERSION_HEADER_STATUS_DISABLED = false;
     @Mock Clock mAdSelectionExecutionLoggerClock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
 
@@ -287,9 +288,10 @@ public class AdsScoreGeneratorImplTest {
                         sCallerMetadata,
                         mAdSelectionExecutionLoggerClock,
                         ApplicationProvider.getApplicationContext(),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mFlags);
         when(mDebugReporting.isEnabled()).thenReturn(false);
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, DATA_VERSION_HEADER_STATUS_DISABLED);
     }
 
     @Test
@@ -331,14 +333,13 @@ public class AdsScoreGeneratorImplTest {
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
+                    mAdSelectionExecutionLogger
+                            .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                    DATA_VERSION_HEADER_STATUS_DISABLED);
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
                             scores.stream()
-                                    .map(
-                                            score ->
-                                                    ScoreAdResult.builder()
-                                                            .setAdScore(score)
-                                                            .build())
+                                    .map(score -> ScoreAdResult.builder().setAdScore(score).build())
                                     .collect(Collectors.toList()));
                 };
         Mockito.when(
@@ -393,13 +394,17 @@ public class AdsScoreGeneratorImplTest {
         assertEquals(1L, scoringOutcome.get(0).getAdWithScore().getScore().longValue());
         assertEquals(2L, scoringOutcome.get(1).getAdWithScore().getScore().longValue());
         verifySuccessAdScoringLogging(
-                mSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);
+                mSellerDecisionLogicJs,
+                mTrustedScoringSignals,
+                mAdBiddingOutcomeList,
+                DATA_VERSION_HEADER_STATUS_DISABLED);
     }
 
     @Test
     public void testRunAdScoringSuccessWithDataVersionHeaderEnabled() throws Exception {
         // Re init generator
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, true);
+        boolean dataVersionHeaderEnabled = true;
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -445,6 +450,9 @@ public class AdsScoreGeneratorImplTest {
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
+                    mAdSelectionExecutionLogger
+                            .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                    dataVersionHeaderEnabled);
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
                             scores.stream()
@@ -512,13 +520,17 @@ public class AdsScoreGeneratorImplTest {
                 expectedSellerContextualSignals,
                 scoringOutcome.get(1).getSellerContextualSignals().toAdSelectionSignals());
         verifySuccessAdScoringLogging(
-                mSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);
+                mSellerDecisionLogicJs,
+                mTrustedScoringSignals,
+                mAdBiddingOutcomeList,
+                dataVersionHeaderEnabled);
     }
 
     @Test
     public void testRunAdScoringSuccessWithDataVersionHeaderDisabled() throws Exception {
         // Re init generator
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
+        boolean dataVersionHeaderEnabled = false;
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -558,6 +570,9 @@ public class AdsScoreGeneratorImplTest {
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
+                    mAdSelectionExecutionLogger
+                            .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                    dataVersionHeaderEnabled);
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
                             scores.stream()
@@ -625,7 +640,10 @@ public class AdsScoreGeneratorImplTest {
                 AdSelectionSignals.EMPTY,
                 scoringOutcome.get(1).getSellerContextualSignals().toAdSelectionSignals());
         verifySuccessAdScoringLogging(
-                mSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);
+                mSellerDecisionLogicJs,
+                mTrustedScoringSignals,
+                mAdBiddingOutcomeList,
+                dataVersionHeaderEnabled);
     }
 
     @Test
@@ -681,6 +699,9 @@ public class AdsScoreGeneratorImplTest {
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
+                    mAdSelectionExecutionLogger
+                            .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                    DATA_VERSION_HEADER_STATUS_DISABLED);
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
                             scores.stream()
@@ -714,7 +735,8 @@ public class AdsScoreGeneratorImplTest {
                                 mAdSelectionExecutionLogger))
                 .thenAnswer(loggerAnswer);
 
-        AdsScoreGenerator adsScoreGenerator = initAdScoreGeneratorWithMockHttpClient(mFlags, false);
+        AdsScoreGenerator adsScoreGenerator =
+                initAdScoreGeneratorWithMockHttpClient(mFlags, DATA_VERSION_HEADER_STATUS_DISABLED);
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 adsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
@@ -763,13 +785,17 @@ public class AdsScoreGeneratorImplTest {
         assertEquals(
                 sellerRejectReason, scoringOutcome.get(1).getDebugReport().getSellerRejectReason());
         verifySuccessAdScoringLogging(
-                mSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);
+                mSellerDecisionLogicJs,
+                mTrustedScoringSignals,
+                mAdBiddingOutcomeList,
+                DATA_VERSION_HEADER_STATUS_DISABLED);
     }
 
     @Test
     public void testRunAdScoringContextual_Success() throws Exception {
         mFlags = new AdsScoreGeneratorImplTestFlags(true);
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
+        boolean dataVersionHeaderEnabled = false;
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -822,14 +848,13 @@ public class AdsScoreGeneratorImplTest {
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
+                    mAdSelectionExecutionLogger
+                            .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                    dataVersionHeaderEnabled);
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
                             scores.stream()
-                                    .map(
-                                            score ->
-                                                    ScoreAdResult.builder()
-                                                            .setAdScore(score)
-                                                            .build())
+                                    .map(score -> ScoreAdResult.builder().setAdScore(score).build())
                                     .collect(Collectors.toList()));
                 };
         Mockito.when(
@@ -884,14 +909,18 @@ public class AdsScoreGeneratorImplTest {
         assertEquals(500, scoringOutcome.get(6).getAdWithScore().getAdWithBid().getBid(), 0);
 
         verifySuccessAdScoringLogging(
-                mSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);
+                mSellerDecisionLogicJs,
+                mTrustedScoringSignals,
+                mAdBiddingOutcomeList,
+                DATA_VERSION_HEADER_STATUS_DISABLED);
     }
 
 
     @Test
     public void testRunAdScoringContextual_withDebugReportingEnabled_Success() throws Exception {
         mFlags = new AdsScoreGeneratorImplTestFlags(true);
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
+        boolean dataVersionHeaderEnabled = false;
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -945,6 +974,9 @@ public class AdsScoreGeneratorImplTest {
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
+                    mAdSelectionExecutionLogger
+                            .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                    dataVersionHeaderEnabled);
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
                             scores.stream()
@@ -979,7 +1011,8 @@ public class AdsScoreGeneratorImplTest {
                                 mAdSelectionExecutionLogger))
                 .thenAnswer(loggerAnswer);
 
-        AdsScoreGenerator adsScoreGenerator = initAdScoreGenerator(mFlags, false);
+        AdsScoreGenerator adsScoreGenerator =
+                initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 adsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
@@ -1025,13 +1058,17 @@ public class AdsScoreGeneratorImplTest {
         assertEquals("invalid-bid", scoringOutcome.get(1).getDebugReport().getSellerRejectReason());
 
         verifySuccessAdScoringLogging(
-                mSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);
+                mSellerDecisionLogicJs,
+                mTrustedScoringSignals,
+                mAdBiddingOutcomeList,
+                dataVersionHeaderEnabled);
     }
 
     @Test
     public void testRunAdScoringContextual_UseOverride_Success() throws Exception {
         mFlags = new AdsScoreGeneratorImplTestFlags(true);
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
+        boolean dataVersionHeaderEnabled = false;
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -1114,14 +1151,13 @@ public class AdsScoreGeneratorImplTest {
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
+                    mAdSelectionExecutionLogger
+                            .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                    dataVersionHeaderEnabled);
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
                             scores.stream()
-                                    .map(
-                                            score ->
-                                                    ScoreAdResult.builder()
-                                                            .setAdScore(score)
-                                                            .build())
+                                    .map(score -> ScoreAdResult.builder().setAdScore(score).build())
                                     .collect(Collectors.toList()));
                 };
         Mockito.when(
@@ -1141,7 +1177,7 @@ public class AdsScoreGeneratorImplTest {
                                 mAdSelectionExecutionLogger))
                 .thenAnswer(loggerAnswer);
 
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 mAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
@@ -1185,13 +1221,17 @@ public class AdsScoreGeneratorImplTest {
         assertEquals(fakeDecisionLogicForBuyer, scoringOutcome.get(6).getBiddingLogicJs());
 
         verifySuccessAdScoringLogging(
-                mSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);
+                mSellerDecisionLogicJs,
+                mTrustedScoringSignals,
+                mAdBiddingOutcomeList,
+                dataVersionHeaderEnabled);
     }
 
     @Test
     public void testRunAdScoringContextualScoresMismatch_Failure() throws Exception {
         mFlags = new AdsScoreGeneratorImplTestFlags(true);
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
+        boolean dataVersionHeaderEnabled = false;
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -1245,14 +1285,13 @@ public class AdsScoreGeneratorImplTest {
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
+                    mAdSelectionExecutionLogger
+                            .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                    dataVersionHeaderEnabled);
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
                             scores.stream()
-                                    .map(
-                                            score ->
-                                                    ScoreAdResult.builder()
-                                                            .setAdScore(score)
-                                                            .build())
+                                    .map(score -> ScoreAdResult.builder().setAdScore(score).build())
                                     .collect(Collectors.toList()));
                 };
         Mockito.when(
@@ -1412,18 +1451,18 @@ public class AdsScoreGeneratorImplTest {
                         .setCallingAppPackageName(myAppPackageName)
                         .build();
 
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, false);
+        boolean dataVersionHeaderEnabled = false;
+        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
+                    mAdSelectionExecutionLogger
+                            .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                    dataVersionHeaderEnabled);
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
                             scores.stream()
-                                    .map(
-                                            score ->
-                                                    ScoreAdResult.builder()
-                                                            .setAdScore(score)
-                                                            .build())
+                                    .map(score -> ScoreAdResult.builder().setAdScore(score).build())
                                     .collect(Collectors.toList()));
                 };
         Mockito.when(
@@ -1456,7 +1495,10 @@ public class AdsScoreGeneratorImplTest {
         Assert.assertEquals(1L, scoringOutcome.get(0).getAdWithScore().getScore().longValue());
         Assert.assertEquals(2L, scoringOutcome.get(1).getAdWithScore().getScore().longValue());
         verifySuccessAdScoringLogging(
-                differentSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);
+                differentSellerDecisionLogicJs,
+                mTrustedScoringSignals,
+                mAdBiddingOutcomeList,
+                dataVersionHeaderEnabled);
     }
 
     @Test
@@ -1808,7 +1850,8 @@ public class AdsScoreGeneratorImplTest {
     private void verifySuccessAdScoringLogging(
             String sellerDecisionLogicJs,
             AdSelectionSignals trustedScoringSignals,
-            List<AdBiddingOutcome> adBiddingOutcomeList) {
+            List<AdBiddingOutcome> adBiddingOutcomeList,
+            boolean dataVersionEnabled) {
         int fetchedAdSelectionLogicScriptSizeInBytes =
                 sellerDecisionLogicJs.getBytes(StandardCharsets.UTF_8).length;
         int fetchedTrustedScoringSignalsDataSizeInBytes =
@@ -1865,6 +1908,10 @@ public class AdsScoreGeneratorImplTest {
                 .isEqualTo(RUN_AD_SCORING_LATENCY_MS);
         assertThat(runAdScoringProcessReportedStats.getRunAdScoringResultCode())
                 .isEqualTo(STATUS_SUCCESS);
+        assertThat(
+                        runAdScoringProcessReportedStats
+                                .getScoreAdSellerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(dataVersionEnabled);
     }
 
     private ListenableFuture<List<Double>> getScoresWithDelay(
@@ -1979,6 +2026,16 @@ public class AdsScoreGeneratorImplTest {
         @Override
         public long getAdSelectionOverallTimeoutMs() {
             return EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public boolean getFledgeDataVersionHeaderMetricsEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeJsScriptResultCodeMetricsEnabled() {
+            return true;
         }
     }
 }

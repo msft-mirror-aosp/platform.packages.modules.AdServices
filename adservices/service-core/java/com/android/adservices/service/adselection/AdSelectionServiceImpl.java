@@ -562,7 +562,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @Nullable AdSelectionCallback fullCallback) {
         final AdSelectionExecutionLogger adSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        callerMetadata, Clock.getInstance(), mContext, mAdServicesLogger);
+                        callerMetadata, Clock.getInstance(), mContext, mAdServicesLogger, mFlags);
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 
         try {

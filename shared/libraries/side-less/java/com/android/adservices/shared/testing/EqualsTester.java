@@ -15,24 +15,21 @@
  */
 package com.android.adservices.shared.testing;
 
-import androidx.annotation.Nullable;
-
-import com.google.common.truth.Expect;
+import com.google.common.truth.StandardSubjectBuilder;
 
 import java.util.Objects;
 
-// TODO(b/336615269): add unit tests and/or replace by Guava's
 /** Helper class used to test the implementation of {@code equals()} and {@code hashCode()}. */
 public final class EqualsTester {
 
-    private final Expect mExpect;
+    private final StandardSubjectBuilder mExpect;
 
     /** Default constructor. */
-    public EqualsTester(Expect expect) {
+    public EqualsTester(StandardSubjectBuilder expect) {
         mExpect = Objects.requireNonNull(expect);
     }
 
-    // TODO(b/285014040): refactor to take Object... instead (once it's unit tested)
+    // TODO(b/336615269): refactor to take Object... instead
     /**
      * Helper method that uses {@code expect} to assert the class properly implement {@code
      * equals()} and {@code hashCode()}.
@@ -51,10 +48,10 @@ public final class EqualsTester {
                 .isEqualTo(obj2.hashCode());
     }
 
-    // TODO(b/285014040): refactor to take Object... instead (once it's unit tested)
+    // TODO(b/336615269): refactor to take Object... instead
     /**
      * Helper method that uses {@code expect} to assert the class properly implement {@code
-     * equals()} and {@code hashCode()}.
+     * equals()}.
      *
      * @param obj1 object that is not equal to {@code obj2}
      * @param obj2 object that is not equal to {@code obj1}
@@ -64,10 +61,5 @@ public final class EqualsTester {
 
         mExpect.withMessage("1st obj (%s)", obj1).that(obj1).isNotEqualTo(obj2);
         mExpect.withMessage("2nd obj (%s)", obj2).that(obj2).isNotEqualTo(obj1);
-        if (obj2 != null) {
-            mExpect.withMessage("hashCode of %s", obj1)
-                    .that(obj1.hashCode())
-                    .isNotEqualTo(obj2.hashCode());
-        }
     }
 }

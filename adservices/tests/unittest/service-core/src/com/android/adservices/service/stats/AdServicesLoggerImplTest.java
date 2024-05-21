@@ -93,6 +93,8 @@ import static com.android.adservices.service.stats.RunAdScoringProcessReportedSt
 import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.RUN_AD_SCORING_LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.RUN_AD_SCORING_RESULT_CODE;
 import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.SCORE_ADS_LATENCY_IN_MILLIS;
+import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.SCORE_AD_JS_SCRIPT_RESULT_CODE;
+import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION;
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.DB_AD_SELECTION_SIZE_IN_BYTES;
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.IS_RMKT_ADS_WON;
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.PERSIST_AD_SELECTION_LATENCY_IN_MILLIS;
@@ -235,6 +237,9 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                                 NUM_OF_CONTEXTUAL_ADS_ENTERING_SCORING)
                         .setRunAdScoringLatencyInMillis(RUN_AD_SCORING_LATENCY_IN_MILLIS)
                         .setRunAdScoringResultCode(RUN_AD_SCORING_RESULT_CODE)
+                        .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION)
+                        .setScoreAdJsScriptResultCode(SCORE_AD_JS_SCRIPT_RESULT_CODE)
                         .build();
 
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
@@ -271,6 +276,10 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getRunAdScoringLatencyInMillis())
                 .isEqualTo(RUN_AD_SCORING_LATENCY_IN_MILLIS);
         expect.that(loggedStats.getRunAdScoringResultCode()).isEqualTo(RUN_AD_SCORING_RESULT_CODE);
+        expect.that(loggedStats.getScoreAdSellerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
+        expect.that(loggedStats.getScoreAdJsScriptResultCode())
+                .isEqualTo(SCORE_AD_JS_SCRIPT_RESULT_CODE);
     }
 
     @Test

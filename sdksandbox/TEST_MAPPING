@@ -238,6 +238,9 @@
       "name": "CtsContentTestCases"
     },
     {
+      "name": "CtsDatabaseTestCases"
+    },
+    {
       "name": "CtsGraphicsTestCases"
     },
     {
@@ -256,7 +259,25 @@
       "name": "CtsLocationPrivilegedTestCases"
     },
     {
+      "name": "CtsMediaBetterTogetherTestCases"
+    },
+    {
       "name": "CtsMediaCodecTestCases"
+    },
+    {
+      "name": "CtsMediaMiscTestCases"
+    },
+    {
+      "name": "CtsMediaPlayerTestCases"
+    },
+    {
+      "name": "CtsMediaProjectionSDK33TestCases"
+    },
+    {
+      "name": "CtsMediaProjectionSDK34TestCases"
+    },
+    {
+      "name": "CtsMediaProjectionTestCases"
     },
     {
       "name": "CtsOsTestCases"

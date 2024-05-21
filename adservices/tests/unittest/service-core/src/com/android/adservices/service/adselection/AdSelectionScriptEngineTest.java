@@ -1591,6 +1591,34 @@ public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testScoreAdsJsReferenceError() throws Exception {
+        doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
+
+        Exception exception =
+                Assert.assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                scoreAds(
+                                        "function scoreAd(ad, bid, auction_config, seller_signals,"
+                                                + " trusted_scoring_signals, contextual_signal,"
+                                                + " user_signal, custom_audience_signal) { \n"
+                                                + "  return {'status': unknown, 'score': bid };\n"
+                                                + "}",
+                                        AD_WITH_BID_LIST,
+                                        anAdSelectionConfig(),
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        CUSTOM_AUDIENCE_SIGNALS_LIST));
+
+        verify(mAdSelectionExecutionLoggerMock).startScoreAds();
+        verify(mAdSelectionExecutionLoggerMock)
+                .setScoreAdJsScriptResultCode(JS_RUN_STATUS_JS_REFERENCE_ERROR);
+
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
+    }
+
+    @Test
     public void testSelectOutcomeWaterfallMediationLogicReturnAdJsSuccess() throws Exception {
         final Long result =
                 selectOutcome(

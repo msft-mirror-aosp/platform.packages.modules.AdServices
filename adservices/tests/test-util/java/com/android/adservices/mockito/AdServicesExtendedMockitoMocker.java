@@ -20,6 +20,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
@@ -62,5 +63,12 @@ public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
         logV("mockAdServicesJobServiceFactory(%s)", mockedAdServicesJobServiceFactory);
         assertSpiedOrMocked(AdServicesJobServiceFactory.class);
         doReturn(mockedAdServicesJobServiceFactory).when(AdServicesJobServiceFactory::getInstance);
+    }
+
+    @Override
+    public void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl) {
+        logV("mockAdServicesLoggerImpl(%s)", mockedAdServicesLoggerImpl);
+        assertSpiedOrMocked(AdServicesLoggerImpl.class);
+        doReturn(mockedAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
     }
 }
