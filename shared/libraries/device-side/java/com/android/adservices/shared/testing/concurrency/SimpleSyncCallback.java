@@ -15,20 +15,18 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import com.android.adservices.shared.testing.Identifiable;
+import com.android.adservices.shared.concurrency.SyncCallback;
 
-/** Base interface for all testing-related sync callbacks. */
-public interface TestSyncCallback extends Identifiable {
+/** Simplest implementation of a {@link SyncCallback} for tests. */
+public final class SimpleSyncCallback extends AbstractTestSyncCallback {
 
-    /**
-     * Asserts the callback was called or throw if it times out - the timeout value is defined by
-     * the constructor and can be obtained through {@link #getMaxTimeoutMs()}.
-     */
-    void assertCalled() throws InterruptedException;
+    /** Default constructor (for single call). */
+    public SimpleSyncCallback() {
+        this(/* expectedNumberOfCalls= */ 1);
+    }
 
-    /** Returns whether the callback was called (at least) the expected number of times. */
-    boolean isCalled();
-
-    /** Returns the maximum timeout before {@link #assertCalled()} would throw. */
-    long getMaxTimeoutMs();
+    /** Constructor for multiple calls. */
+    public SimpleSyncCallback(int expectedNumberOfCalls) {
+        super(expectedNumberOfCalls);
+    }
 }

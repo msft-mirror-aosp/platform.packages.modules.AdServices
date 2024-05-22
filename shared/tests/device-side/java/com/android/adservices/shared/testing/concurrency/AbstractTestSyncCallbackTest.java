@@ -62,5 +62,5 @@ public final class AbstractTestSyncCallbackTest extends SharedExtendedMockitoTes
                 .containsExactly("[" + callback.getId() + "]: Answer=42");
     }
 
-    private final class ConcreteTestSyncCallback extends AbstractTestSyncCallback {}
+    private static final class ConcreteTestSyncCallback extends AbstractTestSyncCallback {}
 }
