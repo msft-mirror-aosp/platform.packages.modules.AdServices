@@ -40,7 +40,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SignalsShellCommandFactory implements ShellCommandFactory {
-    public static final String COMMAND_PREFIX = "app-signals";
+    public static final String COMMAND_PREFIX = "app_signals";
     private final Map<String, ShellCommand> mAllCommandsMap;
     private final boolean mIsSignalsCliEnabled;
 

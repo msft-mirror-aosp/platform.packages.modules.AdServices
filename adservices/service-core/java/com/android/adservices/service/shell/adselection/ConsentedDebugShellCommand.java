@@ -50,7 +50,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class ConsentedDebugShellCommand extends AbstractShellCommand {
-    @VisibleForTesting public static final String CMD = "consented-debug";
+    @VisibleForTesting public static final String CMD = "consented_debug";
     // SUB COMMANDS
     @VisibleForTesting public static final String ENABLE_SUB_CMD = "enable";
     @VisibleForTesting public static final String DISABLE_SUB_CMD = "disable";
@@ -91,7 +91,7 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
                     + " <min 6 character length token>"
                     + " "
                     + ConsentedDebugEnableArgs.EXPIRY_IN_HOURS_ARG_NAME
-                    + " <optional param to set expiry in hours>";
+                    + " <optional param to set expiry in days>";
 
     @VisibleForTesting
     public static final String HELP =
@@ -147,7 +147,7 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
             subCommand = validateAndReturnSubCommand(args);
             cliArgs = ShellCommandArgParserHelper.parseCliArguments(args, SUB_COMMAND_ARG_INDEX);
         } catch (IllegalArgumentException exception) {
-            Log.e(TAG, "IllegalArgumentException while running consented-debug command", exception);
+            Log.e(TAG, "IllegalArgumentException while running consented_debug command", exception);
             return invalidArgsError(HELP, err, CONSENTED_DEBUG_DEFAULT_COMMAND, args);
         }
         int metricsLoggerCommand =
@@ -181,7 +181,7 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
         } catch (IllegalArgumentException exception) {
             Log.e(
                     TAG,
-                    "IllegalArgumentException while running consented-debug sub command. Using"
+                    "IllegalArgumentException while running consented_debug sub command. Using"
                             + " metrics logger as: "
                             + metricsLoggerCommand,
                     exception);
