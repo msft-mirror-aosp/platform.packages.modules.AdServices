@@ -37,15 +37,22 @@ import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
+import com.android.adservices.service.adselection.AuctionServerDataCompressorFactory;
+import com.android.adservices.service.adselection.AuctionServerPayloadMetricsStrategyDisabled;
+import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
@@ -90,6 +97,10 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
                         .build()
                         .appInstallDao();
+        FrequencyCapDao frequencyCapDao =
+                Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
+                        .build()
+                        .frequencyCapDao();
         ConsentedDebugConfigurationDao consentedDebugConfigurationDao =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
@@ -98,6 +109,10 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                 Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
                         .build()
                         .protectedSignalsDao();
+        EncodedPayloadDao encodedPayloadDao =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .getEncodedPayloadDao();
         BackgroundFetchRunner backgroundFetchRunner =
                 new BackgroundFetchRunner(
                         customAudienceDao,
@@ -106,6 +121,23 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         new EnrollmentDao(mContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
                         mFlags,
                         CustomAudienceLoggerFactory.getNoOpInstance());
+        BuyerInputGenerator buyerInputGenerator =
+                new BuyerInputGenerator(
+                        customAudienceDao,
+                        encodedPayloadDao,
+                        new FrequencyCapAdFiltererNoOpImpl(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
+                        mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
+                        mFlags.getProtectedSignalsPeriodicEncodingEnabled(),
+                        AuctionServerDataCompressorFactory.getDataCompressor(
+                                mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()),
+                        mFlags.getFledgeAuctionServerOmitAdsEnabled(),
+                        new AuctionServerPayloadMetricsStrategyDisabled(),
+                        mFlags,
+                        new AdFilteringFeatureFactory(appInstallDao, frequencyCapDao, mFlags)
+                                .getAppInstallAdFilterer());
         ShellCommandFactorySupplier adServicesShellCommandHandlerFactory =
                 new TestShellCommandFactorySupplier(
                         CUSTOM_AUDIENCE_CLI_ENABLED,
@@ -114,7 +146,8 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         backgroundFetchRunner,
                         customAudienceDao,
                         consentedDebugConfigurationDao,
-                        protectedSignalsDao);
+                        protectedSignalsDao,
+                        buyerInputGenerator);
         mShellCommandService =
                 new ShellCommandServiceImpl(
                         adServicesShellCommandHandlerFactory,

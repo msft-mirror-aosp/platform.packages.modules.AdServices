@@ -35,7 +35,9 @@ public final class AdservicesShellCommandFactorySupplier extends ShellCommandFac
                             FlagsFactory.getFlags(),
                             ApplicationContextSingleton.get()),
                     AdSelectionShellCommandFactory.getInstance(
-                            DebugFlags.getInstance(), ApplicationContextSingleton.get()),
+                            DebugFlags.getInstance(),
+                            FlagsFactory.getFlags(),
+                            ApplicationContextSingleton.get()),
                     SignalsShellCommandFactory.getInstance(
                             DebugFlags.getInstance(),
                             ProtectedSignalsDatabase.getInstance().protectedSignalsDao()));
