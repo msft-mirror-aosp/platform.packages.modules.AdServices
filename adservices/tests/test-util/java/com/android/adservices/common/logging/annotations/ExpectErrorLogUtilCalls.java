@@ -19,37 +19,15 @@ package com.android.adservices.common.logging.annotations;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.common.logging.ErrorLogUtilCall;
 
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-/** Used to specify expected {@link ErrorLogUtil} calls. */
+/** Container annotation for wrapping multiple invocation variants of {@link ErrorLogUtilCall}. */
 @Retention(RUNTIME)
 @Target(METHOD)
-@Repeatable(ExpectErrorLogUtilCalls.class)
-public @interface ExpectErrorLogUtilCall {
-    /** Default number of times to expect log call. */
-    int DEFAULT_TIMES = 1;
-
-    /** Default empty exception. */
-    class None extends Throwable {
-        private None() {}
-    }
-
-    /**
-     * Optionally specify a Throwable to be logged, default is None which represents no throwable
-     * was logged.
-     */
-    Class<? extends Throwable> throwable() default None.class;
-
-    /** Error code to be logged */
-    int errorCode();
-
-    /** PPAPI name code to be logged */
-    int ppapiName();
-
-    /** Number of log calls, default set to 1 */
-    int times() default DEFAULT_TIMES;
+public @interface ExpectErrorLogUtilCalls {
+    /** Expected {@link ErrorLogUtilCall} invocations. */
+    ExpectErrorLogUtilCall[] value();
 }
