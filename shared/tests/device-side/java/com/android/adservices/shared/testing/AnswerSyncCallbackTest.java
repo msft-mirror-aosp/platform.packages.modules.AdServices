@@ -68,6 +68,8 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
         expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
     }
 
+    // It's testing doAnswer(), so it needs to call those methods...
+    @SuppressWarnings("DirectInvocationOnMock")
     @Test
     public void testForMultipleAnswers() throws Exception {
         AnswerSyncCallback<String> callback =
@@ -108,6 +110,8 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
         expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
     }
 
+    // It's testing doAnswer(), so it needs to call those methods...
+    @SuppressWarnings("DirectInvocationOnMock")
     @Test
     public void testForSingleFailure_nonVoid() throws Exception {
         AnswerSyncCallback<String> callback =
