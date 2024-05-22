@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.concurrency.AbstractSyncCallback.LOG_TAG;
-
 import com.android.adservices.shared.concurrency.AbstractSyncCallback;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
@@ -29,6 +27,9 @@ import java.util.concurrent.TimeUnit;
 /** Base class for all test-related, side-agnostic sync callback implementations . */
 public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallback
         implements TestSyncCallback {
+
+    /** Constant used to help readability. */
+    public static final int EXPECTS_ONLY_ONE_CALL = 1;
 
     /** Timeout set by default constructor */
     public static final long DEFAULT_TIMEOUT_MS = 5_000;
@@ -78,9 +79,19 @@ public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallb
         throwWaitCalledNotSupported();
     }
 
+    /** Called by {@link #assertCalled()} so subclasses can fail it if needed. */
+    protected void postAssertCalled() {}
+
     @Override
     public final void assertCalled() throws InterruptedException {
         super.waitCalled(mTimeoutMs, TimeUnit.MILLISECONDS);
+        postAssertCalled();
+    }
+
+    @FormatMethod
+    @Override
+    public final void logE(@FormatString String msgFmt, Object... msgArgs) {
+        mLogger.e("%s: %s", toString(), String.format(msgFmt, msgArgs));
     }
 
     @FormatMethod

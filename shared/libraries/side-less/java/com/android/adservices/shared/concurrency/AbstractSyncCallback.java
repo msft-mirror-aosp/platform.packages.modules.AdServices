@@ -60,6 +60,18 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     /**
      * Convenience method to log a debug message.
      *
+     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
+     * by {@link #toString()}) in the message.
+     */
+    @FormatMethod
+    public void logE(@FormatString String msgFmt, Object... msgArgs) {
+        // TODO(b/280460130): use side-less Logger so it's not empty
+    }
+
+    // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
+    /**
+     * Convenience method to log a debug message.
+     *
      * <p>By default it's a no-op, but subclasses should implement it including the {@link #getId()
      * id} in the message.
      */

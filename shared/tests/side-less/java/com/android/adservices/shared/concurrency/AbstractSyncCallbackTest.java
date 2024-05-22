@@ -242,7 +242,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
                 .isTrue();
     }
 
-    // TODO(b/285014040): move to superclass
+    // TODO(b/285014040): move to ConcurrencyHelper
     private void runLater(int when, Runnable r) {
         startNewThread(
                 () -> {
@@ -251,7 +251,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
                 });
     }
 
-    // TODO(b/285014040): move to superclass
+    // TODO(b/285014040): move to ConcurrencyHelper
     private Thread startNewThread(Runnable r) {
         String threadName = mLog.getTag() + "-runLaterThread-" + sThreadId.incrementAndGet();
         mLog.d("Starting new thread (%s) to run %s", threadName, r);
