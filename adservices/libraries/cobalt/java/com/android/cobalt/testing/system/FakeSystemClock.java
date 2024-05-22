@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.cobalt.system.testing;
+package com.android.cobalt.testing.system;
 
 import com.android.cobalt.system.SystemClock;
 

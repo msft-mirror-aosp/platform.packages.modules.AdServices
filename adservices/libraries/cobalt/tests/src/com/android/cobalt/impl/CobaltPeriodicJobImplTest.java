@@ -32,7 +32,6 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.cobalt.CobaltPeriodicJob;
 import com.android.cobalt.crypto.Encrypter;
-import com.android.cobalt.crypto.testing.NoOpEncrypter;
 import com.android.cobalt.data.CobaltDatabase;
 import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.EventVector;
@@ -40,10 +39,11 @@ import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.domain.Project;
 import com.android.cobalt.observations.PrivacyGenerator;
-import com.android.cobalt.observations.testing.ConstantFakeSecureRandom;
 import com.android.cobalt.system.SystemData;
-import com.android.cobalt.system.testing.FakeSystemClock;
-import com.android.cobalt.upload.testing.NoOpUploader;
+import com.android.cobalt.testing.crypto.NoOpEncrypter;
+import com.android.cobalt.testing.observations.ConstantFakeSecureRandom;
+import com.android.cobalt.testing.system.FakeSystemClock;
+import com.android.cobalt.testing.upload.NoOpUploader;
 
 import com.google.cobalt.Envelope;
 import com.google.cobalt.IndexHistogram;
