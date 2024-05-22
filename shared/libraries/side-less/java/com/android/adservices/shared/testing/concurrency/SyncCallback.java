@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.concurrency;
+package com.android.adservices.shared.testing.concurrency;
 
 import java.util.concurrent.TimeUnit;
 
+// NOTE: this interface is basically an abstraction of CountdownLatch and doesn't have any testing
+// specific characteristics, so it could be used on production code as well.
 /**
  * Abstraction to block asynchronous operations until they're completed.
  *

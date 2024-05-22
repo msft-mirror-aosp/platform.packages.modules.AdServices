@@ -16,8 +16,8 @@
 package com.android.adservices.shared.testing.concurrency;
 
 import static com.android.adservices.shared.meta_testing.LogEntry.Subject.logEntry;
-import static com.android.adservices.shared.concurrency.AbstractSyncCallback.LOG_TAG;
 import static com.android.adservices.shared.testing.concurrency.AbstractSidelessTestSyncCallback.DEFAULT_TIMEOUT_MS;
+import static com.android.adservices.shared.testing.concurrency.AbstractSyncCallback.LOG_TAG;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 

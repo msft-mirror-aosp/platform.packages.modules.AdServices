@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.concurrency.AbstractSyncCallback.LOG_TAG;
+import static com.android.adservices.shared.testing.concurrency.AbstractSyncCallback.LOG_TAG;
 import static com.android.adservices.shared.testing.concurrency.AbstractTestSyncCallback.DONT_FAIL_IF_CALLED_ON_MAIN_THREAD;
 import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
 

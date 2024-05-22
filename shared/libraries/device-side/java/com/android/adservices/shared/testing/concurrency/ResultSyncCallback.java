@@ -17,8 +17,6 @@ package com.android.adservices.shared.testing.concurrency;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.shared.concurrency.SyncCallback;
-
 import com.google.common.base.Optional;
 
 import java.util.concurrent.atomic.AtomicReference;
