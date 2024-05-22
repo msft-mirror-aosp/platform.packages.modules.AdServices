@@ -65,6 +65,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Scenario
 @RunWith(JUnit4.class)
@@ -89,6 +90,11 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
     private static final String TAG = "ServerAuctionKAnonE2ETest";
 
     private static final int EXPONENTIAL_BACKOFF_BASE_SECONDS = 4;
+
+    @Override
+    protected String getTag() {
+        return TAG;
+    }
 
     @Rule
     public RuleChain rules =
@@ -169,7 +175,7 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
      * <p>B&A servers often send responses if contacted after a while. Warming up with a couple of
      * calls should greatly reduce this flakiness.
      */
-    private static void warmupClientAndServer() throws Exception {
+    private void warmupClientAndServer() throws Exception {
 
         makeWarmUpNetworkCall(TEST_COORDINATOR);
 
@@ -214,10 +220,17 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
                 new GetAdSelectionDataRequest.Builder()
                         .setSeller(AdTechIdentifier.fromString(SELLER))
                         .build();
+
         GetAdSelectionDataOutcome outcome =
-                AD_SELECTION_CLIENT
-                        .getAdSelectionData(request)
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                retryOnException(
+                        () ->
+                                AD_SELECTION_CLIENT
+                                        .getAdSelectionData(request)
+                                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS),
+                        TimeoutException.class,
+                        /* maxRetries= */ 3,
+                        /* retryIntervalMillis= */ 2000L,
+                        "getAdSelectionData");
 
         SelectAdResponse selectAdResponse =
                 FakeAdExchangeServer.runServerAuction(
