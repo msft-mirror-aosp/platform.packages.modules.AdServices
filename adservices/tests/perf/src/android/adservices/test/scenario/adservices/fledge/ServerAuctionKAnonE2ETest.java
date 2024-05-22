@@ -88,6 +88,8 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
             "Response code is 200. Updating message status to JOINED in database";
     private static final String TAG = "ServerAuctionKAnonE2ETest";
 
+    private static final int EXPONENTIAL_BACKOFF_BASE_SECONDS = 4;
+
     @Rule
     public RuleChain rules =
             RuleChain.outerRule(
@@ -262,6 +264,7 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
     }
 
     private boolean doLogsContainSuccessStatement(Instant startTime, int retries) throws Exception {
+        long waitTimeMs = EXPONENTIAL_BACKOFF_BASE_SECONDS * 1000;
         for (int i = 0; i < retries; i++) {
             Log.d(TAG, "Reading logs. Attempt: " + (i + 1));
             try (InputStream inputStream = getMetricsEvents(startTime);
@@ -275,7 +278,8 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
                 }
             }
 
-            Thread.sleep(5000L);
+            waitTimeMs *= EXPONENTIAL_BACKOFF_BASE_SECONDS;
+            Thread.sleep(waitTimeMs);
         }
         return false;
     }
