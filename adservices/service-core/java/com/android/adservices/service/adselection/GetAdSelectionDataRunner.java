@@ -100,6 +100,8 @@ public class GetAdSelectionDataRunner {
             "GetAdSelectionData exceeded allowed time limit";
 
     @VisibleForTesting static final int REVOKED_CONSENT_RANDOM_DATA_SIZE = 1024;
+
+    private final int mE2ETraceCookie;
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
@@ -133,6 +135,7 @@ public class GetAdSelectionDataRunner {
 
     public GetAdSelectionDataRunner(
             @NonNull final Context context,
+            int e2eTraceCookie,
             @NonNull final MultiCloudSupportStrategy multiCloudSupportStrategy,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final CustomAudienceDao customAudienceDao,
@@ -172,6 +175,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(egressConfigurationGenerator);
         Objects.requireNonNull(appInstallAdFilterer);
 
+        mE2ETraceCookie = e2eTraceCookie;
         mObliviousHttpEncryptor =
                 multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
         mCoordinatorOriginUriValidator =
@@ -225,6 +229,7 @@ public class GetAdSelectionDataRunner {
     @VisibleForTesting
     GetAdSelectionDataRunner(
             @NonNull final Context context,
+            final int e2ETraceCookie,
             @NonNull final MultiCloudSupportStrategy multiCloudSupportStrategy,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final CustomAudienceDao customAudienceDao,
@@ -265,6 +270,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(egressConfigurationGenerator);
         Objects.requireNonNull(appInstallAdFilterer);
 
+        mE2ETraceCookie = e2ETraceCookie;
         mObliviousHttpEncryptor =
                 multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
         mCoordinatorOriginUriValidator =
@@ -377,6 +383,7 @@ public class GetAdSelectionDataRunner {
 
                             notifySuccessToCaller(
                                     result, adSelectionId, callback, apiCalledStatsBuilder);
+                            Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_DATA, mE2ETraceCookie);
                         }
 
                         @Override
@@ -405,6 +412,7 @@ public class GetAdSelectionDataRunner {
                                     notifyFailureToCaller(t, callback);
                                 }
                             }
+                            Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_DATA, mE2ETraceCookie);
                         }
                     },
                     mLightweightExecutorService);

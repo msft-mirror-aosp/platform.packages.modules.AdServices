@@ -30,6 +30,7 @@ import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
@@ -68,6 +69,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
 import com.android.internal.util.Preconditions;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -120,6 +122,7 @@ public class ImpressionReporter {
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     @NonNull private final DevContext mDevContext;
+    @NonNull private final ReportImpressionExecutionLogger mReportImpressionExecutionLogger;
     private int mCallerUid;
     @NonNull private String mCallerAppPackageName;
     private final boolean mShouldUseUnifiedTables;
@@ -140,7 +143,8 @@ public class ImpressionReporter {
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             final int callerUid,
             @NonNull final RetryStrategy retryStrategy,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            ReportImpressionExecutionLogger reportImpressionExecutionLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
@@ -209,6 +213,7 @@ public class ImpressionReporter {
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
+        mReportImpressionExecutionLogger = reportImpressionExecutionLogger;
     }
 
     /**
@@ -297,11 +302,15 @@ public class ImpressionReporter {
                                 notifySuccessToCaller(callback);
                                 sLogger.d("Perform reporting!");
                                 performReporting(result);
+                                mReportImpressionExecutionLogger
+                                        .logReportImpressionApiCalledStats();
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 sLogger.e(t, "Report Impression invocation failed!");
+                                mReportImpressionExecutionLogger
+                                        .logReportImpressionApiCalledStats();
                                 if (t instanceof FilterException
                                         && t.getCause()
                                                 instanceof ConsentManager.RevokedConsentException) {
@@ -555,7 +564,8 @@ public class ImpressionReporter {
                                     ctx.mAdSelectionConfig,
                                     ctx.mComputationData.getWinningRenderUri(),
                                     ctx.mComputationData.getWinningBid(),
-                                    ctx.mComputationData.getSellerContextualSignals()))
+                                    ctx.mComputationData.getSellerContextualSignals(),
+                                    mReportImpressionExecutionLogger))
                     .transform(
                             sellerResult -> Pair.create(sellerResult, ctx),
                             mLightweightExecutorService);
@@ -590,7 +600,8 @@ public class ImpressionReporter {
                                     signals,
                                     sellerReportingResult.getSignalsForBuyer(),
                                     ctx.mComputationData.getBuyerContextualSignals(),
-                                    customAudienceSignals))
+                                    customAudienceSignals,
+                                    mReportImpressionExecutionLogger))
                     .transform(
                             buyerReportingResult ->
                                     Pair.create(
@@ -627,7 +638,11 @@ public class ImpressionReporter {
             callback.onSuccess();
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send successful result to the callback");
-            throw e.rethrowFromSystemServer();
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
+                    0);
         }
     }
 
@@ -665,7 +680,11 @@ public class ImpressionReporter {
                             .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send failed result to the callback");
-            throw e.rethrowFromSystemServer();
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
+                    0);
         }
     }
 

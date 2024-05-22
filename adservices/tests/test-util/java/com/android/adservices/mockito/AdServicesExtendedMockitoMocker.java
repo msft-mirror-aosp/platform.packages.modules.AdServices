@@ -13,112 +13,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.adservices.mockito;
+
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
 /**
- * Helper interface providing common expectations that require {@code ExtendedMockito}.
+ * {@link AdServicesStaticMockitoMocker} implementation that uses {@code ExtendedMockito}.
  *
  * <p><b>NOTE: </b> most expectations require {@code spyStatic()} or {@code mockStatic()} in the
  * {@link com.android.dx.mockito.inline.extended.StaticMockitoSession session} ahead of time - this
  * helper doesn't check that such calls were made, it's up to the caller to do so.
  */
-public interface AdServicesExtendedMockitoMocker {
+public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
+        implements AdServicesStaticMockitoMocker {
 
-    /**
-     * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}
-     * object.
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link FlagsFactory}.
-     */
-    void mockGetFlags(Flags mockedFlags);
+    public AdServicesExtendedMockitoMocker(StaticClassChecker staticClassChecker) {
+        super(staticClassChecker);
+    }
 
-    /**
-     * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
-     * FakeFlagsFactory#getFlagsForTest()}
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link FlagsFactory}.
-     */
-    void mockGetFlagsForTesting();
+    @Override
+    public void mockGetFlags(Flags mockedFlags) {
+        logV("mockGetFlags(%s)", mockedFlags);
+        assertSpiedOrMocked(FlagsFactory.class);
+        doReturn(mockedFlags).when(FlagsFactory::getFlags);
+    }
 
-    /**
-     * Mocks a call to {@link Binder#getCallingUidOrThrow()}, returning {@code uid}.
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link Binder}.
-     */
-    void mockGetCallingUidOrThrow(int uid);
+    @Override
+    public void mockGetFlagsForTesting() {
+        mockGetFlags(FakeFlagsFactory.getFlagsForTest());
+    }
 
-    /**
-     * Same as {@link #mockGetCallingUidOrThrow(int)}, but using the {@code uid} of the calling
-     * process.
-     *
-     * <p>Typically used when code under test calls {@link Binder#getCallingUidOrThrow()} and the
-     * test doesn't care about the result, but it needs to be mocked otherwise the real call would
-     * fail (as the test is not running inside a binder transaction).
-     */
-    void mockGetCallingUidOrThrow();
+    @Override
+    public void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler) {
+        logV("mockSpeJobScheduler(%s)", mockedAdServicesJobScheduler);
+        assertSpiedOrMocked(AdServicesJobScheduler.class);
+        doReturn(mockedAdServicesJobScheduler).when(AdServicesJobScheduler::getInstance);
+    }
 
-    /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
-    void mockIsAtLeastR(boolean isIt);
+    @Override
+    public void mockAdServicesJobServiceFactory(
+            AdServicesJobServiceFactory mockedAdServicesJobServiceFactory) {
+        logV("mockAdServicesJobServiceFactory(%s)", mockedAdServicesJobServiceFactory);
+        assertSpiedOrMocked(AdServicesJobServiceFactory.class);
+        doReturn(mockedAdServicesJobServiceFactory).when(AdServicesJobServiceFactory::getInstance);
+    }
 
-    /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
-    void mockIsAtLeastS(boolean isIt);
-
-    /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
-    void mockIsAtLeastT(boolean isIt);
-
-    /** Mocks a call to SDK level to return R */
-    void mockSdkLevelR();
-
-    /**
-     * Mocks a call to {@link ActivityManager#getCurrentUser()}, returning {@code user}.
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link ActivityManager}.
-     */
-    void mockGetCurrentUser(int user);
-
-    /**
-     * Mocks a call to {@link AdServicesJobScheduler#getInstance()}.
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link AdServicesJobScheduler}.
-     */
-    void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler);
-
-    /**
-     * Mocks a call to {@link AdServicesJobServiceFactory#getInstance()}.
-     *
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link AdServicesJobServiceFactory}.
-     */
-    void mockAdServicesJobServiceFactory(
-            AdServicesJobServiceFactory mockedAdServicesJobServiceFactory);
-
-    /**
-     * Statically spy on {@code Log.v} for that {@code tag}.
-     *
-     * @return object that can be used to assert the {@code Log.v} calls.
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link Log}.
-     */
-    LogInterceptor interceptLogV(String tag);
-
-    /**
-     * Statically spy on {@code Log.e} for that {@code tag}.
-     *
-     * @return object that can be used to assert the {@code Log.e} calls.
-     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
-     *     equivalent annotations) on {@link Log}.
-     */
-    LogInterceptor interceptLogE(String tag);
+    @Override
+    public void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl) {
+        logV("mockAdServicesLoggerImpl(%s)", mockedAdServicesLoggerImpl);
+        assertSpiedOrMocked(AdServicesLoggerImpl.class);
+        doReturn(mockedAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
+    }
 }

@@ -18,13 +18,13 @@ package com.android.adservices.shared.proto;
 
 import android.util.Base64;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 
 import com.google.protobuf.MessageLite;
 
 import org.junit.Test;
 
-public final class ProtoParserTest extends AdServicesMockitoTestCase {
+public final class ProtoParserTest extends SharedMockitoTestCase {
     private static final ErrorCodeSampleInterval SAMPLE_RATE =
             ErrorCodeSampleInterval.newBuilder()
                     .putSampleIntervalToErrorCodes(

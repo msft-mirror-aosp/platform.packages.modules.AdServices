@@ -107,17 +107,16 @@ public class AppUpdateManager {
     /**
      * Returns an instance of AppUpdateManager given a context
      *
-     * @param context the context
      * @return an instance of AppUpdateManager
      */
     @NonNull
-    public static AppUpdateManager getInstance(@NonNull Context context) {
+    public static AppUpdateManager getInstance() {
         synchronized (AppUpdateManager.class) {
             if (sSingleton == null) {
                 sSingleton =
                         new AppUpdateManager(
-                                DbHelper.getInstance(context),
-                                TopicsDao.getInstance(context),
+                                DbHelper.getInstance(),
+                                TopicsDao.getInstance(),
                                 new Random(),
                                 FlagsFactory.getFlags());
             }

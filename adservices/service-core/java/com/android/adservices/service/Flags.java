@@ -487,6 +487,14 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
     }
 
+    /** Default value for whether header error debug report is enabled. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT = false;
+
+    /** Returns whether header error debug report generation is enabled. */
+    default boolean getMeasurementEnableHeaderErrorDebugReport() {
+        return MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
+    }
+
     long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
 
     /** Returns the data expiry window in milliseconds. */
@@ -1839,13 +1847,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether the fledge GetAdSelectionData payload metrics are enabled. */
     default boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
         return FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
-    }
-
-    @FeatureFlag boolean FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED = false;
-
-    /** Returns whether Consented Debugging is enabled for server auctions. */
-    default boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
-        return FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
     }
 
     // Protected signals cleanup feature flag disabled by default
@@ -3670,6 +3671,14 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED;
     }
 
+    // Fledge JS script result code metrics flag.
+    @FeatureFlag boolean FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED = false;
+
+    /** Returns whether the FLEDGE JS script result code metrics feature is enabled. */
+    default boolean getFledgeJsScriptResultCodeMetricsEnabled() {
+        return FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED;
+    }
+
     /**
      * Default allowlist of the enrollments for whom debug key insertion based on join key matching
      * is allowed.
@@ -4460,6 +4469,17 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
     }
 
+    @FeatureFlag
+    boolean MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT = false;
+
+    /**
+     * Enables separate debug report types for event and aggregate attribution rate limit
+     * violations.
+     */
+    default boolean getMeasurementEnableSeparateReportTypesForAttributionRateLimit() {
+        return MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
+    }
+
     int MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE = 20;
 
     /** Returns max number of attribution scopes per source. */
@@ -4511,6 +4531,24 @@ public interface Flags extends ModuleSharedFlags {
      */
     default boolean getTopicsCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled() && TOPICS_COBALT_LOGGING_ENABLED;
+    }
+
+    /**
+     * Default value of whether cobalt logging feature is enabled for source and trigger
+     * registrations in measurement service.
+     */
+    boolean MSMT_REGISTRATION_COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns whether the cobalt logging feature is enabled for source and trigger registration in
+     * measurement service .
+     *
+     * <p>The cobalt logging for measurement registration will be disabled either the {@code
+     * getCobaltLoggingEnabled} or {@code MSMT_REGISTRATION_COBALT_LOGGING_ENABLED} is {@code
+     * false}.
+     */
+    default boolean getMsmtRegistrationCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled() && MSMT_REGISTRATION_COBALT_LOGGING_ENABLED;
     }
 
     /** Default value of whether app name and api error cobalt logging feature is enabled. */
@@ -5205,26 +5243,6 @@ public interface Flags extends ModuleSharedFlags {
         return GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
     }
 
-    /** Default value for status of custom audiences CLI feature */
-    boolean FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED = false;
-
-    /**
-     * @return the enabled status for custom audiences CLI feature.
-     */
-    default boolean getFledgeCustomAudienceCLIEnabledStatus() {
-        return FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
-    }
-
-    /** Default value for status of consented debugging CLI feature */
-    boolean FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED = false;
-
-    /**
-     * @return the enabled status for custom audiences CLI feature.
-     */
-    default boolean getFledgeConsentedDebuggingCliEnabledStatus() {
-        return FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED;
-    }
-
     /** Default value for the base64 encoded Job Policy proto for AdServices. */
     @ConfigFlag String AD_SERVICES_MODULE_JOB_POLICY = "";
 
@@ -5382,6 +5400,55 @@ public interface Flags extends ModuleSharedFlags {
      */
     default boolean getSpeOnPilotJobsBatch2Enabled() {
         return DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
+    }
+
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code EpochJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_EPOCH_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * EpochJobService}.
+     */
+    default boolean getSpeOnEpochJobEnabled() {
+        return DEFAULT_SPE_ON_EPOCH_JOB_ENABLED;
+    }
+
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code
+     * BackgroundFetchJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * BackgroundFetchJobService}.
+     */
+    default boolean getSpeOnBackgroundFetchJobEnabled() {
+        return DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
+    }
+
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code
+     * AsyncRegistrationFallbackJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * AsyncRegistrationFallbackJobService}.
+     */
+    default boolean getSpeOnAsyncRegistrationFallbackJobEnabled() {
+        return DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
+    }
+
+    /** Default value for the enablement the new apis for business logic migration. */
+    @FeatureFlag boolean DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED = false;
+
+    /** Returns the default value of the enablement of adservices business logic migration. */
+    default boolean getAdServicesConsentBusinessLogicMigrationEnabled() {
+        return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
     }
 
     /** Dump some debug info for the flags */

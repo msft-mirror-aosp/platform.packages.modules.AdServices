@@ -33,14 +33,12 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Objects;
 
-// TODO(b/308009734): STOPSHIP - document that it's up to each command implementation to check about
-// caller's permission, whether device is userdebug, etc...
-
-// TODO(b/308009734): arg parsing logic mostly copied from on BasicShellCommandHandler, it might be
-// worth to refactor it once the handler is called by both system_server and service.
-
 /**
  * Service-side version of {@code cmd adservices_manager}.
+ *
+ * <p>It would be up to the each command implementor to check for permission if a particular command
+ * requires checking for additional permission. For example, some commands may require an extra
+ * check to only be allowed on userdebug builds.
  *
  * <p>By convention, methods implementing commands should be prefixed with {@code run}.
  */
@@ -115,8 +113,9 @@ public final class AdServicesShellCommandHandler {
                 Log.d(TAG, "Executed command " + cmd);
             }
         } catch (Throwable e) {
-            // TODO(b/308009734): need to test this
-            mErr.printf("Exception occurred while executing %s\n", Arrays.toString(mArgs));
+            mErr.printf(
+                    "Exception occurred while executing %s with message %s\n",
+                    Arrays.toString(mArgs), e.getMessage());
             e.printStackTrace(mOut);
         } finally {
             if (DEBUG) {

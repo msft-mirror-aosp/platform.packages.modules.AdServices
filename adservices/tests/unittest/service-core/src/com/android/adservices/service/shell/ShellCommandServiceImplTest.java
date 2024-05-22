@@ -42,6 +42,9 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
@@ -66,9 +69,13 @@ import java.util.List;
 
 public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase {
 
+    private static final boolean CUSTOM_AUDIENCE_CLI_ENABLED = true;
+    private static final boolean CONSENTED_DEBUG_CLI_ENABLED = true;
+    private static final boolean SIGNALS_CLI_ENABLED = true;
+
     @Mock private AdServicesLogger mAdServicesLogger;
 
-    private final Flags mFlags = new ShellCommandFlags();
+    private final Flags mFlags = FakeFlagsFactory.getFlagsForTest();
     private ShellCommandServiceImpl mShellCommandService;
     private SyncIShellCommandCallback mSyncIShellCommandCallback;
 
@@ -87,6 +94,10 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
                         .consentedDebugConfigurationDao();
+        ProtectedSignalsDao protectedSignalsDao =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .protectedSignalsDao();
         BackgroundFetchRunner backgroundFetchRunner =
                 new BackgroundFetchRunner(
                         customAudienceDao,
@@ -97,10 +108,13 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         CustomAudienceLoggerFactory.getNoOpInstance());
         ShellCommandFactorySupplier adServicesShellCommandHandlerFactory =
                 new TestShellCommandFactorySupplier(
-                        mFlags,
+                        CUSTOM_AUDIENCE_CLI_ENABLED,
+                        CONSENTED_DEBUG_CLI_ENABLED,
+                        SIGNALS_CLI_ENABLED,
                         backgroundFetchRunner,
                         customAudienceDao,
-                        consentedDebugConfigurationDao);
+                        consentedDebugConfigurationDao,
+                        protectedSignalsDao);
         mShellCommandService =
                 new ShellCommandServiceImpl(
                         adServicesShellCommandHandlerFactory,
@@ -378,18 +392,6 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
         @Override
         public IBinder asBinder() {
             return null;
-        }
-    }
-
-    private static final class ShellCommandFlags implements Flags {
-        @Override
-        public boolean getFledgeCustomAudienceCLIEnabledStatus() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeConsentedDebuggingCliEnabledStatus() {
-            return true;
         }
     }
 }

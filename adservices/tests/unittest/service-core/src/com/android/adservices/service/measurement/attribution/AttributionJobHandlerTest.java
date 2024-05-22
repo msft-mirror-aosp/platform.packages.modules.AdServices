@@ -4472,6 +4472,119 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
+    public void performAttribution_separateReportsForAttributionRateLimitDisabled_sameReportType()
+            throws DatastoreException, JSONException {
+        // Setup
+        when(mFlags.getMeasurementEnableSeparateReportTypesForAttributionRateLimit())
+                .thenReturn(false);
+
+        Trigger trigger = getAggregateAndEventTrigger();
+        Source source = getAggregateSource();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.AGGREGATE, source, trigger))
+                .thenReturn(5L);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.EVENT, source, trigger))
+                .thenReturn((long) Flags.MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+
+        // Execution
+        mHandler.performPendingAttributions();
+
+        // Assertion
+        verify(mDebugReportApi)
+                .scheduleTriggerDebugReport(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        eq(DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT));
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void performAttribution_separateReportsForAttributionRateLimitEnabled_eventReport()
+            throws DatastoreException, JSONException {
+        // Setup
+        when(mFlags.getMeasurementEnableSeparateReportTypesForAttributionRateLimit())
+                .thenReturn(true);
+
+        Trigger trigger = getAggregateAndEventTrigger();
+        Source source = getAggregateSource();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.AGGREGATE, source, trigger))
+                .thenReturn(5L);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.EVENT, source, trigger))
+                .thenReturn((long) Flags.MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+
+        // Execution
+        mHandler.performPendingAttributions();
+
+        // Assertion
+        verify(mDebugReportApi)
+                .scheduleTriggerDebugReport(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        eq(
+                                DebugReportApi.Type
+                                        .TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT));
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void performAttribution_separateReportsForAttributionRateLimitEnabled_aggregateReport()
+            throws DatastoreException, JSONException {
+        // Setup
+        when(mFlags.getMeasurementEnableSeparateReportTypesForAttributionRateLimit())
+                .thenReturn(true);
+
+        Trigger trigger = getAggregateAndEventTrigger();
+        Source source = getAggregateSource();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.AGGREGATE, source, trigger))
+                .thenReturn(
+                        (long) Flags.MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.EVENT, source, trigger))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+
+        // Execution
+        mHandler.performPendingAttributions();
+
+        // Assertion
+        String reportType =
+                DebugReportApi.Type.TRIGGER_AGGREGATE_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT;
+        verify(mDebugReportApi)
+                .scheduleTriggerDebugReport(any(), any(), any(), any(), eq(reportType));
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
     public void performAttribution_eventReportsExceedsLimit_insertsOnlyAggregateReport()
             throws DatastoreException, JSONException {
         // Setup

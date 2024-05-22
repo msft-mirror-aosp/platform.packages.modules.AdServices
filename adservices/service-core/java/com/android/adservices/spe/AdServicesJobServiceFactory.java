@@ -29,6 +29,10 @@ import com.android.adservices.download.MddJobService;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.customaudience.BackgroundFetchJob;
+import com.android.adservices.service.customaudience.BackgroundFetchJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
 import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
@@ -118,11 +122,15 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
             switch (jobInfo) {
                 case TOPICS_EPOCH_JOB:
                     return new EpochJob();
+                case FLEDGE_BACKGROUND_FETCH_JOB:
+                    return new BackgroundFetchJob();
                 case MDD_MAINTENANCE_PERIODIC_TASK_JOB:
                 case MDD_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
                     return new MddJob();
+                case MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB:
+                    return new AsyncRegistrationFallbackJob();
                 default:
                     throw new RuntimeException(
                             "The job isn't configured for jobWorker creation. Requested Job ID: "
@@ -193,11 +201,17 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
                 case TOPICS_EPOCH_JOB:
                     EpochJobService.scheduleIfNeeded(forceSchedule);
                     return;
+                case FLEDGE_BACKGROUND_FETCH_JOB:
+                    BackgroundFetchJobService.scheduleIfNeeded(mFlags, forceSchedule);
+                    return;
                 case MDD_MAINTENANCE_PERIODIC_TASK_JOB:
                 case MDD_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB:
                 case MDD_WIFI_CHARGING_PERIODIC_TASK_JOB:
                     MddJobService.scheduleIfNeeded(forceSchedule);
+                    return;
+                case MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB:
+                    AsyncRegistrationFallbackJobService.scheduleIfNeeded(forceSchedule);
                     return;
                 default:
                     throw new RuntimeException(

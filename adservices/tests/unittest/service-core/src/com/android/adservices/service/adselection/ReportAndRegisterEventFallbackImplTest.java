@@ -69,7 +69,6 @@ import android.os.RemoteException;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -98,6 +97,7 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SimpleSyncCallback;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -142,8 +142,8 @@ public class ReportAndRegisterEventFallbackImplTest {
     private static final int SELLER_DESTINATION =
             ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
     private static final int SELLER_AND_BUYER_DESTINATION =
-            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER |
-                    ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER
+                    | ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
     private static final String CLICK_EVENT = "click";
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
@@ -275,7 +275,7 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog = */ true);
+        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
 
         // Verify registerEvent was called with exact parameters.
         verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
@@ -301,9 +301,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
     }
 
-    // TODO(b/298871007): Remove FlakyTest annotation after stabilizing flake.
     @Test
-    @FlakyTest(bugId = 298871007)
     public void testImplDoesNotCrashAfterSellerReportingThrowsAnException() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -337,11 +335,16 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog = */ true);
+        SimpleSyncCallback sellerCallback =
+                syncRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
+        SimpleSyncCallback buyerCallback =
+                syncRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
+
+        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
 
         // Verify registerEvent was called with exact parameters.
-        verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
-        verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
+        sellerCallback.assertCalled();
+        buyerCallback.assertCalled();
 
         // Confirm success was reported to caller.
         assertTrue(callback.mIsSuccess);
@@ -359,9 +362,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                 BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
     }
 
-    // TODO(b/298871007): Remove FlakyTest annotation after stabilizing flake.
     @Test
-    @FlakyTest(bugId = 298871007)
     public void testImplDoesNotCrashAfterSellerReportingAndRegisteringThrowsAnException()
             throws Exception {
         enableARA();
@@ -369,9 +370,6 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Fail seller reporting and registering.
         Uri reportingUri = mDBRegisteredAdInteractionSellerClick.getInteractionReportingUri();
-        doThrow(new IllegalStateException("Exception for test!"))
-                .when(mMeasurementServiceMock)
-                .registerEvent(eq(reportingUri), any(), any(), anyBoolean(), any(), any(), any());
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -390,11 +388,22 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog = */ true);
+        SimpleSyncCallback sellerCallback = new SimpleSyncCallback();
+        doAnswer(
+                        invocation -> {
+                            sellerCallback.setCalled();
+                            throw new IllegalStateException("Exception for test!");
+                        })
+                .when(mMeasurementServiceMock)
+                .registerEvent(eq(reportingUri), any(), any(), anyBoolean(), any(), any(), any());
+        SimpleSyncCallback buyerCallback =
+                syncRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
+
+        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
 
         // Verify registerEvent was called with exact parameters.
-        verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
-        verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
+        sellerCallback.assertCalled();
+        buyerCallback.assertCalled();
 
         // Confirm success was reported to caller.
         assertTrue(callback.mIsSuccess);
@@ -416,9 +425,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
     }
 
-    // TODO(b/298871007): Remove FlakyTest annotation after stabilizing flake.
     @Test
-    @FlakyTest(bugId = 298871007)
     public void testImplDoesNotCrashAfterBuyerReportingThrowsAnException() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -452,11 +459,16 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog = */ true);
+        SimpleSyncCallback sellerCallback =
+                syncRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
+        SimpleSyncCallback buyerCallback =
+                syncRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
+
+        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
 
         // Verify registerEvent was called with exact parameters.
-        verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
-        verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
+        sellerCallback.assertCalled();
+        buyerCallback.assertCalled();
 
         // Confirm success was reported to caller.
         assertTrue(callback.mIsSuccess);
@@ -474,9 +486,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                 SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
     }
 
-    // TODO(b/298871007): Remove FlakyTest annotation after stabilizing flake.
     @Test
-    @FlakyTest(bugId = 298871007)
     public void testImplDoesNotCrashAfterBuyerReportingAndRegisteringThrowsAnException()
             throws Exception {
         enableARA();
@@ -484,9 +494,6 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Fail buyer reporting and registering.
         Uri reportingUri = mDBRegisteredAdInteractionBuyerClick.getInteractionReportingUri();
-        doThrow(new IllegalStateException("Exception for test!"))
-                .when(mMeasurementServiceMock)
-                .registerEvent(eq(reportingUri), any(), any(), anyBoolean(), any(), any(), any());
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -505,11 +512,23 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog = */ true);
+        SimpleSyncCallback sellerCallback =
+                syncRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
+        SimpleSyncCallback buyerCallback =
+                syncRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
+        doAnswer(
+                        invocation -> {
+                            buyerCallback.setCalled();
+                            throw new IllegalStateException("Exception for test!");
+                        })
+                .when(mMeasurementServiceMock)
+                .registerEvent(eq(reportingUri), any(), any(), anyBoolean(), any(), any(), any());
+
+        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
 
         // Verify registerEvent was called with exact parameters.
-        verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
-        verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
+        sellerCallback.assertCalled();
+        buyerCallback.assertCalled();
 
         // Confirm success was reported to caller.
         assertTrue(callback.mIsSuccess);
@@ -555,7 +574,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         // Call report event with input.
         ReportInteractionInput input =
                 mInputBuilder.setReportingDestinations(BUYER_DESTINATION).build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog = */ true);
+        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
 
         // Verify registerEvent was called with exact parameters.
         verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
@@ -600,7 +619,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         // Call report event with input.
         ReportInteractionInput input =
                 mInputBuilder.setReportingDestinations(SELLER_DESTINATION).build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog = */ true);
+        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
 
         // Verify registerEvent was called with exact parameters.
         verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
@@ -660,7 +679,7 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog = */ true);
+        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
 
         // Verify registerEvent was called with exact parameters.
         verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
@@ -719,7 +738,7 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog = */ true);
+        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
 
         // Verify registerEvent was never called.
         verify(mMeasurementServiceMock, never())
@@ -1596,6 +1615,28 @@ public class ReportAndRegisterEventFallbackImplTest {
         ReportEventTestCallback callback = new ReportEventTestCallback(resultLatch);
         mEventReporter.reportInteraction(inputParams, callback);
         resultLatch.await();
+
+        return callback;
+    }
+
+    // Use a SyncCallback to block until register event happens.
+    private SimpleSyncCallback syncRegisterEvent(String path, ReportInteractionInput input) {
+        SimpleSyncCallback callback = new SimpleSyncCallback();
+
+        doAnswer(
+                        invocation -> {
+                            callback.setCalled();
+                            return null;
+                        })
+                .when(mMeasurementServiceMock)
+                .registerEvent(
+                        mMockWebServerRule.uriForPath(path),
+                        input.getCallerPackageName(),
+                        input.getCallerSdkName(),
+                        input.getAdId() != null,
+                        mEventData,
+                        input.getInputEvent(),
+                        input.getAdId());
 
         return callback;
     }

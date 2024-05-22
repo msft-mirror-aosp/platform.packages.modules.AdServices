@@ -16,18 +16,23 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
-import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.Flags.CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 
 import androidx.annotation.VisibleForTesting;
 
@@ -49,6 +54,24 @@ public final class DebugFlags extends CommonDebugFlags {
 
     /** Default for if FLEDGE ad selection CLI is enabled. */
     @VisibleForTesting static final boolean DEFAULT_AD_SELECTION_CLI_ENABLED = false;
+
+    /** Default value for fledge auction server consented debug enabled. */
+    @VisibleForTesting
+    static final boolean DEFAULT_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED = false;
+
+    /** Default value for console messages from js isolate be available in logcat. */
+    @VisibleForTesting
+    static final boolean DEFAULT_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED = false;
+
+    /** Default value for status of custom audiences CLI feature */
+    @VisibleForTesting static final boolean DEFAULT_FLEDGE_CUSTOM_AUDIENCE_CLI_ENABLED = false;
+
+    /** Default value for status of consented debugging CLI feature */
+    @VisibleForTesting static final boolean DEFAULT_FLEDGE_CONSENTED_DEBUGGING_CLI_ENABLED = false;
+
+    /** Default value for sending a broadcast when record topics is completed. */
+    @VisibleForTesting
+    static final boolean DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED = false;
 
     public static DebugFlags getInstance() {
         return sInstance;
@@ -86,5 +109,43 @@ public final class DebugFlags extends CommonDebugFlags {
 
     public boolean getAdSelectionCommandsEnabled() {
         return getDebugFlag(KEY_AD_SELECTION_CLI_ENABLED, DEFAULT_AD_SELECTION_CLI_ENABLED);
+    }
+
+    /** Returns whether Consented Debugging is enabled for server auctions. */
+    public boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
+        return getDebugFlag(
+                KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
+                DEFAULT_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED);
+    }
+
+    /** Returns the enabled status for custom audiences CLI feature. */
+    public boolean getFledgeConsentedDebuggingCliEnabledStatus() {
+        return getDebugFlag(
+                KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED,
+                DEFAULT_FLEDGE_CONSENTED_DEBUGGING_CLI_ENABLED);
+    }
+
+    /** Returns the enabled status for custom audiences CLI feature. */
+    public boolean getFledgeCustomAudienceCLIEnabledStatus() {
+        return getDebugFlag(
+                KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
+                DEFAULT_FLEDGE_CUSTOM_AUDIENCE_CLI_ENABLED);
+    }
+
+    /** Returns whether sending a broadcast when record topics is completed is enabled. */
+    public boolean getRecordTopicsCompleteBroadcastEnabled() {
+        return getDebugFlag(
+                KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED,
+                DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED);
+    }
+
+    /**
+     * Returns a boolean to indicate if console messages from js isolate should be available in
+     * logcat or not.
+     */
+    public boolean getAdServicesJsIsolateConsoleMessagesInLogsEnabled() {
+        return getDebugFlag(
+                KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED,
+                DEFAULT_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED);
     }
 }

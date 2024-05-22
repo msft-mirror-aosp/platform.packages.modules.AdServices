@@ -297,6 +297,9 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         trustedSignals -> {
                             SellerContextualSignals contextualSignals =
                                     getContextualSignals(trustedSignals.second);
+                            mAdSelectionExecutionLogger
+                                    .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                            contextualSignals.getDataVersion() != null);
                             sLogger.v("Invoking JS engine to generate Ad Scores");
                             return FluentFuture.from(
                                             mAdSelectionScriptEngine.scoreAds(

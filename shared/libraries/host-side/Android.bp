@@ -19,12 +19,14 @@ package {
 java_library_host {
     name: "adservices-shared-hostside-testing",
     srcs: [
-         ":adservices-shared-sideless-testing-sources",
+        ":adservices-shared-sideless-testing-sources",
+        "java/**/*.java",
     ],
     libs: [
         "error_prone_annotations", // @FormatMethod / @FormatString
         "guava-android-host", // @VisibleForTesting
         "junit",
+        "tradefed",
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

@@ -33,6 +33,7 @@ import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCo
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.annotation.SuppressLint;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.consent.ConsentParcel;
 import android.app.job.JobScheduler;
@@ -284,14 +285,13 @@ public class ConsentManager {
 
                     sConsentManager =
                             new ConsentManager(
-                                    TopicsWorker.getInstance(context),
+                                    TopicsWorker.getInstance(),
                                     appConsentDao,
-                                    EnrollmentDao.getInstance(context),
+                                    EnrollmentDao.getInstance(),
                                     MeasurementImpl.getInstance(context),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                                     SharedStorageDatabase.getInstance(context).appInstallDao(),
-                                    ProtectedSignalsDatabase.getInstance(context)
-                                            .protectedSignalsDao(),
+                                    ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                     SharedStorageDatabase.getInstance(context).frequencyCapDao(),
                                     adServicesManager,
                                     datastore,
@@ -318,6 +318,10 @@ public class ConsentManager {
      * write to system server consent if source of truth is system server or dual sources.
      */
     public void enable(@NonNull Context context) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().enable(context);
+            return;
+        }
         Objects.requireNonNull(context);
 
         // Check current value, if it is already enabled, skip this enable process. so that the Api
@@ -352,6 +356,10 @@ public class ConsentManager {
      * write to system server consent if source of truth is system server or dual sources.
      */
     public void disable(@NonNull Context context) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().disable(context);
+            return;
+        }
         Objects.requireNonNull(context);
 
         UiStatsLogger.logOptOutSelected();
@@ -384,6 +392,10 @@ public class ConsentManager {
      * @param apiType Type of the API (Topics, Fledge, Measurement) which should be enabled.
      */
     public void enable(@NonNull Context context, AdServicesApiType apiType) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().enable(context, apiType);
+            return;
+        }
         Objects.requireNonNull(context);
         // Check current value, if it is already enabled, skip this enable process. so that the Api
         // won't be reset.
@@ -421,6 +433,10 @@ public class ConsentManager {
      * write to system server consent if source of truth is system server or dual sources.
      */
     public void disable(@NonNull Context context, AdServicesApiType apiType) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().disable(context, apiType);
+            return;
+        }
         Objects.requireNonNull(context);
 
         UiStatsLogger.logOptOutSelected(apiType);
@@ -459,6 +475,9 @@ public class ConsentManager {
      * @return AdServicesApiConsent the consent
      */
     public AdServicesApiConsent getConsent() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getConsent();
+        }
         if (mFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
         }
@@ -490,6 +509,9 @@ public class ConsentManager {
      *     revoked.
      */
     public AdServicesApiConsent getConsent(AdServicesApiType apiType) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getConsent(apiType);
+        }
         if (mFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
         }
@@ -525,6 +547,9 @@ public class ConsentManager {
      * @return true if user is adult user who OTA from R, otherwise false.
      */
     public boolean isOtaAdultUserFromRvc() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().isOtaAdultUserFromRvc();
+        }
         if (mFlags.getConsentManagerOTADebugMode()) {
             return true;
         }
@@ -546,6 +571,9 @@ public class ConsentManager {
      */
     @NonNull
     public ImmutableList<Topic> getKnownTopicsWithConsent() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getKnownTopicsWithConsent();
+        }
         return mTopicsWorker.getKnownTopicsWithConsent();
     }
 
@@ -557,6 +585,9 @@ public class ConsentManager {
      */
     @NonNull
     public ImmutableList<Topic> getTopicsWithRevokedConsent() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getTopicsWithRevokedConsent();
+        }
         return mTopicsWorker.getTopicsWithRevokedConsent();
     }
 
@@ -568,6 +599,10 @@ public class ConsentManager {
      */
     @NonNull
     public void revokeConsentForTopic(@NonNull Topic topic) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().revokeConsentForTopic(topic);
+            return;
+        }
         mTopicsWorker.revokeConsentForTopic(topic);
     }
 
@@ -579,11 +614,19 @@ public class ConsentManager {
      */
     @NonNull
     public void restoreConsentForTopic(@NonNull Topic topic) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().restoreConsentForTopic(topic);
+            return;
+        }
         mTopicsWorker.restoreConsentForTopic(topic);
     }
 
     /** Wipes out all the data gathered by Topics API but blocked topics. */
     public void resetTopics() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().resetTopics();
+            return;
+        }
         ArrayList<String> tablesToBlock = new ArrayList<>();
         tablesToBlock.add(TopicsTables.BlockedTopicsContract.TABLE);
         mTopicsWorker.clearAllTopicsData(tablesToBlock);
@@ -591,6 +634,10 @@ public class ConsentManager {
 
     /** Wipes out all the data gathered by Topics API. */
     public void resetTopicsAndBlockedTopics() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().resetTopicsAndBlockedTopics();
+            return;
+        }
         mTopicsWorker.clearAllTopicsData(new ArrayList<>());
     }
 
@@ -599,6 +646,9 @@ public class ConsentManager {
      *     consent revoked
      */
     public ImmutableList<App> getKnownAppsWithConsent() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getKnownAppsWithConsent();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ ImmutableList.of(),
                 () ->
@@ -631,6 +681,9 @@ public class ConsentManager {
      *     revoked
      */
     public ImmutableList<App> getAppsWithRevokedConsent() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getAppsWithRevokedConsent();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ ImmutableList.of(),
                 () ->
@@ -667,6 +720,10 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void revokeConsentForApp(@NonNull App app) throws IOException {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().revokeConsentForApp(app);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mAppConsentDao.setConsentForApp(app.getPackageName(), true),
                 () ->
@@ -708,6 +765,10 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void restoreConsentForApp(@NonNull App app) throws IOException {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().restoreConsentForApp(app);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mAppConsentDao.setConsentForApp(app.getPackageName(), false),
                 () ->
@@ -734,6 +795,10 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void resetAppsAndBlockedApps() throws IOException {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().resetAppsAndBlockedApps();
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mAppConsentDao.clearAllConsentData(),
                 () -> mAdServicesManager.clearAllAppConsentData(),
@@ -767,6 +832,10 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void resetApps() throws IOException {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().resetApps();
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mAppConsentDao.clearKnownAppsWithConsent(),
                 () -> mAdServicesManager.clearKnownAppsWithConsent(),
@@ -807,6 +876,9 @@ public class ConsentManager {
      */
     public boolean isFledgeConsentRevokedForApp(@NonNull String packageName)
             throws IllegalArgumentException {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().isFledgeConsentRevokedForApp(packageName);
+        }
         AdServicesApiConsent consent = getConsent(AdServicesApiType.FLEDGE);
 
         if (!consent.isGiven()) {
@@ -864,6 +936,10 @@ public class ConsentManager {
      */
     public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(@NonNull String packageName)
             throws IllegalArgumentException {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance()
+                    .isFledgeConsentRevokedForAppAfterSettingFledgeUse(packageName);
+        }
         AdServicesApiConsent consent = getConsent(AdServicesApiType.FLEDGE);
 
         if (!consent.isGiven()) {
@@ -922,6 +998,10 @@ public class ConsentManager {
      * @param packageUid the package uid that had been uninstalled.
      */
     public void clearConsentForUninstalledApp(String packageName, int packageUid) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().clearConsentForUninstalledApp(packageName, packageUid);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mAppConsentDao.clearConsentForUninstalledApp(packageName, packageUid),
                 () -> mAdServicesManager.clearConsentForUninstalledApp(packageName, packageUid),
@@ -946,6 +1026,10 @@ public class ConsentManager {
      * @param packageName the package name that had been uninstalled.
      */
     public void clearConsentForUninstalledApp(@NonNull String packageName) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().clearConsentForUninstalledApp(packageName);
+            return;
+        }
         Objects.requireNonNull(packageName);
         Preconditions.checkStringNotEmpty(packageName, "Package name should not be empty");
 
@@ -965,6 +1049,10 @@ public class ConsentManager {
 
     /** Wipes out all the data gathered by Measurement API. */
     public void resetMeasurement() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().resetMeasurement();
+            return;
+        }
         mMeasurementImpl.deleteAllMeasurementData(List.of());
         // Log wipeout event triggered by consent flip to delete data of package
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
@@ -983,6 +1071,10 @@ public class ConsentManager {
      * user.
      */
     public void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().recordNotificationDisplayed(wasNotificationDisplayed);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () ->
                         mDatastore.put(
@@ -1008,6 +1100,9 @@ public class ConsentManager {
      * @return true if Consent Notification was displayed, otherwise false.
      */
     public Boolean wasNotificationDisplayed() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().wasNotificationDisplayed();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE),
@@ -1026,6 +1121,10 @@ public class ConsentManager {
      * the user.
      */
     public void recordGaUxNotificationDisplayed(boolean wasGaUxDisplayed) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().recordGaUxNotificationDisplayed(wasGaUxDisplayed);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () ->
                         mDatastore.put(
@@ -1049,6 +1148,9 @@ public class ConsentManager {
      * @return true if GA UX Consent Notification was displayed, otherwise false.
      */
     public Boolean wasGaUxNotificationDisplayed() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().wasGaUxNotificationDisplayed();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE),
@@ -1059,10 +1161,14 @@ public class ConsentManager {
     }
 
     /**
-     * Saves information to the storage that GA UX notification was displayed for the first time to
+     * Saves information to the storage that PAS UX notification was displayed for the first time to
      * the user.
      */
     public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().recordPasNotificationDisplayed(wasPasDisplayed);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () ->
                         mDatastore.put(
@@ -1090,6 +1196,9 @@ public class ConsentManager {
      * @return true if PAS Consent Notification was displayed, otherwise false.
      */
     public Boolean wasPasNotificationDisplayed() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().wasPasNotificationDisplayed();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE),
@@ -1105,6 +1214,9 @@ public class ConsentManager {
      * @return true if the default consent is true, false otherwise.
      */
     public Boolean getDefaultConsent() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getDefaultConsent();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
                 () -> mDatastore.get(ConsentConstants.DEFAULT_CONSENT),
@@ -1124,6 +1236,9 @@ public class ConsentManager {
      * @return true if the topics default consent is true, false otherwise.
      */
     public Boolean getTopicsDefaultConsent() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getTopicsDefaultConsent();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
                 () -> mDatastore.get(ConsentConstants.TOPICS_DEFAULT_CONSENT),
@@ -1145,6 +1260,9 @@ public class ConsentManager {
      * @return true if the FLEDGE default consent is true, false otherwise.
      */
     public Boolean getFledgeDefaultConsent() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getFledgeDefaultConsent();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
                 () -> mDatastore.get(ConsentConstants.FLEDGE_DEFAULT_CONSENT),
@@ -1166,6 +1284,9 @@ public class ConsentManager {
      * @return true if the measurement default consent is true, false otherwise.
      */
     public Boolean getMeasurementDefaultConsent() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getMeasurementDefaultConsent();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
                 () -> mDatastore.get(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT),
@@ -1183,6 +1304,9 @@ public class ConsentManager {
      * @return true if the AdId is enabled by default, false otherwise.
      */
     public Boolean getDefaultAdIdState() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getDefaultAdIdState();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
                 () -> mDatastore.get(ConsentConstants.DEFAULT_AD_ID_STATE),
@@ -1194,6 +1318,10 @@ public class ConsentManager {
 
     /** Saves the default consent bit to data stores based on source of truth. */
     public void recordDefaultConsent(boolean defaultConsent) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().recordDefaultConsent(defaultConsent);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.put(ConsentConstants.DEFAULT_CONSENT, defaultConsent),
                 () -> mAdServicesManager.recordDefaultConsent(defaultConsent),
@@ -1216,6 +1344,10 @@ public class ConsentManager {
 
     /** Saves the topics default consent bit to data stores based on source of truth. */
     public void recordTopicsDefaultConsent(boolean defaultConsent) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().recordTopicsDefaultConsent(defaultConsent);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.put(ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent),
                 () -> mAdServicesManager.recordTopicsDefaultConsent(defaultConsent),
@@ -1234,6 +1366,10 @@ public class ConsentManager {
 
     /** Saves the FLEDGE default consent bit to data stores based on source of truth. */
     public void recordFledgeDefaultConsent(boolean defaultConsent) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().recordFledgeDefaultConsent(defaultConsent);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.put(ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent),
                 () -> mAdServicesManager.recordFledgeDefaultConsent(defaultConsent),
@@ -1252,6 +1388,10 @@ public class ConsentManager {
 
     /** Saves the measurement default consent bit to data stores based on source of truth. */
     public void recordMeasurementDefaultConsent(boolean defaultConsent) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().recordMeasurementDefaultConsent(defaultConsent);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.put(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent),
                 () -> mAdServicesManager.recordMeasurementDefaultConsent(defaultConsent),
@@ -1265,6 +1405,10 @@ public class ConsentManager {
 
     /** Saves the default AdId state bit to data stores based on source of truth. */
     public void recordDefaultAdIdState(boolean defaultAdIdState) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().recordDefaultAdIdState(defaultAdIdState);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.put(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState),
                 () -> mAdServicesManager.recordDefaultAdIdState(defaultAdIdState),
@@ -1289,6 +1433,10 @@ public class ConsentManager {
 
     /** Set the current privacy sandbox feature. */
     public void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType currentFeatureType) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().setCurrentPrivacySandboxFeature(currentFeatureType);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> setPrivacySandboxFeatureTypeInApp(currentFeatureType),
                 () -> mAdServicesManager.setCurrentPrivacySandboxFeature(currentFeatureType.name()),
@@ -1303,6 +1451,10 @@ public class ConsentManager {
 
     /** Saves information to the storage that user interacted with consent manually. */
     public void recordUserManualInteractionWithConsent(@UserManualInteraction int interaction) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().recordUserManualInteractionWithConsent(interaction);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> storeUserManualInteractionToPpApi(interaction, mDatastore),
                 () -> mAdServicesManager.recordUserManualInteractionWithConsent(interaction),
@@ -1340,6 +1492,9 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getCurrentPrivacySandboxFeature();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED,
                 this::getPrivacySandboxFeatureFromApp,
@@ -1389,7 +1544,11 @@ public class ConsentManager {
      *
      * @return true if the user interacted with the consent manually, otherwise false.
      */
+    @SuppressLint("WrongConstant")
     public @UserManualInteraction int getUserManualInteractionWithConsent() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getUserManualInteractionWithConsent();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ UNKNOWN,
                 this::getUserManualInteractionWithConsentInternal,
@@ -2034,6 +2193,9 @@ public class ConsentManager {
 
     /** Returns whether the isAdIdEnabled bit is true based on consent_source_of_truth. */
     public Boolean isAdIdEnabled() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().isAdIdEnabled();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
                 () -> mDatastore.get(ConsentConstants.IS_AD_ID_ENABLED),
@@ -2045,6 +2207,10 @@ public class ConsentManager {
 
     /** Set the AdIdEnabled bit to storage based on consent_source_of_truth. */
     public void setAdIdEnabled(boolean isAdIdEnabled) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().setAdIdEnabled(isAdIdEnabled);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.put(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled),
                 () -> mAdServicesManager.setAdIdEnabled(isAdIdEnabled),
@@ -2056,6 +2222,9 @@ public class ConsentManager {
 
     /** Returns whether the isU18Account bit is true based on consent_source_of_truth. */
     public Boolean isU18Account() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().isU18Account();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
                 () -> mDatastore.get(ConsentConstants.IS_U18_ACCOUNT),
@@ -2067,6 +2236,10 @@ public class ConsentManager {
 
     /** Set the U18Account bit to storage based on consent_source_of_truth. */
     public void setU18Account(boolean isU18Account) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().setU18Account(isU18Account);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account),
                 () -> mAdServicesManager.setU18Account(isU18Account),
@@ -2077,6 +2250,9 @@ public class ConsentManager {
 
     /** Returns whether the isEntryPointEnabled bit is true based on consent_source_of_truth. */
     public Boolean isEntryPointEnabled() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().isEntryPointEnabled();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
                 () -> mDatastore.get(ConsentConstants.IS_ENTRY_POINT_ENABLED),
@@ -2088,6 +2264,10 @@ public class ConsentManager {
 
     /** Set the EntryPointEnabled bit to storage based on consent_source_of_truth. */
     public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().setEntryPointEnabled(isEntryPointEnabled);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.put(ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled),
                 () -> mAdServicesManager.setEntryPointEnabled(isEntryPointEnabled),
@@ -2099,6 +2279,9 @@ public class ConsentManager {
 
     /** Returns whether the isAdultAccount bit is true based on consent_source_of_truth. */
     public Boolean isAdultAccount() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().isAdultAccount();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
                 () -> mDatastore.get(ConsentConstants.IS_ADULT_ACCOUNT),
@@ -2110,6 +2293,10 @@ public class ConsentManager {
 
     /** Set the AdultAccount bit to storage based on consent_source_of_truth. */
     public void setAdultAccount(boolean isAdultAccount) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().setAdultAccount(isAdultAccount);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.put(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount),
                 () -> mAdServicesManager.setAdultAccount(isAdultAccount),
@@ -2122,6 +2309,9 @@ public class ConsentManager {
      * Returns whether the wasU18NotificationDisplayed bit is true based on consent_source_of_truth.
      */
     public Boolean wasU18NotificationDisplayed() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().wasU18NotificationDisplayed();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED),
@@ -2134,6 +2324,10 @@ public class ConsentManager {
 
     /** Set the U18NotificationDisplayed bit to storage based on consent_source_of_truth. */
     public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().setU18NotificationDisplayed(wasU18NotificationDisplayed);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () ->
                         mDatastore.put(
@@ -2157,6 +2351,9 @@ public class ConsentManager {
 
     /** Returns current UX based on consent_source_of_truth. */
     public PrivacySandboxUxCollection getUx() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getUx();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ PrivacySandboxUxCollection.UNSUPPORTED_UX,
                 () -> mUxStatesDao.getUx(),
@@ -2187,6 +2384,10 @@ public class ConsentManager {
 
     /** Set the current UX to storage based on consent_source_of_truth. */
     public void setUx(PrivacySandboxUxCollection ux) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().setUx(ux);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mUxStatesDao.setUx(ux),
                 () -> mAdServicesManager.setUx(ux.toString()),
@@ -2210,6 +2411,9 @@ public class ConsentManager {
     /** Returns current enrollment channel based on consent_source_of_truth. */
     public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
             PrivacySandboxUxCollection ux) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().getEnrollmentChannel(ux);
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ null,
                 () -> mUxStatesDao.getEnrollmentChannel(ux),
@@ -2222,6 +2426,10 @@ public class ConsentManager {
     /** Set the current enrollment channel to storage based on consent_source_of_truth. */
     public void setEnrollmentChannel(
             PrivacySandboxUxCollection ux, PrivacySandboxEnrollmentChannelCollection channel) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().setEnrollmentChannel(ux, channel);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mUxStatesDao.setEnrollmentChannel(ux, channel),
                 () -> mAdServicesManager.setEnrollmentChannel(channel.toString()),
@@ -2236,6 +2444,9 @@ public class ConsentManager {
      * this again
      */
     public boolean isPasFledgeConsentGiven() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().isPasFledgeConsentGiven();
+        }
         if (mFlags.getConsentManagerDebugMode()) {
             return true;
         }
@@ -2252,6 +2463,9 @@ public class ConsentManager {
 
     /** get pas conset for measurement */
     public boolean isPasMeasurementConsentGiven() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().isPasMeasurementConsentGiven();
+        }
         if (mFlags.getConsentManagerDebugMode()) {
             return true;
         }
@@ -2270,6 +2484,9 @@ public class ConsentManager {
      * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
      */
     public Boolean isMeasurementDataReset() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().isMeasurementDataReset();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
                 () -> mDatastore.get(ConsentConstants.IS_MEASUREMENT_DATA_RESET),
@@ -2282,6 +2499,10 @@ public class ConsentManager {
 
     /** Set the isMeasurementDataReset bit to storage based on consent_source_of_truth. */
     public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().setMeasurementDataReset(isMeasurementDataReset);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () ->
                         mDatastore.put(
@@ -2297,6 +2518,9 @@ public class ConsentManager {
      * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
      */
     public Boolean isPaDataReset() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().isPaDataReset();
+        }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
                 () -> mDatastore.get(ConsentConstants.IS_PA_DATA_RESET),
@@ -2309,6 +2533,10 @@ public class ConsentManager {
 
     /** Set the isPaDataReset bit to storage based on consent_source_of_truth. */
     public void setPaDataReset(boolean isPaDataReset) {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            ConsentManagerV2.getInstance().setPaDataReset(isPaDataReset);
+            return;
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.put(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
                 () -> mAdServicesManager.setPaDataReset(isPaDataReset),

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.shell.adselection;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 
@@ -23,7 +24,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
-import com.android.adservices.service.Flags;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
@@ -44,16 +45,21 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
     public static final String COMMAND_PREFIX = "ad_selection";
     private final Map<String, ShellCommand> mAllCommandsMap;
     private final boolean mIsConsentedDebugCliEnabled;
+    private boolean mIsAdSelectionCliEnabled;
 
     @VisibleForTesting
     public AdSelectionShellCommandFactory(
             boolean isConsentedDebugCliEnabled,
+            boolean isAdSelectionCliEnabled,
             @NonNull ConsentedDebugConfigurationDao consentedDebugConfigurationDao) {
         Objects.requireNonNull(consentedDebugConfigurationDao);
 
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
+        mIsAdSelectionCliEnabled = isAdSelectionCliEnabled;
         Set<ShellCommand> allCommands =
-                ImmutableSet.of(new ConsentedDebugShellCommand(consentedDebugConfigurationDao));
+                ImmutableSet.of(
+                        new ConsentedDebugShellCommand(consentedDebugConfigurationDao),
+                        new GetAdSelectionDataCommand());
         mAllCommandsMap =
                 allCommands.stream()
                         .collect(
@@ -64,12 +70,15 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
     /**
      * @return an instance of the {@link AdSelectionShellCommandFactory}.
      */
-    public static AdSelectionShellCommandFactory getInstance(Flags flags, Context context) {
+    public static AdSelectionShellCommandFactory getInstance(
+            DebugFlags debugFlags, Context context) {
         return new AdSelectionShellCommandFactory(
-                flags.getFledgeConsentedDebuggingCliEnabledStatus(),
+                debugFlags.getFledgeConsentedDebuggingCliEnabledStatus(),
+                debugFlags.getAdSelectionCommandsEnabled(),
                 AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao());
     }
 
+    @SuppressLint("VisibleForTests")
     @Override
     public ShellCommand getShellCommand(String cmd) {
         if (!mAllCommandsMap.containsKey(cmd)) {
@@ -80,9 +89,16 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
             return null;
         }
         ShellCommand command = mAllCommandsMap.get(cmd);
+
         switch (cmd) {
             case ConsentedDebugShellCommand.CMD -> {
                 if (!mIsConsentedDebugCliEnabled) {
+                    return new NoOpShellCommand(cmd, command.getMetricsLoggerCommand());
+                }
+                return command;
+            }
+            case GetAdSelectionDataCommand.CMD -> {
+                if (!mIsAdSelectionCliEnabled) {
                     return new NoOpShellCommand(cmd, command.getMetricsLoggerCommand());
                 }
                 return command;

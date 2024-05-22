@@ -20,13 +20,21 @@ import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mo
 import android.content.Context;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
-import com.android.adservices.mockito.AdServicesExtendedMockitoMockerImpl;
-import com.android.adservices.mockito.AdServicesExtendedMockitoMockerImpl.StaticClassChecker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.mockito.AdServicesStaticMockitoMocker;
+import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
+import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
-
-import com.google.common.collect.ImmutableSet;
+import com.android.adservices.mockito.LogInterceptor;
+import com.android.adservices.mockito.SharedMocker;
+import com.android.adservices.mockito.SharedMockitoMocker;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.spe.logging.JobServiceLogger;
+import com.android.adservices.shared.testing.JobServiceLoggingCallback;
+import com.android.adservices.spe.AdServicesJobScheduler;
+import com.android.adservices.spe.AdServicesJobServiceFactory;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -64,24 +72,7 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
     public final AdServicesExtendedMockitoRule extendedMockito = getAdServicesExtendedMockitoRule();
 
     /** Provides common expectations. */
-    public final AdServicesExtendedMockitoMocker mocker =
-            new AdServicesExtendedMockitoMockerImpl(
-                    new StaticClassChecker() {
-                        @Override
-                        public boolean isSpiedOrMocked(Class<?> clazz) {
-                            return getSpiedOrMockedClasses().contains(clazz);
-                        }
-
-                        @Override
-                        public ImmutableSet<Class<?>> getSpiedOrMockedClasses() {
-                            return extendedMockito.getSpiedOrMockedClasses();
-                        }
-
-                        @Override
-                        public String getTestName() {
-                            return extendedMockito.getTestName();
-                        }
-                    });
+    public final Mocker mocker = new Mocker(extendedMockito);
 
     /**
      * Gets the {@link AdServicesExtendedMockitoRule} that will be set as the {@code
@@ -112,4 +103,103 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         return new AdServicesExtendedMockitoRule.Builder(this).setStrictness(Strictness.LENIENT);
     }
 
+    public static final class Mocker
+            implements AndroidStaticMocker, AdServicesStaticMockitoMocker, SharedMocker {
+
+        private final AndroidStaticMocker mAndroidMocker;
+        private final AdServicesStaticMockitoMocker mAdServicesMocker;
+        private final SharedMocker mSharedMocker = new SharedMockitoMocker();
+
+        private Mocker(AdServicesExtendedMockitoRule rule) {
+            mAndroidMocker = new AndroidExtendedMockitoMocker(rule);
+            mAdServicesMocker = new AdServicesExtendedMockitoMocker(rule);
+        }
+
+        // AndroidStaticMocker methods
+
+        @Override
+        public void mockGetCallingUidOrThrow(int uid) {
+            mAndroidMocker.mockGetCallingUidOrThrow(uid);
+        }
+
+        @Override
+        public void mockGetCallingUidOrThrow() {
+            mAndroidMocker.mockGetCallingUidOrThrow();
+        }
+
+        @Override
+        public void mockIsAtLeastR(boolean isIt) {
+            mAndroidMocker.mockIsAtLeastR(isIt);
+        }
+
+        @Override
+        public void mockIsAtLeastS(boolean isIt) {
+            mAndroidMocker.mockIsAtLeastS(isIt);
+        }
+
+        @Override
+        public void mockIsAtLeastT(boolean isIt) {
+            mAndroidMocker.mockIsAtLeastT(isIt);
+        }
+
+        @Override
+        public void mockSdkLevelR() {
+            mAndroidMocker.mockSdkLevelR();
+        }
+
+        @Override
+        public void mockGetCurrentUser(int user) {
+            mAndroidMocker.mockGetCurrentUser(user);
+        }
+
+        @Override
+        public LogInterceptor interceptLogV(String tag) {
+            return mAndroidMocker.interceptLogV(tag);
+        }
+
+        @Override
+        public LogInterceptor interceptLogE(String tag) {
+            return mAndroidMocker.interceptLogE(tag);
+        }
+
+        // AdServicesExtendedMockitoMocker methods
+
+        @Override
+        public void mockGetFlags(Flags mockedFlags) {
+            mAdServicesMocker.mockGetFlags(mockedFlags);
+        }
+
+        @Override
+        public void mockGetFlagsForTesting() {
+            mAdServicesMocker.mockGetFlagsForTesting();
+        }
+
+        @Override
+        public void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler) {
+            mAdServicesMocker.mockSpeJobScheduler(mockedAdServicesJobScheduler);
+        }
+
+        @Override
+        public void mockAdServicesJobServiceFactory(
+                AdServicesJobServiceFactory mockedAdServicesJobServiceFactory) {
+            mAdServicesMocker.mockAdServicesJobServiceFactory(mockedAdServicesJobServiceFactory);
+        }
+
+        @Override
+        public void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl) {
+            mAdServicesMocker.mockAdServicesLoggerImpl(mockedAdServicesLoggerImpl);
+        }
+
+        // SharedMocker methods
+
+        @Override
+        public Context setApplicationContextSingleton() {
+            return mSharedMocker.setApplicationContextSingleton();
+        }
+
+        @Override
+        public JobServiceLoggingCallback syncRecordOnStopJob(JobServiceLogger logger) {
+            return mSharedMocker.syncRecordOnStopJob(logger);
+        }
+    }
 }

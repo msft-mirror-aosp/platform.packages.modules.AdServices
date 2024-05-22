@@ -116,7 +116,7 @@ public class BackgroundFetchWorker {
                                             customAudienceDao,
                                             appInstallDao,
                                             context.getPackageManager(),
-                                            EnrollmentDao.getInstance(context),
+                                            EnrollmentDao.getInstance(),
                                             flags,
                                             customAudienceLoggerFactory),
                                     Clock.systemUTC(),

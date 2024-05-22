@@ -18,6 +18,7 @@ package {
 
 android_test {
     name: "CtsAdServicesDeviceTestCases",
+    team: "trendy_team_android_rubidium",
     defaults: ["cts_defaults"],
     libs: [
         "android.test.runner",
@@ -25,20 +26,21 @@ android_test {
         "framework-adservices-lib",
         "auto_value_annotations",
     ],
-    srcs: ["src/**/*.java",],
+    srcs: ["src/**/*.java"],
     // Tag this module as a cts test artifact
     exclude_srcs: [
-      "src/android/adservices/debuggablects/*.java",
-      "src/android/adservices/rootcts/*.java",
+        "src/android/adservices/debuggablects/*.java",
+        "src/android/adservices/rootcts/*.java",
     ],
     test_suites: [
+        "cts",
         "mts-adservices",
         "general-tests",
         "mcts-adservices",
     ],
     plugins: [
         "auto_value_plugin",
-        "auto_annotation_plugin"
+        "auto_annotation_plugin",
     ],
     static_libs: [
         "androidx.test.rules",
@@ -57,7 +59,6 @@ android_test {
     compile_multilib: "both",
 }
 
-
 android_test {
     name: "CtsAdServicesRootTestCases",
     defaults: ["cts_defaults"],
@@ -73,8 +74,8 @@ android_test {
     ],
     // Tag this module as a cts test artifact
     exclude_srcs: [
-      "src/android/adservices/debuggablects/*.java",
-      "src/android/adservices/cts/*.java",
+        "src/android/adservices/debuggablects/*.java",
+        "src/android/adservices/cts/*.java",
     ],
     test_suites: [
         "cts_root",
@@ -83,7 +84,7 @@ android_test {
     ],
     plugins: [
         "auto_value_plugin",
-        "auto_annotation_plugin"
+        "auto_annotation_plugin",
     ],
     static_libs: [
         "androidx.test.rules",
@@ -114,20 +115,21 @@ android_test {
         "framework-adservices-lib",
         "auto_value_annotations",
     ],
-    srcs: ["src/**/*.java",],
+    srcs: ["src/**/*.java"],
     // Tag this module as a cts test artifact
     exclude_srcs: [
-      "src/android/adservices/debuggablects/*.java",
-      "src/android/adservices/rootcts/*.java",
+        "src/android/adservices/debuggablects/*.java",
+        "src/android/adservices/rootcts/*.java",
     ],
     test_suites: [
+        "cts",
         "mts-extservices",
         "general-tests",
         "mcts-extservices",
     ],
     plugins: [
         "auto_value_plugin",
-        "auto_annotation_plugin"
+        "auto_annotation_plugin",
     ],
     static_libs: [
         "androidx.test.rules",
@@ -161,14 +163,15 @@ android_test {
     srcs: ["src/**/*.java"],
     // Tag this module as a cts test artifact
     exclude_srcs: [
-      "src/android/adservices/cts/*.java",
-      "src/android/adservices/rootcts/*.java",
+        "src/android/adservices/cts/*.java",
+        "src/android/adservices/rootcts/*.java",
     ],
     plugins: [
         "auto_value_plugin",
-        "auto_annotation_plugin"
+        "auto_annotation_plugin",
     ],
     test_suites: [
+        "cts",
         "mts-adservices",
         "general-tests",
         "mcts-adservices",
@@ -206,17 +209,18 @@ android_test {
     srcs: ["src/**/*.java"],
     // Tag this module as a cts test artifact
     exclude_srcs: [
-      "src/android/adservices/cts/*.java",
-      "src/android/adservices/rootcts/*.java",
+        "src/android/adservices/cts/*.java",
+        "src/android/adservices/rootcts/*.java",
     ],
     test_suites: [
+        "cts",
         "mts-extservices",
         "general-tests",
         "mcts-extservices",
     ],
     plugins: [
         "auto_value_plugin",
-        "auto_annotation_plugin"
+        "auto_annotation_plugin",
     ],
     static_libs: [
         "androidx.room_room-runtime",
@@ -238,4 +242,42 @@ android_test {
     max_sdk_version: "32",
     test_config: "AndroidTestDebuggable.ExtServices.xml",
     manifest: "AndroidManifestDebuggableExtServices.xml",
+}
+
+java_library {
+    name: "adservices-cts-test-utility",
+    srcs: [
+        "src/android/adservices/utils/**/*.java",
+    ],
+    plugins: [
+        "auto_value_plugin",
+        "auto_annotation_plugin",
+    ],
+    libs: [
+        "framework-adservices-lib",
+    ],
+    static_libs: [
+        "adservices-clients",
+        "adservices-test-fixtures",
+        "adservices-test-utility",
+        "androidx.test.rules",
+        "androidx.test.ext.junit",
+        "auto_value_annotations",
+        "mockwebserver",
+        "testng",
+    ],
+    min_sdk_version: "Tiramisu",
+}
+
+// Assets need to be bundled via this android_library since tests in submodules need to load assets.
+android_library {
+    name: "adservices-cts-assets",
+    asset_dirs: [
+        "assets",
+    ],
+    // Must use EmptyManifest.xml since "adservices-assets" will also be used by submodule tests.
+    // If we use the normal "AndroidManifest.xml", we will redeclare permissions in the tests.
+    // See b/228270294 for detail on duplicate permissions error.
+    manifest: "EmptyManifest.xml",
+    min_sdk_version: "30",
 }

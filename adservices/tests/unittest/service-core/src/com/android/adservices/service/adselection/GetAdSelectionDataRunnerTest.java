@@ -140,6 +140,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     private static final int CALLER_UID = Process.myUid();
+    private static final int E2E_TRACE_COOKIE = 0;
     private static final String CALLER_PACKAGE_NAME = TEST_PACKAGE_NAME;
     private static final ExecutorService BLOCKING_EXECUTOR =
             AdServicesExecutors.getBlockingExecutor();
@@ -1097,6 +1098,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         GetAdSelectionDataRunner getAdSelectionDataRunner =
                 new GetAdSelectionDataRunner(
                         mContext,
+                        E2E_TRACE_COOKIE,
                         MultiCloudTestStrategyFactory.getDisabledTestStrategy(
                                 mObliviousHttpEncryptorMock),
                         mAdSelectionEntryDaoSpy,
@@ -1163,6 +1165,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
             AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy) {
         return new GetAdSelectionDataRunner(
                 mContext,
+                E2E_TRACE_COOKIE,
                 multiCloudSupportStrategy,
                 mAdSelectionEntryDaoSpy,
                 mCustomAudienceDao,

@@ -19,17 +19,13 @@ package com.android.adservices.common;
 import static android.os.Build.VERSION_CODES.S_V2;
 import static android.os.Build.VERSION_CODES.TIRAMISU;
 
-
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.StandardStreamsLogger;
 
-import com.google.common.truth.Expect;
-
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -65,13 +61,11 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
             "Unknown command:"
                 + " com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity";
 
-    @Mock AbstractDeviceSupportHelper mAbstractDeviceSupportHelper;
-
-    @Rule public final Expect expect = Expect.create();
+    @Mock private AbstractDeviceSupportHelper mAbstractDeviceSupportHelper;
 
     private final Logger.RealLogger mRealLogger = StandardStreamsLogger.getInstance();
 
-    private FakeAdServicesShellCommandHelper mAdServicesShellCommandHelper =
+    private final FakeAdServicesShellCommandHelper mAdServicesShellCommandHelper =
             new FakeAdServicesShellCommandHelper(
                     mAbstractDeviceSupportHelper, mRealLogger, TIRAMISU);
 

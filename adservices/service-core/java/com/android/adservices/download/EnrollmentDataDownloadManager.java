@@ -182,7 +182,7 @@ public class EnrollmentDataDownloadManager {
     }
 
     private void fetchEncryptionKeysForNewEnrollment(List<EnrollmentData> enrollmentDataList) {
-        EncryptionKeyDao encryptionKeyDao = EncryptionKeyDao.getInstance(mContext);
+        EncryptionKeyDao encryptionKeyDao = EncryptionKeyDao.getInstance();
         for (EnrollmentData enrollmentData : enrollmentDataList) {
             List<EncryptionKey> existingKeys =
                     encryptionKeyDao.getEncryptionKeyFromEnrollmentId(
@@ -213,7 +213,7 @@ public class EnrollmentDataDownloadManager {
             bufferedReader.readLine();
             String line = null;
             // While loop runs from the second line.
-            EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(mContext);
+            EnrollmentDao enrollmentDao = EnrollmentDao.getInstance();
             List<EnrollmentData> newEnrollments = new ArrayList<>();
 
             while ((line = bufferedReader.readLine()) != null) {
@@ -244,6 +244,7 @@ public class EnrollmentDataDownloadManager {
                                                     ? Arrays.asList(data[6].split(" "))
                                                     : List.of(data[6]))
                                     .setEncryptionKeyUrl(data[7])
+                                    .setEnrolledSite(data[7])
                                     .build();
                     newEnrollments.add(enrollmentData);
                 } else {

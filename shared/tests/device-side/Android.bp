@@ -19,20 +19,22 @@ android_test {
     name: "AdServicesSharedLibrariesUnitTests",
     srcs: [
         "java/**/*.java",
+        ":adservices-shared-sideless-meta-testing-sources",
+        ":adservices-shared-sideless-tests-sources",
     ],
-    // TODO(b/306522832): should not depend on adservices-extended-mockito-defaults
-    defaults: ["adservices-extended-mockito-defaults"],
+    defaults: ["adservices-shared-extended-mockito-defaults"],
     static_libs: [
         "adservices-shared-common",
         "adservices-shared-error-logging",
         "adservices-shared-exceptions",
+        "adservices-shared-mockito-expectations",
         "adservices-shared-proto-lite",
         "adservices-shared-proto-utils",
         "adservices-shared-spe",
         "adservices-shared-storage",
+        "adservices-shared-sync-callback",
         "adservices-shared-testing",
         "adservices-shared-util",
-        "adservices-test-utility",
         "androidx.test.core",
         "androidx.test.runner",
         "auto_value_annotations",
@@ -42,6 +44,6 @@ android_test {
     min_sdk_version: "30",
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
 }

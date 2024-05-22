@@ -16,9 +16,6 @@
 
 package com.android.adservices.data.signals;
 
-import android.content.Context;
-
-import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
@@ -26,8 +23,7 @@ import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.common.compat.FileCompatUtils;
-
-import java.util.Objects;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 /** Room based database for protected signals. */
 @Database(
@@ -55,8 +51,7 @@ public abstract class ProtectedSignalsDatabase extends RoomDatabase {
     private static volatile ProtectedSignalsDatabase sSingleton;
 
     /** Returns an instance of the ProtectedSignalsDatabase given a context. */
-    public static ProtectedSignalsDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
+    public static ProtectedSignalsDatabase getInstance() {
         /* This initialization pattern tends to outperform more naive approaches since it
          * does not attempt to grab the lock if the DB is already initialized.
          * Ref: "Effective Java" 3rd edition by Joshua Bloch (page 334)
@@ -69,7 +64,9 @@ public abstract class ProtectedSignalsDatabase extends RoomDatabase {
             if (sSingleton == null) {
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
-                                        context, ProtectedSignalsDatabase.class, DATABASE_NAME)
+                                        ApplicationContextSingleton.get(),
+                                        ProtectedSignalsDatabase.class,
+                                        DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
                                 .build();
             }

@@ -21,7 +21,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.Context;
 import android.os.Build;
 import android.util.Pair;
 
@@ -42,6 +41,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
 import com.android.adservices.service.stats.TopicsEncryptionGetTopicsReportedStats;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.util.Clock;
 import com.android.cobalt.CobaltLogger;
 import com.android.internal.annotations.GuardedBy;
@@ -130,20 +130,20 @@ public class CacheManager {
 
     /** Returns an instance of the CacheManager given a context. */
     @NonNull
-    public static CacheManager getInstance(Context context) {
+    public static CacheManager getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 TopicsCobaltLogger topicsCobaltLogger = null;
                 if (FlagsFactory.getFlags().getTopicsCobaltLoggingEnabled()) {
-                    topicsCobaltLogger = new TopicsCobaltLogger(getCobaltLoggerSupplier(context));
+                    topicsCobaltLogger = new TopicsCobaltLogger(getCobaltLoggerSupplier());
                 }
 
                 sSingleton =
                         new CacheManager(
-                                TopicsDao.getInstance(context),
+                                TopicsDao.getInstance(),
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
-                                BlockedTopicsManager.getInstance(context),
+                                BlockedTopicsManager.getInstance(),
                                 GlobalBlockedTopicsManager.getInstance(),
                                 topicsCobaltLogger,
                                 Clock.getInstance());
@@ -445,11 +445,12 @@ public class CacheManager {
 
     // Lazy loading CobaltLogger because CobaltLogger isn't needed during CacheManager
     // initialization.
-    private static Supplier<CobaltLogger> getCobaltLoggerSupplier(Context context) {
+    private static Supplier<CobaltLogger> getCobaltLoggerSupplier() {
         return Suppliers.memoize(
                 () -> {
                     try {
-                        return CobaltFactory.getCobaltLogger(context, FlagsFactory.getFlags());
+                        return CobaltFactory.getCobaltLogger(
+                                ApplicationContextSingleton.get(), FlagsFactory.getFlags());
                     } catch (CobaltInitializationException e) {
                         sLogger.e(e, "Cobalt logger could not be" + " initialised.");
                         ErrorLogUtil.e(

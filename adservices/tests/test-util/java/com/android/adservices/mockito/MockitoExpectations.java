@@ -35,12 +35,11 @@ import android.app.job.JobService;
 import android.content.Context;
 import android.util.Log;
 
-import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.NoFailureSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.AdServicesJobInfo;
@@ -53,19 +52,6 @@ import java.util.concurrent.Executors;
 public final class MockitoExpectations {
 
     private static final String TAG = MockitoExpectations.class.getSimpleName();
-
-    /**
-     * Not an expectation itself, but it sets a mock as the application context on {@link
-     * ApplicationContextSingleton}, and returns it.
-     */
-    public static Context setApplicationContextSingleton() {
-        Context context = mock(Context.class);
-        when(context.getApplicationContext()).thenReturn(context);
-
-        ApplicationContextSingleton.setForTests(context);
-
-        return context;
-    }
 
     /**
      * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback

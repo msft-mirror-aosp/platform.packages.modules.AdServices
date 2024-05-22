@@ -34,21 +34,27 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.service.Flags;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
+import com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceRefreshCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.shell.customaudience.CustomAudienceViewCommand;
+import com.android.adservices.service.shell.signals.GenerateInputForEncodingCommand;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.truth.Expect;
 
@@ -68,13 +74,16 @@ import java.util.Map;
 
 @SpyStatic(AppManifestConfigHelper.class)
 public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedMockitoTestCase {
-    private final Flags mFlags = new ShellCommandFlags();
+    private static final boolean CUSTOM_AUDIENCE_CLI_ENABLED = true;
+    private static final boolean CONSENTED_DEBUG_CLI_ENABLED = true;
+    private static final boolean SIGNALS_CLI_ENABLED = true;
 
     // mCmd is used on most tests methods, excepted those that runs more than one command
     private OneTimeCommand mCmd;
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private BackgroundFetchRunner mBackgroundFetchRunner;
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    @Mock private ProtectedSignalsDao mProtectedSignalsDao;
     @Mock private AdServicesLogger mAdServicesLogger;
     @Mock private Clock mClock;
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
@@ -84,10 +93,13 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         doNothing().when(mAdServicesLogger).logShellCommandStats(any());
         mShellCommandFactorySupplier =
                 new TestShellCommandFactorySupplier(
-                        mFlags,
+                        CUSTOM_AUDIENCE_CLI_ENABLED,
+                        CONSENTED_DEBUG_CLI_ENABLED,
+                        SIGNALS_CLI_ENABLED,
                         mBackgroundFetchRunner,
                         mCustomAudienceDao,
-                        mConsentedDebugConfigurationDao);
+                        mConsentedDebugConfigurationDao,
+                        mProtectedSignalsDao);
         mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
     }
 
@@ -180,6 +192,43 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                     .hasSize(1);
         }
     }
+
+    @Test
+    public void testRun_catchesExceptionAndReturnsError() throws Exception {
+        Exception exception = new RuntimeException("something went wrong");
+        ShellCommandFactory factory =
+                new ShellCommandFactory() {
+                    @Nullable
+                    @Override
+                    public ShellCommand getShellCommand(String cmd) {
+                        throw new RuntimeException(exception);
+                    }
+
+                    @Override
+                    public String getCommandPrefix() {
+                        return CustomAudienceShellCommandFactory.COMMAND_PREFIX;
+                    }
+
+                    @Override
+                    public List<String> getAllCommandsHelp() {
+                        return null;
+                    }
+                };
+
+        mShellCommandFactorySupplier =
+                new ShellCommandFactorySupplier() {
+                    @Override
+                    public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {
+                        return ImmutableList.of(factory);
+                    }
+                };
+
+        mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
+        String result = mCmd.runInvalid(CustomAudienceShellCommandFactory.COMMAND_PREFIX);
+
+        expect.withMessage("err").that(result).contains(exception.getMessage());
+    }
+
     private void assertHelpContents(String help) {
         HashSet<String> actualHelp = Sets.newHashSet(help.split("\n\n"));
         expect.withMessage("help")
@@ -195,7 +244,9 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                                 CustomAudienceListCommand.HELP,
                                 CustomAudienceViewCommand.HELP,
                                 CustomAudienceRefreshCommand.HELP,
-                                ConsentedDebugShellCommand.HELP));
+                                ConsentedDebugShellCommand.HELP,
+                                GenerateInputForEncodingCommand.HELP,
+                                GetAdSelectionDataCommand.HELP));
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {
@@ -286,18 +337,6 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
             pw.close();
             mOutCalled = true;
             return out;
-        }
-    }
-
-    private static final class ShellCommandFlags implements Flags {
-        @Override
-        public boolean getFledgeCustomAudienceCLIEnabledStatus() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeConsentedDebuggingCliEnabledStatus() {
-            return true;
         }
     }
 }

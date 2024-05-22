@@ -16,11 +16,17 @@
 
 package com.android.sdksandbox.cts.host;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
+import static org.junit.Assume.assumeTrue;
+
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 import android.platform.test.annotations.LargeTest;
 
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -34,28 +40,36 @@ public class SdkSandboxInstallationTest extends BaseHostJUnit4Test {
 
     public static final int TIME_OUT = 600_000;
 
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
+
+    @Before
+    public void setUp() throws Exception {
+        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
+    }
+
     @Test
     @LargeTest // Reboot device
-    public void testSdkSandbox_deviceReboot_sdkInstalled() throws Exception {
+    public void testSdkSandbox_deviceReboot_sdkInstalledAndDexopted() throws Exception {
 
-        assertInstalled(
+        assertInstalledAndDexopted(
                 getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER1), SDK_PROVIDER1);
 
-        assertInstalled(
+        assertInstalledAndDexopted(
                 getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER2), SDK_PROVIDER2);
 
         getDevice().reboot();
         getDevice().waitForBootComplete(TIME_OUT);
 
-        assertInstalled(
+        assertInstalledAndDexopted(
                 getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER1), SDK_PROVIDER1);
-        assertInstalled(
+        assertInstalledAndDexopted(
                 getDevice().executeShellCommand("dumpsys package " + SDK_PROVIDER2), SDK_PROVIDER2);
     }
 
-    private static void assertInstalled(String str, String provider) {
+    private static void assertInstalledAndDexopted(String str, String provider) {
         if (str == null || !str.contains("Package [" + provider + "]")) {
             throw new AssertionError("Expected package [" + provider + "] not found at " + str);
         }
+        assertWithMessage("Expected to have ODEX in Dexopt state").that(str).contains("base.odex");
     }
 }

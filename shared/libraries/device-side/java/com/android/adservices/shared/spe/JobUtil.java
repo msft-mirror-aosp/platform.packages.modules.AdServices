@@ -16,12 +16,22 @@
 
 package com.android.adservices.shared.spe;
 
+import android.annotation.Nullable;
 import android.app.job.JobInfo;
 
 import com.android.adservices.shared.proto.JobPolicy;
+import com.android.adservices.shared.util.LogUtil;
+
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
+import java.time.Clock;
+import java.util.Locale;
 
 /** A class for job utility methods. */
 public final class JobUtil {
+    private static final Clock UTC_CLOCK = Clock.systemUTC();
+
     private JobUtil() {
         throw new AssertionError(
                 "The class only contains static method and should be not instantiable.");
@@ -72,6 +82,19 @@ public final class JobUtil {
         builder.append("}");
 
         return builder.toString();
+    }
+
+    /**
+     * Logs formatted current time in UTC timezone in logcat.
+     *
+     * @param msgFmt the formatted string to log.
+     * @param msgArgs the arguments in {@code msgFmt}.
+     */
+    @FormatMethod
+    public static void logV(@FormatString String msgFmt, @Nullable Object... msgArgs) {
+        LogUtil.v(
+                "at %s UTC: %s",
+                UTC_CLOCK.instant(), String.format(Locale.ENGLISH, msgFmt, msgArgs));
     }
 
     private static void appendTriggerContentUriInfo(JobInfo jobInfo, StringBuilder builder) {

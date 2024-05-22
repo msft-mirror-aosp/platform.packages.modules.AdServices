@@ -41,9 +41,12 @@ public class ScenarioDispatcherTest {
     public void testScenarioDispatcher_happyPath_httpGetSuccess() throws Exception {
         ScenarioDispatcher dispatcher =
                 mMockWebServerRule.startMockWebServer(
-                        ScenarioDispatcherFactory.fromScenario("scenarios/scenario-test-001.json"));
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/scenario-test-001.json"));
 
-        makeSimpleGetRequest(new URL(mMockWebServerRule.getServerBaseAddress() + "/bidding"));
+        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        URL url = new URL(baseAddress + "/bidding");
+        makeSimpleGetRequest(url);
 
         assertThat(dispatcher.getCalledPaths()).containsExactlyElementsIn(List.of("/bidding"));
     }
@@ -52,10 +55,10 @@ public class ScenarioDispatcherTest {
     public void testScenarioDispatcher_withPrefix_httpGetSuccess() throws Exception {
         ScenarioDispatcher dispatcher =
                 mMockWebServerRule.startMockWebServer(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/scenario-test-001.json", "/hello"));
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/scenario-test-001.json"));
 
-        URL url = new URL(mMockWebServerRule.getServerBaseAddress() + "/hello/bidding");
+        URL url = new URL(dispatcher.getBaseAddressWithPrefix() + "/bidding");
         makeSimpleGetRequest(url);
 
         assertThat(dispatcher.getCalledPaths()).containsExactlyElementsIn(List.of("/bidding"));
@@ -65,7 +68,8 @@ public class ScenarioDispatcherTest {
     public void testScenarioDispatcher_withVerifyCalled_success() throws Exception {
         ScenarioDispatcher dispatcher =
                 mMockWebServerRule.startMockWebServer(
-                        ScenarioDispatcherFactory.fromScenario("scenarios/scenario-test-002.json"));
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/scenario-test-002.json"));
 
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
@@ -79,7 +83,8 @@ public class ScenarioDispatcherTest {
     public void testScenarioDispatcher_withVerifyNotCalled_success() throws Exception {
         ScenarioDispatcher dispatcher =
                 mMockWebServerRule.startMockWebServer(
-                        ScenarioDispatcherFactory.fromScenario("scenarios/scenario-test-003.json"));
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/scenario-test-003.json"));
 
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding")); // Call something else.
@@ -92,7 +97,8 @@ public class ScenarioDispatcherTest {
     public void testScenarioDispatcher_withTwoSecondDelay_success() throws Exception {
         ScenarioDispatcher dispatcher =
                 mMockWebServerRule.startMockWebServer(
-                        ScenarioDispatcherFactory.fromScenario("scenarios/scenario-test-004.json"));
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/scenario-test-004.json"));
 
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         long startTime = System.currentTimeMillis();
@@ -108,7 +114,8 @@ public class ScenarioDispatcherTest {
     public void testScenarioDispatcher_withMultiplePathSegments_httpGetSuccess() throws Exception {
         ScenarioDispatcher dispatcher =
                 mMockWebServerRule.startMockWebServer(
-                        ScenarioDispatcherFactory.fromScenario("scenarios/scenario-test-005.json"));
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/scenario-test-005.json"));
 
         makeSimpleGetRequest(new URL(mMockWebServerRule.getServerBaseAddress() + "/hello/world"));
 
@@ -120,7 +127,8 @@ public class ScenarioDispatcherTest {
             throws Exception {
         ScenarioDispatcher dispatcher =
                 mMockWebServerRule.startMockWebServer(
-                        ScenarioDispatcherFactory.fromScenario("scenarios/scenario-test-006.json"));
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/scenario-test-006.json"));
 
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
@@ -136,7 +144,8 @@ public class ScenarioDispatcherTest {
     public void testScenarioDispatcher_withComplexUrlStructure_success() throws Exception {
         ScenarioDispatcher dispatcher =
                 mMockWebServerRule.startMockWebServer(
-                        ScenarioDispatcherFactory.fromScenario("scenarios/scenario-test-007.json"));
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/scenario-test-007.json"));
 
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
@@ -156,7 +165,8 @@ public class ScenarioDispatcherTest {
     public void testScenarioDispatcher_withQueryParamPath_success() throws Exception {
         ScenarioDispatcher dispatcher =
                 mMockWebServerRule.startMockWebServer(
-                        ScenarioDispatcherFactory.fromScenario("scenarios/scenario-test-008.json"));
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/scenario-test-008.json"));
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         String path =
                 "/seller/reportImpression?render_uri=https://localhost:38383/render/shoes/0?bid=10";
@@ -168,18 +178,17 @@ public class ScenarioDispatcherTest {
 
     @Test
     public void testScenarioDispatcher_withQueryParamPath_doesNotFallback() throws Exception {
-        String prefix = "/123";
         ScenarioDispatcher dispatcher =
                 mMockWebServerRule.startMockWebServer(
-                        ScenarioDispatcherFactory.fromScenarioWithPrefix(
-                                "scenarios/scenario-test-009.json", prefix));
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/scenario-test-009.json"));
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         String path =
                 "/seller/reportImpression?render_uri=https://localhost:38383/render/shoes/0?bid=10";
 
         // Same structure as testScenarioDispatcher_withQueryParamPath_success except adding some
         // more data into the path.
-        makeSimpleGetRequest(new URL(baseAddress + prefix + path));
+        makeSimpleGetRequest(new URL(baseAddress + path));
 
         assertThat(dispatcher.getCalledPaths()).doesNotContain("/seller/reportImpression");
     }
@@ -188,10 +197,11 @@ public class ScenarioDispatcherTest {
     public void testScenarioDispatcher_withServerPathInQueryParams_success() throws Exception {
         ScenarioDispatcher dispatcher =
                 mMockWebServerRule.startMockWebServer(
-                        ScenarioDispatcherFactory.fromScenario("scenarios/scenario-test-010.json"));
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/scenario-test-010.json"));
         String baseAddress = mMockWebServerRule.getServerBaseAddress();
         String path =
-                "/seller/reportImpression?render_uri=https://localhost:"
+                "/seller/reportImpression?render_uri=http://localhost:"
                         + mMockWebServerRule.getMockWebServer().getPort()
                         + "/render/shoes/0?bid=10";
 
@@ -203,7 +213,8 @@ public class ScenarioDispatcherTest {
     @Test
     public void testScenarioDispatcher_withMissingSlashPrefix_throwsException() throws Exception {
         ScenarioDispatcherFactory scenarioDispatcherFactory =
-                ScenarioDispatcherFactory.fromScenario("scenarios/scenario-test-011.json");
+                ScenarioDispatcherFactory.createFromScenarioFile(
+                        "scenarios/scenario-test-011.json");
 
         assertThrows(
                 IllegalStateException.class,

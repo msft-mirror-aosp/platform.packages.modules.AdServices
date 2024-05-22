@@ -86,7 +86,7 @@ public class AsyncTriggerFetcher {
     public AsyncTriggerFetcher(Context context) {
         this(
                 context,
-                EnrollmentDao.getInstance(context),
+                EnrollmentDao.getInstance(),
                 FlagsFactory.getFlags(),
                 getOdpDelegationManager(context, FlagsFactory.getFlags()),
                 DatastoreManagerFactory.getDatastoreManager(context),
@@ -164,7 +164,8 @@ public class AsyncTriggerFetcher {
 
         boolean isHeaderErrorDebugReportEnabled =
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO));
+                        headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO),
+                        mFlags);
         try {
             String eventTriggerData = new JSONArray().toString();
             JSONObject json = new JSONObject(registrationHeaderStr);
@@ -481,8 +482,9 @@ public class AsyncTriggerFetcher {
 
             // remove ODP header from headers map and forward ODP header
             Optional<Map<String, List<String>>> odpHeader = extractOdpTriggerHeader(headers);
-            if (odpHeader.isPresent() && enrollmentId.isPresent()) {
-                mOdpWrapper.registerOdpTrigger(asyncRegistration, odpHeader.get());
+            if (odpHeader.isPresent()) {
+                mOdpWrapper.registerOdpTrigger(
+                        asyncRegistration, odpHeader.get(), enrollmentId.isPresent());
             }
 
             long headerSize = FetcherUtil.calculateHeadersCharactersLength(headers);

@@ -82,13 +82,13 @@ public class TopicsService extends Service {
             mTopicsService =
                     new TopicsServiceImpl(
                             this,
-                            TopicsWorker.getInstance(this),
+                            TopicsWorker.getInstance(),
                             ConsentManager.getInstance(),
                             AdServicesLoggerImpl.getInstance(),
                             Clock.getInstance(),
                             FlagsFactory.getFlags(),
                             Throttler.getInstance(FlagsFactory.getFlags()),
-                            EnrollmentDao.getInstance(this),
+                            EnrollmentDao.getInstance(),
                             appImportanceFilter);
             mTopicsService.init();
         }
@@ -129,8 +129,8 @@ public class TopicsService extends Service {
         FlagsFactory.getFlags().dump(writer, args);
         if (BuildCompatUtils.isDebuggable()) {
             writer.println("Build is Debuggable, dumping information for TopicsService");
-            EpochManager.getInstance(this).dump(writer, args);
-            CacheManager.getInstance(this).dump(writer, args);
+            EpochManager.getInstance().dump(writer, args);
+            CacheManager.getInstance().dump(writer, args);
             MobileDataDownloadFactory.dump(writer);
             writer.println("=== User Consent State For Topics Service ===");
             writer.println("User Consent is given: " + hasUserConsent());

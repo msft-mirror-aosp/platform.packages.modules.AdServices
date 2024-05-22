@@ -23,7 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicates that a specific test with a long flag is set with the specified value.
+ * Indicates that a specific test with a string flag is set with the specified value.
  *
  * <p>This should be used with {@code AdServicesFlagsSetterRule}.
  */

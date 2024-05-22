@@ -179,8 +179,8 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     private void doNothingForTopics(PackageChangedReceiver receiver) {
-        doNothing().when(receiver).topicsOnPackageFullyRemoved(any(), any());
-        doNothing().when(receiver).topicsOnPackageAdded(any(), any());
+        doNothing().when(receiver).topicsOnPackageFullyRemoved(any());
+        doNothing().when(receiver).topicsOnPackageAdded(any());
     }
 
     private void doNothingForFledge(PackageChangedReceiver receiver) {
@@ -499,9 +499,9 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
             when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
-            // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
-            doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(any()));
-            doReturn(epochId).when(mMockEpochManager).getCurrentEpochId();
+        // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
+        doReturn(mSpyTopicsWorker).when(TopicsWorker::getInstance);
+        doReturn(epochId).when(mMockEpochManager).getCurrentEpochId();
 
             // Initialize package receiver meant for Topics
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForTopics();
@@ -730,8 +730,8 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     private void runPackageAddedForTopics(Intent intent) throws Exception {
-            // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
-            doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(eq(sContext)));
+        // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
+        doReturn(mSpyTopicsWorker).when(TopicsWorker::getInstance);
 
             // Track whether the TopicsWorker.handleAppInstallation was ever invoked.
             // Use a CountDownLatch since this invocation happens on a background thread.
@@ -966,9 +966,9 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                     .getPackageName();
             receiver.onReceive(spyContext, intent);
             verify(receiver, never()).consentOnPackageFullyRemoved(any(), any(), anyInt());
-            verify(receiver, never()).measurementOnPackageFullyRemoved(any(), any());
-            verify(receiver, never()).topicsOnPackageFullyRemoved(any(), any());
-            verify(receiver, never()).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+        verify(receiver, never()).measurementOnPackageFullyRemoved(any(), any());
+        verify(receiver, never()).topicsOnPackageFullyRemoved(any());
+        verify(receiver, never()).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
     }
 
     @Test
@@ -983,9 +983,9 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                     .getPackageName();
             receiver.onReceive(spyContext, intent);
             verify(receiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
-            verify(receiver).measurementOnPackageFullyRemoved(any(), any());
-            verify(receiver).topicsOnPackageFullyRemoved(any(), any());
-            verify(receiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+        verify(receiver).measurementOnPackageFullyRemoved(any(), any());
+        verify(receiver).topicsOnPackageFullyRemoved(any());
+        verify(receiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
     }
 
     @Test

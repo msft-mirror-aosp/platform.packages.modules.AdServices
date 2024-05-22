@@ -47,11 +47,11 @@ android_library {
     sdk_version: "module_current",
     min_sdk_version: "30",
     srcs: [
-        ":adservices-extended-mockito-rule-sources",
         ":adservices-test-utility-sideless-sources",
         ":adservices-test-utility-sources",
         ":adservices-service-core-phflags-sources",
     ],
+    defaults: ["adservices-extended-mockito-defaults"],
     libs: [
         "error_prone_annotations",
         "framework-adservices-lib",
@@ -60,8 +60,9 @@ android_library {
         "junit",
     ],
     static_libs: [
-        // TODO (b/338132355): Clean up dependencies for adservices-test-utility.
+        // TODO(b/338132355): Clean up dependencies for adservices-test-utility.
         "adservices-service-core",
+        "adservices-shared-mockito-expectations", // TODO(b/338132355): should not be needed if mocker is split
         "adservices-shared-testing",
         "androidx.test.runner",
         "compatibility-device-util-axt",
@@ -70,7 +71,14 @@ android_library {
         // TODO(b/281577492): should use modules-utils-extended-mockito-rule instead
         "modules-utils-testable-device-config",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//vendor:__subpackages__", // used by some integration tests
+    ],
     lint: {
         extra_check_modules: ["AdServicesLintChecker"],
     },
@@ -96,7 +104,10 @@ android_library {
         "mockito-target-extended-minus-junit4",
         "truth",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
     lint: {
         extra_check_modules: ["AdServicesLintChecker"],
     },
@@ -119,14 +130,12 @@ java_library_host {
     ],
 }
 
+// TODO(b/338132355): remove / split / create new lib for expectations
 filegroup {
     name: "adservices-extended-mockito-rule-sources",
     srcs: [
+        "java/com/android/adservices/mockito/AdServicesStaticMockitoMocker.java",
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java",
-        "java/com/android/adservices/mockito/AdServicesExtendedMockitoMockerImpl.java",
-        "java/com/android/adservices/mockito/AdServicesExtendedMockitoRule.java",
-        "java/com/android/adservices/mockito/ExtendedMockitoInlineCleanerRule.java",
-        "java/com/android/adservices/mockito/LogInterceptor.java",
     ],
     path: "java",
     visibility: [
@@ -139,14 +148,10 @@ java_defaults {
     srcs: [
         ":adservices-extended-mockito-rule-sources",
     ],
-    defaults: [
-        "modules-utils-testable-device-config-defaults",
-    ],
-    libs: [
-        "framework-configinfrastructure",
-    ],
+    defaults: ["adservices-shared-extended-mockito-defaults"],
     static_libs: [
-         "adservices-service-core",
+        "adservices-service-core",
+        "modules-utils-testable-device-config", // For TestableDeviceConfig
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

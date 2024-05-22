@@ -133,8 +133,8 @@ public class EncryptionKeyJobService extends JobService {
     /** Fetch encryption keys or update expired encryption keys. */
     @VisibleForTesting
     public void fetchAndUpdateEncryptionKeys() {
-        EncryptionKeyDao encryptionKeyDao = EncryptionKeyDao.getInstance(getApplicationContext());
-        EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
+        EncryptionKeyDao encryptionKeyDao = EncryptionKeyDao.getInstance();
+        EnrollmentDao enrollmentDao = EnrollmentDao.getInstance();
         EncryptionKeyJobHandler encryptionKeyJobHandler =
                 new EncryptionKeyJobHandler(
                         encryptionKeyDao,

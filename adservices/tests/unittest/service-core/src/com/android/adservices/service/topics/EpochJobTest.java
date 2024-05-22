@@ -17,6 +17,8 @@
 package com.android.adservices.service.topics;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockJobSchedulingLogger;
+import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
+import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
@@ -33,8 +35,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
-
-import android.content.Context;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
@@ -75,7 +75,7 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
         mocker.mockSpeJobScheduler(mMockAdServicesJobScheduler);
         mocker.mockAdServicesJobServiceFactory(mMockAdServicesJobServiceFactory);
 
-        doReturn(mMockTopicsWorker).when(() -> TopicsWorker.getInstance(any(Context.class)));
+        doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
     }
 
     @Test
@@ -108,7 +108,7 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testSchedule_spe() {
-        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(true);
+        when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(true);
 
         EpochJob.schedule();
 
@@ -118,7 +118,7 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void testSchedule_legacy() {
         int resultCode = SCHEDULING_RESULT_CODE_SUCCESSFUL;
-        when(mMockFlags.getSpeOnPilotJobsBatch2Enabled()).thenReturn(false);
+        when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(false);
         JobSchedulingLogger logger = mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
         doReturn(resultCode).when(() -> EpochJobService.scheduleIfNeeded(anyBoolean()));
 
@@ -130,13 +130,8 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testCreateJobSpec() {
-        long epochJobPeriodMs = Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
-        long flexJobPeriodMs = Flags.TOPICS_EPOCH_JOB_FLEX_MS;
-        when(mMockFlags.getTopicsEpochJobPeriodMs()).thenReturn(epochJobPeriodMs);
-        when(mMockFlags.getTopicsEpochJobFlexMs()).thenReturn(flexJobPeriodMs);
-
-        JobSpec jobSpec = EpochJob.createJobSpec(mMockFlags);
+    public void testCreateDefaultJobSpec() {
+        JobSpec jobSpec = EpochJob.createDefaultJobSpec();
 
         JobPolicy expectedJobPolicy =
                 JobPolicy.newBuilder()
@@ -145,8 +140,8 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
                         .setIsPersisted(true)
                         .setPeriodicJobParams(
                                 JobPolicy.PeriodicJobParams.newBuilder()
-                                        .setPeriodicIntervalMs(epochJobPeriodMs)
-                                        .setFlexInternalMs(flexJobPeriodMs)
+                                        .setPeriodicIntervalMs(TOPICS_EPOCH_JOB_PERIOD_MS)
+                                        .setFlexInternalMs(TOPICS_EPOCH_JOB_FLEX_MS)
                                         .build())
                         .build();
 

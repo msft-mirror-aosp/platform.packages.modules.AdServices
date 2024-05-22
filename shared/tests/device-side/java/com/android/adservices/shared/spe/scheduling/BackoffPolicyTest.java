@@ -16,13 +16,13 @@
 
 package com.android.adservices.shared.spe.scheduling;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
 /** Unit tests for {@link BackoffPolicy}. */
-public final class BackoffPolicyTest extends AdServicesUnitTestCase {
+public final class BackoffPolicyTest extends SharedUnitTestCase {
     @Test
     public void testDefaultGetters() {
         BackoffPolicy policy = new BackoffPolicy.Builder().build();

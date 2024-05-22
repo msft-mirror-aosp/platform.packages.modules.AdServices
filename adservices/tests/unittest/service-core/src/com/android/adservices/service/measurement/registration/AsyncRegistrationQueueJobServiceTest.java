@@ -17,7 +17,7 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -54,7 +54,6 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -64,6 +63,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.testing.JobServiceCallback;
+import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -219,7 +219,7 @@ public class AsyncRegistrationQueueJobServiceTest {
     public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockGetFlags(mMockFlags);
+                    mocker.mockGetFlags(mMockFlags);
                     mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
                     onStartJob_shouldDisableJobTrue();
@@ -232,7 +232,7 @@ public class AsyncRegistrationQueueJobServiceTest {
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
-                    mockGetFlags(mMockFlags);
+                    mocker.mockGetFlags(mMockFlags);
                     mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
 
                     onStartJob_shouldDisableJobTrue();
@@ -669,8 +669,7 @@ public class AsyncRegistrationQueueJobServiceTest {
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(context).when(mSpyService).getApplicationContext();
-        ExtendedMockito.doReturn(mock(EnrollmentDao.class))
-                .when(() -> EnrollmentDao.getInstance(any()));
+        ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
         ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
                 .when(AdServicesLoggerImpl::getInstance);
         ExtendedMockito.doReturn(mMockDatastoreManager)

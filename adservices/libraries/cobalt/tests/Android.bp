@@ -85,6 +85,6 @@ android_test {
     max_sdk_version: "32",
     test_suites: [
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
 }

@@ -20,23 +20,30 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.concurrency.AdServicesExecutors;
+import android.os.Process;
+import android.os.StrictMode;
+import android.os.StrictMode.ThreadPolicy;
+
+import com.android.adservices.shared.SharedUnitTestCase;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public final class BlockingCallableWrapperTest extends AdServicesUnitTestCase {
-
-    private final ListeningExecutorService mLightWeightExecutor =
-            AdServicesExecutors.getLightWeightExecutor();
+public final class BlockingCallableWrapperTest extends SharedUnitTestCase {
+    private final ListeningExecutorService mLightWeightExecutor = sLightWeightExecutor;
 
     @Test
     public void testRunsDelegate() throws Exception {
@@ -139,5 +146,56 @@ public final class BlockingCallableWrapperTest extends AdServicesUnitTestCase {
         } finally {
             asyncWork.cancel(true);
         }
+    }
+
+    // TODO(b/324919960): code below was copied from AdServicesExecutors - should use equivalent
+    // code from shared instead (and refactor AdServicesExecutors as well)
+
+    private static final int MIN_LIGHTWEIGHT_EXECUTOR_THREADS = 2;
+    private static final String LIGHTWEIGHT_NAME = "lightweight";
+
+    private static ThreadFactory createThreadFactory(
+            String name, int priority, Optional<StrictMode.ThreadPolicy> policy) {
+        return new ThreadFactoryBuilder()
+                .setDaemon(true)
+                .setNameFormat(name + "-%d")
+                .setThreadFactory(
+                        new ThreadFactory() {
+                            @Override
+                            public Thread newThread(final Runnable runnable) {
+                                return new Thread(
+                                        () -> {
+                                            if (policy.isPresent()) {
+                                                StrictMode.setThreadPolicy(policy.get());
+                                            }
+                                            // Process class operates on the current thread.
+                                            Process.setThreadPriority(priority);
+                                            runnable.run();
+                                        });
+                            }
+                        })
+                .build();
+    }
+
+    private static final ListeningExecutorService sLightWeightExecutor =
+            MoreExecutors.listeningDecorator(
+                    new ThreadPoolExecutor(
+                            /* corePoolSize= */ Math.max(
+                                    MIN_LIGHTWEIGHT_EXECUTOR_THREADS,
+                                    Runtime.getRuntime().availableProcessors() - 2),
+                            /* maximumPoolSize */
+                            Math.max(
+                                    MIN_LIGHTWEIGHT_EXECUTOR_THREADS,
+                                    Runtime.getRuntime().availableProcessors() - 2),
+                            /* keepAliveTime= */ 60L,
+                            TimeUnit.SECONDS,
+                            new LinkedBlockingQueue<>(),
+                            createThreadFactory(
+                                    LIGHTWEIGHT_NAME,
+                                    Process.THREAD_PRIORITY_DEFAULT,
+                                    Optional.of(getAsyncThreadPolicy()))));
+
+    private static ThreadPolicy getAsyncThreadPolicy() {
+        return new ThreadPolicy.Builder().detectAll().penaltyLog().build();
     }
 }

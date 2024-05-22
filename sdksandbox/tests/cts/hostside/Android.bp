@@ -29,6 +29,7 @@ java_test_host {
         "SdkSandboxHostTestUtils",
     ],
     test_suites: [
+        "cts",
         "mts-adservices",
         "general-tests",
         "mcts-adservices",
@@ -38,6 +39,7 @@ java_test_host {
         ":CtsSdkSandboxHostTestApp2",
         ":SdkSandboxDataIsolationTestProvider",
         ":SdkSandboxStorageTestProvider",
+        ":SdkSandboxManagerCtsProvider",
     ],
 }
 
@@ -54,6 +56,7 @@ android_test_helper_app {
     static_libs: [
         "CtsStorageTestSdkApi",
         "CtsDataIsolationTestSdkApi",
+        "CtsSdkProviderApi",
         "SdkSandboxTestUtils",
         "androidx.core_core",
         "androidx.test.ext.junit",

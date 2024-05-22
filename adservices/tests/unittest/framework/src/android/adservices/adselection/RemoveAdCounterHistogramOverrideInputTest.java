@@ -26,37 +26,31 @@ import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCapFixture;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
-@SmallTest
-public class RemoveAdCounterHistogramOverrideInputTest {
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
+@RequiresSdkLevelAtLeastS
+public final class RemoveAdCounterHistogramOverrideInputTest extends AdServicesUnitTestCase {
     @Test
     public void testBuildValidInput_success() {
-        final RemoveAdCounterHistogramOverrideInput originalInput =
+        RemoveAdCounterHistogramOverrideInput originalInput =
                 new RemoveAdCounterHistogramOverrideInput.Builder()
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
                         .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .build();
 
-        assertThat(originalInput.getAdEventType())
+        expect.that(originalInput.getAdEventType())
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_CLICK);
-        assertThat(originalInput.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
-        assertThat(originalInput.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(originalInput.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
+        expect.that(originalInput.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
     }
 
     @Test
     public void testParcelValidInput_success() {
-        final RemoveAdCounterHistogramOverrideInput originalInput =
+        RemoveAdCounterHistogramOverrideInput originalInput =
                 new RemoveAdCounterHistogramOverrideInput.Builder()
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
                         .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
@@ -66,18 +60,18 @@ public class RemoveAdCounterHistogramOverrideInputTest {
         Parcel targetParcel = Parcel.obtain();
         originalInput.writeToParcel(targetParcel, 0);
         targetParcel.setDataPosition(0);
-        final RemoveAdCounterHistogramOverrideInput inputFromParcel =
+        RemoveAdCounterHistogramOverrideInput inputFromParcel =
                 RemoveAdCounterHistogramOverrideInput.CREATOR.createFromParcel(targetParcel);
 
-        assertThat(inputFromParcel.getAdEventType())
+        expect.that(inputFromParcel.getAdEventType())
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_CLICK);
-        assertThat(inputFromParcel.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
-        assertThat(inputFromParcel.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(inputFromParcel.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
+        expect.that(inputFromParcel.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
     }
 
     @Test
     public void testCreatorNewArray_success() {
-        final int arraySize = 10;
+        int arraySize = 10;
 
         assertArrayEquals(
                 new RemoveAdCounterHistogramOverrideInput[arraySize],
@@ -86,14 +80,14 @@ public class RemoveAdCounterHistogramOverrideInputTest {
 
     @Test
     public void testToString() {
-        final RemoveAdCounterHistogramOverrideInput originalInput =
+        RemoveAdCounterHistogramOverrideInput originalInput =
                 new RemoveAdCounterHistogramOverrideInput.Builder()
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
                         .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .build();
 
-        final String expected =
+        String expected =
                 String.format(
                         "RemoveAdCounterHistogramOverrideInput{mAdEventType=%d,"
                                 + " mAdCounterKey=%d, mBuyer=%s}",
@@ -124,16 +118,16 @@ public class RemoveAdCounterHistogramOverrideInputTest {
 
     @Test
     public void testBuildUnsetAdCounterKey_success() {
-        final RemoveAdCounterHistogramOverrideInput originalInput =
+        RemoveAdCounterHistogramOverrideInput originalInput =
                 new RemoveAdCounterHistogramOverrideInput.Builder()
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .build();
 
-        assertThat(originalInput.getAdEventType())
+        expect.that(originalInput.getAdEventType())
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION);
-        assertThat(originalInput.getAdCounterKey()).isEqualTo(0);
-        assertThat(originalInput.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(originalInput.getAdCounterKey()).isEqualTo(0);
+        expect.that(originalInput.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
     }
 
     @Test

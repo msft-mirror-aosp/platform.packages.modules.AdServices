@@ -27,15 +27,15 @@ import static org.mockito.Mockito.verify;
 
 import android.database.sqlite.SQLiteException;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-public final class AbstractAdServicesErrorLoggerTest extends AdServicesMockitoTestCase {
+public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCase {
 
-    @Mock private StatsdAdServicesErrorLogger mStatsdLoggerMock;
+    @Mock private StatsdAdServicesErrorLogger mMockStatsdLogger;
 
     // Constants used for tests
     private static final String CLASS_NAME = "TopicsService";
@@ -50,14 +50,14 @@ public final class AbstractAdServicesErrorLoggerTest extends AdServicesMockitoTe
     @Before
     public void setUp() {
         mErrorLoggerEnabled =
-                new AbstractAdServicesErrorLogger(mStatsdLoggerMock) {
+                new AbstractAdServicesErrorLogger(mMockStatsdLogger) {
                     @Override
                     protected boolean isEnabled(int errorCode) {
                         return true;
                     }
                 };
         mErrorLoggerDisabled =
-                new AbstractAdServicesErrorLogger(mStatsdLoggerMock) {
+                new AbstractAdServicesErrorLogger(mMockStatsdLogger) {
                     @Override
                     protected boolean isEnabled(int errorCode) {
                         return false;
@@ -70,7 +70,7 @@ public final class AbstractAdServicesErrorLoggerTest extends AdServicesMockitoTe
         mErrorLoggerDisabled.logError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
 
-        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
+        verify(mMockStatsdLogger, never()).logAdServicesError(any());
     }
 
     @Test
@@ -78,7 +78,7 @@ public final class AbstractAdServicesErrorLoggerTest extends AdServicesMockitoTe
         mErrorLoggerEnabled.logError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
 
-        verify(mStatsdLoggerMock).logAdServicesError(any());
+        verify(mMockStatsdLogger).logAdServicesError(any());
     }
 
     @Test
@@ -98,7 +98,7 @@ public final class AbstractAdServicesErrorLoggerTest extends AdServicesMockitoTe
                         .setMethodName(METHOD_NAME)
                         .setLineNumber(LINE_NUMBER)
                         .build();
-        verify(mStatsdLoggerMock).logAdServicesError(eq(stats));
+        verify(mMockStatsdLogger).logAdServicesError(eq(stats));
     }
 
     @Test
@@ -108,7 +108,7 @@ public final class AbstractAdServicesErrorLoggerTest extends AdServicesMockitoTe
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
                 PPAPI_NAME);
 
-        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
+        verify(mMockStatsdLogger, never()).logAdServicesError(any());
     }
 
     @Test
@@ -130,7 +130,7 @@ public final class AbstractAdServicesErrorLoggerTest extends AdServicesMockitoTe
                         .setLineNumber(LINE_NUMBER)
                         .setLastObservedExceptionName(SQ_LITE_EXCEPTION)
                         .build();
-        verify(mStatsdLoggerMock).logAdServicesError(eq(stats));
+        verify(mMockStatsdLogger).logAdServicesError(eq(stats));
     }
 
     @Test
@@ -153,7 +153,7 @@ public final class AbstractAdServicesErrorLoggerTest extends AdServicesMockitoTe
                         .setLineNumber(LINE_NUMBER)
                         .setLastObservedExceptionName(SQ_LITE_EXCEPTION)
                         .build();
-        verify(mStatsdLoggerMock).logAdServicesError(eq(stats));
+        verify(mMockStatsdLogger).logAdServicesError(eq(stats));
     }
 
     @Test
@@ -174,7 +174,7 @@ public final class AbstractAdServicesErrorLoggerTest extends AdServicesMockitoTe
                         .setLineNumber(LINE_NUMBER)
                         .setLastObservedExceptionName(SQ_LITE_EXCEPTION)
                         .build();
-        verify(mStatsdLoggerMock).logAdServicesError(eq(stats));
+        verify(mMockStatsdLogger).logAdServicesError(eq(stats));
     }
 
     Exception createSQLiteException(String className, String methodName, int lineNumber) {

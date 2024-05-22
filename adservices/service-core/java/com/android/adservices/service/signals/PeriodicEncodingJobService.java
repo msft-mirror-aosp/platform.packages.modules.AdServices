@@ -102,7 +102,7 @@ public class PeriodicEncodingJobService extends JobService {
                     /* doRecord=*/ true);
         }
 
-        PeriodicEncodingJobWorker encodingWorker = PeriodicEncodingJobWorker.getInstance(this);
+        PeriodicEncodingJobWorker encodingWorker = PeriodicEncodingJobWorker.getInstance();
         encodingWorker
                 .encodeProtectedSignals()
                 .addCallback(
@@ -141,7 +141,7 @@ public class PeriodicEncodingJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("PeriodicEncodingJobService.onStopJob");
-        PeriodicEncodingJobWorker.getInstance(this).stopWork();
+        PeriodicEncodingJobWorker.getInstance().stopWork();
 
         boolean shouldRetry = true;
         AdServicesJobServiceLogger.getInstance()

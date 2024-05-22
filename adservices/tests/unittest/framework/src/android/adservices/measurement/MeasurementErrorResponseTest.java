@@ -21,22 +21,19 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
 import java.io.IOException;
 
 /** Unit tests for {@link MeasurementErrorResponse} */
-@SmallTest
-public class MeasurementErrorResponseTest {
+public final class MeasurementErrorResponseTest extends AdServicesUnitTestCase {
     private static final String ERROR_MESSAGE = "Error message";
     private static final int RESULT_CODE = 500;
 
@@ -44,8 +41,8 @@ public class MeasurementErrorResponseTest {
     public void testDefaults() throws Exception {
         MeasurementErrorResponse response = new MeasurementErrorResponse.Builder().build();
 
-        assertEquals(0, response.getStatusCode());
-        assertNull(response.getErrorMessage());
+        expect.that(response.getStatusCode()).isEqualTo(0);
+        expect.that(response.getErrorMessage()).isNull();
     }
 
     @Test
@@ -68,21 +65,23 @@ public class MeasurementErrorResponseTest {
                 new MeasurementErrorResponse.Builder()
                         .setStatusCode(STATUS_INVALID_ARGUMENT)
                         .build();
-        assertTrue(AdServicesStatusUtils.asException(response) instanceof IllegalArgumentException);
+        assertThat(AdServicesStatusUtils.asException(response))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void testAdServicesException_internalError_expectIllegalStateException() {
         MeasurementErrorResponse response =
                 new MeasurementErrorResponse.Builder().setStatusCode(STATUS_INTERNAL_ERROR).build();
-        assertTrue(AdServicesStatusUtils.asException(response) instanceof IllegalStateException);
+        assertThat(AdServicesStatusUtils.asException(response))
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     public void testAdServicesException_ioError_expectIOException() {
         MeasurementErrorResponse response =
                 new MeasurementErrorResponse.Builder().setStatusCode(STATUS_IO_ERROR).build();
-        assertTrue(AdServicesStatusUtils.asException(response) instanceof IOException);
+        assertThat(AdServicesStatusUtils.asException(response)).isInstanceOf(IOException.class);
     }
 
     @Test
@@ -91,19 +90,21 @@ public class MeasurementErrorResponseTest {
                 new MeasurementErrorResponse.Builder()
                         .setStatusCode(STATUS_PERMISSION_NOT_REQUESTED)
                         .build();
-        assertTrue(AdServicesStatusUtils.asException(response) instanceof SecurityException);
+        assertThat(AdServicesStatusUtils.asException(response))
+                .isInstanceOf(SecurityException.class);
     }
 
     @Test
     public void testAdServicesException_unrecognized_expectIllegalStateException() {
         MeasurementErrorResponse response =
                 new MeasurementErrorResponse.Builder().setStatusCode(Integer.MAX_VALUE).build();
-        assertTrue(AdServicesStatusUtils.asException(response) instanceof IllegalStateException);
+        assertThat(AdServicesStatusUtils.asException(response))
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     public void testDescribeContents() {
-        assertEquals(0, createExample().describeContents());
+        assertThat(createExample().describeContents()).isEqualTo(0);
     }
 
     private MeasurementErrorResponse createExample() {
@@ -114,7 +115,7 @@ public class MeasurementErrorResponseTest {
     }
 
     private void verifyExample(MeasurementErrorResponse response) {
-        assertEquals(ERROR_MESSAGE, response.getErrorMessage());
-        assertEquals(RESULT_CODE, response.getStatusCode());
+        expect.that(response.getErrorMessage()).isEqualTo(ERROR_MESSAGE);
+        expect.that(response.getStatusCode()).isEqualTo(RESULT_CODE);
     }
 }

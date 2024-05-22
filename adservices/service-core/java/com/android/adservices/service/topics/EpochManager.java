@@ -17,7 +17,6 @@
 package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.text.TextUtils;
@@ -149,19 +148,19 @@ public class EpochManager {
 
     /** Returns an instance of the EpochManager given a context. */
     @NonNull
-    public static EpochManager getInstance(@NonNull Context context) {
+    public static EpochManager getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
                         new EpochManager(
-                                TopicsDao.getInstance(context),
-                                DbHelper.getInstance(context),
+                                TopicsDao.getInstance(),
+                                DbHelper.getInstance(),
                                 new Random(),
-                                ClassifierManager.getInstance(context),
+                                ClassifierManager.getInstance(),
                                 FlagsFactory.getFlags(),
                                 Clock.getInstance(),
-                                ClassifierManager.getInstance(context),
-                                EncryptionManager.getInstance(context),
+                                ClassifierManager.getInstance(),
+                                EncryptionManager.getInstance(),
                                 AdServicesLoggerImpl.getInstance());
             }
             return sSingleton;

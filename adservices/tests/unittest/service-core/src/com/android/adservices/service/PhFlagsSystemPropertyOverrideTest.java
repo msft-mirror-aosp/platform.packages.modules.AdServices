@@ -27,10 +27,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
@@ -705,42 +701,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
     public void testGetMddLoggerEnabled() {
         mFlagsTestHelper.testFeatureFlagBackedBySystemPropertyGuardedByLegacyKillSwitch(
                 KEY_MDD_LOGGER_KILL_SWITCH, "MDD_LOGGER_KILL_SWITCH", Flags::getMddLoggerEnabled);
-    }
-
-    @Test
-    public void testConsentNotificationDebugMode() {
-        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
-                KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
-                "CONSENT_NOTIFICATION_DEBUG_MODE",
-                /* guard= */ null,
-                Flags::getConsentNotificationDebugMode);
-    }
-
-    @Test
-    public void testConsentNotificationActivityDebugMode() {
-        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
-                KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
-                "CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE",
-                /* guard= */ null,
-                Flags::getConsentNotificationActivityDebugMode);
-    }
-
-    @Test
-    public void testConsentNotifiedDebugMode() {
-        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
-                KEY_CONSENT_NOTIFIED_DEBUG_MODE,
-                "CONSENT_NOTIFIED_DEBUG_MODE",
-                /* guard= */ null,
-                Flags::getConsentNotifiedDebugMode);
-    }
-
-    @Test
-    public void testConsentManagerDebugMode() {
-        mFlagsTestHelper.testGuardedFeatureFlagBackedBySystemProperty(
-                KEY_CONSENT_MANAGER_DEBUG_MODE,
-                "CONSENT_MANAGER_DEBUG_MODE",
-                /* guard= */ null,
-                Flags::getConsentManagerDebugMode);
     }
 
     @Test
