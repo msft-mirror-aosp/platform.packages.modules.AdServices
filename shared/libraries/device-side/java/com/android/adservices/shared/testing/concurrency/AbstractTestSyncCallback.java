@@ -13,14 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing.common;
+package com.android.adservices.shared.testing.concurrency;
 
-/**
- * Interface used to provide a human-readable, unique id that can be used for debugging / logging
- * purposes.
- */
-public interface Identifiable {
+import com.android.adservices.shared.testing.AndroidLogger;
 
-    /** Gets the unique id of this object. */
-    String getId();
+/** Base class for device-side sync callbacks for testing. */
+public abstract class AbstractTestSyncCallback extends AbstractSidelessTestSyncCallback {
+
+    // NOTE: currently there's no usage that takes a custom timeout, but we could add on demand
+
+    protected AbstractTestSyncCallback() {
+        this(/* expectedNumberOfCalls= */ 1);
+    }
+
+    protected AbstractTestSyncCallback(int expectedNumberOfCalls) {
+        super(AndroidLogger.getInstance(), expectedNumberOfCalls);
+    }
 }

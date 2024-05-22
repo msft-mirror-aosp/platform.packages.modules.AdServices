@@ -24,10 +24,12 @@ public final class NoOpShellCommandTest extends ShellCommandTestCase<NoOpShellCo
 
     @Test
     public void test_success() {
+        String debugFlagName = "adservices";
         String commandName = "test";
         int expectedCommand = ShellCommandStats.COMMAND_ECHO;
         int expectedResult = ShellCommandStats.RESULT_NOT_ENABLED;
-        NoOpShellCommand command = new NoOpShellCommand(commandName, expectedCommand);
+        NoOpShellCommand command =
+                new NoOpShellCommand(commandName, expectedCommand, debugFlagName);
         Result actualResult = run(command, commandName);
         expectFailure(
                 actualResult,
@@ -38,17 +40,21 @@ public final class NoOpShellCommandTest extends ShellCommandTestCase<NoOpShellCo
 
     @Test
     public void test_getCommandName() {
+        String debugFlagName = "adservices";
         String commandName = "test";
         int expectedCommand = ShellCommandStats.COMMAND_ECHO;
-        NoOpShellCommand command = new NoOpShellCommand(commandName, expectedCommand);
+        NoOpShellCommand command =
+                new NoOpShellCommand(commandName, expectedCommand, debugFlagName);
         expect.withMessage("getCommandHel").that(command.getCommandName()).isEqualTo(commandName);
     }
 
     @Test
     public void test_getCommandHelp() {
+        String debugFlagName = "adservices";
         String commandName = "test";
         int expectedCommand = ShellCommandStats.COMMAND_ECHO;
-        NoOpShellCommand command = new NoOpShellCommand(commandName, expectedCommand);
+        NoOpShellCommand command =
+                new NoOpShellCommand(commandName, expectedCommand, debugFlagName);
         expect.withMessage("getCommandHel").that(command.getCommandHelp()).isEqualTo("");
     }
 }

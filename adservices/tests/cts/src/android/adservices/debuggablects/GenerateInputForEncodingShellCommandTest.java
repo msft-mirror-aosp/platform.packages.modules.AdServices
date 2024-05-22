@@ -112,7 +112,7 @@ public class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggab
                 .get(PAS_API_TIMEOUT_SEC, TimeUnit.SECONDS);
         CommandResult commandResult =
                 mShellCommandHelper.runCommandRwe(
-                        "app_signals generate_input_for_encoding --buyer %s",
+                        "app-signals generate-input-for-encoding --buyer %s",
                         AdTechIdentifier.fromString(
                                 scenarioDispatcher.getBaseAddressWithPrefix().getHost()));
 

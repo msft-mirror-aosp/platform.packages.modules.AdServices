@@ -26,7 +26,6 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.shared.testing.common.Identifiable;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Optional;

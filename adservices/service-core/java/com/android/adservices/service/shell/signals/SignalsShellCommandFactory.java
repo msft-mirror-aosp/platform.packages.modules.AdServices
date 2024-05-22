@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell.signals;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
+
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -38,7 +40,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SignalsShellCommandFactory implements ShellCommandFactory {
-    public static final String COMMAND_PREFIX = "app_signals";
+    public static final String COMMAND_PREFIX = "app-signals";
     private final Map<String, ShellCommand> mAllCommandsMap;
     private final boolean mIsSignalsCliEnabled;
 
@@ -76,7 +78,8 @@ public class SignalsShellCommandFactory implements ShellCommandFactory {
         }
         ShellCommand command = mAllCommandsMap.get(cmd);
         if (!mIsSignalsCliEnabled) {
-            return new NoOpShellCommand(cmd, command.getMetricsLoggerCommand());
+            return new NoOpShellCommand(
+                    cmd, command.getMetricsLoggerCommand(), KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED);
         }
         return command;
     }

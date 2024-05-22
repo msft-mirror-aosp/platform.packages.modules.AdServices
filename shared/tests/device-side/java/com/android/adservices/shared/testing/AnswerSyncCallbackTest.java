@@ -32,40 +32,93 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
     @Mock private Voider mDarthVoider;
 
     @Test
-    public void testForVoidAnswer() throws Exception {
-        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forVoidAnswer();
+    public void testUnsupportedMethods() {
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+
+        assertThrows(UnsupportedOperationException.class, () -> callback.setCalled());
+    }
+
+    @Test
+    public void testForSingleVoidAnswer() throws Exception {
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+
         doAnswer(callback).when(mDarthVoider).voidVoid();
 
         mDarthVoider.voidVoid();
 
         callback.assertCalled();
+        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
     }
 
     @Test
-    public void testForAnswer() throws Exception {
-        AnswerSyncCallback<String> callback = AnswerSyncCallback.forAnswer("Luke's Father");
+    public void testForSingleAnswer() throws Exception {
+        AnswerSyncCallback<String> callback = AnswerSyncCallback.forSingleAnswer("Luke's Father");
+        expect.withMessage("%%s.isCalled() before call", callback)
+                .that(callback.isCalled())
+                .isFalse();
         when(mDarthVoider.toString()).then(callback);
 
+        expect.withMessage("%%s.isCalled() before call", callback)
+                .that(callback.isCalled())
+                .isFalse();
         String toString = mDarthVoider.toString();
 
-        callback.assertCalled();
         expect.withMessage("toString()").that(toString).isEqualTo("Luke's Father");
+        callback.assertCalled();
+        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
+    }
+
+    // It's testing doAnswer(), so it needs to call those methods...
+    @SuppressWarnings("DirectInvocationOnMock")
+    @Test
+    public void testForMultipleAnswers() throws Exception {
+        AnswerSyncCallback<String> callback =
+                AnswerSyncCallback.forMultipleAnswers("Luke's Father", 2);
+        when(mDarthVoider.toString()).then(callback);
+        expect.withMessage("%%s.isCalled() before 1st call", callback)
+                .that(callback.isCalled())
+                .isFalse();
+
+        String firstAnswer = mDarthVoider.toString();
+        expect.withMessage("1st toString() result").that(firstAnswer).isEqualTo("Luke's Father");
+        expect.withMessage("%s.isCalled() after first call", callback)
+                .that(callback.isCalled())
+                .isFalse();
+
+        String secondAnswer = mDarthVoider.toString();
+
+        expect.withMessage("2nd toString() result").that(secondAnswer).isEqualTo("Luke's Father");
+        callback.assertCalled();
+        expect.withMessage("%s.isCalled() after 2nd call", callback)
+                .that(callback.isCalled())
+                .isTrue();
     }
 
     @Test
-    public void testForFailure_void() throws Exception {
-        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forFailure(Void.class, mFailure);
+    public void testForSingleFailure_void() throws Exception {
+        AnswerSyncCallback<Void> callback =
+                AnswerSyncCallback.forSingleFailure(Void.class, mFailure);
+        expect.withMessage("%%s.isCalled() before call", callback)
+                .that(callback.isCalled())
+                .isFalse();
         doAnswer(callback).when(mDarthVoider).voidVoid();
 
         Throwable thrown = assertThrows(Throwable.class, () -> mDarthVoider.voidVoid());
 
         expect.withMessage("thrown exception").that(thrown).isSameInstanceAs(mFailure);
         callback.assertCalled();
+        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
     }
 
+    // It's testing doAnswer(), so it needs to call those methods...
+    @SuppressWarnings("DirectInvocationOnMock")
     @Test
-    public void testForFailure_nonVoid() throws Exception {
-        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forFailure(Void.class, mFailure);
+    public void testForSingleFailure_nonVoid() throws Exception {
+        AnswerSyncCallback<String> callback =
+                AnswerSyncCallback.forSingleFailure(String.class, mFailure);
+        expect.withMessage("%%s.isCalled() before call", callback)
+                .that(callback.isCalled())
+                .isFalse();
         when(mDarthVoider.toString()).then(callback);
 
         IllegalStateException thrown =
@@ -73,6 +126,7 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
 
         expect.withMessage("thrown exception").that(thrown).isSameInstanceAs(mFailure);
         callback.assertCalled();
+        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
     }
 
     public interface Voider {

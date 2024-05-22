@@ -32,8 +32,8 @@ import java.util.Map;
 import java.util.Objects;
 
 class ConsentedDebugEnableArgs {
-    public static final String SECRET_DEBUG_TOKEN_ARG_NAME = "--secret_debug_token";
-    public static final String EXPIRY_IN_HOURS_ARG_NAME = "--expires_in_hours";
+    public static final String SECRET_DEBUG_TOKEN_ARG_NAME = "--secret-debug-token";
+    public static final String EXPIRY_IN_HOURS_ARG_NAME = "--expires-in-hours";
     @VisibleForTesting public static final int SECRET_DEBUG_TOKEN_MIN_LEN = 6;
     @VisibleForTesting public static final int DEFAULT_EXPIRY_IN_HOURS = 24;
     @VisibleForTesting public static final int MAX_EXPIRY_IN_HOURS = 30 * 24;

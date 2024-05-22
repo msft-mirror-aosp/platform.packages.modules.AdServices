@@ -475,10 +475,10 @@ public final class DataService {
             ObservationGenerator generator = generatorSupplier.apply(dayIndex);
             ImmutableList<UnencryptedObservationBatch> batches =
                     generator.generateObservations(dayIndex, eventData);
-            int numObservations =
-                    batches.stream()
-                            .mapToInt(UnencryptedObservationBatch::getUnencryptedObservationsCount)
-                            .sum();
+            int numObservations = 0;
+            for (UnencryptedObservationBatch batch : batches) {
+                numObservations += batch.getUnencryptedObservationsCount();
+            }
             logInfo(
                     "Generated %s observations in %s observation batches for day index %s for"
                             + " report %s",

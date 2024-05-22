@@ -22,20 +22,19 @@ import static com.android.adservices.service.stats.ShellCommandStats.RESULT_NOT_
 
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import java.io.PrintWriter;
-import java.util.Objects;
 
 public final class NoOpShellCommand extends AbstractShellCommand {
     public static final String RESPONSE_MSG = "%s is disabled.";
+    private final String mDebugFlagKey;
     private final String mCommandName;
     private final int mMetricsLoggerCommand;
 
-    public NoOpShellCommand(@NonNull final String commandName, @Command int metricsLoggerCommand) {
-        Objects.requireNonNull(commandName, "commandName should be provided");
+    public NoOpShellCommand(
+            final String commandName, @Command int metricsLoggerCommand, String debugFlagKey) {
         mCommandName = commandName;
         mMetricsLoggerCommand = metricsLoggerCommand;
+        mDebugFlagKey = debugFlagKey;
     }
 
     @Override
@@ -43,7 +42,7 @@ public final class NoOpShellCommand extends AbstractShellCommand {
         Log.d(
                 TAG,
                 String.format(
-                        "CustomAudience CLI is disabled %s cannot be executed.", mCommandName));
+                        "%s is disabled. %s cannot be executed.", mDebugFlagKey, mCommandName));
         err.print(String.format(RESPONSE_MSG, mCommandName));
         return toShellCommandResult(RESULT_NOT_ENABLED, mMetricsLoggerCommand);
     }

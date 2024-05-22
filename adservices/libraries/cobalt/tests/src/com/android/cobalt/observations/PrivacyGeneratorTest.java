@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThrows;
 
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.cobalt.observations.testing.FakeSecureRandom;
+import com.android.cobalt.testing.observations.FakeSecureRandom;
 
 import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReportDefinition;

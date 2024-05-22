@@ -229,6 +229,19 @@ public class AsyncSourceFetcher {
                     TimeUnit.SECONDS.toMillis(
                             mFlags.getMeasurementMinPostInstallExclusivityWindow()));
         }
+        if (mFlags.getMeasurementEnableReinstallReattribution()) {
+            if (!json.isNull(SourceHeaderContract.REINSTALL_REATTRIBUTION_WINDOW_KEY)) {
+                long reinstallReattributionWindow =
+                        extractValidNumberInRange(
+                                json.getLong(
+                                        SourceHeaderContract.REINSTALL_REATTRIBUTION_WINDOW_KEY),
+                                0L,
+                                mFlags.getMeasurementMaxReinstallReattributionWindowSeconds());
+                builder.setReinstallReattributionWindow(reinstallReattributionWindow);
+            } else {
+                builder.setReinstallReattributionWindow(0L);
+            }
+        }
         // This "filter_data" field is used to generate reports.
         if (!json.isNull(SourceHeaderContract.FILTER_DATA)) {
             JSONObject maybeFilterData = json.optJSONObject(SourceHeaderContract.FILTER_DATA);
@@ -1042,6 +1055,7 @@ public class AsyncSourceFetcher {
         String PRIORITY = "priority";
         String INSTALL_ATTRIBUTION_WINDOW_KEY = "install_attribution_window";
         String POST_INSTALL_EXCLUSIVITY_WINDOW_KEY = "post_install_exclusivity_window";
+        String REINSTALL_REATTRIBUTION_WINDOW_KEY = "reinstall_reattribution_window";
         String FILTER_DATA = "filter_data";
         String WEB_DESTINATION = "web_destination";
         String AGGREGATION_KEYS = "aggregation_keys";

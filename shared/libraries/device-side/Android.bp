@@ -209,6 +209,7 @@ java_library {
         // TODO(b/338132355): use defaults instead?
         "mockito-target-extended-minus-junit4",
         "adservices-shared-common",
+        "adservices-shared-sync-callback",
         "adservices-shared-util",
         "androidx.test.core",
         "framework-annotations-lib", // @VisibleForTesting

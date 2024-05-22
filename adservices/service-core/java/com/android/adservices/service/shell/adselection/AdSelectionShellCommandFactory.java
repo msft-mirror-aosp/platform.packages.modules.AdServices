@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.shell.adselection;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
@@ -42,10 +45,10 @@ import java.util.stream.Collectors;
 
 public class AdSelectionShellCommandFactory implements ShellCommandFactory {
 
-    public static final String COMMAND_PREFIX = "ad_selection";
+    public static final String COMMAND_PREFIX = "ad-selection";
     private final Map<String, ShellCommand> mAllCommandsMap;
     private final boolean mIsConsentedDebugCliEnabled;
-    private boolean mIsAdSelectionCliEnabled;
+    private final boolean mIsAdSelectionCliEnabled;
 
     @VisibleForTesting
     public AdSelectionShellCommandFactory(
@@ -93,13 +96,17 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
         switch (cmd) {
             case ConsentedDebugShellCommand.CMD -> {
                 if (!mIsConsentedDebugCliEnabled) {
-                    return new NoOpShellCommand(cmd, command.getMetricsLoggerCommand());
+                    return new NoOpShellCommand(
+                            cmd,
+                            command.getMetricsLoggerCommand(),
+                            KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED);
                 }
                 return command;
             }
             case GetAdSelectionDataCommand.CMD -> {
                 if (!mIsAdSelectionCliEnabled) {
-                    return new NoOpShellCommand(cmd, command.getMetricsLoggerCommand());
+                    return new NoOpShellCommand(
+                            cmd, command.getMetricsLoggerCommand(), KEY_AD_SELECTION_CLI_ENABLED);
                 }
                 return command;
             }

@@ -144,6 +144,7 @@ public final class MeasurementTables {
         String TRIGGER_DATA_MATCHING = "trigger_data_matching";
         String ATTRIBUTION_SCOPE_LIMIT = "attribution_scope_limit";
         String MAX_EVENT_STATES = "max_event_states";
+        String REINSTALL_REATTRIBUTION_WINDOW = "reinstall_reattribution_window";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -541,6 +542,8 @@ public final class MeasurementTables {
                     + SourceContract.ATTRIBUTION_SCOPE_LIMIT
                     + " INTEGER, "
                     + SourceContract.MAX_EVENT_STATES
+                    + " INTEGER, "
+                    + SourceContract.REINSTALL_REATTRIBUTION_WINDOW
                     + " INTEGER "
                     + ")";
 

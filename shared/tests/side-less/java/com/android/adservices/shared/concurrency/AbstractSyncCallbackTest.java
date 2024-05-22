@@ -19,9 +19,7 @@ import static org.junit.Assert.assertThrows;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
-import com.android.adservices.shared.testing.StandardStreamsLogger;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -244,6 +242,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
                 .isTrue();
     }
 
+    // TODO(b/285014040): move to superclass
     private void runLater(int when, Runnable r) {
         startNewThread(
                 () -> {
@@ -252,6 +251,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
                 });
     }
 
+    // TODO(b/285014040): move to superclass
     private Thread startNewThread(Runnable r) {
         String threadName = mLog.getTag() + "-runLaterThread-" + sThreadId.incrementAndGet();
         mLog.d("Starting new thread (%s) to run %s", threadName, r);
@@ -274,9 +274,6 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
     }
 
     private final class ConcreteSyncCallback extends AbstractSyncCallback {
-        private final Logger mLogger =
-                new Logger(StandardStreamsLogger.getInstance(), ConcreteSyncCallback.class);
-
         private final List<String> mActuallogEntries = new ArrayList<>();
         // TODO(b/341797803): @Nullable
         private List<String> mExpectedLoggedMessages;
@@ -299,15 +296,13 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
 
         @Override
         @FormatMethod
-        protected void logD(@FormatString String msgFmt, Object... msgArgs) {
-            mLogger.d(msgFmt, msgArgs);
+        public void logD(@FormatString String msgFmt, Object... msgArgs) {
             log(msgFmt, msgArgs);
         }
 
         @Override
         @FormatMethod
-        protected void logV(@FormatString String msgFmt, Object... msgArgs) {
-            mLogger.v(msgFmt, msgArgs);
+        public void logV(@FormatString String msgFmt, Object... msgArgs) {
             log(msgFmt, msgArgs);
         }
 

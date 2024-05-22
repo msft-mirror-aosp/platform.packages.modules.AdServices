@@ -79,6 +79,11 @@ public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
         }
 
         @Override
+        public LogInterceptor interceptLogD(String tag) {
+            return mAndroidMocker.interceptLogD(tag);
+        }
+
+        @Override
         public LogInterceptor interceptLogV(String tag) {
             return mAndroidMocker.interceptLogV(tag);
         }

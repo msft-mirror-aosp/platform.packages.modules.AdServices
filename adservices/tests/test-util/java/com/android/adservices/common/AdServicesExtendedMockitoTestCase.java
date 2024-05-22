@@ -153,6 +153,11 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         }
 
         @Override
+        public LogInterceptor interceptLogD(String tag) {
+            return mAndroidMocker.interceptLogD(tag);
+        }
+
+        @Override
         public LogInterceptor interceptLogV(String tag) {
             return mAndroidMocker.interceptLogV(tag);
         }

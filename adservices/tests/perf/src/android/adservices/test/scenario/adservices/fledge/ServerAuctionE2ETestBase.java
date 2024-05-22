@@ -32,12 +32,12 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public abstract class ServerAuctionE2ETestBase {
-    protected static final String TAG = "AdSelectionDataE2ETest";
     protected static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     protected static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
@@ -47,7 +47,9 @@ public abstract class ServerAuctionE2ETestBase {
                     .setExecutor(CALLBACK_EXECUTOR)
                     .build();
 
-    protected static void makeWarmUpNetworkCall(String endpointUrl) {
+    protected abstract String getTag();
+
+    protected void makeWarmUpNetworkCall(String endpointUrl) {
         try {
             URL url = new URL(endpointUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -57,17 +59,17 @@ public abstract class ServerAuctionE2ETestBase {
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                Log.w(TAG, "Warm-up call successful.");
+                Log.w(getTag(), "Warm-up call successful.");
             } else {
-                Log.w(TAG, "Failed to make warm-up call. Response code: " + responseCode);
+                Log.w(getTag(), "Failed to make warm-up call. Response code: " + responseCode);
             }
             connection.disconnect();
         } catch (IOException e) {
-            Log.w(TAG, "Error while trying to warm up encryption key server : " + e);
+            Log.w(getTag(), "Error while trying to warm up encryption key server : " + e);
         }
     }
 
-    protected static byte[] warmupBiddingAuctionServer(
+    protected byte[] warmupBiddingAuctionServer(
             String caFileName,
             String seller,
             String contextualSignalsFileName,
@@ -98,7 +100,7 @@ public abstract class ServerAuctionE2ETestBase {
         return outcome.getAdSelectionData();
     }
 
-    protected static void runServerAuction(
+    protected void runServerAuction(
             String contextualSignalsFileName,
             byte[] getAdSelectionData,
             String sfeAddress,
@@ -111,10 +113,38 @@ public abstract class ServerAuctionE2ETestBase {
                     serverResponseLoggingEnabled);
         } catch (Exception e) {
             Log.w(
-                    TAG,
+                    getTag(),
                     "Exception encountered during first runServerAuction warmup: "
                             + e.getMessage()
                             + ". Continuing execution.");
         }
+    }
+
+    protected <T> T retryOnException(
+            Callable<T> callable,
+            Class<? extends Exception> exceptionType,
+            int maxRetries,
+            long retryIntervalMillis,
+            String funcName)
+            throws Exception {
+
+        int attempt = 0;
+        while (attempt <= maxRetries) {
+            Log.w(getTag(), String.format("Retrying %s. Attempt: %d", funcName, attempt));
+            try {
+                return callable.call();
+            } catch (Exception e) {
+                if (exceptionType.isInstance(e)) {
+                    attempt++;
+                    if (attempt > maxRetries) {
+                        throw e;
+                    }
+                    Thread.sleep(retryIntervalMillis);
+                } else {
+                    throw e;
+                }
+            }
+        }
+        return null;
     }
 }

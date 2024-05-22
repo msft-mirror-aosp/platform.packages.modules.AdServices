@@ -19,7 +19,7 @@ package com.android.cobalt.observations;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.cobalt.data.EventVector;
-import com.android.cobalt.observations.testing.FakeSecureRandom;
+import com.android.cobalt.testing.observations.FakeSecureRandom;
 
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.MetricDefinition;

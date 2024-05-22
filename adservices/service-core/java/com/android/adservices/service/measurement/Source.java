@@ -76,6 +76,7 @@ public class Source {
     @Nullable private Long mEventReportWindow;
     @Nullable private String mEventReportWindows;
     private long mAggregatableReportWindow;
+    private long mReinstallReattributionWindow;
     private List<UnsignedLong> mAggregateReportDedupKeys;
     private List<UnsignedLong> mEventReportDedupKeys;
     @AttributionMode private int mAttributionMode;
@@ -570,6 +571,7 @@ public class Source {
                 && Objects.equals(mEventReportWindows, source.mEventReportWindows)
                 && Objects.equals(mAggregatableReportWindow, source.mAggregatableReportWindow)
                 && mEventTime == source.mEventTime
+                && mReinstallReattributionWindow == source.mReinstallReattributionWindow
                 && mAdIdPermission == source.mAdIdPermission
                 && mArDebugPermission == source.mArDebugPermission
                 && Objects.equals(mEventId, source.mEventId)
@@ -625,6 +627,7 @@ public class Source {
                 mEventReportWindow,
                 mEventReportWindows,
                 mAggregatableReportWindow,
+                mReinstallReattributionWindow,
                 mEventTime,
                 mEventId,
                 mSourceType,
@@ -756,6 +759,11 @@ public class Source {
     /** Returns Event report window */
     public Long getEventReportWindow() {
         return mEventReportWindow;
+    }
+
+    /** Returns reinstall reattribution window */
+    public long getReinstallReattributionWindow() {
+        return mReinstallReattributionWindow;
     }
 
     /**
@@ -1350,6 +1358,7 @@ public class Source {
             builder.setInstallCooldownWindow(copyFrom.mInstallCooldownWindow);
             builder.setInstallAttributed(copyFrom.mIsInstallAttributed);
             builder.setInstallAttributionWindow(copyFrom.mInstallAttributionWindow);
+            builder.setReinstallReattributionWindow(copyFrom.mReinstallReattributionWindow);
             builder.setSourceType(copyFrom.mSourceType);
             builder.setAdIdPermission(copyFrom.mAdIdPermission);
             builder.setAggregateContributions(copyFrom.mAggregateContributions);
@@ -1488,6 +1497,12 @@ public class Source {
         /** See {@link Source#getAggregatableReportWindow()}. */
         public Builder setAggregatableReportWindow(Long aggregateReportWindow) {
             mBuilding.mAggregatableReportWindow = aggregateReportWindow;
+            return this;
+        }
+
+        /** See {@link Source#getReinstallReattributionWindow()}. */
+        public Builder setReinstallReattributionWindow(Long reinstallReattributionWindow) {
+            mBuilding.mReinstallReattributionWindow = reinstallReattributionWindow;
             return this;
         }
 

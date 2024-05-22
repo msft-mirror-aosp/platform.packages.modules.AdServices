@@ -36,7 +36,7 @@ import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.data.TestOnlyDao.AggregateStoreTableRow;
 import com.android.cobalt.domain.Project;
 import com.android.cobalt.system.SystemData;
-import com.android.cobalt.system.testing.FakeSystemClock;
+import com.android.cobalt.testing.system.FakeSystemClock;
 
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.LocalIndexHistogram;

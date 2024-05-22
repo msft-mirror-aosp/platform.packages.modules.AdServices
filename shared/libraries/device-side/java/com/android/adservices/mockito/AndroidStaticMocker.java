@@ -57,8 +57,17 @@ public interface AndroidStaticMocker {
      */
     void mockGetCurrentUser(int user);
 
-    // NOTE: current tests are only intercepting v and e, but we could add more methods on demand
-    // (even one that takes Level...levels)
+    // NOTE: current tests are only intercepting d, ,  and e, but we could add more methods on
+    // demand (even one that takes Level...levels)
+
+    /**
+     * Statically spy on {@code Log.d} for that {@code tag}.
+     *
+     * @return object that can be used to assert the {@code Log.d} calls.
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link Log}.
+     */
+    LogInterceptor interceptLogD(String tag);
 
     /**
      * Statically spy on {@code Log.v} for that {@code tag}.

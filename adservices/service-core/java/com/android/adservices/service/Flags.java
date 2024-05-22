@@ -4644,6 +4644,21 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
     }
 
+    @ConfigFlag
+    long MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS = TimeUnit.DAYS.toSeconds(90);
+
+    /** Maximum limit of duration to determine reattribution for a verified installation. */
+    default long getMeasurementMaxReinstallReattributionWindowSeconds() {
+        return MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION = false;
+
+    /** Returns whether to enable reinstall reattribution. */
+    default boolean getMeasurementEnableReinstallReattribution() {
+        return MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
+    }
+
     /** Flag to enable context id for triggers */
     boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
 

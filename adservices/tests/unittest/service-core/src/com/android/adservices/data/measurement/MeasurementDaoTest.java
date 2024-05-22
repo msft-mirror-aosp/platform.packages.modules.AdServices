@@ -247,6 +247,9 @@ public class MeasurementDaoTest {
                 validSource.getInstallAttributionWindow(), source.getInstallAttributionWindow());
         assertEquals(validSource.getInstallCooldownWindow(), source.getInstallCooldownWindow());
         assertEquals(validSource.getAttributionMode(), source.getAttributionMode());
+        assertEquals(
+                validSource.getReinstallReattributionWindow(),
+                source.getReinstallReattributionWindow());
         assertEquals(validSource.getAggregateSource(), source.getAggregateSource());
         assertEquals(validSource.getFilterDataString(), source.getFilterDataString());
         assertEquals(validSource.getSharedFilterDataKeys(), source.getSharedFilterDataKeys());

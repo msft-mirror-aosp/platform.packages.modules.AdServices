@@ -149,6 +149,9 @@ public class ContentValueFixtures {
         // Added in V34
         public static final long ATTRIBUTION_SCOPE_LIMIT = 10L;
         public static final long MAX_EVENT_STATES = 1000L;
+
+        // Added in V36
+        public static final long REINSTALL_REATTRIBUTION_WINDOW = 841839879274L;
     }
 
     public static class SourceDestinationValues {
@@ -800,6 +803,20 @@ public class ContentValueFixtures {
                 SourceValues.ATTRIBUTION_SCOPE_LIMIT);
         values.put(
                 MeasurementTables.SourceContract.MAX_EVENT_STATES, SourceValues.MAX_EVENT_STATES);
+        return values;
+    }
+
+    /** Returns content values for source version 35 */
+    public static ContentValues generateSourceContentValuesV35() {
+        return generateSourceContentValuesV34();
+    }
+
+    /** Returns content values for source version 36 */
+    public static ContentValues generateSourceContentValuesV36() {
+        ContentValues values = generateSourceContentValuesV35();
+        values.put(
+                MeasurementTables.SourceContract.REINSTALL_REATTRIBUTION_WINDOW,
+                SourceValues.REINSTALL_REATTRIBUTION_WINDOW);
         return values;
     }
 

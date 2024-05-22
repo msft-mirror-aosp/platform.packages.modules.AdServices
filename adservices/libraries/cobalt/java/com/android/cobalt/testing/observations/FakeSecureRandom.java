@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.cobalt.observations.testing;
+package com.android.cobalt.testing.observations;
 
 import java.security.SecureRandom;
 import java.util.Arrays;

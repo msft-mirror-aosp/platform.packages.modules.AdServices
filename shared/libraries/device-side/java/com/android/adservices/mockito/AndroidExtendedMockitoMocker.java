@@ -94,6 +94,14 @@ public final class AndroidExtendedMockitoMocker extends AbstractStaticMocker
     }
 
     @Override
+    public LogInterceptor interceptLogD(String tag) {
+        logV("interceptLogD(%s)", tag);
+        assertSpiedOrMocked(Log.class);
+
+        return LogInterceptor.forTagAndLevels(tag, Level.DEBUG);
+    }
+
+    @Override
     public LogInterceptor interceptLogV(String tag) {
         logV("interceptLogV(%s)", tag);
         assertSpiedOrMocked(Log.class);

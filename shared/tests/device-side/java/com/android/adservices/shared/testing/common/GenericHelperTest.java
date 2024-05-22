@@ -18,6 +18,7 @@ package com.android.adservices.shared.testing.common;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.SharedUnitTestCase;
+import com.android.adservices.shared.testing.Identifiable;
 
 import org.junit.Test;
 

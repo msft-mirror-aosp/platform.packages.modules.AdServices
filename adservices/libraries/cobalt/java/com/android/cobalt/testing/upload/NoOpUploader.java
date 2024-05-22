@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.cobalt.upload.testing;
+package com.android.cobalt.testing.upload;
 
 import static com.android.cobalt.collect.ImmutableHelpers.toImmutableList;
 
