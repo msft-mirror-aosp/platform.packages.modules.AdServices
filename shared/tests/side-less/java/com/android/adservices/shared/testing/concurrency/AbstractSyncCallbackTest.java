@@ -53,6 +53,11 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
     private final ConcreteSyncCallback mSingleCallback = new ConcreteSyncCallback();
 
     @Test
+    public void testInvalidConstructor() throws Exception {
+        assertThrows(NullPointerException.class, () -> new AbstractSyncCallback(null) {});
+    }
+
+    @Test
     public void testIsCalled() throws Exception {
         mSingleCallback.expectLogCalls(MSG_SET_CALLED, MSG_SET_CALLED_RETURNING);
 
@@ -207,9 +212,21 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testToString_containsSettings() {
+        SyncCallbackSettings settings =
+                new SyncCallbackSettings.Builder()
+                        .setExpectedNumberCalls(42)
+                        .setMaxTimeoutMs(108)
+                        .build();
+        ConcreteSyncCallback callback = new ConcreteSyncCallback(settings);
+
+        expect.withMessage("toString()").that(callback.toString()).contains(settings.toString());
+    }
+
+    @Test
     public void testCustomizeToString() {
         AbstractSyncCallback callback =
-                new AbstractSyncCallback() {
+                new AbstractSyncCallback(new SyncCallbackSettings.Builder().build()) {
                     protected void customizeToString(StringBuilder string) {
                         string.append("I AM GROOT");
                     }
@@ -285,7 +302,14 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
         }
 
         private ConcreteSyncCallback(int numberOfExpectedCalls) {
-            super(numberOfExpectedCalls);
+            this(
+                    new SyncCallbackSettings.Builder()
+                            .setExpectedNumberCalls(numberOfExpectedCalls)
+                            .build());
+        }
+
+        private ConcreteSyncCallback(SyncCallbackSettings settings) {
+            super(settings);
         }
 
         public void expectLogCalls(String... messages) {

@@ -25,41 +25,19 @@ import com.android.adservices.shared.testing.AndroidLogger;
 /** Base class for device-side sync callbacks for testing. */
 public abstract class AbstractTestSyncCallback extends AbstractSidelessTestSyncCallback {
 
-    /** Constant used to help readability. */
-    public static final boolean FAIL_IF_CALLED_ON_MAIN_THREAD = true;
-
-    /** Constant used to help readability. */
-    public static final boolean DONT_FAIL_IF_CALLED_ON_MAIN_THREAD = false;
-
-    // NOTE: currently there's no usage that takes a custom timeout, but we could add on demand
-
-    private final boolean mFailIfCalledOnMainThread;
-
     @Nullable private IllegalStateException mInternalFailure;
 
     private final long mEpoch = SystemClock.elapsedRealtime();
 
-    protected AbstractTestSyncCallback() {
-        this(EXPECTS_ONLY_ONE_CALL);
-    }
-
-    protected AbstractTestSyncCallback(int expectedNumberOfCalls) {
-        this(FAIL_IF_CALLED_ON_MAIN_THREAD, expectedNumberOfCalls);
-    }
-
-    protected AbstractTestSyncCallback(
-            boolean failIfCalledOnMainThread, int expectedNumberOfCalls) {
-        super(AndroidLogger.getInstance(), expectedNumberOfCalls);
-        mFailIfCalledOnMainThread = failIfCalledOnMainThread;
+    protected AbstractTestSyncCallback(SyncCallbackSettings settings) {
+        super(AndroidLogger.getInstance(), settings);
     }
 
     @Override
     protected void customizeToString(StringBuilder string) {
         super.customizeToString(string);
 
-        string.append(", failIfCalledOnMainThread=")
-                .append(mFailIfCalledOnMainThread)
-                .append(", epoch=")
+        string.append(", epoch=")
                 .append(mEpoch)
                 .append(", internalFailure=")
                 .append(mInternalFailure);
@@ -70,7 +48,7 @@ public abstract class AbstractTestSyncCallback extends AbstractSidelessTestSyncC
         long delta = SystemClock.elapsedRealtime() - mEpoch;
         Thread currentThread = Thread.currentThread();
         logV("setCalled() called in %d ms on %s", delta, currentThread);
-        if (mFailIfCalledOnMainThread
+        if (mSettings.isFailIfCalledOnMainThread()
                 && Looper.getMainLooper() != null
                 && Looper.getMainLooper().isCurrentThread()) {
             String errorMsg = "setCalled() called on main thread (" + currentThread + ")";

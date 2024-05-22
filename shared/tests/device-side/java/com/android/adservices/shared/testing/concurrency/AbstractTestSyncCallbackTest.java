@@ -16,7 +16,6 @@
 package com.android.adservices.shared.testing.concurrency;
 
 import static com.android.adservices.shared.testing.concurrency.AbstractSyncCallback.LOG_TAG;
-import static com.android.adservices.shared.testing.concurrency.AbstractTestSyncCallback.DONT_FAIL_IF_CALLED_ON_MAIN_THREAD;
 import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
 
 import static org.junit.Assert.assertThrows;
@@ -107,7 +106,10 @@ public final class AbstractTestSyncCallbackTest extends SharedExtendedMockitoTes
     @Test
     public void testSetCalled_calledOnMainThread_pass() throws Exception {
         ConcreteTestSyncCallback callback =
-                new ConcreteTestSyncCallback(DONT_FAIL_IF_CALLED_ON_MAIN_THREAD);
+                new ConcreteTestSyncCallback(
+                        new SyncCallbackSettings.Builder()
+                                .setFailIfCalledOnMainThread(false)
+                                .build());
         expect.withMessage("toString()")
                 .that(callback.toString())
                 .contains("failIfCalledOnMainThread=false");
@@ -130,11 +132,11 @@ public final class AbstractTestSyncCallbackTest extends SharedExtendedMockitoTes
 
     private static final class ConcreteTestSyncCallback extends AbstractTestSyncCallback {
         ConcreteTestSyncCallback() {
-            super();
+            this(new SyncCallbackSettings.Builder().build());
         }
 
-        ConcreteTestSyncCallback(boolean failIfCalledOnMainThread) {
-            super(failIfCalledOnMainThread, EXPECTS_ONLY_ONE_CALL);
+        ConcreteTestSyncCallback(SyncCallbackSettings settings) {
+            super(settings);
         }
     }
 }

@@ -27,45 +27,18 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallback
         implements TestSyncCallback {
 
-    /** Constant used to help readability. */
-    public static final int EXPECTS_ONLY_ONE_CALL = 1;
-
-    /** Timeout set by default constructor */
-    public static final long DEFAULT_TIMEOUT_MS = 5_000;
-
-    private final long mTimeoutMs;
-
     private final Logger mLogger;
 
-    /** Default constructor (uses {@link #DEFAULT_TIMEOUT_MS}) that expects a single call. */
-    protected AbstractSidelessTestSyncCallback(RealLogger realLogger) {
-        this(realLogger, DEFAULT_TIMEOUT_MS);
-    }
-
-    /** Custom with custom number of expected calls (using {@link #DEFAULT_TIMEOUT_MS}). */
-    protected AbstractSidelessTestSyncCallback(RealLogger realLogger, int expectedNumberOfCalls) {
-        this(realLogger, expectedNumberOfCalls, DEFAULT_TIMEOUT_MS);
-    }
-
-    /** Constructor with custom timeout (for a single call). */
-    protected AbstractSidelessTestSyncCallback(RealLogger realLogger, long timeoutMs) {
-        this(realLogger, /* expectedNumberOfCalls= */ 1, timeoutMs);
-    }
-
-    /** Constructor with custom timeout and number of expected calls. */
+    /** Default constructor. */
     protected AbstractSidelessTestSyncCallback(
-            RealLogger realLogger, int expectedNumberOfCalls, long timeoutMs) {
-        super(expectedNumberOfCalls);
-        if (timeoutMs <= 0) {
-            throw new IllegalArgumentException("timeout must be positive");
-        }
-        mTimeoutMs = timeoutMs;
+            RealLogger realLogger, SyncCallbackSettings settings) {
+        super(settings);
         mLogger = new Logger(realLogger, LOG_TAG);
     }
 
     @Override
-    public long getMaxTimeoutMs() {
-        return mTimeoutMs;
+    public SyncCallbackSettings getSettings() {
+        return mSettings;
     }
 
     @Override
@@ -83,7 +56,7 @@ public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallb
 
     @Override
     public final void assertCalled() throws InterruptedException {
-        super.waitCalled(mTimeoutMs, TimeUnit.MILLISECONDS);
+        super.waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
         postAssertCalled();
     }
 

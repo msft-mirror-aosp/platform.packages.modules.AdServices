@@ -16,7 +16,7 @@
 package com.android.adservices.shared.testing.concurrency;
 
 import static com.android.adservices.shared.meta_testing.LogEntry.Subject.logEntry;
-import static com.android.adservices.shared.testing.concurrency.AbstractSidelessTestSyncCallback.DEFAULT_TIMEOUT_MS;
+import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
 import static com.android.adservices.shared.testing.concurrency.AbstractSyncCallback.LOG_TAG;
 
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -48,23 +48,12 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
             new ConcreteSidelessTestSyncCallback(mFakeLogger);
 
     @Test
-    public void testConstructor_invalidTimeout() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new ConcreteSidelessTestSyncCallback(mFakeLogger, /* timeoutMs= */ 0));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new ConcreteSidelessTestSyncCallback(mFakeLogger, /* timeoutMs= */ -1));
-    }
+    public void testGetSettings() {
+        SyncCallbackSettings settings = new SyncCallbackSettings.Builder().build();
+        AbstractSidelessTestSyncCallback callback =
+                new AbstractSidelessTestSyncCallback(mFakeLogger, settings) {};
 
-    @Test
-    public void testGetMaxTimeout() {
-        expect.withMessage("default getMaxTimeout()")
-                .that(mCallback.getMaxTimeoutMs())
-                .isEqualTo(DEFAULT_TIMEOUT_MS);
-        expect.withMessage("custom getMaxTimeout()")
-                .that(new ConcreteSidelessTestSyncCallback(mFakeLogger, 42).getMaxTimeoutMs())
-                .isEqualTo(42);
+        expect.withMessage("getSettings()").that(callback.getSettings()).isSameInstanceAs(settings);
     }
 
     @Test
@@ -134,11 +123,7 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
     private static final class ConcreteSidelessTestSyncCallback
             extends AbstractSidelessTestSyncCallback {
         ConcreteSidelessTestSyncCallback(RealLogger realLogger) {
-            super(realLogger);
-        }
-
-        ConcreteSidelessTestSyncCallback(RealLogger realLogger, long timeoutMs) {
-            super(realLogger, timeoutMs);
+            super(realLogger, new SyncCallbackSettings.Builder().build());
         }
     }
 

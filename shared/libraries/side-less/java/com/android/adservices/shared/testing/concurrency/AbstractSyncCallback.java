@@ -18,6 +18,7 @@ package com.android.adservices.shared.testing.concurrency;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,19 +33,15 @@ public abstract class AbstractSyncCallback implements SyncCallback {
 
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
 
+    protected final SyncCallbackSettings mSettings;
+
     private final String mId = getClass().getSimpleName() + '#' + sIdGenerator.incrementAndGet();
-    private final int mNumberExpectedCalls;
     private final CountDownLatch mLatch;
 
-    /** Default constructor (for callbacks that should be called just once). */
-    public AbstractSyncCallback() {
-        this(1);
-    }
-
-    /** Constructor for callbacks that should be called multiple times. */
-    public AbstractSyncCallback(int numberOfExpectedCalls) {
-        mNumberExpectedCalls = numberOfExpectedCalls;
-        mLatch = new CountDownLatch(mNumberExpectedCalls);
+    /** Default constructor. */
+    public AbstractSyncCallback(SyncCallbackSettings settings) {
+        mSettings = Objects.requireNonNull(settings, "settings cannot be null");
+        mLatch = new CountDownLatch(mSettings.getExpectedNumberCalls());
     }
 
     /**
@@ -140,8 +137,8 @@ public abstract class AbstractSyncCallback implements SyncCallback {
                 new StringBuilder()
                         .append('[')
                         .append(mId)
-                        .append(": numberExpectedCalls=")
-                        .append(mNumberExpectedCalls)
+                        .append(": ")
+                        .append(mSettings)
                         .append(", missingCalls=")
                         .append(mLatch.getCount());
         customizeToString(string);
