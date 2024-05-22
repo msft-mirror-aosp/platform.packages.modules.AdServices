@@ -58,6 +58,34 @@ public final class LogInterceptor {
         LogInterceptor interceptor = new LogInterceptor();
         for (Level level : levels) {
             switch (level) {
+                case DEBUG:
+                    doAnswer(
+                                    invocation -> {
+                                        Log.d(TAG, invocation.toString());
+                                        interceptor.log(
+                                                new LogEntry(
+                                                        Level.DEBUG,
+                                                        invocation.getArgument(0),
+                                                        invocation.getArgument(1)));
+                                        invocation.callRealMethod();
+                                        return null;
+                                    })
+                            .when(() -> Log.d(eq(tag), any()));
+
+                    doAnswer(
+                                    invocation -> {
+                                        Log.d(TAG, invocation.toString());
+                                        interceptor.log(
+                                                new LogEntry(
+                                                        Level.DEBUG,
+                                                        invocation.getArgument(0),
+                                                        invocation.getArgument(1),
+                                                        invocation.getArgument(2)));
+                                        invocation.callRealMethod();
+                                        return null;
+                                    })
+                            .when(() -> Log.d(eq(tag), any(), any()));
+                    break;
                 case VERBOSE:
                     doAnswer(
                                     invocation -> {

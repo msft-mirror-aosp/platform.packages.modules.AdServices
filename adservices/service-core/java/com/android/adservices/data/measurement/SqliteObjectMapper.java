@@ -154,6 +154,10 @@ public class SqliteObjectMapper {
                 builder::setInstallCooldownWindow);
         setBooleanColumn(cursor, MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
                 builder::setInstallAttributed);
+        setLongColumn(
+                cursor,
+                MeasurementTables.SourceContract.REINSTALL_REATTRIBUTION_WINDOW,
+                builder::setReinstallReattributionWindow);
         setTextColumn(cursor, MeasurementTables.SourceContract.FILTER_DATA,
                 builder::setFilterDataString);
         setTextColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_SOURCE,

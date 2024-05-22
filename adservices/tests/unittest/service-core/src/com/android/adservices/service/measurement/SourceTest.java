@@ -847,6 +847,16 @@ public class SourceTest {
     }
 
     @Test
+    public void testReinstallReattributionWindow() throws Exception {
+        final Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setReinstallReattributionWindow(50L)
+                        .build();
+
+        assertEquals(50L, source.getReinstallReattributionWindow());
+    }
+
+    @Test
     public void testAggregatableAttributionSourceWithTrigger_addsLookbackWindow() throws Exception {
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         JSONObject aggregatableSource = new JSONObject();

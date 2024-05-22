@@ -97,7 +97,7 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.adservices.shared.testing.SimpleSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;

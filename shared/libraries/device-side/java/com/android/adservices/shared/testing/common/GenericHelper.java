@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.testing.common;
 
+import com.android.adservices.shared.testing.Identifiable;
+
 import java.util.Locale;
 import java.util.Objects;
 
