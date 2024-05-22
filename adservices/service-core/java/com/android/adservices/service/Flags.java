@@ -3756,7 +3756,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /** Default maximum sources per publisher */
-    int MEASUREMENT_MAX_SOURCES_PER_PUBLISHER = 1024;
+    int MEASUREMENT_MAX_SOURCES_PER_PUBLISHER = 4096;
 
     /** Returns maximum sources per publisher */
     default int getMeasurementMaxSourcesPerPublisher() {
