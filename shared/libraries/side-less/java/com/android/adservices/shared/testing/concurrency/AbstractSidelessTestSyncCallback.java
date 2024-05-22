@@ -15,7 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import com.android.adservices.shared.concurrency.AbstractSyncCallback;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.concurrency;
+package com.android.adservices.shared.testing.concurrency;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -22,6 +22,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+// NOTE: this class is basically an abstraction of CountdownLatch and doesn't have any testing
+// specific characteristics, so it could be used on production code as well.
 /** Base implementation for {@link SyncCallback}. */
 public abstract class AbstractSyncCallback implements SyncCallback {
 

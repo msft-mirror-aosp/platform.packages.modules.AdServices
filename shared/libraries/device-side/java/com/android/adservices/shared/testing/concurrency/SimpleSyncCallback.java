@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import com.android.adservices.shared.concurrency.SyncCallback;
-
 /** Simplest implementation of a {@link SyncCallback} for tests. */
 public final class SimpleSyncCallback extends AbstractTestSyncCallback {
 
