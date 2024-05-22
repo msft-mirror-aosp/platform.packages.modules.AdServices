@@ -58,4 +58,12 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
         expect.that(mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription))
                 .containsExactly(errorLogUtilCall);
     }
+
+    @Test
+    public void testResolutionMessage() {
+        expect.that(mErrorLogUtilVerifier.getResolutionMessage())
+                .isEqualTo(
+                        "Please make sure to use @ExpectErrorLogUtilCall(..) over test method to"
+                                + " denote all expected ErrorLogUtil.e(..) calls.");
+    }
 }
