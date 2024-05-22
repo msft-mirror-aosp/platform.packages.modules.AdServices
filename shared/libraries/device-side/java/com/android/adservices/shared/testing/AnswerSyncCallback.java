@@ -58,6 +58,15 @@ public final class AnswerSyncCallback<T> extends AbstractTestSyncCallback implem
     }
 
     /**
+     * Factory method for methods that return {@code Void}. This method allows to pass in a
+     * customized {code numberOfExpectedCalls}.
+     */
+    public static AnswerSyncCallback<Void> forMultipleVoidAnswers(int numberOfExpectedCalls) {
+        return new AnswerSyncCallback<>(
+                /* answer= */ null, /* failure= */ null, numberOfExpectedCalls);
+    }
+
+    /**
      * Factory method for methods that return an object (in multiple calls).
      *
      * @param answer object that will be returned by the {@link Answer}.
