@@ -48,7 +48,8 @@ public class ResultSyncCallback<T> extends AbstractTestSyncCallback
         logV("Injecting %s (mResult=%s)", result, mResult);
         Optional<T> newResult = Optional.fromNullable(result);
         if (!mResult.compareAndSet(null, newResult)) {
-            throw new CallbackAlreadyCalledException("injectResult()", getResult(), result);
+            setInternalFailure(
+                    new CallbackAlreadyCalledException("injectResult()", getResult(), result));
         }
         super.setCalled();
     }

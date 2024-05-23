@@ -27,11 +27,7 @@ import androidx.annotation.Nullable;
  */
 interface ResultTestSyncCallback<T> extends TestSyncCallback {
 
-    /**
-     * Sets the result.
-     *
-     * @throws CallbackAlreadyCalledException if it was already called.
-     */
+    /** Sets the result. */
     void injectResult(@Nullable T result);
 
     /**

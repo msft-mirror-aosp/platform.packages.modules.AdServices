@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
+
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
@@ -25,7 +27,14 @@ import org.junit.Test;
 abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallback<T>>
         extends SharedMockitoTestCase {
 
-    protected final R mCallback = newCallback();
+    protected static final long INJECTION_TIMEOUT_MS = 200;
+    protected static final long CALLBACK_TIMEOUT_MS = INJECTION_TIMEOUT_MS + 400;
+
+    protected final R mCallback =
+            newCallback(
+                    new SyncCallbackSettings.Builder()
+                            .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
+                            .build());
 
     protected R getCallback() {
         return mCallback;
@@ -33,7 +42,7 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
 
     protected abstract T newResult();
 
-    protected abstract R newCallback();
+    protected abstract R newCallback(SyncCallbackSettings settings);
 
     @Test
     public final void testGetSettings() throws Exception {
@@ -45,7 +54,7 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
         String id1 = mCallback.getId();
         expect.withMessage("%s.getId()", mCallback).that(id1).isNotEmpty();
 
-        R callback2 = newCallback();
+        R callback2 = newCallback(new SyncCallbackSettings.Builder().build());
         String id2 = callback2.getId();
         expect.withMessage("getId() from 2nd callback (%s)", callback2).that(id2).isNotEqualTo(id1);
     }
@@ -63,7 +72,7 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
                 .contains("(no result yet)");
         T injectedResult = newResult();
 
-        mCallback.injectResult(injectedResult);
+        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         T receivedResult = mCallback.assertResultReceived();
 
         expect.withMessage("%s.assertResultReceived()", mCallback)
@@ -90,7 +99,7 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
                 .that(mCallback.getResult())
                 .isNull();
 
-        mCallback.injectResult(null);
+        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(null));
         T receivedResult = mCallback.assertResultReceived();
 
         expect.withMessage("%s.assertResultReceived()", mCallback).that(receivedResult).isNull();
@@ -113,7 +122,7 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
                 .isNull();
         T injectedResult = newResult();
 
-        mCallback.injectResult(injectedResult);
+        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         mCallback.assertCalled();
 
         expect.withMessage("%s.isCalled() after injectResult()", mCallback)
@@ -134,7 +143,7 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
                 .that(mCallback.getResult())
                 .isNull();
 
-        mCallback.injectResult(null);
+        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(null));
         mCallback.assertCalled();
 
         T gottenResult = mCallback.getResult();
@@ -147,26 +156,23 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
         mCallback.injectResult(firstResult);
 
         T secondResult = newResult();
-        CallbackAlreadyCalledException thrown =
-                assertThrows(
-                        CallbackAlreadyCalledException.class,
-                        () -> mCallback.injectResult(secondResult));
+        mCallback.injectResult(secondResult);
 
-        expect.withMessage("method name on exception")
-                .that(thrown.getName())
-                .contains("injectResult()");
-        expect.withMessage("previous value on exception")
-                .that(thrown.getPreviousValue())
-                .isSameInstanceAs(firstResult);
-        expect.withMessage("new value on exception")
-                .that(thrown.getNewValue())
-                .isSameInstanceAs(secondResult);
+        CallbackAlreadyCalledException thrown =
+                assertThrows(CallbackAlreadyCalledException.class, () -> mCallback.assertCalled());
+
+        thrown.assertWith(expect, "injectResult()", firstResult, secondResult);
     }
 
     @Test
     public final void testInjectResult_calledTwice_firstWasNull() {
         mCallback.injectResult(null);
+        T newResult = newResult();
+        mCallback.injectResult(newResult);
 
-        assertThrows(IllegalStateException.class, () -> mCallback.injectResult(newResult()));
+        CallbackAlreadyCalledException thrown =
+                assertThrows(CallbackAlreadyCalledException.class, () -> mCallback.assertCalled());
+
+        thrown.assertWith(expect, "injectResult()", null, newResult);
     }
 }

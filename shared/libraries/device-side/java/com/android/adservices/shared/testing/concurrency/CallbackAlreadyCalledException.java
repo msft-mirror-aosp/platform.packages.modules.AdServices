@@ -17,6 +17,8 @@ package com.android.adservices.shared.testing.concurrency;
 
 import androidx.annotation.Nullable;
 
+import com.google.common.truth.StandardSubjectBuilder;
+
 import java.util.Objects;
 
 /** Custom exception thrown when a callback was called more times then expected. */
@@ -35,6 +37,19 @@ public final class CallbackAlreadyCalledException extends IllegalStateException 
         mPreviousValue = previousValue;
         mNewValue = newValue;
         mName = name;
+    }
+
+    /** Convenience helper to assert its values. */
+    public void assertWith(
+            StandardSubjectBuilder expect,
+            String nameSubString,
+            @Nullable Object previousValue,
+            @Nullable Object newValue) {
+        expect.withMessage("method name on exception").that(mName).contains(nameSubString);
+        expect.withMessage("previous value on exception")
+                .that(mPreviousValue)
+                .isSameInstanceAs(previousValue);
+        expect.withMessage("new value on exception").that(mNewValue).isSameInstanceAs(newValue);
     }
 
     @Nullable

@@ -22,10 +22,12 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.shared.testing.AndroidLogger;
 
+import java.util.Objects;
+
 /** Base class for device-side sync callbacks for testing. */
 public abstract class AbstractTestSyncCallback extends AbstractSidelessTestSyncCallback {
 
-    @Nullable private IllegalStateException mInternalFailure;
+    @Nullable private RuntimeException mInternalFailure;
 
     private final long mEpoch = SystemClock.elapsedRealtime();
 
@@ -43,6 +45,16 @@ public abstract class AbstractTestSyncCallback extends AbstractSidelessTestSyncC
                 .append(mInternalFailure);
     }
 
+    /**
+     * Sets an internal failure to be thrown by {@link #postAssertCalled()}.
+     *
+     * <p>This method should be used to "delay" an exception that could otherwise be thrown in a
+     * background thread.
+     */
+    protected void setInternalFailure(RuntimeException failure) {
+        mInternalFailure = Objects.requireNonNull(failure, "failure cannot be null");
+    }
+
     @Override
     public void setCalled() {
         long delta = SystemClock.elapsedRealtime() - mEpoch;
@@ -53,7 +65,7 @@ public abstract class AbstractTestSyncCallback extends AbstractSidelessTestSyncC
                 && Looper.getMainLooper().isCurrentThread()) {
             String errorMsg = "setCalled() called on main thread (" + currentThread + ")";
             logE("%s; assertCalled() will throw an IllegalStateException", errorMsg);
-            mInternalFailure = new IllegalStateException(errorMsg);
+            mInternalFailure = new CalledOnMainThreadException(errorMsg);
         }
         super.setCalled();
     }

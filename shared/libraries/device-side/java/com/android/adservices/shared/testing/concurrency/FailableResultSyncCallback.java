@@ -33,7 +33,7 @@ import java.util.Objects;
 public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<T> {
 
     @VisibleForTesting
-    static final String INJECT_RESULT_OR_FAILURE = "injectResult() or injectFailure()";
+    public static final String INJECT_RESULT_OR_FAILURE = "injectResult() or injectFailure()";
 
     @VisibleForTesting
     static final String MSG_WRONG_ERROR_RECEIVED = "expected error of type %s, but received %s";
@@ -55,16 +55,11 @@ public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<
      *     already called.
      */
     public final void injectFailure(F failure) {
-        try {
-            mCallback.injectResult(
-                    new ResultOrFailure<>(
-                            /* isResult= */ false,
-                            /* result= */ null,
-                            Objects.requireNonNull(failure)));
-        } catch (CallbackAlreadyCalledException e) {
-            throw new CallbackAlreadyCalledException(
-                    INJECT_RESULT_OR_FAILURE, getResultOrValue(e.getPreviousValue()), failure);
-        }
+        mCallback.injectResult(
+                new ResultOrFailure<>(
+                        /* isResult= */ false,
+                        /* result= */ null,
+                        Objects.requireNonNull(failure)));
     }
 
     /**
@@ -117,13 +112,8 @@ public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<
 
     @Override
     public final void injectResult(T result) {
-        try {
-            mCallback.injectResult(
-                    new ResultOrFailure<>(/* isResult= */ true, result, /* failure= */ null));
-        } catch (CallbackAlreadyCalledException e) {
-            throw new CallbackAlreadyCalledException(
-                    INJECT_RESULT_OR_FAILURE, getResultOrValue(e.getPreviousValue()), result);
-        }
+        mCallback.injectResult(
+                new ResultOrFailure<>(/* isResult= */ true, result, /* failure= */ null));
     }
 
     @Override
@@ -140,7 +130,15 @@ public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<
 
     @Override
     public final void assertCalled() throws InterruptedException {
-        mCallback.assertCalled();
+        try {
+            mCallback.assertCalled();
+        } catch (CallbackAlreadyCalledException e) {
+            // Need to switch the message in the exception
+            throw new CallbackAlreadyCalledException(
+                    INJECT_RESULT_OR_FAILURE,
+                    getResultOrValue(e.getPreviousValue()),
+                    getResultOrValue(e.getNewValue()));
+        }
     }
 
     @Override
@@ -185,49 +183,5 @@ public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<
         }
         ResultOrFailure<?, ?> rof = (ResultOrFailure<?, ?>) value;
         return rof.mIsResult ? rof.result : rof.failure;
-    }
-
-    // TODO(b/337014024): remove methods below once classes that were using SyncCallback are
-    // refactored to use the new methods
-
-    /**
-     * @deprecated use {@code injectFailure(Object)} instead.
-     */
-    @Deprecated
-    public final void injectError(F error) {
-        injectFailure(error);
-    }
-
-    /**
-     * @deprecated use {@code assertFailureReceived()} instead.
-     */
-    @Deprecated
-    public final <S extends F> S assertErrorReceived(Class<S> expectedClass)
-            throws InterruptedException {
-        return assertFailureReceived(expectedClass);
-    }
-
-    /**
-     * @deprecated use {@code assertFailureReceived()} instead.
-     */
-    @Deprecated
-    public final F assertErrorReceived() throws InterruptedException {
-        return assertFailureReceived();
-    }
-
-    /**
-     * @deprecated use {@code getFailure()} instead.
-     */
-    @Deprecated
-    public final @Nullable F getErrorReceived() {
-        return getFailure();
-    }
-
-    /**
-     * @deprecated use {@code isCalled()} instead.
-     */
-    @Deprecated
-    public final boolean isReceived() {
-        return isCalled();
     }
 }
