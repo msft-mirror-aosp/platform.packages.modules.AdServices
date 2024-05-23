@@ -15,29 +15,28 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-public final class FailableResultSyncCallbackTest
-        extends FailableResultSyncCallbackTestCase<
-                String, RuntimeException, FailableResultSyncCallback<String, RuntimeException>> {
+import org.junit.Test;
+
+public final class SyncOnSharedPreferenceChangeListenerTest
+        extends ResultTestSyncCallbackTestCase<String, SyncOnSharedPreferenceChangeListener> {
 
     @Override
     protected String newResult() {
-        return "I AM GROOT #" + getNextUniqueId();
+        return getNextUniqueId() + "- I listen, therefore I prefer!";
     }
 
     @Override
-    protected RuntimeException newFailure() {
-        return new UnsupportedOperationException("D'OH#");
+    protected SyncOnSharedPreferenceChangeListener newCallback(SyncCallbackSettings settings) {
+        return new SyncOnSharedPreferenceChangeListener();
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Class<?> getClassOfDifferentFailure() {
-        return ArithmeticException.class;
-    }
+    @Test
+    public void testOnSharedPreferenceChanged() throws Exception {
+        String key = "on song of X";
 
-    @Override
-    protected FailableResultSyncCallback<String, RuntimeException> newCallback(
-            SyncCallbackSettings settings) {
-        return new FailableResultSyncCallback<String, RuntimeException>(settings);
+        mCallback.onSharedPreferenceChanged(/* sharedPreferences= */ null, key);
+        String result = mCallback.assertResultReceived();
+
+        expect.withMessage("assertResultReceived()").that(result).isSameInstanceAs(key);
     }
 }

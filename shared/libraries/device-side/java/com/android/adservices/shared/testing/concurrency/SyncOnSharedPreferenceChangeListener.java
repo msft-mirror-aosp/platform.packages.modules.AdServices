@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.common;
+package com.android.adservices.shared.testing.concurrency;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 
-import com.android.adservices.shared.testing.SyncCallback;
-
 /** OnSharedPreferenceChangeListener implementation that blocks until the first key is received. */
-public final class SyncOnSharedPreferenceChangeListener
-        extends SyncCallback<String, RuntimeException> implements OnSharedPreferenceChangeListener {
+public final class SyncOnSharedPreferenceChangeListener extends ResultSyncCallback<String>
+        implements OnSharedPreferenceChangeListener {
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         injectResult(key);

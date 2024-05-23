@@ -23,12 +23,16 @@ import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 
 import org.junit.Test;
 
-/** Base test for classes that extend R esultSyncCallback. */
+import java.util.concurrent.atomic.AtomicInteger;
+
+/** Base test for classes that extend ResultTestSyncCallback. */
 abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallback<T>>
         extends SharedExtendedMockitoTestCase {
 
     protected static final long INJECTION_TIMEOUT_MS = 200;
     protected static final long CALLBACK_TIMEOUT_MS = INJECTION_TIMEOUT_MS + 400;
+
+    private static final AtomicInteger sNextId = new AtomicInteger();
 
     protected final R mCallback =
             newCallback(
@@ -36,13 +40,44 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
                             .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
                             .build());
 
-    protected R getCallback() {
-        return mCallback;
-    }
+    /** Gets a new instance of the callback class being test. */
+    protected abstract R newCallback(SyncCallbackSettings settings);
 
+    /** Gets a new, unique result object, preferably with a user-friendly string representation. */
     protected abstract T newResult();
 
-    protected abstract R newCallback(SyncCallbackSettings settings);
+    /**
+     * Gets a unique id.
+     *
+     * <p>Useful to make sure {@link #newResult()} return unique objects.
+     *
+     * @return
+     */
+    protected int getNextUniqueId() {
+        return sNextId.incrementAndGet();
+    }
+
+    @Test
+    public final void testNewCallback() {
+        SyncCallbackSettings settings = SyncCallbackSettings.newDefaultSettings();
+
+        R callback1 = newCallback(settings);
+        expect.withMessage("1st callback").that(callback1).isNotNull();
+
+        R callback2 = newCallback(settings);
+        expect.withMessage("2nd callback").that(callback2).isNotNull();
+        expect.withMessage("2nd callback").that(callback2).isNotSameInstanceAs(callback1);
+    }
+
+    @Test
+    public final void testNewResult() {
+        T result1 = newResult();
+        expect.withMessage("1st result").that(result1).isNotNull();
+
+        T result2 = newResult();
+        expect.withMessage("2nd result").that(result2).isNotNull();
+        expect.withMessage("2nd result").that(result2).isNotSameInstanceAs(result1);
+    }
 
     @Test
     public final void testGetSettings() throws Exception {
