@@ -36,7 +36,9 @@ public final class SimpleSyncCallbackTest extends SharedExtendedMockitoTestCase 
 
     @Test
     public void testGetCalled_multipleCallbacks() {
-        SimpleSyncCallback multiCallback = new SimpleSyncCallback(2);
+        SimpleSyncCallback multiCallback =
+                new SimpleSyncCallback(
+                        new SyncCallbackSettings.Builder().setExpectedNumberCalls(2).build());
 
         expect.withMessage("%s.isCalled() before 1st setCalled()", multiCallback)
                 .that(multiCallback.isCalled())

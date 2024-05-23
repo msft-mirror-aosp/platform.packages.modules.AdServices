@@ -16,6 +16,7 @@
 
 package com.android.adservices.tests.cts.topics.connection;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
@@ -34,6 +35,8 @@ import androidx.test.filters.FlakyTest;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -49,8 +52,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @RunWith(JUnit4.class)
-public class TopicsConnectionTest {
-    private static final String TAG = "TopicsConnectionTest";
+@EnableDebugFlag(KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED)
+public final class TopicsConnectionTest {
+    private static final String TAG = TopicsConnectionTest.class.getSimpleName();
 
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
@@ -66,6 +70,9 @@ public class TopicsConnectionTest {
 
     private static final String ADSERVICES_PACKAGE_NAME =
             AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
+
+    private static final String ACTION_RECORD_TOPICS_COMPLETE =
+            "android.adservices.debug.RECORD_TOPICS_COMPLETE";
 
     @Rule(order = 0)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
@@ -116,7 +123,8 @@ public class TopicsConnectionTest {
         enableGlobalKillSwitch(/* enabled */ false);
 
         // At beginning, Sdk1 receives no topic.
-        GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
+        GetTopicsResponse sdk1Result = getTopicsSync(advertisingTopicsClient1);
+
         assertThat(sdk1Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -164,5 +172,15 @@ public class TopicsConnectionTest {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
+    }
+
+    private GetTopicsResponse getTopicsSync(AdvertisingTopicsClient advertisingTopicsClient)
+            throws Exception {
+        BroadcastReceiverSyncCallback receiverSyncCallback =
+                new BroadcastReceiverSyncCallback(sContext);
+        receiverSyncCallback.prepare(ACTION_RECORD_TOPICS_COMPLETE);
+        GetTopicsResponse sdkResult = advertisingTopicsClient.getTopics().get();
+        receiverSyncCallback.assertResultReceived();
+        return sdkResult;
     }
 }

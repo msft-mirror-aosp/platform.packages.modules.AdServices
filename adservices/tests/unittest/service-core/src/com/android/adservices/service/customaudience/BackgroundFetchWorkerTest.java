@@ -65,6 +65,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
+import com.android.adservices.shared.testing.AnswerSyncCallback;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -634,7 +635,6 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchInSequence() throws InterruptedException, ExecutionException {
         int numEligibleCustomAudiences = 16;
         CountDownLatch completionLatch = new CountDownLatch(numEligibleCustomAudiences / 2);
@@ -675,6 +675,16 @@ public class BackgroundFetchWorkerTest {
 
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
 
+        // TODO(b/321743128): Clarify the production behavior for the logger and use existed mocking
+        // method setLatchToCountdownOnLogClose().
+        //
+        // Verify the invocations of the logging events.
+        AnswerSyncCallback<Void> loggerCloseCallback =
+                AnswerSyncCallback.forMultipleVoidAnswers(/* numberOfExpectedCalls= */ 2);
+        doAnswer(loggerCloseCallback)
+                .when(mBackgroundFetchExecutionLoggerSpy)
+                .close(anyInt(), anyInt());
+
         CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
         mExecutorService.execute(
                 () -> {
@@ -707,8 +717,7 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
         assertThat(completionCount.get()).isEqualTo(numEligibleCustomAudiences);
-        verify(mBackgroundFetchExecutionLoggerSpy, times(2))
-                .close(numEligibleCustomAudiences / 2, STATUS_SUCCESS);
+        loggerCloseCallback.assertCalled();
     }
 
     @Test

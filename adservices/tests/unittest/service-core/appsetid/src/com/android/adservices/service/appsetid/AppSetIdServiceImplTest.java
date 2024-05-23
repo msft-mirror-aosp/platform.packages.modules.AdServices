@@ -65,8 +65,8 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.IntFailureSyncCallback;
-import com.android.adservices.shared.testing.NoFailureSyncCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
 
 import org.junit.Before;
@@ -344,7 +344,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .setAppSetIdScope(0)
                         .build();
 
-        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+        ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
                 mockLogApiCallStats(mAdServicesLogger, BACKGROUND_THREAD_TIMEOUT_MS);
 
         GetAppSetIdResult getAppSetIdResult = getAppSetIdResults(appSetIdServiceImpl);

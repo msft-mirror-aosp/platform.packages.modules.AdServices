@@ -270,3 +270,126 @@ message ConsentedDebugConfiguration {
   // Whether save debug logs in response (only in non_prod)
   bool is_debug_info_in_response = 3;
 }
+
+// Context useful for logging and debugging requests.
+message LogContext {
+  // UUID for the request (as originating from client).
+  string generation_id = 1;
+
+  // Adtech debug id that can be used for correlating the request with the
+  // adtech. This will contain `buyer_debug_id` when used in context of buyer
+  // services and `seller_debug_id` when used in context of seller services.
+  string adtech_debug_id = 2;
+}
+
+// Protected App Signals ad related data that Buyer adtechs can send via
+// contextual path to control which PAS ads participate in the auction.
+message ContextualProtectedAppSignalsData {
+  // Optional.
+  // Raw Ad ids that can be used to lookup signals from the KV server.
+  repeated string ad_render_ids = 1;
+
+  // Optional.
+  // Bool indicating whether ads should also be fetched from ads retrieval
+  // service.
+  //
+  // If true, the Bidding server will send an Ad fetch request to the
+  // Ad retrieval service and the request will contain the list of ad_render_ids
+  // as an additional parameter.
+  //
+  // If false, the ad_render_ids will be sent to the TEE K/V server to fetch
+  // the ads related metadata.
+  bool fetch_ads_from_retrieval_service = 2;
+}
+
+// PAS input per buyer.
+message ProtectedAppSignalsBuyerInput {
+  ProtectedAppSignals protected_app_signals = 1;
+
+  // Contextual data related to PAS ads.
+  ContextualProtectedAppSignalsData contextual_protected_app_signals_data = 2;
+}
+
+enum ClientType {
+  UNKNOWN = 0;
+
+  // An Android device with Google Mobile Services (GMS).
+  // Note: This covers apps on Android and browsers on Android.
+  ANDROID = 1;
+
+  // Any browser.
+  BROWSER = 2;
+}
+
+// GetBidsRequest is sent by the SellerFrontEnd Service to the BuyerFrontEnd
+// service.
+message GetBidsRequest {
+  // Unencrypted request.
+  message GetBidsRawRequest {
+    // Whether this is a fake request from SellerFrontEnd service
+    // and should be dropped.
+    // Note: SellerFrontEnd service will send chaffs to a very small set of
+    // other buyers not participating in the auction. This is required for
+    // privacy reasons to prevent seller from figuring the buyers by observing
+    // the network traffic to `BuyerFrontEnd` Services, outside TEE.
+    bool is_chaff = 1;
+
+    // Buyer Input for the Buyer that includes keys for Buyer Key Value lookup
+    // and other signals for bidding. In the case of is_chaff = true, this will
+    // be noise.
+    BuyerInput buyer_input = 2;
+
+    // Information about auction (ad format, size) derived contextually.
+    // Represents a serialized string that is deserialized to a JSON object
+    // before passing to Adtech script. Copied from contextual signals sent to
+    // SellerFrontEnd service.
+    string auction_signals = 3;
+
+    // Buyer may provide additional contextual information that could help in
+    // generating bids. This is Copied from contextual signals sent to
+    // SellerFrontEnd service.
+    // The value represents a serialized string that is deserialized to a JSON
+    // object before passing to Adtech script.
+    string buyer_signals = 4;
+
+    // Seller origin.
+    // Used to verify that a valid seller is sending the request.
+    string seller = 5;
+
+    // Publisher website or app that is part of Buyer KV lookup url.
+    string publisher_name = 6;
+
+    // A boolean value which indicates if event level debug reporting should be
+    // enabled or disabled for this request.
+    bool enable_debug_reporting = 7;
+
+    // Helpful context for logging and tracing the request.
+    LogContext log_context = 8;
+
+    // Consented debugging field.
+    ConsentedDebugConfiguration consented_debug_config = 9;
+
+    // Protected App signals buyer input.
+    ProtectedAppSignalsBuyerInput protected_app_signals_buyer_input = 10;
+
+    // Client device type. Passed to the key/value services.
+    ClientType client_type = 11;
+
+    // Top level seller passed in case of component auctions. This is forwarded
+    // to generateBid.
+    string top_level_seller = 12;
+
+    // Optional.
+    // The Id is specified by the buyer to support coordinated experiments
+    // with the buyer's Key/Value services.
+    optional int32 buyer_kv_experiment_group_id = 13;
+  }
+
+  // Encrypted GetBidsRawRequest.
+  bytes request_ciphertext = 1;
+
+  // Version of the public key used for request encryption. The service
+  // needs to use private keys corresponding to same key_id to decrypt
+  // 'request_ciphertext'.
+  string key_id = 2;
+}

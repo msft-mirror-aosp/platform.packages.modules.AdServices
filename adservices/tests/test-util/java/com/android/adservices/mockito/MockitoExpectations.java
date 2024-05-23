@@ -40,7 +40,8 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
-import com.android.adservices.shared.testing.NoFailureSyncCallback;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -57,7 +58,7 @@ public final class MockitoExpectations {
      * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
      * object that blocks until that call is made.
      */
-    public static NoFailureSyncCallback<ApiCallStats> mockLogApiCallStats(
+    public static ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
             AdServicesLogger adServicesLogger) {
         return mockLogApiCallStats(adServicesLogger, DEFAULT_TIMEOUT_MS);
     }
@@ -67,9 +68,11 @@ public final class MockitoExpectations {
      * object that blocks until that call is made. This method allows to pass in a customized
      * timeout.
      */
-    public static NoFailureSyncCallback<ApiCallStats> mockLogApiCallStats(
+    public static ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
             AdServicesLogger adServicesLogger, int timeoutMs) {
-        NoFailureSyncCallback<ApiCallStats> callback = new NoFailureSyncCallback<>(timeoutMs);
+        ResultSyncCallback<ApiCallStats> callback =
+                new ResultSyncCallback<>(
+                        new SyncCallbackSettings.Builder().setMaxTimeoutMs(timeoutMs).build());
 
         doAnswer(
                         inv -> {

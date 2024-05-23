@@ -81,8 +81,8 @@ import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.shared.testing.IntFailureSyncCallback;
-import com.android.adservices.shared.testing.NoFailureSyncCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -123,7 +123,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
-    private NoFailureSyncCallback<ApiCallStats> mLogApiCallStatsCallback;
+    private ResultSyncCallback<ApiCallStats> mLogApiCallStatsCallback;
     private static final String AD_SERVICES_APK_PKG_SUFFIX = "android.adservices.api";
     private static final String EXT_SERVICES_APK_PKG_SUFFIX = "android.ext.services";
 
@@ -844,7 +844,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
                         () ->
                                 PermissionHelper.hasAccessAdServicesCommonStatePermission(
                                         any(), any()));
-        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+        ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
                 mockLogApiCallStats(mAdServicesLogger);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         GetAdServicesCommonStatesParams params =

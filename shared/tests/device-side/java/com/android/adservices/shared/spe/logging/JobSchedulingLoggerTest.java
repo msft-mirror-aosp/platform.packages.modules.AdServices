@@ -34,7 +34,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
-import com.android.adservices.shared.testing.NoFailureSyncCallback;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -101,10 +101,10 @@ public final class JobSchedulingLoggerTest extends SharedMockitoTestCase {
     public void testRecordOnScheduling_enabled() throws Exception {
         when(mMockFlags.getJobSchedulingLoggingEnabled()).thenReturn(true);
 
-        NoFailureSyncCallback<Void> callback = syncLogSchedulingStatsHelper();
+        ResultSyncCallback<Void> callback = syncLogSchedulingStatsHelper();
         mSpyJobSchedulingLogger.recordOnScheduling(JOB_ID, RESULT_CODE);
 
-        callback.assertReceived();
+        callback.assertResultReceived();
         verify(mSpyJobSchedulingLogger)
                 .logSchedulingStatsHelper(JOB_ID, RESULT_CODE, SCHEDULER_TYPE_SPE);
     }
@@ -124,10 +124,10 @@ public final class JobSchedulingLoggerTest extends SharedMockitoTestCase {
     public void testRecordOnSchedulingLagacy_enabled() throws Exception {
         when(mMockFlags.getJobSchedulingLoggingEnabled()).thenReturn(true);
 
-        NoFailureSyncCallback<Void> callback = syncLogSchedulingStatsHelper();
+        ResultSyncCallback<Void> callback = syncLogSchedulingStatsHelper();
         mSpyJobSchedulingLogger.recordOnSchedulingLegacy(JOB_ID, RESULT_CODE);
 
-        callback.assertReceived();
+        callback.assertResultReceived();
         verify(mSpyJobSchedulingLogger)
                 .logSchedulingStatsHelper(JOB_ID, RESULT_CODE, SCHEDULER_TYPE_JOB_SCHEDULER);
     }
@@ -162,8 +162,8 @@ public final class JobSchedulingLoggerTest extends SharedMockitoTestCase {
         expect.that(mSpyJobSchedulingLogger.shouldLog()).isTrue();
     }
 
-    private NoFailureSyncCallback<Void> syncLogSchedulingStatsHelper() {
-        NoFailureSyncCallback<Void> callback = new NoFailureSyncCallback<>();
+    private ResultSyncCallback<Void> syncLogSchedulingStatsHelper() {
+        ResultSyncCallback<Void> callback = new ResultSyncCallback<>();
 
         doAnswer(
                         invocation -> {

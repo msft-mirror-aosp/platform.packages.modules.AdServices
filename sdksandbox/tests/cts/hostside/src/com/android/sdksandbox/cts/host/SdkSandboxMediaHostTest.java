@@ -83,6 +83,8 @@ public class SdkSandboxMediaHostTest extends BaseHostJUnit4Test {
 
         getDevice().reboot();
         getDevice().waitForBootComplete(TIME_OUT);
+        // Explicitly update device config to ensure SDK Sandbox is enabled
+        getDevice().executeShellCommand("device_config put adservices disable_sdk_sandbox false");
 
         runPhase("testAudioFocus");
     }

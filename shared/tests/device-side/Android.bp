@@ -32,7 +32,6 @@ android_test {
         "adservices-shared-proto-utils",
         "adservices-shared-spe",
         "adservices-shared-storage",
-        "adservices-shared-sync-callback",
         "adservices-shared-testing",
         "adservices-shared-util",
         "androidx.test.core",

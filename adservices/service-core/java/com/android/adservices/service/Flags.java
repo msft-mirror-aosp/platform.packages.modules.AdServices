@@ -2720,7 +2720,7 @@ public interface Flags extends ModuleSharedFlags {
 
     /** Manifest URL for encryption keys file group registered with MDD. */
     String MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/3210/0c19c2a06422c21070192580a136d433ba3ae7f8";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/4543/e9d118728752e6a6bfb5d7d8d1520807591f0717";
 
     /** Returns manifest URL for encryption keys file group registered with MDD. */
     default String getMddEncryptionKeysManifestFileUrl() {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.concurrency;
+package com.android.adservices.shared.testing.concurrency;
 
 import static org.junit.Assert.assertThrows;
 
@@ -51,6 +51,11 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
             "waitCalled(" + LONGER_TIMEOUT_MS + ", " + MILLISECONDS + ") returning";
 
     private final ConcreteSyncCallback mSingleCallback = new ConcreteSyncCallback();
+
+    @Test
+    public void testInvalidConstructor() throws Exception {
+        assertThrows(NullPointerException.class, () -> new AbstractSyncCallback(null) {});
+    }
 
     @Test
     public void testIsCalled() throws Exception {
@@ -207,9 +212,21 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testToString_containsSettings() {
+        SyncCallbackSettings settings =
+                new SyncCallbackSettings.Builder()
+                        .setExpectedNumberCalls(42)
+                        .setMaxTimeoutMs(108)
+                        .build();
+        ConcreteSyncCallback callback = new ConcreteSyncCallback(settings);
+
+        expect.withMessage("toString()").that(callback.toString()).contains(settings.toString());
+    }
+
+    @Test
     public void testCustomizeToString() {
         AbstractSyncCallback callback =
-                new AbstractSyncCallback() {
+                new AbstractSyncCallback(new SyncCallbackSettings.Builder().build()) {
                     protected void customizeToString(StringBuilder string) {
                         string.append("I AM GROOT");
                     }
@@ -242,7 +259,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
                 .isTrue();
     }
 
-    // TODO(b/285014040): move to superclass
+    // TODO(b/285014040): move to ConcurrencyHelper
     private void runLater(int when, Runnable r) {
         startNewThread(
                 () -> {
@@ -251,7 +268,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
                 });
     }
 
-    // TODO(b/285014040): move to superclass
+    // TODO(b/285014040): move to ConcurrencyHelper
     private Thread startNewThread(Runnable r) {
         String threadName = mLog.getTag() + "-runLaterThread-" + sThreadId.incrementAndGet();
         mLog.d("Starting new thread (%s) to run %s", threadName, r);
@@ -285,7 +302,14 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
         }
 
         private ConcreteSyncCallback(int numberOfExpectedCalls) {
-            super(numberOfExpectedCalls);
+            this(
+                    new SyncCallbackSettings.Builder()
+                            .setExpectedNumberCalls(numberOfExpectedCalls)
+                            .build());
+        }
+
+        private ConcreteSyncCallback(SyncCallbackSettings settings) {
+            super(settings);
         }
 
         public void expectLogCalls(String... messages) {

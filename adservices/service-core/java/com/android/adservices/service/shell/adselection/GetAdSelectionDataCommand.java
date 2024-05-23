@@ -34,7 +34,7 @@ import java.io.PrintWriter;
 import java.util.Map;
 
 public class GetAdSelectionDataCommand extends AbstractShellCommand {
-    @VisibleForTesting public static final String CMD = "get-ad-selection-data";
+    @VisibleForTesting public static final String CMD = "get_ad_selection_data";
 
     public static final String HELP =
             AdSelectionShellCommandFactory.COMMAND_PREFIX

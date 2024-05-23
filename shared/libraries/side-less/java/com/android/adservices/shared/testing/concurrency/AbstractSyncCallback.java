@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.concurrency;
+package com.android.adservices.shared.testing.concurrency;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+// NOTE: this class is basically an abstraction of CountdownLatch and doesn't have any testing
+// specific characteristics, so it could be used on production code as well.
 /** Base implementation for {@link SyncCallback}. */
 public abstract class AbstractSyncCallback implements SyncCallback {
 
@@ -30,19 +33,15 @@ public abstract class AbstractSyncCallback implements SyncCallback {
 
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
 
+    protected final SyncCallbackSettings mSettings;
+
     private final String mId = getClass().getSimpleName() + '#' + sIdGenerator.incrementAndGet();
-    private final int mNumberExpectedCalls;
     private final CountDownLatch mLatch;
 
-    /** Default constructor (for callbacks that should be called just once). */
-    public AbstractSyncCallback() {
-        this(1);
-    }
-
-    /** Constructor for callbacks that should be called multiple times. */
-    public AbstractSyncCallback(int numberOfExpectedCalls) {
-        mNumberExpectedCalls = numberOfExpectedCalls;
-        mLatch = new CountDownLatch(mNumberExpectedCalls);
+    /** Default constructor. */
+    public AbstractSyncCallback(SyncCallbackSettings settings) {
+        mSettings = Objects.requireNonNull(settings, "settings cannot be null");
+        mLatch = new CountDownLatch(mSettings.getExpectedNumberCalls());
     }
 
     /**
@@ -54,6 +53,18 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     /** Gets a unique id identifying the callback - used for logging / debugging purposes. */
     public final String getId() {
         return mId;
+    }
+
+    // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
+    /**
+     * Convenience method to log a debug message.
+     *
+     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
+     * by {@link #toString()}) in the message.
+     */
+    @FormatMethod
+    public void logE(@FormatString String msgFmt, Object... msgArgs) {
+        // TODO(b/280460130): use side-less Logger so it's not empty
     }
 
     // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
@@ -126,8 +137,8 @@ public abstract class AbstractSyncCallback implements SyncCallback {
                 new StringBuilder()
                         .append('[')
                         .append(mId)
-                        .append(": numberExpectedCalls=")
-                        .append(mNumberExpectedCalls)
+                        .append(": ")
+                        .append(mSettings)
                         .append(", missingCalls=")
                         .append(mLatch.getCount());
         customizeToString(string);
