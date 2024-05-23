@@ -15,14 +15,20 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import static com.android.adservices.shared.testing.concurrency.AbstractSyncCallback.LOG_TAG;
 import static com.android.adservices.shared.util.Preconditions.checkState;
 
 import android.os.IBinder;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
+import java.util.Locale;
 import java.util.Objects;
 
 // TODO(b/337014024): make it final once once classes that were using SyncCallback are refactored?
@@ -146,6 +152,30 @@ public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<
     @Override
     public final String getId() {
         return mCallback.getId();
+    }
+
+    @FormatMethod
+    @Override
+    public final void logE(@FormatString String msgFmt, Object... msgArgs) {
+        String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
+        Log.e(LOG_TAG, String.format(Locale.ENGLISH, "%s: %s", toString(), msg));
+    }
+
+    @FormatMethod
+    @Override
+    public final void logD(@FormatString String msgFmt, Object... msgArgs) {
+        String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
+        Log.d(
+                LOG_TAG,
+                String.format(
+                        Locale.ENGLISH, "[%s#%s]: %s", getClass().getSimpleName(), getId(), msg));
+    }
+
+    @FormatMethod
+    @Override
+    public final void logV(@FormatString String msgFmt, Object... msgArgs) {
+        String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
+        Log.v(LOG_TAG, String.format(Locale.ENGLISH, "%s: %s", toString(), msg));
     }
 
     @Override

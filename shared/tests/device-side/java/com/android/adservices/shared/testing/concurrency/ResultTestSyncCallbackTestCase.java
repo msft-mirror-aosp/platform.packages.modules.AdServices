@@ -19,13 +19,13 @@ import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.shared.SharedMockitoTestCase;
+import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 
 import org.junit.Test;
 
 /** Base test for classes that extend R esultSyncCallback. */
 abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallback<T>>
-        extends SharedMockitoTestCase {
+        extends SharedExtendedMockitoTestCase {
 
     protected static final long INJECTION_TIMEOUT_MS = 200;
     protected static final long CALLBACK_TIMEOUT_MS = INJECTION_TIMEOUT_MS + 400;

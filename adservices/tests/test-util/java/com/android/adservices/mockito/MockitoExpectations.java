@@ -16,7 +16,7 @@
 
 package com.android.adservices.mockito;
 
-import static com.android.adservices.shared.testing.SyncCallback.DEFAULT_TIMEOUT_MS;
+import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -69,7 +69,7 @@ public final class MockitoExpectations {
      * timeout.
      */
     public static ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
-            AdServicesLogger adServicesLogger, int timeoutMs) {
+            AdServicesLogger adServicesLogger, long timeoutMs) {
         ResultSyncCallback<ApiCallStats> callback =
                 new ResultSyncCallback<>(
                         new SyncCallbackSettings.Builder().setMaxTimeoutMs(timeoutMs).build());

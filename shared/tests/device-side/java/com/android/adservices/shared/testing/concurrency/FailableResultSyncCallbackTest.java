@@ -16,10 +16,17 @@
 package com.android.adservices.shared.testing.concurrency;
 
 import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
+import static com.android.adservices.shared.testing.concurrency.AbstractSyncCallback.LOG_TAG;
 import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.INJECT_RESULT_OR_FAILURE;
 import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.MSG_WRONG_ERROR_RECEIVED;
 
 import static org.junit.Assert.assertThrows;
+
+import android.util.Log;
+
+import com.android.adservices.mockito.LogInterceptor;
+import com.android.adservices.shared.testing.LogEntry.Level;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 
@@ -187,6 +194,55 @@ public final class FailableResultSyncCallbackTest
                 .isEqualTo(
                         String.format(
                                 MSG_WRONG_ERROR_RECEIVED, ArithmeticException.class, mFailure));
+    }
+
+    @SpyStatic(Log.class)
+    @Test
+    public void testLogE() {
+        String tag = LOG_TAG;
+        LogInterceptor logInterceptor = mocker.interceptLogE(tag);
+
+        mCallback.logE("Answer=%d", 42);
+
+        expect.withMessage("Log.*() calls to tag %s", tag)
+                .that(logInterceptor.getAllEntries(tag))
+                .hasSize(1);
+        expect.withMessage("Log.e() calls to tag %s", tag)
+                .that(logInterceptor.getPlainMessages(tag, Level.ERROR))
+                .containsExactly(mCallback + ": Answer=42");
+    }
+
+    @SpyStatic(Log.class)
+    @Test
+    public void testLogD() {
+        String tag = LOG_TAG;
+        LogInterceptor logInterceptor = mocker.interceptLogD(tag);
+
+        mCallback.logD("Answer=%d", 42);
+
+        expect.withMessage("Log.*() calls to tag %s", tag)
+                .that(logInterceptor.getAllEntries(tag))
+                .hasSize(1);
+        expect.withMessage("Log.d() calls to tag %s", tag)
+                .that(logInterceptor.getPlainMessages(tag, Level.DEBUG))
+                .containsExactly(
+                        "[FailableResultSyncCallback#" + mCallback.getId() + "]: Answer=42");
+    }
+
+    @SpyStatic(Log.class)
+    @Test
+    public void testLogV() {
+        String tag = LOG_TAG;
+        LogInterceptor logInterceptor = mocker.interceptLogV(tag);
+
+        mCallback.logV("Answer=%d", 42);
+
+        expect.withMessage("Log.*() calls to tag %s", tag)
+                .that(logInterceptor.getAllEntries(tag))
+                .hasSize(1);
+        expect.withMessage("Log.v() calls to tag %s", tag)
+                .that(logInterceptor.getPlainMessages(tag, Level.VERBOSE))
+                .containsExactly(mCallback + ": Answer=42");
     }
 
     @Test
