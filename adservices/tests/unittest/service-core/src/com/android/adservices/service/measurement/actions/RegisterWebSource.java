@@ -49,6 +49,9 @@ public final class RegisterWebSource implements Action {
     public RegisterWebSource(JSONObject obj) throws JSONException {
         JSONObject regParamsJson =
                 obj.getJSONObject(TestFormatJsonMapping.REGISTRATION_REQUEST_KEY);
+        // We use a specified source_params list for registration URLs rather than relying on the
+        // request responses list in the test JSON because some testing consists of having these
+        // params differ from redirect sequences that are elements in the responses list.
         JSONArray sourceParamsArray =
                 regParamsJson.getJSONArray(TestFormatJsonMapping.SOURCE_PARAMS_REGISTRATIONS_KEY);
         Uri appDestination =
