@@ -139,6 +139,7 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         Objects.requireNonNull(string)
                 .append("id=")
                 .append(mId)
+                .append(", ")
                 .append(mSettings)
                 .append(", missingCalls=")
                 .append(mLatch.getCount());

@@ -91,8 +91,8 @@ public final class AbstractTestSyncCallbackTest extends SharedExtendedMockitoTes
 
         runOnMainThread(() -> callback.setCalled());
 
-        IllegalStateException thrown =
-                assertThrows(IllegalStateException.class, () -> callback.assertCalled());
+        CalledOnMainThreadException thrown =
+                assertThrows(CalledOnMainThreadException.class, () -> callback.assertCalled());
 
         expect.withMessage("thrownn")
                 .that(thrown)
@@ -117,6 +117,25 @@ public final class AbstractTestSyncCallbackTest extends SharedExtendedMockitoTes
         runOnMainThread(() -> callback.setCalled());
 
         callback.assertCalled();
+    }
+
+    @Test
+    public void testPostAssertCalled_afterSetInternalFailure() throws Exception {
+        ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
+        RuntimeException failure = new RuntimeException("D'OH!");
+
+        callback.setInternalFailure(failure);
+        RuntimeException thrown =
+                assertThrows(RuntimeException.class, () -> callback.postAssertCalled());
+
+        expect.withMessage("exception").that(thrown).isSameInstanceAs(failure);
+    }
+
+    @Test
+    public void testSetInternalFailure_null() throws Exception {
+        ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
+
+        assertThrows(NullPointerException.class, () -> callback.setInternalFailure(null));
     }
 
     @Test

@@ -15,6 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
 import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.INJECT_RESULT_OR_FAILURE;
 import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.MSG_WRONG_ERROR_RECEIVED;
 
@@ -37,8 +38,9 @@ public final class FailableResultSyncCallbackTest
     }
 
     @Override
-    protected FailableResultSyncCallback<Object, RuntimeException> newCallback() {
-        return new FailableResultSyncCallback<Object, RuntimeException>();
+    protected FailableResultSyncCallback<Object, RuntimeException> newCallback(
+            SyncCallbackSettings settings) {
+        return new FailableResultSyncCallback<Object, RuntimeException>(settings);
     }
 
     @Test
@@ -54,7 +56,8 @@ public final class FailableResultSyncCallbackTest
                 .that(toStringBefore)
                 .contains("(no failure yet)");
 
-        mCallback.injectResult(null);
+        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(null));
+        mCallback.assertCalled();
 
         expect.withMessage("%s.getFailure() after injectResult()", mCallback)
                 .that(mCallback.getFailure())
@@ -88,7 +91,7 @@ public final class FailableResultSyncCallbackTest
                 .that(mCallback.isCalled())
                 .isFalse();
 
-        mCallback.injectFailure(mFailure);
+        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectFailure(mFailure));
 
         RuntimeException failure = mCallback.assertFailureReceived();
 
@@ -120,35 +123,36 @@ public final class FailableResultSyncCallbackTest
     @Test
     public void testInjectFailure_calledTwice() {
         mCallback.injectFailure(mFailure);
+        mCallback.injectFailure(mAnotherFailure);
 
         CallbackAlreadyCalledException thrown =
                 assertThrows(
                         CallbackAlreadyCalledException.class,
-                        () -> mCallback.injectFailure(mAnotherFailure));
+                        () -> mCallback.assertFailureReceived());
 
-        expect.withMessage("method name on exception")
-                .that(thrown.getName())
-                .isEqualTo(INJECT_RESULT_OR_FAILURE);
-        expect.withMessage("previous value on exception")
-                .that(thrown.getPreviousValue())
-                .isSameInstanceAs(mFailure);
-        expect.withMessage("new value on exception")
-                .that(thrown.getNewValue())
-                .isSameInstanceAs(mAnotherFailure);
+        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, mFailure, mAnotherFailure);
     }
 
     @Test
     public void testInjectFailure_calledAfterInjectResult() {
         mCallback.injectResult(null);
+        mCallback.injectFailure(mFailure);
 
-        assertThrows(IllegalStateException.class, () -> mCallback.injectFailure(mFailure));
+        CallbackAlreadyCalledException thrown =
+                assertThrows(CallbackAlreadyCalledException.class, () -> mCallback.assertCalled());
+
+        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, null, mFailure);
     }
 
     @Test
     public void testInjectResult_calledAfterInjectFailure() {
         mCallback.injectFailure(mFailure);
+        mCallback.injectResult(null);
 
-        assertThrows(IllegalStateException.class, () -> mCallback.injectResult(null));
+        CallbackAlreadyCalledException thrown =
+                assertThrows(CallbackAlreadyCalledException.class, () -> mCallback.assertCalled());
+
+        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, mFailure, null);
     }
 
     @Test
