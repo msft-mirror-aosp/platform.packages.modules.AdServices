@@ -139,6 +139,13 @@ public final class AbstractTestSyncCallbackTest extends SharedExtendedMockitoTes
     }
 
     @Test
+    public void testAsBinder() {
+        ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
+
+        expect.withMessage("asBinder()").that(callback.asBinder()).isNull();
+    }
+
+    @Test
     public void testToString() {
         ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
 

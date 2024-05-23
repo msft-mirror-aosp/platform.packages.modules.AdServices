@@ -32,6 +32,11 @@ public final class SyncCallbackSettings {
     private final long mMaxTimeoutMs;
     private final boolean mFailIfCalledOnMainThread;
 
+    /** Factory method to get a settings object with default values. */
+    public static SyncCallbackSettings newDefaultSettings() {
+        return new SyncCallbackSettings.Builder().build();
+    }
+
     private SyncCallbackSettings(Builder builder) {
         mExpectedNumberCalls = builder.mExpectedNumberCalls;
         mMaxTimeoutMs = builder.mMaxTimeoutMs;

@@ -16,6 +16,8 @@
 
 package com.android.adservices.shared.testing.concurrency;
 
+import android.os.IBinder;
+
 import androidx.annotation.Nullable;
 
 // TODO(b/337014024): get rid of this and use AbstractResultSyncCallback instead
@@ -45,4 +47,12 @@ interface ResultTestSyncCallback<T> extends TestSyncCallback {
      */
     @Nullable
     T getResult();
+
+    /**
+     * Convenience method for callbacks used to implement binder stubs.
+     *
+     * @return {@code null} by default, but subclasses can extend.
+     */
+    @Nullable
+    IBinder asBinder();
 }

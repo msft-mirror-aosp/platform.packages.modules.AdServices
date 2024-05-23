@@ -175,4 +175,9 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
 
         thrown.assertWith(expect, "injectResult()", null, newResult);
     }
+
+    @Test
+    public final void testAsBinder() {
+        expect.withMessage("asBinder()").that(mCallback.asBinder()).isNull();
+    }
 }

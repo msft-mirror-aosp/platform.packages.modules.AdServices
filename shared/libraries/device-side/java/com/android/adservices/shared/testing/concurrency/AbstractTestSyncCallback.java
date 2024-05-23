@@ -15,6 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
 
@@ -75,5 +76,15 @@ public abstract class AbstractTestSyncCallback extends AbstractSidelessTestSyncC
         if (mInternalFailure != null) {
             throw mInternalFailure;
         }
+    }
+
+    /**
+     * Convenience method for callbacks used to implement binder stubs.
+     *
+     * @return {@code null} by default, but subclasses can extend.
+     */
+    @Nullable
+    public IBinder asBinder() {
+        return null;
     }
 }
