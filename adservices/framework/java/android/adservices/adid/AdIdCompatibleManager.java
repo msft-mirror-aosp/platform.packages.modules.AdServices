@@ -32,7 +32,7 @@ import android.os.SystemClock;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;

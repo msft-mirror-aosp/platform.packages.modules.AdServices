@@ -17,31 +17,34 @@
 package com.android.adservices.shared.common;
 
 import com.android.adservices.shared.SharedUnitTestCase;
-import com.android.adservices.shared.common.exception.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ProviderServiceInternalException;
 
 import org.junit.Test;
 
-public class ServiceUnavailableExceptionTest extends SharedUnitTestCase {
+/** Unit tests for {@link ProviderServiceInternalExceptionTest} */
+public final class ProviderServiceInternalExceptionTest extends SharedUnitTestCase {
 
     public static final String ERROR_MESSAGE = "error_message";
 
     @Test
-    public void testAdServicesUnavailableException_default() {
-        ServiceUnavailableException exception = new ServiceUnavailableException();
+    public void testProviderServiceInternalException_default() {
+        ProviderServiceInternalException exception = new ProviderServiceInternalException();
 
         expect.that(exception).hasMessageThat().isNull();
     }
 
     @Test
-    public void testAdServicesUnavailableException_correctErrorMsg() {
-        ServiceUnavailableException exception = new ServiceUnavailableException(ERROR_MESSAGE);
+    public void testProviderServiceInternalException_correctErrorMsg() {
+        ProviderServiceInternalException exception =
+                new ProviderServiceInternalException(ERROR_MESSAGE);
 
         expect.that(exception).hasMessageThat().isEqualTo(ERROR_MESSAGE);
     }
 
     @Test
-    public void testAdServicesUnavailableException_isOfTypeIllegalStateException() {
-        ServiceUnavailableException exception = new ServiceUnavailableException(ERROR_MESSAGE);
+    public void testProviderServiceInternalException_isOfTypeIllegalStateException() {
+        ProviderServiceInternalException exception =
+                new ProviderServiceInternalException(ERROR_MESSAGE);
 
         expect.that(exception).isInstanceOf(IllegalStateException.class);
     }
