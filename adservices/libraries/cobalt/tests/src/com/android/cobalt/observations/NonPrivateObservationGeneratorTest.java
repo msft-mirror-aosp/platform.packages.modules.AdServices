@@ -22,7 +22,7 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.cobalt.data.EventRecordAndSystemProfile;
 import com.android.cobalt.data.EventVector;
-import com.android.cobalt.observations.testing.FakeSecureRandom;
+import com.android.cobalt.testing.observations.FakeSecureRandom;
 
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.IntegerObservation;

@@ -86,6 +86,7 @@ public final class SourceFixture {
                 .setSourceType(ValidSourceParams.SOURCE_TYPE)
                 .setInstallAttributionWindow(ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW)
                 .setInstallCooldownWindow(ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
+                .setReinstallReattributionWindow(ValidSourceParams.REINSTALL_REATTRIBUTION_WINDOW)
                 .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
                 .setFilterDataString(ValidSourceParams.buildFilterDataString())
@@ -137,6 +138,7 @@ public final class SourceFixture {
         public static final List<String> ATTRIBUTION_SCOPES = List.of("1", "2", "3");
         public static final Long ATTRIBUTION_SCOPE_LIMIT = 10L;
         public static final Long MAX_NUM_VIEW_STATES = 1000L;
+        public static final Long REINSTALL_REATTRIBUTION_WINDOW = 841839879274L;
 
         public static final String buildAggregateSource() {
             try {

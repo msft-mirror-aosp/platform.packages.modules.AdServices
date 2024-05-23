@@ -29,8 +29,8 @@ import com.android.cobalt.data.ObservationGenerator;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.StringListEntry;
 import com.android.cobalt.domain.Project;
-import com.android.cobalt.observations.testing.FakeSecureRandom;
 import com.android.cobalt.system.SystemData;
+import com.android.cobalt.testing.observations.FakeSecureRandom;
 
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.ReportDefinition;

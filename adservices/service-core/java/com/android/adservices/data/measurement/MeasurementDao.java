@@ -680,6 +680,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(SourceContract.EVENT_TIME, source.getEventTime());
         values.put(SourceContract.EXPIRY_TIME, source.getExpiryTime());
         values.put(SourceContract.EVENT_REPORT_WINDOW, source.getEventReportWindow());
+        values.put(
+                SourceContract.REINSTALL_REATTRIBUTION_WINDOW,
+                source.getReinstallReattributionWindow());
         values.put(SourceContract.AGGREGATABLE_REPORT_WINDOW, source.getAggregatableReportWindow());
         values.put(SourceContract.PRIORITY, source.getPriority());
         values.put(SourceContract.STATUS, source.getStatus());

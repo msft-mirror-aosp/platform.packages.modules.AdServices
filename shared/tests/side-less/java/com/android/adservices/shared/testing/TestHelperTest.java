@@ -20,20 +20,23 @@ import static com.android.adservices.shared.testing.TestHelper.getAnnotation;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.when;
 
-import com.android.adservices.shared.SharedUnitTestCase;
+import com.android.adservices.shared.SharedMockitoTestCase;
 
 import com.google.auto.value.AutoAnnotation;
 
 import org.junit.Test;
 import org.junit.runner.Description;
+import org.mockito.Mock;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-public final class TestHelperTest extends SharedUnitTestCase {
+public final class TestHelperTest extends SharedMockitoTestCase {
+    @Mock private Description mMockDescription;
 
     @Test
     public void testGetTestName_null() {
@@ -132,6 +135,31 @@ public final class TestHelperTest extends SharedUnitTestCase {
         expect.withMessage("getAnnotation(%s).value()", test)
                 .that(annotation.value())
                 .isEqualTo("A class has an annotation!");
+    }
+
+    @Test
+    public void testIfNotTest_withNonTestDescription_throwsException() {
+        when(mMockDescription.isTest()).thenReturn(false);
+
+        Exception exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> TestHelper.throwIfNotTest(mMockDescription));
+
+        expect.that(exception)
+                .hasMessageThat()
+                .isEqualTo(
+                        "This rule can only be applied to individual tests, it cannot be used as"
+                                + " @ClassRule or in a test suite");
+    }
+
+    @Test
+    public void testIfNotTest_withTestDescription_throwsNoException() {
+        Description test =
+                Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest");
+
+        // No exception should be thrown for test.
+        TestHelper.throwIfNotTest(test);
     }
 
     private static class AClassHasNoNothingAtAll {}

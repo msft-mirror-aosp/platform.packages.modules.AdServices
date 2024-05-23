@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell.customaudience;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -102,7 +104,10 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
         }
         ShellCommand command = mAllCommandsMap.get(cmd);
         if (!mIsCustomAudienceCliEnabled) {
-            return new NoOpShellCommand(cmd, command.getMetricsLoggerCommand());
+            return new NoOpShellCommand(
+                    cmd,
+                    command.getMetricsLoggerCommand(),
+                    KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED);
         }
         return command;
     }

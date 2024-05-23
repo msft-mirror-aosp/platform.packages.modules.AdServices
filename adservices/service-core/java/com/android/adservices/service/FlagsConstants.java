@@ -1292,6 +1292,12 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE =
             "measurement_enable_attribution_scope";
 
+    public static final String KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION =
+            "measurement_enable_reinstall_reattribution";
+
+    public static final String KEY_MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW =
+            "measurement_max_reinstall_reattribution_window";
+
     public static final String KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK =
             "measurement_enable_navigation_reporting_origin_check";
 

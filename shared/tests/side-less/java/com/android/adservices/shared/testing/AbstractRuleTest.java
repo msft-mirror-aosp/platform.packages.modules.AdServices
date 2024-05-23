@@ -55,7 +55,7 @@ public final class AbstractRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testRunSafely_noErrors() throws Exception {
+    public void testRunSafely_noErrors() {
         List<Throwable> errors = new ArrayList<>();
 
         mRule.runSafely(errors, () -> System.out.println("I'm fine"));
@@ -64,7 +64,7 @@ public final class AbstractRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testRunSafely_withError() throws Exception {
+    public void testRunSafely_withError() {
         List<Throwable> errors = new ArrayList<>();
         RuntimeException exception = new RuntimeException("D'OH");
 
