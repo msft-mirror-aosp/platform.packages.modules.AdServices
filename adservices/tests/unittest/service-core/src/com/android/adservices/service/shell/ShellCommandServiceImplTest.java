@@ -54,8 +54,8 @@ import com.android.adservices.service.shell.customaudience.CustomAudienceShellCo
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.ShellCommandStats;
-import com.android.adservices.shared.testing.NoFailureSyncCallback;
 import com.android.adservices.shared.testing.common.BlockingCallableWrapper;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 
 import com.google.common.collect.ImmutableList;
 
@@ -238,7 +238,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                 mSyncIShellCommandCallback);
 
         // If we are here the command is running in a different thread and is still blocked
-        expect.that(mSyncIShellCommandCallback.getResultReceived()).isNull();
+        expect.that(mSyncIShellCommandCallback.getResult()).isNull();
 
         // Letting the command complete
         waitingCommand.startWork();
@@ -298,7 +298,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                 new ShellCommandParam(commandPrefix, "cmd", "param"), mSyncIShellCommandCallback);
 
         // If we are here the command is running in a different thread and is still blocked
-        expect.that(mSyncIShellCommandCallback.getResultReceived()).isNull();
+        expect.that(mSyncIShellCommandCallback.getResult()).isNull();
 
         // Waiting for the timeout to trigger
         Thread.sleep(1500L);
@@ -382,7 +382,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     }
 
     private static final class SyncIShellCommandCallback
-            extends NoFailureSyncCallback<ShellCommandResult> implements IShellCommandCallback {
+            extends ResultSyncCallback<ShellCommandResult> implements IShellCommandCallback {
 
         @Override
         public void onResult(ShellCommandResult response) {

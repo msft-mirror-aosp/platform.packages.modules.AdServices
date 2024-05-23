@@ -20,7 +20,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 
-final class ConcurrencyHelper {
+public final class ConcurrencyHelper {
 
     private static int sThreadId;
 
