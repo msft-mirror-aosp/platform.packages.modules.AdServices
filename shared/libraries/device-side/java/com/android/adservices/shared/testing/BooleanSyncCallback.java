@@ -16,8 +16,10 @@
 
 package com.android.adservices.shared.testing;
 
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
+
 /**
  * Custom {@link SyncCallback} implementation that doesn't expect an exception to be thrown and
  * injects a {@code boolean}
  */
-public class BooleanSyncCallback extends SyncCallback<Boolean, Void> {}
+public class BooleanSyncCallback extends ResultSyncCallback<Boolean> {}

@@ -16,6 +16,7 @@
 
 package com.android.adservices.shared.testing;
 
+import static com.android.adservices.shared.testing.concurrency.AbstractSyncCallback.LOG_TAG;
 import static com.android.adservices.shared.util.Preconditions.checkState;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 
@@ -69,7 +70,7 @@ public final class JobServiceCallback {
         assertCallbackCalled("JobStoppedCallback", mJobStoppedCallback);
     }
 
-    private <T extends SyncCallback> T setCallback(
+    private <T extends BooleanSyncCallback> T setCallback(
             String callbackInstance, T callback, Supplier<T> callbackSupplier) {
         checkState(
                 callback == null,
@@ -79,7 +80,7 @@ public final class JobServiceCallback {
         return callbackSupplier.get();
     }
 
-    private void assertCallbackCalled(String callbackInstance, SyncCallback callback)
+    private void assertCallbackCalled(String callbackInstance, BooleanSyncCallback callback)
             throws InterruptedException {
         checkState(callbackInstance != null, "%s not set yet.", callbackInstance);
 
@@ -112,7 +113,7 @@ public final class JobServiceCallback {
             doAnswer(
                             unusedInvocation -> {
                                 Log.d(
-                                        TAG,
+                                        LOG_TAG,
                                         "Calling callback.onJobFinished() on " + unusedInvocation);
                                 this.onJobFinished();
                                 return null;
@@ -130,7 +131,7 @@ public final class JobServiceCallback {
      * <p>Use a {@link Boolean} type as a place holder for received on success. This {@link Boolean}
      * is used for checking a method has been called when calling {@link #assertResultReceived()}
      */
-    private static class JobStoppedCallback extends BooleanSyncCallback {
+    private static final class JobStoppedCallback extends BooleanSyncCallback {
 
         /**
          * Injects a boolean {@code false} as Result. This is used for checking a stub method is
@@ -147,7 +148,7 @@ public final class JobServiceCallback {
         private JobStoppedCallback(JobService jobService) {
             ExtendedMockito.doAnswer(
                             invocation -> {
-                                Log.d(TAG, "Calling callback.onJobStopped() on " + invocation);
+                                Log.d(LOG_TAG, "Calling callback.onJobStopped() on " + invocation);
                                 invocation.callRealMethod();
                                 this.onJobStopped();
                                 return null;
