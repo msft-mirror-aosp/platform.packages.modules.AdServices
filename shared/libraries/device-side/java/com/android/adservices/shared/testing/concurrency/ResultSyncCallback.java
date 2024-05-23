@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @param <T> type of the result.
  */
-public final class ResultSyncCallback<T> extends AbstractTestSyncCallback {
+public class ResultSyncCallback<T> extends AbstractTestSyncCallback {
 
     private final AtomicReference<Optional<T>> mResult = new AtomicReference<>();
 
@@ -43,7 +43,7 @@ public final class ResultSyncCallback<T> extends AbstractTestSyncCallback {
      *
      * @throws IllegalStateException if it was already called.
      */
-    public void injectResult(@Nullable T result) {
+    public final void injectResult(@Nullable T result) {
         logV("Injecting %s (mResult=%s)", result, mResult);
         Optional<T> newResult = Optional.fromNullable(result);
         if (!mResult.compareAndSet(null, newResult)) {
@@ -59,7 +59,7 @@ public final class ResultSyncCallback<T> extends AbstractTestSyncCallback {
      *
      * @return the result
      */
-    public @Nullable T assertResultReceived() throws InterruptedException {
+    public final @Nullable T assertResultReceived() throws InterruptedException {
         assertCalled();
         return getResult();
     }
@@ -68,13 +68,13 @@ public final class ResultSyncCallback<T> extends AbstractTestSyncCallback {
      * Gets the result returned by {@link #injectResult(Object)} (or {@code null} if it was not
      * called yet).
      */
-    public @Nullable T getResult() {
+    public final @Nullable T getResult() {
         Optional<T> result = mResult.get();
         return result == null ? null : result.orNull();
     }
 
     @Override
-    public void setCalled() {
+    public final void setCalled() {
         throw new UnsupportedOperationException("should call injectResult() instead");
     }
 }
