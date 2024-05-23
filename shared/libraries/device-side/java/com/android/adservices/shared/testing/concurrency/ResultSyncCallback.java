@@ -28,9 +28,15 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class ResultSyncCallback<T> extends AbstractTestSyncCallback {
 
-    // NOTE: add more constructors "on demand"
-
     private final AtomicReference<Optional<T>> mResult = new AtomicReference<>();
+
+    public ResultSyncCallback() {
+        super(new SyncCallbackSettings.Builder().build());
+    }
+
+    public ResultSyncCallback(SyncCallbackSettings settings) {
+        super(settings);
+    }
 
     /**
      * Sets the result.
