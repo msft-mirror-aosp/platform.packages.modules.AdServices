@@ -15,15 +15,18 @@
  */
 package com.android.adservices.shared.testing;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.shared.SharedMockitoTestCase;
+import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.meta_testing.SimpleStatement;
 
 import com.google.common.collect.ImmutableList;
@@ -34,12 +37,14 @@ import org.mockito.Mock;
 
 import java.util.List;
 
-public final class AbstractLoggingUsageRuleTest extends SharedMockitoTestCase {
+@SpyStatic(TestHelper.class)
+public final class AbstractLoggingUsageRuleTest extends SharedExtendedMockitoTestCase {
     private final SimpleStatement mBaseStatement = new SimpleStatement();
 
     @Mock private Description mDescription;
     @Mock private LogVerifier mLogVerifier1;
     @Mock private LogVerifier mLogVerifier2;
+    @Mock private SkipLoggingUsageRule mAnnotation;
 
     @Test
     public void testEvaluate_withNonTestDescription_throwsException() {
@@ -59,6 +64,19 @@ public final class AbstractLoggingUsageRuleTest extends SharedMockitoTestCase {
     }
 
     @Test
+    public void testEvaluate_withSkipAnnotation_gracefullyExits() throws Throwable {
+        when(mDescription.isTest()).thenReturn(true);
+        doReturn(mAnnotation).when(() -> TestHelper.getAnnotation(any(), any()));
+        AbstractLoggingUsageRule rule =
+                new ConcreteLoggingUsageRule(ImmutableList.of(mLogVerifier1));
+
+        rule.evaluate(mBaseStatement, mDescription);
+
+        mBaseStatement.assertNotEvaluated();
+        verifyZeroInteractions(mLogVerifier1);
+    }
+
+    @Test
     public void testEvaluate_withNoLogVerifiers_gracefullyExits() throws Throwable {
         when(mDescription.isTest()).thenReturn(true);
         AbstractLoggingUsageRule rule = new ConcreteLoggingUsageRule(ImmutableList.of());
@@ -69,8 +87,7 @@ public final class AbstractLoggingUsageRuleTest extends SharedMockitoTestCase {
     }
 
     @Test
-    public void testEvaluate_withStatementThrowsException_setupDoneButNoVerification()
-            throws Throwable {
+    public void testEvaluate_withStatementThrowsException_setupDoneButNoVerification() {
         when(mDescription.isTest()).thenReturn(true);
         mBaseStatement.failWith(new RuntimeException());
         AbstractLoggingUsageRule rule =
@@ -83,7 +100,7 @@ public final class AbstractLoggingUsageRuleTest extends SharedMockitoTestCase {
     }
 
     @Test
-    public void testEvaluate_withLogVerifierThrowsException_throwsSameException() throws Throwable {
+    public void testEvaluate_withLogVerifierThrowsException_throwsSameException() {
         when(mDescription.isTest()).thenReturn(true);
         doThrow(IllegalArgumentException.class).when(mLogVerifier1).verify(any());
         AbstractLoggingUsageRule rule =

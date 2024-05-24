@@ -45,6 +45,14 @@ public abstract class AbstractLoggingUsageRule extends AbstractRule {
         // Rule can only be applied to individual tests.
         TestHelper.throwIfNotTest(description);
 
+        // Skip scanning + verification log usage if appropriate annotation is detected.
+        SkipLoggingUsageRule annotation =
+                TestHelper.getAnnotation(description, SkipLoggingUsageRule.class);
+        if (annotation != null) {
+            mLog.v("Skipping log usage rule, reason: %s", annotation.reason());
+            return;
+        }
+
         // Fetch log verifiers based on enabled log types for the rule.
         List<LogVerifier> logVerifiers = getLogVerifiers();
         if (logVerifiers.isEmpty()) {
