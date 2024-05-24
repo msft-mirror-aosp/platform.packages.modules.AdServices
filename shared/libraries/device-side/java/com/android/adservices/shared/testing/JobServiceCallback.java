@@ -28,12 +28,13 @@ import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.util.Log;
 
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.base.Supplier;
 
 /**
- * Helper class to create custom {@link SyncCallback} and assertions for each {@link JobService}
+ * Helper class to create custom {@code SyncCallback} and assertions for each {@link JobService}
  * lifecycle.
  */
 public final class JobServiceCallback {
@@ -70,7 +71,7 @@ public final class JobServiceCallback {
         assertCallbackCalled("JobStoppedCallback", mJobStoppedCallback);
     }
 
-    private <T extends BooleanSyncCallback> T setCallback(
+    private <T extends ResultSyncCallback<Boolean>> T setCallback(
             String callbackInstance, T callback, Supplier<T> callbackSupplier) {
         checkState(
                 callback == null,
@@ -80,7 +81,7 @@ public final class JobServiceCallback {
         return callbackSupplier.get();
     }
 
-    private void assertCallbackCalled(String callbackInstance, BooleanSyncCallback callback)
+    private void assertCallbackCalled(String callbackInstance, ResultSyncCallback<Boolean> callback)
             throws InterruptedException {
         checkState(callbackInstance != null, "%s not set yet.", callbackInstance);
 
@@ -88,14 +89,15 @@ public final class JobServiceCallback {
     }
 
     /**
-     * Custom {@link BooleanSyncCallback} implementation where used for checking methods in {@link
-     * JobService#jobFinished(JobParameters, boolean)} is called or executed. This implementation
+     * Custom {@code SyncCallback} implementation used for checking if methods in {@link
+     * JobService#jobFinished(JobParameters, boolean)} are called or executed. This implementation
      * must only used in {@link JobFinishedCallback}.
      *
-     * <p>Use a {@link Boolean} type as a place holder for received on success. This {@link Boolean}
-     * is used for checking a method has been called when calling {@link #assertResultReceived()}
+     * <p>Uses a {@code Boolean} type as a place holder for received on success. This {@code
+     * Boolean} is used for checking a method has been called when calling {@link
+     * #assertResultReceived()}
      */
-    private static final class JobFinishedCallback extends BooleanSyncCallback {
+    private static final class JobFinishedCallback extends ResultSyncCallback<Boolean> {
 
         /**
          * Injects a boolean {@code true} as Result. This is used for checking a stub method is
@@ -124,14 +126,14 @@ public final class JobServiceCallback {
     }
 
     /**
-     * Custom {@link BooleanSyncCallback} implementation where used for checking methods in {@link
+     * Custom {@code ResultSyncCallback} implementation where used for checking methods in {@link
      * JobService#onStopJob(JobParameters)} is called or executed. This implementation must only
      * used in {@link JobFinishedCallback}.
      *
      * <p>Use a {@link Boolean} type as a place holder for received on success. This {@link Boolean}
      * is used for checking a method has been called when calling {@link #assertResultReceived()}
      */
-    private static final class JobStoppedCallback extends BooleanSyncCallback {
+    private static final class JobStoppedCallback extends ResultSyncCallback<Boolean> {
 
         /**
          * Injects a boolean {@code false} as Result. This is used for checking a stub method is

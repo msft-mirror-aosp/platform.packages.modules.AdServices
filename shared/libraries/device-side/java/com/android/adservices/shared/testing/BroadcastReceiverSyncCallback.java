@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.adservices.shared.util.Preconditions;
 import com.android.internal.annotations.VisibleForTesting;
@@ -100,11 +101,11 @@ public final class BroadcastReceiverSyncCallback {
 
     @VisibleForTesting
     static class ResultBroadcastReceiver extends BroadcastReceiver {
-        private final SyncCallback<Intent, Void> mSyncCallback;
+        private final ResultSyncCallback<Intent> mSyncCallback;
 
         ResultBroadcastReceiver(long timeoutMs) {
             mSyncCallback =
-                    new SyncCallback<>(
+                    new ResultSyncCallback<>(
                             new SyncCallbackSettings.Builder()
                                     .setMaxTimeoutMs(timeoutMs)
                                     .setFailIfCalledOnMainThread(false)

@@ -24,7 +24,7 @@ import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.adservices.shared.util.Preconditions;
 
 /**
- * {@link SyncCallback} used to make sure a handler is "idle", i.e., it processes all requests in
+ * {@code SyncCallback} used to make sure a handler is "idle", i.e., it processes all requests in
  * its queue (posted prior to the callback creation).
  *
  * <p>Typically used on <code>@After</code> methods to wait until for background tasks to be

@@ -19,7 +19,7 @@ package com.android.adservices.shared.testing;
 import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.INJECT_RESULT_OR_FAILURE;
 import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
 import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
-import static com.android.adservices.shared.testing.SyncCallback.MSG_WRONG_ERROR_RECEIVED;
+import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.MSG_WRONG_ERROR_RECEIVED;
 
 import static org.junit.Assert.assertThrows;
 

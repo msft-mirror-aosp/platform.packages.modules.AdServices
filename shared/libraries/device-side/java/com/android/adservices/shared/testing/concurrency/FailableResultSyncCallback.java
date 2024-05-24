@@ -44,7 +44,8 @@ public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<
     public static final String INJECT_RESULT_OR_FAILURE = "injectResult() or injectFailure()";
 
     @VisibleForTesting
-    static final String MSG_WRONG_ERROR_RECEIVED = "expected error of type %s, but received %s";
+    public static final String MSG_WRONG_ERROR_RECEIVED =
+            "expected error of type %s, but received %s";
 
     private final ResultSyncCallback<ResultOrFailure<T, F>> mCallback;
 
