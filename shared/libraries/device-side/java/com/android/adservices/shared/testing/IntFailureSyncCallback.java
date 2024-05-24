@@ -15,101 +15,56 @@
  */
 package com.android.adservices.shared.testing;
 
-import static com.google.common.truth.Truth.assertWithMessage;
+import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 
-import android.os.IBinder;
-
-import androidx.annotation.Nullable;
-
-import com.android.internal.annotations.VisibleForTesting;
-
-// TODO(b/302757068): add unit tests (and/or convert tests from OutcomeReceiverForTestsTest)
 /**
- * Custom {@link SyncCallback} where the error type is an {@code int}.
+ * Custom {@code SyncCallback} where the error type is an {@code int}.
  *
- * <p>Callers typically call {@link #assertSuccess()} or {@link #assertFailure(int)} to assert the
+ * <p>Callers typically call {@link #assertSuccess()} or {@link #assertFailed(int)} to assert the
  * expected result.
  *
- * <p>Modeled on {@link android.adservices.topics.IGetTopicsCallback}, so {@link
+ * <p>Modeled on {@code android.adservices.topics.IGetTopicsCallback}, so {@code
  * SyncGetTopicsCallback} just extends it.
+ *
+ * @param <T> type of the object received on success.
  */
-public abstract class IntFailureSyncCallback<T> extends SyncCallback<T, Integer> {
+public abstract class IntFailureSyncCallback<T> extends FailableOnResultSyncCallback<T, Integer> {
 
-    @VisibleForTesting
-    static final String ERROR_WRONG_EXCEPTION_RECEIVED =
-            "expected exception of type %s, but received %s";
-
-    /**
-     * Default constructor, uses {@link #DEFAULT_TIMEOUT_MS} for timeout and fails if the {@code
-     * inject...} method is called in the main thread.
-     */
+    /** Default constructor. */
     public IntFailureSyncCallback() {
-        super();
+        this(SyncCallbackSettings.newDefaultSettings());
+    }
+
+    /** Fully customizable constructor. */
+    public IntFailureSyncCallback(SyncCallbackSettings settings) {
+        super(settings);
     }
 
     /** Constructor with a custom timeout to wait for the outcome. */
     public IntFailureSyncCallback(long timeoutMs) {
-        super(timeoutMs);
+        this(new SyncCallbackSettings.Builder().setMaxTimeoutMs(timeoutMs).build());
     }
 
-    /** Constructor with custom settings. */
-    protected IntFailureSyncCallback(long timeoutMs, boolean failIfCalledOnMainThread) {
-        super(timeoutMs, failIfCalledOnMainThread);
-    }
-
-    /**
-     * Sets a successful result as outcome.
-     *
-     * @throws IllegalStateException if {@link #onResult(Object)} or {@link #injectError(Object)}
-     *     was already called.
-     */
-    public void onResult(@Nullable T result) {
-        injectResult(result);
-    }
-
-    /**
-     * Sets an error result as outcome.
-     *
-     * @throws IllegalStateException if {@link #onResult(Object)} or {@link #onFailure(int)} was
-     *     already called.
-     */
+    /** Sets the outcome as a failure (of the specific {@code code}. */
     public void onFailure(int code) {
-        injectError(code);
+        super.onFailure(Integer.valueOf(code));
     }
 
     /**
-     * Returns the maximum time the {@code assert...} methods will wait for an outcome before
-     * failing.
+     * Waits until {@link #onFailure(int)} is called and assert it was called with {@code
+     * expectedCode}.
      */
-    public long getTimeoutMs() {
-        return getMaxTimeoutMs();
+    public final void assertFailed(int expectedCode) throws InterruptedException {
+        int actualCode = assertFailureReceived();
+        if (actualCode != expectedCode) {
+            throw new IllegalStateException(
+                    "Expected code " + expectedCode + ", but it failed with code " + actualCode);
+        }
     }
 
-    /**
-     * Asserts that {@link #onResult(Object)} was called, waiting up to {@link #getTimeoutMs()}
-     * milliseconds before failing (if not called).
-     *
-     * @return the result
-     */
-    public T assertSuccess() throws InterruptedException {
+    /** Convenience method for {@link #assertResultReceived()} . */
+    public final T assertSuccess() throws InterruptedException {
         return assertResultReceived();
-    }
-
-    /**
-     * Asserts that {@link #onError(Exception)} was called, waiting up to {@link #getTimeoutMs()}
-     * milliseconds before failing (if not called).
-     *
-     */
-    public void assertFailed(int expectedCode) throws InterruptedException {
-        int actualCode = assertErrorReceived();
-        assertWithMessage("failure code").that(actualCode).isEqualTo(expectedCode);
-    }
-
-    /**
-     * Bogus method (returns {@code null} to make it easier to extend this class for binder
-     * implementations.
-     */
-    public IBinder asBinder() {
-        return null;
     }
 }
