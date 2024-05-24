@@ -42,7 +42,6 @@ import androidx.annotation.Nullable;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
-import com.android.adservices.shared.testing.SyncCallback;
 import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -349,7 +348,7 @@ public final class ExtendedMockitoExpectations {
     }
 
     /**
-     * {@link SyncCallback} used in conjunction with {@link #mockErrorLogUtilWithoutThrowable()} /
+     * {@code SyncCallback} used in conjunction with {@link #mockErrorLogUtilWithoutThrowable()} /
      * {@link #mockErrorLogUtilWithThrowable()}.
      */
     public static final class ErrorLogUtilCallback
