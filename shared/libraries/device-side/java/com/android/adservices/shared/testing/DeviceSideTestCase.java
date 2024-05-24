@@ -19,6 +19,8 @@ import android.content.Context;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import org.junit.Rule;
+
 /**
  * Superclass for all device-side tests, it contains just the bare minimum features used by all
  * tests.
@@ -38,6 +40,11 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
     /** Package name of the app being instrumented. */
     protected final String mPackageName = sPackageName;
 
-    /** {@code Logcat} tag. */
+    /** {@code logcat} tag. */
     protected final String mTag = getClass().getSimpleName();
+
+    // TODO(b/342639109): set order
+    @Rule
+    public final ProcessLifeguardRule processLifeguard =
+            new ProcessLifeguardRule(ProcessLifeguardRule.Mode.IGNORE);
 }
