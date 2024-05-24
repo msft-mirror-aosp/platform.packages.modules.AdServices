@@ -13,23 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adservices.shared.testing.concurrency;
 
-package com.android.adservices.shared.testing;
+/**
+ * {@link ResultSyncCallback} for implementation of binder stub interfaces that have a {@code
+ * onResult()} method.
+ *
+ * @param <T> type of the result.
+ */
+public abstract class OnResultSyncCallback<T> extends ResultSyncCallback<T> {
 
-import com.android.adservices.shared.SharedExtendedMockitoTestCase;
-
-import org.junit.Test;
-
-public final class HandlerIdleSyncCallbackTest extends SharedExtendedMockitoTestCase {
-
-    @Test
-    public void testCustomMethods() throws Exception {
-        HandlerIdleSyncCallback callback = new HandlerIdleSyncCallback();
-        // Cannot assert if it's idle or not right away, as the result is injected by the handler
-        // thread.
-
-        callback.assertIdle();
-        expect.withMessage("isIdle() after called").that(callback.isIdle()).isTrue();
+    protected OnResultSyncCallback() {
+        super();
     }
 
+    protected OnResultSyncCallback(SyncCallbackSettings settings) {
+        super(settings);
+    }
+
+    /** Injects the result. */
+    public final void onResult(T result) {
+        injectResult(result);
+    }
 }

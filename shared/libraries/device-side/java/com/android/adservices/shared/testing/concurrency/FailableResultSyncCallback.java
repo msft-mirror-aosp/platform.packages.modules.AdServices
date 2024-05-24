@@ -17,6 +17,8 @@ package com.android.adservices.shared.testing.concurrency;
 
 import static com.android.adservices.shared.util.Preconditions.checkState;
 
+import android.os.IBinder;
+
 import androidx.annotation.Nullable;
 
 import com.android.internal.annotations.VisibleForTesting;
@@ -144,6 +146,11 @@ public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<
     @Override
     public final String getId() {
         return mCallback.getId();
+    }
+
+    @Override
+    public IBinder asBinder() {
+        return null;
     }
 
     @Override

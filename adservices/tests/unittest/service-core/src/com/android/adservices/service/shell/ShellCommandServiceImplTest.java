@@ -25,7 +25,6 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.shell.IShellCommandCallback;
 import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
-import android.os.IBinder;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -55,7 +54,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.testing.common.BlockingCallableWrapper;
-import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.OnResultSyncCallback;
 
 import com.google.common.collect.ImmutableList;
 
@@ -382,16 +381,5 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     }
 
     private static final class SyncIShellCommandCallback
-            extends ResultSyncCallback<ShellCommandResult> implements IShellCommandCallback {
-
-        @Override
-        public void onResult(ShellCommandResult response) {
-            injectResult(response);
-        }
-
-        @Override
-        public IBinder asBinder() {
-            return null;
-        }
-    }
+            extends OnResultSyncCallback<ShellCommandResult> implements IShellCommandCallback {}
 }
