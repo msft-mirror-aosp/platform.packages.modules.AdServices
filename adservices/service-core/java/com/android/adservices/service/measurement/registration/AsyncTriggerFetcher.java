@@ -430,7 +430,18 @@ public class AsyncTriggerFetcher {
             urlConnection.setRequestMethod("POST");
             urlConnection.setInstanceFollowRedirects(false);
             headers = urlConnection.getHeaderFields();
-            long headerSize = FetcherUtil.calculateHeadersCharactersLength(headers);
+            enrollmentId = getEnrollmentId(asyncRegistration);
+
+            // get ODP header from headers map and forward ODP header
+            long odpHeaderSize = 0;
+            Optional<Map<String, List<String>>> odpHeader = getOdpTriggerHeader(headers);
+            if (odpHeader.isPresent()) {
+                mOdpWrapper.registerOdpTrigger(
+                        asyncRegistration, odpHeader.get(), enrollmentId.isPresent());
+                odpHeaderSize = FetcherUtil.calculateHeadersCharactersLength(odpHeader.get());
+            }
+
+            long headerSize = FetcherUtil.calculateHeadersCharactersLength(headers) - odpHeaderSize;
             if (mFlags.getMeasurementEnableUpdateTriggerHeaderLimit()
                     && headerSize > mFlags.getMaxTriggerRegistrationHeaderSizeBytes()) {
                 LoggerFactory.getMeasurementLogger()
@@ -501,6 +512,28 @@ public class AsyncTriggerFetcher {
     private boolean isTriggerHeaderPresent(Map<String, List<String>> headers) {
         return headers.containsKey(
                 TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER);
+    }
+
+    private Optional<Map<String, List<String>>> getOdpTriggerHeader(
+            Map<String, List<String>> headers) {
+        return headers.containsKey(OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER)
+                ? Optional.of(Map.of(
+                        OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER,
+                        headers.get(
+                                OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER)))
+                : Optional.empty();
+    }
+
+    private Optional<String> getEnrollmentId(AsyncRegistration asyncRegistration) {
+        return mFlags.isDisableMeasurementEnrollmentCheck()
+                ? WebAddresses.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
+                        .map(Uri::toString)
+                : Enrollment.getValidEnrollmentId(
+                        asyncRegistration.getRegistrationUri(),
+                        asyncRegistration.getRegistrant().getAuthority(),
+                        mEnrollmentDao,
+                        mContext,
+                        mFlags);
     }
 
     private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {
