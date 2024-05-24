@@ -115,7 +115,7 @@ public class UpdateProcessingOrchestrator {
 
             mSignalEvictionController.evict(adtech, updatedSignals, combinedUpdates);
 
-            writeChanges(adtech, combinedUpdates, devContext);
+            writeChanges(adtech, creationTime, combinedUpdates, devContext);
         } catch (JSONException e) {
             throw new IllegalArgumentException("Couldn't unpack signal updates JSON", e);
         }
@@ -195,11 +195,16 @@ public class UpdateProcessingOrchestrator {
     }
 
     private void writeChanges(
-            AdTechIdentifier adTech, UpdateOutput combinedUpdates, DevContext devContext) {
+            AdTechIdentifier adTech,
+            Instant creationTime,
+            UpdateOutput combinedUpdates,
+            DevContext devContext) {
         /* Modify the DB based on the output of the update processors. Might be worth skipping
          * this is both signalsToAdd and signalsToDelete are empty.
          */
         mProtectedSignalsDao.insertAndDelete(
+                adTech,
+                creationTime,
                 combinedUpdates.getToAdd().stream()
                         .map(DBProtectedSignal.Builder::build)
                         .collect(Collectors.toList()),

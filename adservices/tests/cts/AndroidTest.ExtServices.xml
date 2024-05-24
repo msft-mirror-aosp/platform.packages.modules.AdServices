@@ -67,6 +67,12 @@
         <option name="teardown-command"
                 value="setprop debug.adservices.consent_manager_debug_mode false"/>
 
+        <!-- Override MDD background job to avoid race condition. -->
+        <option name="run-command"
+                value="setprop debug.adservices.mdd_background_task_kill_switch true"/>
+        <option name="teardown-command"
+                value="setprop debug.adservices.mdd_background_task_kill_switch false"/>
+
         <!-- Force enable enrollment checks for FLEDGE when testing enrollment -->
         <option name="run-command"
                 value="setprop debug.adservices.disable_fledge_enrollment_check false"/>

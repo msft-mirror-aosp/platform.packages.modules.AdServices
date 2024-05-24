@@ -33,6 +33,7 @@
         <option name="run-command" value="setprop debug.adservices.global_kill_switch false" />
         <option name="run-command" value="setprop debug.adservices.fledge_select_ads_kill_switch false" />
         <option name="run-command" value="setprop debug.adservices.fledge_custom_audience_service_kill_switch false" />
+        <option name="run-command" value="setprop debug.adservices.fledge_schedule_custom_audience_update_enabled true" />
         <option name="run-command" value="setprop debug.adservices.adid_kill_switch false" />
 
         <!-- Override Consent notification to debug mode to grant user consent -->
@@ -44,6 +45,12 @@
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
+
+        <!-- Override MDD background job to avoid race condition. -->
+        <option name="run-command"
+                value="setprop debug.adservices.mdd_background_task_kill_switch true"/>
+        <option name="teardown-command"
+                value="setprop debug.adservices.mdd_background_task_kill_switch false"/>
 
         <!-- Increase the allowed API queries per second -->
         <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 100000" />
@@ -79,7 +86,6 @@
                 value="device_config put adservices app_config_returns_enabled_by_detault true" />
         <option name="teardown-command"
                 value="device_config put adservices app_config_returns_enabled_by_detault false" />
-
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

@@ -27,6 +27,9 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 
@@ -35,6 +38,9 @@ public class AdSelectionResponseTest {
     private static final Uri VALID_RENDER_URI =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
     private static final long TEST_AD_SELECTION_ID = 12345;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildAdSelectionResponse() {

@@ -422,7 +422,7 @@ public class TriggerSpecs {
      *
      * @return String encoded the privacy parameters
      */
-    public String encodePrivacyParametersToJSONString() {
+    public String encodePrivacyParametersToJsonString() {
         JSONObject json = new JSONObject();
         try {
             json.put(
@@ -431,7 +431,7 @@ public class TriggerSpecs {
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
                     .e(
-                            "TriggerSpecs::encodePrivacyParametersToJSONString is unable to encode"
+                            "TriggerSpecs::encodePrivacyParametersToJsonString is unable to encode"
                                     + " PrivacyParams to JSON");
             return null;
         }

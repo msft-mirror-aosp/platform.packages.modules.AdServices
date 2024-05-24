@@ -27,12 +27,18 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link AppInstallFilters}. */
 @SmallTest
 public class AppInstallFiltersTest {
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Ignore
     @Test

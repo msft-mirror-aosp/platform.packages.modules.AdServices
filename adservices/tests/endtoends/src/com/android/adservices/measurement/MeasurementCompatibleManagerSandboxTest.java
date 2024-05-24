@@ -42,9 +42,9 @@ import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.net.Uri;
-import android.test.suitebuilder.annotation.SmallTest;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.SmallTest;
 import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;

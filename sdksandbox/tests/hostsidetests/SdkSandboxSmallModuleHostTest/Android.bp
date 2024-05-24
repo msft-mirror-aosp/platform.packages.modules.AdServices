@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -74,7 +75,10 @@ override_apex {
 override_apex {
     name: "com.android.adservices.fullmodule",
     base: "com.android.adservices",
-    apps: ["AdServicesApk", "SdkSandbox"],
+    apps: [
+        "AdServicesApk",
+        "SdkSandbox",
+    ],
     package_name: "com.android.adservices",
     certificate: ":com.android.adservices.certificate",
     key: "com.android.adservices.key",

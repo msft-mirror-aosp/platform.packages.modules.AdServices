@@ -30,6 +30,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.devapi.DevContext;
@@ -39,6 +40,7 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -59,6 +61,9 @@ public class UpdateSignalsOrchestratorTest {
 
     private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
+
     @Before
     public void setup() {
         mUpdateSignalsOrchestrator =
@@ -66,7 +71,8 @@ public class UpdateSignalsOrchestratorTest {
                         AdServicesExecutors.getBackgroundExecutor(),
                         mUpdatesDownloader,
                         mUpdateProcessingOrchestrator,
-                        mAdTechUriValidator);
+                        mAdTechUriValidator,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
     }
 
     @Test

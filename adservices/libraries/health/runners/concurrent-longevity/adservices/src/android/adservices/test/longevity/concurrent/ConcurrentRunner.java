@@ -20,6 +20,9 @@ import android.adservices.test.longevity.concurrent.proto.Configuration.Scenario
 import android.adservices.test.longevity.concurrent.proto.Configuration.Scenario.Journey;
 import android.util.Log;
 
+import com.android.adservices.shared.testing.junit.EasilyExtensibleBlockJUnit4ClassRunner;
+import com.android.adservices.shared.testing.junit.RuleContainer;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -28,16 +31,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.internal.runners.statements.RunAfters;
 import org.junit.internal.runners.statements.RunBefores;
-import org.junit.rules.MethodRule;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.JUnit4;
-import org.junit.runners.model.FrameworkMember;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.MemberValueConsumer;
 import org.junit.runners.model.MultipleFailureException;
 import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
@@ -52,7 +51,7 @@ import java.util.List;
  * <p>Overrides the methodBlock method which changes the execution of {@link Before}, {@link After},
  * {@link Test}, {@link Rule} execution.
  */
-public class ConcurrentRunner extends BlockJUnit4ClassRunner {
+public class ConcurrentRunner extends EasilyExtensibleBlockJUnit4ClassRunner {
 
     private static final String TAG = ConcurrentRunner.class.getSimpleName();
     private static final ThreadLocal<RuleContainer> sCurrentRuleContainer = new ThreadLocal<>();
@@ -263,64 +262,6 @@ public class ConcurrentRunner extends BlockJUnit4ClassRunner {
                             statement);
         }
         return statement;
-    }
-
-    /* Copied from {@link BlockJUnit4ClassRunner} class */
-    private List<TestRule> getTestRules(TestClass testClass, Object target) {
-        RuleCollector<TestRule> collector = new RuleCollector<>();
-        testClass.collectAnnotatedMethodValues(target, Rule.class, TestRule.class, collector);
-        testClass.collectAnnotatedFieldValues(target, Rule.class, TestRule.class, collector);
-        return collector.mResult;
-    }
-
-    /**
-     * Copied from {@link BlockJUnit4ClassRunner} class
-     *
-     * @param target the test case instance
-     * @return a list of MethodRules that should be applied when executing this test
-     */
-    protected List<MethodRule> rules(TestClass testClass, Object target) {
-        RuleCollector<MethodRule> collector = new RuleCollector<MethodRule>();
-        testClass.collectAnnotatedMethodValues(target, Rule.class, MethodRule.class, collector);
-        testClass.collectAnnotatedFieldValues(target, Rule.class, MethodRule.class, collector);
-        return collector.mResult;
-    }
-
-    /* Copied from {@link BlockJUnit4ClassRunner} class */
-    private Statement withRules(
-            FrameworkMethod method, TestClass testClass, Object target, Statement statement) {
-        RuleContainer ruleContainer = new RuleContainer();
-        sCurrentRuleContainer.set(ruleContainer);
-        try {
-            List<TestRule> testRules = getTestRules(testClass, target);
-            for (MethodRule each : rules(testClass, target)) {
-                if (!(each instanceof TestRule && testRules.contains(each))) {
-                    ruleContainer.add(each);
-                }
-            }
-            for (TestRule rule : testRules) {
-                ruleContainer.add(rule);
-            }
-        } finally {
-            sCurrentRuleContainer.remove();
-        }
-        return ruleContainer.apply(method, describeChild(method), target, statement);
-    }
-
-    /* Copied from {@link BlockJUnit4ClassRunner} class */
-    private static class RuleCollector<T> implements MemberValueConsumer<T> {
-        final List<T> mResult = new ArrayList<T>();
-
-        public void accept(FrameworkMember<?> member, T value) {
-            Rule rule = member.getAnnotation(Rule.class);
-            if (rule != null) {
-                RuleContainer container = sCurrentRuleContainer.get();
-                if (container != null) {
-                    container.setOrder(value, rule.order());
-                }
-            }
-            mResult.add(value);
-        }
     }
 
     /*

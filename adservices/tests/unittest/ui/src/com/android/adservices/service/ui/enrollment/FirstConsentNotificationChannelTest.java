@@ -111,7 +111,7 @@ public class FirstConsentNotificationChannelTest extends AdServicesExtendedMocki
 
     @Test
     public void enrollTest_nonReconsentNotification() {
-        mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
+        mFirstConsentNotificationChannel.enroll(mContext, mConsentManager);
 
         verify(() -> ConsentNotificationJobService.schedule(any(), anyBoolean(), eq(false)));
     }
@@ -120,7 +120,7 @@ public class FirstConsentNotificationChannelTest extends AdServicesExtendedMocki
     public void enrollTest_adIdEnabledFirstConsentNotification() {
         doReturn(true).when(mConsentManager).isAdIdEnabled();
 
-        mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
+        mFirstConsentNotificationChannel.enroll(mContext, mConsentManager);
 
         verify(() -> ConsentNotificationJobService.schedule(any(), eq(true), eq(false)));
     }
@@ -129,7 +129,7 @@ public class FirstConsentNotificationChannelTest extends AdServicesExtendedMocki
     public void enrollTest_adIdDisabledFirstConsentNotification() {
         doReturn(false).when(mConsentManager).isAdIdEnabled();
 
-        mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
+        mFirstConsentNotificationChannel.enroll(mContext, mConsentManager);
 
         verify(() -> ConsentNotificationJobService.schedule(any(), eq(false), eq(false)));
     }

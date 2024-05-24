@@ -27,8 +27,11 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -45,6 +48,9 @@ public class AdSelectionDebugReportDaoTest {
     private static final List<DBAdSelectionDebugReport> AD_SELECTION_DEBUG_REPORT_LIST =
             Collections.singletonList(DB_AD_SELECTION_DEBUG_REPORT);
     private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

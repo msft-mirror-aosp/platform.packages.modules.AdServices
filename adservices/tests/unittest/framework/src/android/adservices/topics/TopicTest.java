@@ -18,7 +18,10 @@ package android.adservices.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link android.adservices.topics.Topic} */
@@ -30,6 +33,9 @@ public class TopicTest {
 
     private Topic mTopic1;
     private Topic mTopic2;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {

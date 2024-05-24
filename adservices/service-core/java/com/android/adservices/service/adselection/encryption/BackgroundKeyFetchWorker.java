@@ -18,18 +18,20 @@ package com.android.adservices.service.adselection.encryption;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionKey;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.MultiCloudSupportStrategyFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.SingletonRunner;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ExecutionSequencer;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
@@ -50,7 +52,7 @@ public class BackgroundKeyFetchWorker {
     public static final String JOB_DESCRIPTION = "Ad selection data encryption key fetch job";
     private static final Object SINGLETON_LOCK = new Object();
     private static volatile BackgroundKeyFetchWorker sBackgroundKeyFetchWorker;
-    private final AdSelectionEncryptionKeyManager mKeyManager;
+    private final ProtectedServersEncryptionConfigManagerBase mKeyConfigManager;
     private final Flags mFlags;
     private final Clock mClock;
     private final SingletonRunner<Void> mSingletonRunner =
@@ -58,13 +60,13 @@ public class BackgroundKeyFetchWorker {
 
     @VisibleForTesting
     protected BackgroundKeyFetchWorker(
-            @NonNull AdSelectionEncryptionKeyManager keyManager,
+            @NonNull ProtectedServersEncryptionConfigManagerBase keyConfigManager,
             @NonNull Flags flags,
             @NonNull Clock clock) {
-        Objects.requireNonNull(keyManager);
+        Objects.requireNonNull(keyConfigManager);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(clock);
-        mKeyManager = keyManager;
+        mKeyConfigManager = keyConfigManager;
         mClock = clock;
         mFlags = flags;
     }
@@ -80,8 +82,6 @@ public class BackgroundKeyFetchWorker {
         if (sBackgroundKeyFetchWorker == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sBackgroundKeyFetchWorker == null) {
-                    EncryptionKeyDao encryptionKeyDao =
-                            AdSelectionServerDatabase.getInstance(context).encryptionKeyDao();
                     Flags flags = FlagsFactory.getFlags();
                     AdServicesHttpsClient adServicesHttpsClient =
                             new AdServicesHttpsClient(
@@ -91,14 +91,14 @@ public class BackgroundKeyFetchWorker {
                                     flags
                                             .getFledgeAuctionServerBackgroundKeyFetchNetworkReadTimeoutMs(),
                                     flags.getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB());
-                    AdSelectionEncryptionKeyManager keyManager =
-                            new AdSelectionEncryptionKeyManager(
-                                    encryptionKeyDao,
-                                    flags,
-                                    adServicesHttpsClient,
-                                    AdServicesExecutors.getBackgroundExecutor());
+                    ProtectedServersEncryptionConfigManagerBase configManager =
+                            MultiCloudSupportStrategyFactory.getStrategy(
+                                            flags.getFledgeAuctionServerMultiCloudEnabled(),
+                                            flags.getFledgeAuctionServerCoordinatorUrlAllowlist())
+                                    .getEncryptionConfigManager(
+                                            context, flags, adServicesHttpsClient);
                     sBackgroundKeyFetchWorker =
-                            new BackgroundKeyFetchWorker(keyManager, flags, Clock.systemUTC());
+                            new BackgroundKeyFetchWorker(configManager, flags, Clock.systemUTC());
                 }
             }
         }
@@ -118,7 +118,7 @@ public class BackgroundKeyFetchWorker {
 
         Instant keyExpiryInstant = mClock.instant();
         Set<Integer> expiredKeyTypes =
-                mKeyManager.getExpiredAdSelectionEncryptionKeyTypes(keyExpiryInstant);
+                mKeyConfigManager.getExpiredAdSelectionEncryptionKeyTypes(keyExpiryInstant);
 
         if (expiredKeyTypes.isEmpty()) {
             return FluentFuture.from(Futures.immediateVoidFuture())
@@ -131,14 +131,31 @@ public class BackgroundKeyFetchWorker {
         // calls in parallel.
         ExecutionSequencer sequencer = ExecutionSequencer.create();
 
-
         if (mFlags.getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled()
                 && expiredKeyTypes.contains(
-                AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION)
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION)
                 && !shouldStop.get()) {
-            keyFetchFutures.add(fetchAndPersistAuctionKey(keyExpiryInstant, sequencer));
-        }
 
+            boolean multicloudEnabled = mFlags.getFledgeAuctionServerMultiCloudEnabled();
+            String allowlist = mFlags.getFledgeAuctionServerCoordinatorUrlAllowlist();
+
+            if (multicloudEnabled && !Strings.isNullOrEmpty(allowlist)) {
+                List<String> allowedUrls = AllowLists.splitAllowList(allowlist);
+
+                for (String coordinator : allowedUrls) {
+                    keyFetchFutures.add(
+                            fetchAndPersistAuctionKeys(
+                                    keyExpiryInstant, sequencer, Uri.parse(coordinator)));
+                }
+            } else {
+                String defaultUrl = mFlags.getFledgeAuctionServerAuctionKeyFetchUri();
+                if (defaultUrl != null) {
+                    keyFetchFutures.add(
+                            fetchAndPersistAuctionKeys(
+                                    keyExpiryInstant, sequencer, Uri.parse(defaultUrl)));
+                }
+            }
+        }
 
         if (mFlags.getFledgeAuctionServerBackgroundJoinKeyFetchEnabled()
                 && expiredKeyTypes.contains(
@@ -171,17 +188,16 @@ public class BackgroundKeyFetchWorker {
         mSingletonRunner.stopWork();
     }
 
-    private ListenableFuture<List<DBEncryptionKey>> fetchAndPersistAuctionKey(
-            Instant keyExpiryInstant,
-            ExecutionSequencer sequencer) {
+    private ListenableFuture<List<DBEncryptionKey>> fetchAndPersistAuctionKeys(
+            Instant keyExpiryInstant, ExecutionSequencer sequencer, Uri coordinatorUri) {
+
         return sequencer.submitAsync(
                 () ->
-                        mKeyManager.fetchAndPersistActiveKeysOfType(
-                                AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
-                                        .AUCTION,
+                        mKeyConfigManager.fetchAndPersistActiveKeysOfType(
+                                AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 keyExpiryInstant,
-                                mFlags
-                                        .getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs()),
+                                mFlags.getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs(),
+                                coordinatorUri),
                 AdServicesExecutors.getBackgroundExecutor());
     }
 
@@ -189,14 +205,12 @@ public class BackgroundKeyFetchWorker {
             Instant keyExpiryInstant,
             ExecutionSequencer sequencer) {
         return sequencer.submitAsync(
-            () ->
-                    mKeyManager.fetchAndPersistActiveKeysOfType(
-                            AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
-                                    .JOIN,
-                            keyExpiryInstant,
-                            mFlags
-                                    .getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs()),
-            AdServicesExecutors.getBackgroundExecutor());
-
+                () ->
+                        mKeyConfigManager.fetchAndPersistActiveKeysOfType(
+                                AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN,
+                                keyExpiryInstant,
+                                mFlags.getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs(),
+                                null),
+                AdServicesExecutors.getBackgroundExecutor());
     }
 }

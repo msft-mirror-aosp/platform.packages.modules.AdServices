@@ -32,6 +32,13 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 public class SelectAdsFlagRule implements TestRule {
+    private Boolean mUsePublicCoordinator = false;
+
+    public SelectAdsFlagRule() {}
+
+    public SelectAdsFlagRule(Boolean useServerAuctionPublicCoordinator) {
+        this.mUsePublicCoordinator = useServerAuctionPublicCoordinator;
+    }
 
     @Rule
     public final AdServicesFlagsSetterRule flags =
@@ -61,16 +68,22 @@ public class SelectAdsFlagRule implements TestRule {
         modifyServerAuctionFlags();
     }
 
-    private static void modifyServerAuctionFlags() {
+    private void modifyServerAuctionFlags() {
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_auction_server_ad_render_id_enabled "
                         + "true");
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_auction_server_kill_switch false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_auction_server_enabled true");
+        String coordinatorUri =
+                mUsePublicCoordinator
+                        ? "https://publickeyservice.pa.gcp.privacysandboxservices.com/.well-known/protected-auction/v1/public-keys"
+                        : "https://ba-kv-service-5jyy5ulagq-uc.a.run.app/keys/2";
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "fledge_auction_server_auction_key_fetch_uri",
-                "https://ba-kv-service-5jyy5ulagq-uc.a.run.app/keys/2",
+                coordinatorUri,
                 false);
     }
 
@@ -108,10 +121,13 @@ public class SelectAdsFlagRule implements TestRule {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
         ShellUtils.runShellCommand(
+                "device_config put fledge_schedule_custom_audience_update_enabled true");
+        ShellUtils.runShellCommand(
                 "device_config put adservices fledge_custom_audience_service_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_select_ads_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices adservice_system_service_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices enable_back_compat true");
     }
 }

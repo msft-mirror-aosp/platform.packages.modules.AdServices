@@ -18,6 +18,7 @@ package com.example.adservices.samples.topics.sampleapp3;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
+import android.adservices.topics.EncryptedTopic;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.os.Bundle;
@@ -28,6 +29,9 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.adservices.HpkeJni;
+
+import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -36,6 +40,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -53,6 +58,12 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "SampleApp";
     private static final List<String> SDK_NAMES =
             new ArrayList<>(Arrays.asList("SdkName2", "SdkName3"));
+    // Test constants for testing encryption
+    private static final String TEST_PRIVATE_KEY_BASE64 =
+            "f86EzLmGaVmc+PwjJk5ADPE4ijQvliWf0CQyY/Zyy7I=";
+    private static final byte[] DECODED_PRIVATE_KEY =
+            Base64.getDecoder().decode(TEST_PRIVATE_KEY_BASE64);
+    private static final byte[] EMPTY_CONTEXT_INFO = new byte[] {};
     private Button mTopicsClientButton;
     private TextView mResultTextView;
     private AdvertisingTopicsClient mAdvertisingTopicsClient;
@@ -90,17 +101,28 @@ public class MainActivity extends AppCompatActivity {
                                     public void onSuccess(GetTopicsResponse result) {
                                         Log.d(TAG, "GetTopics for sdk " + sdkName + " succeeded!");
                                         String topics = getTopics(result.getTopics());
-                                        mHandler.post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                              mResultTextView.append(
-                                                sdkName
-                                                        + "'s topics: "
-                                                        + NEWLINE
-                                                        + topics
-                                                        + NEWLINE);
-                                            }
-                                        });
+                                        String encryptedTopicsDecrypted =
+                                                getDecryptedTopics(result.getEncryptedTopics());
+
+                                        mHandler.post(
+                                                new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        mResultTextView.append(
+                                                                sdkName
+                                                                        + "'s topics: "
+                                                                        + NEWLINE
+                                                                        + topics
+                                                                        + NEWLINE);
+                                                        mResultTextView.append(
+                                                                sdkName
+                                                                        + "'s encrypted topics,"
+                                                                        + " decrypted: "
+                                                                        + NEWLINE
+                                                                        + encryptedTopicsDecrypted
+                                                                        + NEWLINE);
+                                                    }
+                                                });
 
                                         Log.d(
                                                 TAG,
@@ -108,6 +130,13 @@ public class MainActivity extends AppCompatActivity {
                                                         + "'s topics: "
                                                         + NEWLINE
                                                         + topics
+                                                        + NEWLINE);
+                                        Log.d(
+                                                TAG,
+                                                sdkName
+                                                        + "'s encrypted topics, decrypted: "
+                                                        + NEWLINE
+                                                        + encryptedTopicsDecrypted
                                                         + NEWLINE);
                                     }
 
@@ -124,17 +153,18 @@ public class MainActivity extends AppCompatActivity {
                                                         + ": "
                                                         + t.getMessage());
 
-                                        mHandler.post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                              mResultTextView.append(
-                                                "Failed to getTopics for sdk "
-                                                        + sdkName
-                                                        + ": "
-                                                        + t.toString()
-                                                        + NEWLINE);
-                                            }
-                                        });
+                                        mHandler.post(
+                                                new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        mResultTextView.append(
+                                                                "Failed to getTopics for sdk "
+                                                                        + sdkName
+                                                                        + ": "
+                                                                        + t.toString()
+                                                                        + NEWLINE);
+                                                    }
+                                                });
                                     }
                                 },
                                 directExecutor());
@@ -147,6 +177,21 @@ public class MainActivity extends AppCompatActivity {
         int index = 1;
         for (Topic topic : arr) {
             sb.append(index++).append(". ").append(topic.toString()).append(NEWLINE);
+        }
+        return sb.toString();
+    }
+
+    private String getDecryptedTopics(List<EncryptedTopic> arr) {
+        StringBuilder sb = new StringBuilder();
+        int index = 1;
+        for (EncryptedTopic encryptedTopic : arr) {
+            byte[] cipherText =
+                    Bytes.concat(
+                            encryptedTopic.getEncapsulatedKey(),
+                            encryptedTopic.getEncryptedTopic());
+            byte[] decryptedText =
+                    HpkeJni.decrypt(DECODED_PRIVATE_KEY, cipherText, EMPTY_CONTEXT_INFO);
+            sb.append(index++).append(". ").append(new String(decryptedText)).append(NEWLINE);
         }
         return sb.toString();
     }

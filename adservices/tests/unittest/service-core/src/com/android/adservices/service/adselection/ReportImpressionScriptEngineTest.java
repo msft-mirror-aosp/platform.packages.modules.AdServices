@@ -31,8 +31,10 @@ import android.net.Uri;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -41,6 +43,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.BuyerReportingResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.ReportingScriptResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.SellerReportingResult;
+import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -126,6 +129,9 @@ public class ReportImpressionScriptEngineTest {
     private static final AdDataArgumentUtil AD_DATA_ARGUMENT_UTIL =
             new AdDataArgumentUtil(new AdCounterKeyCopierNoOpImpl());
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
     // certain minimum version.
@@ -140,6 +146,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testCanCallScript() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
         args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
@@ -154,6 +161,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testThrowsJSExecutionExceptionIfFunctionNotFound() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
         args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
@@ -172,6 +180,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testThrowsIllegalStateExceptionIfScriptIsNotReturningJson() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
         args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
@@ -239,6 +248,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportResultSuccessfulCaseWithMoreResultsFieldsThanExpected() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -262,6 +272,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 317817375)
     public void testReportResultSuccessfulCaseWithCallingRegisterAdBeacon() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
@@ -331,6 +342,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsInvalidInteractionKeyType() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -359,6 +371,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsInvalidInteractionReportingUriType() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -417,6 +430,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Null() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -444,6 +458,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Int() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -823,6 +838,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportWinFailsInvalidInteractionKeyType() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
@@ -851,6 +867,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportWinFailsInvalidInteractionReportingUriType() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
@@ -879,6 +896,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportWinFailsWhenRegisterAdBeaconCalledMoreThanOnce() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer"
@@ -1185,11 +1203,11 @@ public class ReportImpressionScriptEngineTest {
             registerAdBeaconScriptEngineHelper =
                     new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperDisabled();
         }
-
         return new ReportImpressionScriptEngine(
                 sContext,
                 () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
                 () -> mIsolateSettings.getMaxHeapSizeBytes(),
-                registerAdBeaconScriptEngineHelper);
+                registerAdBeaconScriptEngineHelper,
+                new NoOpRetryStrategyImpl());
     }
 }

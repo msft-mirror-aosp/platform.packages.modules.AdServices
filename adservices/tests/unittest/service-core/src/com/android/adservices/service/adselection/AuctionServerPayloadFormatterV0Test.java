@@ -21,15 +21,23 @@ import static com.android.adservices.service.adselection.AuctionServerPayloadFor
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.BYTES_CONVERSION_FACTOR;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.META_INFO_LENGTH_BYTE;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
+import android.adservices.exceptions.UnsupportedPayloadSizeException;
+
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
+import org.mockito.Mockito;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
@@ -44,6 +52,8 @@ public class AuctionServerPayloadFormatterV0Test {
             Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES.stream().max(Integer::compare).get();
     private AuctionServerPayloadFormatterV0 mAuctionServerPayloadFormatterV0;
 
+    private AdServicesLogger mAdServicesLoggerSpy;
+
     private static byte[] getRandomByteArray(int size) {
         SecureRandom secureRandom = new SecureRandom();
         byte[] result = new byte[size];
@@ -51,8 +61,12 @@ public class AuctionServerPayloadFormatterV0Test {
         return result;
     }
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setup() {
+        mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
         mAuctionServerPayloadFormatterV0 =
                 new AuctionServerPayloadFormatterV0(
                         Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
@@ -113,13 +127,18 @@ public class AuctionServerPayloadFormatterV0Test {
     }
 
     @Test
-    public void testInputSizeLargerThenLargestBucket_throwISE() {
+    public void testInputSizeLargerThenLargestBucket_throwsPayloadSizeException() {
         AuctionServerPayloadUnformattedData input =
                 AuctionServerPayloadUnformattedData.create(
                         getRandomByteArray(MAXIMUM_PAYLOAD_SIZE_IN_BYTES));
-        ThrowingRunnable runnable =
-                () -> mAuctionServerPayloadFormatterV0.apply(input, VALID_COMPRESSOR_VERSION);
-        Assert.assertThrows(PAYLOAD_SIZE_EXCEEDS_LIMIT, IllegalStateException.class, runnable);
+        UnsupportedPayloadSizeException exception =
+                assertThrows(
+                        UnsupportedPayloadSizeException.class,
+                        () ->
+                                mAuctionServerPayloadFormatterV0.apply(
+                                        input, VALID_COMPRESSOR_VERSION));
+        assertThat(exception.getMessage()).isEqualTo(PAYLOAD_SIZE_EXCEEDS_LIMIT);
+        assertThat(exception.getPayloadSizeKb()).isEqualTo(MAXIMUM_PAYLOAD_SIZE_IN_BYTES / 1000);
     }
 
     public void testDataPaddingAndDispadding(byte[] data, int expectedSizeInBytes) {

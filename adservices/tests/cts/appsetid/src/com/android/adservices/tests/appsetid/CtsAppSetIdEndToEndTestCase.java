@@ -24,7 +24,7 @@ abstract class CtsAppSetIdEndToEndTestCase extends AdServicesCtsTestCase {
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
         return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                 .setCompatModeFlags()
-                .setPpapiAppAllowList(sContext.getPackageName())
+                .setPpapiAppAllowList(mPackageName)
                 .setAppsetIdKillSwitch(false);
     }
 }

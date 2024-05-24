@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.util.Pair;
@@ -28,6 +30,7 @@ import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAppSignals;
+import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -62,8 +65,10 @@ public class BuyerInputGenerator {
     private final long mCustomAudienceActiveTimeWindowInMs;
     private final boolean mEnableAdFilter;
     private final boolean mEnableProtectedSignals;
+    private final boolean mEnableOmitAds;
 
     @NonNull private final AuctionServerDataCompressor mDataCompressor;
+    @NonNull private final AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategy;
 
     public BuyerInputGenerator(
             @NonNull final CustomAudienceDao customAudienceDao,
@@ -74,13 +79,16 @@ public class BuyerInputGenerator {
             long customAudienceActiveTimeWindowInMs,
             boolean enableAdFilter,
             boolean enableProtectedSignals,
-            @NonNull AuctionServerDataCompressor dataCompressor) {
+            @NonNull AuctionServerDataCompressor dataCompressor,
+            boolean enableOmitAds,
+            @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(encodedSignalsDaoDao);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(dataCompressor);
+        Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
 
         mCustomAudienceDao = customAudienceDao;
         mEncodedSignalsDao = encodedSignalsDaoDao;
@@ -93,6 +101,8 @@ public class BuyerInputGenerator {
         mCustomAudienceActiveTimeWindowInMs = customAudienceActiveTimeWindowInMs;
         mEnableAdFilter = enableAdFilter;
         mEnableProtectedSignals = enableProtectedSignals;
+        mEnableOmitAds = enableOmitAds;
+        mAuctionServerPayloadMetricsStrategy = auctionServerPayloadMetricsStrategy;
     }
 
     /**
@@ -142,16 +152,25 @@ public class BuyerInputGenerator {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS);
 
         final Map<AdTechIdentifier, BuyerInput.Builder> buyerInputs = new HashMap<>();
-        for (DBCustomAudience customAudience : dbCustomAudiences) {
-            final AdTechIdentifier buyerName = customAudience.getBuyer();
+        final Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats =
+                new HashMap<>();
+        for (DBCustomAudience dBcustomAudience : dbCustomAudiences) {
+            final AdTechIdentifier buyerName = dBcustomAudience.getBuyer();
             if (!buyerInputs.containsKey(buyerName)) {
                 buyerInputs.put(buyerName, BuyerInput.newBuilder());
             }
+            BuyerInput.CustomAudience customAudience =
+                    buildCustomAudienceProtoFrom(dBcustomAudience);
 
-            buyerInputs
-                    .get(buyerName)
-                    .addCustomAudiences(buildCustomAudienceProtoFrom(customAudience));
+            buyerInputs.get(buyerName).addCustomAudiences(customAudience);
+
+            mAuctionServerPayloadMetricsStrategy.addToBuyerIntermediateStats(
+                    perBuyerStats, dBcustomAudience, customAudience);
         }
+
+        // Log per buyer stats if feature is enabled
+        mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataBuyerInputGeneratedStats(
+                perBuyerStats);
 
         // Creating a distinct loop over signals as buyers with CAs and Signals could be mutually
         // exclusive
@@ -231,13 +250,23 @@ public class BuyerInputGenerator {
         BuyerInput.CustomAudience.Builder customAudienceBuilder =
                 BuyerInput.CustomAudience.newBuilder();
 
-        return customAudienceBuilder
+        customAudienceBuilder
                 .setName(customAudience.getName())
                 .setOwner(customAudience.getOwner())
                 .setUserBiddingSignals(getUserBiddingSignals(customAudience))
-                .addAllBiddingSignalsKeys(getTrustedBiddingSignalKeys(customAudience))
-                .addAllAdRenderIds(getAdRenderIds(customAudience))
-                .build();
+                .addAllBiddingSignalsKeys(getTrustedBiddingSignalKeys(customAudience));
+
+        if (shouldIncludeAds(customAudience)) {
+            customAudienceBuilder.addAllAdRenderIds(getAdRenderIds(customAudience));
+        }
+        return customAudienceBuilder.build();
+    }
+
+    private boolean shouldIncludeAds(DBCustomAudience customAudience) {
+        return !(mEnableOmitAds
+                && ((customAudience.getAuctionServerRequestFlags()
+                                & FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                        != 0));
     }
 
     private ListenableFuture<Map<AdTechIdentifier, DBEncodedPayload>>

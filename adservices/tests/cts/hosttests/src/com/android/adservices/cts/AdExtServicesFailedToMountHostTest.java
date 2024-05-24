@@ -16,13 +16,15 @@
 
 package com.android.adservices.cts;
 
+import static com.android.adservices.common.AndroidSdk.PRE_T;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
 import com.android.adservices.common.BackgroundLogReceiver;
 import com.android.adservices.common.HostSideSdkLevelSupportRule;
-import com.android.adservices.common.RequiresSdkLevelLessThanT;
+import com.android.adservices.common.RequiresSdkRange;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 
 import org.junit.Rule;
@@ -34,6 +36,7 @@ import java.util.regex.Pattern;
 
 /** Test to check if com.google.android.ext.services failed to mount */
 @RunWith(DeviceJUnit4ClassRunner.class)
+@RequiresSdkRange(atMost = PRE_T, reason = "It's for S only")
 public class AdExtServicesFailedToMountHostTest extends AdServicesHostSideTestCase {
     private static final String LOGCAT_COMMAND = "logcat";
     private static final String PATTERN_TO_MATCH =
@@ -49,7 +52,6 @@ public class AdExtServicesFailedToMountHostTest extends AdServicesHostSideTestCa
             AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests();
 
     @Test
-    @RequiresSdkLevelLessThanT(reason = "Test is for ExtServices only")
     public void testLogcatDoesNotContainError() throws Exception {
         // reboot the device
         mDevice.reboot();

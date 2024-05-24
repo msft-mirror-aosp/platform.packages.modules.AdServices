@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -86,8 +88,12 @@ public class DevContextAccessResolver implements IAccessResolver {
     }
 
     @Override
-    public boolean isAllowed(@NonNull Context context) {
-        return mIsAllowed;
+    public AccessInfo getAccessInfo(@NonNull Context context) {
+        int failureReason =
+                mIsAllowed
+                        ? FAILURE_REASON_UNSET
+                        : FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST;
+        return new AccessInfo(mIsAllowed, failureReason);
     }
 
     @NonNull

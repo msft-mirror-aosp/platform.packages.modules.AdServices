@@ -54,7 +54,7 @@ public class AttributionConfig {
     @Nullable private final Long mSourceExpiryOverride;
     @Nullable private final Long mPriority;
     @Nullable private final Long mExpiry;
-    @Nullable private final List<FilterMap> mFilterData;
+    @Nullable private final FilterMap mFilterData;
     @Nullable private final Long mPostInstallExclusivityWindow;
 
     private AttributionConfig(@NonNull AttributionConfig.Builder builder) {
@@ -163,7 +163,7 @@ public class AttributionConfig {
      * "conversion_subdomain": ["electronics.megastore"], "product": ["1234", "234"] }
      */
     @Nullable
-    public List<FilterMap> getFilterData() {
+    public FilterMap getFilterData() {
         return mFilterData;
     }
 
@@ -215,7 +215,7 @@ public class AttributionConfig {
             }
 
             if (mFilterData != null) {
-                attributionConfig.put(FILTER_DATA, filter.serializeFilterSet(mFilterData));
+                attributionConfig.put(FILTER_DATA, mFilterData.serializeAsJson(flags));
             }
 
             if (mPostInstallExclusivityWindow != null) {
@@ -239,7 +239,7 @@ public class AttributionConfig {
         private Long mSourceExpiryOverride;
         private Long mPriority;
         private Long mExpiry;
-        private List<FilterMap> mFilterData;
+        private FilterMap mFilterData;
         private Long mPostInstallExclusivityWindow;
 
         public Builder() {}
@@ -301,8 +301,11 @@ public class AttributionConfig {
                                         .getMeasurementMaxReportingRegisterSourceExpirationInSeconds());
             }
             if (!attributionConfigsJson.isNull(FILTER_DATA)) {
-                JSONArray filterSet = Filter.maybeWrapFilters(attributionConfigsJson, FILTER_DATA);
-                mFilterData = filter.deserializeFilterSet(filterSet);
+                mFilterData =
+                        new FilterMap.Builder()
+                                .buildFilterData(
+                                        attributionConfigsJson.optJSONObject(FILTER_DATA), flags)
+                                .build();
             }
             if (!attributionConfigsJson.isNull(POST_INSTALL_EXCLUSIVITY_WINDOW)) {
                 mPostInstallExclusivityWindow =
@@ -362,7 +365,7 @@ public class AttributionConfig {
 
         /** See {@link AttributionConfig#getFilterData()} */
         @NonNull
-        public Builder setFilterData(@Nullable List<FilterMap> filterData) {
+        public Builder setFilterData(@Nullable FilterMap filterData) {
             mFilterData = filterData;
             return this;
         }

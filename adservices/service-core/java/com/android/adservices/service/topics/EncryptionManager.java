@@ -33,7 +33,7 @@ import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
@@ -90,7 +90,7 @@ public class EncryptionManager {
                                 new HpkeEncrypter(),
                                 EnrollmentDao.getInstance(context),
                                 EncryptionKeyDao.getInstance(context),
-                                PhFlags.getInstance());
+                                FlagsFactory.getFlags());
             }
         }
         return sSingleton;
@@ -116,8 +116,9 @@ public class EncryptionManager {
      * public key is missing.
      */
     private Optional<String> fetchPublicKeyFor(String sdkName) {
-        if (mFlags.isDisableTopicsEnrollmentCheck()) {
-            return Optional.of(TEST_PUBLIC_KEY_BASE64);
+        if (!mFlags.getTopicsTestEncryptionPublicKey().isEmpty()) {
+            // Use testing key for encryption if the test key is non-empty.
+            return Optional.of(mFlags.getTopicsTestEncryptionPublicKey());
         }
 
         sLogger.v("Fetching EnrollmentData for %s", sdkName);

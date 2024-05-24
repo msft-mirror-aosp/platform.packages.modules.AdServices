@@ -25,6 +25,7 @@ java_test_host {
         "cts",
         "general-tests",
         "mts-adservices",
+        "mcts-adservices",
     ],
     libs: [
         "cts-tradefed",
@@ -50,6 +51,7 @@ java_test_host {
         "cts",
         "general-tests",
         "mts-extservices",
+        "mcts-extservices",
     ],
     libs: [
         "cts-tradefed",

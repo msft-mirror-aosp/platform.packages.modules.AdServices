@@ -27,6 +27,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.registration.AsyncRedirect;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -154,7 +155,7 @@ public class SqliteObjectMapper {
         setBooleanColumn(cursor, MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
                 builder::setInstallAttributed);
         setTextColumn(cursor, MeasurementTables.SourceContract.FILTER_DATA,
-                builder::setFilterData);
+                builder::setFilterDataString);
         setTextColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_SOURCE,
                 builder::setAggregateSource);
         setIntColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
@@ -298,6 +299,12 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.AGGREGATION_COORDINATOR_ORIGIN,
                 builder::setAggregationCoordinatorOrigin);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG,
+                (enumValue) ->
+                        builder.setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.valueOf(enumValue)));
         return builder.build();
     }
 
@@ -312,7 +319,9 @@ public class SqliteObjectMapper {
                 builder::setPublisher);
         setUriColumn(cursor, MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
-        setLongColumn(cursor, MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
+        setLongColumn(
+                cursor,
+                MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
                 builder::setSourceRegistrationTime);
         setLongColumn(cursor, MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 builder::setScheduledReportTime);
@@ -471,6 +480,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.REQUEST_POST_BODY,
                 builder::setPostBody);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_BEHAVIOR,
+                (enumValue) ->
+                        builder.setRedirectBehavior(
+                                enumValue == null
+                                        ? null
+                                        : AsyncRedirect.RedirectBehavior.valueOf(enumValue)));
         return builder.build();
     }
 

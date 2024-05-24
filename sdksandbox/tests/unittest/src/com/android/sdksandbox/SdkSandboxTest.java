@@ -168,18 +168,26 @@ public class SdkSandboxTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .strictness(Strictness.LENIENT)
-                        .mockStatic(Process.class)
+                        .spyStatic(Process.class)
                         .startMocking();
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
 
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mContext = Mockito.spy(context);
-        mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
-        mInjector = Mockito.spy(new InjectorForTest(mContext));
-        Mockito.doReturn(mSpyPackageManager).when(mContext).getPackageManager();
-        mService = new SdkSandboxServiceImpl(mInjector);
         mApplicationInfo = mContext.getPackageManager().getApplicationInfo(SDK_PACKAGE, 0);
         mLoader = getClassLoader(mApplicationInfo);
+        if (sCustomizedSdkContextEnabled) {
+            Mockito.doReturn(mContext)
+                    .when(mContext)
+                    .createContextForSdkInSandbox(Mockito.any(), Mockito.anyInt());
+            Mockito.doReturn(mLoader).when(mContext).getClassLoader();
+        }
+
+        mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
+        Mockito.doReturn(mSpyPackageManager).when(mContext).getPackageManager();
+
+        mInjector = Mockito.spy(new InjectorForTest(mContext));
+        mService = new SdkSandboxServiceImpl(mInjector);
     }
 
     @After

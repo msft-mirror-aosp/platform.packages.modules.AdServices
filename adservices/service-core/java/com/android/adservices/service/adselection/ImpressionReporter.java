@@ -18,6 +18,10 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
@@ -26,7 +30,6 @@ import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
@@ -53,6 +56,7 @@ import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
@@ -113,11 +117,12 @@ public class ImpressionReporter {
     @NonNull private final RegisterAdBeaconSupportHelper mRegisterAdBeaconSupportHelper;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final JsFetcher mJsFetcher;
-    private int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     @NonNull private final DevContext mDevContext;
+    private int mCallerUid;
+    @NonNull private String mCallerAppPackageName;
 
     public ImpressionReporter(
             @NonNull Context context,
@@ -133,7 +138,8 @@ public class ImpressionReporter {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
-            final int callerUid) {
+            final int callerUid,
+            @NonNull final RetryStrategy retryStrategy) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
@@ -147,6 +153,7 @@ public class ImpressionReporter {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(frequencyCapAdDataValidator);
         Objects.requireNonNull(devContext);
+        Objects.requireNonNull(retryStrategy);
 
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutor);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
@@ -178,7 +185,8 @@ public class ImpressionReporter {
                         context,
                         () -> flags.getEnforceIsolateMaxHeapSize(),
                         () -> flags.getIsolateMaxHeapSizeBytes(),
-                        registerAdBeaconScriptEngineHelper);
+                        registerAdBeaconScriptEngineHelper,
+                        retryStrategy);
 
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
@@ -215,6 +223,7 @@ public class ImpressionReporter {
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
         sLogger.v("Executing reportImpression API");
+        mCallerAppPackageName = requestParams.getCallerPackageName();
         long adSelectionId = requestParams.getAdSelectionId();
         long timeoutMs = BinderFlagReader.readFlag(mFlags::getReportImpressionOverallTimeoutMs);
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
@@ -420,8 +429,9 @@ public class ImpressionReporter {
                                 sLogger.d("Reporting finished successfully!");
                                 mAdServicesLogger.logFledgeApiCallStats(
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                        AdServicesStatusUtils.STATUS_SUCCESS,
-                                        0);
+                                        mCallerAppPackageName,
+                                        STATUS_SUCCESS,
+                                        /*latencyMs=*/ 0);
                             }
 
                             @Override
@@ -432,13 +442,15 @@ public class ImpressionReporter {
                                 if (t instanceof IOException) {
                                     mAdServicesLogger.logFledgeApiCallStats(
                                             AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                            AdServicesStatusUtils.STATUS_IO_ERROR,
-                                            0);
+                                            mCallerAppPackageName,
+                                            STATUS_IO_ERROR,
+                                            /*latencyMs=*/ 0);
                                 }
                                 mAdServicesLogger.logFledgeApiCallStats(
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                        AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
-                                        0);
+                                        mCallerAppPackageName,
+                                        STATUS_INTERNAL_ERROR,
+                                        /*latencyMs=*/ 0);
                             }
                         },
                         mLightweightExecutorService);
@@ -625,9 +637,9 @@ public class ImpressionReporter {
         if (isFilterException) {
             resultCode = FilterException.getResultCode(t);
         } else if (t instanceof IllegalArgumentException) {
-            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+            resultCode = STATUS_INVALID_ARGUMENT;
         } else {
-            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            resultCode = STATUS_INTERNAL_ERROR;
         }
 
         // Skip logging if a FilterException occurs.
@@ -635,7 +647,10 @@ public class ImpressionReporter {
         // Note: Failure is logged before the callback to ensure deterministic testing.
         if (!isFilterException) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode, 0);
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                    mCallerAppPackageName,
+                    resultCode,
+                    /*latencyMs=*/ 0);
         }
 
         try {

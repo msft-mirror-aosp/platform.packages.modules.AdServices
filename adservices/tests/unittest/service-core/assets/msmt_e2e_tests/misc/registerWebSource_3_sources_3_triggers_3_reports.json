@@ -128,7 +128,7 @@
         "source_event_id": "1",
         "trigger_data": "1",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263
+        "randomized_trigger_rate": 0.0008051
       }
     }, {
       "report_time": "800176400001",
@@ -139,7 +139,7 @@
         "source_event_id": "2",
         "trigger_data": "2",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263
+        "randomized_trigger_rate": 0.0008051
       }
     }, {
       "report_time": "800176400001",
@@ -150,7 +150,7 @@
         "source_event_id": "3",
         "trigger_data": "3",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263
+        "randomized_trigger_rate": 0.0008051
       }
     }],
     "aggregatable_results": []

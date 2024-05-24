@@ -18,6 +18,8 @@ package com.android.adservices.tests.cts.topics.appupdate;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
@@ -35,7 +37,9 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -155,7 +159,7 @@ public class AppUpdateTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        flags.setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS);
+        flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
         flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
@@ -168,6 +172,8 @@ public class AppUpdateTest {
     @Test
     @FlakyTest(bugId = 298870452)
     public void testAppUpdate() throws Exception {
+        // Set this test as "Assumption Failure" if SDK is S-.
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         // Invoke Topics API once to compute top topics so that following installed test apps are
         // able to get top topics assigned when getting installed.
         AdvertisingTopicsClient advertisingTopicsClient =

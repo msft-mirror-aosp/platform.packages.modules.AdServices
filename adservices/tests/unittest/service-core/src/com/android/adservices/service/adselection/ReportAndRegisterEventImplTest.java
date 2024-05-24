@@ -50,6 +50,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.DataHandlersFixture;
@@ -70,6 +71,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -94,6 +96,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -106,7 +109,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
@@ -130,6 +135,9 @@ public class ReportAndRegisterEventImplTest {
             ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
     private static final int SELLER_DESTINATION =
             ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+    private static final int SELLER_AND_BUYER_DESTINATION =
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER |
+                    ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
     private static final String CLICK_EVENT = "click";
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
@@ -170,6 +178,9 @@ public class ReportAndRegisterEventImplTest {
     private String mEventData;
     private ReportInteractionInput.Builder mInputBuilder;
     private MockitoSession mStaticMockSession = null;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {
@@ -266,6 +277,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -296,6 +308,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -326,6 +339,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -350,6 +364,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -374,12 +389,18 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
 
     @Test
     public void testImplReturnsOnlyReportsUriThatPassesEnrollmentCheck() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
+
         enableARA();
         persistReportingArtifacts();
 
@@ -407,13 +428,26 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_AND_BUYER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(1);
     }
 
     @Test
     public void testImplReturnsSuccessButDoesNotDoReportingWhenBothFailEnrollmentCheck()
             throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
         enableARA();
         persistReportingArtifacts();
 
@@ -441,8 +475,17 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_AND_BUYER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(0);
     }
 
     @Test
@@ -483,6 +526,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_UNAUTHORIZED),
                         anyInt());
     }
@@ -527,6 +571,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_BACKGROUND_CALLER),
                         anyInt());
     }
@@ -569,6 +614,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -589,6 +635,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_RATE_LIMIT_REACHED),
                         anyInt());
     }
@@ -624,6 +671,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_CALLER_NOT_ALLOWED),
                         anyInt());
     }
@@ -658,6 +706,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -678,6 +727,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
@@ -700,6 +750,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -726,6 +777,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
@@ -762,12 +814,17 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
 
     @Test
     public void testImpl_onlyReportsEvent_measurementKillSwitchEnabled() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
         enableARA();
         persistReportingArtifacts();
 
@@ -803,6 +860,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -813,10 +871,22 @@ public class ReportAndRegisterEventImplTest {
                 .containsExactly(
                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_AND_BUYER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(2);
     }
 
     @Test
     public void testImpl_onlyReportsEvent_appIsNotInMeasurementAllowlisted() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
         enableARA();
         persistReportingArtifacts();
 
@@ -852,6 +922,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -862,6 +933,14 @@ public class ReportAndRegisterEventImplTest {
                 .containsExactly(
                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_AND_BUYER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(2);
     }
 
     @Test
@@ -897,6 +976,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -942,6 +1022,7 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -984,12 +1065,17 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
 
     @Test
     public void test_idFoundInInitializationDb_registeredInteractionsReported() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
         enableARA();
         persistReportingArtifactsForServerAuction(AD_SELECTION_ID_2);
         Flags flags =
@@ -1017,12 +1103,21 @@ public class ReportAndRegisterEventImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(DataHandlersFixture.TEST_PACKAGE_NAME_1),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
         // Verify registerEvent was called with exact parameters.
         verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, inputParams);
         verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, inputParams);
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_AND_BUYER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(2);
     }
 
     private void persistReportingArtifacts() {
@@ -1139,7 +1234,7 @@ public class ReportAndRegisterEventImplTest {
                     };
             doAnswer(countDownAnswer)
                     .when(mAdServicesLoggerMock)
-                    .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                    .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
         }
 
         ReportEventTestCallback callback = new ReportEventTestCallback(resultLatch);
@@ -1184,6 +1279,11 @@ public class ReportAndRegisterEventImplTest {
 
         @Override
         public boolean getGaUxFeatureEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeBeaconReportingMetricsEnabled() {
             return true;
         }
     }

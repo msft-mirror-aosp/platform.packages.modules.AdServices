@@ -21,8 +21,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
 import static com.android.adservices.data.adselection.CustomAudienceSignals.CONTEXTUAL_CA_NAME;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.QUERY_PARAM_RENDER_URIS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORES_COUNT_LESS_THAN_EXPECTED;
@@ -75,6 +75,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -89,8 +90,8 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.RunAdScoringProcessReportedStats;
+import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
@@ -172,6 +173,9 @@ public class AdsScoreGeneratorImplTest {
     @Captor
     ArgumentCaptor<RunAdScoringProcessReportedStats>
             mRunAdScoringProcessReportedStatsArgumentCaptor;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() throws Exception {
@@ -817,11 +821,11 @@ public class AdsScoreGeneratorImplTest {
 
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
@@ -829,7 +833,7 @@ public class AdsScoreGeneratorImplTest {
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
         List<SignedContextualAds> signedContextualAds =
-                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
+                mAdSelectionConfig.getPerBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
         for (SignedContextualAds ctx : signedContextualAds) {
@@ -938,11 +942,11 @@ public class AdsScoreGeneratorImplTest {
 
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
@@ -950,7 +954,7 @@ public class AdsScoreGeneratorImplTest {
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
         List<SignedContextualAds> signedContextualAds =
-                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
+                mAdSelectionConfig.getPerBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
         for (SignedContextualAds ctx : signedContextualAds) {
@@ -1086,11 +1090,11 @@ public class AdsScoreGeneratorImplTest {
 
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
@@ -1098,7 +1102,7 @@ public class AdsScoreGeneratorImplTest {
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
         List<SignedContextualAds> signedContextualAds =
-                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
+                mAdSelectionConfig.getPerBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
         for (SignedContextualAds ctx : signedContextualAds) {
@@ -1127,7 +1131,7 @@ public class AdsScoreGeneratorImplTest {
                         .setDecisionLogic(fakeDecisionLogicForBuyer)
                         .setBuyer(BUYER_2)
                         .build();
-        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(
+        mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(
                 ImmutableList.of(buyerDecisionOverride));
         mDevContext =
                 DevContext.builder()
@@ -1257,11 +1261,11 @@ public class AdsScoreGeneratorImplTest {
 
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
@@ -1269,7 +1273,7 @@ public class AdsScoreGeneratorImplTest {
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
         List<SignedContextualAds> signedContextualAds =
-                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
+                mAdSelectionConfig.getPerBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
         for (SignedContextualAds ctx : signedContextualAds) {
@@ -1904,13 +1908,13 @@ public class AdsScoreGeneratorImplTest {
 
         AdTechIdentifier buyer1 = BUYER_1;
         SignedContextualAds contextualAds1 =
-                SignedContextualAdsFixture.generateSignedContextualAds(
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
                                 buyer1, ImmutableList.of(100.0, 200.0, 300.0))
                         .build();
 
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
         SignedContextualAds contextualAds2 =
-                SignedContextualAdsFixture.generateSignedContextualAds(
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
                                 buyer2, ImmutableList.of(400.0, 500.0))
                         .build();
 

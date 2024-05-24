@@ -18,7 +18,7 @@ package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
-import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -38,7 +38,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -71,7 +71,7 @@ public class BackgroundFetchJobService extends JobService {
 
         LoggerFactory.getFledgeLogger().d("BackgroundFetchJobService.onStartJob");
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStartJob(FLEDGE_BACKGROUND_FETCH_JOB_ID);
 
         if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()) {
@@ -94,7 +94,7 @@ public class BackgroundFetchJobService extends JobService {
 
         // Skip the execution and cancel the job if user consent is revoked.
         // Use the per-API consent with GA UX.
-        if (!ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven()) {
+        if (!ConsentManager.getInstance().getConsent(AdServicesApiType.FLEDGE).isGiven()) {
             LoggerFactory.getFledgeLogger()
                     .d("User Consent is revoked ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
@@ -119,7 +119,7 @@ public class BackgroundFetchJobService extends JobService {
                             @Override
                             public void onSuccess(Void result) {
                                 boolean shouldRetry = false;
-                                AdservicesJobServiceLogger.getInstance(
+                                AdServicesJobServiceLogger.getInstance(
                                                 BackgroundFetchJobService.this)
                                         .recordJobFinished(
                                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
@@ -155,7 +155,7 @@ public class BackgroundFetchJobService extends JobService {
                                 }
 
                                 boolean shouldRetry = false;
-                                AdservicesJobServiceLogger.getInstance(
+                                AdServicesJobServiceLogger.getInstance(
                                                 BackgroundFetchJobService.this)
                                         .recordJobFinished(
                                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
@@ -178,7 +178,7 @@ public class BackgroundFetchJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance(this)
                     .recordJobSkipped(FLEDGE_BACKGROUND_FETCH_JOB_ID, skipReason);
         }
 
@@ -193,7 +193,7 @@ public class BackgroundFetchJobService extends JobService {
 
         boolean shouldRetry = true;
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, FLEDGE_BACKGROUND_FETCH_JOB_ID, shouldRetry);
         return shouldRetry;
     }

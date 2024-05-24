@@ -130,7 +130,7 @@ public final class AdFiltererImpl implements AdFilterer {
                     "Filtering finished. %d contextual ads of the original %d remain.",
                     adsList.size(), contextualAds.getAdsWithBid().size());
 
-            return contextualAds.cloneToBuilder().setAdsWithBid(adsList).build();
+            return new SignedContextualAds.Builder(contextualAds).setAdsWithBid(adsList).build();
         } finally {
             Tracing.endAsyncSection(Tracing.FILTERER_FILTER_CONTEXTUAL, traceCookie);
         }

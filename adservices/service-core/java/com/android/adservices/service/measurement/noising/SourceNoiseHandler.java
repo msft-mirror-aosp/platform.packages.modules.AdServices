@@ -30,11 +30,8 @@ import com.google.common.collect.ImmutableList;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -77,41 +74,32 @@ public class SourceNoiseHandler {
             @NonNull Source source) {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
         double value = rand.nextDouble();
-        if (value > getRandomAttributionProbability(source)) {
+        if (value >= getRandomizedSourceResponsePickRate(source)) {
             source.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
-            return Collections.emptyList();
+            return null;
         }
 
         List<Source.FakeReport> fakeReports;
         TriggerSpecs triggerSpecs = source.getTriggerSpecs();
         if (triggerSpecs == null) {
-            if (isVtcDualDestinationModeWithPostInstallEnabled(source)) {
-                // Source is 'EVENT' type, both app and web destination are set and install
-                // exclusivity
-                // window is provided. Pick one of the static reporting states randomly.
-                fakeReports = generateVtcDualDestinationPostInstallFakeReports(source);
-            } else {
-                // There will at least be one (app or web) destination available
-                ImpressionNoiseParams noiseParams = getImpressionNoiseParams(source);
-                fakeReports =
-                        ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(
-                                        noiseParams, rand)
-                                .stream()
-                                .map(
-                                        reportConfig ->
-                                                new Source.FakeReport(
-                                                        new UnsignedLong(
-                                                                Long.valueOf(reportConfig[0])),
-                                                        mEventReportWindowCalcDelegate
-                                                                .getReportingTimeForNoising(
-                                                                        source,
-                                                                        reportConfig[1],
-                                                                        isInstallDetectionEnabled(
-                                                                                source)),
-                                                        resolveFakeReportDestinations(
-                                                                source, reportConfig[2])))
-                                .collect(Collectors.toList());
-            }
+            // There will at least be one (app or web) destination available
+            ImpressionNoiseParams noiseParams = getImpressionNoiseParams(source);
+            fakeReports =
+                    ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(
+                                    noiseParams, rand)
+                            .stream()
+                            .map(
+                                    reportConfig ->
+                                            new Source.FakeReport(
+                                                    new UnsignedLong(
+                                                            Long.valueOf(reportConfig[0])),
+                                                    mEventReportWindowCalcDelegate
+                                                            .getReportingTimeForNoising(
+                                                                    source,
+                                                                    reportConfig[1]),
+                                                    resolveFakeReportDestinations(
+                                                            source, reportConfig[2])))
+                            .collect(Collectors.toList());
         } else {
             int destinationTypeMultiplier = source.getDestinationTypeMultiplier(mFlags);
             List<int[]> fakeReportConfigs =
@@ -142,68 +130,24 @@ public class SourceNoiseHandler {
         return fakeReports;
     }
 
+    @VisibleForTesting
+    double getRandomizedSourceResponsePickRate(Source source) {
+        // Methods on Source and EventReportWindowCalcDelegate that calculate flip probability for
+        // the source rely on reporting windows and max reports that are obtained with consideration
+        // to install-state and its interaction with configurable report windows and configurable
+        // max reports.
+        return source.getFlipProbability(mFlags);
+    }
+
     /** @return Probability of selecting random state for attribution */
-    public double getRandomAttributionProbability(@NonNull Source source) {
-        if (source.getTriggerSpecs() != null
-                || mFlags.getMeasurementEnableConfigurableEventReportingWindows()
-                || mFlags.getMeasurementEnableVtcConfigurableMaxEventReports()
-                || (mFlags.getMeasurementFlexLiteApiEnabled()
-                        && (source.getMaxEventLevelReports() != null
-                                || source.hasManualEventReportWindows()))) {
-            return convertToDoubleAndLimitDecimal(source.getFlipProbability(mFlags));
-        }
-        // TODO(b/290117352): Remove Hardcoded noise values
-
-        // Both destinations are set and install attribution is supported
-        if (!shouldReportCoarseDestinations(source)
-                && source.hasWebDestinations()
-                && isInstallDetectionEnabled(source)) {
-            return source.getSourceType() == Source.SourceType.EVENT
-                    ? convertToDoubleAndLimitDecimal(
-                            mFlags.getMeasurementInstallAttrDualDestinationEventNoiseProbability())
-                    : convertToDoubleAndLimitDecimal(
-                            mFlags.getMeasurementInstallAttrDualDestinationNavigationNoiseProbability());
-        }
-
-        // Both destinations are set but install attribution isn't supported
-        if (!shouldReportCoarseDestinations(source)
-                && source.hasAppDestinations()
-                && source.hasWebDestinations()) {
-            return source.getSourceType() == Source.SourceType.EVENT
-                    ? convertToDoubleAndLimitDecimal(
-                            mFlags.getMeasurementDualDestinationEventNoiseProbability())
-                    : convertToDoubleAndLimitDecimal(
-                            mFlags.getMeasurementDualDestinationNavigationNoiseProbability());
-        }
-
-        // App destination is set and install attribution is supported
-        if (isInstallDetectionEnabled(source)) {
-            return source.getSourceType() == Source.SourceType.EVENT
-                    ? convertToDoubleAndLimitDecimal(
-                            mFlags.getMeasurementInstallAttrEventNoiseProbability())
-                    : convertToDoubleAndLimitDecimal(
-                            mFlags.getMeasurementInstallAttrNavigationNoiseProbability());
-        }
-
-        // One of the destinations is available without install attribution support
-        return source.getSourceType() == Source.SourceType.EVENT
-                ? convertToDoubleAndLimitDecimal(mFlags.getMeasurementEventNoiseProbability())
-                : convertToDoubleAndLimitDecimal(mFlags.getMeasurementNavigationNoiseProbability());
+    public double getRandomizedTriggerRate(@NonNull Source source) {
+        return convertToDoubleAndLimitDecimal(getRandomizedSourceResponsePickRate(source));
     }
 
     private double convertToDoubleAndLimitDecimal(double probability) {
         return BigDecimal.valueOf(probability)
                 .setScale(PROBABILITY_DECIMAL_POINTS_LIMIT, RoundingMode.HALF_UP)
                 .doubleValue();
-    }
-
-    private boolean isVtcDualDestinationModeWithPostInstallEnabled(Source source) {
-        return !shouldReportCoarseDestinations(source)
-                && !source.hasManualEventReportWindows()
-                && source.getMaxEventLevelReports() == null
-                && source.getSourceType() == Source.SourceType.EVENT
-                && source.hasWebDestinations()
-                && isInstallDetectionEnabled(source);
     }
 
     /**
@@ -216,7 +160,7 @@ public class SourceNoiseHandler {
      * @return app or web destination {@link Uri}
      */
     private List<Uri> resolveFakeReportDestinations(Source source, int destinationIdentifier) {
-        if (shouldReportCoarseDestinations(source)) {
+        if (source.shouldReportCoarseDestinations(mFlags)) {
             ImmutableList.Builder<Uri> destinations = new ImmutableList.Builder<>();
             Optional.ofNullable(source.getAppDestinations()).ifPresent(destinations::addAll);
             Optional.ofNullable(source.getWebDestinations()).ifPresent(destinations::addAll);
@@ -234,44 +178,13 @@ public class SourceNoiseHandler {
                 : source.getWebDestinations();
     }
 
-    /** Check if install detection is enabled for the source. */
-    public static boolean isInstallDetectionEnabled(@NonNull Source source) {
-        return source.getInstallCooldownWindow() > 0 && source.hasAppDestinations();
-    }
-
-    private boolean shouldReportCoarseDestinations(Source source) {
-        return mFlags.getMeasurementEnableCoarseEventReportDestinations()
-                && source.hasCoarseEventReportDestinations();
-    }
-
-    private List<Source.FakeReport> generateVtcDualDestinationPostInstallFakeReports(
-            Source source) {
-        int[][][] fakeReportsConfig =
-                ImpressionNoiseUtil.DUAL_DESTINATION_POST_INSTALL_FAKE_REPORT_CONFIG;
-        int randomIndex = new Random().nextInt(fakeReportsConfig.length);
-        int[][] reportsConfig = fakeReportsConfig[randomIndex];
-        return Arrays.stream(reportsConfig)
-                .map(
-                        reportConfig ->
-                                new Source.FakeReport(
-                                        new UnsignedLong(Long.valueOf(reportConfig[0])),
-                                        mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                                                source,
-                                                /* window index */ reportConfig[1],
-                                                isInstallDetectionEnabled(source)),
-                                        resolveFakeReportDestinations(source, reportConfig[2])))
-                .collect(Collectors.toList());
-    }
-
     @VisibleForTesting
     ImpressionNoiseParams getImpressionNoiseParams(Source source) {
         int destinationTypeMultiplier = source.getDestinationTypeMultiplier(mFlags);
         return new ImpressionNoiseParams(
-                mEventReportWindowCalcDelegate.getMaxReportCount(
-                        source, isInstallDetectionEnabled(source)),
+                mEventReportWindowCalcDelegate.getMaxReportCount(source),
                 source.getTriggerDataCardinality(),
-                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        source, isInstallDetectionEnabled(source)),
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(source),
                 destinationTypeMultiplier);
     }
 }

@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
 
@@ -29,13 +30,12 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.AdServicesCommonServiceImpl;
 import com.android.adservices.service.common.AdServicesSyncUtil;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.shared.util.Clock;
 import com.android.adservices.ui.notifications.ConsentNotificationTrigger;
 
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
@@ -50,14 +50,18 @@ public class AdServicesCommonService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Trace.beginSection("AdServicesCommonService#Initialization");
         if (mAdServicesCommonService == null) {
             mAdServicesCommonService =
                     new AdServicesCommonServiceImpl(
                             this,
                             FlagsFactory.getFlags(),
                             UxEngine.getInstance(this),
-                            UxStatesManager.getInstance(this),
-                            AdIdWorker.getInstance());
+                            UxStatesManager.getInstance(),
+                            AdIdWorker.getInstance(),
+                            AdServicesLoggerImpl.getInstance(),
+                            Clock.getInstance());
         }
         LogUtil.d("created adservices common service");
         try {
@@ -79,35 +83,11 @@ public class AdServicesCommonService extends Service {
                     "getting exception when register consumer in AdServicesSyncUtil of "
                             + e.getMessage());
         }
+        Trace.endSection();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return Objects.requireNonNull(mAdServicesCommonService);
-    }
-
-    // TODO(b/308009734): STOPSHIP - remove this method once the proper service is available
-    @Override
-    protected void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
-        enforceCallingPermission(android.Manifest.permission.DUMP, /* message = */ "dump()");
-        if (args != null && args.length > 0 && args[0].equals("cmd")) {
-            boolean enabled = FlagsFactory.getFlags().getAdServicesShellCommandEnabled();
-            if (!enabled) {
-                LogUtil.w(
-                        "dump(%s) called on AdServicesCommonService when shell command flag was"
-                                + " disabled",
-                        Arrays.toString(args));
-                return;
-            }
-            // need to strip the "cmd" arg
-            String[] realArgs = new String[args.length - 1];
-            System.arraycopy(args, 1, realArgs, 0, args.length - 1);
-            LogUtil.w(
-                    "Using dump to call AdServicesShellCommandHandler - should NOT happen on"
-                            + " production");
-            new AdServicesShellCommandHandler(/* context= */ this, pw).run(realArgs);
-            return;
-        }
-        super.dump(fd, pw, args);
     }
 }

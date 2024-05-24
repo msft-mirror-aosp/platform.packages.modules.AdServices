@@ -35,9 +35,9 @@ import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -64,57 +64,48 @@ import com.android.adservices.service.measurement.reporting.VerboseDebugReportin
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.quality.Strictness;
 
 import java.util.List;
 
 /** Unit test for {@link com.android.adservices.measurement.MeasurementService}. */
-public class MeasurementServiceTest {
-    @Mock ConsentManager mMockConsentManager;
-    @Mock DevContextFilter mDevContextFilter;
-    @Mock Flags mMockFlags;
-    @Mock MeasurementImpl mMockMeasurementImpl;
-    @Mock EnrollmentDao mMockEnrollmentDao;
-    @Mock AppImportanceFilter mMockAppImportanceFilter;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(AggregateReportingJobService.class)
-                    .spyStatic(AggregateFallbackReportingJobService.class)
-                    .spyStatic(AppImportanceFilter.class)
-                    .spyStatic(AttributionJobService.class)
-                    .spyStatic(AttributionFallbackJobService.class)
-                    .spyStatic(ConsentManager.class)
-                    .spyStatic(UxStatesManager.class)
-                    .spyStatic(DevContextFilter.class)
-                    .spyStatic(EnrollmentDao.class)
-                    .spyStatic(EventReportingJobService.class)
-                    .spyStatic(PackageChangedReceiver.class)
-                    .spyStatic(EventFallbackReportingJobService.class)
-                    .spyStatic(DeleteExpiredJobService.class)
-                    .spyStatic(DeleteUninstalledJobService.class)
-                    .spyStatic(MddJobService.class)
-                    .spyStatic(EncryptionKeyJobService.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(MeasurementImpl.class)
-                    .spyStatic(AsyncRegistrationQueueJobService.class)
-                    .spyStatic(AsyncRegistrationFallbackJobService.class)
-                    .spyStatic(VerboseDebugReportingFallbackJobService.class)
-                    .spyStatic(DebugReportingFallbackJobService.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
+@SpyStatic(AggregateReportingJobService.class)
+@SpyStatic(AggregateFallbackReportingJobService.class)
+@SpyStatic(AppImportanceFilter.class)
+@SpyStatic(AttributionJobService.class)
+@SpyStatic(AttributionFallbackJobService.class)
+@SpyStatic(ConsentManager.class)
+@SpyStatic(UxStatesManager.class)
+@SpyStatic(DevContextFilter.class)
+@SpyStatic(EnrollmentDao.class)
+@SpyStatic(EventReportingJobService.class)
+@SpyStatic(PackageChangedReceiver.class)
+@SpyStatic(EventFallbackReportingJobService.class)
+@SpyStatic(DeleteExpiredJobService.class)
+@SpyStatic(DeleteUninstalledJobService.class)
+@SpyStatic(MddJobService.class)
+@SpyStatic(EncryptionKeyJobService.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(MeasurementImpl.class)
+@SpyStatic(AsyncRegistrationQueueJobService.class)
+@SpyStatic(AsyncRegistrationFallbackJobService.class)
+@SpyStatic(VerboseDebugReportingFallbackJobService.class)
+@SpyStatic(DebugReportingFallbackJobService.class)
+public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestCase {
+    @Mock private ConsentManager mMockConsentManager;
+    @Mock private DevContextFilter mDevContextFilter;
+    @Mock private Flags mMockFlags;
+    @Mock private MeasurementImpl mMockMeasurementImpl;
+    @Mock private EnrollmentDao mMockEnrollmentDao;
+    @Mock private AppImportanceFilter mMockAppImportanceFilter;
 
     private static final EnrollmentData ENROLLMENT =
             new EnrollmentData.Builder()
                     .setEnrollmentId("E1")
-                    .setCompanyId("1001")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                     .setSdkNames("sdk1")
                     .setAttributionSourceRegistrationUrl(List.of("https://test.com/source"))
                     .setAttributionTriggerRegistrationUrl(List.of("https://test.com/trigger"))
@@ -122,12 +113,6 @@ public class MeasurementServiceTest {
                     .setRemarketingResponseBasedRegistrationUrl(List.of("https://test.com"))
                     .setEncryptionKeyUrl("https://test.com/keys")
                     .build();
-
-    /** Setup for tests */
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     /** Test kill switch off with consent given */
     @Test
@@ -207,12 +192,10 @@ public class MeasurementServiceTest {
             boolean consentStatus,
             TestUtils.RunnableWithThrow execute)
             throws Exception {
-        doReturn(killSwitchStatus).when(mMockFlags).getMeasurementKillSwitch();
+        doReturn(!killSwitchStatus).when(mMockFlags).getMeasurementEnabled();
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-
-        ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance(any()));
-
+        ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
         ExtendedMockito.doReturn(mDevContextFilter)
                 .when(() -> DevContextFilter.create(any(Context.class)));
 

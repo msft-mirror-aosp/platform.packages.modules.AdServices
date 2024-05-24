@@ -22,19 +22,27 @@ import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.adservices.common.ConsentStatus.SERVICE_NOT_ENABLED;
 
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.KEY_ADSERVICES_ENTRY_POINT_STATUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__COMMON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADSERVICES_COMMON_STATES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_ENTRY_POINT_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.service.ui.constants.DebugMessages.BACK_COMPAT_FEATURE_ENABLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.CALLER_NOT_ALLOWED_MESSAGE;
 import static com.android.adservices.service.ui.constants.DebugMessages.ENABLE_AD_SERVICES_API_CALLED_MESSAGE;
 import static com.android.adservices.service.ui.constants.DebugMessages.ENABLE_AD_SERVICES_API_DISABLED_MESSAGE;
 import static com.android.adservices.service.ui.constants.DebugMessages.ENABLE_AD_SERVICES_API_ENABLED_MESSAGE;
@@ -43,10 +51,16 @@ import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_S
 import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
 import android.adservices.adid.AdId;
+import android.adservices.common.AdServicesCommonStates;
+import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesStates;
+import android.adservices.common.CallerMetadata;
+import android.adservices.common.ConsentStatus;
 import android.adservices.common.EnableAdServicesResponse;
+import android.adservices.common.GetAdServicesCommonStatesParams;
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
+import android.adservices.common.IAdServicesCommonStatesCallback;
 import android.adservices.common.IEnableAdServicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
@@ -58,6 +72,7 @@ import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
+import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
 
@@ -68,12 +83,20 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.shared.util.Clock;
 
+import java.util.Objects;
 import java.util.concurrent.Executor;
+
+import javax.annotation.Nonnull;
 
 /**
  * Implementation of {@link IAdServicesCommonService}.
@@ -89,20 +112,27 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     private final Context mContext;
     private final UxEngine mUxEngine;
     private final UxStatesManager mUxStatesManager;
+
+    private final AdServicesLogger mAdServicesLogger;
     private final Flags mFlags;
     private final AdIdWorker mAdIdWorker;
+    private final Clock mClock;
 
     public AdServicesCommonServiceImpl(
             Context context,
             Flags flags,
             UxEngine uxEngine,
             UxStatesManager uxStatesManager,
-            AdIdWorker adIdWorker) {
+            AdIdWorker adIdWorker,
+            AdServicesLogger adServicesLogger,
+            @NonNull Clock clock) {
         mContext = context;
         mFlags = flags;
         mUxEngine = uxEngine;
         mUxStatesManager = uxStatesManager;
         mAdIdWorker = adIdWorker;
+        mAdServicesLogger = adServicesLogger;
+        mClock = clock;
     }
 
     @Override
@@ -131,7 +161,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
                         // TO-DO (b/286664178): remove the block after API is fully ramped up.
                         if (mFlags.getEnableAdServicesSystemApi()
-                                && ConsentManager.getInstance(mContext).getUx() != null) {
+                                && ConsentManager.getInstance().getUx() != null) {
                             LogUtil.d(ENABLE_AD_SERVICES_API_ENABLED_MESSAGE);
                             // PS entry point should be hidden from unenrolled users.
                             isAdServicesEnabled &= mUxStatesManager.isEnrolledUser(mContext);
@@ -206,7 +236,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         + mFlags.getAdServicesEnabled());
                         LogUtil.d("entry point: " + adServicesEntryPointEnabled);
 
-                        ConsentManager consentManager = ConsentManager.getInstance(mContext);
+                        ConsentManager consentManager = ConsentManager.getInstance();
                         consentManager.setAdIdEnabled(adIdEnabled);
                         if (mFlags.getAdServicesEnabled() && adServicesEntryPointEnabled) {
                             // Check if it is reconsent for ROW.
@@ -218,7 +248,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         mContext, adIdEnabled, false);
                             }
 
-                            if (ConsentManager.getInstance(mContext).getConsent().isGiven()) {
+                            if (ConsentManager.getInstance().getConsent().isGiven()) {
                                 PackageChangedReceiver.enableReceiver(mContext, mFlags);
                                 BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
                             }
@@ -245,7 +275,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 && mFlags.getGaUxFeatureEnabled()
                 && DeviceRegionProvider.isEuDevice(mContext, mFlags)) {
             // Check if GA UX was notice before
-            ConsentManager consentManager = ConsentManager.getInstance(mContext);
+            ConsentManager consentManager = ConsentManager.getInstance();
             if (!consentManager.wasGaUxNotificationDisplayed()) {
                 // Check Beta notification displayed and user opt-in, we will re-consent
                 SharedPreferences preferences =
@@ -262,7 +292,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     /** Check if user is first time consent */
     public boolean getFirstConsentStatus() {
-        ConsentManager consentManager = ConsentManager.getInstance(mContext);
+        ConsentManager consentManager = ConsentManager.getInstance();
         return (!consentManager.wasGaUxNotificationDisplayed()
                         && !consentManager.wasNotificationDisplayed())
                 || mFlags.getConsentNotificationDebugMode();
@@ -270,7 +300,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     /** Check ROW device and see if it fit reconsent */
     public boolean reconsentIfNeededForROW() {
-        ConsentManager consentManager = ConsentManager.getInstance(mContext);
+        ConsentManager consentManager = ConsentManager.getInstance();
         return mFlags.getGaUxFeatureEnabled()
                 && !DeviceRegionProvider.isEuDevice(mContext, mFlags)
                 && !consentManager.wasGaUxNotificationDisplayed()
@@ -285,7 +315,9 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             @NonNull IEnableAdServicesCallback callback) {
         LogUtil.d(ENABLE_AD_SERVICES_API_CALLED_MESSAGE);
 
+        Trace.beginSection("AdServicesCommonService#EnableAdServices_PermissionCheck");
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+        Trace.endSection();
 
         sBackgroundExecutor.execute(
                 () -> {
@@ -308,7 +340,10 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             return;
                         }
 
+                        Trace.beginSection("AdServicesCommonService#EnableAdServices_UxEngineFlow");
                         mUxEngine.start(adServicesStates);
+                        Trace.endSection();
+
                         LogUtil.d("enableAdServices(): UxEngine started.");
 
                         callback.onResult(
@@ -358,5 +393,128 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         LogUtil.e(e, "updateAdIdCache() failed to complete.");
                     }
                 });
+    }
+
+    /** add a new API for ODP to get the common states from the adservices service. */
+    @Override
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    public void getAdServicesCommonStates(
+            @Nonnull GetAdServicesCommonStatesParams param,
+            @NonNull CallerMetadata callerMetadata,
+            @NonNull IAdServicesCommonStatesCallback callback) {
+        Objects.requireNonNull(param);
+        Objects.requireNonNull(callerMetadata);
+        Objects.requireNonNull(callback);
+        final long serviceStartTime = mClock.elapsedRealtime();
+        final String packageName = param.getAppPackageName();
+        final String sdkName = param.getSdkPackageName();
+        LogUtil.i(packageName);
+        boolean hasAccessAdServicesCommonStatePermission =
+                PermissionHelper.hasAccessAdServicesCommonStatePermission(mContext, packageName);
+
+        sBackgroundExecutor.execute(
+                () -> {
+                    int resultCode = STATUS_SUCCESS;
+                    int failureReason = FAILURE_REASON_UNSET;
+                    try {
+                        // Check permissions
+                        if (!hasAccessAdServicesCommonStatePermission) {
+                            LogUtil.e(UNAUTHORIZED_CALLER_MESSAGE);
+                            resultCode = STATUS_UNAUTHORIZED;
+                            failureReason = FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            return;
+                        }
+                        // Check package in allowlist
+                        boolean appCanUseGetCommonStatesService =
+                                AllowLists.isPackageAllowListed(
+                                        mFlags.getAdServicesCommonStatesAllowList(),
+                                        param.getAppPackageName());
+                        if (!appCanUseGetCommonStatesService) {
+                            LogUtil.e(CALLER_NOT_ALLOWED_MESSAGE);
+                            resultCode = STATUS_CALLER_NOT_ALLOWED;
+                            failureReason = FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
+                            callback.onFailure(STATUS_CALLER_NOT_ALLOWED);
+                            return;
+                        }
+                        if (mFlags.isGetAdServicesCommonStatesApiEnabled()) {
+                            LogUtil.d("start getting states");
+                            ConsentManager consentManager = ConsentManager.getInstance();
+                            AdServicesCommonStates adservicesCommonStates =
+                                    new AdServicesCommonStates.Builder()
+                                            .setMeasurementState(
+                                                    getConsentStatus(
+                                                            consentManager,
+                                                            AdServicesApiType.MEASUREMENTS))
+                                            .setPaState(
+                                                    getConsentStatus(
+                                                            consentManager,
+                                                            AdServicesApiType.FLEDGE))
+                                            .build();
+                            callback.onResult(
+                                    new AdServicesCommonStatesResponse.Builder(
+                                                    adservicesCommonStates)
+                                            .build());
+                            return;
+                        }
+                        LogUtil.d("service is not started");
+                        AdServicesCommonStates adservicesCommonStates =
+                                new AdServicesCommonStates.Builder()
+                                        .setMeasurementState(SERVICE_NOT_ENABLED)
+                                        .setPaState(SERVICE_NOT_ENABLED)
+                                        .build();
+                        callback.onResult(
+                                new AdServicesCommonStatesResponse.Builder(adservicesCommonStates)
+                                        .build());
+                    } catch (Exception e) {
+                        LogUtil.e("get error " + e.getMessage());
+                        resultCode = STATUS_INTERNAL_ERROR;
+                        failureReason = FAILURE_REASON_UNSET;
+                        try {
+                            callback.onFailure(STATUS_INTERNAL_ERROR);
+                        } catch (RemoteException ex) {
+                            LogUtil.e("Unable to send result to the callback " + ex.getMessage());
+                        }
+                    } finally {
+                        mAdServicesLogger.logApiCallStats(
+                                new ApiCallStats.Builder()
+                                        .setCode(AdServicesStatsLog.AD_SERVICES_API_CALLED)
+                                        .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__COMMON)
+                                        .setApiName(
+                                                AD_SERVICES_API_CALLED__API_NAME__GET_ADSERVICES_COMMON_STATES)
+                                        .setAppPackageName(packageName)
+                                        .setSdkPackageName(sdkName)
+                                        .setLatencyMillisecond(
+                                                getLatency(callerMetadata, serviceStartTime))
+                                        .setResult(resultCode, failureReason)
+                                        .build());
+                    }
+                });
+    }
+
+    private int getLatency(CallerMetadata metadata, long serviceStartTime) {
+        long binderCallStartTimeMillis = metadata.getBinderElapsedTimestamp();
+        long serviceLatency = mClock.elapsedRealtime() - serviceStartTime;
+        // Double it to simulate the return binder time is same to call binder time
+        long binderLatency = (serviceStartTime - binderCallStartTimeMillis) * 2;
+
+        return (int) (serviceLatency + binderLatency);
+    }
+
+    private @ConsentStatus.ConsentStatusCode int getConsentStatus(
+            ConsentManager consentManager, AdServicesApiType apiType) {
+        if (apiType == AdServicesApiType.FLEDGE) {
+            if (consentManager.isPasFledgeConsentGiven()) {
+                return ConsentStatus.GIVEN;
+            }
+            return ConsentStatus.REVOKED;
+        }
+        if (apiType == AdServicesApiType.MEASUREMENTS) {
+            if (consentManager.isPasMeasurementConsentGiven()) {
+                return ConsentStatus.GIVEN;
+            }
+            return ConsentStatus.REVOKED;
+        }
+        return ConsentStatus.REVOKED;
     }
 }

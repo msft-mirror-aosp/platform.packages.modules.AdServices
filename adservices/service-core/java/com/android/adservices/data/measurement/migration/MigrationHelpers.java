@@ -26,6 +26,7 @@ import com.android.adservices.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 
 /** Helper methods for database migrations. */
 public final class MigrationHelpers {
@@ -110,6 +111,12 @@ public final class MigrationHelpers {
             return;
         }
         db.execSQL(String.format("ALTER TABLE %1$s ADD %2$s TEXT", tableName, columnName));
+    }
+
+    static void logUpdateQuery(String column, long count, String table) {
+        String log =
+                String.format(Locale.ENGLISH, "Updated %s for %d %s records", column, count, table);
+        LoggerFactory.getMeasurementLogger().d(log);
     }
 
     /** Returns true if {@code tableName} contains a column {@code columnName}. */

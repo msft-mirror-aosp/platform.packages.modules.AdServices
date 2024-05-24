@@ -21,4 +21,5 @@ interface IMediationTestSdkApi {
     List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces();
     List<SandboxedSdk> getSandboxedSdks();
     void loadSdkBySdk(String sdkName);
+    void checkCanCallMediateeInterface(boolean inSandbox, String expectedValue);
 }

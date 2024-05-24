@@ -18,7 +18,10 @@ package com.android.server.sdksandbox.verifier;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.OutcomeReceiver;
+import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -26,6 +29,8 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.sdksandbox.proto.Verifier.AllowedApi;
 import com.android.server.sdksandbox.proto.Verifier.AllowedApisList;
+import com.android.server.sdksandbox.verifier.SerialDexLoader.DexLoadResult;
+import com.android.server.sdksandbox.verifier.SerialDexLoader.VerificationHandler;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -47,6 +52,7 @@ import java.util.Map;
 public class SdkDexVerifier {
 
     private final Object mPlatformApiAllowlistsLock = new Object();
+    private final Object mVerificationLock = new Object();
 
     private static final String TAG = "SdkSandboxVerifier";
 
@@ -63,6 +69,7 @@ public class SdkDexVerifier {
 
     private static SdkDexVerifier sSdkDexVerifier;
     private ApiAllowlistProvider mApiAllowlistProvider;
+    private SerialDexLoader mDexLoader;
 
     // Maps targetSdkVersion to its allowlist
     @GuardedBy("mPlatformApiAllowlistsLock")
@@ -70,6 +77,9 @@ public class SdkDexVerifier {
 
     @GuardedBy("mPlatformApiAllowlistsLock")
     private Map<Long, StringTrie> mPlatformApiAllowTries = new HashMap<>();
+
+    @GuardedBy("mVerificationLock")
+    private Map<String, Long> mVerificationTimes = new HashMap<>();
 
     /** Returns a singleton instance of {@link SdkDexVerifier} */
     @NonNull
@@ -85,6 +95,7 @@ public class SdkDexVerifier {
     @VisibleForTesting
     SdkDexVerifier(Injector injector) {
         mApiAllowlistProvider = injector.getApiAllowlistProvider();
+        mDexLoader = injector.getDexLoader();
     }
 
     /**
@@ -96,8 +107,14 @@ public class SdkDexVerifier {
      * @param callback to client for communication of parsing/verification results.
      */
     public void startDexVerification(
-            String sdkPath, long targetSdkVersion, OutcomeReceiver<Void, Exception> callback) {
+            String sdkPath,
+            String packagename,
+            long targetSdkVersion,
+            OutcomeReceiver<Void, Exception> callback) {
         long startTime = SystemClock.elapsedRealtime();
+        synchronized (mVerificationLock) {
+            mVerificationTimes.put(packagename, startTime);
+        }
 
         try {
             initAllowlist(targetSdkVersion);
@@ -109,16 +126,37 @@ public class SdkDexVerifier {
         File sdkPathFile = new File(sdkPath);
 
         if (!sdkPathFile.exists()) {
-            callback.onError(new Exception("Apk to verify not found: " + sdkPath));
+            callback.onError(new FileNotFoundException("Apk to verify not found: " + sdkPath));
             return;
         }
 
-        // TODO(b/231441674): load apk dex data and, verify against allowtrie.
+        mDexLoader.queueApkToLoad(
+                sdkPath,
+                packagename,
+                new VerificationHandler() {
+                    @Override
+                    public boolean verify(DexLoadResult result) {
+                        // TODO(b/231441674): verify against allowtrie.
+                        return true;
+                    }
 
-        long verificationTime = SystemClock.elapsedRealtime() - startTime;
-        Log.d(TAG, "Verification time (ms): " + verificationTime);
+                    @Override
+                    public void verificationFinishedForPackage(boolean passed) {
+                        if (passed) {
+                            Log.d(TAG, packagename + " verified.");
+                        } else {
+                            Log.d(TAG, packagename + " rejected");
+                        }
+                        synchronized (mVerificationLock) {
+                            long verificationTime =
+                                    SystemClock.elapsedRealtime()
+                                            - mVerificationTimes.remove(packagename);
+                            Log.d(TAG, "Verification time (ms): " + verificationTime);
+                        }
 
-        // TODO(b/231441674): cache and log verification result
+                        // TODO(b/231441674): cache and log verification result
+                    }
+                });
     }
 
     /*
@@ -261,17 +299,28 @@ public class SdkDexVerifier {
 
     static class Injector {
         private ApiAllowlistProvider mAllowlistProvider;
+        private SerialDexLoader mDexLoader;
 
         Injector() {
             mAllowlistProvider = new ApiAllowlistProvider();
+            HandlerThread handlerThread =
+                    new HandlerThread("DexParsingThread", Process.THREAD_PRIORITY_BACKGROUND);
+            handlerThread.start();
+            DexParser dexParser = new DexParserImpl();
+            mDexLoader = new SerialDexLoader(dexParser, new Handler(handlerThread.getLooper()));
         }
 
-        Injector(ApiAllowlistProvider apiAllowlistProvider) {
+        Injector(ApiAllowlistProvider apiAllowlistProvider, SerialDexLoader serialDexLoader) {
             mAllowlistProvider = apiAllowlistProvider;
+            mDexLoader = serialDexLoader;
         }
 
         ApiAllowlistProvider getApiAllowlistProvider() {
             return mAllowlistProvider;
+        }
+
+        SerialDexLoader getDexLoader() {
+            return mDexLoader;
         }
     }
 }

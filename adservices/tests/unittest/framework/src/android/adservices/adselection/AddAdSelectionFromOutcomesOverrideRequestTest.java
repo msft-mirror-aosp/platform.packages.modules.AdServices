@@ -20,6 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdSelectionSignals;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class AddAdSelectionFromOutcomesOverrideRequestTest {
@@ -27,6 +30,9 @@ public class AddAdSelectionFromOutcomesOverrideRequestTest {
             AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
     private static final String SELECTION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals SELECTION_SIGNALS = AdSelectionSignals.EMPTY;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildsAddAdSelectionOverrideRequest() {

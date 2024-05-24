@@ -21,7 +21,7 @@ android_app {
     defaults: ["platform_app_defaults"],
     certificate: "platform",
     srcs: [
-       "java/**/*.java",
+        "java/**/*.java",
     ],
     libs: [
         "android.ext.adservices",
@@ -41,4 +41,7 @@ android_app {
     resource_dirs: ["res"],
     platform_apis: true,
     min_sdk_version: "30",
+    lint: {
+        baseline_filename: "lint-baseline.xml",
+    },
 }

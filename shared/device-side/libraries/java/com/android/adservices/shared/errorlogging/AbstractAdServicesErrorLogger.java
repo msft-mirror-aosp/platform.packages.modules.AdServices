@@ -16,8 +16,7 @@
 
 package com.android.adservices.shared.errorlogging;
 
-import android.util.Log;
-
+import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -27,9 +26,6 @@ import java.util.Objects;
  * calls {@link StatsdAdServicesErrorLogger} to log the error to {@code Statsd}.
  */
 public abstract class AbstractAdServicesErrorLogger implements AdServicesErrorLogger {
-    // TODO(b/280460130): use adservice helpers for tag name / logging methods
-    private static final String TAG = AdServicesErrorLogger.class.getSimpleName();
-
     private final StatsdAdServicesErrorLogger mStatsdAdServicesErrorLogger;
 
     protected AbstractAdServicesErrorLogger(
@@ -69,7 +65,7 @@ public abstract class AbstractAdServicesErrorLogger implements AdServicesErrorLo
         // EpochJobService.onStartJob, ... } and we log stats for EpochJobService.onStartJob.
         int elementIdx = 2;
         if (stackTrace.length < elementIdx + 1) {
-            Log.w(TAG, "Stack trace length less than 3, skipping client error logging");
+            LogUtil.w("Stack trace length less than 3, skipping client error logging");
             return;
         }
         AdServicesErrorStats.Builder builder =

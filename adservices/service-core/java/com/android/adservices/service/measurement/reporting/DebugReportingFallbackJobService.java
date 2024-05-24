@@ -18,7 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.DEBUG_REPORTING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -30,7 +30,6 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
@@ -39,7 +38,7 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -74,7 +73,7 @@ public class DebugReportingFallbackJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStartJob(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementDebugReportingFallbackJobKillSwitch()) {
@@ -95,7 +94,7 @@ public class DebugReportingFallbackJobService extends JobService {
                         () -> {
                             sendReports();
                             boolean shouldRetry = false;
-                            AdservicesJobServiceLogger.getInstance(
+                            AdServicesJobServiceLogger.getInstance(
                                             DebugReportingFallbackJobService.this)
                                     .recordJobFinished(
                                             MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID,
@@ -113,7 +112,7 @@ public class DebugReportingFallbackJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -164,7 +163,7 @@ public class DebugReportingFallbackJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance(this)
                     .recordJobSkipped(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID, skipReason);
         }
 
@@ -191,11 +190,9 @@ public class DebugReportingFallbackJobService extends JobService {
         final JobLockHolder lock = JobLockHolder.getInstance(DEBUG_REPORTING);
         if (lock.tryLock()) {
             try {
-                EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
                 DatastoreManager datastoreManager =
                         DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new EventReportingJobHandler(
-                                enrollmentDao,
                                 datastoreManager,
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
@@ -205,7 +202,6 @@ public class DebugReportingFallbackJobService extends JobService {
                         .setIsDebugInstance(true)
                         .performScheduledPendingReportsInWindow(0, 0);
                 new AggregateReportingJobHandler(
-                                enrollmentDao,
                                 datastoreManager,
                                 new AggregateEncryptionKeyManager(
                                         datastoreManager, getApplicationContext()),

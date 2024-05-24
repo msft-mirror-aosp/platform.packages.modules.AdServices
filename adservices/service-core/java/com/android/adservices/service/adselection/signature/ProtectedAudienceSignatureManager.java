@@ -16,9 +16,9 @@
 
 package com.android.adservices.service.adselection.signature;
 
+import android.adservices.adselection.SignedContextualAds;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
@@ -28,6 +28,7 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -41,32 +42,96 @@ import java.util.stream.Collectors;
  */
 public class ProtectedAudienceSignatureManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private final Context mContext;
 
-    private final EnrollmentDao mEnrollmentDao;
-    private final EncryptionKeyDao mEncryptionKeyDao;
+    /**
+     * This P-256 ECDSA key is used to verify signatures if {@link
+     * com.android.adservices.service.FlagsConstants #KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK} is set to
+     * true.
+     *
+     * <p>This enables CTS and integration testing.
+     *
+     * <p>To test with this key, {@link SignedContextualAds} should be signed with {@link
+     * ProtectedAudienceSignatureManager#PRIVATE_TEST_KEY_STRING}.
+     */
+    public static final String PUBLIC_TEST_KEY_STRING =
+            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+Eyo0TOllW8as2pTTzxawQ57pXJiH16VERgHqcV1/YpADt3iq6"
+                    + "9vbhwW8Ksi3M0GrxacOuge/AwiM7Uh6+V3PA==";
 
-    public ProtectedAudienceSignatureManager(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    /**
+     * Private key pair of the {@link ProtectedAudienceSignatureManager#PUBLIC_TEST_KEY_STRING}
+     *
+     * <p>See {@link ProtectedAudienceSignatureManager#PUBLIC_TEST_KEY_STRING}
+     */
+    public static final String PRIVATE_TEST_KEY_STRING =
+            "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgECetqRr9eE9DKKjILR+hP66Y1niEw/bqPD/MNx"
+                    + "PTMvmhRANCAAT4TKjRM6WVbxqzalNPPFrBDnulcmIfXpURGAepxXX9ikAO3eKrr29uHBbwqyLczQ"
+                    + "avFpw66B78DCIztSHr5Xc8";
 
-        mContext = context;
+    @NonNull private final EnrollmentDao mEnrollmentDao;
+    @NonNull private final EncryptionKeyDao mEncryptionKeyDao;
+    private final boolean mIsEnrollmentCheckEnabled;
 
-        mEnrollmentDao = EnrollmentDao.getInstance(mContext);
-        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContext);
+    private final SignatureVerifier mSignatureVerifier;
+
+    public ProtectedAudienceSignatureManager(
+            @NonNull EnrollmentDao enrollmentDao,
+            @NonNull EncryptionKeyDao encryptionKeyDao,
+            boolean isEnrollmentCheckEnabled) {
+        Objects.requireNonNull(enrollmentDao);
+        Objects.requireNonNull(encryptionKeyDao);
+
+        mEnrollmentDao = enrollmentDao;
+        mEncryptionKeyDao = encryptionKeyDao;
+        mIsEnrollmentCheckEnabled = isEnrollmentCheckEnabled;
+
+        mSignatureVerifier = new ECDSASignatureVerifier();
     }
 
     @VisibleForTesting
     ProtectedAudienceSignatureManager(
-            @NonNull Context context,
             @NonNull EnrollmentDao enrollmentDao,
-            @NonNull EncryptionKeyDao encryptionKeyDao) {
-        mContext = context;
+            @NonNull EncryptionKeyDao encryptionKeyDao,
+            @NonNull SignatureVerifier signatureVerifier) {
         mEnrollmentDao = enrollmentDao;
         mEncryptionKeyDao = encryptionKeyDao;
+        mSignatureVerifier = signatureVerifier;
+
+        mIsEnrollmentCheckEnabled = true;
+    }
+
+    /**
+     * Returns whether is the given {@link SignedContextualAds} object is valid or not
+     *
+     * @param buyer Ad tech's identifier to resolve their public key
+     * @param signedContextualAds contextual ads object to verify
+     * @return true if the object is valid else false
+     */
+    public boolean isVerified(
+            @NonNull AdTechIdentifier buyer, @NonNull SignedContextualAds signedContextualAds) {
+        Objects.requireNonNull(buyer);
+        Objects.requireNonNull(signedContextualAds);
+
+        List<byte[]> publicKeys = fetchPublicKeyForAdTech(buyer);
+        boolean isVerified = false;
+        SignedContextualAdsHashUtil contextualAdsHashUtil;
+        for (byte[] publicKey : publicKeys) {
+            contextualAdsHashUtil = new SignedContextualAdsHashUtil();
+            byte[] serialized = contextualAdsHashUtil.serialize(signedContextualAds);
+            isVerified =
+                    mSignatureVerifier.verify(
+                            publicKey, serialized, signedContextualAds.getSignature());
+        }
+        return isVerified;
     }
 
     @VisibleForTesting
-    List<String> fetchPublicKeyForAdTech(AdTechIdentifier adTech) {
+    List<byte[]> fetchPublicKeyForAdTech(AdTechIdentifier adTech) {
+        Base64.Decoder decoder = Base64.getDecoder();
+        if (!mIsEnrollmentCheckEnabled) {
+            sLogger.v("Enrollment check is disabled, returning the default key");
+            return Collections.singletonList(decoder.decode(PUBLIC_TEST_KEY_STRING));
+        }
+
         sLogger.v("Fetching EnrollmentData for %s", adTech);
         EnrollmentData enrollmentData =
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
@@ -81,10 +146,10 @@ public class ProtectedAudienceSignatureManager {
                 mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
                         enrollmentData.getEnrollmentId(), EncryptionKey.KeyType.SIGNING);
 
-        sLogger.v("Received %s signing keys", encryptionKeys.size());
+        sLogger.v("Received %s signing key(s)", encryptionKeys.size());
         return encryptionKeys.stream()
                 .sorted(Comparator.comparingLong(EncryptionKey::getExpiration))
-                .map(EncryptionKey::getBody)
+                .map(key -> decoder.decode(key.getBody()))
                 .collect(Collectors.toList());
     }
 }

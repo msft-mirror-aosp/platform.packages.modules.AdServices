@@ -109,18 +109,20 @@ public class SignalsMaintenanceTasksWorker {
      *       </ul>
      */
     public void clearInvalidProtectedSignalsData() {
-        Instant expirationInstant =
-                mClock.instant().minusSeconds(ProtectedSignal.EXPIRATION_SECONDS);
-        clearInvalidSignals(expirationInstant);
+        Instant now = mClock.instant();
+        Instant expirationInstant = now.minusSeconds(ProtectedSignal.EXPIRATION_SECONDS);
+        clearInvalidSignals(expirationInstant, now);
         clearInvalidEncoders(expirationInstant);
         clearInvalidEncodedPayloads(expirationInstant);
     }
 
     @VisibleForTesting
-    void clearInvalidSignals(Instant expirationInstant) {
+    void clearInvalidSignals(Instant expirationInstant, Instant now) {
 
         sLogger.v("Clearing expired signals older than %s", expirationInstant);
-        int numExpiredSignals = mProtectedSignalsDao.deleteSignalsBeforeTime(expirationInstant);
+        int numExpiredSignals =
+                mProtectedSignalsDao.deleteExpiredSignalsAndUpdateSignalsUpdateMetadata(
+                        expirationInstant, now);
         sLogger.v("Cleared %d expired signals", numExpiredSignals);
 
         // Read from flags directly, since this maintenance task worker is attached to a background
@@ -138,7 +140,8 @@ public class SignalsMaintenanceTasksWorker {
 
         sLogger.v("Clearing signals for disallowed source apps");
         int numDisallowedSourceAppSignals =
-                mProtectedSignalsDao.deleteAllDisallowedPackageSignals(mPackageManager, mFlags);
+                mProtectedSignalsDao.deleteAllDisallowedPackageSignalsAndUpdateSignalUpdateMetadata(
+                        mPackageManager, mFlags, now);
         sLogger.v("Cleared %d signals for disallowed source apps", numDisallowedSourceAppSignals);
     }
 

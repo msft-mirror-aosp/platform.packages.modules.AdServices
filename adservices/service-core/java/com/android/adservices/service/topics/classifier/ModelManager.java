@@ -556,9 +556,9 @@ public class ModelManager {
                                 // in the ASSETS_PROPERTY_ATTRIBUTIONS.
                                 reader.skipValue();
                                 sLogger.e(
-                                        attribution,
-                                        " is a redundant metadata attribution of "
-                                                + "metadata property.");
+                                        "%s is a redundant metadata attribution of "
+                                                + "metadata property.",
+                                        attribution);
                                 ErrorLogUtil.e(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_PROPERTY,
                                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
@@ -577,8 +577,8 @@ public class ModelManager {
                                 // in the ASSET_NORMAL_ATTRIBUTIONS.
                                 reader.skipValue();
                                 sLogger.e(
-                                        attribution,
-                                        " is a redundant metadata attribution of asset.");
+                                        "%s is a redundant metadata attribution of asset.",
+                                        attribution);
                                 ErrorLogUtil.e(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET,
                                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
@@ -665,7 +665,7 @@ public class ModelManager {
                     try {
                         inputFields.add(ClassifierInputField.valueOf(line));
                     } catch (IllegalArgumentException e) {
-                        LogUtil.e("Invalid input field in classifier input config: {}", line);
+                        LogUtil.e("Invalid input field in classifier input config: %s", line);
                         return ClassifierInputConfig.getEmptyConfig();
                     }
                 }
@@ -696,7 +696,7 @@ public class ModelManager {
         try {
             String formattedInput =
                     String.format(classifierInputConfig.getInputFormat(), (Object[]) inputFields);
-            LogUtil.d("Validated classifier input format: {}", formattedInput);
+            LogUtil.d("Validated classifier input format: %s", formattedInput);
         } catch (IllegalFormatException e) {
             LogUtil.e("Classifier input config is incorrectly formatted");
             return false;
