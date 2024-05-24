@@ -41,7 +41,7 @@ import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
-import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -72,7 +72,9 @@ public final class MockitoExpectations {
             AdServicesLogger adServicesLogger, long timeoutMs) {
         ResultSyncCallback<ApiCallStats> callback =
                 new ResultSyncCallback<>(
-                        new SyncCallbackSettings.Builder().setMaxTimeoutMs(timeoutMs).build());
+                        SyncCallbackFactory.newSettingsBuilder()
+                                .setMaxTimeoutMs(timeoutMs)
+                                .build());
 
         doAnswer(
                         inv -> {

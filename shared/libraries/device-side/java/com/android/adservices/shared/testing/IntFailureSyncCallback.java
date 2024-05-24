@@ -16,6 +16,7 @@
 package com.android.adservices.shared.testing;
 
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 
 /**
@@ -33,7 +34,7 @@ public abstract class IntFailureSyncCallback<T> extends FailableOnResultSyncCall
 
     /** Default constructor. */
     public IntFailureSyncCallback() {
-        this(SyncCallbackSettings.newDefaultSettings());
+        this(SyncCallbackFactory.newDefaultSettings());
     }
 
     /** Fully customizable constructor. */
@@ -43,11 +44,11 @@ public abstract class IntFailureSyncCallback<T> extends FailableOnResultSyncCall
 
     /** Constructor with a custom timeout to wait for the outcome. */
     public IntFailureSyncCallback(long timeoutMs) {
-        this(new SyncCallbackSettings.Builder().setMaxTimeoutMs(timeoutMs).build());
+        this(SyncCallbackFactory.newSettingsBuilder().setMaxTimeoutMs(timeoutMs).build());
     }
 
     /** Sets the outcome as a failure (of the specific {@code code}. */
-    public void onFailure(int code) {
+    public final void onFailure(int code) {
         super.onFailure(Integer.valueOf(code));
     }
 
