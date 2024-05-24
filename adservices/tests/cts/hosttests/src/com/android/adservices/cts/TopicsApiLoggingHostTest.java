@@ -21,6 +21,7 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MAN
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
+import static com.android.os.adservices.AdservicesExtensionAtoms.AD_SERVICES_API_CALLED_FIELD_NUMBER;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -38,13 +39,15 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
-import com.android.os.AtomsProto.AdServicesApiCalled;
-import com.android.os.AtomsProto.Atom;
 import com.android.os.StatsLog.EventMetricData;
+import com.android.os.adservices.AdServicesApiCalled;
+import com.android.os.adservices.AdservicesExtensionAtoms;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner.TestMetrics;
+
+import com.google.protobuf.ExtensionRegistry;
 
 import org.junit.After;
 import org.junit.Before;
@@ -71,6 +74,8 @@ import java.util.List;
 public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
     private static final String PACKAGE = "com.android.adservices.cts";
     private static final String CLASS = "TopicsApiLogActivity";
+    private static final String CLASS_NAME = "TARGETING";
+    private static final String API_NAME = "GET_TOPICS";
     private static final String SDK_NAME = "AdservicesCtsSdk";
     private static final String TARGET_PACKAGE_SUFFIX_TPLUS = "android.adservices.api";
     private static final String TARGET_PACKAGE_SUFFIX_SMINUS = "android.ext.services";
@@ -112,13 +117,15 @@ public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
     public void testGetTopicsLog() throws Exception {
         ITestDevice device = getDevice();
         assertNotNull("Device not set", device);
+        ExtensionRegistry registry = ExtensionRegistry.newInstance();
+        AdservicesExtensionAtoms.registerAllExtensions(registry);
         boolean enforceForegroundStatus = getEnforceForeground();
         setEnforceForeground(false);
 
         callTopicsAPI(mTargetPackage, device);
 
         // Fetch a list of happened log events and their data
-        List<EventMetricData> data = ReportUtils.getEventMetricDataList(device);
+        List<EventMetricData> data = ReportUtils.getEventMetricDataList(device, registry);
 
         setEnforceForeground(enforceForegroundStatus);
 
@@ -126,20 +133,19 @@ public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
         assertThat(data).hasSize(1);
 
         // Verify the log event data
-        AdServicesApiCalled adServicesApiCalled = data.get(0).getAtom().getAdServicesApiCalled();
+        AdServicesApiCalled adServicesApiCalled =
+                data.get(0).getAtom().getExtension(AdservicesExtensionAtoms.adServicesApiCalled);
         assertThat(adServicesApiCalled.getSdkPackageName()).isEqualTo(SDK_NAME);
         assertThat(adServicesApiCalled.getAppPackageName()).isEqualTo(PACKAGE);
-        assertThat(adServicesApiCalled.getApiClass())
-                .isEqualTo(AdServicesApiCalled.AdServicesApiClassType.TARGETING);
-        assertThat(adServicesApiCalled.getApiName())
-                .isEqualTo(AdServicesApiCalled.AdServicesApiName.GET_TOPICS);
+        assertThat(adServicesApiCalled.getApiClass().toString()).isEqualTo(CLASS_NAME);
+        assertThat(adServicesApiCalled.getApiName().toString()).isEqualTo(API_NAME);
     }
 
     private void callTopicsAPI(String apiName, ITestDevice device) throws Exception {
         // Upload the config.
         final StatsdConfig.Builder config = ConfigUtils.createConfigBuilder(apiName);
 
-        ConfigUtils.addEventMetric(config, Atom.AD_SERVICES_API_CALLED_FIELD_NUMBER);
+        ConfigUtils.addEventMetric(config, AD_SERVICES_API_CALLED_FIELD_NUMBER);
         ConfigUtils.uploadConfig(device, config);
 
         // Run the get topic activity that has logging event on the devices
