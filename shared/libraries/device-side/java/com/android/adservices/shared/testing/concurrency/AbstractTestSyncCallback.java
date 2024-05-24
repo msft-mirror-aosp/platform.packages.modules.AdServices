@@ -15,18 +15,53 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import android.os.Looper;
+import android.os.SystemClock;
+
+import androidx.annotation.Nullable;
+
 import com.android.adservices.shared.testing.AndroidLogger;
 
 /** Base class for device-side sync callbacks for testing. */
 public abstract class AbstractTestSyncCallback extends AbstractSidelessTestSyncCallback {
 
-    // NOTE: currently there's no usage that takes a custom timeout, but we could add on demand
+    @Nullable private IllegalStateException mInternalFailure;
 
-    protected AbstractTestSyncCallback() {
-        this(/* expectedNumberOfCalls= */ 1);
+    private final long mEpoch = SystemClock.elapsedRealtime();
+
+    protected AbstractTestSyncCallback(SyncCallbackSettings settings) {
+        super(AndroidLogger.getInstance(), settings);
     }
 
-    protected AbstractTestSyncCallback(int expectedNumberOfCalls) {
-        super(AndroidLogger.getInstance(), expectedNumberOfCalls);
+    @Override
+    protected void customizeToString(StringBuilder string) {
+        super.customizeToString(string);
+
+        string.append(", epoch=")
+                .append(mEpoch)
+                .append(", internalFailure=")
+                .append(mInternalFailure);
+    }
+
+    @Override
+    public void setCalled() {
+        long delta = SystemClock.elapsedRealtime() - mEpoch;
+        Thread currentThread = Thread.currentThread();
+        logV("setCalled() called in %d ms on %s", delta, currentThread);
+        if (mSettings.isFailIfCalledOnMainThread()
+                && Looper.getMainLooper() != null
+                && Looper.getMainLooper().isCurrentThread()) {
+            String errorMsg = "setCalled() called on main thread (" + currentThread + ")";
+            logE("%s; assertCalled() will throw an IllegalStateException", errorMsg);
+            mInternalFailure = new IllegalStateException(errorMsg);
+        }
+        super.setCalled();
+    }
+
+    @Override
+    protected void postAssertCalled() {
+        if (mInternalFailure != null) {
+            throw mInternalFailure;
+        }
     }
 }

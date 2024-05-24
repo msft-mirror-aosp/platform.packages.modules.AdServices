@@ -62,11 +62,6 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     // android.os.OutcomeReceiver) and hence don't need to be checked at runtime.
                     FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
 
-                    // DeviceConfig flags for PA/FLEDGE are named "auction_server" instead of
-                    // "server_auction."  This API has already been released, and the aconfig flag
-                    // cannot be renamed, so this mismatch is intentional.
-                    FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED,
-
                     // TODO(b/323397060): Remove from this allowlist after implementing feature and
                     //  adding matching DeviceConfig flag
                     FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED,
@@ -104,9 +99,11 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
      */
     private static final Map<String, String> NON_CANONICAL_FLAGS =
             Map.of(
-                    // Example:
-                    // FLAG_MY_FLAG, FlagsConstants.KEY_MY_NON_CANONICAL_FLAG
-                    );
+                    // DeviceConfig flags for PA/FLEDGE are named "auction_server" instead of
+                    // "server_auction."  This API has already been released, and the aconfig flag
+                    // cannot be renamed, so this mismatch is intentional.
+                    FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED,
+                    FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED);
 
     @Test
     public void testNoFlagHasTheAConfigPrefix() throws Exception {

@@ -102,9 +102,9 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.IntFailureSyncCallback;
-import com.android.adservices.shared.testing.NoFailureSyncCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -846,7 +846,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // Send client side timestamp, working with the mock information in
         // service side to calculate the latency
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
-        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+        ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
                 mockLogApiCallStats(mAdServicesLogger);
 
         topicsServiceImpl.getTopics(mRequest, mCallerMetadata, callback);
@@ -895,7 +895,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .setSdkPackageName(SOME_SDK_NAME)
                         .build();
 
-        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+        ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
                 mockLogApiCallStats(mAdServicesLogger);
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
@@ -956,7 +956,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .build();
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
-        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+        ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
                 mockLogApiCallStats(mAdServicesLogger);
 
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
@@ -990,7 +990,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .build();
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
-        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+        ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
                 mockLogApiCallStats(mAdServicesLogger);
 
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
@@ -1035,7 +1035,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
             boolean checkLoggingStatus)
             throws InterruptedException {
 
-        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+        ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
                 mockLogApiCallStats(mAdServicesLogger);
 
         mTopicsServiceImpl =
@@ -1111,7 +1111,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @NonNull
     private GetTopicsResult getTopicsResults(TopicsServiceImpl topicsServiceImpl)
             throws InterruptedException {
-        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+        ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
                 mockLogApiCallStats(mAdServicesLogger);
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();

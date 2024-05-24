@@ -15,9 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.concurrency.AbstractSyncCallback.LOG_TAG;
-
-import com.android.adservices.shared.concurrency.AbstractSyncCallback;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 
@@ -30,42 +27,18 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallback
         implements TestSyncCallback {
 
-    /** Timeout set by default constructor */
-    public static final long DEFAULT_TIMEOUT_MS = 5_000;
-
-    private final long mTimeoutMs;
-
     private final Logger mLogger;
 
-    /** Default constructor (uses {@link #DEFAULT_TIMEOUT_MS}) that expects a single call. */
-    protected AbstractSidelessTestSyncCallback(RealLogger realLogger) {
-        this(realLogger, DEFAULT_TIMEOUT_MS);
-    }
-
-    /** Custom with custom number of expected calls (using {@link #DEFAULT_TIMEOUT_MS}). */
-    protected AbstractSidelessTestSyncCallback(RealLogger realLogger, int expectedNumberOfCalls) {
-        this(realLogger, expectedNumberOfCalls, DEFAULT_TIMEOUT_MS);
-    }
-
-    /** Constructor with custom timeout (for a single call). */
-    protected AbstractSidelessTestSyncCallback(RealLogger realLogger, long timeoutMs) {
-        this(realLogger, /* expectedNumberOfCalls= */ 1, timeoutMs);
-    }
-
-    /** Constructor with custom timeout and number of expected calls. */
+    /** Default constructor. */
     protected AbstractSidelessTestSyncCallback(
-            RealLogger realLogger, int expectedNumberOfCalls, long timeoutMs) {
-        super(expectedNumberOfCalls);
-        if (timeoutMs <= 0) {
-            throw new IllegalArgumentException("timeout must be positive");
-        }
-        mTimeoutMs = timeoutMs;
+            RealLogger realLogger, SyncCallbackSettings settings) {
+        super(settings);
         mLogger = new Logger(realLogger, LOG_TAG);
     }
 
     @Override
-    public long getMaxTimeoutMs() {
-        return mTimeoutMs;
+    public SyncCallbackSettings getSettings() {
+        return mSettings;
     }
 
     @Override
@@ -78,9 +51,19 @@ public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallb
         throwWaitCalledNotSupported();
     }
 
+    /** Called by {@link #assertCalled()} so subclasses can fail it if needed. */
+    protected void postAssertCalled() {}
+
     @Override
     public final void assertCalled() throws InterruptedException {
-        super.waitCalled(mTimeoutMs, TimeUnit.MILLISECONDS);
+        super.waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
+        postAssertCalled();
+    }
+
+    @FormatMethod
+    @Override
+    public final void logE(@FormatString String msgFmt, Object... msgArgs) {
+        mLogger.e("%s: %s", toString(), String.format(msgFmt, msgArgs));
     }
 
     @FormatMethod

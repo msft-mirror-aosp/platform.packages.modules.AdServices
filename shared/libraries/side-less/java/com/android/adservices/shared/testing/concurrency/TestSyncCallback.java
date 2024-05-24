@@ -22,13 +22,13 @@ public interface TestSyncCallback extends Identifiable {
 
     /**
      * Asserts the callback was called or throw if it times out - the timeout value is defined by
-     * the constructor and can be obtained through {@link #getMaxTimeoutMs()}.
+     * the constructor and can be obtained through {@link #getSettings()}.
      */
     void assertCalled() throws InterruptedException;
 
     /** Returns whether the callback was called (at least) the expected number of times. */
     boolean isCalled();
 
-    /** Returns the maximum timeout before {@link #assertCalled()} would throw. */
-    long getMaxTimeoutMs();
+    /** Gets the callback settings. */
+    SyncCallbackSettings getSettings();
 }

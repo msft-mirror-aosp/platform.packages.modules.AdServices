@@ -19,7 +19,6 @@ package {
 java_library_host {
     name: "adservices-shared-hostside-testing",
     srcs: [
-        ":adservices-shared-sideless-sync-callback-sources",
         ":adservices-shared-sideless-testing-sources",
         "java/**/*.java",
     ],

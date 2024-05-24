@@ -68,6 +68,31 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
         expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
     }
 
+
+    // It's testing doAnswer(), so it needs to call those methods...
+    @SuppressWarnings("DirectInvocationOnMock")
+    @Test
+    public void testForMultipleVoidAnswers() throws Exception {
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forMultipleVoidAnswers(2);
+        doAnswer(callback).when(mDarthVoider).voidVoid();
+        expect.withMessage("%%s.isCalled() before 1st call", callback)
+                .that(callback.isCalled())
+                .isFalse();
+
+        mDarthVoider.voidVoid();
+
+        expect.withMessage("%s.isCalled() after 1st call", callback)
+                .that(callback.isCalled())
+                .isFalse();
+
+        mDarthVoider.voidVoid();
+
+        callback.assertCalled();
+        expect.withMessage("%s.isCalled() after 2nd call", callback)
+                .that(callback.isCalled())
+                .isTrue();
+    }
+
     // It's testing doAnswer(), so it needs to call those methods...
     @SuppressWarnings("DirectInvocationOnMock")
     @Test
