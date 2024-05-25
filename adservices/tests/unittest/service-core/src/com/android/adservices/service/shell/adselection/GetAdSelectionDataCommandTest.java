@@ -18,20 +18,31 @@ package com.android.adservices.service.shell.adselection;
 
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
 
+import static org.mockito.Mockito.when;
+
+import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.shell.ShellCommandTestCase;
 import com.android.adservices.service.stats.ShellCommandStats;
 
+import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
+
 import org.junit.Test;
+import org.mockito.Mock;
+
+import java.util.Map;
 
 public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSelectionDataCommand> {
 
     @ShellCommandStats.Command
     private static final int EXPECTED_COMMAND = COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
 
+    @Mock private BuyerInputGenerator mBuyerInputGenerator;
+
     @Test
     public void testRun_missingBuyerArgument_returnsHelp() {
         runAndExpectInvalidArgument(
-                new GetAdSelectionDataCommand(),
+                new GetAdSelectionDataCommand(mBuyerInputGenerator),
                 GetAdSelectionDataCommand.HELP,
                 EXPECTED_COMMAND,
                 AdSelectionShellCommandFactory.COMMAND_PREFIX,
@@ -40,10 +51,13 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
 
     @Test
     public void testRun_withAllArguments_returnsSuccess() {
+        when(mBuyerInputGenerator.createCompressedBuyerInputs())
+                .thenReturn(FluentFuture.from(Futures.immediateFuture(Map.of())));
+
         // TODO(b/339851172): Replace with full implementation later.
         Result result =
                 run(
-                        new GetAdSelectionDataCommand(),
+                        new GetAdSelectionDataCommand(mBuyerInputGenerator),
                         AdSelectionShellCommandFactory.COMMAND_PREFIX,
                         GetAdSelectionDataCommand.CMD,
                         GetAdSelectionDataArgs.BUYER,
