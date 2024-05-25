@@ -78,6 +78,13 @@ public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallb
         mLogger.v("%s: %s", toString(), String.format(msgFmt, msgArgs));
     }
 
+    @Override
+    protected void customizeToString(StringBuilder string) {
+        super.customizeToString(string);
+
+        string.append(", logTag=").append(LOG_TAG);
+    }
+
     private void throwWaitCalledNotSupported() {
         throw new UnsupportedOperationException("should call assertCalled() instead");
     }

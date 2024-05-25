@@ -16,7 +16,7 @@
 
 package com.android.adservices.shared.testing;
 
-import static com.android.adservices.shared.testing.SyncCallback.DEFAULT_TIMEOUT_MS;
+import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -24,6 +24,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.adservices.shared.util.Preconditions;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -46,7 +48,7 @@ public final class BroadcastReceiverSyncCallback {
         this(context, DEFAULT_TIMEOUT_MS);
     }
 
-    public BroadcastReceiverSyncCallback(Context context, int timeoutMs) {
+    public BroadcastReceiverSyncCallback(Context context, long timeoutMs) {
         this(context, new ResultBroadcastReceiver(timeoutMs));
     }
 
@@ -99,10 +101,15 @@ public final class BroadcastReceiverSyncCallback {
 
     @VisibleForTesting
     static class ResultBroadcastReceiver extends BroadcastReceiver {
-        private final SyncCallback<Intent, Void> mSyncCallback;
+        private final ResultSyncCallback<Intent> mSyncCallback;
 
-        ResultBroadcastReceiver(int timeoutMs) {
-            mSyncCallback = new SyncCallback<>(timeoutMs, /* failIfCalledOnMainThread= */ false);
+        ResultBroadcastReceiver(long timeoutMs) {
+            mSyncCallback =
+                    new ResultSyncCallback<>(
+                            new SyncCallbackSettings.Builder()
+                                    .setMaxTimeoutMs(timeoutMs)
+                                    .setFailIfCalledOnMainThread(false)
+                                    .build());
         }
 
         @Override

@@ -35,7 +35,7 @@ public abstract class AbstractSyncCallback implements SyncCallback {
 
     protected final SyncCallbackSettings mSettings;
 
-    private final String mId = getClass().getSimpleName() + '#' + sIdGenerator.incrementAndGet();
+    private final String mId = String.valueOf(sIdGenerator.incrementAndGet());
     private final CountDownLatch mLatch;
 
     /** Default constructor. */
@@ -131,17 +131,26 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         return mLatch.getCount() == 0;
     }
 
+    /**
+     * Helper method that fills the {@code string} with the content of {@link #toString()} but
+     * without the enclosing {@code [class: ]} part.
+     */
+    public final StringBuilder appendInfo(StringBuilder string) {
+        Objects.requireNonNull(string)
+                .append("id=")
+                .append(mId)
+                .append(", ")
+                .append(mSettings)
+                .append(", missingCalls=")
+                .append(mLatch.getCount());
+        customizeToString(string);
+        return string;
+    }
+
     @Override
     public final String toString() {
-        StringBuilder string =
-                new StringBuilder()
-                        .append('[')
-                        .append(mId)
-                        .append(": ")
-                        .append(mSettings)
-                        .append(", missingCalls=")
-                        .append(mLatch.getCount());
-        customizeToString(string);
-        return string.append(']').toString();
+        return appendInfo(new StringBuilder("[").append(getClass().getSimpleName()).append(": "))
+                .append(']')
+                .toString();
     }
 }

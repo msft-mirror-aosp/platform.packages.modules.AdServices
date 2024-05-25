@@ -16,37 +16,35 @@
 
 package com.android.adservices.shared.testing;
 
-import android.annotation.Nullable;
+import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 
 import com.google.common.util.concurrent.FutureCallback;
 
 /**
- * * SyncCallback based implementation for FutureCallback.
+ * SyncCallback based implementation for FutureCallback.
  *
  * @param <T> type of the object received on success.
  */
-public class FutureSyncCallback<T> extends SyncCallback<T, Throwable> implements FutureCallback<T> {
+public class FutureSyncCallback<T> extends FailableResultSyncCallback<T, Throwable>
+        implements FutureCallback<T> {
 
-    /**
-     * Default constructor, uses {@link #DEFAULT_TIMEOUT_MS} for timeout and fails if the {@code
-     * inject...} method is called in the main thread.
-     */
     public FutureSyncCallback() {
         super();
     }
 
-    /** Constructor with a custom timeout to wait for the outcome. */
-    public FutureSyncCallback(long timeoutMs) {
-        super(timeoutMs);
+    public FutureSyncCallback(SyncCallbackSettings settings) {
+        super(settings);
     }
 
     @Override
-    public void onSuccess(@Nullable T result) {
+    public void onSuccess(T result) {
         injectResult(result);
+
     }
 
     @Override
     public void onFailure(Throwable t) {
-        injectError(t);
+        injectFailure(t);
     }
 }

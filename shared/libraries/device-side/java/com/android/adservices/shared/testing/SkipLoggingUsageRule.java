@@ -16,10 +16,20 @@
 
 package com.android.adservices.shared.testing;
 
-import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 /**
- * Custom {@code SyncCallback} implementation that doesn't expect an exception to be thrown and
- * injects a {@code boolean}
+ * Annotation used to skip logging usage rule. Use at class level to skip all tests; user at method
+ * level to skip individual tests.
  */
-public final class BooleanSyncCallback extends ResultSyncCallback<Boolean> {}
+@Retention(RUNTIME)
+@Target({METHOD, TYPE})
+public @interface SkipLoggingUsageRule {
+    /** Reason why the test should be skipped. */
+    String reason() default "";
+}

@@ -19,10 +19,12 @@ package com.android.adservices.shared.testing;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.adservices.shared.util.Preconditions;
 
 /**
- * {@link SyncCallback} used to make sure a handler is "idle", i.e., it processes all requests in
+ * {@code SyncCallback} used to make sure a handler is "idle", i.e., it processes all requests in
  * its queue (posted prior to the callback creation).
  *
  * <p>Typically used on <code>@After</code> methods to wait until for background tasks to be
@@ -31,10 +33,10 @@ import com.android.adservices.shared.util.Preconditions;
  * <p>NOTE: for now it only checks the main thread, but it could be extended to take a {@code
  * Handler} or {@code Looper} in the constructor.
  */
-public final class HandlerIdleSyncCallback extends SyncCallback<Object, Void> {
+public final class HandlerIdleSyncCallback extends ResultSyncCallback<Object> {
 
     public HandlerIdleSyncCallback() {
-        super(DEFAULT_TIMEOUT_MS, /* failIfCalledOnMainThread= */ false);
+        super(new SyncCallbackSettings.Builder().setFailIfCalledOnMainThread(false).build());
 
         Looper looper = Looper.getMainLooper();
         Preconditions.checkState(looper != null, "No main looper");
@@ -46,43 +48,12 @@ public final class HandlerIdleSyncCallback extends SyncCallback<Object, Void> {
      * callback).
      */
     public boolean isIdle() {
-        return isReceived();
+        return isCalled();
     }
 
     /** Blocks until the handler is idle. */
     public void assertIdle() throws InterruptedException {
-        assertReceived();
+        assertCalled();
     }
 
-    // TODO(b/337014024): should not need to override methods below
-
-    @Override
-    public void injectResult(Object result) {
-        throw new UnsupportedOperationException("result posted on handler by constructor");
-    }
-
-    @Override
-    public void injectError(Void result) {
-        throw new UnsupportedOperationException("result posted on handler by constructor");
-    }
-
-    @Override
-    public Void assertErrorReceived() throws InterruptedException {
-        throw new UnsupportedOperationException("should call assertIdle() instead");
-    }
-
-    @Override
-    public Void getErrorReceived() {
-        throw new UnsupportedOperationException("should call isIdle() instead");
-    }
-
-    @Override
-    public Object assertResultReceived() throws InterruptedException {
-        throw new UnsupportedOperationException("should call assertIdle() instead");
-    }
-
-    @Override
-    public Object getResultReceived() {
-        throw new UnsupportedOperationException("should call isIdle() instead");
-    }
 }
