@@ -56,7 +56,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -444,16 +443,20 @@ public class AsyncTriggerFetcher {
                             openUrl(new URL(asyncRegistration.getRegistrationUri().toString()));
             urlConnection.setRequestMethod("POST");
             urlConnection.setInstanceFollowRedirects(false);
-            headers = new HashMap<>(urlConnection.getHeaderFields());
+            headers = urlConnection.getHeaderFields();
             enrollmentId = getEnrollmentId(asyncRegistration);
 
-            // remove ODP header from headers map and forward ODP header
+            // get ODP header from headers map and forward ODP header
+            long odpHeaderSize = 0;
             Optional<Map<String, List<String>>> odpHeader = extractOdpTriggerHeader(headers);
-            if (odpHeader.isPresent() && enrollmentId.isPresent()) {
-                mOdpWrapper.registerOdpTrigger(asyncRegistration, odpHeader.get());
+            if (odpHeader.isPresent()) {
+                odpHeaderSize = FetcherUtil.calculateHeadersCharactersLength(odpHeader.get());
+                if (enrollmentId.isPresent()) {
+                    mOdpWrapper.registerOdpTrigger(asyncRegistration, odpHeader.get());
+                }
             }
 
-            long headerSize = FetcherUtil.calculateHeadersCharactersLength(headers);
+            long headerSize = FetcherUtil.calculateHeadersCharactersLength(headers) - odpHeaderSize;
             if (mFlags.getMeasurementEnableUpdateTriggerHeaderLimit()
                     && headerSize > mFlags.getMaxTriggerRegistrationHeaderSizeBytes()) {
                 LoggerFactory.getMeasurementLogger()
@@ -524,7 +527,7 @@ public class AsyncTriggerFetcher {
         return headers.containsKey(OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER)
                 ? Optional.of(Map.of(
                         OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER,
-                        headers.remove(
+                        headers.get(
                                 OdpTriggerHeaderContract.HEADER_ODP_REGISTER_TRIGGER)))
                 : Optional.empty();
     }
