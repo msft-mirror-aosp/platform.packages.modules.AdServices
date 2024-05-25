@@ -31,8 +31,8 @@ public abstract class SidelessTestCase implements TestNamer {
 
     private static final AtomicInteger sNextInvocationId = new AtomicInteger();
 
-    @Rule(order = 42)
-    public final Expect expect = Expect.create();
+    // TODO(b/342639109): set order
+    @Rule public final Expect expect = Expect.create();
 
     private final int mInvocationId = sNextInvocationId.incrementAndGet();
 

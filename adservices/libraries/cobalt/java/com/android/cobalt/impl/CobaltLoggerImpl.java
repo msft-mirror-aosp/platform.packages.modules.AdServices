@@ -44,7 +44,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of the logging of metrics for Cobalt. */
@@ -262,20 +261,26 @@ public final class CobaltLoggerImpl implements CobaltLogger {
 
     private MetricDefinition validateEventAndGetMetric(
             MetricType metricType, long metricId, List<Integer> eventCodes) {
-        checkArgument(
-                eventCodes.stream().allMatch(c -> c >= 0),
-                "event vectors can't contain negative event codes");
+        for (int eventCode : eventCodes) {
+            checkArgument(eventCode >= 0, "event vectors can't contain negative event codes");
+        }
 
-        Optional<MetricDefinition> foundMetric =
-                mProject.getMetrics().stream().filter(m -> m.getId() == metricId).findFirst();
-        checkArgument(foundMetric.isPresent(), "failed to find metric with ID: %s", metricId);
-        MetricType foundMetricType = foundMetric.get().getMetricType();
+        MetricDefinition foundMetric = null;
+        for (MetricDefinition metric : mProject.getMetrics()) {
+            if (metric.getId() == metricId) {
+                foundMetric = metric;
+                break;
+            }
+        }
+
+        checkArgument(foundMetric != null, "failed to find metric with ID: %s", metricId);
+        MetricType foundMetricType = foundMetric.getMetricType();
         checkArgument(
                 foundMetricType == metricType,
                 "wrong metric type, expected %s, found %s",
                 metricType,
                 foundMetricType);
 
-        return foundMetric.get();
+        return foundMetric;
     }
 }

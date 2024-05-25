@@ -29,8 +29,8 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
 
     @Test
     public void testDefaultBuilder() {
-        SyncCallbackSettings settings = new SyncCallbackSettings.Builder().build();
-        assertWithMessage("builder.build()").that(settings).isNotNull();
+        SyncCallbackSettings settings = SyncCallbackSettings.newDefaultSettings();
+        assertWithMessage("1st call").that(settings).isNotNull();
 
         expect.withMessage("getExpectedNumberCalls()")
                 .that(settings.getExpectedNumberCalls())
@@ -48,6 +48,10 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
                 .that(toString)
                 .contains("maxTimeoutMs=" + DEFAULT_TIMEOUT_MS);
         expect.withMessage("toString()").that(toString).contains("failIfCalledOnMainThread=true");
+
+        // Should always return a new instance
+        SyncCallbackSettings settings2 = SyncCallbackSettings.newDefaultSettings();
+        assertWithMessage("2nd call()").that(settings2).isNotSameInstanceAs(settings);
     }
 
     @Test

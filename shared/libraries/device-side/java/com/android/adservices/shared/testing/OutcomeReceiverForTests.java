@@ -17,30 +17,66 @@ package com.android.adservices.shared.testing;
 
 import android.os.OutcomeReceiver;
 
+import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
+
 /**
  * Simple implementation of {@link OutcomeReceiver} for tests.
  *
  * <p>Callers typically call {@link #assertSuccess()} or {@link #assertFailure(Class)} to assert the
  * expected result.
+ *
+ * @param <T> type of outcome
  */
-public final class OutcomeReceiverForTests<T> extends ExceptionFailureSyncCallback<T>
+public final class OutcomeReceiverForTests<T> extends FailableResultSyncCallback<T, Exception>
         implements OutcomeReceiver<T, Exception> {
 
     /**
-     * Default constructor, uses {@link #DEFAULT_TIMEOUT_MS} for timeout and fails if the {@code
-     * inject...} method is called in the main thread.
+     * Default constructor, uses {@link SyncCallbackSettings#DEFAULT_TIMEOUT_MS} for timeout and
+     * fails if the {@code inject...} method is called in the main thread.
      */
     public OutcomeReceiverForTests() {
         super();
     }
 
-    /** Constructor with a custom timeout to wait for the outcome. */
-    public OutcomeReceiverForTests(int timeoutMs) {
-        super(timeoutMs);
+    /** Custom constructor. */
+    public OutcomeReceiverForTests(SyncCallbackSettings settings) {
+        super(settings);
     }
 
-    /** Constructor with custom settings. */
-    public OutcomeReceiverForTests(int timeoutMs, boolean failIfCalledOnMainThread) {
-        super(timeoutMs, failIfCalledOnMainThread);
+    @Override
+    public void onResult(T result) {
+        injectResult(result);
+    }
+
+    @Override
+    public void onError(Exception error) {
+        injectFailure(error);
+    }
+
+    /**
+     * Asserts that {@link #onResult(Object)} was called, waiting up to {@link #getTimeoutMs()}
+     * milliseconds before failing (if not called).
+     *
+     * @return the result
+     */
+    public T assertSuccess() throws InterruptedException {
+        return assertResultReceived();
+    }
+
+    /** Gets the error returned by {@link #onError(Exception)}. */
+    public @Nullable Exception getError() {
+        return getFailure();
+    }
+
+    /**
+     * Asserts that {@link #onError(Exception)} was called, waiting up to {@code timeoutMs}
+     * milliseconds before failing (if not called).
+     *
+     * @return the error
+     */
+    public <E extends Exception> E assertFailure(Class<E> expectedClass)
+            throws InterruptedException {
+        return assertFailureReceived(expectedClass);
     }
 }

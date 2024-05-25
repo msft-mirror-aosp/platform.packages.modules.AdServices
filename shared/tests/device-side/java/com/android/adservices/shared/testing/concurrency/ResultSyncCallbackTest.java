@@ -15,79 +15,16 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static org.junit.Assert.assertThrows;
+public final class ResultSyncCallbackTest
+        extends ResultTestSyncCallbackTestCase<Object, ResultSyncCallback<Object>> {
 
-import com.android.adservices.shared.SharedExtendedMockitoTestCase;
-
-import org.junit.Test;
-
-public final class ResultSyncCallbackTest extends SharedExtendedMockitoTestCase {
-
-    private final ResultSyncCallback<Object> mCallback = new ResultSyncCallback<>();
-
-    @Test
-    public void testUnsupportedMethods() {
-        assertThrows(UnsupportedOperationException.class, () -> mCallback.setCalled());
+    @Override
+    protected Object newResult() {
+        return new Object();
     }
 
-    @Test
-    public void testCustomWorkflow() throws Exception {
-        expect.withMessage("%s.isCalled() before injectResult()", mCallback)
-                .that(mCallback.isCalled())
-                .isFalse();
-        expect.withMessage("%s.getResult() before injectResult()", mCallback)
-                .that(mCallback.getResult())
-                .isNull();
-
-        Object injectedResult = new Object();
-        mCallback.injectResult(injectedResult);
-
-        Object receivedResult = mCallback.assertResultReceived();
-        expect.withMessage("%s.assertResultReceived()", mCallback)
-                .that(receivedResult)
-                .isSameInstanceAs(injectedResult);
-        expect.withMessage("%s.isCalled() after injectResult()", mCallback)
-                .that(mCallback.isCalled())
-                .isTrue();
-
-        Object gottenResult = mCallback.getResult();
-        expect.withMessage("%s.getResult()", mCallback)
-                .that(gottenResult)
-                .isSameInstanceAs(injectedResult);
-    }
-
-    @Test
-    public void testCustomWorkflow_nullResult() throws Exception {
-        expect.withMessage("%s.isCalled() before injectResult()", mCallback)
-                .that(mCallback.isCalled())
-                .isFalse();
-        expect.withMessage("%s.getResult() before injectResult()", mCallback)
-                .that(mCallback.getResult())
-                .isNull();
-
-        mCallback.injectResult(null);
-
-        Object receivedResult = mCallback.assertResultReceived();
-        expect.withMessage("%s.assertResultReceived()", mCallback).that(receivedResult).isNull();
-        expect.withMessage("%s.isCalled() after injectResult()", mCallback)
-                .that(mCallback.isCalled())
-                .isTrue();
-
-        Object gottenResult = mCallback.getResult();
-        expect.withMessage("%s.getResult()", mCallback).that(gottenResult).isNull();
-    }
-
-    @Test
-    public void testInjectResult_calledTwice() {
-        mCallback.injectResult(new Object());
-
-        assertThrows(IllegalStateException.class, () -> mCallback.injectResult(new Object()));
-    }
-
-    @Test
-    public void testInjectResult_calledTwice_firstWasNull() {
-        mCallback.injectResult(null);
-
-        assertThrows(IllegalStateException.class, () -> mCallback.injectResult(new Object()));
+    @Override
+    protected ResultSyncCallback<Object> newCallback(SyncCallbackSettings settings) {
+        return new ResultSyncCallback<Object>(settings);
     }
 }

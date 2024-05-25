@@ -16,8 +16,6 @@
 
 package com.android.cobalt.data;
 
-import static java.util.stream.Collectors.toList;
-
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -30,6 +28,7 @@ import com.google.cobalt.AggregateValue;
 import com.google.cobalt.UnencryptedObservationBatch;
 import com.google.common.hash.HashCode;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -105,10 +104,11 @@ public abstract class DaoBuildingBlocks {
      * @param observationBatches the observation batches to insert
      */
     Void insertObservationBatches(List<UnencryptedObservationBatch> observationBatches) {
-        return insertObservations(
-                observationBatches.stream()
-                        .map(ObservationStoreEntity::createForInsertion)
-                        .collect(toList()));
+        List<ObservationStoreEntity> observationStoreEntities = new ArrayList<>();
+        for (UnencryptedObservationBatch batch : observationBatches) {
+            observationStoreEntities.add(ObservationStoreEntity.createForInsertion(batch));
+        }
+        return insertObservations(observationStoreEntities);
     }
 
     /**

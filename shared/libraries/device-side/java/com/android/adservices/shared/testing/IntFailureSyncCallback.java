@@ -112,22 +112,4 @@ public abstract class IntFailureSyncCallback<T> extends SyncCallback<T, Integer>
     public IBinder asBinder() {
         return null;
     }
-
-    /**
-     * Asserts that either {@link #onResult(Object)} or {@link #onError(Exception)} was called,
-     * waiting up to {@link #getTimeoutMs()} milliseconds before failing (if not called).
-     */
-    public void assertCalled() throws InterruptedException {
-        assertReceived();
-    }
-
-    /** Gets the error returned by {@link #onError(Exception)}. */
-    public int getFailure() {
-        return getErrorReceived();
-    }
-
-    /** Gets the result returned by {@link #onResult(Object)}. */
-    public T getResult() {
-        return getResultReceived();
-    }
 }

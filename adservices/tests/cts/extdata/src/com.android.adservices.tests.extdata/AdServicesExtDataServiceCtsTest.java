@@ -31,7 +31,7 @@ import android.os.IBinder;
 
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.shared.testing.ExceptionFailureSyncCallback;
+import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -87,28 +87,28 @@ public class AdServicesExtDataServiceCtsTest {
                 new int[] {}, // Fake service implementation ignores this parameter.
                 putReceiver);
 
-        putReceiver.assertSuccess();
+        putReceiver.assertResultReceived();
 
         // Get updated AdExt data
         SyncAdExtTestCallback getReceiver = new SyncAdExtTestCallback();
         service.getAdServicesExtData(getReceiver);
 
-        GetAdServicesExtDataResult result = getReceiver.assertSuccess();
+        GetAdServicesExtDataResult result = getReceiver.assertResultReceived();
         assertThat(result.getAdServicesExtDataParams()).isEqualTo(paramsToUpdate);
     }
 
+    // TODO(b/337014024): create subclass of OnResultSyncCallback instead
     private static final class SyncAdExtTestCallback
-            extends ExceptionFailureSyncCallback<GetAdServicesExtDataResult>
+            extends FailableResultSyncCallback<GetAdServicesExtDataResult, String>
             implements IGetAdServicesExtDataCallback {
-
         @Override
-        public void onError(String msg) {
-            injectError(new RuntimeException(msg));
+        public void onResult(GetAdServicesExtDataResult result) {
+            injectResult(result);
         }
 
         @Override
-        public IBinder asBinder() {
-            return null;
+        public void onError(String msg) {
+            injectFailure(msg);
         }
     }
 }

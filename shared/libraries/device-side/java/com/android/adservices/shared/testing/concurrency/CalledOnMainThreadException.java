@@ -12,14 +12,12 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ */ package com.android.adservices.shared.testing.concurrency;
 
-package com.android.adservices.shared.testing;
+/** Custom exception thrown when something was called in the main thread (when it shouldn't). */
+public final class CalledOnMainThreadException extends IllegalStateException {
 
-import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
-
-/**
- * Custom {@code SyncCallback} implementation that doesn't expect an exception to be thrown and
- * injects a {@code boolean}
- */
-public final class BooleanSyncCallback extends ResultSyncCallback<Boolean> {}
+    public CalledOnMainThreadException(String msg) {
+        super(msg);
+    }
+}

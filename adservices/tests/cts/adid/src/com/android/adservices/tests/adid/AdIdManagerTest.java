@@ -25,13 +25,12 @@ import android.util.Log;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.shared.testing.ExceptionFailureSyncCallback;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -70,9 +69,9 @@ public final class AdIdManagerTest extends CtsAdIdEndToEndTestCase {
         validateAdIdManagerTestResults(callback);
     }
 
-    private void validateAdIdManagerTestResults(ExceptionFailureSyncCallback<AdId> callback)
-            throws Exception {
-        AdId resultAdId = callback.assertSuccess();
+    private void validateAdIdManagerTestResults(
+            FailableResultSyncCallback<AdId, Exception> callback) throws Exception {
+        AdId resultAdId = callback.assertResultReceived();
         Log.v(mTag, "AdId: " + toString(resultAdId));
 
         assertWithMessage("getAdId()").that(resultAdId.getAdId()).isNotNull();
@@ -135,11 +134,11 @@ public final class AdIdManagerTest extends CtsAdIdEndToEndTestCase {
         }
     }
 
-    private boolean verifyAdIdRateLimitReached(ExceptionFailureSyncCallback<AdId> callback)
+    private boolean verifyAdIdRateLimitReached(FailableResultSyncCallback<AdId, Exception> callback)
             throws InterruptedException {
         callback.assertCalled();
         AdId result = callback.getResult();
-        Exception error = callback.getError();
+        Exception error = callback.getFailure();
         Log.v(
                 mTag,
                 "getAdIdAndVerifyRateLimitReached(): result="

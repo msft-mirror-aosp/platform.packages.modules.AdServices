@@ -49,7 +49,7 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
 
     @Test
     public void testGetSettings() {
-        SyncCallbackSettings settings = new SyncCallbackSettings.Builder().build();
+        SyncCallbackSettings settings = SyncCallbackSettings.newDefaultSettings();
         AbstractSidelessTestSyncCallback callback =
                 new AbstractSidelessTestSyncCallback(mFakeLogger, settings) {};
 
@@ -123,7 +123,7 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
     private static final class ConcreteSidelessTestSyncCallback
             extends AbstractSidelessTestSyncCallback {
         ConcreteSidelessTestSyncCallback(RealLogger realLogger) {
-            super(realLogger, new SyncCallbackSettings.Builder().build());
+            super(realLogger, SyncCallbackSettings.newDefaultSettings());
         }
     }
 

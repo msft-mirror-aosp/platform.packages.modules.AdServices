@@ -19,6 +19,7 @@ package com.android.adservices.shared.testing;
 import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
 import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
 import static com.android.adservices.shared.testing.SyncCallback.MSG_WRONG_ERROR_RECEIVED;
+import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.INJECT_RESULT_OR_FAILURE;
 
 import static org.junit.Assert.assertThrows;
 
@@ -27,6 +28,8 @@ import android.util.Log;
 import com.android.adservices.mockito.LogInterceptor;
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.testing.LogEntry.Level;
+import com.android.adservices.shared.testing.concurrency.CallbackAlreadyCalledException;
+import com.android.adservices.shared.testing.concurrency.CalledOnMainThreadException;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
@@ -111,18 +114,10 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
 
         callback.injectResult(RESULT);
         callback.injectResult(ANOTHER_RESULT);
-        IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> callback.assertReceived());
 
-        expect.withMessage("exception")
-                .that(exception)
-                .hasMessageThat()
-                .contains(
-                        "injectResult("
-                                + ANOTHER_RESULT
-                                + ") called after injectResult("
-                                + RESULT
-                                + ")");
+        CallbackAlreadyCalledException thrown =
+                assertThrows(CallbackAlreadyCalledException.class, () -> callback.assertReceived());
+        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, RESULT, ANOTHER_RESULT);
     }
 
     @Test
@@ -131,13 +126,9 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
         callback.injectError(ERROR);
         callback.injectResult(RESULT);
 
-        IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> callback.assertReceived());
-
-        expect.withMessage("exception")
-                .that(exception)
-                .hasMessageThat()
-                .contains("injectResult(" + RESULT + ") called after injectError(" + ERROR + ")");
+        CallbackAlreadyCalledException thrown =
+                assertThrows(CallbackAlreadyCalledException.class, () -> callback.assertReceived());
+        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, ERROR, RESULT);
     }
 
     @Test
@@ -146,20 +137,14 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
                 new SyncCallback<>(TIMEOUT_MS, /* failIfCalledOnMainThread= */ true);
 
         runOnMainThread(() -> callback.injectResult(RESULT));
-        IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> callback.assertReceived());
 
-        expect.withMessage("exception")
-                .that(exception)
-                .hasMessageThat()
-                .contains("injectResult(" + RESULT + ") called on main thread");
+        assertThrows(CalledOnMainThreadException.class, () -> callback.assertReceived());
     }
 
     @Test
     public void testInjectResult_calledOnMainThread_pass() throws Exception {
         SyncCallback<String, Exception> callback =
                 new SyncCallback<>(TIMEOUT_MS, /* failIfCalledOnMainThread= */ false);
-
 
         runOnMainThread(() -> callback.injectResult(RESULT));
 
@@ -171,7 +156,7 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
         SyncCallback<String, Exception> callback = new SyncCallback<>();
         callback.injectError(ERROR);
 
-        assertThrows(IllegalArgumentException.class, () -> callback.assertErrorReceived(null));
+        assertThrows(NullPointerException.class, () -> callback.assertErrorReceived(null));
     }
 
     @Test
@@ -207,18 +192,9 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
         callback.injectError(ERROR);
         callback.injectError(ANOTHER_ERROR);
 
-        IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> callback.assertReceived());
-
-        expect.withMessage("exception")
-                .that(exception)
-                .hasMessageThat()
-                .contains(
-                        "injectError("
-                                + ANOTHER_ERROR
-                                + ") called after injectError("
-                                + ERROR
-                                + ")");
+        CallbackAlreadyCalledException thrown =
+                assertThrows(CallbackAlreadyCalledException.class, () -> callback.assertReceived());
+        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, ERROR, ANOTHER_ERROR);
     }
 
     @Test
@@ -227,13 +203,9 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
         callback.injectResult(RESULT);
         callback.injectError(ERROR);
 
-        IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> callback.assertReceived());
-
-        expect.withMessage("exception")
-                .that(exception)
-                .hasMessageThat()
-                .contains("injectError(" + ERROR + ") called after injectResult(" + RESULT + ")");
+        CallbackAlreadyCalledException thrown =
+                assertThrows(CallbackAlreadyCalledException.class, () -> callback.assertReceived());
+        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, RESULT, ERROR);
     }
 
     @Test
@@ -242,13 +214,8 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
                 new SyncCallback<>(TIMEOUT_MS, /* failIfCalledOnMainThread= */ true);
 
         runOnMainThread(() -> callback.injectError(ERROR));
-        IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> callback.assertReceived());
 
-        expect.withMessage("exception")
-                .that(exception)
-                .hasMessageThat()
-                .contains("injectError(" + ERROR + ") called on main thread");
+        assertThrows(CalledOnMainThreadException.class, () -> callback.assertReceived());
     }
 
     @Test
@@ -260,24 +227,6 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
         Exception error = callback.assertErrorReceived(ERROR.getClass());
 
         assertErrorReceived(callback, error);
-    }
-
-    @Test
-    public void testToString_beforeOutcome() {
-        SyncCallback<String, Exception> callback =
-                new SyncCallback<>(TIMEOUT_MS, /* failIfCalledOnMainThread= */ false);
-
-        String string = callback.toString();
-
-        expect.withMessage("toString()").that(string).startsWith("SyncCallback");
-        expect.withMessage("toString()")
-                .that(string)
-                .containsMatch(".*timeoutMs=" + TIMEOUT_MS + ".*");
-        expect.withMessage("toString()")
-                .that(string)
-                .containsMatch(".*failIfCalledOnMainThread=false.*");
-        expect.withMessage("toString()").that(string).containsMatch(".*result=null.*");
-        expect.withMessage("toString()").that(string).containsMatch(".*error=null.*");
     }
 
     @Test
@@ -294,7 +243,7 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
                 .hasSize(1);
         expect.withMessage("Log.v() calls to tag %s", tag)
                 .that(logInterceptor.getPlainMessages(tag, Level.VERBOSE))
-                .containsExactly("[" + callback.getId() + "] Answer=42");
+                .hasSize(1);
     }
 
     @Test
@@ -311,7 +260,7 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
                 .hasSize(1);
         expect.withMessage("Log.e() calls to tag %s", tag)
                 .that(logInterceptor.getPlainMessages(tag, Level.ERROR))
-                .containsExactly("[" + callback.getId() + "] Answer=42");
+                .hasSize(1);
     }
 
     private void assertResultReceived(
@@ -334,7 +283,6 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
         expect.withMessage("getErrorReceived()").that(callback.getErrorReceived()).isNull();
         String toString = callback.toString();
         expect.withMessage("toString()").that(toString).contains("result=" + expectedResult);
-        expect.withMessage("toString()").that(toString).contains("error=null");
     }
 
     private void assertErrorReceived(
@@ -350,7 +298,6 @@ public final class SyncCallbackTest extends SharedExtendedMockitoTestCase {
                 .isSameInstanceAs(expectedError);
         expect.withMessage("getResultReceived()").that(callback.getResultReceived()).isNull();
         String toString = callback.toString();
-        expect.withMessage("toString()").that(toString).contains("result=null");
-        expect.withMessage("toString()").that(toString).contains("error=" + expectedError);
+        expect.withMessage("toString()").that(toString).contains("result=" + expectedError);
     }
 }

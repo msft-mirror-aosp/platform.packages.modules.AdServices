@@ -13,18 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.common;
+package com.android.adservices.shared.testing.concurrency;
 
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+/**
+ * {@link ResultSyncCallback} for implementation of binder stub interfaces that have a {@code
+ * onResult()} method.
+ *
+ * @param <T> type of the result.
+ */
+public abstract class OnResultSyncCallback<T> extends ResultSyncCallback<T> {
 
-import com.android.adservices.shared.testing.SyncCallback;
+    protected OnResultSyncCallback() {
+        super();
+    }
 
-/** OnSharedPreferenceChangeListener implementation that blocks until the first key is received. */
-public final class SyncOnSharedPreferenceChangeListener
-        extends SyncCallback<String, RuntimeException> implements OnSharedPreferenceChangeListener {
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        injectResult(key);
+    protected OnResultSyncCallback(SyncCallbackSettings settings) {
+        super(settings);
+    }
+
+    /** Injects the result. */
+    public final void onResult(T result) {
+        injectResult(result);
     }
 }
