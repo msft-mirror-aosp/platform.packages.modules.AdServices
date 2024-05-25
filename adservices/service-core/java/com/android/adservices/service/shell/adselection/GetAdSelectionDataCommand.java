@@ -21,17 +21,26 @@ import static com.android.adservices.service.shell.adselection.GetAdSelectionDat
 import static com.android.adservices.service.shell.adselection.GetAdSelectionDataArgs.FIRST_ARG_FOR_PARSING;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_GENERIC_ERROR;
 import static com.android.internal.util.Preconditions.checkArgument;
 
+import android.adservices.common.AdTechIdentifier;
 import android.util.Log;
 
+import com.android.adservices.service.adselection.AuctionServerDataCompressor;
+import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandArgParserHelper;
 import com.android.adservices.service.shell.ShellCommandResult;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.util.concurrent.FluentFuture;
+
 import java.io.PrintWriter;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class GetAdSelectionDataCommand extends AbstractShellCommand {
     @VisibleForTesting public static final String CMD = "get_ad_selection_data";
@@ -47,6 +56,14 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                     + "GetBidsRequest protocol buffer message designed for usage together with "
                     + "`secure_invoke`.";
 
+    private static final int DB_TIMEOUT_SEC = 3;
+
+    private final BuyerInputGenerator mBuyerInputGenerator;
+
+    public GetAdSelectionDataCommand(BuyerInputGenerator buyerInputGenerator) {
+        mBuyerInputGenerator = buyerInputGenerator;
+    }
+
     @Override
     public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
         Map<String, String> cliArgs;
@@ -57,6 +74,16 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
             Log.e(TAG, "Error running get_ad_selection_data command", exception);
             return invalidArgsError(HELP, err, COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA, args);
         }
+        FluentFuture<Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>>
+                buyerInputs = mBuyerInputGenerator.createCompressedBuyerInputs();
+        // TODO(b/339851172): Decompress the data after b/339411896 is fixed.
+        try {
+            buyerInputs.get(DB_TIMEOUT_SEC, TimeUnit.SECONDS);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            return toShellCommandResult(
+                    RESULT_GENERIC_ERROR, COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA);
+        }
+
         return toShellCommandResult(RESULT_SUCCESS, COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA);
     }
 

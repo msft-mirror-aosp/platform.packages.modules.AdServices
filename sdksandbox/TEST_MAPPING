@@ -141,6 +141,12 @@
     },
     {
       "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxNextTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxAuditTests[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -225,6 +231,12 @@
     },
     {
       "name": "SdkSandboxUiTests"
+    },
+    {
+      "name": "SdkSandboxNextTests"
+    },
+    {
+      "name": "SdkSandboxAuditTests"
     }
   ],
   "sdksandbox-postsubmit": [

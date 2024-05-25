@@ -24,7 +24,7 @@ android_test {
     min_sdk_version: "Tiramisu",
 
     srcs: [
-        "src/**/*.java",
+        "src/**/inprocess/*.java",
     ],
 
     libs: [
@@ -43,4 +43,60 @@ android_test {
     test_options: {
         extra_test_configs: ["AndroidTest_SdkInSandbox.xml"],
     },
+}
+
+android_test {
+    name: "SdkSandboxNextTests",
+
+    manifest: "AndroidManifest_Next.xml",
+    test_config: "AndroidTest_Next.xml",
+
+    target_sdk_version: "34",
+    min_sdk_version: "34",
+
+    srcs: [
+        "src/**/next/*.java",
+    ],
+
+    libs: [
+        "android.test.base",
+        "android.test.runner",
+    ],
+    static_libs: [
+        "androidx.core_core",
+        "androidx.test.rules",
+        "androidx.test.ext.truth",
+        "androidx.test.ext.junit",
+        "truth",
+        "SdkSandboxTestUtils",
+    ],
+    test_suites: ["general-tests"],
+}
+
+android_test {
+    name: "SdkSandboxAuditTests",
+
+    manifest: "AndroidManifest_Audit.xml",
+    test_config: "AndroidTest_Audit.xml",
+
+    target_sdk_version: "34",
+    min_sdk_version: "34",
+
+    srcs: [
+        "src/**/audit/*.java",
+    ],
+
+    libs: [
+        "android.test.base",
+        "android.test.runner",
+    ],
+    static_libs: [
+        "androidx.core_core",
+        "androidx.test.rules",
+        "androidx.test.ext.truth",
+        "androidx.test.ext.junit",
+        "truth",
+        "SdkSandboxTestUtils",
+    ],
+    test_suites: ["general-tests"],
 }

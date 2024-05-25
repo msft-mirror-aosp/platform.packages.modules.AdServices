@@ -23,11 +23,19 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
+import com.android.adservices.service.adselection.AuctionServerDataCompressorFactory;
+import com.android.adservices.service.adselection.AuctionServerPayloadMetricsStrategyDisabled;
+import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
@@ -54,7 +62,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
     public AdSelectionShellCommandFactory(
             boolean isConsentedDebugCliEnabled,
             boolean isAdSelectionCliEnabled,
-            @NonNull ConsentedDebugConfigurationDao consentedDebugConfigurationDao) {
+            ConsentedDebugConfigurationDao consentedDebugConfigurationDao,
+            BuyerInputGenerator buyerInputGenerator) {
         Objects.requireNonNull(consentedDebugConfigurationDao);
 
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
@@ -62,7 +71,7 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
         Set<ShellCommand> allCommands =
                 ImmutableSet.of(
                         new ConsentedDebugShellCommand(consentedDebugConfigurationDao),
-                        new GetAdSelectionDataCommand());
+                        new GetAdSelectionDataCommand(buyerInputGenerator));
         mAllCommandsMap =
                 allCommands.stream()
                         .collect(
@@ -74,11 +83,34 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
      * @return an instance of the {@link AdSelectionShellCommandFactory}.
      */
     public static AdSelectionShellCommandFactory getInstance(
-            DebugFlags debugFlags, Context context) {
+            DebugFlags debugFlags, Flags flags, Context context) {
+        SharedStorageDatabase sharedStorageDatabase = SharedStorageDatabase.getInstance(context);
+        // TODO(b/342574944): Decide which fields need to be configurable and update.
+        BuyerInputGenerator buyerInputGenerator =
+                new BuyerInputGenerator(
+                        CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                        ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
+                        new FrequencyCapAdFiltererNoOpImpl(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        flags.getFledgeCustomAudienceActiveTimeWindowInMs(),
+                        flags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
+                        flags.getProtectedSignalsPeriodicEncodingEnabled(),
+                        AuctionServerDataCompressorFactory.getDataCompressor(
+                                flags.getFledgeAuctionServerCompressionAlgorithmVersion()),
+                        flags.getFledgeAuctionServerOmitAdsEnabled(),
+                        new AuctionServerPayloadMetricsStrategyDisabled(),
+                        flags,
+                        new AdFilteringFeatureFactory(
+                                        sharedStorageDatabase.appInstallDao(),
+                                        sharedStorageDatabase.frequencyCapDao(),
+                                        flags)
+                                .getAppInstallAdFilterer());
         return new AdSelectionShellCommandFactory(
                 debugFlags.getFledgeConsentedDebuggingCliEnabledStatus(),
                 debugFlags.getAdSelectionCommandsEnabled(),
-                AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao());
+                AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao(),
+                buyerInputGenerator);
     }
 
     @SuppressLint("VisibleForTests")
