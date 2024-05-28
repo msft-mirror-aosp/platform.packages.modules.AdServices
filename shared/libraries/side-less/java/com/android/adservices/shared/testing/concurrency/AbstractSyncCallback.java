@@ -19,13 +19,12 @@ import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 // NOTE: this class is basically an abstraction of CountdownLatch and doesn't have any testing
 // specific characteristics, so it could be used on production code as well.
-/** Base implementation for {@link SyncCallback}. */
+/** Base implementation for {@code SyncCallback}. */
 public abstract class AbstractSyncCallback implements SyncCallback {
 
     /** Tag used on {@code logcat} calls. */
@@ -36,12 +35,10 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     protected final SyncCallbackSettings mSettings;
 
     private final String mId = String.valueOf(sIdGenerator.incrementAndGet());
-    private final CountDownLatch mLatch;
 
     /** Default constructor. */
     public AbstractSyncCallback(SyncCallbackSettings settings) {
         mSettings = Objects.requireNonNull(settings, "settings cannot be null");
-        mLatch = new CountDownLatch(mSettings.getExpectedNumberCalls());
     }
 
     /**
@@ -96,7 +93,7 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     public void setCalled() {
         logD("setCalled() called");
         try {
-            mLatch.countDown();
+            mSettings.countDown();
         } finally {
             logV("setCalled() returning");
         }
@@ -107,7 +104,7 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     public void waitCalled() throws InterruptedException {
         logD("waitCalled() called");
         try {
-            mLatch.await();
+            mSettings.await();
         } finally {
             logV("waitCalled() returning");
         }
@@ -118,7 +115,7 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     public void waitCalled(long timeout, TimeUnit unit) throws InterruptedException {
         logD("waitCalled(%d, %s) called", timeout, unit);
         try {
-            if (!mLatch.await(timeout, unit)) {
+            if (!mSettings.await(timeout, unit)) {
                 throw new SyncCallbackTimeoutException(toString(), timeout, unit);
             }
         } finally {
@@ -128,7 +125,7 @@ public abstract class AbstractSyncCallback implements SyncCallback {
 
     @Override
     public final boolean isCalled() {
-        return mLatch.getCount() == 0;
+        return mSettings.isCalled();
     }
 
     /**
@@ -136,13 +133,7 @@ public abstract class AbstractSyncCallback implements SyncCallback {
      * without the enclosing {@code [class: ]} part.
      */
     public final StringBuilder appendInfo(StringBuilder string) {
-        Objects.requireNonNull(string)
-                .append("id=")
-                .append(mId)
-                .append(", ")
-                .append(mSettings)
-                .append(", missingCalls=")
-                .append(mLatch.getCount());
+        Objects.requireNonNull(string).append("id=").append(mId).append(", ").append(mSettings);
         customizeToString(string);
         return string;
     }

@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.adservices.shared.testing.concurrency;
 
-/** Simplest implementation of a {@code SyncCallback} for tests. */
-public final class SimpleSyncCallback extends AbstractTestSyncCallback {
+/**
+ * Abstraction for {@code OnResultSyncCallback} and {@code FailableOnResultSyncCallback}.
+ *
+ * <p>This is needed because the latter is a "special" case of the former as it can receive either a
+ * result OR a failure.
+ *
+ * @param <T> type of the result.
+ */
+public interface OnResultTestSyncCallback<T> extends ResultTestSyncCallback<T> {
 
-    /** Default constructor. */
-    public SimpleSyncCallback() {
-        this(SyncCallbackFactory.newSettingsBuilder().build());
-    }
-
-    /** Customizable constructor. */
-    public SimpleSyncCallback(SyncCallbackSettings settings) {
-        super(settings);
-    }
+    /** Injects the result. */
+    void onResult(T result);
 }

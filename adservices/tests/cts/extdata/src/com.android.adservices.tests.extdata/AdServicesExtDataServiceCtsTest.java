@@ -31,7 +31,7 @@ import android.os.IBinder;
 
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -97,18 +97,12 @@ public class AdServicesExtDataServiceCtsTest {
         assertThat(result.getAdServicesExtDataParams()).isEqualTo(paramsToUpdate);
     }
 
-    // TODO(b/337014024): create subclass of OnResultSyncCallback instead
     private static final class SyncAdExtTestCallback
-            extends FailableResultSyncCallback<GetAdServicesExtDataResult, String>
+            extends FailableOnResultSyncCallback<GetAdServicesExtDataResult, String>
             implements IGetAdServicesExtDataCallback {
         @Override
-        public void onResult(GetAdServicesExtDataResult result) {
-            injectResult(result);
-        }
-
-        @Override
         public void onError(String msg) {
-            injectFailure(msg);
+            onFailure(msg);
         }
     }
 }

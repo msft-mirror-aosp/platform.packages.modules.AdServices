@@ -19,7 +19,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-/** Custom exception to indicate a {@link SyncCallback} timed out. */
+/** Custom exception to indicate a {@code SyncCallback} timed out. */
 public final class SyncCallbackTimeoutException extends IllegalStateException {
 
     // TODO(b/341797803): @VisibleForTesting
@@ -32,7 +32,7 @@ public final class SyncCallbackTimeoutException extends IllegalStateException {
     /**
      * Default constructor.
      *
-     * @param what technically the {@link SyncCallback}, but could be any callback that timed out.
+     * @param what technically the {@code SyncCallback}, but could be any callback that timed out.
      * @param timeout timeout duration
      * @param unit timeout unit
      */

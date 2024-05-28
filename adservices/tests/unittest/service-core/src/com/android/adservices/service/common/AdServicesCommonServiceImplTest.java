@@ -797,7 +797,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         doThrow(exception).when(mMockAdIdWorker).updateAdId(request);
 
         SyncIUpdateAdIdCallback callback = callUpdateAdIdCache(request);
-        callback.assertErrorReceived();
+        callback.assertFailureReceived();
 
         ExtendedMockito.verify(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
         verify(mFlags).getAdIdCacheEnabled();

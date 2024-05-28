@@ -23,7 +23,7 @@ flag {
 }
 
 flag {
-    name: "selinux_sdk_sandbox_input_selector"
+    name: "selinux_input_selector"
     namespace: "sdk_sandbox"
     description: "Bug fix for the SDK sandbox selinux input selector"
     bug: "295861450"

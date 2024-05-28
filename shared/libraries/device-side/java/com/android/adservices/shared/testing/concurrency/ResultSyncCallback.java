@@ -15,14 +15,14 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import androidx.annotation.Nullable;
+import com.android.adservices.shared.testing.Nullable;
 
 import com.google.common.base.Optional;
 
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * {@link SyncCallback} use to return an object (result).
+ * {@code SyncCallback} use to return an object (result).
  *
  * @param <T> type of the result.
  */
@@ -32,7 +32,7 @@ public class ResultSyncCallback<T> extends AbstractTestSyncCallback
     private final AtomicReference<Optional<T>> mResult = new AtomicReference<>();
 
     public ResultSyncCallback() {
-        super(new SyncCallbackSettings.Builder().build());
+        super(SyncCallbackFactory.newSettingsBuilder().build());
     }
 
     public ResultSyncCallback(SyncCallbackSettings settings) {

@@ -25,7 +25,7 @@ import android.content.IntentFilter;
 import android.util.Log;
 
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
-import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.util.Preconditions;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -106,7 +106,7 @@ public final class BroadcastReceiverSyncCallback {
         ResultBroadcastReceiver(long timeoutMs) {
             mSyncCallback =
                     new ResultSyncCallback<>(
-                            new SyncCallbackSettings.Builder()
+                            SyncCallbackFactory.newSettingsBuilder()
                                     .setMaxTimeoutMs(timeoutMs)
                                     .setFailIfCalledOnMainThread(false)
                                     .build());

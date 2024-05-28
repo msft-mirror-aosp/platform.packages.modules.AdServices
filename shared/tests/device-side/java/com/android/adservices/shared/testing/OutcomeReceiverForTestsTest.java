@@ -27,6 +27,7 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 import com.android.adservices.shared.testing.concurrency.CallbackAlreadyCalledException;
 import com.android.adservices.shared.testing.concurrency.CalledOnMainThreadException;
 import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallbackTestCase;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.adservices.shared.testing.junit.SafeAndroidJUnitRunner;
 
@@ -207,7 +208,7 @@ public final class OutcomeReceiverForTestsTest
     private static OutcomeReceiverForTests<String> newReceiver(
             long timeoutMs, boolean failIfCalledOnMainThread) {
         return new OutcomeReceiverForTests<>(
-                new SyncCallbackSettings.Builder()
+                SyncCallbackFactory.newSettingsBuilder()
                         .setMaxTimeoutMs(timeoutMs)
                         .setFailIfCalledOnMainThread(failIfCalledOnMainThread)
                         .build());

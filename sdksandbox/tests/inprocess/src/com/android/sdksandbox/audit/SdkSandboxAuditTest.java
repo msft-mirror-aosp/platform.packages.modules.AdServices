@@ -51,7 +51,7 @@ public class SdkSandboxAuditTest {
     }
 
     @Test
-    @RequiresFlagsEnabled(Flags.FLAG_SELINUX_SDK_SANDBOX_INPUT_SELECTOR)
+    @RequiresFlagsEnabled(Flags.FLAG_SELINUX_INPUT_SELECTOR)
     public void testSdkSandboxAuditDomain() {
         assertThat(SELinux.getContext()).contains("u:r:sdk_sandbox_audit");
     }

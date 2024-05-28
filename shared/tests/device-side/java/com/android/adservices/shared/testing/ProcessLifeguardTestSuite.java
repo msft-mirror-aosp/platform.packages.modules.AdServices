@@ -29,7 +29,7 @@ import com.android.adservices.shared.testing.ProcessLifeguardTestSuite.Test1Thro
 import com.android.adservices.shared.testing.ProcessLifeguardTestSuite.Test2RuleCatchesIt;
 import com.android.adservices.shared.testing.ProcessLifeguardTestSuite.Test3MakesSureProcessDidntCrash;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
-import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -179,7 +179,10 @@ public final class ProcessLifeguardTestSuite {
     private static class MySyncCallback extends ResultSyncCallback<Object> {
 
         MySyncCallback() {
-            super(new SyncCallbackSettings.Builder().setMaxTimeoutMs(WAITING_TIMEOUT_MS).build());
+            super(
+                    SyncCallbackFactory.newSettingsBuilder()
+                            .setMaxTimeoutMs(WAITING_TIMEOUT_MS)
+                            .build());
         }
     }
 

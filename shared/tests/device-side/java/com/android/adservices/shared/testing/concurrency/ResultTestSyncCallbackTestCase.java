@@ -36,7 +36,7 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
 
     protected final R mCallback =
             newCallback(
-                    new SyncCallbackSettings.Builder()
+                    SyncCallbackFactory.newSettingsBuilder()
                             .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
                             .build());
 
@@ -59,7 +59,7 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
 
     @Test
     public final void testNewCallback() {
-        SyncCallbackSettings settings = SyncCallbackSettings.newDefaultSettings();
+        SyncCallbackSettings settings = SyncCallbackFactory.newDefaultSettings();
 
         R callback1 = newCallback(settings);
         expect.withMessage("1st callback").that(callback1).isNotNull();
@@ -89,7 +89,7 @@ abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallbac
         String id1 = mCallback.getId();
         expect.withMessage("%s.getId()", mCallback).that(id1).isNotEmpty();
 
-        R callback2 = newCallback(new SyncCallbackSettings.Builder().build());
+        R callback2 = newCallback(SyncCallbackFactory.newSettingsBuilder().build());
         String id2 = callback2.getId();
         expect.withMessage("getId() from 2nd callback (%s)", callback2).that(id2).isNotEqualTo(id1);
     }
