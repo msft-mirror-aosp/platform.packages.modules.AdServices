@@ -15,6 +15,11 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import com.android.adservices.shared.testing.Identifiable;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
@@ -25,18 +30,23 @@ import java.util.function.Supplier;
  * default settings), although it could be shared when a test need to block after distinct callbacks
  * are called.
  */
-public final class SyncCallbackSettings {
+public final class SyncCallbackSettings implements Identifiable {
 
     /** Timeout set by default constructor */
     public static final long DEFAULT_TIMEOUT_MS = 5_000;
 
+    private static final AtomicInteger sIdGenerator = new AtomicInteger();
+
+    private final String mId = String.valueOf(sIdGenerator.incrementAndGet());
     private final int mExpectedNumberCalls;
+    private final CountDownLatch mLatch;
     private final long mMaxTimeoutMs;
     private final boolean mFailIfCalledOnMainThread;
     private final Supplier<Boolean> mIsMainThreadSupplier;
 
     private SyncCallbackSettings(Builder builder) {
         mExpectedNumberCalls = builder.mExpectedNumberCalls;
+        mLatch = new CountDownLatch(mExpectedNumberCalls);
         mMaxTimeoutMs = builder.mMaxTimeoutMs;
         mFailIfCalledOnMainThread = builder.mFailIfCalledOnMainThread;
         mIsMainThreadSupplier = builder.mIsMainThreadSupplier;
@@ -64,14 +74,43 @@ public final class SyncCallbackSettings {
     }
 
     @Override
+    public String getId() {
+        return mId;
+    }
+
+    @Override
     public String toString() {
-        return "expectedNumberCalls="
+        return "settingsId="
+                + mId
+                + ", expectedNumberCalls="
                 + mExpectedNumberCalls
                 + ", maxTimeoutMs="
                 + mMaxTimeoutMs
                 + ", failIfCalledOnMainThread="
                 + mFailIfCalledOnMainThread
+                + ", missingCalls="
+                + mLatch.getCount()
                 + "]";
+    }
+
+    // NOTE: methods below are indirectly unit tested by the callback test - testing them on
+    // SyncCallbackSettings would be an overkill (they're not public anyways)
+
+    void countDown() {
+        mLatch.countDown();
+    }
+
+    // TODO(b/337014024): remove (should only use version with timeout);
+    void await() throws InterruptedException {
+        mLatch.await();
+    }
+
+    boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+        return mLatch.await(timeout, unit);
+    }
+
+    boolean isCalled() {
+        return mLatch.getCount() == 0;
     }
 
     /** Bob the Builder! */
