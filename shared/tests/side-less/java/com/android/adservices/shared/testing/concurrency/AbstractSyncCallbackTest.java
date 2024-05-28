@@ -280,6 +280,60 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
                 .isTrue();
     }
 
+    @Test
+    public void testSharedSettings_waitOnFirst() throws Exception {
+        SyncCallbackSettings settings =
+                SyncCallbackFactory.newSettingsBuilder().setExpectedNumberCalls(2).build();
+        ConcreteSyncCallback callback1 = new ConcreteSyncCallback(settings);
+        ConcreteSyncCallback callback2 = new ConcreteSyncCallback(settings);
+
+        runLater(SMALLER_TIMEOUT_MS, () -> callback1.setCalled());
+
+        expect.withMessage("callback1.isCalled() after call on callback1")
+                .that(callback1.isCalled())
+                .isFalse();
+        expect.withMessage("callback2.isCalled() after call on callback1")
+                .that(callback2.isCalled())
+                .isFalse();
+
+        runLater(SMALLER_TIMEOUT_MS, () -> callback2.setCalled());
+        callback1.waitCalled(LONGER_TIMEOUT_MS, MILLISECONDS);
+
+        expect.withMessage("callback1.isCalled() after call on callback2")
+                .that(callback1.isCalled())
+                .isTrue();
+        expect.withMessage("callback2.isCalled() after call on callback2")
+                .that(callback2.isCalled())
+                .isTrue();
+    }
+
+    @Test
+    public void testSharedSettings_waitOnSecond() throws Exception {
+        SyncCallbackSettings settings =
+                SyncCallbackFactory.newSettingsBuilder().setExpectedNumberCalls(2).build();
+        ConcreteSyncCallback callback1 = new ConcreteSyncCallback(settings);
+        ConcreteSyncCallback callback2 = new ConcreteSyncCallback(settings);
+
+        runLater(SMALLER_TIMEOUT_MS, () -> callback1.setCalled());
+
+        expect.withMessage("callback1.isCalled() after call on callback1")
+                .that(callback1.isCalled())
+                .isFalse();
+        expect.withMessage("callback2.isCalled() after call on callback1")
+                .that(callback2.isCalled())
+                .isFalse();
+
+        runLater(SMALLER_TIMEOUT_MS, () -> callback2.setCalled());
+        callback2.waitCalled(LONGER_TIMEOUT_MS, MILLISECONDS);
+
+        expect.withMessage("callback1.isCalled() after call on callback2")
+                .that(callback1.isCalled())
+                .isTrue();
+        expect.withMessage("callback2.isCalled() after call on callback2")
+                .that(callback2.isCalled())
+                .isTrue();
+    }
+
     // TODO(b/285014040): move to ConcurrencyHelper
     private void runLater(int when, Runnable r) {
         startNewThread(

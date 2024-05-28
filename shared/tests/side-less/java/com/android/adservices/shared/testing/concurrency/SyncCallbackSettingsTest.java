@@ -96,4 +96,19 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
         assertThrows(IllegalArgumentException.class, () -> builder.setMaxTimeoutMs(0));
         assertThrows(IllegalArgumentException.class, () -> builder.setMaxTimeoutMs(-1));
     }
+
+    @Test
+    public void testGetId() {
+        SyncCallbackSettings settings1 = SyncCallbackFactory.newSettingsBuilder().build();
+        String id1 = settings1.getId();
+        expect.withMessage("callback1.getId()").that(id1).isNotEmpty();
+
+        SyncCallbackSettings settings2 = SyncCallbackFactory.newSettingsBuilder().build();
+        String id2 = settings2.getId();
+        expect.withMessage("callback2.getId()").that(id2).isNotEmpty();
+        expect.withMessage("callback2.getId()").that(id2).isNotEqualTo(id1);
+
+        String toString = settings1.toString();
+        expect.withMessage("toString()").that(toString).contains("settingsId=" + id1);
+    }
 }
