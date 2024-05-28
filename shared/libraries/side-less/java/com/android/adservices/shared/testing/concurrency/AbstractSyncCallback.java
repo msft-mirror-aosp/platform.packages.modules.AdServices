@@ -27,9 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 /** Base implementation for {@code SyncCallback}. */
 public abstract class AbstractSyncCallback {
 
-    /** Tag used on {@code logcat} calls. */
-    public static final String LOG_TAG = "SyncCallback";
-
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
 
     protected final SyncCallbackSettings mSettings;

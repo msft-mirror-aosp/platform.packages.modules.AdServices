@@ -19,6 +19,7 @@ import static org.junit.Assert.assertThrows;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import com.android.adservices.shared.meta_testing.FakeLogger;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
 import com.google.errorprone.annotations.FormatMethod;
@@ -52,7 +53,7 @@ public final class SidelessTestSyncCallbackTest extends SharedSidelessTestCase {
             "waitCalled(" + LONGER_TIMEOUT_MS + ", " + MILLISECONDS + ") returning";
 
     private final SyncCallbackSettings.Builder mSettingsBuilder =
-            new SyncCallbackSettings.Builder(() -> Boolean.FALSE);
+            new SyncCallbackSettings.Builder(new FakeLogger(), () -> Boolean.FALSE);
 
     private final ConcreteSyncCallback mSingleCallback = new ConcreteSyncCallback();
 

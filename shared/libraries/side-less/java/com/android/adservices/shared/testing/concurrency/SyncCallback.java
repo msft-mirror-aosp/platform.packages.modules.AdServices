@@ -24,6 +24,9 @@ import com.google.errorprone.annotations.FormatString;
 /** Base interface for all testing-related sync callbacks. */
 public interface SyncCallback extends Identifiable {
 
+    /** Tag used on {@code logcat} calls. */
+    String LOG_TAG = "SyncCallback";
+
     /**
      * Asserts the callback was called or throw if it times out - the timeout value is defined by
      * the constructor and can be obtained through {@link #getSettings()}.
