@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 // NOTE: this class is basically an abstraction of CountdownLatch and doesn't have any testing
 // specific characteristics, so it could be used on production code as well.
-/** Base implementation for {@link SyncCallback}. */
+/** Base implementation for {@code SyncCallback}. */
 public abstract class AbstractSyncCallback implements SyncCallback {
 
     /** Tag used on {@code logcat} calls. */

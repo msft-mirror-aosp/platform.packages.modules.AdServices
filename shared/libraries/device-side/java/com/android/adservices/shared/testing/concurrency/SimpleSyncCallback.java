@@ -15,12 +15,12 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-/** Simplest implementation of a {@link SyncCallback} for tests. */
+/** Simplest implementation of a {@code SyncCallback} for tests. */
 public final class SimpleSyncCallback extends AbstractTestSyncCallback {
 
     /** Default constructor. */
     public SimpleSyncCallback() {
-        this(new SyncCallbackSettings.Builder().build());
+        this(SyncCallbackFactory.newSettingsBuilder().build());
     }
 
     /** Customizable constructor. */

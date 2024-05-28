@@ -16,7 +16,6 @@
 package com.android.adservices.shared.testing.concurrency;
 
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.SystemClock;
 
 import androidx.annotation.Nullable;
@@ -61,9 +60,7 @@ public abstract class AbstractTestSyncCallback extends AbstractSidelessTestSyncC
         long delta = SystemClock.elapsedRealtime() - mEpoch;
         Thread currentThread = Thread.currentThread();
         logV("setCalled() called in %d ms on %s", delta, currentThread);
-        if (mSettings.isFailIfCalledOnMainThread()
-                && Looper.getMainLooper() != null
-                && Looper.getMainLooper().isCurrentThread()) {
+        if (mSettings.isFailIfCalledOnMainThread() && mSettings.isMainThread()) {
             String errorMsg = "setCalled() called on main thread (" + currentThread + ")";
             logE("%s; assertCalled() will throw an IllegalStateException", errorMsg);
             mInternalFailure = new CalledOnMainThreadException(errorMsg);

@@ -35,11 +35,12 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
 
     private static final AtomicInteger sThreadId = new AtomicInteger();
-
+    private static final Supplier<Boolean> IS_MAIN_THREAD_SUPPLIER = () -> Boolean.FALSE;
     private static final long SMALLER_TIMEOUT_MS = DEFAULT_TIMEOUT_MS / 10;
 
     private final FakeLogger mFakeLogger = new FakeLogger();
@@ -49,7 +50,8 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
 
     @Test
     public void testGetSettings() {
-        SyncCallbackSettings settings = SyncCallbackSettings.newDefaultSettings();
+        SyncCallbackSettings settings =
+                new SyncCallbackSettings.Builder(IS_MAIN_THREAD_SUPPLIER).build();
         AbstractSidelessTestSyncCallback callback =
                 new AbstractSidelessTestSyncCallback(mFakeLogger, settings) {};
 
@@ -123,7 +125,7 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
     private static final class ConcreteSidelessTestSyncCallback
             extends AbstractSidelessTestSyncCallback {
         ConcreteSidelessTestSyncCallback(RealLogger realLogger) {
-            super(realLogger, SyncCallbackSettings.newDefaultSettings());
+            super(realLogger, new SyncCallbackSettings.Builder(IS_MAIN_THREAD_SUPPLIER).build());
         }
     }
 

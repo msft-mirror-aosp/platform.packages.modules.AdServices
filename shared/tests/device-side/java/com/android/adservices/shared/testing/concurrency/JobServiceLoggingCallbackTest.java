@@ -31,7 +31,7 @@ public final class JobServiceLoggingCallbackTest extends SharedMockitoTestCase {
     public void testCustomMethods() throws Exception {
         JobServiceLoggingCallback callback =
                 new JobServiceLoggingCallback(
-                        new SyncCallbackSettings.Builder()
+                        SyncCallbackFactory.newSettingsBuilder()
                                 .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
                                 .build());
 

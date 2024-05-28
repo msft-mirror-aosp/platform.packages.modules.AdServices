@@ -19,7 +19,7 @@ package com.android.adservices.shared.testing;
 import android.util.Log;
 
 import com.android.adservices.shared.testing.concurrency.AbstractTestSyncCallback;
-import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -38,7 +38,7 @@ public final class AnswerSyncCallback<T> extends AbstractTestSyncCallback implem
 
     private AnswerSyncCallback(T answer, Throwable failure, int numberOfExpectedCalls) {
         super(
-                new SyncCallbackSettings.Builder()
+                SyncCallbackFactory.newSettingsBuilder()
                         .setExpectedNumberCalls(numberOfExpectedCalls)
                         .build());
         mAnswer = answer;
